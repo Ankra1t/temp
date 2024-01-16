@@ -1,0 +1,19 @@
+from telebot import TeleBot as _TB
+
+from .pages import send_main, send_settings, send_manual_page
+from .utils import choose_calculate_step, choose_first_calculate_step
+
+from .manual.handler import registration as _reg_manual
+from .manual.keyboards import kb_manual
+
+from .main.handler import registration as _reg_main
+from .main.keyboards import kb_main, kb_cancel, cancel_btn, kb_forex_val
+
+from .settings.handler import registration as _reg_settings
+from .settings.keyboards import kb_settings, kb_base_cancel, kb_settings_confirm, kb_change_base, kb_choose_lang
+
+
+def callbacks_registration(bot: _TB):
+    _reg_manual(bot)
+    _reg_main(bot)
+    _reg_settings(bot)

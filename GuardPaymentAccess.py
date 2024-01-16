@@ -1,0 +1,229 @@
+from typing import Literal
+from config_logger import logger
+from telebot import types
+from datetime import datetime, timedelta
+from models import User, Subscribe
+
+from db_new import db_new
+from db import Database
+
+
+class GuardPaymentAccess():
+    """
+    Класс защитник платного доступа, рассылки и бана
+
+    Взаимодействие с таблицами
+        pay (платежные шлюзы)
+        , prices (цены, тарифы)
+        , transactions (транзакции платежей)
+    users (платные пользователи)
+        - pay_money пополнения
+        - balance текущий баланс (pay_money - потраченная сумма)
+    """
+
+    def __init__(self, db: Database) -> None:
+        self.db = db
+        self.mess = ''
+        self.dt_format = "%Y-%m-%d %I:%M"
+        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
+        self.dt_format_user_show = "%d/%m/%Y"
+
+    # Тестовые подписки
+    def set_trial(self, message: types.Message):
+        """Дать новому пользователю тестовый период """
+        finish_date = datetime.now() + timedelta(days=2)
+
+        subscribe = Subscribe(
+            message.from_user.id,
+            finish_date, 1, None, 'trial',
+        )
+
+        self.delete_trial(message)
+
+        db_new.add_subsbscribe(subscribe)
+
+    def set_custom_paid_subscribe(self, user_id, count_days):
+        """Дать пользователю платную подписку без оплаты"""
+        now = datetime.now()
+        finish_date = now + timedelta(days=count_days)
+
+        subscribe = Subscribe(
+            user_id, finish_date, 1, None, 'paid', 1, 1
+        )
+        db_new.add_subsbscribe(subscribe)
+
+        finish_date_show_user = finish_date.strftime(
+            self.dt_format_user_show)
+        finish_date_show_admin = finish_date.strftime(
+            self.dt_format_admin_show)
+
+        return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
+
+    def delete_trial(self, message: types.Message):
+        """Удаление тестового период из БД"""
+        db_new.del_transaction(message.from_user.id)
+
+    def check_trial_active_by_user(self, user_id):
+        """Проверить есть ли у пользователя тестовая подписка"""
+        trial_subscribe = db_new.get_user_trial_subscribe(user_id)
+
+        if trial_subscribe is None:
+            return False
+
+        trial_id = trial_subscribe.id
+        active = trial_subscribe.active
+
+        if trial_id and (active == 1):
+            return trial_id
+        return False
+
+    # Платные подписки
+    def set_paid_subscribe(self, transaction):
+        """Добавить платную подписку для пользователя по результату оплаты (транзакция paid)"""
+        subscribe_days = self.get_subscribe_days_prices_id(
+            transaction['prices_id'])
+
+        finish_date = datetime.now() + timedelta(days=subscribe_days)
+
+        subscribe = Subscribe(
+            transaction['user_id'], finish_date, 1, None, 'paid',
+            transaction['prices_id'], transaction['transaction_id']
+        )
+        db_new.add_subsbscribe(subscribe)
+
+        return finish_date
+
+    def get_subscribe_days_prices_id(self, price_id):
+        tariff = db_new.get_price_by_id(price_id)
+
+        return tariff.duration_days if tariff is not None else 0
+
+    # Получение СПИСКИ пользователей для рассылки
+    def get_users_note_fin_trial(self):
+        """Получаем пользователей у которых закончилась Тестовая подписка - для рассылки уведомлений"""
+        return db_new.get_users_finished_subscribe('trial')
+
+    def get_users_note_fin_paid(self):
+        """Получаем платных пользователей у которых закончилась Платная подписка - для рассылки уведомлений"""
+        return db_new.get_users_finished_subscribe('paid')
+
+    def get_users_no_ban(self):
+        """Получаем пользователей без бана"""
+        user_list = self.db.get_users_no_ban()
+        return user_list
+
+    def get_ban_users(self):
+        """Получаем пользователей из БАН листа"""
+        user_list = self.db.get_ban_users()
+        return user_list
+
+    def get_paid_users(self):
+        """Получаем пользователей с активными подписками для платной рассылки сигналов"""
+        # Выбрать пользователей только с активной и действительной по дате подпиской
+        date_fin = datetime.now()
+        # date_fin = datetime.now() + timedelta(days=5)
+        date_bonus = date_fin + timedelta(days=2)
+        finish_date = date_fin.strftime(self.dt_format)
+
+        # Добавлена фильтрация бан пользователей
+        user_list = self.db.get_subsribe_users(finish_date, date_bonus)
+
+        return user_list
+
+    def get_paid_more1_users(self):
+        """Получаем пользователей с больше чем одной подпиской"""
+        date_fin = datetime.now()
+        # date_fin = datetime.now() + timedelta(days=5)
+        # date_bonus = date_fin + timedelta(days=2)
+        finish_date = date_fin.strftime(self.dt_format)
+        user_list = self.db.get_subsribe_more1_users(finish_date)
+        return user_list
+
+    # # # Остальные методы
+
+    def set_subscribe_unactive_many_users(self):
+        db_new.set_unactive_subscribes('trial')
+
+    def set_paid_subscribe_unactive_many_users(self):
+        db_new.set_unactive_subscribes('paid')
+
+    def set_subscribe_unactive(self, subscribe_id: int):
+        """Убираем активность у подписки для одного пользователя """
+        db_new.set_subscribe_unactive(subscribe_id)
+
+    def set_subscribe_unactive_by_user_id(self, user_id):
+        """Убираем активность у подписки для одного пользователя по user_id"""
+        db_new.set_subscribe_unactive_by_user_id(user_id)
+
+    # Управление подписками
+    def get_current_subscribe_user(self, user: User):
+        """Получить текущую активную подписку пользователя"""
+        user.subscribe = db_new.get_current_subscribe_user(user.id or 0)
+        return user
+
+    def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
+        if user.subscribe is None:
+            return
+
+        subscribe_id = user.subscribe.id
+        current_date = user.subscribe.finish_dt
+        days: int = user.subscribe_days or 0
+
+        current_date_obj = current_date
+
+        if direct == 'add':
+            finish_date = current_date_obj + timedelta(days=int(days))
+        else:
+            finish_date = current_date_obj - timedelta(days=int(days))
+
+        finish_date = finish_date.strftime(self.dt_format)
+        db_new.set_subscribe_findate(subscribe_id or 0, finish_date)
+        return finish_date
+
+    def cancel_subscribes_for_time_type(self, time_type, count):
+        """Отменить подписку за прошедший период"""
+        time_start_obj = datetime.now()
+
+        if time_type == 'hours':
+            time_start_obj -= timedelta(hours=count)
+
+        if time_type == 'days':
+            time_start_obj -= timedelta(days=count)
+
+        time_start = time_start_obj.strftime(self.dt_format)
+        time_end = datetime.now().strftime(self.dt_format)
+
+        logger.info(f'-----> Начало отмены дата {time_start}')
+        logger.info(f'-----> Конец отмены дата {time_end}')
+
+        db_new.set_unactive_subscribe_for_time(time_start, time_end)
+
+        return {
+            'time_start': time_start_obj.strftime(self.dt_format_admin_show),
+            'time_end': datetime.now().strftime(self.dt_format_admin_show)
+        }
+
+    def cancel_subscribes_for_time_period(self, date_start_obj: datetime, date_end_obj: datetime):
+        time_start = date_start_obj.strftime(self.dt_format)
+        time_end = date_end_obj.strftime(self.dt_format)
+        db_new.set_unactive_subscribe_for_time(time_start, time_end)
+
+        return {
+            'time_start': date_start_obj.strftime(self.dt_format_admin_show),
+            'time_end': date_end_obj.strftime(self.dt_format_admin_show)
+        }
+
+    # # # Управление баном
+
+    def unban_user_by_id(self, user_id):
+        ban_status = None
+        self.db.set_user_ban_status(user_id, ban_status)
+
+    def ban_user_by_id(self, user_id):
+        ban_status = 1
+        self.db.set_user_ban_status(user_id, ban_status)
+    # # # Вспомогательные методы
+
+    def get_user_id_by_username(self, username):
+        user = self.db.get_user_by_username(username)
+        return user[9] if user is not None else None

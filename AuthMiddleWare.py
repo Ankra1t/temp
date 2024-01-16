@@ -1,0 +1,66 @@
+from telebot import types
+from telebot.handler_backends import BaseMiddleware
+from telebot.handler_backends import CancelUpdate
+
+from GuardPaymentAccess import GuardPaymentAccess
+from AuthRoles import check_ban, check_registrate, registration
+
+
+class AuthMiddleWare(BaseMiddleware):
+    """Класс защитник авторизации"""
+
+    def __init__(self, bot, db, limit=2) -> None:
+        self.last_time = {}
+        self.limit = limit
+        self.update_types = ['message', 'edited_message']
+        self.bot = bot
+        self.db = db
+
+    def pre_process(self, message: types.Message, data):
+        user_id = message.from_user.id
+        username = message.from_user.username
+
+        PayGuarder = GuardPaymentAccess(self.db)
+
+        data['has_registered_now'] = False
+
+        if check_ban(user_id):
+            return CancelUpdate()
+
+        user_role = check_registrate(user_id)
+
+        if user_role is None:
+            ref_id = message.text
+            ref_id = ref_id.split() if (ref_id is not None) else []
+
+            if len(ref_id) == 2 and ref_id[0] == '/start' and ref_id[1].isdigit():
+                ref_id = int(ref_id[1])
+            else:
+                ref_id = 0
+
+            registration(user_id, username, ref_id)
+            PayGuarder.set_trial(message)
+
+            data['has_registered_now'] = True
+            user_role = 0
+
+        data['user_role'] = user_role
+
+        # Защита от флуда отключена
+        # if message.from_user.id not in self.last_time:
+        #   User is not in a dict, so lets add and cancel this function
+        # self.last_time[message.from_user.id] = message.date
+        # return
+        # if message.date - self.last_time[message.from_user.id] < self.limit:
+        #     User is flooding
+        # self.bot.send_message(message.chat.id, 'You are making request too often')
+        # logger.info(f'Пользователь флудит (быстро отправляет одни и те же сообщения) message.from_user.id')
+        #
+        # return CancelUpdate()
+        # self.last_time[message.from_user.id] = message.date
+
+        # return SkipHandler() -> this will skip handler
+        # return CancelUpdate() -> this will cancel update
+
+    def post_process(self, message, data, exception):
+        pass
