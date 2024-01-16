@@ -1,3 +1,6 @@
+.idea
+.handler-saves
+
 __pycache__
 ngrok.exe
 
