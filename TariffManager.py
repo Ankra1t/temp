@@ -85,8 +85,6 @@ class TariffManager(object):
         tariff_id = ''
         return True
 
-        pass
-
     def tariff_list_show(self, message: types.Message):
         list = db_new.get_prices(1)
         if len(list):
