@@ -1,0 +1,9 @@
+__pycache__
+ngrok.exe
+
+/4p_bots-env
+.env
+config_global.py
+
+pyrightconfig.json
+4p_bot.db

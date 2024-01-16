@@ -96,8 +96,6 @@ class TariffManager(object):
         for i in range(0, len(list)):
             tariff = list[i]
             discount_show = ''
-            print(f'tariff.discount.findate ')
-            print(tariff.discount.findate)
             if tariff.discount is not None:
                 now = datetime.now()
                 fin_date_discount = tariff.discount.findate

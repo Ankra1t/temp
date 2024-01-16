@@ -126,6 +126,6 @@ values
 
 insert into workers (username, role, id)
 values
-    ('@worker365', 1, 774944610),
-    ('@siturn4rex', 1, 626871943);
+    ('worker365', 1, 774944610),
+    ('siturn4rex', 1, 626871943);
 
