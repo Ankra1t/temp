@@ -1,7 +1,8 @@
 from datetime import datetime
 from db import db
 
-# azat id 156045434
+# azatFa  id 156045434
+# ankrait id 6919899538
 
 # db.delete_calculator_user(156045434)
 db.add_worker(156045434, 'azatFa', 1)
@@ -9,9 +10,9 @@ db.add_worker(156045434, 'azatFa', 1)
 # db.curs.execute('DELETE FROM users')
 # db.connection.commit()
 
-# a = datetime.now()
+a = datetime.now()
 
-# print(a.time().isoformat('minutes'))
+print(a.time().isoformat('minutes'))
 
 ################################################################################################
 # if user_role == 0:

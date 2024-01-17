@@ -552,10 +552,10 @@ class Database:
 
         query = """
             INSERT INTO fut_posts(img, text, type, date, time, id, kind, open_price, stop_loss, name)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         params = (f'{post.media}({post.mes_type})', post.content, post.direct,
-                  dt.date(), dt.isoformat('minutes'), id, kind, *details)
+                  dt.date(), dt.time().isoformat('minutes'), id, kind, *details)
 
         try:
             self.curs.execute(query, params)

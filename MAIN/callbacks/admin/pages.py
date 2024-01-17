@@ -11,13 +11,14 @@ def send_admin_post(
         f'Стоп лосс: <b>{stop_loss}</b>' if stop_loss is not None else '',
     )) if kind == 'signal' else ''
 
-    result = signal_txt + '\n'.join((
+    result = '\n'.join((
         f'<b>{name}</b>' if name is not None else '',
+        '',
         signal_txt,
         '',
         text,
         '',
-        f'ID: <b>{id}</b>',
+        f'ID: <b>{id}</b>' if id != 0 else '',
         f'Тип: <b>{"Сигнал" if kind == "signal" else "Пост"}</b>',
         f'Время поста: <b>{time}</b>',
         f'Дата: <b>{date}</b>',
