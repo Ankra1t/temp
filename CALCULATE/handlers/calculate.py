@@ -4,13 +4,14 @@ from telebot.types import Message
 from db import db
 from common.utils import digit_accept, set_state_data, text_accept
 
-from CALCULATE.callbacks import kb_cancel, choose_calculate_step, choose_first_calculate_step, send_main
+from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
-    msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_digit_error, msg_enter_stop_loss, msg_paire_error, msg_paire_not_found, msg_percent_error,
+    msg_calculate, msg_calculate_forex_result, msg_calculate_result,
+    msg_digit_error, msg_enter_stop_loss, msg_paire_error,
+    msg_paire_not_found, msg_percent_error,
     msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
 )
-
 
 
 def handle_future_ticker(message: Message, bot: TeleBot):
@@ -211,7 +212,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     db.minus_calculator_uses_count(user_id)
     bot.send_message(chat_id, mes)
     bot.delete_state(user_id, chat_id)
-    choose_first_calculate_step(bot, user_id, message, calc_type)
+    send_main(message, bot, user_id, True)
+
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
@@ -275,7 +277,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     db.minus_calculator_uses_count(user_id)
     bot.send_message(chat_id, message_res)
     bot.delete_state(user_id, chat_id)
-    choose_first_calculate_step(bot, user_id, message, calc_type)
+    send_main(message, bot, user_id, True)
 
 
 # ? Выравнивание результатов

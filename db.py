@@ -5,6 +5,7 @@ from typing import Any, Literal, Optional
 
 from models import Post
 
+MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
 
@@ -425,7 +426,7 @@ class Database:
             print(f'ERROR[set_calculator_tp_show]: {e}')
             return False
 
-    def get_calculator_user_market(self, user_id: int):
+    def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None:
         """Получить рынок пользователя"""
         query = 'SELECT market FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -436,7 +437,7 @@ class Database:
             print(f'ERROR[get_calculator_user_market]: {e}')
             return None
 
-    def set_calculator_user_market(self, user_id: int, market: str):
+    def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
         query = "UPDATE calc_user_settings SET market = ? WHERE id = ?"
         params = (market, user_id)

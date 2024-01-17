@@ -1,6 +1,7 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.utils import get_lang
+from CALCULATE.common.messages import market_translates
 
 from .filter import settings_factory
 
@@ -44,8 +45,7 @@ def kb_settings(user_id: int):
 
     keyboard.add(btn_base, btn_market)
     keyboard.add(btn_tp_show, btn_lang)
-    keyboard.add(btn_uses)
-    keyboard.add(btn_back)
+    keyboard.add(btn_uses, btn_back)
     return keyboard
 
 
@@ -107,6 +107,38 @@ def kb_change_tp_show(user_id: int, tp_show: str):
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
     keyboard.add(back)
+    return keyboard
+
+
+def kb_change_market(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'back': 'Назад'
+        },
+        'en': {
+            'back': 'Back'
+        }
+    }
+
+    row_width = 2
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
+
+    buttons: list[InlineKeyboardButton] = []
+
+    markets_list = ('crypto', 'forex')  # 'paper', 'future',
+    for i, el in enumerate(markets_list):
+        btn = getButton(market_translates[lang][el], f'market_{el}')
+        buttons.append(btn)
+
+        if len(buttons) == 2 or (i == len(markets_list) and len(buttons) != 0):
+            keyboard.add(*buttons)
+            buttons = []
+
+    btn_back = getButton(texts[lang]['back'], 'go_settings')
+    keyboard.add(btn_back)
+
     return keyboard
 
 
