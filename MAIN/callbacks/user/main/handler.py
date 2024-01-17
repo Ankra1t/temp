@@ -1,8 +1,8 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks import send_main
 from MAIN.callbacks import send_user_education
-from MAIN.callbacks.calculator.pages import send_main
 from MAIN.callbacks.user.pages import send_user_account
 from MAIN.common.utils import send_in_development
 

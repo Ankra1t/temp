@@ -21,8 +21,9 @@ from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
 from MAIN.callbacks import (
     callbacks_registration, kb_posts_back,
-    send_admin_post, kb_cancel, choose_calculate_step,
+    send_admin_post
 )
+from CALCULATE.callbacks import kb_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
 

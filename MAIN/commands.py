@@ -5,7 +5,7 @@ from config_logger import logger
 from db import db
 from keyboard_reply import kb_user_sup
 
-from MAIN.callbacks import send_manual_page, send_main
+from CALCULATE.callbacks import send_manual_page, send_main
 from MAIN.start import send_start_by_user
 
 
