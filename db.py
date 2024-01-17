@@ -773,7 +773,7 @@ class Database:
 
         try:
             result = self.curs.execute(query, params).fetchone()
-            return result[0] is not None
+            return (result is not None) and (len(result) == 1) and (result[0] is not None)
         except Exception as e:
             print(f'ERROR[check_ban_user]: {e}')
             return False
