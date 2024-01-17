@@ -3,7 +3,7 @@ import flask
 from flask import request, Response
 
 from config_logger import logger
-from config_global import CRYPTOPAY_URL, BITBANKER_URL
+from config_global import CRYPTOPAY_URL, BITBANKER_URL, base_url, flask_port
 from StartBot import bot, pays, pays_banker
 from CALCULATE.initialize import bot_calc
 # from NOTICE.bot_Notification import *
@@ -13,7 +13,8 @@ from CALCULATE.initialize import bot_calc
 logger.info(f' * * * * * Logging is Start Now * * * * * ')
 
 app = flask.Flask(__name__)
-base_url = '/_bots'
+
+
 
 # Тестовый запрос
 @app.route(base_url, methods=['POST', 'GET'])
@@ -102,4 +103,5 @@ def bitbanker_updates():
     # if not Pays.get_updates(request):
         # flask.abort(403)
 
-app.run(host='127.0.0.1', port=5000, debug=True)
+
+app.run(host='127.0.0.1', port=flask_port, debug=True)
