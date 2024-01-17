@@ -90,13 +90,6 @@ class BlockTGBotSender(object):
             signal_text += f'Цена входа: <b>{self.open_price}</b>\n'
             signal_text += f'Стоп лосс: <b>{self.stop_loss}</b>\n'
 
-            diff = self.open_price - self.stop_loss
-            tp_1 = self.open_price + diff * 3
-            tp_2 = self.open_price + diff * 4
-            tp_3 = self.open_price + diff * 5
-
-            # signal_text += f'Тейк профит: <b>{tp_1} / {tp_2} / {tp_3}</b>\n\n'
-
             user_base_values = db.get_user_base(id)
             dep = user_base_values['base_deposit']
             risk = user_base_values['base_risk_percent']
@@ -104,6 +97,11 @@ class BlockTGBotSender(object):
             if dep is None or risk is None:
                 calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках'
             else:
+                diff = self.open_price - self.stop_loss
+                tp_1 = self.open_price + diff * 3
+                tp_2 = self.open_price + diff * 4
+                tp_3 = self.open_price + diff * 5
+
                 count_bet = floor(
                     (dep * risk / 100) /
                     (self.open_price - self.stop_loss)
@@ -114,7 +112,7 @@ class BlockTGBotSender(object):
                 if summary_open_value > dep:
                     credit = round(summary_open_value // dep + 1)
 
-                calc_text = '<b><u>Новый сигнал</u></b>\n'
+                calc_text = '<b><u>Расчет по сигналу</u></b>\n'
                 calc_text += msg_calculate_result(
                     id, dep, risk,
                     self.open_price,
@@ -125,26 +123,24 @@ class BlockTGBotSender(object):
                     credit, dep * risk
                 )
 
-        content = signal_text + '\n' + self.text
-        if '(photo)' in self.media:
-            out_file = self.media.replace('(photo)', '')
-            bot.send_photo(
-                id, out_file,
-                caption=content
-            )
-        elif '(text)' in self.media:
-            bot.send_message(
-                id, content
-            )
-        elif '(video)' in self.media:
-            out_file = self.media.replace('(video)', '')
-            bot.send_video(
-                id, out_file,
-                caption=content
-            )
-
         try:
+            content = signal_text + '\n' + self.text
+            if '(photo)' in self.media:
+                out_file = self.media.replace('(photo)', '')
+                bot.send_photo(
+                    id, out_file,
+                    caption=content
+                )
+            elif '(text)' in self.media:
+                bot.send_message(id, content)
+            elif '(video)' in self.media:
+                out_file = self.media.replace('(video)', '')
+                bot.send_video(
+                    id, out_file,
+                    caption=content
+                )
+
             bot.send_message(id, calc_text)
-        except:
-            print('Пользователь не подписан на калькулятор')
+        except Exception as e:
+            print(f'Ошибка рассылки user({id}): {e}')
             pass

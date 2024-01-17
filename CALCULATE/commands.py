@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from CALCULATE.callbacks.settings.keyboards import kb_settings_confirm
 
-from db import db, LANGUAGES
+from db import db
 
 from CALCULATE.common.messages import msg_support, msg_welcome
 from CALCULATE.common.keyboard import kb_support
@@ -14,12 +14,6 @@ def _start(message: Message, bot: TeleBot, data: dict):
     chat_id = message.chat.id
 
     has_registered_now = data.get('has_registered_now')
-
-    if db.get_user_lang(user_id) is None:
-        lang = message.from_user.language_code.lower()
-        lang = lang if (lang in LANGUAGES) else 'ru'
-
-        db.set_user_lang(user_id, lang)
 
     if has_registered_now:
         bot.send_message(

@@ -56,11 +56,11 @@ def admin_posting_msg(count: int):
 def generate_normal_text(message: Message):
     msg_res = ''
     if message.content_type == 'photo' and message.caption_entities == None:
-        return message.caption
+        return message.caption or ''
     if message.content_type == 'text' and message.entities == None or message.text is None:
-        return message.text
+        return message.text or ''
     if message.content_type == 'video' and message.caption_entities == None:
-        return message.caption
+        return message.caption or ''
 
     if message.content_type == 'text' and message.entities != None:
         msg_res = message.text
@@ -164,3 +164,5 @@ def generate_normal_text(message: Message):
                 else:
                     msg_res = msg_res.replace(serch, f'<i>{serch}</i>')
         return msg_res
+
+    return ''

@@ -12,85 +12,105 @@ from MAIN.callbacks import kb_posts_back, kb_post_add_confirm, kb_post_confirm, 
 from MAIN.common.utils import get_post_from_message
 
 from db import db
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from common.utils import digit_accept, set_state_data, text_accept
+from keyboard_reply import kb_live_cancel
 from messages.workers import admin_fut_posts_msg
+from models import Post, PostDetails
 
 
 def handle_new_post_name(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        post: Post = data.get('post')
+        kind: str = data.get('kind') or ''
+
+    if kind == 'live':
+        kb_cancel = kb_live_cancel()
+    else:
+        kb_cancel = kb_posts_back()
+
     name = text_accept(message)
     if name is None:
         bot.send_message(
             chat_id, 'Введите название текстом:',
-            reply_markup=kb_posts_back()
+            reply_markup=kb_cancel
         )
         return
 
+    post.details = PostDetails(
+        name=name,
+        open_price=-1,
+        stop_loss=-1
+    )
+
     bot.set_state(user_id, AdminPostsState.signal_values, chat_id)
-    set_state_data(bot, user_id, chat_id, {'name': name})
+    set_state_data(bot, user_id, chat_id, {'post': post})
     bot.send_message(
         chat_id, 'Введите цену входа:',
-        reply_markup=kb_posts_back()
+        reply_markup=kb_cancel
     )
 
 
-def handle_new_post_signal(message: Message, bot: TeleBot, data: dict):
+def handle_new_post_signal(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     mes_id = message.id
 
-    user_role = data.get('user_role') or 1
+    with bot.retrieve_data(user_id, chat_id) as state_data:
+        kind = state_data.get('kind') or ''
+        post: Post = state_data.get('post')
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        kind = data.get('kind') or ''
-        name = data.get('name')
-        open_price = data.get('open_price')
-        post: str = data.get('post') or ''
-        media_id = data.get('media_id')
-        mes_type = data.get('mes_type')
+    if post.details is None:
+        print('ERROR["handle_new_post_signal"]: no details in post!')
+        return
+
+    if kind == 'live':
+        kb_cancel = kb_live_cancel()
+    else:
+        kb_cancel = kb_posts_back()
 
     value = digit_accept(message)
-    if value is None:
-        if open_price is None:
+    if (value is None) or (value <= 0):
+        if post.details.open_price is None:
             text = 'Введите цену входа числом:'
         else:
             text = 'Введите стоп лосс числом:'
 
         bot.send_message(
             chat_id, text,
-            reply_markup=kb_posts_back()
+            reply_markup=kb_cancel
         )
         return
 
-    if (open_price is not None) and (kind == 'live'):
+    if (post.details.open_price != -1) and (kind == 'live'):
         kind = 'signal'
-        bot.send_message(chat_id, 'Отправка...')
+        new_message = bot.send_message(chat_id, 'Отправка...')
         tg_sender = BlockTGBotSender(
-            [], post, f'{media_id or ""}({mes_type})',
-            kind, open_price, value, name
+            [], post.content, f'{post.media}({post.mes_type})',
+            kind, post.details.open_price, value, post.details.name
         )
         tg_sender.send()
 
         bot.delete_state(user_id, chat_id)
-        bot.edit_message_text('Успешно отправлен!', chat_id, mes_id)
-        send_start_by_user(bot, message, user_id, chat_id, user_role)
+        bot.edit_message_text('Успешно отправлен!', chat_id, new_message.id)
         return
 
-    if open_price is None:
-        set_state_data(bot, user_id, chat_id, {'open_price': value})
+    if post.details.open_price == -1:
+        post.details.open_price = value
         state = AdminPostsState.signal_values
         text = 'Введите стоп лосс:'
     else:
-        set_state_data(bot, user_id, chat_id, {'stop_loss': value})
+        post.details.stop_loss = value
         state = AdminPostsState.datetime
         text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'
 
     bot.send_message(
         chat_id, text,
-        reply_markup=kb_posts_back()
+        reply_markup=kb_cancel
     )
+    set_state_data(bot, user_id, chat_id, {'post': post})
     bot.set_state(user_id, state, chat_id)
 
 
@@ -98,22 +118,22 @@ def handle_new_post_content(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    post_data = get_post_from_message(bot, message)
+    post = get_post_from_message(bot, message)
 
-    if post_data is None:
+    if post is None:
         bot.send_message(
             chat_id, 'Ошибка, попробуйте снова:',
             reply_markup=kb_posts_back()
         )
         return
 
-    set_state_data(bot, user_id, chat_id, post_data)
     with bot.retrieve_data(user_id, chat_id) as data:
+        data['post'] = post
         kind = data.get('kind') or ''
 
     if kind == 'signal':
-        state = AdminPostsState.signal_values
-        text = 'Введите цену входа:'
+        state = AdminPostsState.name
+        text = 'Введите название сигнала:'
     else:
         state = AdminPostsState.datetime
         text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'
@@ -158,30 +178,30 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
             value = datetime(year, month, day, hour, minute)
         except:
             bot.send_message(
-                chat_id, 'Неверная дата. Введите повторно ДД ММ (ГГ?)  ЧЧ ММ',
+                chat_id, 'Неверная дата. Введите повторно ДД ММ (ГГ?) ЧЧ ММ',
                 reply_markup=kb_posts_back())
             return
     else:
         value = datetime.now()
 
-    value = value.strftime("%d.%m.%Y %H:%M")
-    date, time = value.split(' ')
-
     with bot.retrieve_data(user_id, chat_id) as data:
-        data['date'] = date
-        data['time'] = time
         kind = data.get('kind')
-        name = data.get('name')
-        open_price = data.get('open_price')
-        stop_loss = data.get('stop_loss')
-        post = data.get('post')
-        media_id = data.get('media_id')
-        mes_type = data.get('mes_type')
+        post: Post = data.get('post')
+        post.date_time = value
+
+    if post.details is None:
+        details = (None, None, None)
+    else:
+        details = (
+            post.details.open_price,
+            post.details.stop_loss,
+            post.details.name
+        )
 
     if mes_text == '-':
         tg_sender = BlockTGBotSender(
-            [], post, f'{media_id or ""}({mes_type})',
-            kind, open_price, stop_loss, name
+            [], post.content, f'{post.media or ""}({post.mes_type})',
+            kind, *details
         )
         tg_sender.send()
         bot.delete_state(user_id, chat_id)
@@ -190,11 +210,18 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
             reply_markup=kb_posts()
         )
     else:
+        dt = post.date_time or datetime.now()
+        send_admin_post(
+            bot, chat_id, 0, f'{post.media or ""}({post.mes_type})',
+            post.content, '-', dt.date(), dt.time().isoformat('minutes'), kind, *details
+        )
+
         bot.set_state(user_id, AdminPostsState.confirm_add, chat_id)
-        send_admin_post(bot, chat_id, 0, f'{media_id or ""}({mes_type})',
-                        post, '-', date, time, kind, open_price, stop_loss, name)
-        bot.send_message(chat_id, 'Выберите дейтсвие:',
-                         reply_markup=kb_post_add_confirm())
+        set_state_data(bot, user_id, chat_id, {'post': post})
+        bot.send_message(
+            chat_id, 'Выберите дейтсвие:',
+            reply_markup=kb_post_add_confirm()
+        )
 
 
 def handle_action_post(action: Literal['send', 'delete']):

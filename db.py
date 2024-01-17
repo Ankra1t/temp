@@ -1,6 +1,9 @@
+from datetime import datetime
 from math import exp
 import sqlite3
 from typing import Any, Literal, Optional
+
+from models import Post
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
@@ -536,15 +539,23 @@ class Database:
             return 3
 
     # ================================ Отложенные посты
-    def add_fut_post(self, img, text, post_type, date, time, kind, open_price, stop_loss, take_profit):
+    def add_fut_post(self, post: Post, kind: str):
         """Добавить отложенный пост"""
+        dt = post.date_time or datetime.now()
         id = len(self.get_fut_all_posts()) + 1
+
+        if post.details is None:
+            details = (None, None, None)
+        else:
+            details = (post.details.open_price,
+                       post.details.stop_loss, post.details.name)
+
         query = """
-            INSERT INTO fut_posts(img, text, type, date, time, id, kind, open_price, stop_loss, take_profit)
+            INSERT INTO fut_posts(img, text, type, date, time, id, kind, open_price, stop_loss, name)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        params = (img, text, post_type, date, time, id,
-                  kind, open_price, stop_loss, take_profit)
+        params = (f'{post.media}({post.mes_type})', post.content, post.direct,
+                  dt.date(), dt.time().isoformat('minutes'), id, kind, *details)
 
         try:
             self.curs.execute(query, params)
@@ -754,6 +765,7 @@ class Database:
 
 # ======================= // Управление Баном Пользователей
 
+
     def check_ban_user(self, user_id):
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = ? and ban IS NOT NULL"
@@ -761,7 +773,7 @@ class Database:
 
         try:
             result = self.curs.execute(query, params).fetchone()
-            return result[0] is not None
+            return (result is not None) and (len(result) == 1) and (result[0] is not None)
         except Exception as e:
             print(f'ERROR[check_ban_user]: {e}')
             return False
@@ -849,9 +861,9 @@ class Database:
 
 # ======================= // Отсутствующие функции
     def get_prices(self, active):
-        res = self.curs.execute(f"SELECT * FROM prices WHERE active = ?", (active,)).fetchall()
+        res = self.curs.execute(
+            f"SELECT * FROM prices WHERE active = ?", (active,)).fetchall()
         return res
-
 
 
 db = Database('4p_bot.db')

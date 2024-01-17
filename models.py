@@ -23,11 +23,13 @@ class InvoiceBBanker(BaseModel):
     pay_url: Optional[str] = None
     description: Optional[str] = None
 
+
 class Update(BaseModel):
     update_id: int
     update_type: str
     request_date: datetime
     payload: Invoice
+
 
 class UpdateBBanker(BaseModel):
     payload: InvoiceBBanker | None = None
@@ -88,7 +90,8 @@ class Price:
         self.img = image
 
         if discount_percent is not None and discount_findate is not None:
-            self.discount = Discount(percent=discount_percent, findate=discount_findate)
+            self.discount = Discount(
+                percent=discount_percent, findate=discount_findate)
         else:
             self.discount = None
 
@@ -116,3 +119,20 @@ class Transactions:
         self.price_id = price_id
         self.status = status
         self.payment_date = payment_date
+
+
+class PostDetails(BaseModel):
+    name: str
+    open_price: float
+    stop_loss: float
+
+
+class Post(BaseModel):
+    id: int = -1
+    content: str = ''
+    mes_type: str = 'text'
+    direct: str = 'Всем'
+    media: str | None = None
+    date_time: datetime | None = None
+    details: PostDetails | None = None
+

@@ -65,3 +65,200 @@
 [2024-01-16 14:54:05,074: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
 [2024-01-16 14:54:09,356: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
 [2024-01-16 14:54:11,079: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 11:40:21,382: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 11:40:21,382: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 11:40:21,383: INFO] -----> Криптобот баланс:
+[2024-01-17 11:40:21,383: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 11:40:24,764: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:23:31,369: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:23:31,370: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:23:31,370: INFO] -----> Криптобот баланс:
+[2024-01-17 12:23:31,370: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:23:34,649: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:30:51,098: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 12:44:04,328: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:44:04,328: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:44:04,329: INFO] -----> Криптобот баланс:
+[2024-01-17 12:44:04,329: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:44:07,656: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:45:48,955: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:45:52,587: INFO] Начало рассылки------------------>>>
+[2024-01-17 12:46:37,452: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:46:37,453: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:46:37,453: INFO] -----> Криптобот баланс:
+[2024-01-17 12:46:37,453: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:46:40,730: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:46:41,096: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:46:42,324: INFO] Начало рассылки------------------>>>
+[2024-01-17 12:50:51,071: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:50:51,072: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:50:51,073: INFO] -----> Криптобот баланс:
+[2024-01-17 12:50:51,074: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:50:54,534: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:55:55,500: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:55:56,915: INFO] Начало рассылки------------------>>>
+[2024-01-17 12:56:06,755: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:56:07,947: INFO] Начало рассылки------------------>>>
+[2024-01-17 12:56:17,997: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:57:31,700: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:57:31,700: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:57:31,701: INFO] -----> Криптобот баланс:
+[2024-01-17 12:57:31,701: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:57:35,036: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:57:48,058: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:57:54,480: INFO] Начало рассылки------------------>>>
+[2024-01-17 12:59:07,658: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 12:59:07,659: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 12:59:07,660: INFO] -----> Криптобот баланс:
+[2024-01-17 12:59:07,660: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 12:59:10,978: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 12:59:11,361: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 12:59:18,213: INFO] Начало рассылки------------------>>>
+[2024-01-17 13:00:23,294: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:00:23,295: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:00:23,295: INFO] -----> Криптобот баланс:
+[2024-01-17 13:00:23,295: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:00:26,563: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:06:44,902: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:06:44,902: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:06:44,903: INFO] -----> Криптобот баланс:
+[2024-01-17 13:06:44,903: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:06:48,234: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:07:01,041: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:07:52,889: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:07:52,890: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:07:52,891: INFO] -----> Криптобот баланс:
+[2024-01-17 13:07:52,891: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:07:56,192: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:07:56,565: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:08:32,292: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:08:32,292: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:08:32,292: INFO] -----> Криптобот баланс:
+[2024-01-17 13:08:32,293: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:08:35,612: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:08:35,978: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:08:43,897: INFO] Начало рассылки------------------>>>
+[2024-01-17 13:11:00,559: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:11:00,560: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:11:00,560: INFO] -----> Криптобот баланс:
+[2024-01-17 13:11:00,560: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:11:03,913: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:11:06,365: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:13:17,489: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:13:17,490: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:13:17,490: INFO] -----> Криптобот баланс:
+[2024-01-17 13:13:17,491: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:13:20,820: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:15:00,069: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:17:53,012: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:17:53,013: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:17:53,013: INFO] -----> Криптобот баланс:
+[2024-01-17 13:17:53,013: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:17:56,348: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 13:17:58,809: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 13:18:04,636: INFO] Начало рассылки------------------>>>
+[2024-01-17 13:22:05,362: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 13:27:36,146: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 13:27:36,146: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 13:27:36,147: INFO] -----> Криптобот баланс:
+[2024-01-17 13:27:36,147: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 13:27:39,451: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:30:08,308: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 14:30:08,309: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 14:30:08,309: INFO] -----> Криптобот баланс:
+[2024-01-17 14:30:08,309: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 14:30:11,631: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:30:13,323: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 14:33:23,579: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 14:33:23,579: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 14:33:23,579: INFO] -----> Криптобот баланс:
+[2024-01-17 14:33:23,580: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 14:33:26,926: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:33:38,100: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 14:35:10,849: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 14:35:10,850: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 14:35:10,850: INFO] -----> Криптобот баланс:
+[2024-01-17 14:35:10,851: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 14:35:14,130: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:35:16,724: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 14:35:19,775: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 14:35:31,490: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 14:38:03,023: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 14:38:03,023: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 14:38:03,023: INFO] -----> Криптобот баланс:
+[2024-01-17 14:38:03,024: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 14:38:06,392: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:38:08,571: INFO] Кастомное callback_query меню ***workers***
+[2024-01-17 14:38:10,418: INFO] Кастомное callback_query меню ***go_main***
+[2024-01-17 14:38:10,418: INFO] -----> Выбрано меню ***go_main*** 
+[2024-01-17 14:38:11,421: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 14:39:07,555: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 14:39:07,555: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 14:39:07,556: INFO] -----> Криптобот баланс:
+[2024-01-17 14:39:07,557: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 14:39:10,892: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 14:40:12,378: INFO] Кастомное callback_query меню ***go_main***
+[2024-01-17 14:40:12,379: INFO] -----> Выбрано меню ***go_main*** 
+[2024-01-17 14:40:14,448: INFO] Кастомное callback_query меню ***fut_posts***
+[2024-01-17 15:11:35,071: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 15:11:35,072: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 15:11:35,072: INFO] -----> Криптобот баланс:
+[2024-01-17 15:11:35,072: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 15:11:38,393: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 15:11:39,524: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:12:11,177: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:12:33,492: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:13:49,560: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:13:56,528: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:15:37,445: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:16:11,749: INFO] -----> Запрошен приветственный текст из БД  
+[2024-01-17 15:16:17,831: INFO] Кнопка client callback_query ***pay_tariff***
+[2024-01-17 15:16:17,831: INFO] Элемент client target_id ***2***
+[2024-01-17 15:16:17,832: INFO] Элемент client user_id ***5719013936***
+[2024-01-17 15:16:17,833: INFO] -----> Действие ***pay_tariff*** 
+[2024-01-17 15:16:18,116: INFO] -----> Запрос чека прошел удачно response [<Response [200]>]
+[2024-01-17 15:16:18,118: INFO] Получен чек от Cryptobot invoice_to_send [invoice_id=5435927 status='active' asset='USDT' amount=123 pay_url='https://t.me/CryptoBot?start=IVwgY7mR9LtV' description='Оплатить asdfasdf' allow_comments=True allow_anonymous=True]
+[2024-01-17 15:16:18,130: INFO] -----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж 
+[2024-01-17 15:16:18,131: INFO] -----> Сборка счета по параметрам currency, amount, header, description
+[2024-01-17 15:16:18,131: INFO] -----> currency [USDT] 
+[2024-01-17 15:16:18,132: INFO] -----> amount [123] 
+[2024-01-17 15:16:18,132: INFO] -----> header [THE CLAN] 
+[2024-01-17 15:16:18,133: INFO] -----> description [Оплатить asdfasdf] 
+[2024-01-17 15:16:18,133: INFO] cтрока =b'USDT123THE CLAN\xd0\x9e\xd0\xbf\xd0\xbb\xd0\xb0\xd1\x82\xd0\xb8\xd1\x82\xd1\x8c asdfasdf'=
+[2024-01-17 15:16:18,133: INFO] Подпись строки =07095df69c116574972343bd484ea1d9f4ce7c6314898815da6d73ef59ef5e1e=
+[2024-01-17 15:16:18,134: INFO] -----> Данные отправляемые при запросе счета в json, json_data: 
+[2024-01-17 15:16:18,135: INFO] {"payment_currencies": ["USDT"], "currency": "USDT", "amount": 123, "description": "\u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c asdfasdf", "header": "THE CLAN", "payer": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c id 5719013936", "is_convert_payments": false, "data": {"description": "\u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c asdfasdf"}, "sign": "07095df69c116574972343bd484ea1d9f4ce7c6314898815da6d73ef59ef5e1e"}
+[2024-01-17 15:16:30,654: ERROR] Ошибка в pays_banker.create_invoice [Ошибка [BlockchainServiceError] BitBanker]
+[2024-01-17 15:17:09,285: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 15:17:09,286: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 15:17:09,286: INFO] -----> Криптобот баланс:
+[2024-01-17 15:17:09,287: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 15:17:12,607: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 15:17:42,894: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:17:46,211: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:17:54,708: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:17:55,878: INFO] Начало рассылки------------------>>>
+[2024-01-17 15:19:33,122: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:19:34,455: INFO] Начало рассылки------------------>>>
+[2024-01-17 15:19:52,436: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 15:19:52,437: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 15:19:52,437: INFO] -----> Криптобот баланс:
+[2024-01-17 15:19:52,438: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 15:19:55,755: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 15:20:08,898: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:20:10,467: INFO] Начало рассылки------------------>>>
+[2024-01-17 15:20:46,326: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 15:20:46,327: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 15:20:46,327: INFO] -----> Криптобот баланс:
+[2024-01-17 15:20:46,328: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 15:20:49,644: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 15:21:09,224: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:21:11,636: INFO] Начало рассылки------------------>>>
+[2024-01-17 15:25:34,244: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 15:25:34,245: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 15:25:34,245: INFO] -----> Криптобот баланс:
+[2024-01-17 15:25:34,245: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 15:25:37,539: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 
+[2024-01-17 15:25:41,873: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:25:49,088: INFO] Принимаем текст для быстрой отправки
+[2024-01-17 15:25:50,739: INFO] Начало рассылки------------------>>>

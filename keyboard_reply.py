@@ -1,8 +1,7 @@
 from telebot import types
 
+
 # ===================== REDACTOR
-
-
 def kb_main_redactor():
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     btn3 = types.InlineKeyboardButton(
@@ -43,6 +42,14 @@ def kb_admin_livepost_request():
     button3 = types.InlineKeyboardButton(
         text="Отмена", callback_data="live_cancel")
     keyboard.add(button1, button2)
+    keyboard.add(button3)
+    return keyboard
+
+
+def kb_live_cancel():
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    button3 = types.InlineKeyboardButton(
+        text="Отмена", callback_data="live_cancel")
     keyboard.add(button3)
     return keyboard
 
