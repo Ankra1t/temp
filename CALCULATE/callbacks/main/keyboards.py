@@ -31,34 +31,24 @@ def kb_main(user_id: int, is_access=True):
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'forex': 'Форекс',
-            'crypto': 'Криптовалюта',
-            'paper': 'Акции',
-            'future': 'Фьючерсы',
+            'calc': 'Новый расчёт',
             'settings': 'Настройки',
         },
         'en': {
-            'forex': 'Forex',
-            'crypto': 'Cryptocurrency',
-            'paper': 'Actions',
-            'future': 'Futures',
+            'calc': 'New calculation',
             'settings': 'Settings',
         }
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton(texts[lang]['forex'], 'forex')
-    btn2 = getButton(texts[lang]['crypto'], 'crypto')
-    btn3 = getButton(texts[lang]['paper'], 'paper')
-    btn4 = getButton(texts[lang]['future'], 'future')
-    btn5 = getButton(texts[lang]['settings'], 'settings')
+    btn_calc = getButton(texts[lang]['calc'], 'calc')
+    btn_settings = getButton(texts[lang]['settings'], 'settings')
 
     if is_access:
-        keyboard.add(btn1, btn2)
-        keyboard.add(btn3, btn4)
+        keyboard.add(btn_calc)
 
-    keyboard.add(btn5)
+    keyboard.add(btn_settings)
     return keyboard
 
 

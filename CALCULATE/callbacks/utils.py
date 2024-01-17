@@ -1,4 +1,3 @@
-from operator import is_
 from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message

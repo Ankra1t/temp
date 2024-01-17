@@ -8,8 +8,7 @@ from .admin.posts import registration as _reg_admin_posts
 
 from .user.account import registration as _reg_user_account
 
-from .calculator.calculate import registration as _reg_calculate
-from .calculator.settings import registration as _reg_settings
+from CALCULATE.handlers import handlers_registration as _reg_calculator
 
 
 def handlers_registration(bot: _TB):
@@ -21,5 +20,4 @@ def handlers_registration(bot: _TB):
 
     _reg_user_account(bot)
 
-    _reg_calculate(bot)
-    _reg_settings(bot)
+    _reg_calculator(bot)

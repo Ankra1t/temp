@@ -47,7 +47,6 @@ bot = TeleBot(
     skip_pending=True,
     use_class_middlewares=True
 )
-print(bot.get_me())
 
 pay_guard = GuardPaymentAccess(db)
 pays = Payments(db, token=cryptopay_token, network=Networks.MAIN_NET)

@@ -1,3 +1,4 @@
+from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
@@ -7,11 +8,11 @@ from db import db, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_settings_change_base, msg_settings_set_tp_show
+    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
-from .keyboards import kb_change_base, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
+from .keyboards import kb_change_base, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
 from ..pages import send_main, send_settings
 
 
@@ -100,8 +101,21 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_change_tp_show(user_id, tp_show)
             )
 
-    if type == 'market':
-        pass
+    if 'market' in type:
+        type_list = type.split('_')
+
+        if len(type_list) == 1:
+            bot.edit_message_text(
+                msg_settings_change_market(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_change_market(user_id)
+            )
+        else:
+            market: Any = type_list[1]
+
+            db.set_calculator_user_market(user_id, market)
+
+            send_settings(bot, call.message, user_id)
 
     if 'welcome_confirm' in type:
         if 'no' in type:

@@ -4,13 +4,14 @@ from telebot.types import Message
 from db import db
 from common.utils import digit_accept, set_state_data, text_accept
 
+from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
+from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
-    msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_digit_error, msg_enter_stop_loss, msg_paire_error, msg_paire_not_found, msg_percent_error,
+    msg_calculate, msg_calculate_forex_result, msg_calculate_result,
+    msg_digit_error, msg_enter_stop_loss, msg_paire_error,
+    msg_paire_not_found, msg_percent_error,
     msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
 )
-
-from CALCULATE.callbacks import kb_cancel, choose_calculate_step, choose_first_calculate_step, send_main
-from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 
 
 def handle_future_ticker(message: Message, bot: TeleBot):
@@ -179,9 +180,10 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if open_price == stop_loss:
         bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
 
-    take_profit_3 = open_price + (open_price - stop_loss) * 3
-    take_profit_4 = open_price + (open_price - stop_loss) * 4
-    take_profit_5 = open_price + (open_price - stop_loss) * 5
+    diff = open_price - stop_loss
+    take_profit_3 = open_price + diff * 3
+    take_profit_4 = open_price + diff * 4
+    take_profit_5 = open_price + diff * 5
 
     risk_value = deposit * risk_percent * 0.01
 
@@ -189,7 +191,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if ticker is not None:
         fut = db.get_future(ticker)
         rate = fut[3] if fut is not None else 1
-    count_bet = round(risk_value / (abs(open_price - stop_loss) * rate), 2)
+    count_bet = round(risk_value / (abs(diff) * rate), 2)
 
     summary_open_value = round(count_bet * open_price, 2)
 
@@ -210,7 +212,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     db.minus_calculator_uses_count(user_id)
     bot.send_message(chat_id, mes)
     bot.delete_state(user_id, chat_id)
-    choose_first_calculate_step(bot, user_id, message, calc_type)
+    send_main(message, bot, user_id, True)
+
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
@@ -233,11 +236,12 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         val_dep = data.get('val_dep')
         paire = data.get('paire')
 
-    take_profit_2 = open_price + (open_price - stop_loss) * 2
-    take_profit_3 = open_price + (open_price - stop_loss) * 3
-    take_profit_4 = open_price + (open_price - stop_loss) * 4
+    diff = open_price - stop_loss
+    take_profit_2 = open_price + diff * 2
+    take_profit_3 = open_price + diff * 3
+    take_profit_4 = open_price + diff * 4
 
-    pips = float(abs(stop_loss - open_price) * 10000)
+    pips = float(abs(diff) * 10000)
 
     if val_dep == 'RUB':
         price_usd_rub = db.get_forex_rub_price()[0]
@@ -273,7 +277,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     db.minus_calculator_uses_count(user_id)
     bot.send_message(chat_id, message_res)
     bot.delete_state(user_id, chat_id)
-    choose_first_calculate_step(bot, user_id, message, calc_type)
+    send_main(message, bot, user_id, True)
 
 
 # ? Выравнивание результатов

@@ -1,6 +1,8 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from db import db
+
 from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main
@@ -14,9 +16,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-    calc_types = ('crypto', 'future', 'paper', 'forex')
-    if type in calc_types:
-        choose_first_calculate_step(bot, user_id, call.message, type, True)
+    if type == 'calc':
+        market = db.get_calculator_user_market(user_id) or 'crypto'
+        choose_first_calculate_step(bot, user_id, call.message, market, True)
 
     if type == 'cancel':
         send_main(call.message, bot, user_id)

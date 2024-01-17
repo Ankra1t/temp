@@ -38,5 +38,3 @@ bot_calc.add_custom_filter(StateFilter(bot_calc))
 
 if _ENV == 'calc':
     bot_calc.infinity_polling()
-
-print(bot_calc.get_me())

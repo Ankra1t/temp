@@ -262,3 +262,8 @@
 [2024-01-17 15:25:41,873: INFO] Принимаем текст для быстрой отправки
 [2024-01-17 15:25:49,088: INFO] Принимаем текст для быстрой отправки
 [2024-01-17 15:25:50,739: INFO] Начало рассылки------------------>>>
+[2024-01-17 19:47:17,671: INFO] -----> Криптобот удачно запустился profile:
+[2024-01-17 19:47:17,671: INFO] app_id=127028 name='TRADERS PAY' payment_processing_bot_username='CryptoBot'
+[2024-01-17 19:47:17,672: INFO] -----> Криптобот баланс:
+[2024-01-17 19:47:17,672: INFO] [Balance(currency_code='USDT', available=0.097), Balance(currency_code='TON', available=0), Balance(currency_code='BTC', available=0), Balance(currency_code='LTC', available=0), Balance(currency_code='ETH', available=0), Balance(currency_code='BNB', available=0), Balance(currency_code='TRX', available=0), Balance(currency_code='USDC', available=0)]
+[2024-01-17 19:47:21,075: INFO] -----> Запустили поток check_unfinit_tasks если он еще не запущен 

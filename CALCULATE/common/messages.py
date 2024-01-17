@@ -6,6 +6,21 @@ from db import db
 
 BULLET = '✦'
 
+market_translates = {
+    'ru': {
+        'crypto': 'Криптовалюта',
+        'paper': 'Акции',
+        'future': 'Фьючерсы',
+        'forex': 'Форекс'
+    },
+    'en': {
+        'crypto': 'Cryptocurrency',
+        'paper': 'Stocks',
+        'future': 'Futures',
+        'forex': 'Forex'
+    }
+}
+
 
 # Основные страницы
 def msg_main(user_id: int, uses_count: int):
@@ -14,16 +29,14 @@ def msg_main(user_id: int, uses_count: int):
     texts = {
         'ru': {
             'name': 'Меню',
-            '1': 'Выберите рынок',
-            '2': 'Укажите цифры',
-            '3': 'Получите точные расчеты',
+            '1': 'Настройте калькулятор',
+            '2': 'Получите точные расчеты',
             'uses': 'Бесплатных расчетов',
         },
         'en': {
             'name': 'Menu',
             '1': 'Choose the market',
-            '2': 'Indicate the numbers',
-            '3': 'Get accurate calculations',
+            '2': 'Get accurate calculations',
             'uses': 'Free calculations',
         }
     }
@@ -33,7 +46,6 @@ def msg_main(user_id: int, uses_count: int):
         '',
         f'1. <b>{texts[lang]["1"]}</b>',
         f'2. <b>{texts[lang]["2"]}</b>',
-        f'3. <b>{texts[lang]["3"]}</b>',
         '',
         f'{texts[lang]["uses"]}: <b>{uses_count}</b>'
     ))
@@ -61,6 +73,7 @@ def msg_settings(user_id: int):
     lang = get_lang(user_id)
     base = db.get_user_base(user_id)
     tp_show: str = db.get_calculator_tp_show(user_id) or '345'
+    market: str = db.get_calculator_user_market(user_id) or 'crypto'
 
     texts = {
         'ru': {
@@ -68,20 +81,22 @@ def msg_settings(user_id: int):
             'dep': 'Базовый депозит',
             'risk': 'Базовый процент риска',
             'currency': 'Базовая валюта',
-            'tp_show': 'Вывод расчета прибыли'
+            'tp_show': 'Вывод расчета прибыли',
+            'market': 'Рынок',
         },
         'en': {
             'name': 'Settings',
             'dep': 'Default deposit',
             'risk': 'Default risk percent',
             'currency': 'Default currency',
-            'tp_show': 'Display calculation of profit'
+            'tp_show': 'Display calculation of profit',
+            'market': 'Market',
         },
     }
 
-    result = ''
+    tp_result = ''
     for el in tp_show:
-        result += f'x{el} '
+        tp_result += f'x{el} '
 
     return '\n'.join((
         f'⚙️ <b><u>{texts[lang]["name"]}</u></b>',
@@ -90,7 +105,8 @@ def msg_settings(user_id: int):
         f'{BULLET} {texts[lang]["risk"]}: <b>{float_to_print(base["base_risk_percent"])}</b>',
         f'{BULLET} {texts[lang]["currency"]}: <b>{base["base_currency"] or "-"}</b>',
         '',
-        f'{BULLET} {texts[lang]["tp_show"]}: <b>{result}</b>'
+        f'{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>',
+        f'{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>'
     ))
 
 
@@ -105,6 +121,23 @@ def msg_settings_change_base(user_id: int):
         'en': {
             'name': 'Settings',
             'subname': 'Change base',
+        },
+    }
+
+    return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
+
+
+def msg_settings_change_market(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'subname': 'Изменение рынка',
+        },
+        'en': {
+            'name': 'Settings',
+            'subname': 'Change market',
         },
     }
 
@@ -317,21 +350,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
         risk_percent = data.get('risk_percent')
         open_price = data.get('open_price')
 
-    name = {
-        'ru': {
-            'crypto': 'Криптовалюта',
-            'paper': 'Акции',
-            'future': 'Фьючерсы',
-            'forex': 'Форекс'
-        },
-        'en': {
-            'crypto': 'Cryptocurrency',
-            'paper': 'Stocks',
-            'future': 'Futures',
-            'forex': 'Forex'
-        }
-    }
-
     type_list = ['ticker', 'dep', 'risk', 'open']
     vars_dict = {
         'ticker': ticker,
@@ -354,7 +372,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
         }
     }
 
-    text = f'💵 <b><u>{name[lang][type] or "Forex"}</u></b>\n'
+    text = f'💵 <b><u>{market_translates[lang][type] or "Forex"}</u></b>\n'
     text += '\n'
 
     for el in type_list:
