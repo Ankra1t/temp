@@ -8,6 +8,7 @@ from MAIN.callbacks import send_admin_post
 from MAIN.states import AdminPostsState
 from messages.workers import admin_fut_posts_msg
 from common.utils import set_state_data
+from models import Post
 
 from .keyboards import kb_post_kinds, kb_posts, kb_posts_back
 from .filter import admin_posts_factory, AdminPostsCallbackFilter
@@ -97,26 +98,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         with bot.retrieve_data(user_id, chat_id) as data:
             kind = data.get('kind')
-            open_price = data.get('open_price')
-            stop_loss = data.get('stop_loss')
-            take_profit = data.get('take_profit')
+            post_data: Post = data.get('post')
 
-            time = data.get('time')
-            date = data.get('date')
-            post = data.get('post')
-            media_id = data.get('media_id') or ''
-            mes_type = data.get('mes_type')
-
-        db.add_fut_post(
-            media_id + f'({mes_type})', post, type, date, time,
-            kind, open_price, stop_loss, take_profit
-        )
+        db.add_fut_post(post_data, kind)
         bot.delete_state(user_id, chat_id)
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
         bot.send_message(
             chat_id, admin_fut_posts_msg(),
-            parse_mode='HTML', reply_markup=kb_posts()
+            reply_markup=kb_posts()
         )
 
     if 'confirm' in type:

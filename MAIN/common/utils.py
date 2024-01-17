@@ -3,6 +3,7 @@ from telebot.types import Message, InlineKeyboardButton
 
 from messages.workers import generate_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
+from models import Post
 
 
 def get_post_from_message(bot: TeleBot, message: Message):
@@ -16,17 +17,17 @@ def get_post_from_message(bot: TeleBot, message: Message):
         return
 
     media_id: str | None = None
-    
+
     if (message.content_type == 'photo') and (message.photo is not None):
         media_id = message.photo[-1].file_id
     elif (message.content_type == 'video') and (message.video is not None):
         media_id = message.video.file_id
 
-    return {
-        'post': generate_normal_text(message),
-        'media_id': media_id,
-        'mes_type': mes_type
-    }
+    return Post(
+        content=generate_normal_text(message),
+        media=media_id,
+        mes_type=mes_type
+    )
 
 
 def get_calculator_btn_link():

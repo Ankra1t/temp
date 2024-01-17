@@ -64,6 +64,7 @@ class BlockTGBotSender(object):
         if calc_test:
             users = db.get_all_users()
             users = list(map(lambda x: int(x[9]), users))
+            users = 156045434,
         else:
             users = self.users
 
@@ -114,7 +115,7 @@ class BlockTGBotSender(object):
                 if summary_open_value > dep:
                     credit = round(summary_open_value // dep + 1)
 
-                calc_text = '<b><u>Новый сигнал</u></b>\n'
+                calc_text = '<b><u>Расчет по сигналу</u></b>\n'
                 calc_text += msg_calculate_result(
                     id, dep, risk,
                     self.open_price,
@@ -126,6 +127,7 @@ class BlockTGBotSender(object):
                 )
 
         content = signal_text + '\n' + self.text
+        from CALCULATE.initialize import bot_calc as bot
         if '(photo)' in self.media:
             out_file = self.media.replace('(photo)', '')
             bot.send_photo(

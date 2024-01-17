@@ -39,7 +39,7 @@ from messages.workers import (admin_fut_posts_msg, admin_users_msg,
 from BlockTGBotSender import BlockTGBotSender
 from AuthMiddleWare import AuthMiddleWare
 
-from models import Update, User, UpdateBBanker
+from models import Post, Update, User, UpdateBBanker
 
 
 # TODO - переписать db
@@ -165,18 +165,18 @@ def get_admin_livepost(message: types.Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    post_data = get_post_from_message(bot, message)
+    post = get_post_from_message(bot, message)
 
-    if post_data is None:
+    if post is None:
         bot.send_message(
             chat_id, 'Ошибка, попробуйте снова:',
-            reply_markup=kb_posts_back()
+            reply_markup=kb_live_cancel()
         )
         return
 
-    post_data['kind'] = 'live'
+    state_data = {'post': post, 'kind': 'live'}
     bot.set_state(user_id, AdminPostsState.live, chat_id)
-    set_state_data(bot, user_id, chat_id, post_data)
+    set_state_data(bot, user_id, chat_id, state_data)
 
     bot.send_message(
         chat_id, 'Выберите действие:',
@@ -289,7 +289,7 @@ bot.add_custom_filter(ClientActionsCallbackFilter())
 
 
 bot.enable_save_next_step_handlers(delay=2)
-bot.load_next_step_handlers() # (default "./.handlers-saves/step.save")
+bot.load_next_step_handlers()  # (default "./.handlers-saves/step.save")
 
 
 # =============================== //ANCHOR - Обработка INLINE
@@ -335,25 +335,21 @@ def callback_inline(call: types.CallbackQuery):
         bot.edit_message_text('Отправка...', chat_id, mes_id)
         with bot.retrieve_data(user_id, chat_id) as data:
             kind = data.get('kind') or ''
-            post = data.get('post')
-            media_id = data.get('media_id')
-            mes_type = data.get('mes_type')
+            post: Post = data.get('post')
 
         tg_sender = BlockTGBotSender(
-            [], post, f'{media_id or ""}({mes_type})', kind
+            [], post.content, f'{post.media or ""}({post.mes_type})', kind
         )
         tg_sender.send()
 
         bot.edit_message_text('Успешно отправлен!', chat_id, mes_id)
         bot.delete_state(user_id, chat_id)
-        send_start_by_user(bot, call.message, user_id, chat_id, user_role)
-
 
     if call.data == 'live_signal':
         bot.edit_message_text(
             'Введите название сигнала:',
             chat_id, mes_id,
-            reply_markup=kb_posts_back()
+            reply_markup=kb_live_cancel()
         )
         bot.set_state(user_id, AdminPostsState.name, chat_id)
 
