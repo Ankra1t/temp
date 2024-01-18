@@ -85,7 +85,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if 'tp_show' in type:
         tp_show = db.get_calculator_tp_show(user_id) or '345'
-        is_changed = False
+        is_changed = True
         arr_type = type.split('_')
 
         num, action = arr_type[-2], arr_type[-1]
@@ -93,13 +93,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if action == 'off':
             if len(tp_show) != 1:
                 tp_show = tp_show.replace(num, '')
-                is_changed = True
         elif action == 'on':
             tp_show = list(map(lambda x: int(x), tp_show))
             tp_show.append(int(num))
             tp_show.sort()
             tp_show = ''.join(list(map(lambda x: str(x), tp_show)))
-            is_changed = True
+        else:
+            is_changed = False
 
         if is_changed or len(arr_type) == 2:
             db.set_calculator_tp_show(user_id, tp_show)
