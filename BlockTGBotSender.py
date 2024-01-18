@@ -95,7 +95,7 @@ class BlockTGBotSender(object):
             risk = user_base_values['base_risk_percent']
 
             if dep is None or risk is None:
-                calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках'
+                calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
             else:
                 diff = self.open_price - self.stop_loss
                 tp_1 = self.open_price + diff * 3

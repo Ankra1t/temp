@@ -1,3 +1,4 @@
+from locale import currency
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
@@ -8,11 +9,11 @@ from db import db, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show
+    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show, msg_success_edit
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
-from .keyboards import kb_change_base, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
+from .keyboards import kb_change_base, kb_change_currency, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
 from ..pages import send_main, send_settings
 
 
@@ -39,13 +40,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, SettingsState.risk_percent, chat_id)
 
-    if type == 'set_currency':
-        bot.edit_message_text(
-            msg_enter_currency(user_id),
-            chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id)
-        )
-        bot.set_state(user_id, SettingsState.currency, chat_id)
+    if 'set_currency' in type:
+        if type == 'set_currency':
+            bot.edit_message_text(
+                msg_enter_currency(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_change_currency(user_id)
+            )
+            bot.set_state(user_id, SettingsState.currency, chat_id)
+        else:
+            _, currency = type.split('+')
+            db.set_user_currency(user_id, currency)
+            bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
+            send_settings(bot, call.message, user_id, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False

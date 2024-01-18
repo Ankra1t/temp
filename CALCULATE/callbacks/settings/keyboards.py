@@ -79,6 +79,31 @@ def kb_change_base(user_id: int):
     return keyboard
 
 
+def kb_change_currency(user_id: int):
+    lang = get_lang(user_id)
+
+    back = {
+        'ru': 'Назад',
+        'en': 'Back',
+    }
+
+    row_width = 3
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
+
+    currency_list = ['USD', 'USDT', 'EUR', 'RUB', 'CNY', 'JPY']
+    buttons: list[InlineKeyboardButton] = []
+    for i, el in enumerate(currency_list):
+        btn = getButton(el, f'set_currency+{el}')
+        buttons.append(btn)
+
+        if len(buttons) == row_width or (i + 1 == len(currency_list) and len(buttons) != 0):
+            keyboard.add(*buttons)
+
+    btn_back = getButton(back[lang], 'go_settings')
+    keyboard.add(btn_back)
+    return keyboard
+
+
 def kb_change_tp_show(user_id: int, tp_show: str):
     lang = get_lang(user_id)
 
@@ -132,7 +157,7 @@ def kb_change_market(user_id: int):
         btn = getButton(market_translates[lang][el], f'market_{el}')
         buttons.append(btn)
 
-        if len(buttons) == 2 or (i == len(markets_list) and len(buttons) != 0):
+        if len(buttons) == row_width or (i + 1 == len(markets_list) and len(buttons) != 0):
             keyboard.add(*buttons)
             buttons = []
 

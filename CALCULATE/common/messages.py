@@ -566,8 +566,8 @@ def msg_enter_currency(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валюту',
-        'en': 'Enter the currency'
+        'ru': 'Введите валюту или выберите из списка',
+        'en': 'Enter the currency or select from the list'
     }
 
     return f'✍ {texts[lang]}:'
