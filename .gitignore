@@ -10,3 +10,5 @@ config_global.py
 
 pyrightconfig.json
 4p_bot.db
+
+/logs/*.*
