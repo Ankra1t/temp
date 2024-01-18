@@ -1,5 +1,5 @@
 .idea
-.handler-saves
+/.handler-saves
 
 __pycache__
 ngrok.exe
