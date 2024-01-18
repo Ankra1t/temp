@@ -57,7 +57,8 @@ class TariffManager(object):
 
     def admin_discount_list_active(self, message: types.Message):
         list = db_new.get_prices(1)
-
+        print(f'list ')
+        print(list)
         if len(list) == 0:
             self.bot.send_message(chat_id=message.chat.id,
                                   parse_mode="HTML",
