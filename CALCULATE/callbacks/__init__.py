@@ -10,7 +10,11 @@ from .main.handler import registration as _reg_main
 from .main.keyboards import kb_main, kb_cancel, cancel_btn, kb_forex_val
 
 from .settings.handler import registration as _reg_settings
-from .settings.keyboards import kb_settings, kb_base_cancel, kb_settings_confirm, kb_change_base, kb_choose_lang
+from .settings.keyboards import (
+    kb_settings, kb_base_cancel, kb_settings_confirm,
+    kb_change_base, kb_choose_lang, kb_change_currency,
+    kb_change_market, kb_change_tp_show
+)
 
 
 def callbacks_registration(bot: _TB):

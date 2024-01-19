@@ -125,6 +125,7 @@ class PostDetails(BaseModel):
     name: str
     open_price: float
     stop_loss: float
+    ticker: str
 
 
 class Post(BaseModel):

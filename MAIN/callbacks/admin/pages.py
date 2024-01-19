@@ -4,7 +4,8 @@ from telebot import TeleBot, REPLY_MARKUP_TYPES
 def send_admin_post(
     bot: TeleBot, chat_id: int, id,
     media, text, direct, date, time, kind,
-    open_price, stop_loss, name
+    open_price, stop_loss, name,
+    ticker = None
 ):
     signal_txt = '\n'.join((
         f'Цена входа: <b>{open_price}</b>' if open_price is not None else '',
@@ -13,6 +14,7 @@ def send_admin_post(
 
     result = '\n'.join((
         f'<b>{name}</b>' if name is not None else '',
+        f'👉 {ticker}' if ticker is not None else '',
         '',
         signal_txt,
         '',
