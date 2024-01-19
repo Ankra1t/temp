@@ -18,6 +18,8 @@ def handle_name(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    current_state = bot.get_state(user_id, chat_id)
+
     if name is None:
         bot.send_message(
             chat_id,
@@ -25,11 +27,28 @@ def handle_name(message: Message, bot: TeleBot):
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    set_state_data(bot, user_id, chat_id, {'name': name})
-    bot.set_state(user_id, AdminTariffState.duration, chat_id)
-    bot.send_message(
-        chat_id, 'Введите кол-во дней действия тарифа',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+    if current_state == 'AdminTariffState:edit_field_name':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
+            # tariff = db_new.get_price_by_id(data.get('tariff_id'))
+
+        db_new.update_price_field('name', name, tariff_id)
+        tariff = db_new.get_price_by_id(tariff_id)
+
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+        bot.delete_state(user_id, chat_id)
+
+    if current_state == 'AdminTariffState:name':
+        set_state_data(bot, user_id, chat_id, {'name': name})
+        bot.set_state(user_id, AdminTariffState.duration, chat_id)
+        bot.send_message(
+            chat_id, 'Введите кол-во дней действия тарифа',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
 
 def handle_duration(message: Message, bot: TeleBot):
@@ -38,17 +57,35 @@ def handle_duration(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    current_state = bot.get_state(user_id, chat_id)
+
     if days is None or days == 0:
         bot.send_message(
             chat_id, 'Введите количество дней более 0',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    set_state_data(bot, user_id, chat_id, {'duration': days})
-    bot.set_state(user_id, AdminTariffState.price, chat_id)
-    bot.send_message(
-        chat_id, 'Стоимость нового тарифа в USDT',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+    if current_state == 'AdminTariffState:edit_field_duration':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
+
+        db_new.update_price_field('duration_days', days, tariff_id)
+        tariff = db_new.get_price_by_id(tariff_id)
+
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+        bot.delete_state(user_id, chat_id)
+
+    if current_state == 'AdminTariffState:duration':
+        set_state_data(bot, user_id, chat_id, {'duration': days})
+        bot.set_state(user_id, AdminTariffState.price, chat_id)
+        bot.send_message(
+            chat_id, 'Стоимость нового тарифа в USDT',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
 
 def handle_price(message: Message, bot: TeleBot):
@@ -57,22 +94,43 @@ def handle_price(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    current_state = bot.get_state(user_id, chat_id)
+
     if price is None or price == 0:
         bot.send_message(
             chat_id, 'Введите число более 0',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    set_state_data(bot, user_id, chat_id, {'price': price})
-    bot.set_state(user_id, AdminTariffState.image, chat_id)
-    bot.send_message(
-        chat_id, 'Постер (картинку) для нового тарифа',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+    if current_state == 'AdminTariffState:edit_field_price':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
+
+        db_new.update_price_field('price', price, tariff_id)
+        tariff = db_new.get_price_by_id(tariff_id)
+
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+        bot.delete_state(user_id, chat_id)
+
+    if current_state == 'AdminTariffState:price':
+
+        set_state_data(bot, user_id, chat_id, {'price': price})
+        bot.set_state(user_id, AdminTariffState.image, chat_id)
+        bot.send_message(
+            chat_id, 'Постер (картинку) для нового тарифа',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
 
 def handle_image(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
+
+    current_state = bot.get_state(user_id, chat_id)
 
     if message.content_type != 'photo' or message.photo is None:
         bot.send_message(
@@ -80,40 +138,76 @@ def handle_image(message: Message, bot: TeleBot):
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    set_state_data(bot, user_id, chat_id, {'image': message.photo[-1].file_id})
-    bot.set_state(user_id, AdminTariffState.description, chat_id)
-    bot.send_message(
-        chat_id, 'Отправьте описание нового тарифа в виде текста',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+    if current_state == 'AdminTariffState:edit_field_image':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
+
+        db_new.update_price_field('img', message.photo[-1].file_id, tariff_id)
+        tariff = db_new.get_price_by_id(tariff_id)
+
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML",
+                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+        bot.delete_state(user_id, chat_id)
+
+    if current_state == 'AdminTariffState:image':
+
+        set_state_data(bot, user_id, chat_id, {'image': message.photo[-1].file_id})
+        bot.set_state(user_id, AdminTariffState.description, chat_id)
+        bot.send_message(
+            chat_id, 'Отправьте описание нового тарифа в виде текста',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
 
 def handle_description(message: Message, bot: TeleBot):
+    description = text_accept(message)
+
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    description = text_accept(message)
+    current_state = bot.get_state(user_id, chat_id)
+
     if description is None:
         bot.send_message(
             chat_id, 'Неправильно задан текст',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        name = data.get('name')
-        duration = data.get('duration')
-        price = data.get('price')
-        image = data.get('image')
+    if current_state == 'AdminTariffState:edit_field_description':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
 
-    tariff = Price(name, duration, price, 'USDT', None, image, description)
+        db_new.update_price_field('description', description, tariff_id)
+        tariff = db_new.get_price_by_id(tariff_id)
 
-    db_new.add_price(tariff)
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
-    desc_template = tariff_manager.get_template_tariff_show(tariff)
-    bot.send_photo(chat_id, tariff.img, desc_template, "HTML")
+    if current_state == 'AdminTariffState:description':
 
-    bot.send_message(
-        chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT создан',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+        with bot.retrieve_data(user_id, chat_id) as data:
+            name = data.get('name')
+            duration = data.get('duration')
+            price = data.get('price')
+            image = data.get('image')
+
+        tariff = Price(name, duration, price, 'USDT', None, image, description)
+
+        db_new.add_price(tariff)
+
+        desc_template = tariff_manager.get_template_tariff_show(tariff)
+        bot.send_photo(chat_id, tariff.img, desc_template, "HTML")
+
+        bot.send_message(
+            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT создан',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
     bot.delete_state(user_id, chat_id)
 
@@ -184,3 +278,9 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_discount_percent, state=AdminTariffState.discount_percent)
     reg_mes(handle_discount_fin_date, state=AdminTariffState.discount_fin_date)
+
+    reg_mes(handle_name, state=AdminTariffState.edit_field_name)
+    reg_mes(handle_duration, state=AdminTariffState.edit_field_duration)
+    reg_mes(handle_description, state=AdminTariffState.edit_field_description)
+    reg_mes(handle_price, state=AdminTariffState.edit_field_price)
+    reg_mes(handle_image, state=AdminTariffState.edit_field_image)

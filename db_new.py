@@ -99,6 +99,21 @@ class Database:
             self.connection.rollback()
             return False
 
+    def update_price_field(self, field, value, price_id: int):
+        """Обновить цену"""
+        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        query = f"UPDATE prices set {field} = %s, updated_at = %s WHERE id = %s"
+        params = (value, datetime_now, price_id, )
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price]: {e}')
+            self.connection.rollback()
+            return False
+
     def add_price(self, data: Price):
         """Добавление цены"""
         datetime_now = datetime.now()
