@@ -8,11 +8,11 @@ from db import db, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show
+    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show, msg_success_edit
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
-from .keyboards import kb_change_base, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
+from .keyboards import kb_change_base, kb_change_currency, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
 from ..pages import send_main, send_settings
 
 
@@ -39,13 +39,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, SettingsState.risk_percent, chat_id)
 
-    if type == 'set_currency':
-        bot.edit_message_text(
-            msg_enter_currency(user_id),
-            chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id)
-        )
-        bot.set_state(user_id, SettingsState.currency, chat_id)
+    if 'set_currency' in type:
+        if type == 'set_currency':
+            bot.edit_message_text(
+                msg_enter_currency(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_change_currency(user_id)
+            )
+            bot.set_state(user_id, SettingsState.currency, chat_id)
+        else:
+            _, currency = type.split('+')
+            db.set_user_currency(user_id, currency)
+            bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
+            send_settings(bot, call.message, user_id, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False
@@ -78,7 +84,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if 'tp_show' in type:
         tp_show = db.get_calculator_tp_show(user_id) or '345'
-        is_changed = False
+        is_changed = True
         arr_type = type.split('_')
 
         num, action = arr_type[-2], arr_type[-1]
@@ -86,13 +92,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if action == 'off':
             if len(tp_show) != 1:
                 tp_show = tp_show.replace(num, '')
-                is_changed = True
         elif action == 'on':
             tp_show = list(map(lambda x: int(x), tp_show))
             tp_show.append(int(num))
             tp_show.sort()
             tp_show = ''.join(list(map(lambda x: str(x), tp_show)))
-            is_changed = True
+        else:
+            is_changed = False
 
         if is_changed or len(arr_type) == 2:
             db.set_calculator_tp_show(user_id, tp_show)
