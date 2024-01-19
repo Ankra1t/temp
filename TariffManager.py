@@ -64,6 +64,7 @@ class TariffManager(object):
 
     def admin_discount_list(self, message: types.Message, type_discount = 'active'):
         list = db_new.get_prices(1)
+        count = 0
         if len(list) == 0:
             self.bot.send_message(chat_id=message.chat.id,
                                   parse_mode="HTML",
@@ -74,6 +75,7 @@ class TariffManager(object):
 
             # Сортируем действующие скидки
             if type_discount == 'active' and self.is_active_discount(tariff):
+                count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
                 self.bot.send_message(chat_id=message.chat.id,
                                       parse_mode="HTML",
@@ -82,11 +84,19 @@ class TariffManager(object):
 
             # Сортируем прошедшие скидки
             if type_discount == 'inactive' and self.is_inactive_discount(tariff):
+                count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
                 self.bot.send_message(chat_id=message.chat.id,
                                       parse_mode="HTML",
                                       text=desc_template,
                                       )
+        if not count:
+            empty_message = 'Активных' if type_discount == 'active' else 'Прошедших'
+            self.bot.send_message(chat_id=message.chat.id,
+                                  parse_mode="HTML",
+                                  text=f'{empty_message} скидок в тарифах не обнаружено',
+                                  )
+
 
     def is_active_discount(self, tariff):
         date_now = datetime.now()

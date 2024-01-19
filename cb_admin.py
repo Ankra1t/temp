@@ -251,21 +251,24 @@ def admin_default_callbacks(call: types.CallbackQuery):
     # ## Показать список действующих скидок
     if type == 'discount_list_active':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text=f'--- Список действующих скидок:', reply_markup=None)
+        # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+        #                       text=f'--- Список действующих скидок:', reply_markup=None)
+
+        bot.send_message(call.message.chat.id,
+                         text=f'--- Список действующих скидок:', reply_markup=None)
         tariff_manager.admin_discount_list(call.message, type_discount='active')
-        # tariff_manager.admin_tariff_list_show(call.message)
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
 
-    # ## Показать список действующих скидок
+    # ## Показать список Прошедших скидок
     if type == 'discount_list_inactive':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text=f'--- Список прошедших скидок:', reply_markup=None)
+        # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+        #                       text=f'--- Список прошедших скидок:', reply_markup=None)
+        bot.send_message(call.message.chat.id,
+                         text=f'--- Список прошедших скидок:', reply_markup=None)
         tariff_manager.admin_discount_list(call.message, type_discount='inactive')
-        # tariff_manager.admin_tariff_list_show(call.message)
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
