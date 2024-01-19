@@ -1,5 +1,6 @@
 from math import floor
 from time import sleep
+from common.utils import get_decimal_count, get_print_float
 
 from config_logger import logger
 from db import db
@@ -15,7 +16,8 @@ class BlockTGBotSender(object):
             media: str, kind: str,
             open_price: float | None = None,
             stop_loss: float | None = None,
-            name: str | None = None
+            name: str | None = None,
+            ticker: str | None = None
     ):
         # Ограничение телеграм на кол-во сообщений разным пользователям в сек (с запасом)
         self.c_tg = 25
@@ -28,6 +30,7 @@ class BlockTGBotSender(object):
 
         self.open_price = open_price or 0
         self.stop_loss = stop_loss or 0
+        self.ticker = ticker
 
     def send(self):
         self.batch_send(True)
@@ -84,11 +87,16 @@ class BlockTGBotSender(object):
 
     def bot_send_by_type(self, id: int):
         signal_text = f'<b>{self.name}</b>\n' if self.name is not None else ''
+        signal_text += (f'👉 {self.ticker}\n' if self.ticker is not None else '')
+
         calc_text = f'<b>{self.name}</b>\n' if self.name is not None else ''
 
         if self.kind == 'signal':
-            signal_text += f'Цена входа: <b>{self.open_price}</b>\n'
-            signal_text += f'Стоп лосс: <b>{self.stop_loss}</b>\n'
+            round_count = max(get_decimal_count(self.open_price),
+                              get_decimal_count(self.stop_loss))
+
+            signal_text += f'Цена входа: <b>{get_print_float(self.open_price, round_count)}</b>\n'
+            signal_text += f'Стоп лосс: <b>{get_print_float(self.stop_loss, round_count)}</b>\n'
 
             user_base_values = db.get_user_base(id)
             dep = user_base_values['base_deposit']
