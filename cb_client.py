@@ -59,44 +59,64 @@ def client_action_callbacks(call: types.CallbackQuery):
             #                  parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link))
 
         # ------------ Формируем оплату через BitBanker
-        try:
-            for_client = "Оплатить " + tariff.name
-            # Пока делаем целые
-            final_price = int(pays_banker.check_discount_price(tariff))
-            invoice_to_send_bb = pays_banker.create_invoice(
-                # asset, amount, description, payer, data_payments
-                tariff.currency, final_price, for_client, f'Пользователь id {user_id}')
+        # Пока делаем целые
+        final_price = int(pays_banker.check_discount_price(tariff))
+        invoice_to_send_bb = None
+        if final_price > 50 or final_price == 50:
 
-        except Exception as e:
-            logger.error(f'Ошибка в pays_banker.create_invoice [{e}]')
-            return
+            try:
+                for_client = "Оплатить " + tariff.name
 
-        if invoice_to_send_bb is None:
-            return
+                invoice_to_send_bb = pays_banker.create_invoice(
+                    # asset, amount, description, payer, data_payments
+                    tariff.currency, final_price, for_client, f'Пользователь id {user_id}')
 
-        logger.info(
-            f'Получен чек от BitBanker invoice_to_send [{invoice_to_send_bb}]')
 
-        # Формируем транзакцию от BitBanker для ожидания оплаты
-        try:
-            pays_banker.set_transactions_for_wait(
-                user_id, invoice_to_send_bb, tariff.id)
-            logger.info(
-                f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж ')
+            except Exception as e:
+                logger.error(f'Ошибка в pays_banker.create_invoice [{e}]')
 
-        except Exception as e:
-            logger.error(f'Ошибка pays_banker.set_transactions_for_wait[{e}]')
 
-        # Отправить пользователю счет для оплаты со ссылкой
-        show_price = '{} {}'.format(
-            str(invoice_to_send_bb.amount), invoice_to_send_bb.asset)
-        pay_link2 = invoice_to_send_bb.pay_url
+            if invoice_to_send_bb:
+                # if invoice_to_send_bb is None:
+                #     return
 
-        # Отправляем сразу две кнопки оплаты
-        # bot.send_message(call.message.chat.id, text='Оплатить <b>{}</b>'.format(invoice_to_send.description),
-        bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
-                         parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_many(show_price, pay_link1, pay_link2))
-        # bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
-        #                          parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_bitbanker(show_price, pay_link2))
-        bot.send_message(call.message.chat.id, text='❗️ Регистрацию проходить не нужно ',
-                         parse_mode="HTML")
+                logger.info(
+                    f'Получен чек от BitBanker invoice_to_send [{invoice_to_send_bb}]')
+
+                # Формируем транзакцию от BitBanker для ожидания оплаты
+                try:
+                    pays_banker.set_transactions_for_wait(
+                        user_id, invoice_to_send_bb, tariff.id)
+                    logger.info(
+                        f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж ')
+
+                except Exception as e:
+                    logger.error(f'Ошибка pays_banker.set_transactions_for_wait[{e}]')
+
+                # Отправить пользователю счет для оплаты со ссылкой
+                show_price = '{} {}'.format(
+                    str(invoice_to_send_bb.amount), invoice_to_send_bb.asset)
+                pay_link2 = invoice_to_send_bb.pay_url
+
+                # Отправляем сразу две кнопки оплаты
+                # bot.send_message(call.message.chat.id, text='Оплатить <b>{}</b>'.format(invoice_to_send.description),
+
+                bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                             parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_many(show_price, pay_link1, pay_link2))
+                # bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                #                          parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_bitbanker(show_price, pay_link2))
+                bot.send_message(call.message.chat.id, text='❗️ Регистрацию проходить не нужно ',
+                                 parse_mode="HTML")
+            else:
+                bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                                 parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
+                bot.send_message(call.message.chat.id,
+                                 text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
+                                 parse_mode="HTML")
+
+        else:
+
+            bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                             parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
+            bot.send_message(call.message.chat.id, text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
+                             parse_mode="HTML")
