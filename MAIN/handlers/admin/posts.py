@@ -18,6 +18,9 @@ from messages.workers import admin_fut_posts_msg
 from models import Post, PostDetails
 
 
+ticker_pattern = r'[a-zA-Z]+\/[a-zA-Z]+'
+
+
 def handle_new_post_name(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -39,11 +42,58 @@ def handle_new_post_name(message: Message, bot: TeleBot):
         )
         return
 
+    ticker = re.search(ticker_pattern, post.content)
+    if ticker is not None:
+        ticker = ticker.group()
+
     post.details = PostDetails(
         name=name,
         open_price=-1,
-        stop_loss=-1
+        stop_loss=-1,
+        ticker=(ticker or '').upper()
     )
+
+    if ticker is None:
+        text = 'Введите тикер (***/***):'
+        state = AdminPostsState.ticker
+    else:
+        text = 'Введите цену входа:'
+        state = AdminPostsState.signal_values
+
+    bot.set_state(user_id, state, chat_id)
+    set_state_data(bot, user_id, chat_id, {'post': post})
+    bot.send_message(
+        chat_id, text,
+        reply_markup=kb_cancel
+    )
+
+
+def handle_new_post_ticker(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        post: Post = data.get('post')
+        kind: str = data.get('kind') or ''
+
+    if kind == 'live':
+        kb_cancel = kb_live_cancel()
+    else:
+        kb_cancel = kb_posts_back()
+
+    ticker = text_accept(message)
+    print(ticker)
+    print(re.search(ticker_pattern, post.content))
+    # if ticker is None or re.search(ticker_pattern, post.content) is None:
+    if ticker is None:
+        bot.send_message(
+            chat_id, 'Введите тикер текстом (***/***):',
+            reply_markup=kb_cancel
+        )
+        return
+
+    if post.details is not None:
+        post.details.ticker = ticker.upper()
 
     bot.set_state(user_id, AdminPostsState.signal_values, chat_id)
     set_state_data(bot, user_id, chat_id, {'post': post})
@@ -89,7 +139,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         new_message = bot.send_message(chat_id, 'Отправка...')
         tg_sender = BlockTGBotSender(
             [], post.content, f'{post.media}({post.mes_type})',
-            kind, post.details.open_price, value, post.details.name
+            kind, post.details.open_price, value, post.details.name, post.details.ticker
         )
         tg_sender.send()
 
@@ -190,12 +240,13 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         post.date_time = value
 
     if post.details is None:
-        details = (None, None, None)
+        details = (None, None, None, None)
     else:
         details = (
             post.details.open_price,
             post.details.stop_loss,
-            post.details.name
+            post.details.name,
+            post.details.ticker
         )
 
     if mes_text == '-':
@@ -263,6 +314,7 @@ def registration(bot: TeleBot):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
     reg_mes(handle_new_post_name, state=AdminPostsState.name)
+    reg_mes(handle_new_post_ticker, state=AdminPostsState.ticker)
     reg_mes(handle_new_post_signal, state=AdminPostsState.signal_values)
 
     reg_mes(handle_new_post_content, state=AdminPostsState.content)

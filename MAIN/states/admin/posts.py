@@ -4,6 +4,7 @@ from telebot.handler_backends import State, StatesGroup
 class AdminPostsState(StatesGroup):
     live = State()
     name = State()
+    ticker = State()
 
     signal_values = State()
     content = State()

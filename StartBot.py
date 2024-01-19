@@ -319,7 +319,11 @@ def callback_inline(call: types.CallbackQuery):
         bot.send_message(
             chat_id,
             text=admin_posting_msg(count_posts),
-            reply_markup=kb_admin_posting()
+            # reply_markup=kb_admin_posting()
+            # Button("Платн: Новые посты")
+            # Button("Отложенные посты")
+            # Button("Всем: Сделать рассылку")
+            # Button("Главная")
         )
 
     if call.data == 'redactor_main':

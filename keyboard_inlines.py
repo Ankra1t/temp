@@ -206,13 +206,13 @@ class Admin_kb_inlines(object):
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
         discount_list_active = types.InlineKeyboardButton(text='Скидки работают',
                                                   callback_data=admin_default_factory.new(type='discount_list_active'))
-        discount_list_out = types.InlineKeyboardButton(text='Скидки прошли',
-                                                  callback_data=admin_default_factory.new(type='discount_list_out'))
+        discount_list_inactive = types.InlineKeyboardButton(text='Скидки прошли',
+                                                  callback_data=admin_default_factory.new(type='discount_list_inactive'))
         add_tariff = types.InlineKeyboardButton(text='Добавить тариф',
                                                 callback_data=admin_default_factory.new(type='add_tariff'))
 
         keyboard.add(tariffs_list, add_tariff)
-        keyboard.add(discount_list_active, discount_list_out)
+        keyboard.add(discount_list_active, discount_list_inactive)
         keyboard.add(self.go_main_btn)
         return keyboard
 
@@ -230,8 +230,15 @@ class Admin_kb_inlines(object):
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
         add_tariff = types.InlineKeyboardButton(text='Добавить тариф',
                                                 callback_data=admin_default_factory.new(type='add_tariff'))
+        discount_list_active = types.InlineKeyboardButton(text='Скидки работают',
+                                                          callback_data=admin_default_factory.new(
+                                                              type='discount_list_active'))
+        discount_list_inactive = types.InlineKeyboardButton(text='Скидки прошли',
+                                                            callback_data=admin_default_factory.new(
+                                                                type='discount_list_inactive'))
 
         keyboard.add(tariffs_list, add_tariff)
+        keyboard.add(discount_list_active, discount_list_inactive)
         keyboard.add(self.go_main_btn)
         return keyboard
 
@@ -241,8 +248,43 @@ class Admin_kb_inlines(object):
                                                        callback_data=adm_action.new(action='deactivate_tariff', id=tariff_id))
         add_discount_tariff = types.InlineKeyboardButton(text='Добавить скидку 🏷',
                                                          callback_data=adm_action.new(action='add_discount_tariff', id=tariff_id))
+        edit_tariff = types.InlineKeyboardButton(text='Редактировать тариф ✏️',
+                                                         callback_data=adm_action.new(action='edit_tariff',
+                                                                                      id=tariff_id))
 
         keyboard.add(deactivate_tariff, add_discount_tariff)
+        keyboard.add(edit_tariff)
+        return keyboard
+
+    def kb_change_tariff_fields(self, tariff_id):
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        change_tariff_name = types.InlineKeyboardButton(text='Название',
+                                                       callback_data=adm_action.new(action='change_tariff_name', id=tariff_id))
+        change_tariff_description = types.InlineKeyboardButton(text='Описание',
+                                                        callback_data=adm_action.new(action='change_tariff_description',
+                                                                                     id=tariff_id))
+        change_tariff_price = types.InlineKeyboardButton(text='Стоимость',
+                                                               callback_data=adm_action.new(
+                                                                   action='change_tariff_price',
+                                                                   id=tariff_id))
+        change_tariff_duration = types.InlineKeyboardButton(text='Кол-во дней',
+                                                         callback_data=adm_action.new(
+                                                             action='change_tariff_duration',
+                                                             id=tariff_id))
+
+        change_tariff_image = types.InlineKeyboardButton(text='Постер (картинку)',
+                                                         callback_data=adm_action.new(
+                                                             action='change_tariff_image',
+                                                             id=tariff_id))
+        go_main = self.go_main_btn
+        tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
+                                                  callback_data=admin_default_factory.new(type='tariffs_list'))
+
+
+        keyboard.add(change_tariff_name, change_tariff_description)
+        keyboard.add(change_tariff_price, change_tariff_duration)
+        keyboard.add(change_tariff_image)
+        keyboard.add(go_main, tariffs_list)
         return keyboard
 
     def kb_tariff_options_choose(self, user_tariff):

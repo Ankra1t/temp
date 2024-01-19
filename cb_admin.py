@@ -251,10 +251,24 @@ def admin_default_callbacks(call: types.CallbackQuery):
     # ## Показать список действующих скидок
     if type == 'discount_list_active':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text=f'Список действующих скидок', reply_markup=None)
-        tariff_manager.admin_discount_list_active(call.message)
-        # tariff_manager.admin_tariff_list_show(call.message)
+        # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+        #                       text=f'--- Список действующих скидок:', reply_markup=None)
+
+        bot.send_message(call.message.chat.id,
+                         text=f'--- Список действующих скидок:', reply_markup=None)
+        tariff_manager.admin_discount_list(call.message, type_discount='active')
+
+        bot.send_message(call.message.chat.id,
+                         text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
+
+    # ## Показать список Прошедших скидок
+    if type == 'discount_list_inactive':
+        logger.info(f'-----> Выбрано меню ***{type}*** ')
+        # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+        #                       text=f'--- Список прошедших скидок:', reply_markup=None)
+        bot.send_message(call.message.chat.id,
+                         text=f'--- Список прошедших скидок:', reply_markup=None)
+        tariff_manager.admin_discount_list(call.message, type_discount='inactive')
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
@@ -337,10 +351,65 @@ def admin_action_callbacks(call: types.CallbackQuery):
                          text=f'Тариф id {target_id} удален',
                          reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
+    # ##### ------------------ Добавить скидку тарифу
     if action == 'add_discount_tariff':
         bot.set_state(user_id, AdminTariffState.discount_percent, chat_id)
         # TODO - доавить получение id здесь
-        set_state_data(bot, user_id, chat_id, {'discount_id': 0})
+        set_state_data(bot, user_id, chat_id, {'discount_id': target_id})
         bot.send_message(
             chat_id, 'Введите размер скидки в процентах',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    # ## Выбрать какое поле нужно редактировать в тарифе
+    if action == 'edit_tariff':
+        logger.info(f'-----> Действие ***{action}*** ')
+
+        try:
+            bot.set_state(user_id, AdminTariffState.choose_edit_field, chat_id)
+            set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        except Exception as e:
+            print(f'Что то пошло не так {e}')
+            # pass
+            logger.error(f'Ошибка  [{e}]')
+
+        change_text = 'Что хотите поменять?'
+        text = tariff_manager.change_fields_tariff_show(target_id, change_text)
+        bot.send_message(call.message.chat.id,
+                         text=text,
+                         reply_markup=kb_inl_admin.kb_change_tariff_fields(target_id))
+
+    # ##### ------------------ Изменяем свойства тарифа
+    if action == 'change_tariff_name':
+        bot.set_state(user_id, AdminTariffState.edit_field_name, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        bot.send_message(
+            chat_id, 'Введите новое название тарифа',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    if action == 'change_tariff_duration':
+        bot.set_state(user_id, AdminTariffState.edit_field_duration, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        bot.send_message(
+            chat_id, 'Введите новый период в днях',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    if action == 'change_tariff_description':
+        bot.set_state(user_id, AdminTariffState.edit_field_description, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        bot.send_message(
+            chat_id, 'Введите новое описание',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    if action == 'change_tariff_price':
+        bot.set_state(user_id, AdminTariffState.edit_field_price, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        bot.send_message(
+            chat_id, 'Введите новую стоимость',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    if action == 'change_tariff_image':
+        bot.set_state(user_id, AdminTariffState.edit_field_image, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        bot.send_message(
+            chat_id, 'Отправьте новый постер (картинку)',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())

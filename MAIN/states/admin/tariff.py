@@ -10,3 +10,11 @@ class AdminTariffState(StatesGroup):
 
     discount_percent = State()
     discount_fin_date = State()
+
+    choose_edit_field = State()
+    edit_field_name = State()
+    edit_field_duration = State()
+    edit_field_description = State()
+    edit_field_price = State()
+    edit_field_image = State()
+
