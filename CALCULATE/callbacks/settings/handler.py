@@ -1,4 +1,3 @@
-from locale import currency
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
