@@ -14,11 +14,11 @@ db.add_worker(156045434, 'azatFa', 1)
 
 # print(a.time().isoformat('minutes'))
 
-arr = 'a'
-print(arr)
-a, b = arr.split('_')
-print(a)
-print(b)
+# arr = 'a'
+# print(arr)
+# a, b = arr.split('_')
+# print(a)
+# print(b)
 
 ################################################################################################
 # if user_role == 0:
