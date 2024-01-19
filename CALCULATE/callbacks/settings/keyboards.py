@@ -98,6 +98,7 @@ def kb_change_currency(user_id: int):
 
         if len(buttons) == row_width or (i + 1 == len(currency_list) and len(buttons) != 0):
             keyboard.add(*buttons)
+            buttons = []
 
     btn_back = getButton(back[lang], 'go_settings')
     keyboard.add(btn_back)
