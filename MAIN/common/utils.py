@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
 
+from common.utils import get_decimal_count, get_print_float
 from messages.workers import generate_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from models import Post
@@ -38,3 +39,15 @@ def send_in_development(bot: TeleBot, message: Message):
     bot.send_message(
         message.chat.id, 'Временно ведётся разработка❗️\n<b>Следите</b> за обновлениями😉'
     )
+
+
+def get_print_signal_info(open_price: float, stop_loss: float):
+    round_count = max(
+        get_decimal_count(open_price),
+        get_decimal_count(stop_loss)
+    )
+
+    return '\n'.join((
+        f'Цена входа: <b>{get_print_float(open_price, round_count)}</b>',
+        f'Стоп лосс: <b>{get_print_float(stop_loss, round_count)}</b>'
+    ))

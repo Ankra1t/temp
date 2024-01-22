@@ -18,7 +18,25 @@ db.add_worker(156045434, 'azatFa', 1)
 # print(arr)
 # a, b = arr.split('_')
 # print(a)
-# print(b)
+# print(.0)
+query = ' '.join((
+        'CREATE TABLE posts (',
+        'id INTEGER PRIMARY KEY AUTOINCREMENT,',
+        'content TEXT NOT NULL,',
+        'mes_type VARCHAR(20) DEFAULT "text",',
+        'direct VARCHAR(20) DEFAULT "Всем",',
+        'media TEXT NULL,',
+        'date_time TIMESTAMP NOT NULL,',
+        'name TEXT NULL,',
+        'open_price FLOAT NULL,',
+        'stop_loss FLOAT NULL,',
+        'ticker VARCHAR(20) NULL',
+        ')',
+))
+print(query)
+db.curs.execute(query)
+db.connection.commit()
+
 
 ################################################################################################
 # if user_role == 0:
