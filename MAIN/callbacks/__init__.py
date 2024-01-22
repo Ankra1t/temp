@@ -7,7 +7,7 @@ from .admin.workers.handler import registration as _reg_admin_workers
 from .admin.workers.keyboards import kb_admin_workers_update, kb_admin_workers_actions
 
 from .admin.users.handler import registration as _reg_admin_users
-from .admin.users.keyboards import kb_admin_users, kb_admin_users_back
+from .admin.users.keyboards import kb_admin_users, kb_admin_users_back, kb_admin_users_list
 
 from .admin.params.handler import registration as _reg_admin_params
 from .admin.params.keyboards import (kb_params_change, kb_calculator, kb_params,

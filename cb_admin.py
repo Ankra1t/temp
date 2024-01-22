@@ -33,7 +33,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
-        count_all = len(db.get_all_users())
+        count_all = db.get_users_count()
         count_with_sub = pay_guard.get_paid_users()
         count_old = pay_guard.get_paid_more1_users()
         text = admin_users_msg(count_all, len(count_with_sub), len(count_old))
@@ -149,7 +149,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
     if type == 'go_main':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
-            count_all = len(db.get_all_users())
+            count_all = db.get_users_count()
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
             count_admins = len(db.get_all_workes())

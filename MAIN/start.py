@@ -30,7 +30,7 @@ def send_start_by_user(
         send_user_main(bot, message, user_id, True)
 
     if user_role == 1:
-        count_all = len(db.get_all_users())
+        count_all = db.get_users_count()
         count_with_sub = len(pay_guard.get_paid_users())
         count_old = len(pay_guard.get_paid_more1_users())
         count_admins = len(db.get_all_workes())
