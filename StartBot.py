@@ -351,21 +351,6 @@ def callback_inline(call: types.CallbackQuery):
         bot.edit_message_text('Отменено!', chat_id, mes_id)
         send_start_by_user(bot, call.message, user_id, chat_id, user_role)
 
-    if call.data == 'admin_posting_fut_post_all_show':
-        # ## Показать список отложенных постов
-        posts = db.get_fut_all_posts()
-
-        if len(posts) != 0:
-            for i in range(0, len(posts)):
-                send_admin_post(bot, chat_id, posts[i])
-        else:
-            bot.send_message(chat_id, 'Нет отложенных постов')
-
-        bot.send_message(
-            chat_id, admin_fut_posts_msg(),
-            reply_markup=kb_posts_back()
-        )
-
     bot.answer_callback_query(call.id)
 
 

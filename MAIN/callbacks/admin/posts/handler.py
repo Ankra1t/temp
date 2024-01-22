@@ -38,15 +38,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'list':
         posts = db.get_fut_all_posts()
 
-        if len(posts) != 0:
-            for i in range(len(posts)):
-                send_admin_post(bot, chat_id, posts[i])
-            text = admin_fut_posts_msg()
-        else:
-            text = 'Нет отложенных постов'
+        if len(posts) == 0:
+            bot.edit_message_text(
+                'Нет отложенных постов',
+                chat_id, user_id,
+                reply_markup=kb_posts()
+            )
+
+        for i in range(len(posts)):
+            send_admin_post(bot, chat_id, posts[i])
 
         bot.send_message(
-            chat_id, text,
+            chat_id, admin_fut_posts_msg(),
             reply_markup=kb_posts()
         )
 
@@ -142,7 +145,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
                     # tgsender.send()
                 except Exception as e:
-                    print(f'Ошибка рассылки постов в балансировщике при рассылке [{e}]')
+                    print(
+                        f'Ошибка рассылки постов в балансировщике при рассылке [{e}]')
 
                 text = 'Пост успешно отправлен!'
 
