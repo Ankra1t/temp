@@ -335,13 +335,14 @@ class Clients_kb_inlines(object):
     # ## Клиенту выставлен счет через BitBanker и Cryptobot со ссылками оплаты
     def kb_bill_many(self, price, pay_link1, pay_link2):
         keyboard = types.InlineKeyboardMarkup(row_width=1)
-        pay_link_btn1 = types.InlineKeyboardButton(
-            text=f"Оплатить {price} через CryptoBot", url=pay_link1)
         pay_link_btn2 = types.InlineKeyboardButton(
             text=f"Оплатить {price} через BitBanker", url=pay_link2)
+        pay_link_btn1 = types.InlineKeyboardButton(
+            text=f"Оплатить {price} через CryptoBot", url=pay_link1)
 
-        keyboard.add(pay_link_btn1)
+
         keyboard.add(pay_link_btn2)
+        keyboard.add(pay_link_btn1)
         return keyboard
 
     # ## Клиенту выставлен счет через BitBanker со ссылкой оплаты

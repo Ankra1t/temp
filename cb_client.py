@@ -101,14 +101,14 @@ def client_action_callbacks(call: types.CallbackQuery):
                 # Отправляем сразу две кнопки оплаты
                 # bot.send_message(call.message.chat.id, text='Оплатить <b>{}</b>'.format(invoice_to_send.description),
 
-                bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
                              parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_many(show_price, pay_link1, pay_link2))
                 # bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
                 #                          parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_bitbanker(show_price, pay_link2))
-                bot.send_message(call.message.chat.id, text='❗️ Регистрацию проходить не нужно ',
+                bot.send_message(call.message.chat.id, text='❗️ Выберите удобный способ оплаты (регистрация не требуется)',
                                  parse_mode="HTML")
             else:
-                bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+                bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
                                  parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
                 bot.send_message(call.message.chat.id,
                                  text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
@@ -116,7 +116,7 @@ def client_action_callbacks(call: types.CallbackQuery):
 
         else:
 
-            bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
+            bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
                              parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
             bot.send_message(call.message.chat.id, text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
                              parse_mode="HTML")
