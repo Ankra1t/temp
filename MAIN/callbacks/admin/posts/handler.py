@@ -36,19 +36,20 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, AdminPostsState.post_delete, chat_id)
 
     if type == 'list':
-        mas_posts = db.get_fut_all_posts()
+        posts = db.get_fut_all_posts()
 
-        if len(mas_posts) != 0:
-            for i in range(0, len(mas_posts)):
-                post = mas_posts[i]
+        if len(posts) == 0:
+            bot.edit_message_text(
+                'Нет отложенных постов',
+                chat_id, user_id,
+                reply_markup=kb_posts()
+            )
 
-                send_admin_post(bot, chat_id, *post)
-            text = admin_fut_posts_msg()
-        else:
-            text = 'Нет отложенных постов'
+        for i in range(len(posts)):
+            send_admin_post(bot, chat_id, posts[i])
 
         bot.send_message(
-            chat_id, text,
+            chat_id, admin_fut_posts_msg(),
             reply_markup=kb_posts()
         )
 
@@ -120,13 +121,14 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             text = 'Пост успешно удалён!'
 
             if 'send' in type:
-                post: Any = db.get_fut_post(post_id)
+                post = db.get_fut_post(post_id)
 
-                post_direct = post[3]
+                if post is None:
+                    return
 
-                if post_direct == 'Платным':
+                if post.direct == 'Платным':
                     users = db.get_users_with_sub()
-                elif post_direct == 'Бесплатным':
+                elif post.direct == 'Бесплатным':
                     users = db.get_users_without_sub()
                 else:
                     users = db.get_all_users()
@@ -134,11 +136,14 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 users_id = list(map(lambda user: user[9], users))
 
                 try:
-                    tgsender = BlockTGBotSender(
-                        users_id, post[2], post[1], post[6], post[7], post[8]
-                    )
+                    pass
+                    # tgsender = BlockTGBotSender(
+                    #     users_id, post.content, post.media,
+                    #     'post' if post.details is None else 'signal',
+                    #     post.details.open_price, post.details.
+                    # )
 
-                    tgsender.send()
+                    # tgsender.send()
                 except Exception as e:
                     print(
                         f'Ошибка рассылки постов в балансировщике при рассылке [{e}]')

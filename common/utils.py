@@ -61,3 +61,6 @@ def get_decimal_count(value: float):
     decimal_index = num_str.index('.')
     num_digits = len(num_str) - decimal_index - 1
     return num_digits
+
+def get_normal_text(message: Message):
+    return message.html_text or message.html_caption or ''

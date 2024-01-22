@@ -129,7 +129,7 @@ class PostDetails(BaseModel):
 
 
 class Post(BaseModel):
-    id: int = -1
+    id: int | None = None
     content: str = ''
     mes_type: str = 'text'
     direct: str = 'Всем'

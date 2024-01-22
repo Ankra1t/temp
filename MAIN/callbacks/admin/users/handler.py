@@ -1,4 +1,5 @@
 from datetime import datetime
+import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
@@ -7,7 +8,7 @@ from db import db
 from models import User
 from MAIN.states import AdminUsersState
 
-from .keyboards import kb_admin_users_back
+from .keyboards import kb_admin_users_back, kb_admin_users_list
 from .filter import admin_users_factory, AdminUsersCallbackFilter
 
 
@@ -54,13 +55,22 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.set_state(user_id, AdminUsersState.ban_username, chat_id)
 
-    if type == 'client_list':
-        mas_all_user = db.get_all_users()
+    if 'client_list' in type:
+        type_list = type.split('+')
+
+        page = int(type_list[1]) if len(type_list) == 2 else 1
+
+        limit = 10
+        count = db.get_users_count()
+
+        pages = math.ceil(count / limit)
+
+        mas_all_user = db.get_all_users(limit, page)
         res_str_all_users = ''
 
         for user in mas_all_user:
             tg_user_id = int(user[9])
-            nik = str(user[2]) if user[2] else 'Скрыт'
+            nik = f'@{user[2]}' if user[2] else 'Скрыт'
             ban = ' (BAN) ' if user[10] is not None else ''
             user = User()
             user.id = tg_user_id
@@ -77,8 +87,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             res_str_all_users += (f'\n {ban}{str(tg_user_id)} | {nik}   '
                                   f'\nПодписка (окончание): {fin_date}{type_subscribe_show}\n')
 
-        bot.edit_message_text(res_str_all_users, chat_id, mes_id,
-                              reply_markup=kb_admin_users_back())
+        kb = kb_admin_users_list(pages, page) if (
+            pages > limit) else kb_admin_users_back()
+
+        bot.edit_message_text(
+            res_str_all_users, chat_id, mes_id,
+            reply_markup=kb
+        )
 
     bot.answer_callback_query(call.id)
 

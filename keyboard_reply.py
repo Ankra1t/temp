@@ -1,7 +1,10 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from initialize import kb_inl_admin
 
 # ===================== REDACTOR
+
+
 def kb_main_redactor():
     keyboard = InlineKeyboardMarkup(row_width=2)
     btn3 = InlineKeyboardButton(
@@ -65,13 +68,16 @@ def kb_user_go_back():
     return keyboard
 
 
-def kb_user_sup(link):
+def kb_user_sup(link: str):
     link = link.replace('@', '')
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    admin_users_del_yes1 = InlineKeyboardButton(
-        text="Перейти к оператору", url=f'https://t.me/{link}')
+    keyboard = InlineKeyboardMarkup(row_width=2)
 
-    keyboard.add(admin_users_del_yes1)
+    btn = InlineKeyboardButton(
+        "Перейти к оператору", f'https://t.me/{link}'
+    )
+
+    keyboard.add(btn, kb_inl_admin.go_main_btn)
+
     return keyboard
 
 
