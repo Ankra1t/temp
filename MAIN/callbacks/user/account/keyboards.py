@@ -12,16 +12,16 @@ def getButton(text: str, type: str):
 
 def kb_user_account():
     keyboard = InlineKeyboardMarkup(row_width=2)
-    btn1 = getButton("Купить сигналы на месяц", 'buy_month')
-    btn2 = getButton("Реф. система", 'referral')
+    # btn1 = getButton("Купить сигналы на месяц", 'buy_month')
+    btn2 = getButton("Реферальная система", 'referral')
     btn3 = getButton("Мои покупки", 'purchases')
     btn_password = getButton('Изменить пароль', 'password')
     btn4 = getButton("Главная", 'main')
     # btn5 = getButton("Пополнить баланс")
 
-    keyboard.add(btn1)
-    keyboard.add(btn2, btn3)
-    keyboard.add(btn_password)
+    # keyboard.add(btn1)
+    keyboard.add(btn2)
+    keyboard.add(btn3, btn_password)
     keyboard.add(btn4)
     return keyboard
 

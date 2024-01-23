@@ -29,7 +29,7 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
             for key in value:
                 data[key] = value[key]
     except Exception as e:
-        print('Ошибка в записи данных state')
+        print(f'Ошибка в записи данных state [{e}]')
 
 
 def float_to_print(val: float | None):

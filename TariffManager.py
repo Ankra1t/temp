@@ -26,8 +26,12 @@ class TariffManager(object):
         db_new.set_price_discount(
             id, discount.percent, discount.findate)
 
-    def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None):
-        list = db_new.get_prices(1)
+    def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None, product_id=None):
+        list = None
+        if product_id:
+            list = db_new.get_prices_by_product(product_id, 1)
+        else:
+            list = db_new.get_prices(1)
 
         if len(list) == 0:
             self.bot.send_message(chat_id=message.chat.id,
@@ -38,7 +42,7 @@ class TariffManager(object):
         for i in range(0, len(list)):
 
             tariff = list[i]
-            desc_template = self.get_template_tariff_show(tariff)
+            desc_template = self.get_template_tariff_show_admin(tariff)
             if mode == 'main':
                 kb = self.kb_inl.kb_tariff_options(tariff.id)
             else:  # 'change_for_client'
@@ -114,8 +118,13 @@ class TariffManager(object):
 
         return False
 
-    def tariff_list_show(self, message: types.Message):
-        list = db_new.get_prices(1)
+    def tariff_list_show(self, message: types.Message, product_id=None):
+        list = None
+        if product_id:
+            list = db_new.get_prices_by_product(product_id, 1)
+        else:
+            list = db_new.get_prices(1)
+
         if len(list) == 0:
 
             self.bot.send_message(chat_id=message.chat.id,
@@ -138,11 +147,11 @@ class TariffManager(object):
                     self.bot.send_photo(chat_id=message.chat.id,
                                         photo=tariff.img,
                                         caption=desc_template + discount_show,
-                                        reply_markup=self.kb_inl_user.kb_pay(tariff.id, message.from_user.id))
+                                        reply_markup=self.kb_inl_user.kb_pay(tariff.id))
                 else:
                     self.bot.send_message(chat_id=message.chat.id,
                                           text=desc_template + discount_show,
-                                          reply_markup=self.kb_inl_user.kb_pay(tariff.id, message.from_user.id))
+                                          reply_markup=self.kb_inl_user.kb_pay(tariff.id))
 
             except Exception as e:
                 print(f'Проблемы с отправкой тарифа tariff_list_show {e}')
@@ -153,17 +162,19 @@ class TariffManager(object):
         tariff = db_new.get_price_by_id(tariff_id)
         return self.get_template_change_tariff_show(tariff, change_text)
 
-    def get_template_tariff_show(self, tariff: Price):
+    def get_template_tariff_show_admin(self, tariff: Price):
         """Получить описание согласно шаблону и данным тарифа """
         template = """
 {}
 {} {}
 {}
+Продукт "{}"
 <i>действует {} дн.</i>
         """.format(tariff.name,
                    str(tariff.price),
                    tariff.currency,
                    tariff.description,
+                   tariff.type_product,
                    tariff.duration_days
                    )
         return template
@@ -173,7 +184,7 @@ class TariffManager(object):
         findate = tariff.discount.findate.strftime(self.dt_format_admin_show)
         template = """
 id {} <b>{}</b> (стоимость {} {})
-<b>скида {}%</b> до {}
+<b>скидка {}%</b> до {}
         """.format(tariff.id,
                    tariff.name,
                    str(tariff.price),
@@ -182,15 +193,6 @@ id {} <b>{}</b> (стоимость {} {})
                    findate
                    )
         return template
-
-        def get_template_tariff_show(self, tariff: Price):
-            """Получить описание согласно шаблону и данным тарифа """
-            template = """
-    {}
-    {} {}
-    {}
-            """.format(tariff.name, str(tariff.price), tariff.currency, tariff.description)
-            return template
 
     def get_template_change_tariff_show(self, tariff: Price, change_text):
         """Получить описание согласно шаблону и данным тарифа """
@@ -209,4 +211,14 @@ id={} <b>\"{}\"</b>
                    tariff.duration_days,
                    change_text
                    )
+        return template
+
+    def get_template_tariff_show(self, tariff: Price):
+        """Получить описание согласно шаблону и данным тарифа для клиента """
+        template = """
+{}
+{} {}
+{}
+<i>действует {} дн.</i>
+        """.format(tariff.name, str(tariff.price), tariff.currency, tariff.description, tariff.duration_days)
         return template

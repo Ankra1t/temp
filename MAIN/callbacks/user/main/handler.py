@@ -6,7 +6,7 @@ from MAIN.callbacks import send_user_education
 from MAIN.callbacks.user.pages import send_user_account
 from MAIN.common.utils import send_in_development
 
-from initialize import tariff_manager
+from initialize import tariff_manager, kb_inl_user
 from db import db
 
 from .keyboards import kb_user_calculator
@@ -34,7 +34,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_in_development(bot, call.message)
 
     if type == 'buy':
-        tariff_manager.tariff_list_show(call.message)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text=f'Какой продукт вас интересует?',
+                              reply_markup=kb_inl_user.kb_select_products())
+        # tariff_manager.tariff_list_show(call.message)
+
 
     bot.answer_callback_query(call.id)
 

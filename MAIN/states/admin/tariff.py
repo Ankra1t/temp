@@ -2,6 +2,7 @@ from telebot.handler_backends import State, StatesGroup
 
 
 class AdminTariffState(StatesGroup):
+    type_product = State()
     name = State()
     duration = State()
     price = State()
