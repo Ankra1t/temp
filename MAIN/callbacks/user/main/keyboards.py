@@ -11,14 +11,16 @@ def getButton(text: str, type: str):
 def kb_user_main():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton("Сигналы", 'signals')
+    # btn1 = getButton("Сигналы", 'signals')
     btn2 = getButton("Купить", 'buy')
-    btn3 = getButton("Обучение", 'education')
+    # btn3 = getButton("Обучение", 'education')
     btn4 = getButton("Калькулятор", 'calculator')
     btn5 = getButton("Личный кабинет", 'account')
 
-    keyboard.add(btn1, btn2)
-    keyboard.add(btn3, btn4)
+    # keyboard.add(btn1, btn2)
+    # keyboard.add(btn3, btn4)
+
+    keyboard.add(btn4, btn2)
     keyboard.add(btn5)
     return keyboard
 

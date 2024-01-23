@@ -8,7 +8,8 @@ admin_workerss_factory = CallbackData('type', prefix='adminn_workerss')
 admin_default_factory = CallbackData('type', prefix='admin_default')
 
 adm_action = CallbackData('action', 'id', prefix='adm_act')
-client_action = CallbackData('action', 'id', 'user_id', prefix='cl_act')
+client_action = CallbackData('action', 'id', prefix='cl_act')
+# client_action = CallbackData('action', 'id', 'user_id', prefix='cl_act')
 # пробросить через параметры id из бд текста
 
 

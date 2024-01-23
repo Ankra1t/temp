@@ -71,3 +71,8 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
         f'*Ваш баланс:* {balance}р.\n*Всего потратили:* {money}р.\n*У вас рефералов:* {count_ref}',
         parse_mode='Markdown', reply_markup=kb_user_account()
     )
+
+
+def send_user_tariffs(bot: TeleBot, message: Message, user_id: int):
+
+    pass

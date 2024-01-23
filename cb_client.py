@@ -1,4 +1,4 @@
-from initialize import bot, kb_inl_user, pays, pays_banker
+from initialize import bot, kb_inl_user, pays, pays_banker, tariff_manager
 
 from telebot import types
 
@@ -11,7 +11,11 @@ from models import Invoice, InvoiceBBanker
 @bot.callback_query_handler(func=None, action=client_action.filter())
 def client_action_callbacks(call: types.CallbackQuery):
     callback_data: dict = client_action.parse(callback_data=call.data)
-    action, target_id, user_id = callback_data['action'], callback_data['id'], callback_data['user_id']
+    action, target_id = callback_data['action'], callback_data['id']
+    # action, target_id, user_id = callback_data['action'], callback_data['id'], callback_data['user_id']
+
+    user_id = call.from_user.id
+
     logger.info(f'Кнопка client callback_query ***{action}***')
     logger.info(f'Элемент client target_id ***{target_id}***')
     logger.info(f'Элемент client user_id ***{user_id}***')
@@ -120,3 +124,7 @@ def client_action_callbacks(call: types.CallbackQuery):
                              parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
             bot.send_message(call.message.chat.id, text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
                              parse_mode="HTML")
+
+    if action == 'tariffs_for_user_by_product':
+        logger.info(f'-----> Действие ***{action}*** ')
+        tariff_manager.tariff_list_show(call.message, product_id=target_id)
