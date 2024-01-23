@@ -33,7 +33,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
-        count_all = len(db.get_all_users())
+        count_all = db.get_users_count()
         count_with_sub = pay_guard.get_paid_users()
         count_old = pay_guard.get_paid_more1_users()
         text = admin_users_msg(count_all, len(count_with_sub), len(count_old))
@@ -149,7 +149,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
     if type == 'go_main':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
-            count_all = len(db.get_all_users())
+            count_all = db.get_users_count()
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
             count_admins = len(db.get_all_workes())
@@ -229,24 +229,48 @@ def admin_default_callbacks(call: types.CallbackQuery):
             call.message, get_user_for_cancel_subscribe)
 
     # ## Добавить новый тариф Тарифы - Добавить тариф
+    # if type == 'add_tariff':
+    #     logger.info(f'-----> Выбрано меню ***{type}*** ')
+    #
+    #     bot.edit_message_text(
+    #         'Введите название нового тарифа (заголовок)', chat_id, mes_id,
+    #         reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+    #
+    #     bot.set_state(user_id, AdminTariffState.name, chat_id)
+
     if type == 'add_tariff':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
 
         bot.edit_message_text(
-            'Введите название нового тарифа (заголовок)', chat_id, mes_id,
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            'Укажите продукт тарифа', chat_id, mes_id,
+            reply_markup=kb_inl_admin.kb_choice_product())
 
-        bot.set_state(user_id, AdminTariffState.name, chat_id)
+        # bot.set_state(user_id, AdminTariffState.name, chat_id)
 
-    # ## Показать список тарифов
+    # ## Выбрать продукт для показа тарифов по нему
     if type == 'tariffs_list':
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text=f'Выберите продукт для показа тарифов', reply_markup=kb_inl_admin.kb_select_tariff_products())
+
+    # ## Показать список всех тарифов
+    if type == 'tariffs_list_all':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text=f'Список добавленных тарифов', reply_markup=None)
+                              text=f'Список всех добавленных тарифов', reply_markup=None)
         tariff_manager.admin_tariff_list_show(call.message)
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
+
+    # ## Показать список тарифов по продукту
+    # if type == 'tariffs_list_all':
+    #     logger.info(f'-----> Выбрано меню ***{type}*** ')
+    #     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+    #                           text=f'Список всех добавленных тарифов', reply_markup=None)
+    #     tariff_manager.admin_tariff_list_show(call.message)
+    #
+    #     bot.send_message(call.message.chat.id,
+    #                      text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
 
     # ## Показать список действующих скидок
     if type == 'discount_list_active':
@@ -284,6 +308,7 @@ def admin_action_callbacks(call: types.CallbackQuery):
     logger.info(f'Элемент id ***{target_id}***')
 
     chat_id = call.message.chat.id
+    mes_id = call.message.id
     user_id = call.from_user.id
 
     # ##### ------------------ Редактируем сообщения из БД
@@ -359,6 +384,28 @@ def admin_action_callbacks(call: types.CallbackQuery):
         bot.send_message(
             chat_id, 'Введите размер скидки в процентах',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+    # ##### ------------------ Выбрать продукт для нового тарифа
+    if action == 'add_tariff_product':
+        logger.info(f'-----> Действие ***{action}*** ')
+        bot.set_state(user_id, AdminTariffState.type_product, chat_id)
+        set_state_data(bot, user_id, chat_id, {'type_product': target_id})
+
+        bot.edit_message_text(
+                'Введите название нового тарифа (заголовок)', chat_id, mes_id,
+                reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+
+        bot.set_state(user_id, AdminTariffState.name, chat_id)
+
+    # ##### ------------------ Показать выбранные тарифы по продукту
+    if action == 'tariffs_list_by_product':
+        logger.info(f'-----> Действие ***{action}*** ')
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text=f'Список тарифов по продукту:', reply_markup=None)
+        tariff_manager.admin_tariff_list_show(call.message, product_id=target_id)
+
+        bot.send_message(call.message.chat.id,
+                         text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
 
     # ## Выбрать какое поле нужно редактировать в тарифе
     if action == 'edit_tariff':

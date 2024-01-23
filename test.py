@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from db import db
 
 # azatFa  id 156045434
@@ -18,7 +18,39 @@ db.add_worker(156045434, 'azatFa', 1)
 # print(arr)
 # a, b = arr.split('_')
 # print(a)
-# print(b)
+# print(.0)
+
+
+# query = ' '.join((
+#         'CREATE TABLE posts (',
+#         'id INTEGER PRIMARY KEY AUTOINCREMENT,',
+#         'content TEXT NOT NULL,',
+#         'mes_type VARCHAR(20) DEFAULT "text",',
+#         'direct VARCHAR(20) DEFAULT "Всем",',
+#         'media TEXT NULL,',
+#         'date_time TIMESTAMP NOT NULL,',
+#         'name TEXT NULL,',
+#         'open_price FLOAT NULL,',
+#         'stop_loss FLOAT NULL,',
+#         'ticker VARCHAR(20) NULL',
+#         ')',
+# ))
+# db.curs.execute(query)
+# db.connection.commit()
+
+db.curs.execute('DELETE FROM users WHERE id < 1000')
+db.connection.commit()
+
+for i in range(1, 100):
+        query = (
+                'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
+                'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
+        )
+        params = (i, 'andww', 0, datetime.now() - timedelta(days=i))
+
+        db.curs.execute(query, params)
+        db.connection.commit()
+
 
 ################################################################################################
 # if user_role == 0:

@@ -135,12 +135,12 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         return
 
     if (post.details.open_price != -1) and (kind == 'live'):
+        post.details.stop_loss = value
+
         kind = 'signal'
         new_message = bot.send_message(chat_id, 'Отправка...')
-        tg_sender = BlockTGBotSender(
-            [], post.content, f'{post.media}({post.mes_type})',
-            kind, post.details.open_price, value, post.details.name, post.details.ticker
-        )
+
+        tg_sender = BlockTGBotSender([], post)
         tg_sender.send()
 
         bot.delete_state(user_id, chat_id)
@@ -250,11 +250,9 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         )
 
     if mes_text == '-':
-        tg_sender = BlockTGBotSender(
-            [], post.content, f'{post.media or ""}({post.mes_type})',
-            kind, *details
-        )
+        tg_sender = BlockTGBotSender([], post)
         tg_sender.send()
+
         bot.delete_state(user_id, chat_id)
         bot.send_message(
             chat_id, admin_fut_posts_msg(),
@@ -262,10 +260,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         )
     else:
         dt = post.date_time or datetime.now()
-        send_admin_post(
-            bot, chat_id, 0, f'{post.media or ""}({post.mes_type})',
-            post.content, '-', dt.date(), dt.time().isoformat('minutes'), kind, *details
-        )
+        send_admin_post(bot, chat_id, post)
 
         bot.set_state(user_id, AdminPostsState.confirm_add, chat_id)
         set_state_data(bot, user_id, chat_id, {'post': post})
@@ -286,14 +281,18 @@ def handle_action_post(action: Literal['send', 'delete']):
                 chat_id, msg_digit_error(user_id),
                 reply_markup=kb_posts_back())
             return
-        if not db.check_fut_post(post_id):
+
+        post = db.get_fut_post(post_id)
+
+        if post is None:
             bot.send_message(chat_id, f'Пост с ID: {post_id} - не существует!')
             bot.send_message(
                 chat_id, 'Отправьте ID поста:',
-                reply_markup=kb_posts_back())
+                reply_markup=kb_posts_back()
+            )
+            return
 
-        post: Any = db.get_fut_post(post_id)
-        send_admin_post(bot, chat_id, *post)
+        send_admin_post(bot, chat_id, post)
 
         if action == 'delete':
             text = 'Удалить?'

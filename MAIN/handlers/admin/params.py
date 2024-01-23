@@ -3,8 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
-from messages.workers import generate_normal_text
-from common.utils import digit_accept, set_state_data, text_accept
+from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
 from MAIN.callbacks import kb_params_choice, kb_params_back
 from MAIN.states import AdminParamsState
 
@@ -16,8 +15,10 @@ def handle_other_text(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    set_state_data(bot, user_id, chat_id, {
-                   'text': generate_normal_text(message)})
+    set_state_data(
+        bot, user_id, chat_id, {
+            'text': get_normal_text(message)}
+    )
 
     bot.send_message(
         chat_id, 'Применить изменения?',

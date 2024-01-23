@@ -194,36 +194,22 @@ def check_future_post_for_sent():
     mas_posts = db.get_fut_all_posts()
 
     for post in mas_posts:
-        date_post = post[4]
-        date_post = date_post.split('.')
-        time_post = post[5]
-        time_post = time_post.split(':')
-        delayed_time_obj = dt.datetime(int(date_post[2]), int(date_post[1]),
-                                       int(date_post[0]), int(time_post[0]), int(time_post[1]))
-
-        if (date_now > delayed_time_obj) and (delayed_time_obj > lose_time_back):
+        if (post.date_time is not None) and (post.date_time < date_now) and (post.date_time > lose_time_back):
             send_future_pos_by_intime(post)
-            db.del_fut_post(post[0])
-            # Написать админу, что отложенный пост отправлен
-            # bot.send_message(chat_id, f'Успешно!')
-            print(
-                f'-----> Отправляем пост [{post[0]}] c меткой времени [{post[4]}] и спим 10 сек')
+            db.del_fut_post(post.id)
+
+            # TODO - Написать админу, что отложенный пост отправлен
             time.sleep(10)
-        elif date_now < delayed_time_obj:
-            pass
-        elif (date_now > delayed_time_obj) and (delayed_time_obj < lose_time_back):
-            pass
+
     return True
 
 
-def send_future_pos_by_intime(post):
+def send_future_pos_by_intime(post: Post):
     """Рассылка отложенных постов по времени"""
     users_id = list(map(lambda user: user[9], pay_guard.get_paid_users()))
 
     try:
-        tgsender = BlockTGBotSender(
-            users_id, post[2], post[1], post[6], post[7], post[8])
-
+        tgsender = BlockTGBotSender(users_id, post)
         tgsender.send()
     except Exception as e:
         logger.error(
@@ -235,14 +221,15 @@ def check_finish_trial_subscribe():
     users = list(map(lambda user: user[9],
                  pay_guard.get_users_note_fin_trial()))
     if users:
-        logger.info(f'-----> Нашли пользователей для уведомлений ')
+        text = end_trial_subscribe_msg()
 
-        new_admin_post = end_trial_subscribe_msg()
+        post = Post(
+            content=text,
+            mes_type='text',
+        )
 
         try:
-            tgsender = BlockTGBotSender(
-                users, new_admin_post, '(text)', 'post')
-
+            tgsender = BlockTGBotSender(users, post)
             tgsender.send()
         except Exception as e:
             logger.error(
@@ -256,14 +243,17 @@ def check_finish_paid_subscribe():
     users = list(map(lambda user: user[9],
                  pay_guard.get_users_note_fin_paid()))
     if users:
-        fin_date_obj = datetime.now()
-        fin_date = fin_date_obj.strftime('%d.%m.%Y')
+        fin_date = datetime.now().strftime('%d.%m.%Y')
 
-        new_admin_post = end_paid_subscribe_msg(fin_date)
+        text = end_paid_subscribe_msg(fin_date)
+
+        post = Post(
+            content=text,
+            mes_type='text',
+        )
+
         try:
-            tgsender = BlockTGBotSender(
-                users, new_admin_post, '(text)', 'post')
-
+            tgsender = BlockTGBotSender(users, post)
             tgsender.send()
         except Exception as e:
             logger.error(
@@ -338,13 +328,11 @@ def callback_inline(call: types.CallbackQuery):
     # ============================================= Рассылка live поста
     if call.data == 'live_send_now':
         bot.edit_message_text('Отправка...', chat_id, mes_id)
+
         with bot.retrieve_data(user_id, chat_id) as data:
-            kind = data.get('kind') or ''
             post: Post = data.get('post')
 
-        tg_sender = BlockTGBotSender(
-            [], post.content, f'{post.media or ""}({post.mes_type})', kind
-        )
+        tg_sender = BlockTGBotSender([], post)
         tg_sender.send()
 
         bot.edit_message_text('Успешно отправлен!', chat_id, mes_id)
@@ -362,31 +350,6 @@ def callback_inline(call: types.CallbackQuery):
         bot.delete_state(user_id, chat_id)
         bot.edit_message_text('Отменено!', chat_id, mes_id)
         send_start_by_user(bot, call.message, user_id, chat_id, user_role)
-
-    if call.data == 'admin_posting_fut_post_all_show':
-        # ## Показать список отложенных постов
-
-        # Отобразить список постов
-        mas_posts = db.get_fut_all_posts()
-        logger.info(f'Массив постов посмотреть')
-        logger.info(mas_posts)
-
-        if len(mas_posts) != 0:
-            for i in range(0, len(mas_posts)):
-                mas_post_slice = mas_posts[i]
-
-                # logger.info(f'Массив постов посмотреть mas_post_slice после подрезки')
-                # logger.info(mas_post_slice)
-                # logger.info(f'тип mas_post_slice {type(mas_post_slice)}')
-
-                send_admin_post(bot, chat_id, *mas_post_slice)
-
-        else:
-            bot.send_message(chat_id,
-                             text='Нет отложенных постов')
-
-        bot.send_message(chat_id, admin_fut_posts_msg(),
-                         reply_markup=kb_posts_back(), parse_mode='HTML')
 
     bot.answer_callback_query(call.id)
 

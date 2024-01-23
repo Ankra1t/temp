@@ -1,13 +1,16 @@
 from telebot import TeleBot as _TB
 
-from .admin.pages import send_admin_post
+from .admin.pages import send_admin_post, send_admin_client
 from .user.pages import send_user_education, send_user_main, send_user_terms, send_user_account
 
 from .admin.workers.handler import registration as _reg_admin_workers
 from .admin.workers.keyboards import kb_admin_workers_update, kb_admin_workers_actions
 
 from .admin.users.handler import registration as _reg_admin_users
-from .admin.users.keyboards import kb_admin_users, kb_admin_users_back
+from .admin.users.keyboards import (
+    kb_admin_users, kb_admin_users_back, kb_admin_users_list,
+    kb_admin_client_info, kb_admin_users_confirm
+)
 
 from .admin.params.handler import registration as _reg_admin_params
 from .admin.params.keyboards import (kb_params_change, kb_calculator, kb_params,

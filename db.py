@@ -1,9 +1,11 @@
 from datetime import datetime
 from math import exp
+import re
 import sqlite3
+from tracemalloc import stop
 from typing import Any, Literal, Optional
 
-from models import Post
+from models import Post, PostDetails
 
 MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 LANGUAGES_TYPE = Literal['ru', 'en']
@@ -34,6 +36,17 @@ class Database:
         """Получение пользователя по имени"""
         query = "SELECT * FROM users WHERE username = ?"
         params = (username,)
+
+        try:
+            return self.curs.execute(query, params).fetchone()
+        except Exception as e:
+            print(f'ERROR[get_user_by_username]: {e}')
+            return None
+
+    def get_user_by_id(self, user_id: int):
+        """Получение пользователя по имени"""
+        query = "SELECT * FROM users WHERE id = ?"
+        params = (user_id,)
 
         try:
             return self.curs.execute(query, params).fetchone()
@@ -180,13 +193,25 @@ class Database:
             print(f'ERROR[add_count_sub]: {e}')
             return False
 
-    def get_all_users(self):
+    def get_all_users(self, limit = 10, page = 1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
         try:
-            return self.curs.execute("SELECT * FROM users").fetchall()
+            return self.curs.execute(
+                "SELECT * FROM users "
+                f"ORDER BY created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+                "LIMIT ? OFFSET ? ",
+                (limit, (page - 1) * limit)
+            ).fetchall()
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
+
+    def get_users_count(self):
+        try:
+            return len(self.curs.execute("SELECT * FROM users").fetchall())
+        except Exception as e:
+            print(f'ERROR[get_users_count]: {e}')
+            return 0
 
     def get_users_with_sub(self):
         """Получить список пользователей с активной подпиской"""
@@ -252,31 +277,7 @@ class Database:
                 ALTER TABLE calc_user_settings_temp RENAME TO calc_user_settings;
                 """
             )
-            # self.curs.execute(
-            #     """
-            #     ALTER TABLE fut_posts ADD kind VARCHAR(10) DEFAULT 'post';
-            #     """
-            # )
-            # self.curs.execute(
-            #     """
-            #     ALTER TABLE fut_posts ADD open_price FLOAT NULL;
-            #     """
-            # )
-            # self.curs.execute(
-            #     """
-            #     ALTER TABLE fut_posts ADD stop_loss FLOAT NULL;
-            #     """
-            # )
-            # self.curs.execute(
-            #     """
-            #     ALTER TABLE fut_posts ADD risk_percent FLOAT NULL;
-            #     """
-            # )
-            # self.curs.execute(
-            #     """
-            #     ALTER TABLE fut_posts RENAME COLUMN risk_percent TO take_profit;
-            #     """
-            # )
+
             self.connection.commit()
         except Exception as e:
             print(f'ERROR[add_base_table]: {e}')
@@ -452,7 +453,6 @@ class Database:
 
     # ================================= Рабочий персонал
     # Гл.админ
-    # TODO - переписать на эти две функции
 
     def add_worker(self, id: int, username: str, role):
         """Добваление работника (1 = админ, 2 = редактор)"""
@@ -540,23 +540,50 @@ class Database:
             return 3
 
     # ================================ Отложенные посты
+    def _data_to_post(self, data: list):
+        open_price, stop_loss, name, ticker = data[6], data[7], data[8], data[9]
+        details = None
+
+        if (
+            open_price is None or
+            stop_loss is None or
+            name is None or
+            ticker is None
+        ):
+            details = PostDetails(
+                name=name,
+                open_price=open_price,
+                stop_loss=stop_loss,
+                ticker=ticker
+            )
+
+        return Post(
+            id=data[0],
+            content=data[1],
+            mes_type=data[2],
+            media=data[3],
+            direct=data[4],
+            date_time=data[5],
+            details=details
+        )
+
     def add_fut_post(self, post: Post, kind: str):
         """Добавить отложенный пост"""
-        dt = post.date_time or datetime.now()
-        id = len(self.get_fut_all_posts()) + 1
-
         if post.details is None:
-            details = (None, None, None)
+            details = (None, None, None, None)
         else:
-            details = (post.details.open_price,
-                       post.details.stop_loss, post.details.name)
+            details = (
+                post.details.open_price,
+                post.details.stop_loss,
+                post.details.name,
+                post.details.ticker
+            )
 
         query = """
-            INSERT INTO fut_posts(img, text, type, date, time, id, kind, open_price, stop_loss, name)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        params = (f'{post.media}({post.mes_type})', post.content, post.direct,
-                  dt.date(), dt.time().isoformat('minutes'), id, kind, *details)
+        params = (post.content, post.mes_type, post.media, post.direct, post.date_time, *details)
 
         try:
             self.curs.execute(query, params)
@@ -567,48 +594,44 @@ class Database:
 
     def del_fut_post(self, post_id):
         """Удалить отложенный пост"""
-
         try:
-            self.curs.execute("DELETE FROM fut_posts WHERE id = ?", (post_id,))
-            self.curs.execute(
-                "UPDATE fut_posts SET id = id - 1 WHERE id > ?", (post_id,))
+            self.curs.execute("DELETE FROM posts WHERE id = ?", (post_id,))
             self.connection.commit()
+            return True
         except Exception as e:
             print(f'ERROR[del_fut_post]: {e}')
+            return False
 
-    def get_fut_all_posts(self) -> list[Any]:
+    def get_fut_all_posts(self) -> list[Post]:
         """Получение отложенных постов"""
-        query = "SELECT id, img, text, type, date, time, kind, open_price, stop_loss, name FROM fut_posts"
+        query = (
+            'SELECT id, content, mes_type, media, direct, '
+            'date_time, open_price, stop_loss, name, ticker FROM posts'
+        )
 
         try:
-            return self.curs.execute(query).fetchall()
+            data = self.curs.execute(query).fetchall()
+
+            return list(map(lambda el: self._data_to_post(el), data))
         except Exception as e:
             print(f'ERROR[get_fut_all_posts]: {e}')
             return []
 
-    def check_fut_post(self, fut_post_id):
-        """Есть ли отложенные посты"""
-        query = "SELECT * FROM fut_posts WHERE id = ?"
-        params = (fut_post_id,)
-
-        try:
-            result = self.curs.execute(query, params).fetchall()
-            return bool(len(result))
-        except Exception as e:
-            print(f'ERROR[check_fut_post]: {e}')
-
-    def get_fut_post(self, id):
+    def get_fut_post(self, id: int):
         """Получить отложенный пост по id"""
-        query = """
-            SELECT id, img, text, type, date, time, kind, open_price, stop_loss, name
-            FROM fut_posts WHERE id = ?
-        """
+        query = (
+            'SELECT id, content, mes_type, media, direct, '
+            'date_time, open_price, stop_loss, name, ticker FROM posts WHERE id = ?'
+        )
         params = (id,)
 
         try:
-            return self.curs.execute(query, params).fetchone()
+            data = self.curs.execute(query, params).fetchone()
+
+            return self._data_to_post(data) if (data is not None) else None
         except Exception as e:
             print(f'ERROR[get_fut_post]: {e}')
+            return None
 
     # ================================ Изменние КИВИ ТОКЕНА И т.д.
     def update_qiwi_token(self, token):
@@ -766,7 +789,6 @@ class Database:
 
 # ======================= // Управление Баном Пользователей
 
-
     def check_ban_user(self, user_id):
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = ? and ban IS NOT NULL"
@@ -797,7 +819,7 @@ class Database:
                           (status, user_id,))
         self.connection.commit()
         print(
-            f'Обновили статус в status [{status}] пsubscribesользователя user_id [{user_id}]')
+            f'Обновили статус в status [{status}] пользователя user_id [{user_id}]')
 
     def get_subsribe_users(self, today, date_bonus):
         res = self.curs.execute(f"SELECT u.id_idx, u.created_at, u.username, "

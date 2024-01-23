@@ -65,6 +65,20 @@ CREATE TABLE
   );
 
   CREATE TABLE
+  `posts` (
+    `id` integer not null primary key autoincrement,
+    `content` TEXT not null,
+    `mes_type` varchar(20) DEFAULT `text`,
+    `direct` varchar(20) DEFAULT `Всем`,
+    `media` TEXT null,
+    `date_time` datetime not null,
+    `name`: TEXT null,
+    `open_price`: FLOAT null,
+    `stop_loss`: FLOAT null,
+    `ticker`: VARCHAR(20) null,
+  );
+
+  CREATE TABLE
   `transactions` (
     `id` integer not null primary key autoincrement,
     `created_at` datetime not null default CURRENT_TIMESTAMP,

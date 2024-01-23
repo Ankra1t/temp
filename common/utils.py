@@ -29,7 +29,7 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
             for key in value:
                 data[key] = value[key]
     except Exception as e:
-        print('Ошибка в записи данных state')
+        print(f'Ошибка в записи данных state [{e}]')
 
 
 def float_to_print(val: float | None):
@@ -61,3 +61,6 @@ def get_decimal_count(value: float):
     decimal_index = num_str.index('.')
     num_digits = len(num_str) - decimal_index - 1
     return num_digits
+
+def get_normal_text(message: Message):
+    return message.html_text or message.html_caption or ''

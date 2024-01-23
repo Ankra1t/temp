@@ -36,12 +36,28 @@ class Database:
             data.get('description'),
             data.get('discount_percent'),
             data.get('discount_findate'),
+            data.get('type_product'),
         )
 
     def get_prices(self, active: int) -> list[Price]:
         """Получение тарифа"""
         query = """SELECT * FROM prices WHERE active = %s"""
         params = (active,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_price(el), data))
+        except Exception as e:
+            print(f'ERROR[get_prices]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_prices_by_product(self, product_id, active: int) -> list[Price]:
+        """Получение тарифа по типу продукта"""
+        query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
+        params = (active, product_id,)
 
         try:
             self.curs.execute(query, params)
@@ -118,10 +134,12 @@ class Database:
         """Добавление цены"""
         datetime_now = datetime.now()
         query = ("INSERT INTO prices "
-                 "(name, currency, price, description, img, duration_days, updated_at, created_at) "
-                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)")
+                 "(name, currency, price, description, img, duration_days, type_product, "
+                 "updated_at, created_at) "
+                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
         params = (data.name, data.currency, data.price, data.description,
-                  data.img, data.duration_days, datetime_now, datetime_now)
+                  data.img, data.duration_days, data.type_product,
+                  datetime_now, datetime_now)
 
         try:
             self.curs.execute(query, params)
