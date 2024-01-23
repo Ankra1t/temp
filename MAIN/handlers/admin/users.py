@@ -1,4 +1,3 @@
-from datetime import datetime
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -7,7 +6,7 @@ from initialize import kb_inl_admin, pay_guard
 from models import User
 
 from MAIN.states import AdminUsersState
-from MAIN.callbacks import kb_admin_users, kb_admin_users_back
+from MAIN.callbacks import kb_admin_users_back, send_admin_client
 from CALCULATE.common.messages import msg_digit_error
 from common.utils import digit_accept, set_state_data, text_accept
 from messages.users import gift_subscribe_msg
@@ -45,7 +44,8 @@ def handle_username_subscribe(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Такого пользователя не существует, попробуйте другой username',
-            reply_markup=kb_admin_users_back())
+            reply_markup=kb_admin_users_back()
+        )
 
 
 def handle_days_subscribe(message: Message, bot: TeleBot):
@@ -68,7 +68,6 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         subscribe_user_id = data.get('user_id')
-        username = data.get('username')
 
     pay_guard.set_subscribe_unactive_by_user_id(subscribe_user_id)
 
@@ -79,13 +78,9 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
     data_fin = datetime_show['admin']
     bot.send_message(
         chat_id,
-        f'Клиенту {username} установлена платная подписка на {days} дней, до {data_fin}'
+        f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
     )
-    bot.send_message(
-        chat_id,
-        'Действия с пользователями 👤',
-        reply_markup=kb_admin_users()
-    )
+    send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
     bot.send_message(
         subscribe_user_id,
