@@ -1,4 +1,3 @@
-from tkinter import Button
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from .filter import admin_users_factory
