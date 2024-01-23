@@ -102,12 +102,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         res_str_all_users += '\n<b>Выберите id пользователя для подробной информации и действий над ним</b> 👇'
 
-        kb = kb_admin_users_list(pages, page, client_ids, filter) if (
-            count > limit) else kb_admin_users_back()
-
         bot.edit_message_text(
             res_str_all_users, chat_id, mes_id,
-            reply_markup=kb
+            reply_markup=kb_admin_users_list(pages, page, client_ids, filter)
         )
 
     if type == 'client_add_sub':
