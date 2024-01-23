@@ -44,6 +44,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 chat_id, user_id,
                 reply_markup=kb_posts()
             )
+            return
 
         for i in range(len(posts)):
             send_admin_post(bot, chat_id, posts[i])
