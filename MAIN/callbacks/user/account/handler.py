@@ -105,7 +105,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         count_ref = len(referals)
         intext = msg_referral(count_ref)
         bot.send_message(
-            chat_id, text=intext, parse_mode="HTML",
+            chat_id, text=intext,
             reply_markup=kb_user_referral()
         )
 

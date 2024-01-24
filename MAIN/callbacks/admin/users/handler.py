@@ -2,19 +2,25 @@ from datetime import datetime
 import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from common.utils import set_state_data
 
 from initialize import kb_inl_admin, pay_guard
 from db import db
 from models import User
 from MAIN.states import AdminUsersState
 
-from .keyboards import kb_admin_users_back, kb_admin_users_list
+from .keyboards import kb_admin_client_info, kb_admin_users_back, kb_admin_users_confirm, kb_admin_users_list
 from .filter import admin_users_factory, AdminUsersCallbackFilter
+from ..pages import send_admin_client
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = admin_users_factory.parse(call.data)
-    type = callback_data['type']
+
+    type: str = callback_data.get('type') or ''
+    filter: str = callback_data.get('filter') or ''
+    client_id = int(callback_data.get('client_id') or 0)
+    page = int(callback_data.get('page') or 1)
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
@@ -55,45 +61,109 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.set_state(user_id, AdminUsersState.ban_username, chat_id)
 
-    if 'client_list' in type:
-        type_list = type.split('+')
-
-        page = int(type_list[1]) if len(type_list) == 2 else 1
-
-        limit = 10
+    if type == 'client_list':
+        limit = 6
         count = db.get_users_count()
 
         pages = math.ceil(count / limit)
 
-        mas_all_user = db.get_all_users(limit, page)
+        mas_all_user = db.get_all_users(
+            limit, page, 'by_date_old' if filter == 'by_date_old' else '')
         res_str_all_users = ''
+        client_ids: list[int] = []
 
         for user in mas_all_user:
             tg_user_id = int(user[9])
+            client_ids.append(tg_user_id)
+
             nik = f'@{user[2]}' if user[2] else 'Скрыт'
-            ban = ' (BAN) ' if user[10] is not None else ''
+            ban = '(BAN)' if user[10] is not None else ''
             user = User()
             user.id = tg_user_id
             user_subsriber = pay_guard.get_current_subscribe_user(user)
 
             fin_date = 'нет подписок'
             type_subscribe_show = ''
+
             if user_subsriber.subscribe is not None:
-                fin_date = user_subsriber.subscribe.finish_dt
-                fin_date = fin_date.strftime('%d/%m/%Y')
-                type_subscribe = user_subsriber.subscribe.type
-                type_subscribe_show = f' тип {type_subscribe}'
+                fin_date = user_subsriber.subscribe.finish_dt.strftime(
+                    '%d/%m/%Y')
+                type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
 
-            res_str_all_users += (f'\n {ban}{str(tg_user_id)} | {nik}   '
-                                  f'\nПодписка (окончание): {fin_date}{type_subscribe_show}\n')
+            user_show = (
+                f'\n{str(tg_user_id)} | {nik} | {ban}'
+                f'\nПодписка до: {fin_date}{type_subscribe_show}\n'
+            )
 
-        kb = kb_admin_users_list(pages, page) if (
-            pages > limit) else kb_admin_users_back()
+            if (user_subsriber.subscribe is not None) and (filter == 'by_paid'):
+                res_str_all_users = user_show + res_str_all_users
+            else:
+                res_str_all_users += user_show
+
+        res_str_all_users += '\n<b>Выберите id пользователя для подробной информации и действий над ним</b> 👇'
 
         bot.edit_message_text(
             res_str_all_users, chat_id, mes_id,
-            reply_markup=kb
+            reply_markup=kb_admin_users_list(pages, page, client_ids, filter)
         )
+
+    if type == 'client_add_sub':
+        bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'user_id': client_id,
+        })
+        bot.edit_message_text(
+            'Введите количество дней подписки:',
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_back()
+        )
+
+    if type == 'client_cancel_sub':
+        bot.edit_message_text(
+            f'Отменить подписку пользователю с id[{client_id}?]',
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_confirm('cancel_sub', client_id)
+        )
+
+    if type == 'client_ban':
+        user = db.get_user_by_id(client_id)
+        if user is None:
+            return
+        is_banned = user[10] is not None
+
+        if is_banned:
+            text = f'Разбанить пользователя с id[{client_id}]'
+        else:
+            text = f'Забанить пользователя с id[{client_id}]'
+
+        bot.edit_message_text(
+            text,
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_confirm('ban', client_id)
+        )
+
+    if 'confirm_yes' in type:
+        user = db.get_user_by_id(client_id)
+        if user is None:
+            return
+        is_banned = user[10] is not None
+
+        if 'cancel_sub' in type:
+            pay_guard.set_subscribe_unactive_by_user_id(client_id)
+        if 'ban' in type:
+            if is_banned:
+                pay_guard.unban_user_by_id(client_id)
+            else:
+                pay_guard.ban_user_by_id(client_id)
+
+        bot.edit_message_text('Успешно!', chat_id, mes_id)
+
+    if 'confirm_no' in type:
+        bot.edit_message_text('Отменено!', chat_id, mes_id)
+
+    if (type == 'client_info') or ('confirm' in type):
+        send_admin_client(bot, call.message, user_id,
+                          client_id, type != 'client_info')
 
     bot.answer_callback_query(call.id)
 

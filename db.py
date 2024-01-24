@@ -43,6 +43,17 @@ class Database:
             print(f'ERROR[get_user_by_username]: {e}')
             return None
 
+    def get_user_by_id(self, user_id: int):
+        """Получение пользователя по имени"""
+        query = "SELECT * FROM users WHERE id = ?"
+        params = (user_id,)
+
+        try:
+            return self.curs.execute(query, params).fetchone()
+        except Exception as e:
+            print(f'ERROR[get_user_by_username]: {e}')
+            return None
+
     def check_worker(self, id: int):
         """Проверка на работника"""
         query = "SELECT * FROM workers WHERE id = ?"
@@ -191,11 +202,17 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_paging_users(self, limit = 10, page = 1):
-        """Получить список всех пользователей постранично"""
+    
+    def get_all_users(self, limit = 10, page = 1, filter: Literal['', 'by_date_old'] = ''):
+        """Получить список всех пользователей"""
         try:
-            return self.curs.execute("SELECT * FROM users LIMIT ? OFFSET ?",
-                                     (limit, (page - 1) * limit)).fetchall()
+            return self.curs.execute(
+                "SELECT * FROM users "
+                f"ORDER BY created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+                "LIMIT ? OFFSET ? ",
+                (limit, (page - 1) * limit)
+            ).fetchall()
+          
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
@@ -813,7 +830,7 @@ class Database:
                           (status, user_id,))
         self.connection.commit()
         print(
-            f'Обновили статус в status [{status}] пsubscribesользователя user_id [{user_id}]')
+            f'Обновили статус в status [{status}] пользователя user_id [{user_id}]')
 
     def get_subsribe_users(self, today, date_bonus):
         res = self.curs.execute(f"SELECT u.id_idx, u.created_at, u.username, "
