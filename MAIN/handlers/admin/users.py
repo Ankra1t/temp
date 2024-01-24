@@ -1,5 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message
+from MAIN.callbacks.admin.users.keyboards import kb_admin_users_cancel
 
 from db import db
 from initialize import kb_inl_admin, pay_guard
@@ -8,8 +9,50 @@ from models import User
 from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client
 from CALCULATE.common.messages import msg_digit_error
-from common.utils import digit_accept, set_state_data, text_accept
+from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from messages.users import gift_subscribe_msg
+
+
+def handle_client_search(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        filter = data.get('filter') or ''
+        page = data.get('page') or 1
+
+    client_name_id = text_accept(message)
+    if client_name_id is None:
+        bot.send_message(
+            chat_id,
+            'Введите id или имя пользователя текстом:',
+            reply_markup=kb_admin_users_cancel(filter, page)
+        )
+        return
+
+    if is_digit(client_name_id):
+        client_id = int(float(client_name_id))
+        client = db.get_user_by_id(client_id)
+    else:
+        client_name_id = client_name_id.replace('@', '')
+        client = db.get_user_by_username(client_name_id)
+
+    if client is None:
+        bot.send_message(
+            chat_id,
+            'Пользователя не существует.\nВведите id или имя пользователя:',
+            reply_markup=kb_admin_users_cancel(filter, page)
+        )
+        return
+
+    send_admin_client(
+        bot, message, user_id,
+        client[9], True,
+        filter, page
+    )
+
+    bot.delete_state(user_id, chat_id)
 
 
 def handle_username_subscribe(message: Message, bot: TeleBot):
@@ -208,6 +251,8 @@ def handle_ban_username(message: Message, bot: TeleBot):
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
+
+    reg_mes(handle_client_search, state=AdminUsersState.client_search)
 
     reg_mes(handle_username_subscribe,
             state=AdminUsersState.subscribe_username)

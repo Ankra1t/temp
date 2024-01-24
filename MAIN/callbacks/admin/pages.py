@@ -44,7 +44,15 @@ def send_admin_post(
         bot.send_message(chat_id, text)
 
 
-def send_admin_client(bot: TeleBot, message: Message, user_id: int, client_id: int, is_first=False):
+def send_admin_client(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    client_id: int,
+    is_first=False,
+    filter='',
+    page=1
+):
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -75,14 +83,15 @@ def send_admin_client(bot: TeleBot, message: Message, user_id: int, client_id: i
         '',
         '<b>Выберите действие 👇</b>'
     ))
+    keyboard = kb_admin_client_info(client_id, is_banned, page, filter)
 
     if is_first:
         bot.send_message(
             chat_id, text,
-            reply_markup=kb_admin_client_info(client_id, is_banned)
+            reply_markup=keyboard
         )
     else:
         bot.edit_message_text(
             text, chat_id, mes_id,
-            reply_markup=kb_admin_client_info(client_id, is_banned)
+            reply_markup=keyboard
         )
