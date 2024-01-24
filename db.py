@@ -185,7 +185,8 @@ class Database:
     def get_all_users(self):
         """Получить список всех пользователей"""
         try:
-            return self.curs.execute("SELECT * FROM users").fetchall()
+            return self.curs.execute("SELECT * FROM users LIMIT ? OFFSET ?",
+                                     (limit, (page - 1) * limit)).fetchall()
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
