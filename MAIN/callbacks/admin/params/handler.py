@@ -61,7 +61,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             bot.send_message(chat_id, 'Успешно')
             bot.send_message(
                 chat_id, menu_msg('Параметры'),
-                reply_markup=kb_params(), parse_mode='HTML')
+                reply_markup=kb_params())
         if 'no' in type:
             bot.edit_message_text(
                 'Что изменяем?', chat_id, mes_id,
