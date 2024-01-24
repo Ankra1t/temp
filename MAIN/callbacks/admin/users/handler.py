@@ -26,18 +26,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
-    if type == 'put_subscribe':
-        bot.edit_message_text('Отправьте ник клиента', chat_id, mes_id,
-                              reply_markup=kb_admin_users_back())
-
-        bot.set_state(user_id, AdminUsersState.subscribe_username, chat_id)
-
-    if type == 'add_sub_subscribe':
-        bot.edit_message_text('Отправьте id клиента', chat_id, mes_id,
-                              reply_markup=kb_admin_users_back())
-
-        bot.set_state(user_id, AdminUsersState.sub_user_id, chat_id)
-
     if type == 'cancel_subscribe':
         bot.edit_message_text(
             'Отменить подписку', chat_id, mes_id,
@@ -45,21 +33,27 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'ban_list':
+        limit = 10
         users = pay_guard.get_ban_users()
+        count = len(users)
+
+        pages = math.ceil(count / limit)
+
+        users = users[(page - 1) * limit:page * limit]
+        text = ''
 
         for user in users:
             tg_user_id = str(user[9])
-            nik = str(user[2]) if user[2] else 'Скрыт'
-            ban = ' (BAN) ' if user[10] is not None else ''
+            nik = str(user[2]) if user[2] is not None else 'Скрыт'
+            ban = '(BAN)' if user[10] is not None else ''
 
-            user_info = f'\n {ban} {tg_user_id} | {nik} '
-            bot.send_message(chat_id, user_info,
-                             reply_markup=kb_inl_admin.user_unbun(tg_user_id))
+            text += f'\n{ban} {tg_user_id} | @{nik}\n'
 
-        bot.send_message(chat_id, 'Отправьте username для бана пользователя:',
-                         reply_markup=kb_admin_users_back())
-
-        bot.set_state(user_id, AdminUsersState.ban_username, chat_id)
+        bot.edit_message_text(
+            text,
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_list(pages, page, filter, False)
+        )
 
     if type == 'client_list':
         limit = 6
@@ -72,11 +66,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'by_date_old' if filter == 'by_date_old' else ''
         )
         res_str_all_users = ''
-        client_ids: list[int] = []
 
         for user in mas_all_user:
             tg_user_id = int(user[9])
-            client_ids.append(tg_user_id)
 
             nik = f'@{user[2]}' if user[2] else 'Скрыт'
             ban = '(BAN)' if user[10] is not None else ''
