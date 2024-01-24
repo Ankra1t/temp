@@ -38,20 +38,18 @@ db.add_worker(156045434, 'azatFa', 1)
 # db.curs.execute(query)
 # db.connection.commit()
 
-# db.curs.execute('DELETE FROM users WHERE id < 1000')
-# db.connection.commit()
+db.curs.execute('DELETE FROM users WHERE id < 1000')
+db.connection.commit()
 
-# for i in range(1, 100):
-#         query = (
-#                 'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
-#                 'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
-#         )
-#         params = (i, 'andww', 0, datetime.now() - timedelta(days=i))
+for i in range(1, 30):
+        query = (
+                'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
+                'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
+        )
+        params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
 
-#         db.curs.execute(query, params)
-#         db.connection.commit()
-
-print(float(float('20.9123123')))
+        db.curs.execute(query, params)
+        db.connection.commit()
 
 ################################################################################################
 # if user_role == 0:
