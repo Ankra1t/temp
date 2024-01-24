@@ -4,8 +4,6 @@ from telebot.types import CallbackQuery
 from db import db
 from db_new import db_new
 
-from models import Price, Transactions
-
 from .keyboards import kb_user_referral, kb_user_referral_list
 from .filter import user_account_factory, UserAccountCallbackFilter
 
