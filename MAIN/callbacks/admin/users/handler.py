@@ -68,7 +68,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         pages = math.ceil(count / limit)
 
         mas_all_user = db.get_paginated_users(
-            limit, page, 'by_date_old' if filter == 'by_date_old' else '')
+            limit, page,
+            'by_date_old' if filter == 'by_date_old' else ''
+        )
         res_str_all_users = ''
         client_ids: list[int] = []
 
@@ -170,6 +172,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'filter': filter,
             'page': page
         })
+
+    if 'confirm' in type:
+        send_admin_client(
+            bot, call.message,
+            user_id, client_id,
+            True, filter, page
+        )
 
     bot.answer_callback_query(call.id)
 
