@@ -196,14 +196,12 @@ class Database:
     def get_all_users(self):
         """Получить список всех пользователей"""
         try:
-            return self.curs.execute("SELECT * FROM users LIMIT ? OFFSET ?",
-                                     (limit, (page - 1) * limit)).fetchall()
+            return self.curs.execute("SELECT * FROM users").fetchall()
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    
-    def get_all_users(self, limit = 10, page = 1, filter: Literal['', 'by_date_old'] = ''):
+    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
         try:
             return self.curs.execute(
@@ -212,7 +210,7 @@ class Database:
                 "LIMIT ? OFFSET ? ",
                 (limit, (page - 1) * limit)
             ).fetchall()
-          
+
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
@@ -594,7 +592,8 @@ class Database:
             INSERT INTO posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        params = (post.content, post.mes_type, post.media, post.direct, post.date_time, *details)
+        params = (post.content, post.mes_type, post.media,
+                  post.direct, post.date_time, *details)
 
         try:
             self.curs.execute(query, params)

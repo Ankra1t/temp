@@ -67,7 +67,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         pages = math.ceil(count / limit)
 
-        mas_all_user = db.get_all_users(
+        mas_all_user = db.get_paginated_users(
             limit, page, 'by_date_old' if filter == 'by_date_old' else '')
         res_str_all_users = ''
         client_ids: list[int] = []
