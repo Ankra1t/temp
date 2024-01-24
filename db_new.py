@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import Price, Subscribe, Transactions
+from models import Price, Subscribe, Transactions, Purchase
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 
@@ -376,6 +376,62 @@ class Database:
             print(f'ERROR[get_wait_transaction]: {e}')
             self.connection.rollback()
             return None
+
+    def get_paid_transactions_by_user(self, user_id: int):
+        """Получение тарифа"""
+        query = ("SELECT * FROM transactions "
+                "WHERE user_id = %s AND status = %s"
+        )
+        status = 'paid'
+        params = (user_id, status, )
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_purchases_by_user(self, user_id: int):
+        """Получение тарифа"""
+        query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
+                 "t.sum AS real_sum, p.price AS tariff_price, "
+                 "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
+                 "t.created_at AS create_date "
+                 "FROM transactions t, prices p "
+                 "WHERE "
+                 "t.user_id = %s AND t.status = %s "
+                 "AND t.price_id = p.id"
+                 )
+        status = 'paid'
+        params = (user_id, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            # return data
+            return list(map(lambda el: self._data_to_purchase(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            self.connection.rollback()
+            return []
+
+    def _data_to_purchase(self, data: DictRow):
+        return Purchase(
+            data.get('user_id'),
+            data.get('price_id'),
+            data.get('price_name'),
+            data.get('product'),
+            data.get('real_sum'),
+            data.get('tariff_price'),
+            data.get('currency'),
+            data.get('duration'),
+            data.get('date'),
+            data.get('create_date'),
+        )
 
     def set_transactions_complete(self, id: int):
         datetime_now = datetime.now().strftime(DATE_FORMAT)

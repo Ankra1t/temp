@@ -182,10 +182,19 @@ class Database:
             print(f'ERROR[add_count_sub]: {e}')
             return False
 
-    def get_all_users(self, limit = 10, page = 1):
+    def get_all_users(self):
         """Получить список всех пользователей"""
         try:
-            return self.curs.execute("SELECT * FROM users LIMIT ? OFFSET ?", (limit, (page - 1) * limit)).fetchall()
+            return self.curs.execute("SELECT * FROM users").fetchall()
+        except Exception as e:
+            print(f'ERROR[get_all_users]: {e}')
+            return []
+
+    def get_paging_users(self, limit = 10, page = 1):
+        """Получить список всех пользователей постранично"""
+        try:
+            return self.curs.execute("SELECT * FROM users LIMIT ? OFFSET ?",
+                                     (limit, (page - 1) * limit)).fetchall()
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
