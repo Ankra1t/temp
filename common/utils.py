@@ -15,7 +15,7 @@ def is_digit(val: str) -> bool:
 
 def digit_accept(message: Message, type: type[T] = float):
     if message.content_type == 'text' and message.text is not None and is_digit(message.text):
-        return type(message.text.replace(',', '.'))
+        return type(float(message.text.replace(',', '.')))
 
 
 def text_accept(message: Message):

@@ -9,7 +9,7 @@ from .admin.workers.keyboards import kb_admin_workers_update, kb_admin_workers_a
 from .admin.users.handler import registration as _reg_admin_users
 from .admin.users.keyboards import (
     kb_admin_users, kb_admin_users_back, kb_admin_users_list,
-    kb_admin_client_info, kb_admin_users_confirm
+    kb_admin_client_info, kb_admin_users_confirm, kb_admin_users_cancel
 )
 
 from .admin.params.handler import registration as _reg_admin_params
