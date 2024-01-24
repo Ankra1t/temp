@@ -193,6 +193,15 @@ class Database:
             print(f'ERROR[add_count_sub]: {e}')
             return False
 
+    def get_all_users(self):
+        """Получить список всех пользователей"""
+        try:
+            return self.curs.execute("SELECT * FROM users").fetchall()
+        except Exception as e:
+            print(f'ERROR[get_all_users]: {e}')
+            return []
+
+    
     def get_all_users(self, limit = 10, page = 1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
         try:
@@ -202,6 +211,7 @@ class Database:
                 "LIMIT ? OFFSET ? ",
                 (limit, (page - 1) * limit)
             ).fetchall()
+          
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
