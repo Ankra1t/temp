@@ -9,7 +9,7 @@ from db import db
 from models import User
 from MAIN.states import AdminUsersState
 
-from .keyboards import kb_admin_client_info, kb_admin_users_back, kb_admin_users_confirm, kb_admin_users_list
+from .keyboards import kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_users_list
 from .filter import admin_users_factory, AdminUsersCallbackFilter
 from ..pages import send_admin_client
 
@@ -67,8 +67,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         pages = math.ceil(count / limit)
 
-        mas_all_user = db.get_all_users(
-            limit, page, 'by_date_old' if filter == 'by_date_old' else '')
+        mas_all_user = db.get_paginated_users(
+            limit, page,
+            'by_date_old' if filter == 'by_date_old' else ''
+        )
         res_str_all_users = ''
         client_ids: list[int] = []
 
@@ -100,11 +102,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             else:
                 res_str_all_users += user_show
 
-        res_str_all_users += '\n<b>Выберите id пользователя для подробной информации и действий над ним</b> 👇'
-
         bot.edit_message_text(
             res_str_all_users, chat_id, mes_id,
-            reply_markup=kb_admin_users_list(pages, page, client_ids, filter)
+            reply_markup=kb_admin_users_list(pages, page, filter)
         )
 
     if type == 'client_add_sub':
@@ -161,9 +161,24 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'confirm_no' in type:
         bot.edit_message_text('Отменено!', chat_id, mes_id)
 
-    if (type == 'client_info') or ('confirm' in type):
-        send_admin_client(bot, call.message, user_id,
-                          client_id, type != 'client_info')
+    if type == 'client_search':
+        bot.edit_message_text(
+            'Введите id или имя пользователя:',
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_cancel(filter, page)
+        )
+        bot.set_state(user_id, AdminUsersState.client_search, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'filter': filter,
+            'page': page
+        })
+
+    if 'confirm' in type:
+        send_admin_client(
+            bot, call.message,
+            user_id, client_id,
+            True, filter, page
+        )
 
     bot.answer_callback_query(call.id)
 

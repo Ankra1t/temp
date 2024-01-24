@@ -18,16 +18,18 @@ def kb_admin_users():
     btn2 = getButton('Отменить подписку', 'cancel_subscribe')
     btn3 = getButton('Добавить/убавить', 'add_sub_subscribe')
     btn4 = getButton('Бан ⛔️', 'ban_list')
+    search = getButton('Поиск пользователя', 'client_search')
     btn5 = getButton('👨‍💻 Список клиентов', 'client_list', '', 1)
     btn6 = kb_inl_admin.go_main_btn
 
     # keyboard.add(btn1, btn2)
     # keyboard.add(btn3, btn4)
+    keyboard.add(search)
     keyboard.add(btn5, btn6)
     return keyboard
 
 
-def kb_admin_users_list(pages: int, page: int, client_ids: list[int], filter=''):
+def kb_admin_users_list(pages: int, page: int, filter=''):
     def getListButton(text: str, new_page: int, new_filter=None):
         new_filter = new_filter if (new_filter is not None) else filter
         return getButton(text, 'client_list', new_filter, new_page)
@@ -41,6 +43,7 @@ def kb_admin_users_list(pages: int, page: int, client_ids: list[int], filter='')
     btn_back = getListButton('Назад', page - 1)
 
     counter = getButton(f'{page}/{pages}', 'counter')
+    search = getButton('Поиск пользователя', 'client_search', filter, page)
 
     if pages > 1:
         if page == 1:
@@ -63,21 +66,13 @@ def kb_admin_users_list(pages: int, page: int, client_ids: list[int], filter='')
     btn_filter = getListButton(filter_text, 1, new_filter)
     keyboard.add(btn_filter)
 
-    add_buttons: list[InlineKeyboardButton] = []
-    for i, el in enumerate(client_ids):
-        btn = getButton(f'{el}', 'client_info', '', 1, el)
-        add_buttons.append(btn)
-
-        if (len(add_buttons) == row_width) or (i + 1 == len(client_ids) and len(add_buttons) != 0):
-            keyboard.add(*add_buttons)
-            add_buttons = []
-
+    keyboard.add(search)
     keyboard.add(kb_inl_admin.go_users_btn, kb_inl_admin.go_main_btn)
 
     return keyboard
 
 
-def kb_admin_client_info(client_id: int, is_banned: bool):
+def kb_admin_client_info(client_id: int, is_banned: bool, page=1, filter=''):
     def getClientButton(text: str, type: str):
         return getButton(text, type, '', 1, client_id)
 
@@ -92,9 +87,30 @@ def kb_admin_client_info(client_id: int, is_banned: bool):
     btn_add_sub = getClientButton(
         'Выдать подписку', 'client_add_sub'
     )
+    print(filter, page)
+    if filter != '' or page != 1:
+        btn_client_list = getButton(
+            '👨‍💻 Список клиентов', 'client_list', filter, page
+        )
+    else:
+        btn_client_list = kb_inl_admin.go_users_btn
 
     keyboard.add(btn_add_sub, btn_remove_sub)
-    keyboard.add(btn_ban, kb_inl_admin.go_users_btn)
+    keyboard.add(btn_ban, btn_client_list)
+    return keyboard
+
+
+def kb_admin_users_cancel(filter='', page=1):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    if filter != '' or page != 1:
+        btn_client_list = getButton(
+            '👨‍💻 Список клиентов', 'client_list', filter, page
+        )
+    else:
+        btn_client_list = kb_inl_admin.go_users_btn
+
+    keyboard.add(btn_client_list)
     return keyboard
 
 

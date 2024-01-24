@@ -2,6 +2,8 @@ from telebot.handler_backends import State, StatesGroup
 
 
 class AdminUsersState(StatesGroup):
+    client_search = State()
+
     subscribe_username = State()
     subscribe_days = State()
 

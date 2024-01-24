@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from db import db
+from db_new import db_new
 
 from .keyboards import kb_user_referral, kb_user_referral_list
 from .filter import user_account_factory, UserAccountCallbackFilter
@@ -23,8 +24,75 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     # цена входа
     # 
 
-    if type == 'purchases' or type == 'buy_month':
-        send_in_development(bot, call.message)
+
+    if type == 'purchases':
+    # if type == 'purchases' or type == 'buy_month':
+        purchases_list = db_new.get_purchases_by_user(user_id)
+        bot.edit_message_text(
+            '<b>--- Мои покупки</b>', chat_id, mes_id, parse_mode="HTML"
+        )
+
+        if len(purchases_list) == 0:
+            bot.send_message(chat_id=chat_id,
+                                  parse_mode="HTML",
+                                  text=f'<b>- - - Сигналы:</b>')
+            bot.send_message(chat_id=chat_id,
+                             parse_mode="HTML",
+                             text=f'не куплено')
+            bot.send_message(chat_id=chat_id,
+                             parse_mode="HTML",
+                             text=f'<b>- - - Калькулятор:</b>')
+            bot.send_message(chat_id=chat_id,
+                             parse_mode="HTML",
+                             text=f'не куплено')
+        else:
+
+            product_list = {'signals': [], 'calc': []}
+
+            template_buy_goods = """
+                🛍 Покупка <b>{}</b> за {} {}
+                дата {}
+                            """
+
+            # Сортируем услуги по продуктам
+            for i in range(0, len(purchases_list)):
+                purchase = purchases_list[i]
+                date_buy = purchase.payment_date if purchase.payment_date else purchase.create_date
+                purchase_show = template_buy_goods.format(purchase.price_name,
+                                                                          purchase.real_sum,
+                                                                          purchase.currency,
+                                                                          date_buy
+                                                                          )
+                if purchase.type_product == 'calc':
+                    product_list['calc'].append(purchase_show)
+                if purchase.type_product == 'signals':
+                    product_list['signals'].append(purchase_show)
+
+            bot.send_message(chat_id=chat_id,
+                             parse_mode="HTML",
+                             text=f'<b>- - -Сигналы:</b>')
+            if len(product_list['signals']):
+                for i in range(0, len(product_list['signals'])):
+                    bot.send_message(chat_id=chat_id,
+                                     parse_mode="HTML",
+                                     text=product_list['signals'][i])
+            else:
+                bot.send_message(chat_id=chat_id,
+                                 parse_mode="HTML",
+                                 text=f'не куплено')
+
+            bot.send_message(chat_id=chat_id,
+                             parse_mode="HTML",
+                             text=f'<b>- - -Калькулятор:</b>')
+            if len(product_list['calc']):
+                for i in range(0, len(product_list['calc'])):
+                    bot.send_message(chat_id=chat_id,
+                                     parse_mode="HTML",
+                                     text=product_list['calc'][i])
+            else:
+                bot.send_message(chat_id=chat_id,
+                                 parse_mode="HTML",
+                                 text=f'не куплено')
 
     if type == 'main':
         send_user_main(bot, call.message, user_id)

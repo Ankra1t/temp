@@ -123,6 +123,39 @@ class Transactions:
         self.payment_date = payment_date
 
 
+
+class Purchase:
+    def __init__(
+        self,
+        user_id: int | None,
+        price_id: int | None = None,
+        price_name: str | None = None,
+        type_product: str | None = None,
+        real_sum: float | None = None,
+        tariff_price: float | None = None,
+        currency: str | None = None,
+        duration: int = None,
+        payment_date: str | None = None,
+        create_date: str | None = None,
+
+    ):
+        self.user_id = user_id
+        self.price_id = price_id
+        self.price_name = price_name
+        self.type_product = type_product
+        self.real_sum = real_sum
+        self.tariff_price = tariff_price
+        self.currency = currency
+        self.duration_days = duration
+        self.payment_date = payment_date
+        self.create_date = create_date
+
+
+
+
+
+
+
 class PostDetails(BaseModel):
     name: str
     open_price: float
