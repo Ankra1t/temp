@@ -42,7 +42,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         # todo-fin: Что-то тут не работает, что-то достается из БД
         # mas = db.get_other()
         # for i in range(0, len(mas)):
-        #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1], parse_mode="HTML")
+        #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1])
         # bot.register_next_step_handler(message, admin_other_menu)
         pass
     elif type == 'change':

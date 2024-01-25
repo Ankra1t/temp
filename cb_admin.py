@@ -46,8 +46,8 @@ def admin_main_callbacks(call: types.CallbackQuery):
     if type == 'workers':
         bot.edit_message_text(
             menu_msg('Работники'), chat_id, mes_id,
-            reply_markup=kb_inl_admin.workers(),
-            parse_mode='HTML')
+            reply_markup=kb_inl_admin.workers()
+        )
 
     if type == 'fut_posts':
         bot.edit_message_text(
@@ -60,9 +60,10 @@ def admin_main_callbacks(call: types.CallbackQuery):
                               reply_markup=kb_inl_admin.kb_tariffs())
 
     if type == 'params':
-        bot.edit_message_text(menu_msg('Параметры'), chat_id, mes_id,
-                              reply_markup=kb_params(),
-                              parse_mode='HTML')
+        bot.edit_message_text(
+            menu_msg('Параметры'), chat_id, mes_id,
+            reply_markup=kb_params()
+        )
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
@@ -80,15 +81,17 @@ def admin_workers_callbacks(call: types.CallbackQuery):
     mes_id = call.message.id
 
     if type == 'admins':
-        bot.edit_message_text(menu_msg('Главные админы'), chat_id, mes_id,
-                              reply_markup=kb_admin_workers_actions('admin'),
-                              parse_mode='HTML')
+        bot.edit_message_text(
+            menu_msg('Главные админы'), chat_id, mes_id,
+            reply_markup=kb_admin_workers_actions('admin')
+        )
 
     if type == 'redactors':
-        bot.edit_message_text(menu_msg('Редакторы'), chat_id, mes_id,
-                              reply_markup=kb_admin_workers_actions(
-                                  'redactor'),
-                              parse_mode='HTML')
+        bot.edit_message_text(
+            menu_msg('Редакторы'), chat_id, mes_id,
+            reply_markup=kb_admin_workers_actions(
+                'redactor')
+        )
 
     if type == 'support':
         sup = db.get_support()
@@ -157,8 +160,10 @@ def admin_default_callbacks(call: types.CallbackQuery):
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)
 
-            bot.edit_message_text(text, chat_id, mes_id,
-                                  reply_markup=kb_inl_admin.main(), parse_mode='HTML')
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_inl_admin.main()
+            )
 
             bot.clear_step_handler(call.message)
         except Exception as e:
@@ -280,7 +285,8 @@ def admin_default_callbacks(call: types.CallbackQuery):
 
         bot.send_message(call.message.chat.id,
                          text=f'--- Список действующих скидок:', reply_markup=None)
-        tariff_manager.admin_discount_list(call.message, type_discount='active')
+        tariff_manager.admin_discount_list(
+            call.message, type_discount='active')
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
@@ -292,7 +298,8 @@ def admin_default_callbacks(call: types.CallbackQuery):
         #                       text=f'--- Список прошедших скидок:', reply_markup=None)
         bot.send_message(call.message.chat.id,
                          text=f'--- Список прошедших скидок:', reply_markup=None)
-        tariff_manager.admin_discount_list(call.message, type_discount='inactive')
+        tariff_manager.admin_discount_list(
+            call.message, type_discount='inactive')
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
@@ -329,8 +336,10 @@ def admin_action_callbacks(call: types.CallbackQuery):
     if action == 'bot_texts_list':
         # Список текстов как при реплай кнопке
         text_editor.list_texts(call.message.chat)
-        bot.send_message(call.message.chat.id, menu_msg('Параметры'),
-                         reply_markup=kb_params(), parse_mode='HTML')
+        bot.send_message(
+            call.message.chat.id, menu_msg('Параметры'),
+            reply_markup=kb_params()
+        )
 
     # ##### ------------------ Разбанить пользователя по id
     if action == 'unban_user':
@@ -392,8 +401,8 @@ def admin_action_callbacks(call: types.CallbackQuery):
         set_state_data(bot, user_id, chat_id, {'type_product': target_id})
 
         bot.edit_message_text(
-                'Введите название нового тарифа (заголовок)', chat_id, mes_id,
-                reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            'Введите название нового тарифа (заголовок)', chat_id, mes_id,
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
         bot.set_state(user_id, AdminTariffState.name, chat_id)
 
@@ -402,7 +411,8 @@ def admin_action_callbacks(call: types.CallbackQuery):
         logger.info(f'-----> Действие ***{action}*** ')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
                               text=f'Список тарифов по продукту:', reply_markup=None)
-        tariff_manager.admin_tariff_list_show(call.message, product_id=target_id)
+        tariff_manager.admin_tariff_list_show(
+            call.message, product_id=target_id)
 
         bot.send_message(call.message.chat.id,
                          text=f'Выполнение действий с тарифами', reply_markup=kb_inl_admin.kb_tariff_list())
@@ -441,7 +451,8 @@ def admin_action_callbacks(call: types.CallbackQuery):
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
     if action == 'change_tariff_description':
-        bot.set_state(user_id, AdminTariffState.edit_field_description, chat_id)
+        bot.set_state(
+            user_id, AdminTariffState.edit_field_description, chat_id)
         set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
         bot.send_message(
             chat_id, 'Введите новое описание',

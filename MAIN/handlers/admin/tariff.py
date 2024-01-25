@@ -36,10 +36,12 @@ def handle_name(message: Message, bot: TeleBot):
         tariff = db_new.get_price_by_id(tariff_id)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_photo(chat_id, tariff.img, desc_template,
+                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+        )
 
         bot.delete_state(user_id, chat_id)
 
@@ -73,7 +75,8 @@ def handle_duration(message: Message, bot: TeleBot):
         tariff = db_new.get_price_by_id(tariff_id)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_photo(chat_id, tariff.img, desc_template,
+                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
@@ -110,7 +113,8 @@ def handle_price(message: Message, bot: TeleBot):
         tariff = db_new.get_price_by_id(tariff_id)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_photo(chat_id, tariff.img, desc_template,
+                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
@@ -146,17 +150,21 @@ def handle_image(message: Message, bot: TeleBot):
         tariff = db_new.get_price_by_id(tariff_id)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML",
-                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_photo(
+            chat_id, tariff.img, desc_template,
+            reply_markup=kb_inl_admin.kb_tariff_options(tariff_id)
+        )
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+        )
 
         bot.delete_state(user_id, chat_id)
 
     if current_state == 'AdminTariffState:image':
 
-        set_state_data(bot, user_id, chat_id, {'image': message.photo[-1].file_id})
+        set_state_data(bot, user_id, chat_id, {
+                       'image': message.photo[-1].file_id})
         bot.set_state(user_id, AdminTariffState.description, chat_id)
         bot.send_message(
             chat_id, 'Отправьте описание нового тарифа в виде текста',
@@ -185,7 +193,10 @@ def handle_description(message: Message, bot: TeleBot):
         tariff = db_new.get_price_by_id(tariff_id)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML", reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
+        bot.send_photo(
+            chat_id, tariff.img, desc_template,
+            reply_markup=kb_inl_admin.kb_tariff_options(tariff_id)
+        )
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
@@ -199,12 +210,13 @@ def handle_description(message: Message, bot: TeleBot):
             image = data.get('image')
             type_product = data.get('type_product')
 
-        tariff = Price(name, duration, price, 'USDT', None, image, description, type_product=type_product)
+        tariff = Price(name, duration, price, 'USDT', None,
+                       image, description, type_product=type_product)
 
         db_new.add_price(tariff)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template, "HTML")
+        bot.send_photo(chat_id, tariff.img, desc_template)
 
         bot.send_message(
             chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT создан',

@@ -5,7 +5,7 @@ from db import db
 # ankrait id 6919899538
 
 # db.delete_calculator_user(156045434)
-db.add_worker(156045434, 'azatFa', 1)
+# db.add_worker(156045434, 'azatFa', 1)
 # db.del_worker(156045434)
 # db.curs.execute('DELETE FROM users')
 # db.connection.commit()
@@ -38,18 +38,18 @@ db.add_worker(156045434, 'azatFa', 1)
 # db.curs.execute(query)
 # db.connection.commit()
 
-db.curs.execute('DELETE FROM users WHERE id < 1000')
-db.connection.commit()
+# db.curs.execute('DELETE FROM users WHERE id < 1000')
+# db.connection.commit()
 
-for i in range(1, 30):
-        query = (
-                'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
-                'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
-        )
-        params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
+# for i in range(1, 30):
+#         query = (
+#                 'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
+#                 'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
+#         )
+#         params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
 
-        db.curs.execute(query, params)
-        db.connection.commit()
+#         db.curs.execute(query, params)
+#         db.connection.commit()
 
 ################################################################################################
 # if user_role == 0:
@@ -87,4 +87,4 @@ for i in range(1, 30):
 #         pay_link = invoice_to_send.pay_url
 
 #         bot.send_message(message.chat.id, text='{}'.format(invoice_to_send.description),
-#                          parse_mode="HTML", reply_markup=kb_users_bill(show_price, pay_link))
+#                          reply_markup=kb_users_bill(show_price, pay_link))

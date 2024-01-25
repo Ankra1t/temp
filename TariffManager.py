@@ -34,9 +34,10 @@ class TariffManager(object):
             list = db_new.get_prices(1)
 
         if len(list) == 0:
-            self.bot.send_message(chat_id=message.chat.id,
-                                  parse_mode="HTML",
-                                  text=f'Тарифов не обнаружено')
+            self.bot.send_message(
+                message.chat.id,
+                'Тарифов не обнаружено'
+            )
             return
 
         for i in range(0, len(list)):
@@ -51,28 +52,34 @@ class TariffManager(object):
 
             try:
                 if tariff.img:
-                    
-                    self.bot.send_photo(chat_id=message.chat.id, photo=tariff.img,
-                                        caption=desc_template,
-                                        parse_mode="HTML", reply_markup=kb)
+
+                    self.bot.send_photo(
+                        message.chat.id, tariff.img,
+                        desc_template,
+                        reply_markup=kb
+                    )
                 else:
-                    self.bot.send_message(chat_id=message.chat.id,
-                                          parse_mode="HTML",
-                                          text=desc_template,
-                                          reply_markup=kb)
+                    self.bot.send_message(
+                        message.chat.id,
+                        desc_template,
+                        reply_markup=kb
+                    )
 
             except Exception as e:
-                print(f'Проблемы с отправкой тарифа admin_tariff_list_show {e}')
+                print(
+                    f'Проблемы с отправкой тарифа admin_tariff_list_show {e}')
                 if 'wrong file identifier' in str(e):
-                    print(f'Скорей всего не отправилась картинка созданная в другом боте')
+                    print(
+                        f'Скорей всего не отправилась картинка созданная в другом боте')
 
-    def admin_discount_list(self, message: types.Message, type_discount = 'active'):
+    def admin_discount_list(self, message: types.Message, type_discount='active'):
         list = db_new.get_prices(1)
         count = 0
         if len(list) == 0:
-            self.bot.send_message(chat_id=message.chat.id,
-                                  parse_mode="HTML",
-                                  text=f'Тарифов не обнаружено')
+            self.bot.send_message(
+                message.chat.id,
+                f'Тарифов не обнаружено'
+            )
             return
         for i in range(0, len(list)):
             tariff = list[i]
@@ -81,26 +88,25 @@ class TariffManager(object):
             if type_discount == 'active' and self.is_active_discount(tariff):
                 count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
-                self.bot.send_message(chat_id=message.chat.id,
-                                      parse_mode="HTML",
-                                      text=desc_template,
-                                      )
+                self.bot.send_message(
+                    message.chat.id,
+                    desc_template,
+                )
 
             # Сортируем прошедшие скидки
             if type_discount == 'inactive' and self.is_inactive_discount(tariff):
                 count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
-                self.bot.send_message(chat_id=message.chat.id,
-                                      parse_mode="HTML",
-                                      text=desc_template,
-                                      )
+                self.bot.send_message(
+                    message.chat.id,
+                    desc_template,
+                )
         if not count:
             empty_message = 'Активных' if type_discount == 'active' else 'Прошедших'
-            self.bot.send_message(chat_id=message.chat.id,
-                                  parse_mode="HTML",
-                                  text=f'{empty_message} скидок в тарифах не обнаружено',
-                                  )
-
+            self.bot.send_message(
+                message.chat.id,
+                f'{empty_message} скидок в тарифах не обнаружено',
+            )
 
     def is_active_discount(self, tariff):
         date_now = datetime.now()
@@ -127,9 +133,10 @@ class TariffManager(object):
 
         if len(list) == 0:
 
-            self.bot.send_message(chat_id=message.chat.id,
-                                  parse_mode="HTML",
-                                  text=f'Тарифов не обнаружено')
+            self.bot.send_message(
+                message.chat.id,
+                'Тарифов не обнаружено'
+            )
 
         for i in range(0, len(list)):
             tariff = list[i]
@@ -156,7 +163,8 @@ class TariffManager(object):
             except Exception as e:
                 print(f'Проблемы с отправкой тарифа tariff_list_show {e}')
                 if 'wrong file identifier' in str(e):
-                    print(f'Скорей всего не отправилась картинка созданная в другом боте')
+                    print(
+                        f'Скорей всего не отправилась картинка созданная в другом боте')
 
     def change_fields_tariff_show(self, tariff_id, change_text):
         tariff = db_new.get_price_by_id(tariff_id)
