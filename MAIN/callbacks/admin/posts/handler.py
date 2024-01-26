@@ -157,8 +157,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(text, chat_id, mes_id)
             bot.send_message(
                 chat_id, admin_fut_posts_msg(),
-                reply_markup=kb_posts(),
-                parse_mode='HTML')
+                reply_markup=kb_posts()
+            )
 
     bot.answer_callback_query(call.id)
 

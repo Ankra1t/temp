@@ -20,11 +20,16 @@ class TextEditor(object):
                 text_id = list[i][0]
                 print(f'list[i] ')
                 print(list[i])
-                single_text = 'id={} label={} \n\n{}'.format(text_id, list[i][2], list[i][3])
-                self.bot.send_message(chat.id, text=single_text, parse_mode="HTML",
-                                      reply_markup=self.kb_inl.kb_edit_single_text(text_id))
+                single_text = 'id={} label={} \n\n{}'.format(
+                    text_id, list[i][2], list[i][3])
+                self.bot.send_message(
+                    chat.id, single_text,
+                    reply_markup=self.kb_inl.kb_edit_single_text(text_id)
+                )
         else:
-            self.bot.send_message(chat.id, text=f'Тестов для редактирования не найдено', parse_mode="HTML")
+            self.bot.send_message(
+                chat.id, 'Тестов для редактирования не найдено'
+            )
 
     def get_text(self, label):
         logger.info(f'-----> Запрошен приветственный текст из БД  ')
@@ -42,4 +47,3 @@ class TextEditor(object):
             self.db.save_bot_text_by_id(text_id, content)
         else:
             raise Exception('Пустой текст затрет полностью старый текст!')
-

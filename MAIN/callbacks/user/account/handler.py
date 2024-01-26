@@ -20,31 +20,33 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
-    
-    # цена входа
-    # 
 
+    # цена входа
+    #
 
     if type == 'purchases':
-    # if type == 'purchases' or type == 'buy_month':
+        # if type == 'purchases' or type == 'buy_month':
         purchases_list = db_new.get_purchases_by_user(user_id)
         bot.edit_message_text(
-            '<b>--- Мои покупки</b>', chat_id, mes_id, parse_mode="HTML"
+            '<b>--- Мои покупки</b>', chat_id, mes_id
         )
 
         if len(purchases_list) == 0:
-            bot.send_message(chat_id=chat_id,
-                                  parse_mode="HTML",
-                                  text=f'<b>- - - Сигналы:</b>')
-            bot.send_message(chat_id=chat_id,
-                             parse_mode="HTML",
-                             text=f'не куплено')
-            bot.send_message(chat_id=chat_id,
-                             parse_mode="HTML",
-                             text=f'<b>- - - Калькулятор:</b>')
-            bot.send_message(chat_id=chat_id,
-                             parse_mode="HTML",
-                             text=f'не куплено')
+            bot.send_message(
+                chat_id,
+                '<b>- - - Сигналы:</b>'
+            )
+            bot.send_message(
+                chat_id,
+                'не куплено'
+            )
+            bot.send_message(
+                chat_id,
+                '<b>- - - Калькулятор:</b>')
+            bot.send_message(
+                chat_id,
+                'не куплено'
+            )
         else:
 
             product_list = {'signals': [], 'calc': []}
@@ -59,40 +61,45 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 purchase = purchases_list[i]
                 date_buy = purchase.payment_date if purchase.payment_date else purchase.create_date
                 purchase_show = template_buy_goods.format(purchase.price_name,
-                                                                          purchase.real_sum,
-                                                                          purchase.currency,
-                                                                          date_buy
-                                                                          )
+                                                          purchase.real_sum,
+                                                          purchase.currency,
+                                                          date_buy
+                                                          )
                 if purchase.type_product == 'calc':
                     product_list['calc'].append(purchase_show)
                 if purchase.type_product == 'signals':
                     product_list['signals'].append(purchase_show)
 
-            bot.send_message(chat_id=chat_id,
-                             parse_mode="HTML",
-                             text=f'<b>- - -Сигналы:</b>')
+            bot.send_message(
+                chat_id,
+                '<b>- - -Сигналы:</b>'
+            )
             if len(product_list['signals']):
                 for i in range(0, len(product_list['signals'])):
-                    bot.send_message(chat_id=chat_id,
-                                     parse_mode="HTML",
-                                     text=product_list['signals'][i])
+                    bot.send_message(
+                        chat_id,
+                        product_list['signals'][i]
+                    )
             else:
-                bot.send_message(chat_id=chat_id,
-                                 parse_mode="HTML",
-                                 text=f'не куплено')
+                bot.send_message(
+                    chat_id,
+                    'не куплено'
+                )
 
-            bot.send_message(chat_id=chat_id,
-                             parse_mode="HTML",
-                             text=f'<b>- - -Калькулятор:</b>')
+            bot.send_message(
+                chat_id,
+                '<b>- - -Калькулятор:</b>'
+            )
             if len(product_list['calc']):
                 for i in range(0, len(product_list['calc'])):
-                    bot.send_message(chat_id=chat_id,
-                                     parse_mode="HTML",
-                                     text=product_list['calc'][i])
+                    bot.send_message(
+                        chat_id,
+                        product_list['calc'][i]
+                    )
             else:
-                bot.send_message(chat_id=chat_id,
-                                 parse_mode="HTML",
-                                 text=f'не куплено')
+                bot.send_message(
+                    chat_id, 'не куплено'
+                )
 
     if type == 'main':
         send_user_main(bot, call.message, user_id)
@@ -118,7 +125,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         else:
             res = "К сожалению, у вас нет рефералов 😔\n<b>Отправьте</b> свой реферальную ссылку друзьями, чтобы это исправить 😉"
         bot.send_message(
-            chat_id, res, reply_markup=kb_user_referral_list(), parse_mode="HTML")
+            chat_id, res, reply_markup=kb_user_referral_list()
+        )
 
     if type == 'password':
         bot.edit_message_text(

@@ -93,9 +93,10 @@ def invoice_paid_prev(update: Update) -> None:
                 pay_guard.set_subscribe_unactive(trial_id)
 
             # Отправляем сообщение пользователю
-            bot.send_message(transaction['user_id'],
-                             text=paid_subscribe_msg(finish_date),
-                             parse_mode="HTML")
+            bot.send_message(
+                transaction['user_id'],
+                text=paid_subscribe_msg(finish_date)
+            )
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
@@ -118,9 +119,10 @@ def invoice_paid(update: UpdateBBanker) -> None:
             logger.info('-----> Нашли нужную транзакцию '
                         'далее transactions_complete [{}]'.format(transaction['transaction_id']))
 
-            bot.send_message(transaction['user_id'],
-                             text='Ваш платеж подтвержден и находиться в обработке',
-                             parse_mode="HTML")
+            bot.send_message(
+                transaction['user_id'],
+                'Ваш платеж подтвержден и находиться в обработке'
+            )
 
             # Завершаем транзакцию
             pays_banker.transactions_complete(transaction['transaction_id'])
@@ -139,9 +141,10 @@ def invoice_paid(update: UpdateBBanker) -> None:
                 pay_guard.set_subscribe_unactive(transaction['user_id'])
 
             # Отправляем сообщение пользователю
-            bot.send_message(transaction['user_id'],
-                             text=paid_subscribe_msg(finish_date),
-                             parse_mode="HTML")
+            bot.send_message(
+                transaction['user_id'],
+                text=paid_subscribe_msg(finish_date),
+            )
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '

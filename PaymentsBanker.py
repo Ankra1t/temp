@@ -16,7 +16,7 @@ from models import InvoiceBBanker, Transactions, UpdateBBanker, Price
 class PaymentsBanker(object):
     """Класс обработки платежей, в том числе Cryptobot"""
 
-    def __init__(self, api_key, api_secret, bot_instance:TeleBot) -> None:
+    def __init__(self, api_key, api_secret, bot_instance: TeleBot) -> None:
         self.bot = bot_instance
         self.dt_format = "%Y-%m-%d %I:%M"
         self.token = api_key
@@ -267,9 +267,10 @@ class PaymentsBanker(object):
         logger.info(f'-----> true_amount [{true_amount}]')
 
         if transaction:
-            self.bot.send_message(transaction['user_id'],
-                                  text='Благодарим. Получили информацию о вашем платеже',
-                                  parse_mode="HTML")
+            self.bot.send_message(
+                transaction['user_id'],
+                'Благодарим. Получили информацию о вашем платеже'
+            )
             true_amount = int(transaction['sum'])
 
         if not incoming_update_json['sign'] or not incoming_update_json['sign_2']:
@@ -333,9 +334,10 @@ class PaymentsBanker(object):
             transaction = self.get_wait_transaction_by_invoice_id(
                 incoming_update_json['id'], incoming_update_json['currency'])
             if transaction:
-                self.bot.send_message(transaction['user_id'],
-                                      text='Не смогли проверить корректность вашего платежа, обратитесь в нашу тех поддержку',
-                                      parse_mode="HTML")
+                self.bot.send_message(
+                    transaction['user_id'],
+                    'Не смогли проверить корректность вашего платежа, обратитесь в нашу тех поддержку'
+                )
 
         return Response('Status False!', status=400)
 

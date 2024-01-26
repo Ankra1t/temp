@@ -69,9 +69,9 @@ class Database:
 
     # ==================================Пользователи
     # ПОРАВИТЬ В БУДУЩЕМ
-
     def add_user(self, user_id: int, username: str, refer: int):
         """Добавление юзера"""
+
         query = (
             'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance) '
             'VALUES(?, ?, ?, 0, 0, 0, 0)'
@@ -98,17 +98,6 @@ class Database:
         except Exception as e:
             print(f'ERROR[del_user]: {e}')
             return False
-
-    def get_days(self, id: int):
-        """Получить количество оставшихся дней юзера"""
-        query = "SELECT count_days FROM users WHERE id = ?"
-        params = (id,)
-
-        try:
-            return int(self.curs.execute(query, params).fetchone()[0])
-        except Exception as e:
-            print(f'ERROR[get_days]: {e}')
-            return None
 
     def get_referals(self, id: int):
         """Получить рефералов юзера"""
@@ -142,57 +131,6 @@ class Database:
             print(f'ERROR[get_balance]: {e}')
             return None
 
-    def add_days(self, id: int, count: int):
-        """Добавлить дни юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_days = ? WHERE id = ?"
-        params = (current_days + count, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[add_days]: {e}')
-            return False
-
-    def minus_days(self, id: int, count: int):
-        """Убавить дни юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_days = ? WHERE id = ?"
-        params = (current_days - count, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[minus_days]: {e}')
-            return False
-
-    def add_count_sub(self, id: int):
-        """Добавить покупку юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_sub = ? WHERE id = ?"
-        params = (current_days + 1, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[add_count_sub]: {e}')
-            return False
-
     def get_all_users(self):
         """Получить список всех пользователей"""
         try:
@@ -203,13 +141,17 @@ class Database:
 
     def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
+        query = "SELECT * FROM users "
+        # if filter == 'by_paid':
+        #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
+        #     query += 'WHERE subscribes.active = 1 '
+        query += f"ORDER BY users.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+        query += "LIMIT ? OFFSET ? "
+
+        params = (limit, (page - 1) * limit)
+
         try:
-            return self.curs.execute(
-                "SELECT * FROM users "
-                f"ORDER BY created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
-                "LIMIT ? OFFSET ? ",
-                (limit, (page - 1) * limit)
-            ).fetchall()
+            return self.curs.execute(query, params).fetchall()
 
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
@@ -462,7 +404,6 @@ class Database:
 
     # ================================= Рабочий персонал
     # Гл.админ
-
     def add_worker(self, id: int, username: str, role):
         """Добваление работника (1 = админ, 2 = редактор)"""
         self.del_user(id)
@@ -548,6 +489,7 @@ class Database:
             print(f'ERROR[get_role]: {e}')
             return 3
 
+    # TODO - удалить fut_posts, count_days в users
     # ================================ Отложенные посты
     def _data_to_post(self, data: list):
         open_price, stop_loss, name, ticker = data[6], data[7], data[8], data[9]
@@ -798,6 +740,7 @@ class Database:
 
 
 # ======================= // Управление Баном Пользователей
+
 
     def check_ban_user(self, user_id):
         """Проверка на бан"""
