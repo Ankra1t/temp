@@ -23,9 +23,11 @@ def send_start_by_user(
 
     if user_role == 0:
         if has_registered_now:
-            bot.send_message(
-                chat_id, welcome_trial_subscribe_msg()
-            )
+            # bot.send_message(
+            #     chat_id, welcome_trial_subscribe_msg()
+            # )
+            # todo-fin: Назначаем тестовую подписку
+            pass
 
         send_user_main(bot, message, user_id, True)
 
