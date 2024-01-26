@@ -152,7 +152,15 @@ class Purchase:
 
 
 
-
+class NUser(BaseModel):
+    id: int
+    tg_id: int
+    username: str
+    refer: int
+    lesson_count: int
+    lang: str
+    ban: int
+    registration_dt: datetime
 
 
 

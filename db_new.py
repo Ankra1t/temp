@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import Price, Subscribe, Transactions, Purchase
+from models import NUser, Price, Subscribe, Transactions, Purchase
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 
@@ -102,7 +102,7 @@ class Database:
 
     def update_price(self, name: str, price: float):
         """Обновить цену"""
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE prices set price = %s, updated_at = %s WHERE name = %s"
         params = (price, datetime_now, name)
 
@@ -117,7 +117,7 @@ class Database:
 
     def update_price_field(self, field, value, price_id: int):
         """Обновить цену"""
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = f"UPDATE prices set {field} = %s, updated_at = %s WHERE id = %s"
         params = (value, datetime_now, price_id, )
 
@@ -132,7 +132,7 @@ class Database:
 
     def add_price(self, data: Price):
         """Добавление цены"""
-        datetime_now = datetime.now()
+        datetime_now = datetime.utcnow()
         query = ("INSERT INTO prices "
                  "(name, currency, price, description, img, duration_days, type_product, "
                  "updated_at, created_at) "
@@ -150,7 +150,7 @@ class Database:
 
     def deactive_price(self, id: int):
         """Установить цену не активной"""
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE prices set active = 0, updated_at = %s WHERE id = %s"
         params = (datetime_now, id,)
 
@@ -165,7 +165,7 @@ class Database:
 
     def set_price_discount(self, id: int, percent: float, fin_date: datetime):
         """Установка скидки тарифу"""
-        datetime_now = datetime.now()
+        datetime_now = datetime.utcnow()
         query = "UPDATE prices set discount_percent = %s, discount_findate = %s, updated_at = %s WHERE id = %s"
         params = (percent, fin_date, datetime_now, id,)
 
@@ -235,7 +235,7 @@ class Database:
             return None
 
     def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = (
             'SELECT u.id_idx, u.created_at, u.username, u.count_sub, u.count_days, '
             'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
@@ -255,7 +255,7 @@ class Database:
             return []
 
     def set_subscribe_unactive_by_user_id(self, user_id: int):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s"
         params = (0, datetime_now, user_id,)
 
@@ -269,7 +269,7 @@ class Database:
             return False
 
     def set_subscribe_unactive(self, subscribe_id: int):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE id = %s"
         params = (0, datetime_now, subscribe_id)
 
@@ -283,7 +283,7 @@ class Database:
             return False
 
     def set_subscribe_findate(self, subscribe_id: int, finish_date: str):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE subscribes set finish_dt = %s, updated_at = %s WHERE id = %s"
         params = (finish_date, datetime_now, subscribe_id,)
 
@@ -297,7 +297,7 @@ class Database:
             return False
 
     def set_unactive_subscribes(self, type: SUBSCRIBE_TYPE):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = (
             'UPDATE subscribes set active = %s, updated_at = %s '
             'WHERE finish_dt < %s AND subscribe_type = %s'
@@ -314,7 +314,7 @@ class Database:
             return False
 
     def set_unactive_subscribe_for_time(self, time_start: str, time_end: str):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = (
             "UPDATE subscribes set active = %s, updated_at = %s "
             "WHERE (updated_at BETWEEN %s AND %s ) AND active = %s"
@@ -380,8 +380,8 @@ class Database:
     def get_paid_transactions_by_user(self, user_id: int):
         """Получение тарифа"""
         query = ("SELECT * FROM transactions "
-                "WHERE user_id = %s AND status = %s"
-        )
+                 "WHERE user_id = %s AND status = %s"
+                 )
         status = 'paid'
         params = (user_id, status, )
 
@@ -434,7 +434,7 @@ class Database:
         )
 
     def set_transactions_complete(self, id: int):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.utcnow()
         query = "UPDATE transactions set status = %s, payment_date = %s WHERE id = %s"
         params = ('paid', datetime_now, id, )
 
@@ -461,16 +461,26 @@ class Database:
             return False
 
     # Users
-    def get_all_users(self):
-        query = "SELECT * FROM users"
+    def _data_to_user(self, data: DictRow):
+        print(data.get('created_at'))
+        # return NUser(
+        #     tg_id=data.get('id_telegram'),
+        #     username=data.get('username_tg'),
+        #     refer=
+        # )
+
+    def get_all_users(self) -> list[DictRow]:
+        query = "SELECT * FROM users JOIN tgbotusers ON users.id = tgbotusers.user_id"
 
         try:
             self.curs.execute(query)
-            data = self.curs.fetchone()
-            print(data)
+            data = self.curs.fetchall()
+            self._data_to_user(data[0])
+            return data
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             self.connection.rollback()
+            return []
 
     # Auth
     def get_access_token(self):

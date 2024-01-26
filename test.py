@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from time import timezone
+from datetime import datetime, timedelta, timezone
 from db import db
 from db_new import db_new
 
@@ -13,7 +12,6 @@ from db_new import db_new
 # db.connection.commit()
 
 # print(db_new.get_access_token())
-
 
 # query = ' '.join((
 #         'CREATE TABLE posts (',
@@ -54,8 +52,10 @@ from db_new import db_new
 # a = db.get_fut_post(2)
 # if a is not None:
 #     dt = a.date_time or datetime.now()
-
-db_new.get_all_users()
+data = db_new.get_all_users()
+print(data)
+# db_new.curs.execute("SELECT * FROM tgbotusers")
+# print(db_new.curs.fetchall())
 
 ################################################################################################
 # if user_role == 0:
