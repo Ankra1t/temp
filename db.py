@@ -71,6 +71,7 @@ class Database:
     # ПОРАВИТЬ В БУДУЩЕМ
     def add_user(self, user_id: int, username: str, refer: int):
         """Добавление юзера"""
+
         query = (
             'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance) '
             'VALUES(?, ?, ?, 0, 0, 0, 0)'

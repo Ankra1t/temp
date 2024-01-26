@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+from time import timezone
 from db import db
+from db_new import db_new
 
 # azatFa  id 156045434
 # ankrait id 6919899538
@@ -10,15 +12,7 @@ from db import db
 # db.curs.execute('DELETE FROM users')
 # db.connection.commit()
 
-# a = datetime.now()
-
-# print(a.time().isoformat('minutes'))
-
-# arr = 'a'
-# print(arr)
-# a, b = arr.split('_')
-# print(a)
-# print(.0)
+# print(db_new.get_access_token())
 
 
 # query = ' '.join((
@@ -50,6 +44,18 @@ from db import db
 
 #         db.curs.execute(query, params)
 #         db.connection.commit()
+
+# db.add_user(-1, 'asd', 0)
+# db.del_user(-1)
+
+# a = db.get_user_by_id(-1)
+# dt: datetime = a[1]
+
+# a = db.get_fut_post(2)
+# if a is not None:
+#     dt = a.date_time or datetime.now()
+
+db_new.get_all_users()
 
 ################################################################################################
 # if user_role == 0:

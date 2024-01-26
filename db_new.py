@@ -460,6 +460,18 @@ class Database:
             self.connection.rollback()
             return False
 
+    # Users
+    def get_all_users(self):
+        query = "SELECT * FROM users"
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchone()
+            print(data)
+        except Exception as e:
+            print(f'ERROR[get_all_users]: {e}')
+            self.connection.rollback()
+
     # Auth
     def get_access_token(self):
         query = 'SELECT value FROM access_options WHERE name = %s'
