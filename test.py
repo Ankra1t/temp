@@ -6,7 +6,7 @@ from db_new import db_new
 # ankrait id 6919899538
 
 # db.delete_calculator_user(156045434)
-# db.add_worker(156045434, 'azatFa', 1)
+db.add_worker(156045434, 'azatFa', 1)
 # db.del_worker(156045434)
 # db.curs.execute('DELETE FROM users')
 # db.connection.commit()
@@ -52,8 +52,10 @@ from db_new import db_new
 # a = db.get_fut_post(2)
 # if a is not None:
 #     dt = a.date_time or datetime.now()
-data = db_new.get_all_users()
-print(data)
+#
+# data = db_new.get_all_users()
+# print(data)
+
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
 

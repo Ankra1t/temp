@@ -76,7 +76,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
             user_subsriber = User()
             user_subsriber.id = tg_user_id
-            user_subsriber = pay_guard.get_current_subscribe_user(user_subsriber)
+            user_subsriber = pay_guard.get_current_subscribe_user(
+                user_subsriber)
 
             fin_date = 'нет подписок'
             type_subscribe_show = ''
@@ -97,7 +98,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 res_str_all_users += user_show
 
         bot.edit_message_text(
-            res_str_all_users, chat_id, mes_id,
+            res_str_all_users or 'Нет пользователей', chat_id, mes_id,
             reply_markup=kb_admin_users_list(pages, page, filter)
         )
 

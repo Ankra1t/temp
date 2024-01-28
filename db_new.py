@@ -464,11 +464,11 @@ class Database:
     def _data_to_user(self, data: DictRow):
         return UserInfo(
             id=data.get('id'),
-            tg_id=data.get('id_telegram') or -1,
+            tg_id=data.get('id_telegram'),
             username=data.get('username_tg') or '',
             refer=data.get('refer_id') or -1,
             ban=data.get('ban') or 0,
-            registration_dt=data.get('created_at')
+            registration_dt=data.get('created_at') or datetime(2023, 5, 5)
         )
 
     USER_INFO_QUERY = (
@@ -494,11 +494,13 @@ class Database:
         params = (id,)
 
         try:
-            return self.curs.execute(query, params).fetchall()
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
             print(f'ERROR[get_referals]: {e}')
+            self.connection.rollback()
             return []
-
 
     def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = '') -> list[UserInfo]:
         """Получить список всех пользователей"""
@@ -507,17 +509,18 @@ class Database:
         #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
         #     query += 'WHERE subscribes.active = 1 '
         query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
-        query += "LIMIT ? OFFSET ? "
+        query += "LIMIT %s OFFSET %s "
 
         params = (limit, (page - 1) * limit)
 
         try:
-            return self.curs.execute(query, params).fetchall()
-
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_all_users]: {e}')
+            print(f'ERROR[get_paginated_users]: {e}')
+            self.connection.rollback()
             return []
-
 
     # Auth
     def get_access_token(self):
