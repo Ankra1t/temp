@@ -1,16 +1,16 @@
 CREATE TABLE
   `users` (
     "id_idx" integer not null primary key autoincrement,
-    `created_at` datetime not null default CURRENT_TIMESTAMP,
-    "username" varchar(255) NULL,
-    "count_sub" INT NULL,
-    "count_days" INT NULL,
-    "refer" INT NULL,
-    "pay_money" INT2 NULL,
-    "balance" INT2 NULL,
-    "count_les" INT NULL,
-    "id" INT2 NULL,
-    "ban" DATETIME NULL,
+    -- `created_at` datetime not null default CURRENT_TIMESTAMP,
+    -- "username" varchar(255) NULL,
+    -- "count_sub" INT NULL,
+    -- "count_days" INT NULL,
+    -- "refer" INT NULL,
+    -- -- "pay_money" INT2 NULL,
+    -- "balance" INT2 NULL,
+    -- "count_les" INT NULL,
+    -- "id" INT2 NULL,
+    -- "ban" DATETIME NULL,
   );
 
   CREATE TABLE

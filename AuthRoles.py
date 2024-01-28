@@ -73,7 +73,7 @@ def check_ban(user_id: int):
 
 # Сообщение рефералу
 # if refer != 0:
-#     count_ref = len(self.db.get_referals(refer))
+#     count_ref = len(db_new.get_referals(refer))
 #     self.bot.send_message(refer, text=f'<b>Поздравляем!</b>🎊\nУ Вас появился новый реферал 😎 '
 #                           f'\n\n Ник: {self.nickname}\n\nУ вас рефералов: {count_ref} шт.')
 

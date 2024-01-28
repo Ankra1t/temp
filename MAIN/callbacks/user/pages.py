@@ -2,7 +2,9 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from db_new import db_new
 from initialize import text_editor
+
 from MAIN.common.messages import default_menu
 from messages.education import termins
 from .main.keyboards import kb_user_main
@@ -58,7 +60,7 @@ def send_user_terms(bot: TeleBot, message: Message, page: int, user_id: int, is_
 def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
 
-    referals = db.get_referals(user_id)
+    referals = db_new.get_referals(user_id)
 
     count_ref = len(referals)
     money = db.get_pay_money(user_id)

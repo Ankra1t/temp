@@ -99,7 +99,7 @@ class Database:
             print(f'ERROR[del_user]: {e}')
             return False
 
-    def get_referals(self, id: int):
+    def get_referals(self, id: int): # !deprecated
         """Получить рефералов юзера"""
         query = "SELECT * FROM users WHERE refer = ?"
         params = (id,)
@@ -131,7 +131,7 @@ class Database:
             print(f'ERROR[get_balance]: {e}')
             return None
 
-    def get_all_users(self):
+    def get_all_users(self): # !deprecated
         """Получить список всех пользователей"""
         try:
             return self.curs.execute("SELECT * FROM users").fetchall()
@@ -139,7 +139,7 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
+    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''): # !deprecated
         """Получить список всех пользователей"""
         query = "SELECT * FROM users "
         # if filter == 'by_paid':

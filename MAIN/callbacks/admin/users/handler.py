@@ -6,6 +6,7 @@ from common.utils import set_state_data
 
 from initialize import kb_inl_admin, pay_guard
 from db import db
+from db_new import db_new
 from models import User
 from MAIN.states import AdminUsersState
 
@@ -61,20 +62,21 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         pages = math.ceil(count / limit)
 
-        mas_all_user = db.get_paginated_users(
+        mas_all_user = db_new.get_paginated_users(
             limit, page,
             'by_date_old' if filter == 'by_date_old' else ''
         )
         res_str_all_users = ''
 
         for user in mas_all_user:
-            tg_user_id = int(user[9])
+            tg_user_id = user.tg_id
 
-            nik = f'@{user[2]}' if user[2] else 'Скрыт'
-            ban = '(BAN)' if user[10] is not None else ''
-            user = User()
-            user.id = tg_user_id
-            user_subsriber = pay_guard.get_current_subscribe_user(user)
+            nik = f'@{user.username}' if user.username != '' else 'Скрыт'
+            ban = '(BAN)' if user.ban == 1 else ''
+
+            user_subsriber = User()
+            user_subsriber.id = tg_user_id
+            user_subsriber = pay_guard.get_current_subscribe_user(user_subsriber)
 
             fin_date = 'нет подписок'
             type_subscribe_show = ''

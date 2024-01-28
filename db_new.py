@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import NUser, Price, Subscribe, Transactions, Purchase
+from models import UserInfo, Price, Subscribe, Transactions, Purchase
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 
@@ -462,25 +462,62 @@ class Database:
 
     # Users
     def _data_to_user(self, data: DictRow):
-        print(data.get('created_at'))
-        # return NUser(
-        #     tg_id=data.get('id_telegram'),
-        #     username=data.get('username_tg'),
-        #     refer=
-        # )
+        return UserInfo(
+            id=data.get('id'),
+            tg_id=data.get('id_telegram') or -1,
+            username=data.get('username_tg') or '',
+            refer=data.get('refer_id') or -1,
+            ban=data.get('ban') or 0,
+            registration_dt=data.get('created_at')
+        )
 
-    def get_all_users(self) -> list[DictRow]:
-        query = "SELECT * FROM users JOIN tgbotusers ON users.id = tgbotusers.user_id"
+    USER_INFO_QUERY = (
+        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at  '
+        'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
+    )
+
+    def get_all_users(self) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY
 
         try:
             self.curs.execute(query)
             data = self.curs.fetchall()
-            self._data_to_user(data[0])
-            return data
+            return list(map(lambda u: self._data_to_user(u), data))
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             self.connection.rollback()
             return []
+
+    def get_referals(self, id: int) -> list[UserInfo]:
+        """Получить рефералов юзера"""
+        query = self.USER_INFO_QUERY + 'WHERE tu.refer_id = %s'
+        params = (id,)
+
+        try:
+            return self.curs.execute(query, params).fetchall()
+        except Exception as e:
+            print(f'ERROR[get_referals]: {e}')
+            return []
+
+
+    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = '') -> list[UserInfo]:
+        """Получить список всех пользователей"""
+        query = self.USER_INFO_QUERY
+        # if filter == 'by_paid':
+        #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
+        #     query += 'WHERE subscribes.active = 1 '
+        query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+        query += "LIMIT ? OFFSET ? "
+
+        params = (limit, (page - 1) * limit)
+
+        try:
+            return self.curs.execute(query, params).fetchall()
+
+        except Exception as e:
+            print(f'ERROR[get_all_users]: {e}')
+            return []
+
 
     # Auth
     def get_access_token(self):
