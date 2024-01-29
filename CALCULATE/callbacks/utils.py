@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from initialize import pay_guard
 from common.utils import set_state_data
 from .main.keyboards import kb_cancel, kb_forex_val
 from .pages import send_main
@@ -61,13 +62,16 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
 def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
                                 type: Literal['crypto', 'future', 'paper', 'forex'],
                                 is_edit=False):
-    uses_count = db.get_calculator_uses_count(user_id) or 0
     chat_id = message.chat.id
     mes_id = message.id
 
-    if uses_count <= 0:
+    # Проверяем подписку
+    if not pay_guard.valid_use_calc(user_id):
         send_main(message, bot, user_id, True)
         return
+    # if uses_count <= 0:
+    #     send_main(message, bot, user_id, True)
+    #     return
 
     if type == 'forex':
         bot.set_state(user_id, ForexCalcState.paire, chat_id)

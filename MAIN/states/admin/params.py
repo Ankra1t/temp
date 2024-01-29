@@ -11,3 +11,5 @@ class AdminParamsState(StatesGroup):
     forex_paire = State()
     forex_price = State()
     forex_help_paire = State()
+
+    count_trial_days = State()

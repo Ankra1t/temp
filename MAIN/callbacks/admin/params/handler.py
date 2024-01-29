@@ -5,6 +5,8 @@ from db import db
 
 # TODO удалить
 from initialize import text_editor
+from initialize import pay_guard
+
 from common.utils import set_state_data
 from MAIN.states import AdminParamsState
 from messages.workers import menu_msg
@@ -38,6 +40,16 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_params_back()
         )
 
+    elif type == 'change_trial_days':
+        days = pay_guard.get_option_trial_days()
+        bot.edit_message_text(
+            f'Сейчас для нового пользователя кол-во дней пробного периода {days}дн. '
+            f'\n\n'
+            f'Отправьте новое значение дней:', chat_id, mes_id,
+            reply_markup=kb_params_back()
+        )
+        bot.set_state(user_id, AdminParamsState.count_trial_days, chat_id)
+
     elif type == 'show':
         # todo-fin: Что-то тут не работает, что-то достается из БД
         # mas = db.get_other()
@@ -49,6 +61,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             'Что изменяем?', chat_id, mes_id,
             reply_markup=kb_params_change())
+
+
 
     elif 'choice' in type:
         if 'yes' in type:

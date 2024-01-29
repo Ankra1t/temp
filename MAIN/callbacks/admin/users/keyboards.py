@@ -85,6 +85,9 @@ def kb_admin_client_info(client_id: int, is_banned: bool, page=1, filter=''):
     btn_add_sub = getClientButton(
         'Выдать подписку', 'client_add_sub'
     )
+    btn_add_trial_sub = getClientButton(
+        'Выдать пробный доступ', 'client_set_trial_custom'
+    )
 
     # if filter != '' or page != 1:
     #     btn_client_list = getButton(
@@ -95,6 +98,7 @@ def kb_admin_client_info(client_id: int, is_banned: bool, page=1, filter=''):
     btn_client_list = kb_inl_admin.go_users_btn
 
     keyboard.add(btn_add_sub, btn_remove_sub)
+    keyboard.add(btn_add_trial_sub)
     keyboard.add(btn_ban, btn_client_list)
     return keyboard
 
