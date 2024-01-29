@@ -4,6 +4,7 @@ from config_logger import logger
 
 from initialize import bot, text_editor, kb_inl_admin, pay_guard
 from models import User
+from db_new import db_new
 
 from MAIN.callbacks.admin.users.keyboards import kb_admin_users_back
 import variables as vars
@@ -74,7 +75,7 @@ def get_user_for_cancel_subscribe(message: types.Message):
     username = (message.text or '').strip().replace('@', '')
 
     # Проверяем есть данный пользователь в базе
-    user_id = pay_guard.get_user_id_by_username(username)
+    user_id = db_new.get_user_id_by_tg_name(username)
     if user_id:
         user = User()
         user.id = user_id

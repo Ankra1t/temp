@@ -5,9 +5,9 @@ from .filter import admin_users_factory
 from initialize import kb_inl_admin
 
 
-def getButton(text: str, type: str, filter='', page=1, client_id=0):
+def getButton(text: str, type: str, filter='', page=1, client_db_id=0):
     return InlineKeyboardButton(text, None, admin_users_factory.new(
-        type=type, filter=filter, client_id=client_id, page=page
+        type=type, filter=filter, client_db_id=client_db_id, page=page
     ))
 
 
@@ -70,9 +70,9 @@ def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True)
     return keyboard
 
 
-def kb_admin_client_info(client_id: int, is_banned: bool, page=1, filter=''):
+def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, filter=''):
     def getClientButton(text: str, type: str):
-        return getButton(text, type, '', 1, client_id)
+        return getButton(text, type, '', 1, client_db_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
@@ -114,9 +114,9 @@ def kb_admin_users_cancel(filter='', page=1):
     return keyboard
 
 
-def kb_admin_users_confirm(type_info: str, client_id: int):
+def kb_admin_users_confirm(type_info: str, client_db_id: int):
     def getConfimButton(text: str, type: str):
-        return getButton(text, f'confirm_{type}_{type_info}', '', 1, client_id)
+        return getButton(text, f'confirm_{type}_{type_info}', '', 1, client_db_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 

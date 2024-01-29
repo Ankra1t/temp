@@ -19,20 +19,7 @@ class Database:
         self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.curs = self.connection.cursor()
 
-    def check_user(self, user_id: int):
-        """Проверка: есть ли юзер в системе"""
-        query = "SELECT * FROM users WHERE id = ?"
-        params = (user_id,)
-
-        try:
-            result = self.curs.execute(query, params).fetchall()
-        except Exception as e:
-            print(f'ERROR[check_user]: {e}')
-            result = []
-
-        return bool(len(result))
-
-    def get_user_by_username(self, username: str):
+    def get_user_by_username(self, username: str):  # !deprecated
         """Получение пользователя по имени"""
         query = "SELECT * FROM users WHERE username = ?"
         params = (username,)
@@ -43,7 +30,7 @@ class Database:
             print(f'ERROR[get_user_by_username]: {e}')
             return None
 
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int):  # !deprecated
         """Получение пользователя по имени"""
         query = "SELECT * FROM users WHERE id = ?"
         params = (user_id,)
@@ -69,7 +56,7 @@ class Database:
 
     # ==================================Пользователи
     # ПОРАВИТЬ В БУДУЩЕМ
-    def add_user(self, user_id: int, username: str, refer: int):
+    def add_user(self, user_id: int, username: str, refer: int):  # !deprecated
         """Добавление юзера"""
 
         query = (
@@ -86,7 +73,7 @@ class Database:
             print(f'ERROR[add_user]: {e}')
             return False
 
-    def del_user(self, id: int):
+    def del_user(self, id: int):  # !deprecated
         """Удаление юзера"""
         query = "DELETE FROM users WHERE id = ?"
         params = (id,)
@@ -99,7 +86,7 @@ class Database:
             print(f'ERROR[del_user]: {e}')
             return False
 
-    def get_referals(self, id: int): # !deprecated
+    def get_referals(self, id: int):  # !deprecated
         """Получить рефералов юзера"""
         query = "SELECT * FROM users WHERE refer = ?"
         params = (id,)
@@ -110,7 +97,7 @@ class Database:
             print(f'ERROR[get_referals]: {e}')
             return []
 
-    def get_pay_money(self, id: int):
+    def get_pay_money(self, id: int):  # TODO
         """Получить потраченную сумму юзера"""
         query = "SELECT pay_money FROM users WHERE id = ?"
         params = (id,)
@@ -121,7 +108,7 @@ class Database:
             print(f'ERROR[get_pay_money]: {e}')
             return None
 
-    def get_balance(self, id: int):
+    def get_balance(self, id: int):  # TODO
         """Получаем баланс юзера"""
         query = "SELECT balance FROM users WHERE id = ?"
         params = (id,)
@@ -131,7 +118,7 @@ class Database:
             print(f'ERROR[get_balance]: {e}')
             return None
 
-    def get_all_users(self): # !deprecated
+    def get_all_users(self):  # !deprecated
         """Получить список всех пользователей"""
         try:
             return self.curs.execute("SELECT * FROM users").fetchall()
@@ -139,7 +126,8 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''): # !deprecated
+    # !deprecated
+    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
         query = "SELECT * FROM users "
         # if filter == 'by_paid':
@@ -157,14 +145,14 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_users_count(self):
+    def get_users_count(self):  # !deprecated
         try:
             return len(self.curs.execute("SELECT * FROM users").fetchall())
         except Exception as e:
             print(f'ERROR[get_users_count]: {e}')
             return 0
 
-    def get_users_with_sub(self):
+    def get_users_with_sub(self):  # TODO
         """Получить список пользователей с активной подпиской"""
         try:
             return self.curs.execute(
@@ -173,7 +161,7 @@ class Database:
             print(f'ERROR[get_users_with_sub]: {e}')
             return []
 
-    def get_users_without_sub(self):
+    def get_users_without_sub(self):  # TODO
         """Получить список бесплатников"""
         try:
             return self.curs.execute(
@@ -182,7 +170,7 @@ class Database:
             print(f'ERROR[get_users_without_sub]: {e}')
             return []
 
-    def get_users_with_more_pay(self):
+    def get_users_with_more_pay(self):  # TODO
         """Получить список пользователей с более 1 покупкой"""
         try:
             return self.curs.execute(
@@ -192,7 +180,7 @@ class Database:
             return []
 
 # Базовые значения пользователя
-    def add_base_table(self):
+    def add_base_table(self):  # !deprecated
         """Добавить нужные столбцы"""
         try:
             self.curs.execute(
@@ -593,7 +581,6 @@ class Database:
         print('Изменён qiwi токен!!!')
 
     # ================================= OTHER
-
     def get_all_others(self):
         """Получить все текста"""
         try:
@@ -626,7 +613,6 @@ class Database:
             print(f'[ERROR]: update other {name} - {text}')
 
     # ================ Фьючерсы
-
     def update_future(self, name, step, price_step):
         self.curs.execute(f"UPDATE future set step = ?, price_step = ? WHERE name = ?",
                           (step, price_step, name.lower(),))
@@ -659,7 +645,7 @@ class Database:
             print(e)
 
     # Уроки
-    def add_count_les(self, id: int):
+    def add_count_les(self, id: int): # !deprecated
         query = "UPDATE users set count_les = ? WHERE id = ?"
         count = self.get_count_les(id) + 1
         params = (count, id,)
@@ -672,7 +658,7 @@ class Database:
             print(f'ERROR[users_add_les]: {e}')
             return False
 
-    def get_count_les(self, id: int):
+    def get_count_les(self, id: int): # !deprecated
         query = "SELECT count_les FROM users WHERE id = ?"
         params = (id,)
         try:
@@ -740,9 +726,7 @@ class Database:
 
 
 # ======================= // Управление Баном Пользователей
-
-
-    def check_ban_user(self, user_id):
+    def check_ban_user(self, user_id): # !deprecated
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = ? and ban IS NOT NULL"
         params = (user_id,)
@@ -754,20 +738,14 @@ class Database:
             print(f'ERROR[check_ban_user]: {e}')
             return False
 
-    # Получить пользователей без бана
-    def get_users_no_ban(self):
-        res = self.curs.execute(
-            f"SELECT * FROM users WHERE ban IS NULL").fetchall()
-        return res
-
     # Получить забаненных пользователей
-    def get_ban_users(self):
+    def get_ban_users(self): # !deprecated
         res = self.curs.execute(
             f"SELECT * FROM users WHERE ban IS NOT NULL").fetchall()
         return res
 
     # Установить статус забанненого / незабанненого пользователя
-    def set_user_ban_status(self, user_id, status):
+    def set_user_ban_status(self, user_id, status): # !deprecated
         self.curs.execute(f"UPDATE users set ban = ? WHERE id = ?",
                           (status, user_id,))
         self.connection.commit()

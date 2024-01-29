@@ -2,9 +2,10 @@ from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 
+from db_new import db_new
 from db import Database, LANGUAGES
 from GuardPaymentAccess import GuardPaymentAccess
-from AuthRoles import check_ban, check_registrate, registration
+from AuthRoles import check_registrate, registration
 
 
 class AuthMiddleWare(BaseMiddleware):
@@ -25,7 +26,8 @@ class AuthMiddleWare(BaseMiddleware):
 
         data['has_registered_now'] = False
 
-        if check_ban(user_id):
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        if db_new.check_ban_user(user_db_id):
             return CancelUpdate()
 
         user_role = check_registrate(user_id)

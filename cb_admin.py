@@ -5,10 +5,10 @@ from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscri
 from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
 import variables as vars
+from models import User
+from db_new import db_new
 
 from messages.workers import admin_main_msg
-from models import User
-
 from common.utils import set_state_data
 from MAIN.callbacks import (
     kb_admin_workers_actions, kb_params, kb_posts,
@@ -33,7 +33,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
-        count_all = db.get_users_count()
+        count_all = db_new.get_users_count()
         count_with_sub = pay_guard.get_paid_users()
         count_old = pay_guard.get_paid_more1_users()
         text = admin_users_msg(count_all, len(count_with_sub), len(count_old))
@@ -152,7 +152,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
     if type == 'go_main':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
-            count_all = db.get_users_count()
+            count_all = db_new.get_users_count()
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
             count_admins = len(db.get_all_workes())
@@ -340,18 +340,6 @@ def admin_action_callbacks(call: types.CallbackQuery):
             call.message.chat.id, menu_msg('Параметры'),
             reply_markup=kb_params()
         )
-
-    # ##### ------------------ Разбанить пользователя по id
-    if action == 'unban_user':
-        # Убираем из бана
-        pay_guard.unban_user_by_id(target_id)
-        user = vars.user_dict[call.message.chat.id]
-        bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Пользователь {user.username} id {user.id} разбанен и имеет полные клиентские права',
-                         reply_markup=kb_inl_admin.kb_success_ban_actions())
-
-        # Сбросить обработчик приема username для бана
-        bot.clear_step_handler(call.message)
 
     # ##### ------------------ Отменить подписку для пользователя
     if action == 'user_cancel_subscribe':

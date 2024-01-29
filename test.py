@@ -46,7 +46,7 @@ db.add_worker(156045434, 'azatFa', 1)
 # db.add_user(-1, 'asd', 0)
 # db.del_user(-1)
 
-# a = db.get_user_by_id(-1)
+# a = db_new.get_user_by_tg_id(-1)
 # dt: datetime = a[1]
 
 # a = db.get_fut_post(2)

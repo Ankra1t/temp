@@ -488,20 +488,6 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_referals(self, id: int) -> list[UserInfo]:
-        """Получить рефералов юзера"""
-        query = self.USER_INFO_QUERY + 'WHERE tu.refer_id = %s'
-        params = (id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_user(el), data))
-        except Exception as e:
-            print(f'ERROR[get_referals]: {e}')
-            self.connection.rollback()
-            return []
-
     def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = '') -> list[UserInfo]:
         """Получить список всех пользователей"""
         query = self.USER_INFO_QUERY
@@ -521,6 +507,141 @@ class Database:
             print(f'ERROR[get_paginated_users]: {e}')
             self.connection.rollback()
             return []
+
+    def get_banned_users(self) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY + 'WHERE u.ban = 1'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda u: self._data_to_user(u), data))
+        except Exception as e:
+            print(f'ERROR[get_banned_users]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_users_count(self):
+        try:
+            self.curs.execute("SELECT * FROM users")
+            return len(self.curs.fetchall())
+        except Exception as e:
+            print(f'ERROR[get_users_count]: {e}')
+            self.connection.rollback()
+            return 0
+
+    def get_user_id_by_tg_name(self, username: str):
+        """Получение пользователя по имени"""
+        query = 'SELECT id FROM users WHERE username_tg = %s'
+        params = (username,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return int(data.get('id')) if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_user_id_by_tg_name]: {e}')
+            self.connection.rollback()
+            return 0
+
+    def get_user_id_by_tg_id(self, tg_id: int):
+        """Получение пользователя по id телеграм"""
+        query = 'SELECT id FROM users WHERE id_telegram = %s'
+        params = (tg_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return int(data.get('id')) if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_user_id_by_tg_id]: {e}')
+            self.connection.rollback()
+            return 0
+
+    def get_user_referals(self, id: int) -> list[UserInfo]:
+        """Получить рефералов юзера"""
+        query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data))
+        except Exception as e:
+            print(f'ERROR[get_user_referals]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_user_by_id(self, id: int):
+        """Получение пользователя"""
+        query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_user(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_user_by_id]: {e}')
+            self.connection.rollback()
+            return None
+
+    def add_lesson_count(self, id: int):
+        query = "UPDATE tgbotusers set lesson_count = %s WHERE user_id = %s"
+        count = self.get_lesson_count(id) + 1
+        params = (count, id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[add_lesson_count]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_lesson_count(self, id: int):
+        query = "SELECT lesson_count FROM tgbotusers WHERE user_id = %s"
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+
+            if data == None:
+                return 1
+            else:
+                return data['lesson_count']
+        except Exception as e:
+            print(f'ERROR[get_lesson_count]: {e}')
+            self.connection.rollback()
+            return 1
+
+    def check_ban_user(self, id: int):
+        """Проверка на бан"""
+        query = "SELECT ban FROM users WHERE id = %s"
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data == 1
+        except Exception as e:
+            print(f'ERROR[check_ban_user]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_ban(self, id: int, ban: int):
+        query = 'UPDATE users set ban = %s WHERE id = %s'
+        params = (ban, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_ban]: {e}')
+            self.connection.rollback()
+            return False
 
     # Auth
     def get_access_token(self):

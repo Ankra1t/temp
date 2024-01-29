@@ -1,11 +1,9 @@
-from datetime import datetime
 import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
 from initialize import kb_inl_admin, pay_guard
-from db import db
 from db_new import db_new
 from models import User
 from MAIN.states import AdminUsersState
@@ -20,7 +18,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     type: str = callback_data.get('type') or ''
     filter: str = callback_data.get('filter') or ''
-    client_id = int(callback_data.get('client_id') or 0)
+    client_db_id = int(callback_data.get('client_db_id') or 0)
     page = int(callback_data.get('page') or 1)
 
     chat_id = call.message.chat.id
@@ -35,7 +33,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'ban_list':
         limit = 10
-        users = pay_guard.get_ban_users()
+        users = db_new.get_banned_users()
         count = len(users)
 
         pages = math.ceil(count / limit)
@@ -44,11 +42,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         text = ''
 
         for user in users:
-            tg_user_id = str(user[9])
-            nik = str(user[2]) if user[2] is not None else 'Скрыт'
-            ban = '(BAN)' if user[10] is not None else ''
+            nik = f'@{user.username}' if (
+                user.username is not None) else 'Скрыт'
+            ban = '(BAN)' if user.ban == 1 else ''
 
-            text += f'\n{ban} {tg_user_id} | @{nik}\n'
+            text += f'\n{ban} {user.tg_id} | {nik}\n'
 
         bot.edit_message_text(
             text,
@@ -58,7 +56,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'client_list':
         limit = 6
-        count = db.get_users_count()
+        count = db_new.get_users_count()
 
         pages = math.ceil(count / limit)
 
@@ -105,7 +103,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'client_add_sub':
         bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
         set_state_data(bot, user_id, chat_id, {
-            'user_id': client_id,
+            'user_id': client_db_id,
         })
         bot.edit_message_text(
             'Введите количество дней подписки:',
@@ -115,41 +113,37 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'client_cancel_sub':
         bot.edit_message_text(
-            f'Отменить подписку пользователю с id[{client_id}?]',
+            f'Отменить подписку пользователю с id[{client_db_id}?]',
             chat_id, mes_id,
-            reply_markup=kb_admin_users_confirm('cancel_sub', client_id)
+            reply_markup=kb_admin_users_confirm('cancel_sub', client_db_id)
         )
 
     if type == 'client_ban':
-        user = db.get_user_by_id(client_id)
+        user = db_new.get_user_by_id(client_db_id)
         if user is None:
             return
-        is_banned = user[10] is not None
+        is_banned = user.ban == 1
 
         if is_banned:
-            text = f'Разбанить пользователя с id[{client_id}]'
+            text = f'Разбанить пользователя с id[{client_db_id}]'
         else:
-            text = f'Забанить пользователя с id[{client_id}]'
+            text = f'Забанить пользователя с id[{client_db_id}]'
 
         bot.edit_message_text(
             text,
             chat_id, mes_id,
-            reply_markup=kb_admin_users_confirm('ban', client_id)
+            reply_markup=kb_admin_users_confirm('ban', client_db_id)
         )
 
     if 'confirm_yes' in type:
-        user = db.get_user_by_id(client_id)
+        user = db_new.get_user_by_id(client_db_id)
         if user is None:
             return
-        is_banned = user[10] is not None
 
         if 'cancel_sub' in type:
-            pay_guard.set_subscribe_unactive_by_user_id(client_id)
+            pay_guard.set_subscribe_unactive_by_user_id(client_db_id)
         if 'ban' in type:
-            if is_banned:
-                pay_guard.unban_user_by_id(client_id)
-            else:
-                pay_guard.ban_user_by_id(client_id)
+            db_new.set_user_ban(user.id, abs(user.ban - 1))
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
 
@@ -171,7 +165,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'confirm' in type:
         send_admin_client(
             bot, call.message,
-            user_id, client_id,
+            user_id, client_db_id,
             True, filter, page
         )
 

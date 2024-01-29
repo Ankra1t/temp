@@ -107,16 +107,6 @@ class GuardPaymentAccess():
         """Получаем платных пользователей у которых закончилась Платная подписка - для рассылки уведомлений"""
         return db_new.get_users_finished_subscribe('paid')
 
-    def get_users_no_ban(self):
-        """Получаем пользователей без бана"""
-        user_list = self.db.get_users_no_ban()
-        return user_list
-
-    def get_ban_users(self):
-        """Получаем пользователей из БАН листа"""
-        user_list = self.db.get_ban_users()
-        return user_list
-
     def get_paid_users(self):
         """Получаем пользователей с активными подписками для платной рассылки сигналов"""
         # Выбрать пользователей только с активной и действительной по дате подпиской
@@ -213,17 +203,3 @@ class GuardPaymentAccess():
             'time_end': date_end_obj.strftime(self.dt_format_admin_show)
         }
 
-    # # # Управление баном
-
-    def unban_user_by_id(self, user_id):
-        ban_status = None
-        self.db.set_user_ban_status(user_id, ban_status)
-
-    def ban_user_by_id(self, user_id):
-        ban_status = 1
-        self.db.set_user_ban_status(user_id, ban_status)
-    # # # Вспомогательные методы
-
-    def get_user_id_by_username(self, username):
-        user = self.db.get_user_by_username(username)
-        return user[9] if user is not None else None

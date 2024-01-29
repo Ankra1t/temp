@@ -60,7 +60,7 @@ def send_user_terms(bot: TeleBot, message: Message, page: int, user_id: int, is_
 def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
 
-    referals = db_new.get_referals(user_id)
+    referals = db_new.get_user_referals(user_id)
 
     count_ref = len(referals)
     money = db.get_pay_money(user_id)
