@@ -208,6 +208,8 @@ class Database:
             return False
 
     def get_current_subscribe_user(self, user_id: int):
+        print(f'user_id ')
+        print(user_id)
         query = 'SELECT * FROM subscribes WHERE tg_user_id = %s AND active = 1'
         params = (user_id,)
 
@@ -279,6 +281,34 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_subscribe_unactive]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_subscribe_unactive(self, subscribe_id: int):
+        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        query = "UPDATE subscribes set active = %s, updated_at = %s WHERE id = %s"
+        params = (0, datetime_now, subscribe_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_subscribe_unactive]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_trial_subscribe_unactive_by_user(self, user_id):
+        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND subscribe_type = %s"
+        params = (0, datetime_now, user_id, 'trial')
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_trial_subscribe_unactive_by_user]: {e}')
             self.connection.rollback()
             return False
 
@@ -448,6 +478,7 @@ class Database:
             return False
 
     def del_transaction(self, user_id: int):
+        """Deprecated: транзакции удалять нельзя"""
         query = "DELETE FROM transactions WHERE user_id = %s"
         params = (user_id,)
 
@@ -485,6 +516,35 @@ class Database:
             print(f'ERROR[get_access_token]: {e}')
             self.connection.rollback()
             return None
+
+
+    def set_option(self, name, value):
+        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        query = "UPDATE tgbot_options set value = %s, updated_at = %s WHERE name_option = %s"
+        params = (value, datetime_now, name,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_option]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_option(self, name):
+        query = 'SELECT value FROM tgbot_options WHERE name_option = %s'
+        params = (name,)
+
+        try:
+            self.curs.execute(query, params)
+            res = self.curs.fetchone()
+            return res['value'] if res is not None else None
+        except Exception as e:
+            print(f'ERROR[get_access_token]: {e}')
+            self.connection.rollback()
+            return None
+
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

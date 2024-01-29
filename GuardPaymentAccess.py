@@ -29,18 +29,37 @@ class GuardPaymentAccess():
         self.dt_format_user_show = "%d/%m/%Y"
 
     # Тестовые подписки
-    def set_trial(self, message: types.Message):
+    def set_trial(self, message: types.Message, custom_days = None):
         """Дать новому пользователю тестовый период """
-        finish_date = datetime.now() + timedelta(days=2)
+        current_trial_days = custom_days
+        if not custom_days:
+            current_trial_days = self.get_option_trial_days()
+
+        finish_date = datetime.now() + timedelta(days=current_trial_days)
 
         subscribe = Subscribe(
             message.from_user.id,
             finish_date, 1, None, 'trial',
         )
 
-        self.delete_trial(message)
-
+        # self.delete_trial(message)
         db_new.add_subsbscribe(subscribe)
+
+        finish_date_show_user = finish_date.strftime(
+            self.dt_format_user_show)
+        finish_date_show_admin = finish_date.strftime(
+            self.dt_format_admin_show)
+
+        return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
+
+    def set_option_trial_days(self, days):
+        print(f'days ')
+        print(days)
+        db_new.set_option('count_trial_days_new_user', str(int(days)))
+
+    def get_option_trial_days(self):
+        days = db_new.get_option('count_trial_days_new_user')
+        return days
 
     def set_custom_paid_subscribe(self, user_id, count_days):
         """Дать пользователю платную подписку без оплаты"""
@@ -76,6 +95,10 @@ class GuardPaymentAccess():
         if trial_id and (active == 1):
             return trial_id
         return False
+
+    def set_trial_subscribe_unactive_by_user(self, user_id):
+        """Отключить все пробные подписки у пользователя"""
+        db_new.set_trial_subscribe_unactive_by_user(user_id)
 
     # Платные подписки
     def set_paid_subscribe(self, transaction):
@@ -139,6 +162,21 @@ class GuardPaymentAccess():
         user_list = self.db.get_subsribe_more1_users(finish_date)
         return user_list
 
+    # Проверить может ли пользователь работать с калькулятором
+    def valid_use_calc(self, user_id):
+
+        uses_count = self.db.get_calculator_uses_count(user_id) or 0
+
+        # Проверить есть ли остаток использований калькулятора
+        if uses_count <= 0:
+            # Проверять есть ли платная подписка
+            return True
+
+        pass
+    
+    # def get_(self):
+    #     pass
+
     # # # Остальные методы
 
     def set_subscribe_unactive_many_users(self):
@@ -148,7 +186,7 @@ class GuardPaymentAccess():
         db_new.set_unactive_subscribes('paid')
 
     def set_subscribe_unactive(self, subscribe_id: int):
-        """Убираем активность у подписки для одного пользователя """
+        """Убираем активность у подписки по subscribe_id """
         db_new.set_subscribe_unactive(subscribe_id)
 
     def set_subscribe_unactive_by_user_id(self, user_id):
