@@ -10,7 +10,7 @@ from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel
 from CALCULATE.common.messages import msg_digit_error
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
-from messages.users import gift_subscribe_msg
+from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
 
 
 def handle_client_search(message: Message, bot: TeleBot):
@@ -54,11 +54,11 @@ def handle_client_search(message: Message, bot: TeleBot):
 
     bot.delete_state(user_id, chat_id)
 
-
 def handle_days_subscribe(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     days = digit_accept(message, int)
+    current_state = bot.get_state(user_id, chat_id)
 
     if days is None:
         bot.send_message(
@@ -76,23 +76,44 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         subscribe_user_id = data.get('user_id')
 
-    pay_guard.set_subscribe_unactive_by_user_id(subscribe_user_id)
+    if current_state == 'AdminUsersState:subscribe_days':
+        pay_guard.set_subscribe_unactive_by_user_id(subscribe_user_id)
 
-    datetime_show = pay_guard.set_custom_paid_subscribe(
-        subscribe_user_id, int(days)
-    )
+        datetime_show = pay_guard.set_custom_paid_subscribe(
+            subscribe_user_id, int(days)
+        )
 
-    data_fin = datetime_show['admin']
-    bot.send_message(
-        chat_id,
-        f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
-    )
-    send_admin_client(bot, message, user_id, subscribe_user_id, True)
+        data_fin = datetime_show['admin']
+        bot.send_message(
+            chat_id,
+            f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
+        )
+        send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
-    bot.send_message(
-        subscribe_user_id,
-        gift_subscribe_msg(datetime_show['user'])
-    )
+        bot.send_message(
+            subscribe_user_id,
+            gift_subscribe_msg(datetime_show['user'])
+        )
+
+    if current_state == 'AdminUsersState:trial_subscribe_days_get_days':
+        try:
+            pay_guard.set_trial_subscribe_unactive_by_user(subscribe_user_id)
+            datetime_show = pay_guard.set_trial(message, days)
+            
+            data_fin = datetime_show['admin']
+            bot.send_message(
+                chat_id,
+                f'Клиенту с id[{subscribe_user_id}] установлена пробная подписка на {days} дней, до {data_fin}'
+            )
+            send_admin_client(bot, message, user_id, subscribe_user_id, True)
+
+            bot.send_message(
+                subscribe_user_id,
+                gift_trial_subscribe_msg(datetime_show['user'])
+            )
+        except Exception as e:
+            print(f'Что то пошло не так {e}')
+            pass
 
     bot.delete_state(user_id, chat_id)
 
@@ -104,3 +125,6 @@ def registration(bot: TeleBot):
     reg_mes(handle_client_search, state=AdminUsersState.client_search)
 
     reg_mes(handle_days_subscribe, state=AdminUsersState.subscribe_days)
+
+    reg_mes(handle_days_subscribe, state=AdminUsersState.trial_subscribe_days_get_days)
+

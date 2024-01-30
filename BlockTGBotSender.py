@@ -1,3 +1,5 @@
+from typing import Literal
+from telebot import TeleBot
 from math import floor
 from time import sleep
 from MAIN.common.utils import get_print_signal_info
@@ -8,6 +10,85 @@ from db_new import db_new
 from initialize import bot
 from CALCULATE.common.messages import msg_calculate_result
 from models import Post
+
+
+def send_message_by_type(
+    bot: TeleBot,
+    user_id: int,
+    type: str,
+    text: str,
+    media_id: str | None
+):
+    if type == 'photo':
+        bot.send_photo(
+            user_id, media_id,
+            caption=text
+        )
+    elif type == 'video':
+        bot.send_video(
+            user_id, media_id,
+            caption=text
+        )
+    else:
+        bot.send_message(user_id, text)
+
+
+def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
+    signal_text = ''
+    calc_text = None
+
+    details = post.details
+    if details:
+        open_price = details.open_price
+        stop_loss = details.stop_loss
+        name = details.name
+        ticker = details.ticker
+
+        signal_text = f'<b>{name}</b>\n'
+        calc_text = f'<b>{name}</b>\n'
+
+        signal_text += f'👉 {ticker}\n'
+
+        signal_text += get_print_signal_info(
+            open_price, stop_loss
+        )
+
+        user_base_values = db.get_user_base(user_id)
+        dep = user_base_values['base_deposit']
+        risk = user_base_values['base_risk_percent']
+
+        if dep is None or risk is None:
+            calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
+        else:
+            diff = open_price - stop_loss
+            tp_1 = open_price + diff * 3
+            tp_2 = open_price + diff * 4
+            tp_3 = open_price + diff * 5
+
+            count_bet = floor(
+                (dep * risk / 100) /
+                (open_price - stop_loss)
+            )
+            summary_open_value = round(count_bet * open_price, 2)
+
+            credit = 1
+            if summary_open_value > dep:
+                credit = round(summary_open_value // dep + 1)
+
+            calc_text = '<b><u>Расчет по сигналу</u></b>\n'
+            calc_text += msg_calculate_result(
+                user_id, dep, risk,
+                open_price,
+                stop_loss,
+                tp_1, tp_2, tp_3,
+                count_bet,
+                summary_open_value,
+                credit, dep * risk
+            )
+
+    signal_text += '\n\n' + post.content
+
+    return signal_text, calc_text
 
 
 class BlockTGBotSender(object):
@@ -38,88 +119,29 @@ class BlockTGBotSender(object):
         i = 0
         while i < len(users):
             user = users[i]
-            current_batch += 1
 
             if current_batch < self.c_tg:
                 try:
-                    self.bot_send_by_type(user)
                     i += 1
+                    self.send_by_type(user)
+                    current_batch += 1
                 except Exception as e:
                     print(f'Ошибка пользователя {user}: {e}')
             else:
                 sleep(1)
                 current_batch = 0
 
-    def bot_send_by_type(self, id: int):
-        signal_text = ''
-        calc_text = ''
+    def send_by_type(self, id: int):
+        content, calc_mes = get_post_content(self.post, id)
 
-        if self.post.details:
-            open_price = self.post.details.open_price
-            stop_loss = self.post.details.stop_loss
-            name = self.post.details.name
-            ticker = self.post.details.ticker
+        send_message_by_type(
+            bot,
+            id,
+            self.post.mes_type,
+            content,
+            self.post.media
+        )
 
-            signal_text += f'<b>{name}</b>\n'
-            signal_text += f'👉 {ticker}\n'
+        if calc_mes is not None:
+            bot.send_message(id, calc_mes)
 
-            calc_text = f'<b>{name}</b>\n'
-
-            signal_text += get_print_signal_info(
-                open_price, stop_loss
-            )
-
-            user_db_id = db_new.get_user_id_by_tg_id(id)
-            user_base_values = db_new.get_user_base(user_db_id)
-            dep = user_base_values['base_deposit']
-            risk = user_base_values['base_risk_percent']
-
-            if dep is None or risk is None:
-                calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
-            else:
-                diff = open_price - stop_loss
-                tp_1 = open_price + diff * 3
-                tp_2 = open_price + diff * 4
-                tp_3 = open_price + diff * 5
-
-                count_bet = floor(
-                    (dep * risk / 100) /
-                    (open_price - stop_loss)
-                )
-                summary_open_value = round(count_bet * open_price, 2)
-
-                credit = 1
-                if summary_open_value > dep:
-                    credit = round(summary_open_value // dep + 1)
-
-                calc_text = '<b><u>Расчет по сигналу</u></b>\n'
-                calc_text += msg_calculate_result(
-                    id, dep, risk,
-                    open_price,
-                    stop_loss,
-                    tp_1, tp_2, tp_3,
-                    count_bet,
-                    summary_open_value,
-                    credit, dep * risk
-                )
-
-        try:
-            media = self.post.media
-            content = signal_text + '\n\n' + self.post.content
-            if self.post.mes_type == 'photo':
-                bot.send_photo(
-                    id, media,
-                    caption=content
-                )
-            elif self.post.mes_type == 'text':
-                bot.send_message(id, content)
-            elif self.post.mes_type == 'video':
-                bot.send_video(
-                    id, media,
-                    caption=content
-                )
-
-            bot.send_message(id, calc_text)
-        except Exception as e:
-            print(f'Ошибка рассылки user({id}): {e}')
-            pass

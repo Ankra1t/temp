@@ -85,12 +85,13 @@ def invoice_paid_prev(update: Update) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            trial_id = pay_guard.check_trial_active_by_user(
-                transaction['user_id'])
-            if trial_id:
-                logger.info(
-                    f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
-                pay_guard.set_subscribe_unactive(trial_id)
+            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            # trial_id = pay_guard.check_trial_active_by_user(
+            #     transaction['user_id'])
+            # if trial_id:
+            #     logger.info(
+            #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
+            #     pay_guard.set_subscribe_unactive(trial_id)
 
             # Отправляем сообщение пользователю
             bot.send_message(
@@ -133,12 +134,14 @@ def invoice_paid(update: UpdateBBanker) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            trial_id = pay_guard.check_trial_active_by_user(
-                transaction['user_id'])
-            if trial_id:
-                logger.info(
-                    f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
-                pay_guard.set_subscribe_unactive(transaction['user_id'])
+            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            # trial_id = pay_guard.check_trial_active_by_user(
+            #     transaction['user_id'])
+            # if trial_id:
+            #     logger.info(
+            #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
+            #     pay_guard.set_subscribe_unactive(trial_id)
+                # pay_guard.set_subscribe_unactive(transaction['user_id'])
 
             # Отправляем сообщение пользователю
             bot.send_message(

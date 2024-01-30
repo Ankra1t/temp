@@ -170,6 +170,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'page': page
         })
 
+    if type == 'client_set_trial_custom':
+        bot.set_state(user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
+        print(f'Назначить пробную подписку пользователю handler')
+        set_state_data(bot, user_id, chat_id, {
+            'user_id': client_id,
+        })
+        bot.edit_message_text(
+            'Введите количество дней ПРОБНОЙ подписки:',
+            chat_id, mes_id,
+            reply_markup=kb_admin_users_back()
+        )
+
     if 'confirm' in type:
         send_admin_client(
             bot, call.message,
