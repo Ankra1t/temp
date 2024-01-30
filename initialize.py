@@ -1,6 +1,5 @@
 import asyncio
 
-from aiocryptopay import AioCryptoPay, Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 

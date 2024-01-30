@@ -4,7 +4,7 @@ from math import floor
 from time import sleep
 from MAIN.common.utils import get_print_signal_info
 
-from config_logger import logger
+from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
 from db import db
 from initialize import bot
 from CALCULATE.common.messages import msg_calculate_result
@@ -107,13 +107,16 @@ class BlockTGBotSender(object):
 
     def batch_send(self, calc_test=False):
         current_batch = 0
-        logger.info(f'Начало рассылки------------------>>>')
+        log_send_ok.info(f'Начало рассылки------------------>>>')
 
         if calc_test:
             users = db.get_all_users()
             users = list(map(lambda x: int(x[9]), users))
         else:
             users = self.users
+            
+        print(f'users ')
+        print(users)
 
         i = 0
         while i < len(users):
@@ -125,7 +128,9 @@ class BlockTGBotSender(object):
                     self.send_by_type(user)
                     current_batch += 1
                 except Exception as e:
-                    print(f'Ошибка пользователя {user}: {e}')
+                    err_mess = f'Ошибка пользователя {user} : {e}'
+                    print(err_mess)
+                    log_send_fails.error(err_mess)
             else:
                 sleep(1)
                 current_batch = 0
