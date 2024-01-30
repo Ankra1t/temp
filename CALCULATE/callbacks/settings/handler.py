@@ -3,7 +3,6 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
-from db import db
 from db_new import db_new, LANGUAGES
 
 from CALCULATE.states import SettingsState
@@ -22,6 +21,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     type = callback_data['type']
 
     user_id = call.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
@@ -51,7 +52,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             _, currency = type.split('+')
 
-            user_db_id = db_new.get_user_id_by_tg_id(user_id)
             db_new.set_user_currency(user_db_id, currency)
 
             bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
@@ -63,7 +63,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         for lang in LANGUAGES:
             if f'_{lang}' in type:
                 is_edit_lang = True
-                db.set_user_lang(user_id, lang)
+                db_new.set_user_lang(user_db_id, lang)
                 send_settings(bot, call.message, user_id)
 
         if not is_edit_lang:
@@ -87,7 +87,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'tp_show' in type:
-        tp_show = db.get_calculator_tp_show(user_id) or '345'
+        tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
         is_changed = True
         arr_type = type.split('_')
 
@@ -105,7 +105,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             is_changed = False
 
         if is_changed or len(arr_type) == 2:
-            db.set_calculator_tp_show(user_id, tp_show)
+            db_new.set_calculator_tp_show(user_db_id, tp_show)
             bot.edit_message_text(
                 msg_settings_set_tp_show(user_id), chat_id, mes_id,
                 reply_markup=kb_change_tp_show(user_id, tp_show)
@@ -123,7 +123,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             market: Any = type_list[1]
 
-            db.set_calculator_user_market(user_id, market)
+            db_new.set_calculator_user_market(user_db_id, market)
 
             send_settings(bot, call.message, user_id)
 
@@ -138,9 +138,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
     if type == 'uses':
-        db.curs.execute(
-            f'UPDATE calc_user_settings SET uses_count = 10 WHERE id = {user_id}')
-        db.curs.connection.commit()
+        db_new.curs.execute(
+            f'UPDATE tgcalc_user_settings SET uses_count = 10 WHERE id = {user_id}')
+        db_new.connection.commit()
 
     bot.answer_callback_query(call.id)
 

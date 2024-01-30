@@ -1,4 +1,4 @@
-import asyncio
+from aiocryptopay import Networks
 
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage

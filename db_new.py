@@ -552,6 +552,7 @@ class Database:
         #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
         #     query += 'WHERE subscribes.active = 1 '
         query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+        query += f", u.id ASC "
         query += "LIMIT %s OFFSET %s "
 
         params = (limit, (page - 1) * limit)
@@ -910,9 +911,9 @@ class Database:
             self.connection.rollback()
             return None
 
-
+    # Options
     def set_option(self, name, value):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.now()
         query = "UPDATE tgbot_options set value = %s, updated_at = %s WHERE name_option = %s"
         params = (value, datetime_now, name,)
 
@@ -934,10 +935,9 @@ class Database:
             res = self.curs.fetchone()
             return res['value'] if res is not None else None
         except Exception as e:
-            print(f'ERROR[get_access_token]: {e}')
+            print(f'ERROR[get_option]: {e}')
             self.connection.rollback()
             return None
-
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

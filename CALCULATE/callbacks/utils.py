@@ -73,9 +73,6 @@ def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
     if not pay_guard.valid_use_calc(user_id):
         send_main(message, bot, user_id, True)
         return
-    # if uses_count <= 0:
-    #     send_main(message, bot, user_id, True)
-    #     return
 
     if type == 'forex':
         bot.set_state(user_id, ForexCalcState.paire, chat_id)

@@ -72,7 +72,7 @@ def msg_no_uses(user_id: int):
 
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
-    
+
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     base = db_new.get_user_base(user_db_id)
     tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
@@ -149,7 +149,9 @@ def msg_settings_change_market(user_id: int):
 
 def msg_settings_set_tp_show(user_id: int):
     lang = get_lang(user_id)
-    tp_show: str = db.get_calculator_tp_show(user_id) or '345'
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
 
     texts = {
         'ru': {

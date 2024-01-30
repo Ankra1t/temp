@@ -73,11 +73,12 @@ def send_admin_client(
             '%d/%m/%Y')
         type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
 
+    nikname = f'@{client.username}' if client.username != '' else ''
     count_ref = len(db_new.get_user_referals(user_id))
     is_banned = client.ban == 1
 
     text = '\n'.join((
-        f'Пользователь <b>@{client.username} | {client.id} {"(BAN)" if is_banned else ""}</b>',
+        f'Пользователь <b>{nikname} | {client.id} {"(BAN)" if is_banned else ""}</b>',
         f'Подписка: {fin_date}{type_subscribe_show}',
         # f'Баланс: <b>{balance}</b>',
         f'Рефералов: <b>{count_ref}</b>',

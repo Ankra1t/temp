@@ -32,10 +32,6 @@ class AuthMiddleWare(BaseMiddleware):
 
         user_role = check_registrate(user_id)
 
-        is_tg_tables = db_new.check_tg_user_tables(user_db_id)
-        if not is_tg_tables and user_role == 0:
-            db_new.create_tg_user_tables(user_db_id)
-
         if user_role is None:
             ref_id = message.text
             ref_id = ref_id.split() if (ref_id is not None) else []
@@ -45,17 +41,17 @@ class AuthMiddleWare(BaseMiddleware):
             else:
                 ref_id = 0
 
-            if self.db.get_user_lang(user_id) is None:
-                lang = message.from_user.language_code.lower()
-                lang = lang if (lang in LANGUAGES) else 'ru'
-
-                self.db.set_user_lang(user_id, lang)
-
             registration(user_id, username, ref_id)
             PayGuarder.set_trial(message)
 
+            db_new.create_tg_user_tables(user_db_id)
+
             data['has_registered_now'] = True
             user_role = 0
+
+        is_tg_tables = db_new.check_tg_user_tables(user_db_id)
+        if not is_tg_tables and user_role == 0:
+            db_new.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
 

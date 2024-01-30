@@ -102,7 +102,6 @@ def handle_deposit(message: Message, bot: TeleBot):
                          reply_markup=kb_cancel(user_id))
         return
 
-
     db_new.set_user_base(user_id, 'base_deposit', value)
 
     set_state_data(bot, user_id, chat_id, {'deposit': value})
@@ -164,6 +163,8 @@ def handle_open_price(message: Message, bot: TeleBot):
 
 def handle_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -212,7 +213,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
                                stop_loss, take_profit_3, take_profit_4, take_profit_5,
                                count_bet, summary_open_value, credit, risk_value)
 
-    db.minus_calculator_uses_count(user_id)
+    db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(chat_id, mes)
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True)
@@ -220,6 +221,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -277,7 +280,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         take_profit_3, take_profit_4, lot, risk_value
     )
 
-    db.minus_calculator_uses_count(user_id)
+    db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(chat_id, message_res)
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True)
