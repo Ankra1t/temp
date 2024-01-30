@@ -53,6 +53,7 @@ def change_password(id: int, password: str):
 
 
 def check_registrate(tg_id: int):
+    """Возвращает роль"""
     check_user = db_new.get_user_id_by_tg_id(tg_id)
     check_worker = db.check_worker(tg_id)
     user_role = None

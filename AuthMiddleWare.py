@@ -32,6 +32,10 @@ class AuthMiddleWare(BaseMiddleware):
 
         user_role = check_registrate(user_id)
 
+        is_tg_tables = db_new.check_tg_user_tables(user_db_id)
+        if not is_tg_tables and user_role == 0:
+            db_new.create_tg_user_tables(user_db_id)
+
         if user_role is None:
             ref_id = message.text
             ref_id = ref_id.split() if (ref_id is not None) else []

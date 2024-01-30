@@ -493,6 +493,41 @@ class Database:
             self.connection.rollback()
             return []
 
+    def check_tg_user_tables(self, id: int):
+        query = 'SELECT * FROM tgbotusers WHERE user_id = %s'
+        query2 = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s'
+        params = id,
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            self.curs.execute(query2, params)
+            data2 = self.curs.fetchone()
+
+            if (data is None) or (data2 is None):
+                return False
+            else:
+                return True
+        except Exception as e:
+            print(e)
+            self.connection.rollback()
+            return False
+
+    def create_tg_user_tables(self, id: int):
+        query = 'INSERT INTO tgbotusers (user_id) VALUES (%s)'
+        query2 = 'INSERT INTO tgcalc_user_settings (user_id) VALUES (%s)'
+        params = id,
+
+        try:
+            self.curs.execute(query, params)
+            self.curs.execute(query2, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            self.connection.rollback()
+            return False
+
     def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = '') -> list[UserInfo]:
         """Получить список всех пользователей"""
         query = self.USER_INFO_QUERY
