@@ -289,20 +289,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_subscribe_unactive(self, subscribe_id: int):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
-        query = "UPDATE subscribes set active = %s, updated_at = %s WHERE id = %s"
-        params = (0, datetime_now, subscribe_id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[set_subscribe_unactive]: {e}')
-            self.connection.rollback()
-            return False
-
     def set_trial_subscribe_unactive_by_user(self, user_id):
         datetime_now = datetime.now().strftime(DATE_FORMAT)
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND subscribe_type = %s"

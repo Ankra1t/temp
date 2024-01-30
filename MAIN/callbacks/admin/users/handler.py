@@ -174,7 +174,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
         print(f'Назначить пробную подписку пользователю handler')
         set_state_data(bot, user_id, chat_id, {
-            'user_id': client_id,
+            'user_id': client_db_id,
         })
         bot.edit_message_text(
             'Введите количество дней ПРОБНОЙ подписки:',
