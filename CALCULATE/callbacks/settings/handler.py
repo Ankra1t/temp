@@ -3,7 +3,8 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
-from db import db, LANGUAGES
+from db import db
+from db_new import db_new, LANGUAGES
 
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -49,7 +50,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.currency, chat_id)
         else:
             _, currency = type.split('+')
-            db.set_user_currency(user_id, currency)
+
+            user_db_id = db_new.get_user_id_by_tg_id(user_id)
+            db_new.set_user_currency(user_db_id, currency)
+
             bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
             send_settings(bot, call.message, user_id, True)
 

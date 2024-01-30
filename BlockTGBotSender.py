@@ -6,6 +6,7 @@ from MAIN.common.utils import get_print_signal_info
 
 from config_logger import logger
 from db import db
+from db_new import db_new
 from initialize import bot
 from CALCULATE.common.messages import msg_calculate_result
 from models import Post
@@ -110,8 +111,8 @@ class BlockTGBotSender(object):
         logger.info(f'Начало рассылки------------------>>>')
 
         if calc_test:
-            users = db.get_all_users()
-            users = list(map(lambda x: int(x[9]), users))
+            users = db_new.get_all_users()
+            users = list(map(lambda x: x.tg_id, users))
         else:
             users = self.users
 
@@ -120,8 +121,8 @@ class BlockTGBotSender(object):
             user = users[i]
 
             if current_batch < self.c_tg:
-                i += 1
                 try:
+                    i += 1
                     self.send_by_type(user)
                     current_batch += 1
                 except Exception as e:
@@ -143,3 +144,4 @@ class BlockTGBotSender(object):
 
         if calc_mes is not None:
             bot.send_message(id, calc_mes)
+

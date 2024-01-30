@@ -116,14 +116,6 @@ class Admin_kb_inlines(object):
         keyboard.add(btn, self.go_workers_btn)
         return keyboard
 
-    # Управление баном пользователя
-    def user_unbun(self, user_id):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        unban_user = types.InlineKeyboardButton(text='Разбанить',
-                                                callback_data=adm_action.new(action='unban_user', id=user_id))
-
-        keyboard.add(unban_user)
-        return keyboard
 
     def kb_success_ban_actions(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)

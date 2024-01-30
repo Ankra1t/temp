@@ -3,6 +3,7 @@ from telebot.types import CallbackQuery
 from MAIN.callbacks.user.pages import send_user_education
 
 from db import db
+from db_new import db_new
 
 from .keyboards import kb_user_lesson, kb_user_curs
 from .filter import user_education_factory, UserEducationCallbackFilter
@@ -40,7 +41,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             send_user_terms(bot, call.message, page, user_id)
 
     if 'curs' in type:
-        count_now_les = db.get_count_les(user_id)
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        count_now_les = db_new.get_lesson_count(user_db_id)
         if 'les' in type:
             if len(curs) + 1 == num_les:
                 bot.edit_message_text(
@@ -52,7 +54,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 lesson = curs[num_les - 1]
 
                 if page == len(lesson) and count_now_les == num_les and count_now_les != len(curs):
-                    db.add_count_les(user_id)
+                    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+                    db_new.add_lesson_count(user_db_id)
 
                 bot.edit_message_text(
                     lesson[page - 1], chat_id, mes_id,

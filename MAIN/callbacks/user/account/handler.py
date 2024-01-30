@@ -108,7 +108,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_user_account(bot, call.message, user_id)
 
     if type == 'referral':
-        referals = db.get_referals(user_id)
+        referals = db_new.get_user_referals(user_id)
         count_ref = len(referals)
         intext = msg_referral(count_ref)
         bot.send_message(
@@ -117,11 +117,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'referral_list':
-        referals = db.get_referals(user_id)
+        referals = db_new.get_user_referals(user_id)
         res = ''
         if len(referals) != 0:
             for i in range(0, len(referals)):
-                res += f'\nНик: {referals[i][1]}\nВсего потратил: {referals[i][5]}'
+                res += f'\nНик: {referals[i].username}\nВсего потратил: {referals[i].username}'
         else:
             res = "К сожалению, у вас нет рефералов 😔\n<b>Отправьте</b> свой реферальную ссылку друзьями, чтобы это исправить 😉"
         bot.send_message(

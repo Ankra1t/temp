@@ -20,8 +20,6 @@ sup_name = ''
 link = ''
 index_term = 0
 role = 0
-check_user = False
-check_worker = False
 referals = []
 
 # Стек команд игнорируемых быстрым постом

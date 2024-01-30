@@ -15,8 +15,6 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         'username_tg': username
     }
 
-    db.add_user(user_id, username, referral_id)
-
     try:
         response = requests.post(
             f'{API_URL}/auth/tg_register',
@@ -54,26 +52,22 @@ def change_password(id: int, password: str):
     return response.status_code == 200
 
 
-def check_registrate(user_id: int):
-    check_user = db.check_user(user_id)
-    check_worker = db.check_worker(user_id)
+def check_registrate(tg_id: int):
+    """Возвращает роль"""
+    check_user = db_new.get_user_id_by_tg_id(tg_id)
+    check_worker = db.check_worker(tg_id)
     user_role = None
 
     if check_worker:
-        user_role = db.get_role(user_id)
-    elif check_user:
+        user_role = db.get_role(tg_id)
+    elif check_user != 0:
         user_role = 0
 
     return user_role
 
-
-def check_ban(user_id: int):
-    return db.check_ban_user(user_id)
-
-
 # Сообщение рефералу
 # if refer != 0:
-#     count_ref = len(self.db.get_referals(refer))
+#     count_ref = len(db_new.get_user_referals(refer))
 #     self.bot.send_message(refer, text=f'<b>Поздравляем!</b>🎊\nУ Вас появился новый реферал 😎 '
 #                           f'\n\n Ник: {self.nickname}\n\nУ вас рефералов: {count_ref} шт.')
 

@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from db_new import db_new
 from initialize import kb_inl_admin, pay_guard
 from models import User
 
@@ -15,7 +16,6 @@ from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
 def handle_client_search(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
-    mes_id = message.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
         filter = data.get('filter') or ''
@@ -31,11 +31,12 @@ def handle_client_search(message: Message, bot: TeleBot):
         return
 
     if is_digit(client_name_id):
-        client_id = int(float(client_name_id))
-        client = db.get_user_by_id(client_id)
+        client_db_id = int(float(client_name_id))
     else:
         client_name_id = client_name_id.replace('@', '')
-        client = db.get_user_by_username(client_name_id)
+        client_db_id = db_new.get_user_id_by_tg_name(client_name_id)
+
+    client = db_new.get_user_by_id(client_db_id)
 
     if client is None:
         bot.send_message(
@@ -47,7 +48,7 @@ def handle_client_search(message: Message, bot: TeleBot):
 
     send_admin_client(
         bot, message, user_id,
-        client[9], True,
+        client.id, True,
         filter, page
     )
 

@@ -2,6 +2,7 @@ from telebot import TeleBot
 from common.utils import float_to_print, get_decimal_count, get_lang, get_print_float
 
 from db import db
+from db_new import db_new
 
 
 BULLET = '✦'
@@ -71,9 +72,11 @@ def msg_no_uses(user_id: int):
 
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
-    base = db.get_user_base(user_id)
-    tp_show: str = db.get_calculator_tp_show(user_id) or '345'
-    market: str = db.get_calculator_user_market(user_id) or 'crypto'
+    
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    base = db_new.get_user_base(user_db_id)
+    tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
+    market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
 
     texts = {
         'ru': {
@@ -341,7 +344,8 @@ def msg_currency_error(user_id):
 # Калькулятор
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
-    currency = db.get_user_base(user_id)['base_currency'] or 'USD'
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
 
     with bot.retrieve_data(user_id, chat_id) as data:
         type = data.get('calc_type')
@@ -406,8 +410,10 @@ def msg_calculate_result(
     risk_value: float,
 ):
     lang = get_lang(user_id)
-    currency = db.get_user_base(user_id)['base_currency'] or 'USD'
-    tp_show: str = db.get_calculator_tp_show(user_id) or '345'
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
+    tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
 
     point = {
         'ru': {

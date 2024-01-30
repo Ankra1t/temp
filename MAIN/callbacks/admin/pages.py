@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from db_new import db_new
 from initialize import pay_guard
 
 from MAIN.common.utils import get_print_signal_info
@@ -48,7 +49,7 @@ def send_admin_client(
     bot: TeleBot,
     message: Message,
     user_id: int,
-    client_id: int,
+    client_db_id: int,
     is_first=False,
     filter='',
     page=1
@@ -56,12 +57,12 @@ def send_admin_client(
     chat_id = message.chat.id
     mes_id = message.id
 
-    user = db.get_user_by_id(client_id)
-    if user is None:
+    client = db_new.get_user_by_id(client_db_id)
+    if client is None:
         return
 
     user_check = User()
-    user_check.id = user[9]
+    user_check.id = client.tg_id
     user_subsriber = pay_guard.get_current_subscribe_user(user_check)
 
     fin_date = 'нет'
@@ -72,18 +73,18 @@ def send_admin_client(
             '%d/%m/%Y')
         type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
 
-    count_ref = len(db.get_referals(user_id))
-    is_banned = user[10] is not None
+    count_ref = len(db_new.get_user_referals(user_id))
+    is_banned = client.ban == 1
 
     text = '\n'.join((
-        f'Пользователь <b>@{user[2]} | {user[9]} {"(BAN)" if is_banned else ""}</b>',
+        f'Пользователь <b>@{client.username} | {client.id} {"(BAN)" if is_banned else ""}</b>',
         f'Подписка: {fin_date}{type_subscribe_show}',
-        f'Баланс: <b>{user[7]}</b>',
+        # f'Баланс: <b>{balance}</b>',
         f'Рефералов: <b>{count_ref}</b>',
         '',
         '<b>Выберите действие 👇</b>'
     ))
-    keyboard = kb_admin_client_info(client_id, is_banned, page, filter)
+    keyboard = kb_admin_client_info(client_db_id, is_banned, page, filter)
 
     if is_first:
         bot.send_message(
