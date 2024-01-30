@@ -1,6 +1,5 @@
 import asyncio
 
-from aiocryptopay import AioCryptoPay, Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 
@@ -15,24 +14,6 @@ from PaymentsBanker import PaymentsBanker
 from TariffManager import TariffManager
 from TextEditor import TextEditor
 
-
-crypto = AioCryptoPay(token=cryptopay_token, network=Networks.MAIN_NET)
-
-async def start_cryptopay():
-    profile = await crypto.get_me()
-    # currencies = await crypto.get_currencies()
-    balance = await crypto.get_balance()
-    rates = await crypto.get_exchange_rates()
-    # print(profile, currencies, balance, rates, sep='\n')
-    logger.info(f'-----> Криптобот удачно запустился profile:')
-    logger.info(profile)
-    logger.info(f'-----> Криптобот баланс:')
-    logger.info(balance)
-
-    async def close_session() -> None:
-        await crypto.close()
-
-asyncio.run(start_cryptopay())
 
 state_storage = StateMemoryStorage()
 bot = TeleBot(
