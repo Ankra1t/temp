@@ -2,8 +2,8 @@ from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 
-from db_new import db_new
-from db import Database, LANGUAGES
+from db_new import db_new, LANGUAGES
+from db import Database
 from GuardPaymentAccess import GuardPaymentAccess
 from AuthRoles import check_registrate, registration
 

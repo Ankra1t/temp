@@ -122,11 +122,7 @@ class GuardPaymentAccess():
 
     def get_paid_more1_users(self):
         """Получаем пользователей с больше чем одной подпиской"""
-        date_fin = datetime.now()
-        # date_fin = datetime.now() + timedelta(days=5)
-        # date_bonus = date_fin + timedelta(days=2)
-        finish_date = date_fin.strftime(self.dt_format)
-        user_list = self.db.get_subsribe_more1_users(finish_date)
+        user_list = self.db.get_subsribe_more1_users()
         return user_list
 
     # # # Остальные методы
@@ -202,4 +198,3 @@ class GuardPaymentAccess():
             'time_start': date_start_obj.strftime(self.dt_format_admin_show),
             'time_end': date_end_obj.strftime(self.dt_format_admin_show)
         }
-

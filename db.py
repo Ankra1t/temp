@@ -1,17 +1,8 @@
-from datetime import datetime
-from math import exp
-import re
 import sqlite3
-from tracemalloc import stop
 from typing import Any, Literal, Optional
 
 from models import Post, PostDetails
-
-MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
-LANGUAGES_TYPE = Literal['ru', 'en']
-LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
-
-BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
+from db_new import BASE_VALUE_TYPE, LANGUAGES_TYPE, MARKETS_TYPE
 
 
 class Database:
@@ -645,7 +636,7 @@ class Database:
             print(e)
 
     # Уроки
-    def add_count_les(self, id: int): # !deprecated
+    def add_count_les(self, id: int):  # !deprecated
         query = "UPDATE users set count_les = ? WHERE id = ?"
         count = self.get_count_les(id) + 1
         params = (count, id,)
@@ -658,7 +649,7 @@ class Database:
             print(f'ERROR[users_add_les]: {e}')
             return False
 
-    def get_count_les(self, id: int): # !deprecated
+    def get_count_les(self, id: int):  # !deprecated
         query = "SELECT count_les FROM users WHERE id = ?"
         params = (id,)
         try:
@@ -726,7 +717,8 @@ class Database:
 
 
 # ======================= // Управление Баном Пользователей
-    def check_ban_user(self, user_id): # !deprecated
+
+    def check_ban_user(self, user_id):  # !deprecated
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = ? and ban IS NOT NULL"
         params = (user_id,)
@@ -739,13 +731,13 @@ class Database:
             return False
 
     # Получить забаненных пользователей
-    def get_ban_users(self): # !deprecated
+    def get_ban_users(self):  # !deprecated
         res = self.curs.execute(
             f"SELECT * FROM users WHERE ban IS NOT NULL").fetchall()
         return res
 
     # Установить статус забанненого / незабанненого пользователя
-    def set_user_ban_status(self, user_id, status): # !deprecated
+    def set_user_ban_status(self, user_id, status):  # !deprecated
         self.curs.execute(f"UPDATE users set ban = ? WHERE id = ?",
                           (status, user_id,))
         self.connection.commit()
@@ -771,7 +763,7 @@ class Database:
                                 (today, date_bonus,)).fetchall()
         return res
 
-    def get_subsribe_more1_users(self, today):
+    def get_subsribe_more1_users(self):
         # todo-fin: Как получить пользователей с кол-во подписок больше 1
         res = self.curs.execute(f"SELECT u.id_idx, u.created_at, u.username, "
                                 f"u.count_sub, "
@@ -797,7 +789,6 @@ class Database:
         self.connection.commit()
 
 # ======================= // Редактирование текстов
-
     def get_list_texts(self):
         res = self.curs.execute(f"SELECT * FROM bot_texts").fetchall()
         return res

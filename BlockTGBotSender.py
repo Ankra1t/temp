@@ -69,7 +69,8 @@ class BlockTGBotSender(object):
                 open_price, stop_loss
             )
 
-            user_base_values = db.get_user_base(id)
+            user_db_id = db_new.get_user_id_by_tg_id(id)
+            user_base_values = db_new.get_user_base(user_db_id)
             dep = user_base_values['base_deposit']
             risk = user_base_values['base_risk_percent']
 

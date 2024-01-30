@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
 
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
@@ -101,7 +102,8 @@ def handle_deposit(message: Message, bot: TeleBot):
                          reply_markup=kb_cancel(user_id))
         return
 
-    db.set_user_base(user_id, 'base_deposit', value)
+
+    db_new.set_user_base(user_id, 'base_deposit', value)
 
     set_state_data(bot, user_id, chat_id, {'deposit': value})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
@@ -124,7 +126,8 @@ def handle_risk_percent(message: Message, bot: TeleBot):
             reply_markup=kb_cancel(user_id))
         return
 
-    db.set_user_base(user_id, 'base_risk_percent', value)
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    db_new.set_user_base(user_db_id, 'base_risk_percent', value)
 
     set_state_data(bot, user_id, chat_id, {'risk_percent': value})
     choose_calculate_step(bot, user_id, chat_id, mes_id)

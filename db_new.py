@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal, Optional
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
 
@@ -8,6 +8,11 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from models import UserInfo, Price, Subscribe, Transactions, Purchase
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
+BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
+
+LANGUAGES_TYPE = Literal['ru', 'en']
+LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
+MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 
 
 class Database:
@@ -585,6 +590,7 @@ class Database:
             self.connection.rollback()
             return None
 
+    # Users - Lessons
     def add_lesson_count(self, id: int):
         query = "UPDATE tgbotusers set lesson_count = %s WHERE user_id = %s"
         count = self.get_lesson_count(id) + 1
@@ -616,6 +622,7 @@ class Database:
             self.connection.rollback()
             return 1
 
+    # Users - Ban
     def check_ban_user(self, id: int):
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = %s"
@@ -640,6 +647,200 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_user_ban]: {e}')
+            self.connection.rollback()
+            return False
+
+    # Users - Settings
+    def get_user_base(self, id: int) -> dict[BASE_VALUE_TYPE, Any]:
+        """Получить значения для автозаполнения пользователя"""
+        query = (
+            'SELECT base_deposit, base_risk_percent, base_currency FROM tgcalc_user_settings '
+            'WHERE user_id = %s'
+        )
+        params = (id,)
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return {
+                'base_deposit': None if (data is None) else data.get('base_deposit'),
+                'base_risk_percent': None if (data is None) else data.get('base_risk_percent'),
+                'base_currency': None if (data is None) else data.get('base_currency')
+            }
+        except Exception as e:
+            print(f'ERROR[get_user_base]: {e}')
+            self.connection.rollback()
+            return {
+                'base_deposit': None,
+                'base_risk_percent': None,
+                'base_currency': None
+            }
+
+    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
+        """Установить значения для автозаполения пользователя"""
+        value = round(value, 2)
+        query = f'UPDATE tgcalc_user_settings SET {type} = %s WHERE user_id = %s'
+        params = (value, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_base]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_currency(self, user_id: int, value: str):
+        """Установить значения для автозаполения пользователя"""
+        query = 'UPDATE tgcalc_user_settings SET base_currency = %s WHERE user_id = %s'
+        params = (value, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_currency]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
+        """Получить язык пользователя"""
+        query = 'SELECT lang FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if (data is None) else data.get('lang')
+        except Exception as e:
+            print(f'ERROR[get_user_lang]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE):
+        """Установить язык пользователя"""
+        if len(lang) > 5:
+            return False
+
+        query = "UPDATE tgcalc_user_settings SET lang = %s WHERE user_id = %s"
+        params = (lang, user_id)
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_lang]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_calculator_users_id(self) -> list[int]:
+        """Получить всех пользователей Калькулятора Бота"""
+        query = 'SELECT user_id FROM tgcalc_user_settings'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return [] if (data is None) else list(map(lambda el: el['user_id'], data))
+        except Exception as e:
+            print(f'ERROR[get_calculator_users_id]: {e}')
+            self.connection.rollback()
+            return []
+
+    def delete_calculator_user(self, user_id: int):
+        """Удалить пользователя из калькулятора"""
+        query = "DELETE FROM tgcalc_user_settings WHERE user_id = %s"
+        params = (user_id,)
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[delete_calculator_user]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_calculator_uses_count(self, user_id: int) -> int | None:
+        """Получить количество использований калькулятора пользователем"""
+        query = 'SELECT uses_count FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if (data is None) else data['uses_count']
+        except Exception as e:
+            print(f'ERROR[get_calculator_uses_count]: {e}')
+            self.connection.rollback()
+            return None
+
+    def minus_calculator_uses_count(self, user_id: int):
+        """Минус 1 к значению использований у пользователя"""
+        query = "UPDATE tgcalc_user_settings SET uses_count = %s WHERE user_id = %s"
+        uses_count = self.get_calculator_uses_count(user_id) or 1
+        params = (uses_count - 1, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[minus_calculator_uses_count]: {e}')
+            self.connection.rollback()
+            return False
+
+        pass
+
+    def get_calculator_tp_show(self, user_id: int):
+        """Получить коэфициенты тейк профит на показ"""
+        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE id = %s'
+        params = (user_id,)
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if (data is None) else data['take_profit_to_show']
+        except Exception as e:
+            print(f'ERROR[get_calculator_tp_show]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_calculator_tp_show(self, user_id: int, tp: str):
+        """Установить коэфициенты тейк профит на показ"""
+        query = "UPDATE tgcalc_user_settings SET take_profit_to_show = %s WHERE user_id = %s"
+        params = (tp, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_calculator_tp_show]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None:
+        """Получить рынок пользователя"""
+        query = 'SELECT market FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if data is None else data['market']
+        except Exception as e:
+            print(f'ERROR[get_calculator_user_market]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
+        """Установить рынок пользователя"""
+        query = "UPDATE tgcalc_user_settings SET market = %s WHERE id = %s"
+        params = (market, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_calculator_user_market]: {e}')
             self.connection.rollback()
             return False
 

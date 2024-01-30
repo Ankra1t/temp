@@ -2,6 +2,7 @@ import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
+from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard
 from db_new import db_new
@@ -41,12 +42,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         users = users[(page - 1) * limit:page * limit]
         text = ''
 
-        for user in users:
-            nik = f'@{user.username}' if (
-                user.username is not None) else 'Скрыт'
-            ban = '(BAN)' if user.ban == 1 else ''
+        if len(users) == 0:
+            text = 'Нет забаненных пользователей'
+        else:
+            for user in users:
+                nik = f'@{user.username}' if (
+                    user.username is not None) else 'Скрыт'
+                ban = '(BAN)' if user.ban == 1 else ''
 
-            text += f'\n{ban} {user.tg_id} | {nik}\n'
+                text += f'\n{ban} {user.tg_id} | {nik}\n'
 
         bot.edit_message_text(
             text,
@@ -64,39 +68,43 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             limit, page,
             'by_date_old' if filter == 'by_date_old' else ''
         )
-        res_str_all_users = ''
+        text = ''
 
-        for user in mas_all_user:
-            tg_user_id = user.tg_id
+        if len(mas_all_user) == 0:
+            text = 'Нет пользователей'
+        else:
+            for user in mas_all_user:
+                tg_user_id = user.tg_id
 
-            nik = f'@{user.username}' if user.username != '' else 'Скрыт'
-            ban = '(BAN)' if user.ban == 1 else ''
+                nik = f'@{user.username}' if user.username != '' else 'Скрыт'
+                ban = '(BAN)' if user.ban == 1 else ''
 
-            user_subsriber = User()
-            user_subsriber.id = tg_user_id
-            user_subsriber = pay_guard.get_current_subscribe_user(
-                user_subsriber)
+                user_subsriber = User()
+                user_subsriber.id = tg_user_id
+                user_subsriber = pay_guard.get_current_subscribe_user(
+                    user_subsriber)
 
-            fin_date = 'нет подписок'
-            type_subscribe_show = ''
+                fin_date = 'нет подписок'
+                type_subscribe_show = ''
 
-            if user_subsriber.subscribe is not None:
-                fin_date = user_subsriber.subscribe.finish_dt.strftime(
-                    '%d/%m/%Y')
-                type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
+                if user_subsriber.subscribe is not None:
+                    fin_date = user_subsriber.subscribe.finish_dt.strftime(
+                        '%d/%m/%Y')
+                    type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
 
-            user_show = (
-                f'\n{str(tg_user_id)} | {nik} | {ban}'
-                f'\nПодписка до: {fin_date}{type_subscribe_show}\n'
-            )
+                user_show = (
+                    f'\n{user.id} | {nik} {ban}'
+                    f'\nПодписка до: {fin_date}<b>{type_subscribe_show}</b>'
+                    f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>\n'
+                )
 
-            if (user_subsriber.subscribe is not None) and (filter == 'by_paid'):
-                res_str_all_users = user_show + res_str_all_users
-            else:
-                res_str_all_users += user_show
+                if (user_subsriber.subscribe is not None) and (filter == 'by_paid'):
+                    text = user_show + text
+                else:
+                    text += user_show
 
         bot.edit_message_text(
-            res_str_all_users or 'Нет пользователей', chat_id, mes_id,
+            text or 'Нет пользователей', chat_id, mes_id,
             reply_markup=kb_admin_users_list(pages, page, filter)
         )
 
