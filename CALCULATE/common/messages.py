@@ -346,6 +346,7 @@ def msg_currency_error(user_id):
 # Калькулятор
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
+
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
 
@@ -414,6 +415,7 @@ def msg_calculate_result(
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
     tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
 

@@ -110,6 +110,8 @@ def handle_deposit(message: Message, bot: TeleBot):
 
 def handle_risk_percent(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -125,7 +127,6 @@ def handle_risk_percent(message: Message, bot: TeleBot):
             reply_markup=kb_cancel(user_id))
         return
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
     db_new.set_user_base(user_db_id, 'base_risk_percent', value)
 
     set_state_data(bot, user_id, chat_id, {'risk_percent': value})

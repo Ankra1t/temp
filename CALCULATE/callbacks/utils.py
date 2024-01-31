@@ -64,7 +64,6 @@ def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
                                 type: Literal['crypto', 'future', 'paper', 'forex'],
                                 is_edit=False):
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
 
     chat_id = message.chat.id
     mes_id = message.id

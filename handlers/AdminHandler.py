@@ -72,7 +72,7 @@ def get_end_date_cancel_subscribe(message: types.Message, date_start_obj):
 def get_user_for_cancel_subscribe(message: types.Message):
     logger.info(
         f'-----> Получили username пользователя для деактивации его подписки ')
-    username = (message.text or '').strip().replace('@', '')
+    username = (message.text or '').replace('@', '')
 
     # Проверяем есть данный пользователь в базе
     user_id = db_new.get_user_id_by_tg_name(username)

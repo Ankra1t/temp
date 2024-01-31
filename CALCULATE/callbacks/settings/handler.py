@@ -17,8 +17,8 @@ from ..pages import send_main, send_settings
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
-    callback_data: dict = settings_factory.parse(call.data)
-    type = callback_data['type']
+    callback_data = settings_factory.parse(call.data)
+    type = callback_data.get('type', '')
 
     user_id = call.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)

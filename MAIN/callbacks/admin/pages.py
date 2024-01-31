@@ -74,7 +74,7 @@ def send_admin_client(
         type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''
-    count_ref = len(db_new.get_user_referals(user_id))
+    count_ref = len(db_new.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
     text = '\n'.join((

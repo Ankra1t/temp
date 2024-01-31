@@ -2,6 +2,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
 from db_new import db_new
+from initialize import pay_guard
 
 from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual
 from .manual.keyboards import kb_manual
@@ -19,7 +20,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
 
     uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
 
-    if uses_count > 0:
+    if pay_guard.valid_use_calc(user_id):
         text = msg_main(user_id, uses_count)
         keyboard = kb_main(user_id)
     else:

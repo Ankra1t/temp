@@ -526,7 +526,7 @@ class Database:
             else:
                 return True
         except Exception as e:
-            print(e)
+            print(f'ERROR [check_tg_user_tables]: {e}')
             self.connection.rollback()
             return False
 
@@ -541,7 +541,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(e)
+            print(f'ERROR [create_tg_user_tables]: {e}')
             self.connection.rollback()
             return False
 
@@ -617,7 +617,7 @@ class Database:
 
     def get_user_referals(self, id: int) -> list[UserInfo]:
         """Получить рефералов юзера"""
-        query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
+        query = self.USER_INFO_QUERY + 'WHERE tu.refer_id = %s'
         params = (id,)
 
         try:

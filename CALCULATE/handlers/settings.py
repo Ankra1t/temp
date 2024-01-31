@@ -17,6 +17,8 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
     def r_func(message: Message, bot: TeleBot):
         user_id = message.from_user.id
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
         chat_id = message.chat.id
 
         value = digit_accept(message)
@@ -31,7 +33,6 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                 reply_markup=kb_base_cancel(user_id))
             return
 
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
         db_new.set_user_base(user_db_id, type, value)
 
         with bot.retrieve_data(user_id, chat_id) as data:
