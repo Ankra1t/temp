@@ -10,6 +10,7 @@ from MAIN.states import AdminPostsState
 from messages.workers import admin_fut_posts_msg
 from common.utils import set_state_data
 from models import Post
+from MAIN.callbacks.admin.workers.handler import _handle_callback
 
 from .keyboards import kb_post_kinds, kb_posts, kb_posts_back
 from .filter import admin_posts_factory, AdminPostsCallbackFilter

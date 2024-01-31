@@ -12,13 +12,15 @@ from messages.education import (curs_contents, curs, termins)
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
-    callback_data: dict = user_education_factory.parse(call.data)
-    type = callback_data.get('type') or ''
-    page = int(callback_data.get('page') or -1)
-    num_les = int(callback_data.get('num_les') or -1)
+    callback_data = user_education_factory.parse(call.data)
+    type = callback_data.get('type', '')
+    page = int(callback_data.get('page', -1))
+    num_les = int(callback_data.get('num_les', -1))
+
+    user_id = call.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
     chat_id = call.message.chat.id
-    user_id = call.from_user.id
     mes_id = call.message.id
 
     if type == 'back':
@@ -41,7 +43,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             send_user_terms(bot, call.message, page, user_id)
 
     if 'curs' in type:
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
         count_now_les = db_new.get_lesson_count(user_db_id)
         if 'les' in type:
             if len(curs) + 1 == num_les:
@@ -54,7 +55,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 lesson = curs[num_les - 1]
 
                 if page == len(lesson) and count_now_les == num_les and count_now_les != len(curs):
-                    user_db_id = db_new.get_user_id_by_tg_id(user_id)
                     db_new.add_lesson_count(user_db_id)
 
                 bot.edit_message_text(

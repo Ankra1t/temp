@@ -149,7 +149,7 @@ class GuardPaymentAccess():
         return user_list
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, user_id):
+    def valid_use_calc(self, tg_id: int):
 
         uses_count = db_new.get_calculator_uses_count(user_id) or 0
 
@@ -160,8 +160,8 @@ class GuardPaymentAccess():
         # Проверить есть ли остаток использований калькулятора
         if uses_count <= 0:
             return False
-
-
+          
+        return True
     
     def check_paid_product(self, user_id, product):
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
@@ -174,7 +174,6 @@ class GuardPaymentAccess():
         return False
 
     # # # Остальные методы
-
     def set_subscribe_unactive_many_users(self):
         db_new.set_unactive_subscribes('trial')
 

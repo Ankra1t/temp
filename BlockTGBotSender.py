@@ -53,7 +53,8 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
             open_price, stop_loss
         )
 
-        user_base_values = db.get_user_base(user_id)
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        user_base_values = db_new.get_user_base(user_db_id)
         dep = user_base_values['base_deposit']
         risk = user_base_values['base_risk_percent']
 
@@ -115,9 +116,6 @@ class BlockTGBotSender(object):
             users = list(map(lambda x: x.tg_id, users))
         else:
             users = self.users
-            
-        print(f'users ')
-        print(users)
 
         i = 0
         while i < len(users):

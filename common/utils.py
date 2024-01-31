@@ -3,7 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from typing import TypeVar, Any
 
-from db import db
+from db_new import db_new
 
 
 T = TypeVar('T', int, float)
@@ -36,8 +36,9 @@ def float_to_print(val: float | None):
     return round(val, 2) if val is not None else '-'
 
 
-def get_lang(user_id: int):
-    return db.get_user_lang(user_id) or 'ru'
+def get_lang(tg_id: int):
+    user_db_id = db_new.get_user_id_by_tg_id(tg_id)
+    return db_new.get_user_lang(user_db_id) or 'ru'
 
 
 def get_print_float(value: float, round_count: int | None = None):
