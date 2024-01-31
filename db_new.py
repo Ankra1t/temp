@@ -526,7 +526,7 @@ class Database:
             else:
                 return True
         except Exception as e:
-            print(e)
+            print(f'ERROR [check_tg_user_tables]: {e}')
             self.connection.rollback()
             return False
 
@@ -541,7 +541,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(e)
+            print(f'ERROR [create_tg_user_tables]: {e}')
             self.connection.rollback()
             return False
 
@@ -552,6 +552,7 @@ class Database:
         #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
         #     query += 'WHERE subscribes.active = 1 '
         query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+        query += f", u.id ASC "
         query += "LIMIT %s OFFSET %s "
 
         params = (limit, (page - 1) * limit)
@@ -616,7 +617,7 @@ class Database:
 
     def get_user_referals(self, id: int) -> list[UserInfo]:
         """Получить рефералов юзера"""
-        query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
+        query = self.USER_INFO_QUERY + 'WHERE tu.refer_id = %s'
         params = (id,)
 
         try:
@@ -758,7 +759,7 @@ class Database:
 
     def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
         """Получить язык пользователя"""
-        query = 'SELECT lang FROM tgcalc_user_settings WHERE user_id = %s'
+        query = 'SELECT lang FROM users WHERE id = %s'
         params = (user_id,)
         try:
             self.curs.execute(query, params)
@@ -774,7 +775,7 @@ class Database:
         if len(lang) > 5:
             return False
 
-        query = "UPDATE tgcalc_user_settings SET lang = %s WHERE user_id = %s"
+        query = "UPDATE users SET lang = %s WHERE id = %s"
         params = (lang, user_id)
         try:
             self.curs.execute(query, params)
@@ -843,12 +844,12 @@ class Database:
 
     def get_calculator_tp_show(self, user_id: int):
         """Получить коэфициенты тейк профит на показ"""
-        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE id = %s'
+        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE user_id = %s'
         params = (user_id,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return None if (data is None) else data['take_profit_to_show']
+            return data.get('take_profit_to_show') if (data is not None) else None
         except Exception as e:
             print(f'ERROR[get_calculator_tp_show]: {e}')
             self.connection.rollback()
@@ -884,7 +885,7 @@ class Database:
 
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
-        query = "UPDATE tgcalc_user_settings SET market = %s WHERE id = %s"
+        query = "UPDATE tgcalc_user_settings SET market = %s WHERE user_id = %s"
         params = (market, user_id)
 
         try:
@@ -910,9 +911,9 @@ class Database:
             self.connection.rollback()
             return None
 
-
+    # Options
     def set_option(self, name, value):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = datetime.now()
         query = "UPDATE tgbot_options set value = %s, updated_at = %s WHERE name_option = %s"
         params = (value, datetime_now, name,)
 
@@ -934,10 +935,9 @@ class Database:
             res = self.curs.fetchone()
             return res['value'] if res is not None else None
         except Exception as e:
-            print(f'ERROR[get_access_token]: {e}')
+            print(f'ERROR[get_option]: {e}')
             self.connection.rollback()
             return None
-
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

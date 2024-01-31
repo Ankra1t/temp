@@ -10,10 +10,10 @@ from .filter import admin_workers_factory, AdminWorkersCallbackFilter
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
-    data: dict = admin_workers_factory.parse(call.data)
-    type = data['type'] or ''
+    data = admin_workers_factory.parse(call.data)
+    type = data.get('type', '')
     id = int(data.get('id', 0)) if is_digit(data.get('id', '')) else 0
-    name = data['name'] or ''
+    name = data.get('name', '')
     role = int(data.get('role', 0)) if is_digit(data.get('role', '')) else -1
 
     user_id = call.from_user.id

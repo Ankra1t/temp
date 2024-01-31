@@ -151,7 +151,7 @@ def handle_count_trial_days(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    count_days = int(digit_accept(message))
+    count_days = digit_accept(message, int)
     if count_days is None:
         bot.send_message(
             chat_id, 'Введите число:',

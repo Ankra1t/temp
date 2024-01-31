@@ -149,9 +149,9 @@ class GuardPaymentAccess():
         return user_list
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, user_id):
-
-        uses_count = self.db.get_calculator_uses_count(user_id) or 0
+    def valid_use_calc(self, tg_id: int):
+        user_db_id = db_new.get_user_id_by_tg_id(tg_id)
+        uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
 
         # Проверить есть ли остаток использований калькулятора
         if uses_count <= 0:
@@ -159,12 +159,10 @@ class GuardPaymentAccess():
             return True
 
         pass
-    
     # def get_(self):
     #     pass
 
     # # # Остальные методы
-
     def set_subscribe_unactive_many_users(self):
         db_new.set_unactive_subscribes('trial')
 

@@ -1,4 +1,4 @@
-import asyncio
+from aiocryptopay import Networks
 
 from aiocryptopay import AioCryptoPay, Networks
 from telebot import TeleBot
