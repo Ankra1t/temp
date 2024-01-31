@@ -759,7 +759,7 @@ class Database:
 
     def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
         """Получить язык пользователя"""
-        query = 'SELECT lang FROM tgcalc_user_settings WHERE user_id = %s'
+        query = 'SELECT lang FROM users WHERE id = %s'
         params = (user_id,)
         try:
             self.curs.execute(query, params)
@@ -775,7 +775,7 @@ class Database:
         if len(lang) > 5:
             return False
 
-        query = "UPDATE tgcalc_user_settings SET lang = %s WHERE user_id = %s"
+        query = "UPDATE users SET lang = %s WHERE id = %s"
         params = (lang, user_id)
         try:
             self.curs.execute(query, params)
@@ -844,12 +844,12 @@ class Database:
 
     def get_calculator_tp_show(self, user_id: int):
         """Получить коэфициенты тейк профит на показ"""
-        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE id = %s'
+        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE user_id = %s'
         params = (user_id,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return None if (data is None) else data['take_profit_to_show']
+            return data.get('take_profit_to_show') if (data is not None) else None
         except Exception as e:
             print(f'ERROR[get_calculator_tp_show]: {e}')
             self.connection.rollback()
@@ -885,7 +885,7 @@ class Database:
 
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
-        query = "UPDATE tgcalc_user_settings SET market = %s WHERE id = %s"
+        query = "UPDATE tgcalc_user_settings SET market = %s WHERE user_id = %s"
         params = (market, user_id)
 
         try:

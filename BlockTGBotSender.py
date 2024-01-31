@@ -116,9 +116,6 @@ class BlockTGBotSender(object):
             users = list(map(lambda x: x.tg_id, users))
         else:
             users = self.users
-            
-        print(f'users ')
-        print(users)
 
         i = 0
         while i < len(users):

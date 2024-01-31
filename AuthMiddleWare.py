@@ -46,6 +46,10 @@ class AuthMiddleWare(BaseMiddleware):
 
             db_new.create_tg_user_tables(user_db_id)
 
+            lang = message.from_user.language_code.lower()
+            lang = lang if (lang in LANGUAGES) else 'ru'
+            db_new.set_user_lang(user_db_id, lang)
+
             data['has_registered_now'] = True
             user_role = 0
 
