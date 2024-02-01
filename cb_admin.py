@@ -89,28 +89,32 @@ def admin_workers_callbacks(call: types.CallbackQuery):
     if type == 'redactors':
         bot.edit_message_text(
             menu_msg('Редакторы'), chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions(
-                'redactor')
+            reply_markup=kb_admin_workers_actions('redactor')
         )
 
     if type == 'support':
-        sup = db.get_support()
-        bot.edit_message_text(f'Тех.поддержка: {sup[0][2]}', chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_support())
+        sup = db_new.get_support_name()
+        sup_link = f'@{sup}' if sup != '' else '-'
+
+        bot.edit_message_text(
+            f'Тех.поддержка: {sup_link}', chat_id, mes_id,
+            reply_markup=kb_inl_admin.workers_support()
+        )
 
     if type == 'workers_list':
-        mas = db.get_all_workes()
+        mas = db_new.get_all_workes()
         res = ''
         role = ''
         for i in range(0, len(mas)):
-            if mas[i][2] == 1:
+            if mas[i].role == 1:
                 role = 'Гл.админ'
-            if mas[i][2] == 2:
+            if mas[i].role == 2:
                 role = 'Редактор'
-            if mas[i][2] == 3:
+            if mas[i].role == 3:
                 role = 'Тех.поддержка'
-            res += '\n' + str(mas[i][0]) + ' | ' + \
-                mas[i][1] + '\nДолжность: ' + role + '\n'
+
+            res += f'\n@{mas[i].username} | {role}'
+
         bot.edit_message_text(res, chat_id, mes_id,
                               reply_markup=kb_inl_admin.workers())
 
@@ -121,9 +125,8 @@ def admin_workers_callbacks(call: types.CallbackQuery):
 
 @bot.callback_query_handler(func=None, admin_default=admin_default_factory.filter())
 def admin_default_callbacks(call: types.CallbackQuery):
-    callback_data: dict[str, str] = admin_default_factory.parse(call.data)
-    type = callback_data['type']
-    logger.info(f'Кастомное callback_query меню ***{type}***')
+    callback_data = admin_default_factory.parse(call.data)
+    type = callback_data.get('type', '')
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
@@ -132,14 +135,18 @@ def admin_default_callbacks(call: types.CallbackQuery):
     if 'update_support' in type and type != 'update_support':
         if 'yes' in type:
             vars.sup_name = vars.sup_name.replace('@', '')
-            db.update_sup(vars.sup_name)
+            db_new.update_support_name(vars.sup_name)
             bot.edit_message_text('Изменено!', chat_id, mes_id)
         if 'no' in type:
             vars.sup_name = ''
 
-        sup = db.get_support()
+        sup = db_new.get_support_name()
+        sup_link = f'@{sup}' if (sup != '') else ''
+
         bot.send_message(
-            chat_id, f'Тех.поддержка: {sup[0][2]}', reply_markup=kb_inl_admin.workers_support())
+            chat_id, f'Тех.поддержка: {sup_link}',
+            reply_markup=kb_inl_admin.workers_support()
+        )
 
     if type == 'update_support':
         bot.edit_message_text('Отправьте ник ТГ для тех. поддержки с @',
@@ -155,7 +162,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
             count_all = db_new.get_users_count()
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
-            count_admins = len(db.get_all_workes())
+            count_admins = len(db_new.get_all_workes())
             count_fut_posts = len(db.get_fut_all_posts())
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)

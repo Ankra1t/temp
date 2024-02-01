@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import UserInfo, Price, Subscribe, Transactions, Purchase
+from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
@@ -896,6 +896,123 @@ class Database:
             print(f'ERROR[set_calculator_user_market]: {e}')
             self.connection.rollback()
             return False
+
+    # Workers
+    def _data_to_worker(self, data: DictRow):
+        return Worker(
+            id=data.get('id'),
+            tg_id=data.get('tg_user_id'),
+            username=data.get('tg_username'),
+            role=data.get('role')
+        )
+
+    def add_worker(self, tg_id: int, username: str, role: int):
+        """Добваление работника (1 = админ, 2 = редактор)"""
+        query = "INSERT INTO tgbot_workers(tg_user_id, tg_username, role) VALUES(%s, %s, %s)"
+        params = (tg_id, username, role)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[add_worker]: {e}')
+            self.connection.rollback()
+            return False
+
+    def del_worker(self, tg_id: int):
+        """Удаление работника"""
+        query = 'DELETE FROM tgbot_workers WHERE tg_user_id = %s'
+        params = (tg_id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[del_worker]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_all_workes(self) -> list[Worker]:
+        """Получить всех работников"""
+        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_all_workes]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_admins(self) -> list[Worker]:
+        """Получить всех админов"""
+        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 1'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_admins]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_redactors(self) -> list[Worker]:
+        """Получить всех редакторов"""
+        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 2'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_redactors]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_support_name(self) -> str:
+        """Получение тех. поддержки"""
+        query = 'SELECT tg_username FROM tgbot_workers WHERE role = 3'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchone()
+            return data.get('tg_username', '') if (data is not None) else ''
+        except Exception as e:
+            print(f'ERROR[get_support_name]: {e}')
+            self.connection.rollback()
+            return ''
+
+    def update_support_name(self, username: str):
+        """Изменение тех. поддержки"""
+        query = 'UPDATE tgbot_workers SET tg_username = %s WHERE role = 3'
+        params = username,
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_support]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_worker_role(self, id: int) -> int | None:
+        """Узнать роль работника"""
+        query = "SELECT role FROM tgbot_workers WHERE tg_user_id = %s"
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data.get('role') if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_role]: {e}')
+            self.connection.rollback()
+            return None
 
     # Auth
     def get_access_token(self):

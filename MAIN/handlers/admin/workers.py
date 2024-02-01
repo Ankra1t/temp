@@ -40,7 +40,8 @@ def handle_add_id(message: Message, bot: TeleBot):
     if id is None:
         bot.send_message(
             chat_id, 'Введите чисо:',
-            reply_markup=kb_inl_admin.workers_actions_back(role))
+            reply_markup=kb_inl_admin.workers_actions_back(role)
+        )
         return
 
     set_state_data(bot, user_id, chat_id, {'id': id})

@@ -384,11 +384,9 @@ class Database:
             print(f'ERROR[set_calculator_user_market]: {e}')
             return False
 
-    # ================================= Рабочий персонал
-    # Гл.админ
-    def add_worker(self, id: int, username: str, role):
+    # ================================= Рабочий персонал # !deprecated
+    def add_worker(self, id: int, username: str, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        self.del_user(id)
         query = "INSERT INTO workers(id, username, role) VALUES(?, ?, ?)"
         params = (id, username, role)
 
@@ -418,7 +416,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Обычный админ
     def get_redactors(self):
         """Получить всех редакторов"""
         try:
@@ -427,7 +424,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Тех. поддержка
     def get_support(self):
         """Получение тех. поддержки"""
         try:
@@ -451,7 +447,6 @@ class Database:
             print(f'ERROR[update_sup]: {e}')
             return False
 
-    # Получаем список всех работников
     def get_all_workes(self):
         """Получить всех работников"""
         try:

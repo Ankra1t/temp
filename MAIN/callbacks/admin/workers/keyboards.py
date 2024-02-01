@@ -28,7 +28,8 @@ def kb_admin_workers_actions(worker: str):
             text, None,
             admin_workers_factory.new(
                 type=type, id='', name='',
-                role='1' if worker == 'admin' else '2')
+                role='1' if worker == 'admin' else '2'
+            )
         )
 
     keyboard = InlineKeyboardMarkup(row_width=2)

@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from initialize import kb_inl_admin
-from db import db
+from db_new import db_new
 from common.utils import is_digit, set_state_data
 from MAIN.states import AdminWorkersState
 
@@ -11,6 +11,7 @@ from .filter import admin_workers_factory, AdminWorkersCallbackFilter
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     data = admin_workers_factory.parse(call.data)
+
     type = data.get('type', '')
     id = int(data.get('id', 0)) if is_digit(data.get('id', '')) else 0
     name = data.get('name', '')
@@ -22,25 +23,27 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     # Удаление/Добавление
     if type == 'add_yes':
-        if db.check_worker(id):
+        if db_new.get_worker_role(id) is not None:
             bot.edit_message_text(
-                f'Админ с ID: {id} - уже есть!', chat_id, mes_id)
+                f'Админ с ID: {id} - уже есть!',
+                chat_id, mes_id
+            )
         else:
-            print(f'Добавляю админа: {name} {id}')
-            db.add_worker(id, name, role)
+            db_new.add_worker(id, name, role)
             bot.edit_message_text('Успешно!', chat_id, mes_id)
+
+    if type == 'delete_yes':
+        if db_new.get_worker_role(id) is not None:
+            db_new.del_worker(id)
+            bot.edit_message_text('Успешно!', chat_id, mes_id)
+        else:
+            bot.edit_message_text(
+                'Админа с таким ID не существует!',
+                chat_id, mes_id
+            )
 
     if type == 'add_no' or type == 'delete_no':
         bot.edit_message_text('Отменено!', chat_id, mes_id)
-
-    if type == 'delete_yes':
-        if db.check_worker(id):
-            print(f'Удаляю админа: {id}')
-            db.del_worker(id)
-            bot.edit_message_text('Успешно!', chat_id, mes_id)
-        else:
-            bot.edit_message_text(
-                'Админа с таким ID не существует!', chat_id, mes_id)
 
     if 'delete' in type or 'add' in type:
         if role == 1:
@@ -66,33 +69,34 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'role': role})
 
     if type == 'redactor_list':
-        res = ''
-        mas = db.get_redactors()
+        res = '<b>Редакторы</b>\n'
+        redactors = db_new.get_redactors()
 
-        for i in range(0, len(mas)):
-            if mas[i][3] == 2:
-                res += '\n' + str(mas[i][0]) + ' | ' + \
-                    mas[i][1] + '\nДолжность: Редактор\n'
+        if len(redactors) != 0:
+            for i in range(0, len(redactors)):
+                res += f'\nID: {redactors[i].tg_id} | Username: @{redactors[i].username}\n'
+        else:
+            res = '\nНет редакторов!\n'
 
-        if res == '':
-            res = 'Редакторов нет!'
-
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('redactor'))
+        bot.edit_message_text(
+            res, chat_id, mes_id,
+            reply_markup=kb_inl_admin.workers_actions_back('redactor')
+        )
 
     if type == 'admin_list':
-        res = ''
-        mas = db.get_all_workes()
-        for i in range(0, len(mas)):
-            role = mas[i][3]
-            user_tg_id = mas[i][4]
-            username = mas[i][2]
-            if role == 1:
-                res += 'ID: ' + str(user_tg_id) + ' | Username: ' + \
-                    username + ' | Должность: Гл.админ\n'
+        res = '<b>Админы</b>\n'
+        admins = db_new.get_admins()
 
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('admin'))
+        if len(admins) != 0:
+            for i in range(0, len(admins)):
+                res += f'\nID: {admins[i].tg_id} | Username: @{admins[i].username}\n'
+        else:
+            res = '\nНет админов!\n'
+
+        bot.edit_message_text(
+            res, chat_id, mes_id,
+            reply_markup=kb_inl_admin.workers_actions_back('admin')
+        )
 
     bot.answer_callback_query(call.id)
 

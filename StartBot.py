@@ -7,7 +7,6 @@ from MAIN.start import send_start_by_user
 
 
 from initialize import bot, db, pays, pays_banker, pay_guard
-from variables import *
 from telebot import custom_filters, types
 from telebot.types import Message
 
@@ -160,7 +159,7 @@ def invoice_paid(update: UpdateBBanker) -> None:
 def livepost_media(message: Message, data):
     user_role = data.get('user_role')
 
-    if (user_role == 1 or user_role == 2) and message.text not in text_commands_stack:
+    if (user_role == 1 or user_role == 2):
         get_admin_livepost(message)
 
 
@@ -297,10 +296,6 @@ def callback_inline(call: types.CallbackQuery):
     mes_id = call.message.id
 
     user_role = check_registrate(user_id) or 0
-
-    global new_admin_post, new_admin_post_img, new_admin_type, new_admin_post_video
-    global new_post, new_post_img, new_fut_post, new_fut_post_img, new_fut_post_time, new_fut_post_date
-    global link, index_term
 
     if call.data == 'RUB' or call.data == 'USD':
         set_state_data(bot, user_id, chat_id, {'val_dep': call.data})
