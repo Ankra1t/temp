@@ -149,27 +149,44 @@ class GuardPaymentAccess():
         return user_list
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, tg_id: int):
+    def valid_use_calc(self, user_id: int):
 
         uses_count = db_new.get_calculator_uses_count(user_id) or 0
 
         # Проверять есть ли платная подписка
-        if self.check_paid_product(user_id, 'calc'):
+        if self.paid_user_product(user_id, 'calc'):
             return True
 
         # Проверить есть ли остаток использований калькулятора
-        if uses_count <= 0:
-            return False
+        if uses_count > 0:
+            return True
           
-        return True
+        return False
     
-    def check_paid_product(self, user_id, product):
+    def paid_user_product(self, user_id, product=None):
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
-        # Проверяем текущие активные платные подписки по продукту калькулятор
-        # db_new.get_current_subscribe_user()
-        # db_new.get_users_finished_subscribe()
+        client = db_new.get_user_by_id(user_id)
 
-        # Проверяем актуальность по дате окончания подписки Subscribe
+        # Проверяем текущие активные платные подписки по продукту калькулятор
+        subscribes = db_new.get_active_subscribes_by_user_id(client.tg_id)
+
+        if not subscribes:
+            return False
+
+        # Найти транзакцию по продукту
+        list_subscribes = subscribes
+        now = datetime.now()
+        for i in range(0, len(list_subscribes)):
+            sub_item = list_subscribes[i]
+            fin_date_subscribe_obj = sub_item.finish_dt
+
+            if fin_date_subscribe_obj > now:
+                price_item = db_new.get_price_by_id(sub_item.prices_id)
+
+                if price_item.type_product == product:
+                    return True
+            else:
+                db_new.set_deactivate_subscribe(sub_item.id)
 
         return False
 
