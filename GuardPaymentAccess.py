@@ -156,11 +156,9 @@ class GuardPaymentAccess():
         # Проверить есть ли остаток использований калькулятора
         if uses_count <= 0:
             # Проверять есть ли платная подписка
-            return True
+            return False
 
-        pass
-    # def get_(self):
-    #     pass
+        return True
 
     # # # Остальные методы
     def set_subscribe_unactive_many_users(self):

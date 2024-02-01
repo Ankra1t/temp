@@ -1,14 +1,13 @@
-from typing import Literal
 from telebot import TeleBot
 from math import floor
 from time import sleep
+from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
+from common.utils import get_calculation
 
 from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
-from db import db
 from db_new import db_new
 from initialize import bot
-from CALCULATE.common.messages import msg_calculate_result
 from models import Post
 
 
@@ -61,11 +60,6 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
         if dep is None or risk is None:
             calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
         else:
-            diff = open_price - stop_loss
-            tp_1 = open_price + diff * 3
-            tp_2 = open_price + diff * 4
-            tp_3 = open_price + diff * 5
-
             count_bet = floor(
                 (dep * risk / 100) /
                 (open_price - stop_loss)
@@ -77,14 +71,15 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
                 credit = round(summary_open_value // dep + 1)
 
             calc_text = '<b><u>Расчет по сигналу</u></b>\n'
-            calc_text += msg_calculate_result(
-                user_id, dep, risk,
-                open_price,
-                stop_loss,
-                tp_1, tp_2, tp_3,
-                count_bet,
-                summary_open_value,
-                credit, dep * risk
+            count_bet, value_bet, credit, risk_value, take_profit, profit = get_calculation(
+                user_id, dep, risk, open_price,
+                stop_loss, ticker
+            )
+
+            mes = msg_calculate_result(
+                user_id, dep, risk, open_price,
+                stop_loss, count_bet, value_bet, credit,
+                risk_value, take_profit, profit
             )
 
     signal_text += '\n\n' + post.content
@@ -147,4 +142,3 @@ class BlockTGBotSender(object):
 
         if calc_mes is not None:
             bot.send_message(id, calc_mes)
-

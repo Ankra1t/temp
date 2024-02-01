@@ -139,7 +139,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'uses':
         db_new.curs.execute(
-            f'UPDATE tgcalc_user_settings SET uses_count = 10 WHERE id = {user_id}')
+            f'UPDATE tgcalc_user_settings SET uses_count = 10 WHERE user_id = {user_db_id}')
         db_new.connection.commit()
 
     bot.answer_callback_query(call.id)

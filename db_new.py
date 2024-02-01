@@ -819,7 +819,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return None if (data is None) else data['uses_count']
+            return None if (data is None) else data.get('uses_count')
         except Exception as e:
             print(f'ERROR[get_calculator_uses_count]: {e}')
             self.connection.rollback()
