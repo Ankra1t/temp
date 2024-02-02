@@ -6,7 +6,7 @@ from initialize import kb_inl_admin
 from .filter import admin_workers_factory
 
 
-def getButton(text: str, type: str, role: int = -1, id: int | None = None, name: str | None = None):
+def getButton(text: str, type: str, role: int = -1, id: int = -1, name: str = ''):
     return InlineKeyboardButton(
         text, None,
         admin_workers_factory.new(
@@ -21,9 +21,9 @@ def getButton(text: str, type: str, role: int = -1, id: int | None = None, name:
 def kb_admin_workers():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_admins = getButton('Гл. админы', 'admins')
+    btn_admins = getButton('Админы', 'admins')
     btn_redactors = getButton('Редакторы', 'redactors')
-    btn_support = getButton('Тех. поддержка', 'support')
+    btn_support = getButton('Поддержка', 'support')
     btn_list = getButton('Список раб.', 'workers_list')
     btn_back = kb_inl_admin.go_main_btn
 
@@ -53,8 +53,7 @@ def kb_admin_workers_actions(worker: int):
     btn2 = getButton('Удалить', 'delete', worker)
     btnback = getButton(
         'Назад',
-        'admins' if (worker == 1) else 'redactors',
-        worker
+        'workers'
     )
 
     keyboard.add(btn1, btn2)

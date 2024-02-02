@@ -45,12 +45,13 @@ def handle_add_name(message: Message, bot: TeleBot):
     if name is None:
         bot.send_message(
             chat_id, 'Отправьте текст:',
-            reply_markup=kb_admin_workers_back(current_role))
+            reply_markup=kb_admin_workers_back(current_role)
+        )
         return
 
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        chat_id, f'Добавить <b>{name}</b> с id: <b>{id}</b>?',
+        chat_id, f'Добавить <b>@{name}</b> с id: <b>{id}</b>?',
         reply_markup=kb_admin_workers_confirm(id, name, current_role, 'add')
     )
 
@@ -93,7 +94,7 @@ def handle_support_name(message: Message, bot: TeleBot):
     db_new.update_support_name(support_name)
 
     bot.delete_state(user_id, chat_id)
-    send_admin_workers_support(bot, message, True)
+    send_admin_workers_support(bot, message, user_id, True)
 
 
 def registration(bot: TeleBot):

@@ -44,7 +44,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
         )
 
     if type == 'workers':
-        send_admin_workers(bot, call.message)
+        send_admin_workers(bot, call.message, user_id)
 
     if type == 'fut_posts':
         bot.edit_message_text(

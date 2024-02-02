@@ -81,7 +81,8 @@ def invoice_paid_prev(update: Update) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            pay_guard.set_trial_subscribe_unactive_by_user(
+                transaction['user_id'])
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
@@ -130,14 +131,15 @@ def invoice_paid(update: UpdateBBanker) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            pay_guard.set_trial_subscribe_unactive_by_user(
+                transaction['user_id'])
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
             #     logger.info(
             #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
             #     pay_guard.set_subscribe_unactive(trial_id)
-                # pay_guard.set_subscribe_unactive(transaction['user_id'])
+            # pay_guard.set_subscribe_unactive(transaction['user_id'])
 
             # Отправляем сообщение пользователю
             bot.send_message(
@@ -154,7 +156,7 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
 @bot.message_handler(content_types=['photo', 'video', 'text'])
 def livepost_media(message: Message, data):
-    user_role = data.get('user_role')
+    user_role = data.get('user_role', 0)
 
     if (user_role == 1 or user_role == 2):
         get_admin_livepost(message)

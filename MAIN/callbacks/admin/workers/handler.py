@@ -8,7 +8,7 @@ from MAIN.states import AdminWorkersState
 
 from .filter import admin_workers_factory, AdminWorkersCallbackFilter
 from .keyboards import kb_admin_workers_actions, kb_admin_workers_back
-from ..pages import send_admin_workers, send_admin_workers_support
+from ..pages import send_admin_workers, send_admin_workers_admin, send_admin_workers_redactors, send_admin_workers_support
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -24,42 +24,19 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'workers':
-        send_admin_workers(bot, call.message)
+        send_admin_workers(bot, call.message, user_id)
 
     if type == 'admins':
-        res = '<b>Админы</b>\n'
-        admins = db_new.get_admins()
-
-        if len(admins) != 0:
-            for i in range(0, len(admins)):
-                res += f'\nID: {admins[i].tg_id} | Username: @{admins[i].username}'
-        else:
-            res = '\nНет админов!'
-
-        bot.edit_message_text(
-            res, chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions(1)
-        )
+        send_admin_workers_admin(bot, call.message, user_id)
 
     if type == 'redactors':
-        res = '<b>Редакторы</b>\n'
-        redactors = db_new.get_redactors()
-
-        if len(redactors) != 0:
-            for i in range(0, len(redactors)):
-                res += f'\nID: {redactors[i].tg_id} | Username: @{redactors[i].username}\n'
-        else:
-            res = '\nНет редакторов!\n'
-
-        bot.edit_message_text(
-            res, chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions(2)
-        )
+        send_admin_workers_redactors(bot, call.message, user_id)
 
     if type == 'support':
-        send_admin_workers_support(bot, call.message)
+        send_admin_workers_support(bot, call.message, user_id)
 
     if type == 'workers_list':
+        bot.delete_state(user_id, chat_id)
         mas = db_new.get_all_workes()
         res = ''
         for i in range(0, len(mas)):
@@ -119,6 +96,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'add_no' or type == 'delete_no':
         bot.edit_message_text('Отменено!', chat_id, mes_id)
 
+    if '_yes' in type or '_no' in type:
+        if role == 1:
+            send_admin_workers_admin(bot, call.message, user_id, True)
+        elif role == 2:
+            send_admin_workers_redactors(bot, call.message, user_id, True)
+
     # Тех. поддержка
     if type == 'update_support':
         bot.set_state(user_id, AdminWorkersState.update_support, chat_id)
@@ -128,8 +111,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_admin_workers_back(3)
         )
 
-    bot.clear_step_handler(call.message)
-    bot.delete_state(user_id, chat_id)
     bot.answer_callback_query(call.id)
 
 
