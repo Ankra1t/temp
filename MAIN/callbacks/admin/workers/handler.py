@@ -1,98 +1,115 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from initialize import kb_inl_admin
-from db import db
+from db_new import db_new
+
 from common.utils import is_digit, set_state_data
 from MAIN.states import AdminWorkersState
 
 from .filter import admin_workers_factory, AdminWorkersCallbackFilter
+from .keyboards import kb_admin_workers_actions, kb_admin_workers_back
+from ..pages import send_admin_workers, send_admin_workers_admin, send_admin_workers_redactors, send_admin_workers_support
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     data = admin_workers_factory.parse(call.data)
+
     type = data.get('type', '')
     id = int(data.get('id', 0)) if is_digit(data.get('id', '')) else 0
     name = data.get('name', '')
-    role = int(data.get('role', 0)) if is_digit(data.get('role', '')) else -1
+    role = int(data.get('role', -1)) if is_digit(data.get('role', '')) else -1
 
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
+    if type == 'workers':
+        send_admin_workers(bot, call.message, user_id)
+
+    if type == 'admins':
+        send_admin_workers_admin(bot, call.message, user_id)
+
+    if type == 'redactors':
+        send_admin_workers_redactors(bot, call.message, user_id)
+
+    if type == 'support':
+        send_admin_workers_support(bot, call.message, user_id)
+
+    if type == 'workers_list':
+        bot.delete_state(user_id, chat_id)
+        mas = db_new.get_all_workes()
+        res = ''
+        for i in range(0, len(mas)):
+            show_role = ''
+            if mas[i].role == 1:
+                show_role = 'Гл.админ'
+            elif mas[i].role == 2:
+                show_role = 'Редактор'
+            elif mas[i].role == 3:
+                show_role = 'Тех.поддержка'
+
+            res += f'\n@{mas[i].username} | {show_role}'
+
+        bot.edit_message_text(
+            res, chat_id, mes_id,
+            reply_markup=kb_admin_workers_back()
+        )
+
     # Удаление/Добавление
-    if type == 'add_yes':
-        if db.check_worker(id):
-            bot.edit_message_text(
-                f'Админ с ID: {id} - уже есть!', chat_id, mes_id)
-        else:
-            print(f'Добавляю админа: {name} {id}')
-            db.add_worker(id, name, role)
-            bot.edit_message_text('Успешно!', chat_id, mes_id)
-
-    if type == 'add_no' or type == 'delete_no':
-        bot.edit_message_text('Отменено!', chat_id, mes_id)
-
-    if type == 'delete_yes':
-        if db.check_worker(id):
-            print(f'Удаляю админа: {id}')
-            db.del_worker(id)
-            bot.edit_message_text('Успешно!', chat_id, mes_id)
-        else:
-            bot.edit_message_text(
-                'Админа с таким ID не существует!', chat_id, mes_id)
-
-    if 'delete' in type or 'add' in type:
+    if type == 'delete' or type == 'add':
         if role == 1:
-            text = 'Отправьте ID гл.админа'
-            worker = 'admin'
+            text = 'Отправьте ID гл. админа'
         else:
             text = 'Отправьте ID редактора'
-            worker = 'redactor'
 
-        if 'add' in type:
+        if type == 'add':
             state = AdminWorkersState.add_id
         else:
             state = AdminWorkersState.delete_id
 
-        markup = kb_inl_admin.workers_actions_back(worker)
-
-        if type == 'add' or type == 'delete':
-            bot.edit_message_text(text, chat_id, mes_id, reply_markup=markup)
-        else:
-            bot.send_message(chat_id, text, reply_markup=markup)
+        markup = kb_admin_workers_back(role)
 
         bot.set_state(user_id, state, chat_id)
         set_state_data(bot, user_id, chat_id, {'role': role})
+        bot.edit_message_text(text, chat_id, mes_id, reply_markup=markup)
 
-    if type == 'redactor_list':
-        res = ''
-        mas = db.get_redactors()
+    if type == 'add_yes':
+        if db_new.get_worker_role(id) is not None:
+            bot.edit_message_text(
+                f'Админ с ID: {id} - уже есть!',
+                chat_id, mes_id
+            )
+        else:
+            db_new.add_worker(id, name, role)
+            bot.edit_message_text('Успешно!', chat_id, mes_id)
 
-        for i in range(0, len(mas)):
-            if mas[i][3] == 2:
-                res += '\n' + str(mas[i][0]) + ' | ' + \
-                    mas[i][1] + '\nДолжность: Редактор\n'
+    if type == 'delete_yes':
+        if db_new.get_worker_role(id) is not None:
+            db_new.del_worker(id)
+            bot.edit_message_text('Успешно!', chat_id, mes_id)
+        else:
+            bot.edit_message_text(
+                'Админа с таким ID не существует!',
+                chat_id, mes_id
+            )
 
-        if res == '':
-            res = 'Редакторов нет!'
+    if type == 'add_no' or type == 'delete_no':
+        bot.edit_message_text('Отменено!', chat_id, mes_id)
 
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('redactor'))
+    if '_yes' in type or '_no' in type:
+        if role == 1:
+            send_admin_workers_admin(bot, call.message, user_id, True)
+        elif role == 2:
+            send_admin_workers_redactors(bot, call.message, user_id, True)
 
-    if type == 'admin_list':
-        res = ''
-        mas = db.get_all_workes()
-        for i in range(0, len(mas)):
-            role = mas[i][3]
-            user_tg_id = mas[i][4]
-            username = mas[i][2]
-            if role == 1:
-                res += 'ID: ' + str(user_tg_id) + ' | Username: ' + \
-                    username + ' | Должность: Гл.админ\n'
-
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('admin'))
+    # Тех. поддержка
+    if type == 'update_support':
+        bot.set_state(user_id, AdminWorkersState.update_support, chat_id)
+        bot.edit_message_text(
+            'Отправьте ник ТГ для тех. поддержки:',
+            chat_id, mes_id,
+            reply_markup=kb_admin_workers_back(3)
+        )
 
     bot.answer_callback_query(call.id)
 

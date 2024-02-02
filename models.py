@@ -161,6 +161,12 @@ class UserInfo(BaseModel):
     registration_dt: datetime
 
 
+class Worker(BaseModel):
+    id: int
+    tg_id: int
+    username: str
+    role: int
+
 
 class PostDetails(BaseModel):
     name: str

@@ -3,6 +3,7 @@ from telebot.types import Message
 from CALCULATE.callbacks.settings.keyboards import kb_settings_confirm
 
 from db import db
+from db_new import db_new
 
 from CALCULATE.common.messages import msg_support, msg_welcome
 from CALCULATE.common.keyboard import kb_support
@@ -38,10 +39,11 @@ def _about_us(message: Message, bot: TeleBot):
 
 
 def _support(message: Message, bot: TeleBot):
-    sup = db.get_support()[0][2]
+    sup = db_new.get_support_name()
     bot.send_message(
         message.chat.id, msg_support(message.from_user.id),
-        reply_markup=kb_support(message.from_user.id, sup))
+        reply_markup=kb_support(message.from_user.id, sup)
+    )
 
 
 def _manual(message: Message, bot: TeleBot):

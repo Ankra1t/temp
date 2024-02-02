@@ -7,3 +7,4 @@ class AdminWorkersState(StatesGroup):
 
     delete_id = State()
 
+    update_support = State()
