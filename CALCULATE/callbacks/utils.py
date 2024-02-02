@@ -69,7 +69,7 @@ def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
     mes_id = message.id
 
     # Проверяем подписку
-    if not pay_guard.valid_use_calc(user_id):
+    if not pay_guard.valid_use_calc(user_db_id):
         send_main(message, bot, user_id, True)
         return
 

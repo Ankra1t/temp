@@ -378,7 +378,11 @@ if _ENV == 'main':
 
 try:
     if os.getenv("MODE_BOT") and os.getenv("MODE_BOT") == 'dev':
-        bot.infinity_polling()
+        if _ENV != 'calc':
+            bot.infinity_polling()
+
+
+
 except Exception as e:
     print(f'Переменная окружения НЕ ЗАДАНА MODE_BOT == dev[{e}]')
     pass

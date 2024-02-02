@@ -2,6 +2,8 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from config_logger import logger
+from initialize import pay_guard
+
 from db import db
 from db_new import db_new
 from keyboard_reply import kb_user_sup
@@ -55,6 +57,22 @@ def _calc(message: Message, bot: TeleBot):
     send_main(message, bot, message.from_user.id, True)
 
 
+def _test_check_func(message: Message, bot: TeleBot):
+    print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
+    # Мой тестовый клиент в телеграм
+    user_id = 423
+    client = db_new.get_user_by_id(user_id)
+    print(f'client {client}')
+
+    pay_guard.paid_user_product(user_id, 'calc')
+
+    return False
+    # Проверяем текущие активные платные подписки по продукту калькулятор
+    subscribes = db_new.get_active_subscribes_by_user_id(client.tg_id)
+    print(f'subscribes ')
+    print(subscribes)
+    print(f'subscribes {subscribes.tg_user_id} prices_id {subscribes.prices_id} {subscribes.type}')
+
 def commands_registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -70,3 +88,7 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_manual, commands=['manual'])
     reg_mes(_calc, commands=['calc'])
+
+    reg_mes(_test_check_func, commands=['tasty'])
+
+

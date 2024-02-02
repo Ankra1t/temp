@@ -8,6 +8,7 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
+PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
@@ -29,7 +30,8 @@ class Database:
         except Exception as error:
             print(f"Ошибка при работе с PostgreSQL: {error}")
 
-    # Prices
+
+    # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
         return Price(
             data.get('name'),
@@ -183,7 +185,8 @@ class Database:
             self.connection.rollback()
             return False
 
-    # Subscribe
+
+    # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
         return Subscribe(
             data.get('tg_user_id'),
@@ -213,8 +216,6 @@ class Database:
             return False
 
     def get_current_subscribe_user(self, user_id: int):
-        print(f'user_id ')
-        print(user_id)
         query = 'SELECT * FROM subscribes WHERE tg_user_id = %s AND active = 1'
         params = (user_id,)
 
@@ -317,6 +318,23 @@ class Database:
             self.connection.rollback()
             return False
 
+    def set_deactivate_subscribe(self, subscribe_id):
+        datetime_now = datetime.utcnow()
+        query = (
+            'UPDATE subscribes set active = %s, updated_at = %s '
+            'WHERE id = %s'
+        )
+        params = (0, datetime_now, subscribe_id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_deactivate_subscribe]: {e}')
+            self.connection.rollback()
+            return False
+
     def set_unactive_subscribes(self, type: SUBSCRIBE_TYPE):
         datetime_now = datetime.utcnow()
         query = (
@@ -350,7 +368,21 @@ class Database:
             print(f'ERROR[set_unactive_trial_subscribes]: {e}')
             return False
 
-    # Transactions
+    def get_active_subscribes_by_user_id(self, user_id):
+        query = 'SELECT * FROM subscribes WHERE tg_user_id = %s AND active = 1'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_subsbscribe(el), data))
+
+        except Exception as e:
+            print(f'ERROR[get_active_subscribes_by_user_id]: {e}')
+            self.connection.rollback()
+            return None
+
+    # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(
             data.get('user_id'),
@@ -482,7 +514,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    # Users
+    # # # # # # # #  Users
     def _data_to_user(self, data: DictRow):
         return UserInfo(
             id=data.get('id'),
