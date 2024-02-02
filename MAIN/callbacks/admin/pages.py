@@ -1,14 +1,16 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new
 from initialize import pay_guard
 
 from MAIN.common.utils import get_print_signal_info
 from common.vars import PRINT_DATE_FROMAT
+from messages.workers import menu_msg
 from models import Post, User
+
 from .users.keyboards import kb_admin_client_info
+from .workers.keyboards import kb_admin_workers
 
 
 def send_admin_post(
@@ -92,6 +94,26 @@ def send_admin_client(
             chat_id, text,
             reply_markup=keyboard
         )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_workers(
+    bot: TeleBot,
+    message: Message,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    text = menu_msg('Работники')
+    keyboard = kb_admin_workers()
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=keyboard)
     else:
         bot.edit_message_text(
             text, chat_id, mes_id,

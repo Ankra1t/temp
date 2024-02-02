@@ -3,7 +3,6 @@ from telebot.custom_filters import AdvancedCustomFilter
 from telebot import types
 
 admin_main_factory = CallbackData('type', prefix='admin_main')
-admin_workerss_factory = CallbackData('type', prefix='adminn_workerss')
 
 admin_default_factory = CallbackData('type', prefix='admin_default')
 
@@ -18,14 +17,6 @@ class AdminMainCallbackFilter(AdvancedCustomFilter):
 
     def check(self, call: types.CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
-
-
-class AdminWorkerssCallbackFilter(AdvancedCustomFilter):
-    key = 'adminn_workerss'  # нужен при фильтрации колбека
-
-    def check(self, call: types.CallbackQuery, config: CallbackDataFilter):
-        return config.check(call)
-
 
 
 class AdminDefaultCallbackFilter(AdvancedCustomFilter):

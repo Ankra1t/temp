@@ -1,6 +1,6 @@
 from telebot import types
 from cb_filters import (admin_default_factory, adm_action, client_action,
-                        admin_main_factory, admin_workerss_factory)
+                        admin_main_factory)
 
 
 class Admin_kb_inlines(object):
@@ -15,15 +15,6 @@ class Admin_kb_inlines(object):
             '🔙 Отложенные посты', callback_data=admin_main_factory.new(type='fut_posts'))
         self.go_params_btn = types.InlineKeyboardButton(
             '🔙 Параметры', callback_data=admin_main_factory.new(type='params'))
-
-        self.go_workers_btn = types.InlineKeyboardButton(
-            '🔙 Работники', callback_data=admin_main_factory.new(type='workers'))
-        self.go_workers_redactors_btn = types.InlineKeyboardButton(
-            '🔙 Редакторы', callback_data=admin_workerss_factory.new(type='redactors'))
-        self.go_workers_admins_btn = types.InlineKeyboardButton(
-            '🔙 Гл. админы', callback_data=admin_workerss_factory.new(type='admins'))
-        self.go_workers_support_btn = types.InlineKeyboardButton(
-            '🔙 Тех. поддержка', callback_data=admin_workerss_factory.new(type='support'))
 
     # Главная
     def main(self):
@@ -54,42 +45,6 @@ class Admin_kb_inlines(object):
         return keyboard
 
     # Меню Работники
-    def workers(self):
-        def getCbData(type: str):
-            return admin_workerss_factory.new(type=type)
-
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-
-        btn1 = types.InlineKeyboardButton('Гл.админы',
-                                          callback_data=getCbData('admins'))
-        btn2 = types.InlineKeyboardButton('Редакторы',
-                                          callback_data=getCbData('redactors'))
-        btn3 = types.InlineKeyboardButton('Тех.поддержка',
-                                          callback_data=getCbData('support'))
-        btn4 = types.InlineKeyboardButton('Список раб.',
-                                          callback_data=getCbData('workers_list'))
-        btn6 = self.go_main_btn
-
-        keyboard.add(btn1, btn2)
-        keyboard.add(btn3, btn4)
-        keyboard.add(btn6)
-        return keyboard
-
-    def workers_actions_back(self, worker: str):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-
-        back_btn = self.go_workers_btn
-        if worker == 'support':
-            back_btn = self.go_workers_support_btn
-        if worker == 'redactor':
-            back_btn = self.go_workers_redactors_btn
-        if worker == 'admin':
-            back_btn = self.go_workers_admins_btn
-
-        keyboard.add(back_btn, self.go_main_btn)
-        return keyboard
-
-    # TODO - переиминовать + создать отдельный factory
     def workers_choice(self, action: str):
         def getCbData(type: str):
             return admin_default_factory.new(type=f'{action}_{type}')
@@ -113,19 +68,6 @@ class Admin_kb_inlines(object):
         btn = types.InlineKeyboardButton('Изменить',
                                          callback_data=getCbData('update_support'))
 
-        keyboard.add(btn, self.go_workers_btn)
-        return keyboard
-
-
-    def kb_success_ban_actions(self):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        menu_users = self.go_users_btn
-        go_main = self.go_main_btn
-        ban_list = types.InlineKeyboardButton(text='Список бана',
-                                              callback_data=admin_default_factory.new(type='ban_list'))
-
-        keyboard.add(menu_users, go_main)
-        keyboard.add(ban_list)
         return keyboard
 
     # Отмена подписки

@@ -11,13 +11,13 @@ from db_new import db_new
 from messages.workers import admin_main_msg
 from common.utils import set_state_data
 from MAIN.callbacks import (
-    kb_admin_workers_actions, kb_params, kb_posts,
-    kb_admin_users, kb_admin_users_back
+    kb_params, kb_posts, kb_admin_users,
+    kb_admin_users_back, kb_admin_workers_back,
+    send_admin_workers
 )
 from MAIN.states import AdminTariffState
 
-from cb_filters import (admin_default_factory, adm_action, admin_main_factory,
-                        admin_workerss_factory)
+from cb_filters import (admin_default_factory, adm_action, admin_main_factory)
 from config_logger import logger
 
 
@@ -44,10 +44,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
         )
 
     if type == 'workers':
-        bot.edit_message_text(
-            menu_msg('Работники'), chat_id, mes_id,
-            reply_markup=kb_inl_admin.workers()
-        )
+        send_admin_workers(bot, call.message)
 
     if type == 'fut_posts':
         bot.edit_message_text(
@@ -64,59 +61,6 @@ def admin_main_callbacks(call: types.CallbackQuery):
             menu_msg('Параметры'), chat_id, mes_id,
             reply_markup=kb_params()
         )
-
-    bot.clear_step_handler(call.message)
-    bot.delete_state(user_id, chat_id)
-    bot.answer_callback_query(call.id)
-
-
-@bot.callback_query_handler(func=None, adminn_workerss=admin_workerss_factory.filter())
-def admin_workers_callbacks(call: types.CallbackQuery):
-    callback_data: dict = admin_workerss_factory.parse(call.data)
-    type = callback_data['type']
-    logger.info(f'Кастомное callback_query меню ***{type}***')
-
-    chat_id = call.message.chat.id
-    user_id = call.from_user.id
-    mes_id = call.message.id
-
-    if type == 'admins':
-        bot.edit_message_text(
-            menu_msg('Главные админы'), chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions('admin')
-        )
-
-    if type == 'redactors':
-        bot.edit_message_text(
-            menu_msg('Редакторы'), chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions('redactor')
-        )
-
-    if type == 'support':
-        sup = db_new.get_support_name()
-        sup_link = f'@{sup}' if sup != '' else '-'
-
-        bot.edit_message_text(
-            f'Тех.поддержка: {sup_link}', chat_id, mes_id,
-            reply_markup=kb_inl_admin.workers_support()
-        )
-
-    if type == 'workers_list':
-        mas = db_new.get_all_workes()
-        res = ''
-        role = ''
-        for i in range(0, len(mas)):
-            if mas[i].role == 1:
-                role = 'Гл.админ'
-            if mas[i].role == 2:
-                role = 'Редактор'
-            if mas[i].role == 3:
-                role = 'Тех.поддержка'
-
-            res += f'\n@{mas[i].username} | {role}'
-
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers())
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
@@ -151,7 +95,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
     if type == 'update_support':
         bot.edit_message_text('Отправьте ник ТГ для тех. поддержки с @',
                               chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('support'))
+                              reply_markup=kb_admin_workers_back(3))
         bot.register_next_step_handler(
             call.message, update_support)
 

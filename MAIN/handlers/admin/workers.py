@@ -2,29 +2,10 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from MAIN.states import AdminWorkersState
-from MAIN.callbacks import kb_admin_workers_update
+from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back
 from common.utils import digit_accept, set_state_data, text_accept
 
 from initialize import kb_inl_admin
-
-
-def _get_role(bot: TeleBot, user_id: int, chat_id: int):
-    with bot.retrieve_data(user_id, chat_id) as data:
-        role = data.get('role')
-        if role is not None:
-            role = int(role)
-        else:
-            role = -1
-
-    worker = ''
-    if role == 1:
-        worker = 'admin'
-    elif role == 2:
-        worker = 'redactor'
-    elif role == 3:
-        worker = 'support'
-
-    return worker
 
 
 def handle_add_id(message: Message, bot: TeleBot):
@@ -33,22 +14,21 @@ def handle_add_id(message: Message, bot: TeleBot):
 
     id = digit_accept(message, int)
 
-    role = _get_role(bot, user_id, chat_id)
-    if role is None:
-        return
+    with bot.retrieve_data(user_id, chat_id) as data:
+        current_role = data.get('role', 2)
 
     if id is None:
         bot.send_message(
             chat_id, 'Введите чисо:',
-            reply_markup=kb_inl_admin.workers_actions_back(role)
+            reply_markup=kb_admin_workers_back(current_role)
         )
         return
 
     set_state_data(bot, user_id, chat_id, {'id': id})
     bot.set_state(user_id, AdminWorkersState.add_name, chat_id)
     bot.send_message(
-        chat_id, 'Никнейм с @?',
-        reply_markup=kb_inl_admin.workers_actions_back(role)
+        chat_id, 'Введите никнейм:',
+        reply_markup=kb_admin_workers_back(current_role)
     )
 
 
@@ -57,21 +37,22 @@ def handle_add_name(message: Message, bot: TeleBot):
     user_id = message.from_user.id
 
     name = text_accept(message)
-    worker = _get_role(bot, user_id, chat_id)
-    if name is None:
-        bot.send_message(
-            chat_id, 'Отправьте текст:',
-            reply_markup=kb_inl_admin.workers_actions_back(worker))
-        return
 
     with bot.retrieve_data(user_id, chat_id) as data:
         id = data.get('id')
-        role = data.get('role')
+        current_role = data.get('role', 2)
+
+    if name is None:
+        bot.send_message(
+            chat_id, 'Отправьте текст:',
+            reply_markup=kb_admin_workers_back(current_role))
+        return
 
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        chat_id, f'Добавить {name} с id: {id}?',
-        reply_markup=kb_admin_workers_update(id, name, role, 'add'))
+        chat_id, f'Добавить <b>{name}</b> с id: <b>{id}</b>?',
+        reply_markup=kb_admin_workers_confirm(id, name, current_role, 'add')
+    )
 
 
 def handle_delete_id(message: Message, bot: TeleBot):
@@ -79,21 +60,21 @@ def handle_delete_id(message: Message, bot: TeleBot):
     user_id = message.from_user.id
 
     id = digit_accept(message, int)
-    worker = _get_role(bot, user_id, chat_id)
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        current_role = data.get('role', 2)
 
     if id is None:
         bot.send_message(
             chat_id, 'Введите чисо:',
-            reply_markup=kb_inl_admin.workers_actions_back(worker))
+            reply_markup=kb_admin_workers_back(current_role))
         return
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        role = data.get('role')
 
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        message.chat.id, text=f'Удалить {id}?',
-        reply_markup=kb_admin_workers_update(id, '', role, action='delete'))
+        message.chat.id, text=f'Удалить <b>{id}</b>?',
+        reply_markup=kb_admin_workers_confirm(id, '', current_role, action='delete')
+    )
 
 
 def registration(bot: TeleBot):

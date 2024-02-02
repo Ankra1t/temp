@@ -1,44 +1,80 @@
 from typing import Literal
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from .filter import admin_workers_factory
-
-# TODO - удалить
 from initialize import kb_inl_admin
 
+from .filter import admin_workers_factory
 
-def kb_admin_workers_update(id: int, name: str, role: Literal[1, 2], action: Literal['add', 'delete']):
-    def getButton(text: str, type: str):
-        return InlineKeyboardButton(
-            text, None,
-            admin_workers_factory.new(type=f'{action}_{type}', id=id, name=name, role=role))
+
+def getButton(text: str, type: str, role: int = -1, id: int | None = None, name: str | None = None):
+    return InlineKeyboardButton(
+        text, None,
+        admin_workers_factory.new(
+            type=type,
+            id=id,
+            name=name,
+            role=role
+        )
+    )
+
+
+def kb_admin_workers():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_admins = getButton('Гл. админы', 'admins')
+    btn_redactors = getButton('Редакторы', 'redactors')
+    btn_support = getButton('Тех. поддержка', 'support')
+    btn_list = getButton('Список раб.', 'workers_list')
+    btn_back = kb_inl_admin.go_main_btn
+
+    keyboard.add(btn_admins, btn_redactors)
+    keyboard.add(btn_support, btn_list)
+    keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_admin_workers_confirm(id: int, name: str, worker: int, action: Literal['add', 'delete']):
+    def getThisButton(text: str, type: str):
+        return getButton(text, f'{action}_{type}', worker, id, name)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Да', 'yes')
-    btn2 = getButton('Нет', 'no')
+    btn1 = getThisButton('Да', 'yes')
+    btn2 = getThisButton('Нет', 'no')
 
     keyboard.add(btn1, btn2)
     return keyboard
 
 
-def kb_admin_workers_actions(worker: str):
-    def getButton(text: str, type: str):
-        return InlineKeyboardButton(
-            text, None,
-            admin_workers_factory.new(
-                type=type, id='', name='',
-                role='1' if worker == 'admin' else '2'
-            )
-        )
-
+def kb_admin_workers_actions(worker: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Добавить', 'add')
-    btn2 = getButton('Удалить', 'delete')
-    btn3 = getButton('Список', f'{worker}_list')
+    btn1 = getButton('Добавить', 'add', worker)
+    btn2 = getButton('Удалить', 'delete', worker)
+    btnback = getButton(
+        'Назад',
+        'admins' if (worker == 1) else 'redactors',
+        worker
+    )
 
     keyboard.add(btn1, btn2)
-    keyboard.add(btn3)
-    keyboard.add(kb_inl_admin.go_workers_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(btnback)
+    return keyboard
+
+
+def kb_admin_workers_back(worker: int | None = None):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    if worker is None:
+        worker = -1
+
+    type = {
+        1: 'admins',
+        2: 'redactors',
+        3: 'support',
+        -1: 'workers'
+    }
+    back_btn = getButton('Назад', type[worker])
+
+    keyboard.add(back_btn)
     return keyboard
