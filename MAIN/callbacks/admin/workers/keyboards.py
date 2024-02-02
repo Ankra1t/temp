@@ -78,3 +78,13 @@ def kb_admin_workers_back(worker: int | None = None):
 
     keyboard.add(back_btn)
     return keyboard
+
+
+def kb_admin_workers_support():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_change = getButton('Изменить', 'update_support')
+    btn_back = getButton('Назад', 'workers')
+
+    keyboard.add(btn_change, btn_back)
+    return keyboard

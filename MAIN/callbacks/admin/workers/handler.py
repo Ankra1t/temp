@@ -1,14 +1,14 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from initialize import kb_inl_admin
 from db_new import db_new
+
 from common.utils import is_digit, set_state_data
 from MAIN.states import AdminWorkersState
 
 from .filter import admin_workers_factory, AdminWorkersCallbackFilter
 from .keyboards import kb_admin_workers_actions, kb_admin_workers_back
-from ..pages import send_admin_workers
+from ..pages import send_admin_workers, send_admin_workers_support
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -57,13 +57,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'support':
-        sup = db_new.get_support_name()
-        sup_link = f'@{sup}' if sup != '' else '-'
-
-        bot.edit_message_text(
-            f'Тех.поддержка: {sup_link}', chat_id, mes_id,
-            reply_markup=kb_inl_admin.workers_support()
-        )
+        send_admin_workers_support(bot, call.message)
 
     if type == 'workers_list':
         mas = db_new.get_all_workes()
@@ -124,6 +118,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'add_no' or type == 'delete_no':
         bot.edit_message_text('Отменено!', chat_id, mes_id)
+
+    # Тех. поддержка
+    if type == 'update_support':
+        bot.set_state(user_id, AdminWorkersState.update_support, chat_id)
+        bot.edit_message_text(
+            'Отправьте ник ТГ для тех. поддержки:',
+            chat_id, mes_id,
+            reply_markup=kb_admin_workers_back(3)
+        )
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)

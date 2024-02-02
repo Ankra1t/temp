@@ -996,7 +996,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_support]: {e}')
+            print(f'ERROR[update_support_name]: {e}')
             self.connection.rollback()
             return False
 

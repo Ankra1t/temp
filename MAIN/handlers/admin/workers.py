@@ -1,11 +1,11 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from MAIN.states import AdminWorkersState
-from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back
-from common.utils import digit_accept, set_state_data, text_accept
+from db_new import db_new
 
-from initialize import kb_inl_admin
+from MAIN.states import AdminWorkersState
+from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back, send_admin_workers_support
+from common.utils import digit_accept, set_state_data, text_accept
 
 
 def handle_add_id(message: Message, bot: TeleBot):
@@ -73,8 +73,27 @@ def handle_delete_id(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
     bot.send_message(
         message.chat.id, text=f'Удалить <b>{id}</b>?',
-        reply_markup=kb_admin_workers_confirm(id, '', current_role, action='delete')
+        reply_markup=kb_admin_workers_confirm(
+            id, '', current_role, action='delete')
     )
+
+
+def handle_support_name(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    support_name = text_accept(message)
+    if support_name is None:
+        bot.send_message(
+            chat_id, 'Введите ник текстом:'
+        )
+        return
+
+    support_name = support_name.replace('@', '')
+    db_new.update_support_name(support_name)
+
+    bot.delete_state(user_id, chat_id)
+    send_admin_workers_support(bot, message, True)
 
 
 def registration(bot: TeleBot):
@@ -83,4 +102,7 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_add_id, state=AdminWorkersState.add_id)
     reg_mes(handle_add_name, state=AdminWorkersState.add_name)
+
     reg_mes(handle_delete_id, state=AdminWorkersState.delete_id)
+
+    reg_mes(handle_support_name, state=AdminWorkersState.update_support)

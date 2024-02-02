@@ -44,31 +44,6 @@ class Admin_kb_inlines(object):
         keyboard.add(btn5, btn6)
         return keyboard
 
-    # Меню Работники
-    def workers_choice(self, action: str):
-        def getCbData(type: str):
-            return admin_default_factory.new(type=f'{action}_{type}')
-
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-
-        yes = types.InlineKeyboardButton('Да',
-                                         callback_data=getCbData('yes'))
-        no = types.InlineKeyboardButton('Нет',
-                                        callback_data=getCbData('no'))
-
-        keyboard.add(yes, no)
-        return keyboard
-
-    def workers_support(self):
-        def getCbData(type: str):
-            return admin_default_factory.new(type=type)
-
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-
-        btn = types.InlineKeyboardButton('Изменить',
-                                         callback_data=getCbData('update_support'))
-
-        return keyboard
 
     # Отмена подписки
     def users_cancel_subscribe(self):

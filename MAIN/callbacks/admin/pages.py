@@ -10,7 +10,7 @@ from messages.workers import menu_msg
 from models import Post, User
 
 from .users.keyboards import kb_admin_client_info
-from .workers.keyboards import kb_admin_workers
+from .workers.keyboards import kb_admin_workers, kb_admin_workers_support
 
 
 def send_admin_post(
@@ -119,3 +119,20 @@ def send_admin_workers(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
+
+
+def send_admin_workers_support(
+    bot: TeleBot,
+    message: Message,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    sup = db_new.get_support_name()
+    sup_link = f'@{sup}' if sup != '' else '-'
+
+    bot.edit_message_text(
+        f'Тех.поддержка: {sup_link}', chat_id, mes_id,
+        reply_markup=kb_admin_workers_support()
+    )

@@ -1,6 +1,6 @@
 from telebot import types
 from datetime import datetime
-from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe, update_support
+from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
 from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
@@ -75,29 +75,6 @@ def admin_default_callbacks(call: types.CallbackQuery):
     chat_id = call.message.chat.id
     mes_id = call.message.id
     user_id = call.from_user.id
-
-    if 'update_support' in type and type != 'update_support':
-        if 'yes' in type:
-            vars.sup_name = vars.sup_name.replace('@', '')
-            db_new.update_support_name(vars.sup_name)
-            bot.edit_message_text('Изменено!', chat_id, mes_id)
-        if 'no' in type:
-            vars.sup_name = ''
-
-        sup = db_new.get_support_name()
-        sup_link = f'@{sup}' if (sup != '') else ''
-
-        bot.send_message(
-            chat_id, f'Тех.поддержка: {sup_link}',
-            reply_markup=kb_inl_admin.workers_support()
-        )
-
-    if type == 'update_support':
-        bot.edit_message_text('Отправьте ник ТГ для тех. поддержки с @',
-                              chat_id, mes_id,
-                              reply_markup=kb_admin_workers_back(3))
-        bot.register_next_step_handler(
-            call.message, update_support)
 
     # ## Главное меню
     if type == 'go_main':

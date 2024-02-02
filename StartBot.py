@@ -18,10 +18,8 @@ import datetime as dt
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
-from MAIN.callbacks import (
-    callbacks_registration, kb_posts_back,
-    send_admin_post
-)
+from MAIN.callbacks import callbacks_registration
+
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
@@ -33,13 +31,12 @@ from cb_filters import (AdminDefaultCallbackFilter,
 
 from messages.users import (paid_subscribe_msg, end_trial_subscribe_msg,
                             end_paid_subscribe_msg)
-from messages.workers import (admin_fut_posts_msg, admin_users_msg,
-                              redactor_main_msg, admin_posting_msg)
+from messages.workers import redactor_main_msg, admin_posting_msg
 
 from BlockTGBotSender import BlockTGBotSender
 from AuthMiddleWare import AuthMiddleWare
 
-from models import Post, Update, User, UpdateBBanker
+from models import Post, Update, UpdateBBanker
 
 
 # TODO - переписать db
