@@ -4,6 +4,7 @@ from config_logger import logger
 
 from initialize import bot, text_editor, kb_inl_admin, pay_guard
 from models import User
+from db_new import db_new
 
 from MAIN.callbacks.admin.users.keyboards import kb_admin_users_back
 import variables as vars
@@ -71,10 +72,10 @@ def get_end_date_cancel_subscribe(message: types.Message, date_start_obj):
 def get_user_for_cancel_subscribe(message: types.Message):
     logger.info(
         f'-----> Получили username пользователя для деактивации его подписки ')
-    username = (message.text or '').strip().replace('@', '')
+    username = (message.text or '').replace('@', '')
 
     # Проверяем есть данный пользователь в базе
-    user_id = pay_guard.get_user_id_by_username(username)
+    user_id = db_new.get_user_id_by_tg_name(username)
     if user_id:
         user = User()
         user.id = user_id
@@ -91,9 +92,3 @@ def get_user_for_cancel_subscribe(message: types.Message):
         bot.register_next_step_handler(
             message, get_user_for_cancel_subscribe)
 
-
-# Изменить тех. поддержку
-def update_support(message: types.Message):
-    vars.sup_name = message.text
-    bot.send_message(message.chat.id, f'Новый аккаунт тех.поддерки: {vars.sup_name} ?',
-                     reply_markup=kb_inl_admin.workers_choice('update_support'))

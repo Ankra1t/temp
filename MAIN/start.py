@@ -4,6 +4,7 @@ from telebot.types import Message
 from initialize import pay_guard, kb_inl_admin
 from keyboard_reply import kb_main_redactor, kb_main_support
 from db import db
+from db_new import db_new
 
 from MAIN.callbacks import send_user_main
 
@@ -23,17 +24,19 @@ def send_start_by_user(
 
     if user_role == 0:
         if has_registered_now:
-            bot.send_message(
-                chat_id, welcome_trial_subscribe_msg()
-            )
+            # bot.send_message(
+            #     chat_id, welcome_trial_subscribe_msg()
+            # )
+            # todo-fin: Назначаем тестовую подписку
+            pass
 
         send_user_main(bot, message, user_id, True)
 
     if user_role == 1:
-        count_all = db.get_users_count()
+        count_all = db_new.get_users_count()
         count_with_sub = len(pay_guard.get_paid_users())
         count_old = len(pay_guard.get_paid_more1_users())
-        count_admins = len(db.get_all_workes())
+        count_admins = len(db_new.get_all_workes())
         count_fut_posts = len(db.get_fut_all_posts())
 
         text = admin_main_msg(count_all, count_with_sub,

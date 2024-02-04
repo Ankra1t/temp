@@ -1,17 +1,8 @@
-from datetime import datetime
-from math import exp
-import re
 import sqlite3
-from tracemalloc import stop
 from typing import Any, Literal, Optional
 
 from models import Post, PostDetails
-
-MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
-LANGUAGES_TYPE = Literal['ru', 'en']
-LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
-
-BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
+from db_new import BASE_VALUE_TYPE, LANGUAGES_TYPE, MARKETS_TYPE
 
 
 class Database:
@@ -19,20 +10,7 @@ class Database:
         self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.curs = self.connection.cursor()
 
-    def check_user(self, user_id: int):
-        """Проверка: есть ли юзер в системе"""
-        query = "SELECT * FROM users WHERE id = ?"
-        params = (user_id,)
-
-        try:
-            result = self.curs.execute(query, params).fetchall()
-        except Exception as e:
-            print(f'ERROR[check_user]: {e}')
-            result = []
-
-        return bool(len(result))
-
-    def get_user_by_username(self, username: str):
+    def get_user_by_username(self, username: str):  # !deprecated
         """Получение пользователя по имени"""
         query = "SELECT * FROM users WHERE username = ?"
         params = (username,)
@@ -43,7 +21,7 @@ class Database:
             print(f'ERROR[get_user_by_username]: {e}')
             return None
 
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int):  # !deprecated
         """Получение пользователя по имени"""
         query = "SELECT * FROM users WHERE id = ?"
         params = (user_id,)
@@ -69,9 +47,9 @@ class Database:
 
     # ==================================Пользователи
     # ПОРАВИТЬ В БУДУЩЕМ
-
-    def add_user(self, user_id: int, username: str, refer: int):
+    def add_user(self, user_id: int, username: str, refer: int):  # !deprecated
         """Добавление юзера"""
+
         query = (
             'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance) '
             'VALUES(?, ?, ?, 0, 0, 0, 0)'
@@ -86,7 +64,7 @@ class Database:
             print(f'ERROR[add_user]: {e}')
             return False
 
-    def del_user(self, id: int):
+    def del_user(self, id: int):  # !deprecated
         """Удаление юзера"""
         query = "DELETE FROM users WHERE id = ?"
         params = (id,)
@@ -99,18 +77,7 @@ class Database:
             print(f'ERROR[del_user]: {e}')
             return False
 
-    def get_days(self, id: int):
-        """Получить количество оставшихся дней юзера"""
-        query = "SELECT count_days FROM users WHERE id = ?"
-        params = (id,)
-
-        try:
-            return int(self.curs.execute(query, params).fetchone()[0])
-        except Exception as e:
-            print(f'ERROR[get_days]: {e}')
-            return None
-
-    def get_referals(self, id: int):
+    def get_referals(self, id: int):  # !deprecated
         """Получить рефералов юзера"""
         query = "SELECT * FROM users WHERE refer = ?"
         params = (id,)
@@ -121,7 +88,7 @@ class Database:
             print(f'ERROR[get_referals]: {e}')
             return []
 
-    def get_pay_money(self, id: int):
+    def get_pay_money(self, id: int):  # TODO
         """Получить потраченную сумму юзера"""
         query = "SELECT pay_money FROM users WHERE id = ?"
         params = (id,)
@@ -132,7 +99,7 @@ class Database:
             print(f'ERROR[get_pay_money]: {e}')
             return None
 
-    def get_balance(self, id: int):
+    def get_balance(self, id: int):  # TODO
         """Получаем баланс юзера"""
         query = "SELECT balance FROM users WHERE id = ?"
         params = (id,)
@@ -142,58 +109,7 @@ class Database:
             print(f'ERROR[get_balance]: {e}')
             return None
 
-    def add_days(self, id: int, count: int):
-        """Добавлить дни юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_days = ? WHERE id = ?"
-        params = (current_days + count, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[add_days]: {e}')
-            return False
-
-    def minus_days(self, id: int, count: int):
-        """Убавить дни юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_days = ? WHERE id = ?"
-        params = (current_days - count, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[minus_days]: {e}')
-            return False
-
-    def add_count_sub(self, id: int):
-        """Добавить покупку юзеру"""
-        current_days = self.get_days(id)
-        if current_days is None:
-            return False
-
-        query = "UPDATE users SET count_sub = ? WHERE id = ?"
-        params = (current_days + 1, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[add_count_sub]: {e}')
-            return False
-
-    def get_all_users(self):
+    def get_all_users(self):  # !deprecated
         """Получить список всех пользователей"""
         try:
             return self.curs.execute("SELECT * FROM users").fetchall()
@@ -201,28 +117,33 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
+    # !deprecated
     def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
+        query = "SELECT * FROM users "
+        # if filter == 'by_paid':
+        #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
+        #     query += 'WHERE subscribes.active = 1 '
+        query += f"ORDER BY users.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+        query += "LIMIT ? OFFSET ? "
+
+        params = (limit, (page - 1) * limit)
+
         try:
-            return self.curs.execute(
-                "SELECT * FROM users "
-                f"ORDER BY created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
-                "LIMIT ? OFFSET ? ",
-                (limit, (page - 1) * limit)
-            ).fetchall()
+            return self.curs.execute(query, params).fetchall()
 
         except Exception as e:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_users_count(self):
+    def get_users_count(self):  # !deprecated
         try:
             return len(self.curs.execute("SELECT * FROM users").fetchall())
         except Exception as e:
             print(f'ERROR[get_users_count]: {e}')
             return 0
 
-    def get_users_with_sub(self):
+    def get_users_with_sub(self):  # TODO
         """Получить список пользователей с активной подпиской"""
         try:
             return self.curs.execute(
@@ -231,7 +152,7 @@ class Database:
             print(f'ERROR[get_users_with_sub]: {e}')
             return []
 
-    def get_users_without_sub(self):
+    def get_users_without_sub(self):  # TODO
         """Получить список бесплатников"""
         try:
             return self.curs.execute(
@@ -240,7 +161,7 @@ class Database:
             print(f'ERROR[get_users_without_sub]: {e}')
             return []
 
-    def get_users_with_more_pay(self):
+    def get_users_with_more_pay(self):  # TODO
         """Получить список пользователей с более 1 покупкой"""
         try:
             return self.curs.execute(
@@ -250,7 +171,7 @@ class Database:
             return []
 
 # Базовые значения пользователя
-    def add_base_table(self):
+    def add_base_table(self):  # !deprecated
         """Добавить нужные столбцы"""
         try:
             self.curs.execute(
@@ -291,6 +212,7 @@ class Database:
         except Exception as e:
             print(f'ERROR[add_base_table]: {e}')
 
+    # !deprecated
     def get_user_base(self, id: int) -> dict[BASE_VALUE_TYPE, Any]:
         """Получить значения для автозаполнения пользователя"""
         query = 'SELECT base_deposit, base_risk_percent, base_currency FROM calc_user_settings WHERE id = ?'
@@ -310,7 +232,7 @@ class Database:
                 'base_currency': None
             }
 
-    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
+    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):  # !deprecated
         """Установить значения для автозаполения пользователя"""
         value = round(value, 2)
         query = f'INSERT INTO calc_user_settings ({type}, id) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET {type} = ?'
@@ -324,7 +246,7 @@ class Database:
             print(f'ERROR[set_user_base]: {e}')
             return False
 
-    def set_user_currency(self, user_id: int, value: str):
+    def set_user_currency(self, user_id: int, value: str):  # !deprecated
         """Установить значения для автозаполения пользователя"""
         query = f'UPDATE calc_user_settings SET base_currency = ? WHERE id = ?'
         params = (value, user_id)
@@ -348,7 +270,7 @@ class Database:
             print(f'ERROR[get_user_lang]: {e}')
             return None
 
-    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE):
+    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE):  # !deprecated
         """Установить язык пользователя"""
         if len(lang) > 5:
             return False
@@ -363,7 +285,7 @@ class Database:
             print(f'ERROR[set_user_lang]: {e}')
             return False
 
-    def get_calculator_users_id(self) -> list[int]:
+    def get_calculator_users_id(self) -> list[int]:  # !deprecated
         """Получить всех пользователей Калькулятора Бота"""
         query = 'SELECT id FROM calc_user_settings'
 
@@ -373,7 +295,7 @@ class Database:
             print(f'ERROR[get_calculator_users_id]: {e}')
             return []
 
-    def delete_calculator_user(self, user_id: int):
+    def delete_calculator_user(self, user_id: int):  # !deprecated
         """Удалить пользователя из калькулятора"""
         query = "DELETE FROM calc_user_settings WHERE id = ?"
         params = (user_id,)
@@ -385,7 +307,7 @@ class Database:
             print(f'ERROR[delete_calculator_user]: {e}')
             return False
 
-    def get_calculator_uses_count(self, user_id: int) -> int | None:
+    def get_calculator_uses_count(self, user_id: int) -> int | None:  # !deprecated
         """Получить количество использований калькулятора пользователем"""
         query = 'SELECT uses_count FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -396,7 +318,7 @@ class Database:
             print(f'ERROR[get_calculator_uses_count]: {e}')
             return None
 
-    def minus_calculator_uses_count(self, user_id: int):
+    def minus_calculator_uses_count(self, user_id: int):  # !deprecated
         """Минус 1 к значению использований у пользователя"""
         query = "UPDATE calc_user_settings SET uses_count = ? WHERE id = ?"
         uses_count = self.get_calculator_uses_count(user_id) or 1
@@ -412,7 +334,7 @@ class Database:
 
         pass
 
-    def get_calculator_tp_show(self, user_id: int):
+    def get_calculator_tp_show(self, user_id: int):  # !deprecated
         """Получить коэфициенты тейк профит на показ"""
         query = 'SELECT take_profit_to_show FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -423,7 +345,7 @@ class Database:
             print(f'ERROR[get_calculator_tp_show]: {e}')
             return None
 
-    def set_calculator_tp_show(self, user_id: int, tp: str):
+    def set_calculator_tp_show(self, user_id: int, tp: str):  # !deprecated
         """Установить коэфициенты тейк профит на показ"""
         query = "UPDATE calc_user_settings SET take_profit_to_show = ? WHERE id = ?"
         params = (tp, user_id)
@@ -436,6 +358,7 @@ class Database:
             print(f'ERROR[set_calculator_tp_show]: {e}')
             return False
 
+    # !deprecated
     def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None:
         """Получить рынок пользователя"""
         query = 'SELECT market FROM calc_user_settings WHERE id = ?'
@@ -447,6 +370,7 @@ class Database:
             print(f'ERROR[get_calculator_user_market]: {e}')
             return None
 
+    # !deprecated
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
         query = "UPDATE calc_user_settings SET market = ? WHERE id = ?"
@@ -460,12 +384,9 @@ class Database:
             print(f'ERROR[set_calculator_user_market]: {e}')
             return False
 
-    # ================================= Рабочий персонал
-    # Гл.админ
-
-    def add_worker(self, id: int, username: str, role):
+    # ================================= Рабочий персонал # !deprecated
+    def add_worker(self, id: int, username: str, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        self.del_user(id)
         query = "INSERT INTO workers(id, username, role) VALUES(?, ?, ?)"
         params = (id, username, role)
 
@@ -495,7 +416,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Обычный админ
     def get_redactors(self):
         """Получить всех редакторов"""
         try:
@@ -504,7 +424,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Тех. поддержка
     def get_support(self):
         """Получение тех. поддержки"""
         try:
@@ -528,7 +447,6 @@ class Database:
             print(f'ERROR[update_sup]: {e}')
             return False
 
-    # Получаем список всех работников
     def get_all_workes(self):
         """Получить всех работников"""
         try:
@@ -548,6 +466,7 @@ class Database:
             print(f'ERROR[get_role]: {e}')
             return 3
 
+    # TODO - удалить fut_posts, count_days в users
     # ================================ Отложенные посты
     def _data_to_post(self, data: list):
         open_price, stop_loss, name, ticker = data[6], data[7], data[8], data[9]
@@ -651,7 +570,6 @@ class Database:
         print('Изменён qiwi токен!!!')
 
     # ================================= OTHER
-
     def get_all_others(self):
         """Получить все текста"""
         try:
@@ -684,7 +602,6 @@ class Database:
             print(f'[ERROR]: update other {name} - {text}')
 
     # ================ Фьючерсы
-
     def update_future(self, name, step, price_step):
         self.curs.execute(f"UPDATE future set step = ?, price_step = ? WHERE name = ?",
                           (step, price_step, name.lower(),))
@@ -717,7 +634,7 @@ class Database:
             print(e)
 
     # Уроки
-    def add_count_les(self, id: int):
+    def add_count_les(self, id: int):  # !deprecated
         query = "UPDATE users set count_les = ? WHERE id = ?"
         count = self.get_count_les(id) + 1
         params = (count, id,)
@@ -730,7 +647,7 @@ class Database:
             print(f'ERROR[users_add_les]: {e}')
             return False
 
-    def get_count_les(self, id: int):
+    def get_count_les(self, id: int):  # !deprecated
         query = "SELECT count_les FROM users WHERE id = ?"
         params = (id,)
         try:
@@ -799,7 +716,7 @@ class Database:
 
 # ======================= // Управление Баном Пользователей
 
-    def check_ban_user(self, user_id):
+    def check_ban_user(self, user_id):  # !deprecated
         """Проверка на бан"""
         query = "SELECT ban FROM users WHERE id = ? and ban IS NOT NULL"
         params = (user_id,)
@@ -811,20 +728,14 @@ class Database:
             print(f'ERROR[check_ban_user]: {e}')
             return False
 
-    # Получить пользователей без бана
-    def get_users_no_ban(self):
-        res = self.curs.execute(
-            f"SELECT * FROM users WHERE ban IS NULL").fetchall()
-        return res
-
     # Получить забаненных пользователей
-    def get_ban_users(self):
+    def get_ban_users(self):  # !deprecated
         res = self.curs.execute(
             f"SELECT * FROM users WHERE ban IS NOT NULL").fetchall()
         return res
 
     # Установить статус забанненого / незабанненого пользователя
-    def set_user_ban_status(self, user_id, status):
+    def set_user_ban_status(self, user_id, status):  # !deprecated
         self.curs.execute(f"UPDATE users set ban = ? WHERE id = ?",
                           (status, user_id,))
         self.connection.commit()
@@ -850,7 +761,7 @@ class Database:
                                 (today, date_bonus,)).fetchall()
         return res
 
-    def get_subsribe_more1_users(self, today):
+    def get_subsribe_more1_users(self):
         # todo-fin: Как получить пользователей с кол-во подписок больше 1
         res = self.curs.execute(f"SELECT u.id_idx, u.created_at, u.username, "
                                 f"u.count_sub, "
@@ -876,7 +787,6 @@ class Database:
         self.connection.commit()
 
 # ======================= // Редактирование текстов
-
     def get_list_texts(self):
         res = self.curs.execute(f"SELECT * FROM bot_texts").fetchall()
         return res

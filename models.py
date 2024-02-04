@@ -152,8 +152,20 @@ class Purchase:
 
 
 
+class UserInfo(BaseModel):
+    id: int
+    tg_id: int
+    username: str
+    refer: int
+    ban: int
+    registration_dt: datetime
 
 
+class Worker(BaseModel):
+    id: int
+    tg_id: int
+    username: str
+    role: int
 
 
 class PostDetails(BaseModel):

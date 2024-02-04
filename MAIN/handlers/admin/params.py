@@ -3,6 +3,8 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from initialize import pay_guard
+
 from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
 from MAIN.callbacks import kb_params_choice, kb_params_back
 from MAIN.states import AdminParamsState
@@ -145,6 +147,27 @@ def handle_forex_help_paire(message: Message, bot: TeleBot):
     bot.set_state(user_id, AdminParamsState.forex_paire, chat_id)
 
 
+def handle_count_trial_days(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    count_days = digit_accept(message, int)
+    if count_days is None:
+        bot.send_message(
+            chat_id, 'Введите число:',
+            reply_markup=kb_params_back())
+        return
+
+    # Сохраняем данные тарифа в таблице параметров
+    pay_guard.set_option_trial_days(count_days)
+
+    bot.send_message(
+        chat_id, f'✅ Кол-во пробных дней {int(count_days)}дн. для нового пользователя сохранено',
+        reply_markup=kb_params_back())
+
+    bot.delete_state(user_id, chat_id)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -158,3 +181,5 @@ def registration(bot: TeleBot):
     reg_mes(handle_forex_paire, state=AdminParamsState.forex_paire)
     reg_mes(handle_forex_price, state=AdminParamsState.forex_price)
     reg_mes(handle_forex_help_paire, state=AdminParamsState.forex_help_paire)
+
+    reg_mes(handle_count_trial_days, state=AdminParamsState.count_trial_days)

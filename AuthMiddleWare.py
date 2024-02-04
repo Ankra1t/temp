@@ -2,9 +2,10 @@ from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 
-from db import Database, LANGUAGES
+from db_new import db_new, LANGUAGES
+from db import Database
 from GuardPaymentAccess import GuardPaymentAccess
-from AuthRoles import check_ban, check_registrate, registration
+from AuthRoles import check_registrate, registration
 
 
 class AuthMiddleWare(BaseMiddleware):
@@ -25,7 +26,8 @@ class AuthMiddleWare(BaseMiddleware):
 
         data['has_registered_now'] = False
 
-        if check_ban(user_id):
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        if db_new.check_ban_user(user_db_id):
             return CancelUpdate()
 
         user_role = check_registrate(user_id)
@@ -39,17 +41,21 @@ class AuthMiddleWare(BaseMiddleware):
             else:
                 ref_id = 0
 
-            if self.db.get_user_lang(user_id) is None:
-                lang = message.from_user.language_code.lower()
-                lang = lang if (lang in LANGUAGES) else 'ru'
-
-                self.db.set_user_lang(user_id, lang)
-
             registration(user_id, username, ref_id)
             PayGuarder.set_trial(message)
 
+            db_new.create_tg_user_tables(user_db_id)
+
+            lang = message.from_user.language_code.lower()
+            lang = lang if (lang in LANGUAGES) else 'ru'
+            db_new.set_user_lang(user_db_id, lang)
+
             data['has_registered_now'] = True
             user_role = 0
+
+        is_tg_tables = db_new.check_tg_user_tables(user_db_id)
+        if not is_tg_tables and user_role == 0:
+            db_new.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
 

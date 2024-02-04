@@ -15,13 +15,13 @@ def kb_user_account():
     # btn1 = getButton("Купить сигналы на месяц", 'buy_month')
     btn2 = getButton("Реферальная система", 'referral')
     btn3 = getButton("Мои покупки", 'purchases')
-    btn_password = getButton('Изменить пароль', 'password')
+    # btn_password = getButton('Изменить пароль', 'password')
     btn4 = getButton("Главная", 'main')
     # btn5 = getButton("Пополнить баланс")
 
     # keyboard.add(btn1)
     keyboard.add(btn2)
-    keyboard.add(btn3, btn_password)
+    keyboard.add(btn3)
     keyboard.add(btn4)
     return keyboard
 

@@ -60,7 +60,7 @@ def client_action_callbacks(call: types.CallbackQuery):
 
             # bot.send_message(call.message.chat.id, text='Оплатить <b>{}</b>'.format(invoice_to_send.description),
             # bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
-            #                  parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link))
+            #                  reply_markup=kb_inl_user.kb_bill(show_price, pay_link))
 
         # ------------ Формируем оплату через BitBanker
         # Пока делаем целые
@@ -75,10 +75,8 @@ def client_action_callbacks(call: types.CallbackQuery):
                     # asset, amount, description, payer, data_payments
                     tariff.currency, final_price, for_client, f'Пользователь id {user_id}')
 
-
             except Exception as e:
                 logger.error(f'Ошибка в pays_banker.create_invoice [{e}]')
-
 
             if invoice_to_send_bb:
                 # if invoice_to_send_bb is None:
@@ -95,7 +93,8 @@ def client_action_callbacks(call: types.CallbackQuery):
                         f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж ')
 
                 except Exception as e:
-                    logger.error(f'Ошибка pays_banker.set_transactions_for_wait[{e}]')
+                    logger.error(
+                        f'Ошибка pays_banker.set_transactions_for_wait[{e}]')
 
                 # Отправить пользователю счет для оплаты со ссылкой
                 show_price = '{} {}'.format(
@@ -103,27 +102,37 @@ def client_action_callbacks(call: types.CallbackQuery):
                 pay_link2 = invoice_to_send_bb.pay_url
 
                 # Отправляем сразу две кнопки оплаты
-                # bot.send_message(call.message.chat.id, text='Оплатить <b>{}</b>'.format(invoice_to_send.description),
+                # bot.send_message(call.message.chat.id, 'Оплатить <b>{}</b>'.format(invoice_to_send.description),
 
-                bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
-                             parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_many(show_price, pay_link1, pay_link2))
-                # bot.send_message(call.message.chat.id, text='Счет за услугу <b>{}</b>'.format(tariff.name),
-                #                          parse_mode="HTML", reply_markup=kb_inl_user.kb_bill_bitbanker(show_price, pay_link2))
-                bot.send_message(call.message.chat.id, text='❗️ Выберите удобный способ оплаты (регистрация не требуется)',
-                                 parse_mode="HTML")
+                bot.send_message(
+                    call.message.chat.id, '❗️ Выберите удобный способ оплаты (регистрация не требуется)'.format(tariff.name),
+                    reply_markup=kb_inl_user.kb_bill_many(
+                        show_price, pay_link1, pay_link2
+                    )
+                )
+                # bot.send_message(call.message.chat.id, 'Счет за услугу <b>{}</b>'.format(tariff.name),
+                #                          reply_markup=kb_inl_user.kb_bill_bitbanker(show_price, pay_link2))
+                # bot.send_message(call.message.chat.id,
+                #                  '❗️ Выберите удобный способ оплаты (регистрация не требуется)')
             else:
-                bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
-                                 parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
-                bot.send_message(call.message.chat.id,
-                                 text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
-                                 parse_mode="HTML")
+                bot.send_message(
+                    call.message.chat.id, '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(tariff.name),
+                    reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
+                )
+                # bot.send_message(
+                #     call.message.chat.id,
+                #     '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
+                # )
 
         else:
-
-            bot.send_message(call.message.chat.id, text='_'.format(tariff.name),
-                             parse_mode="HTML", reply_markup=kb_inl_user.kb_bill(show_price, pay_link1))
-            bot.send_message(call.message.chat.id, text='❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
-                             parse_mode="HTML")
+            bot.send_message(
+                call.message.chat.id, '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(tariff.name),
+                reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
+            )
+            # bot.send_message(
+            #     call.message.chat.id,
+            #     '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
+            # )
 
     if action == 'tariffs_for_user_by_product':
         logger.info(f'-----> Действие ***{action}*** ')

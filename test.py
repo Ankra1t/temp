@@ -1,25 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from db import db
+from db_new import db_new
 
 # azatFa  id 156045434
 # ankrait id 6919899538
 
 # db.delete_calculator_user(156045434)
-db.add_worker(156045434, 'azatFa', 1)
-# db.del_worker(156045434)
+# db_new.add_worker(156045434, 'azatFa', 1)
+# db_new.del_worker(156045434)
 # db.curs.execute('DELETE FROM users')
 # db.connection.commit()
 
-# a = datetime.now()
-
-# print(a.time().isoformat('minutes'))
-
-# arr = 'a'
-# print(arr)
-# a, b = arr.split('_')
-# print(a)
-# print(.0)
-
+# print(db_new.get_access_token())
 
 # query = ' '.join((
 #         'CREATE TABLE posts (',
@@ -38,18 +30,34 @@ db.add_worker(156045434, 'azatFa', 1)
 # db.curs.execute(query)
 # db.connection.commit()
 
-db.curs.execute('DELETE FROM users WHERE id < 1000')
-db.connection.commit()
+# db.curs.execute('DELETE FROM users WHERE id < 1000')
+# db.connection.commit()
 
-for i in range(1, 30):
-        query = (
-                'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
-                'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
-        )
-        params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
+# for i in range(1, 30):
+#         query = (
+#                 'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
+#                 'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
+#         )
+#         params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
 
-        db.curs.execute(query, params)
-        db.connection.commit()
+#         db.curs.execute(query, params)
+#         db.connection.commit()
+
+# db.add_user(-1, 'asd', 0)
+# db.del_user(-1)
+
+# a = db_new.get_user_by_tg_id(-1)
+# dt: datetime = a[1]
+
+# a = db.get_fut_post(2)
+# if a is not None:
+#     dt = a.date_time or datetime.now()
+#
+# data = db_new.get_all_users()
+# print(data)
+
+# db_new.curs.execute("SELECT * FROM tgbotusers")
+# print(db_new.curs.fetchall())
 
 ################################################################################################
 # if user_role == 0:
@@ -87,4 +95,4 @@ for i in range(1, 30):
 #         pay_link = invoice_to_send.pay_url
 
 #         bot.send_message(message.chat.id, text='{}'.format(invoice_to_send.description),
-#                          parse_mode="HTML", reply_markup=kb_users_bill(show_price, pay_link))
+#                          reply_markup=kb_users_bill(show_price, pay_link))

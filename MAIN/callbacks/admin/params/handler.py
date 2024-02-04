@@ -2,9 +2,12 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from db import db
+from db_new import db_new
 
 # TODO удалить
 from initialize import text_editor
+from initialize import pay_guard
+
 from common.utils import set_state_data
 from MAIN.states import AdminParamsState
 from messages.workers import menu_msg
@@ -22,11 +25,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'calculator':
-        sup = db.get_support()
-        sup = sup[0][3] if sup is not None else ''
+        sup = db_new.get_support_name()
+        sup_link = f'@{sup}' if (sup != '') else ''
 
         bot.edit_message_text(
-            f'<b>Калькулятор расчета рисков</b>\nТех.поддержка: {sup}',
+            f'<b>Калькулятор расчета рисков</b>\nТех.поддержка: {sup_link}',
             chat_id, mes_id,
             reply_markup=kb_calculator()
         )
@@ -38,17 +41,29 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_params_back()
         )
 
+    elif type == 'change_trial_days':
+        days = pay_guard.get_option_trial_days()
+        bot.edit_message_text(
+            f'Сейчас для нового пользователя кол-во дней пробного периода {days}дн. '
+            f'\n\n'
+            f'Отправьте новое значение дней:', chat_id, mes_id,
+            reply_markup=kb_params_back()
+        )
+        bot.set_state(user_id, AdminParamsState.count_trial_days, chat_id)
+
     elif type == 'show':
         # todo-fin: Что-то тут не работает, что-то достается из БД
         # mas = db.get_other()
         # for i in range(0, len(mas)):
-        #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1], parse_mode="HTML")
+        #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1])
         # bot.register_next_step_handler(message, admin_other_menu)
         pass
     elif type == 'change':
         bot.edit_message_text(
             'Что изменяем?', chat_id, mes_id,
             reply_markup=kb_params_change())
+
+
 
     elif 'choice' in type:
         if 'yes' in type:

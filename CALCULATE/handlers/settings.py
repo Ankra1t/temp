@@ -1,8 +1,8 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db, BASE_VALUE_TYPE
-from common.vars import API_URL
+from db import db
+from db_new import db_new, BASE_VALUE_TYPE
 from common.utils import digit_accept, text_accept
 from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
 from CALCULATE.states import SettingsState
@@ -10,12 +10,15 @@ from CALCULATE.common.messages import msg_currency_error, msg_digit_error, msg_e
 
 from AuthRoles import change_password
 
+
 def handle_new_value(type: BASE_VALUE_TYPE):
     if type == 'base_currency':
         return
 
     def r_func(message: Message, bot: TeleBot):
         user_id = message.from_user.id
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
         chat_id = message.chat.id
 
         value = digit_accept(message)
@@ -30,7 +33,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                 reply_markup=kb_base_cancel(user_id))
             return
 
-        db.set_user_base(user_id, type, value)
+        db_new.set_user_base(user_db_id, type, value)
 
         with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
@@ -54,6 +57,8 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
 def handle_new_currency(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     chat_id = message.chat.id
 
     value = text_accept(message)
@@ -63,7 +68,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
             reply_markup=kb_base_cancel(user_id))
         return
 
-    db.set_user_currency(user_id, value.upper())
+    db_new.set_user_currency(user_db_id, value.upper())
 
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
