@@ -1,14 +1,16 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new
 from initialize import pay_guard
 
 from MAIN.common.utils import get_print_signal_info
 from common.vars import PRINT_DATE_FROMAT
+from messages.workers import menu_msg
 from models import Post, User
+
 from .users.keyboards import kb_admin_client_info
+from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
 
 
 def send_admin_post(
@@ -97,3 +99,114 @@ def send_admin_client(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
+
+
+def send_admin_workers(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    text = menu_msg('Работники')
+    keyboard = kb_admin_workers()
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+    bot.delete_state(user_id, chat_id)
+
+
+def send_admin_workers_admin(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    res = '<b>Админы</b>\n'
+    admins = db_new.get_admins()
+
+    if len(admins) != 0:
+        for i in range(0, len(admins)):
+            res += f'\nID: {admins[i].tg_id} | Username: @{admins[i].username}'
+    else:
+        res = '\nНет админов!'
+
+    keyboard = kb_admin_workers_actions(1)
+
+    if is_first:
+        bot.send_message(chat_id, res, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            res, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+    bot.delete_state(user_id, chat_id)
+
+
+def send_admin_workers_redactors(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    res = '<b>Редакторы</b>\n'
+    redactors = db_new.get_redactors()
+
+    if len(redactors) != 0:
+        for i in range(0, len(redactors)):
+            res += f'\nID: {redactors[i].tg_id} | Username: @{redactors[i].username}'
+    else:
+        res = '\nНет редакторов!'
+
+    keyboard = kb_admin_workers_actions(2)
+
+    if is_first:
+        bot.send_message(chat_id, res, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            res, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+    bot.delete_state(user_id, chat_id)
+
+
+def send_admin_workers_support(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    sup = db_new.get_support_name()
+    sup_link = f'@{sup}' if sup != '' else '-'
+
+    text = f'Тех. поддержка: {sup_link}'
+    keyboard = kb_admin_workers_support()
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+    bot.delete_state(user_id, chat_id)

@@ -3,7 +3,7 @@ from telebot.types import Message
 
 from db import db
 from db_new import db_new
-from common.utils import digit_accept, set_state_data, text_accept
+from common.utils import digit_accept, get_calculation, set_state_data, text_accept
 
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
@@ -185,34 +185,16 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if open_price == stop_loss:
         bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
 
-    diff = open_price - stop_loss
-    take_profit_3 = open_price + diff * 3
-    take_profit_4 = open_price + diff * 4
-    take_profit_5 = open_price + diff * 5
+    count_bet, value_bet, credit, risk_value, take_profit, profit = get_calculation(
+        user_id, deposit, risk_percent, open_price,
+        stop_loss, ticker
+    )
 
-    risk_value = deposit * risk_percent * 0.01
-
-    rate = 1
-    if ticker is not None:
-        fut = db.get_future(ticker)
-        rate = fut[3] if fut is not None else 1
-    count_bet = round(risk_value / (abs(diff) * rate), 2)
-
-    summary_open_value = round(count_bet * open_price, 2)
-
-    credit = 1
-    if summary_open_value > deposit:
-        credit = summary_open_value // deposit + 1
-
-    # ?????
-    # umnoj = 1
-    # if open_price < 1 or stop_loss < 1:
-    #     umnoj = user_cal_def(open_price, stop_loss, 0)
-    # open_price *= umnoj
-    # stop_loss *= umnoj
-    mes = msg_calculate_result(user_id, deposit, risk_percent, open_price,
-                               stop_loss, take_profit_3, take_profit_4, take_profit_5,
-                               count_bet, summary_open_value, credit, risk_value)
+    mes = msg_calculate_result(
+        user_id, deposit, risk_percent, open_price,
+        stop_loss, count_bet, value_bet, credit,
+        risk_value, take_profit, profit
+    )
 
     db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(chat_id, mes)
@@ -234,7 +216,6 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        calc_type = data.get('calc_type')
         deposit = data.get('deposit')
         risk_percent = data.get('risk_percent')
         open_price = data.get('open_price')

@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from db import db
+from db_new import db_new
 
 # TODO удалить
 from initialize import text_editor
@@ -24,11 +25,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'calculator':
-        sup = db.get_support()
-        sup = sup[0][3] if sup is not None else ''
+        sup = db_new.get_support_name()
+        sup_link = f'@{sup}' if (sup != '') else ''
 
         bot.edit_message_text(
-            f'<b>Калькулятор расчета рисков</b>\nТех.поддержка: {sup}',
+            f'<b>Калькулятор расчета рисков</b>\nТех.поддержка: {sup_link}',
             chat_id, mes_id,
             reply_markup=kb_calculator()
         )

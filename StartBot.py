@@ -7,7 +7,6 @@ from MAIN.start import send_start_by_user
 
 
 from initialize import bot, db, pays, pays_banker, pay_guard
-from variables import *
 from telebot import custom_filters, types
 from telebot.types import Message
 
@@ -19,28 +18,25 @@ import datetime as dt
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
-from MAIN.callbacks import (
-    callbacks_registration, kb_posts_back,
-    send_admin_post
-)
+from MAIN.callbacks import callbacks_registration
+
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
 
 from keyboard_reply import *
-from cb_filters import (AdminDefaultCallbackFilter, AdminWorkerssCallbackFilter,
+from cb_filters import (AdminDefaultCallbackFilter,
                         AdminActionsCallbackFilter,
                         ClientActionsCallbackFilter, AdminMainCallbackFilter)
 
 from messages.users import (paid_subscribe_msg, end_trial_subscribe_msg,
                             end_paid_subscribe_msg)
-from messages.workers import (admin_fut_posts_msg, admin_users_msg,
-                              redactor_main_msg, admin_posting_msg)
+from messages.workers import redactor_main_msg, admin_posting_msg
 
 from BlockTGBotSender import BlockTGBotSender
 from AuthMiddleWare import AuthMiddleWare
 
-from models import Post, Update, User, UpdateBBanker
+from models import Post, Update, UpdateBBanker
 
 
 # TODO - переписать db
@@ -85,7 +81,8 @@ def invoice_paid_prev(update: Update) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            pay_guard.set_trial_subscribe_unactive_by_user(
+                transaction['user_id'])
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
@@ -134,14 +131,15 @@ def invoice_paid(update: UpdateBBanker) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            pay_guard.set_trial_subscribe_unactive_by_user(transaction['user_id'])
+            pay_guard.set_trial_subscribe_unactive_by_user(
+                transaction['user_id'])
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
             #     logger.info(
             #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
             #     pay_guard.set_subscribe_unactive(trial_id)
-                # pay_guard.set_subscribe_unactive(transaction['user_id'])
+            # pay_guard.set_subscribe_unactive(transaction['user_id'])
 
             # Отправляем сообщение пользователю
             bot.send_message(
@@ -158,9 +156,9 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
 @bot.message_handler(content_types=['photo', 'video', 'text'])
 def livepost_media(message: Message, data):
-    user_role = data.get('user_role')
+    user_role = data.get('user_role', 0)
 
-    if (user_role == 1 or user_role == 2) and message.text not in text_commands_stack:
+    if (user_role == 1 or user_role == 2):
         get_admin_livepost(message)
 
 
@@ -277,7 +275,6 @@ import cb_admin
 bot.add_custom_filter(custom_filters.StateFilter(bot))
 
 bot.add_custom_filter(AdminMainCallbackFilter())
-bot.add_custom_filter(AdminWorkerssCallbackFilter())
 
 bot.add_custom_filter(AdminDefaultCallbackFilter())
 bot.add_custom_filter(AdminActionsCallbackFilter())
@@ -297,10 +294,6 @@ def callback_inline(call: types.CallbackQuery):
     mes_id = call.message.id
 
     user_role = check_registrate(user_id) or 0
-
-    global new_admin_post, new_admin_post_img, new_admin_type, new_admin_post_video
-    global new_post, new_post_img, new_fut_post, new_fut_post_img, new_fut_post_time, new_fut_post_date
-    global link, index_term
 
     if call.data == 'RUB' or call.data == 'USD':
         set_state_data(bot, user_id, chat_id, {'val_dep': call.data})
