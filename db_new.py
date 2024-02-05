@@ -348,7 +348,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_unactive_trial_subscribes]: {e}')
+            print(f'ERROR[set_unactive_subscribes]: {e}')
             self.connection.rollback()
             return False
 
@@ -381,6 +381,46 @@ class Database:
             print(f'ERROR[get_active_subscribes_by_user_id]: {e}')
             self.connection.rollback()
             return None
+
+    def get_active_subscribes_all_users(self, ban: int = 0):
+        """Получить активные подписки для всех пользователей"""
+        query = (
+            'SELECT u.id AS id, u.username_tg AS username, u.id_telegram AS tg_id, '
+            'p.type_product AS type_product, '
+            'sub.id AS sub_id, '
+            'sub.finish_dt AS sub_finish, '
+            'ub.refer_id AS refer, u.ban AS ban, u.created_at AS created_at '
+            'FROM subscribes sub, users u, prices p, tgbotusers ub '
+            'WHERE '
+            '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
+            'AND sub.active = %s AND sub.tg_user_id = u.id_telegram '
+            'AND sub.prices_id = p.id '
+            'AND ub.user_id = u.id '
+            'AND u.ban = %s '
+        )
+        params = ('paid', 'trial', 1, ban)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return data
+            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+        except Exception as e:
+            print(f'ERROR[get_users_finished_subscribe]: {e}')
+            self.connection.rollback()
+            return []
+
+        pass
+
+    def _data_to_client(self, data: DictRow):
+        return Client(
+            user=UserInfo(
+                data.get('user_id')
+            ),
+            subscribes=Subscribe(
+
+            )
+        )
 
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):

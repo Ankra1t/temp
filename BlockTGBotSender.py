@@ -7,9 +7,9 @@ from MAIN.common.utils import get_print_signal_info
 from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
 from db import db
 from db_new import db_new
-from initialize import bot
+from initialize import bot, pay_guard
 from CALCULATE.common.messages import msg_calculate_result
-from models import Post
+from models import Post, UserInfo
 
 
 def send_message_by_type(
@@ -112,7 +112,16 @@ class BlockTGBotSender(object):
         log_send_ok.info(f'Начало рассылки------------------>>>')
 
         if calc_test:
+            # Внедряем проверку платных, пробных пользователей
+            # Внедряем анализ качества пользователей - оптимизация рассылки
+            # Учесть массовую рассылку отложенных постов
+
             users = db_new.get_all_users()
+            users = pay_guard.get_valid_users_for_signals()
+            if not users:
+                return False
+
+            users_info = users
             users = list(map(lambda x: x.tg_id, users))
         else:
             users = self.users
@@ -120,6 +129,7 @@ class BlockTGBotSender(object):
         i = 0
         while i < len(users):
             user = users[i]
+            user_i: UserInfo = users_info[i]
 
             if current_batch < self.c_tg:
                 try:
@@ -127,7 +137,7 @@ class BlockTGBotSender(object):
                     self.send_by_type(user)
                     current_batch += 1
                 except Exception as e:
-                    err_mess = f'Ошибка пользователя {user} : {e}'
+                    err_mess = f'Ошибка пользователя {user} username->@{user_i.username} : {e}'
                     print(err_mess)
                     log_send_fails.error(err_mess)
             else:
