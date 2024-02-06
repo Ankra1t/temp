@@ -241,6 +241,7 @@ class Database:
             self.connection.rollback()
             return None
 
+    # TODO - продумать данные функция работы с получнием пользователей с подпиской и без
     def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
         datetime_now = datetime.utcnow()
         query = (

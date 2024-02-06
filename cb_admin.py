@@ -34,9 +34,10 @@ def admin_main_callbacks(call: types.CallbackQuery):
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
         count_all = db_new.get_users_count()
-        count_with_sub = pay_guard.get_paid_users()
-        count_old = pay_guard.get_paid_more1_users()
-        text = admin_users_msg(count_all, len(count_with_sub), len(count_old))
+        count_with_sub = len(pay_guard.get_paid_users())
+        count_old = len(pay_guard.get_paid_more1_users())
+
+        text = admin_users_msg(count_all, count_with_sub, count_old)
 
         bot.edit_message_text(
             text, chat_id, mes_id,
