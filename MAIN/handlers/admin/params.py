@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
+from db_new import db_new
 from initialize import pay_guard
 
 from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
@@ -78,7 +79,7 @@ def handle_future_price_step(message: Message, bot: TeleBot):
         name = data.get('future_name')
         step = int(data.get('future_step'))
 
-    db.add_future(name, step, price_step)
+    db_new.update_future(name, step, price_step)
     bot.delete_state(user_id, chat_id)
     bot.send_message(
         chat_id, 'Тикер успешно добавлен!\nВведите тикер фьючерса:',

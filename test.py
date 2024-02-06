@@ -5,7 +5,7 @@ from db_new import db_new
 # azatFa  id 156045434
 # ankrait id 6919899538
 
-# db.delete_calculator_user(156045434)
+# db_new.delete_calculator_user(156045434)
 # db_new.add_worker(156045434, 'azatFa', 1)
 # db_new.del_worker(156045434)
 # db.curs.execute('DELETE FROM users')
@@ -43,13 +43,12 @@ from db_new import db_new
 #         db.curs.execute(query, params)
 #         db.connection.commit()
 
-# db.add_user(-1, 'asd', 0)
-# db.del_user(-1)
+# db_new.add_user(-1, 'asd', 0)
+# db_new.del_user(-1)
 
 # a = db_new.get_user_by_tg_id(-1)
 # dt: datetime = a[1]
 
-# a = db.get_fut_post(2)
 # if a is not None:
 #     dt = a.date_time or datetime.now()
 #

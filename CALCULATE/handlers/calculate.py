@@ -25,11 +25,12 @@ def handle_future_ticker(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_ticker_error(user_id))
         return
 
-    if not db.check_future(ticker):
+    if db_new.get_future(ticker) is None:
         bot.send_message(
             chat_id,
             msg_ticker_not_found(user_id, ticker),
-            reply_markup=kb_cancel(user_id))
+            reply_markup=kb_cancel(user_id)
+        )
         return
 
     set_state_data(bot, user_id, chat_id, {'ticker': ticker})

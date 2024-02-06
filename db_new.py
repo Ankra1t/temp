@@ -5,7 +5,8 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker
+from models import Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker
+
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
@@ -29,7 +30,6 @@ class Database:
             self.curs = self.connection.cursor(cursor_factory=DictCursor)
         except Exception as error:
             print(f"Ошибка при работе с PostgreSQL: {error}")
-
 
     # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
@@ -72,7 +72,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            print(f'ERROR[get_prices]: {e}')
+            print(f'ERROR[get_prices_by_product]: {e}')
             self.connection.rollback()
             return []
 
@@ -184,7 +184,6 @@ class Database:
             print(f'ERROR[set_price_discount]: {e}')
             self.connection.rollback()
             return False
-
 
     # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
@@ -1087,6 +1086,214 @@ class Database:
             print(f'ERROR[get_option]: {e}')
             self.connection.rollback()
             return None
+
+    # Posts
+    def _data_to_post(self, data: DictRow):
+        open_price, stop_loss, name, ticker = data['open_price'], data['stop_loss'], data['name'], data['ticker']
+        details = None
+
+        if (
+            open_price is None
+            and stop_loss is None
+            and name is None
+            and ticker is None
+        ):
+            details = PostDetails(
+                name=name,
+                open_price=open_price,
+                stop_loss=stop_loss,
+                ticker=ticker
+            )
+
+        return Post(
+            id=data['id'],
+            content=data['content'],
+            mes_type=data['message_type'],
+            media=data['media'],
+            direct=data['direct'],
+            date_time=data['date_time'],
+            details=details
+        )
+
+    def add_post(self, post: Post):
+        """Добавить отложенный пост"""
+        if post.details is None:
+            details = (None, None, None, None)
+        else:
+            details = (
+                post.details.open_price,
+                post.details.stop_loss,
+                post.details.name,
+                post.details.ticker
+            )
+
+        query = """
+            INSERT INTO posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (post.content, post.mes_type, post.media,
+                  post.direct, post.date_time, *details)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[add_post]: {e}')
+            self.connection.rollback()
+            return False
+
+    def delete_post(self, post_id: int):
+        """Удалить отложенный пост"""
+        try:
+            self.curs.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[delete_post]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_all_posts(self) -> list[Post]:
+        """Получение отложенных постов"""
+        query = 'SELECT * FROM posts'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_post(el), data))
+        except Exception as e:
+            print(f'ERROR[get_all_posts]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_post(self, id: int):
+        """Получить отложенный пост по id"""
+        query = 'SELECT * FROM posts WHERE id = ?'
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_post(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_post]: {e}')
+            self.connection.rollback()
+            return None
+
+    # Texts
+    def _data_to_text(self, data: DictRow):
+        return Text(
+            id=data.get('id'),
+            name=data.get('name'),
+            message=data.get('message', ''),
+            message_type=data.get('message_type', 'text'),
+            media_id=data.get('media_id', '')
+        )
+
+    def get_texts(self) -> list[Text]:
+        query = 'SELECT * FROM tgbot_texts'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_text(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_texts]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_text_by_name(self, name: str):
+        query = 'SELECT * FROM tgbot_texts WHERE name = %s'
+        params = (name,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_text(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_text_by_name]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_text(self, name: str, text: str):
+        mes_type = 'text'
+        check_text = self.get_text_by_name(name)
+
+        try:
+            if check_text is None:
+                query = 'UPDATE tgbot_texts SET message = %s, message_type = %s WHERE name = %s'
+            else:
+                query = 'INSERT INTO tgbot_texts(message, message_type, name) VALUES(%s, %s, %s)'
+
+            params = (text, mes_type, name)
+
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_text]: {e}')
+            self.connection.rollback()
+            return False
+
+    # Future
+    def _data_to_future(self, data: DictRow):
+        return Future(
+            id=data.get('id'),
+            name=data.get('name'),
+            step=data.get('step'),
+            price_step=data.get('price_step')
+        )
+
+    def get_future(self, name: str):
+        name = name.upper()
+        query = 'SELECT * FROM tgbot_futures WHERE name = %s'
+        params = (name,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_future(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_future]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_future(self, name: str, step: float, price_step: float):
+        check_future = self.get_future(name)
+
+        try:
+            if check_future is None:
+                query = 'INSERT INTO tgbot_futures(step, price_step, name) VALUES(%s, %s, %s)'
+            else:
+                query = 'UPDATE tgbot_futures SET step = %s, price_step = %s WHERE name = %s'
+
+            params = (step, price_step, name)
+
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_future]: {e}')
+            self.connection.rollback()
+            return False
+
+    # Forexes
+    def get_forex(self, paire: str):
+        query = 'SELECT * FROM tgbot_forexes WHERE paire = ?'
+    
+    
+    def update_forex(self, paire: str, price: float, help_paire: str | None = None):
+        query = 'INSERT INTO forexes (paire, price, help_paire) VALUES (?,?,?)'
+        params = (paire, price, help_paire)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except:
+            return False
+
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

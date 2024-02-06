@@ -73,7 +73,7 @@ def check_registrate(tg_id: int):
 #                           f'\n\n Ник: {self.nickname}\n\nУ вас рефералов: {count_ref} шт.')
 
 # Сообщение админам
-# admins = self.db.get_all_global_admins()
+# admins = db_new.get_all_global_admins()
 # for i in range(0, len(admins)):
 #     self.bot.send_message(admins[i][0],
 #                             f'Подключился новый пользователь\n ID: {self.mess.from_user.id} '

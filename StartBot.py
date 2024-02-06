@@ -2,13 +2,16 @@ import threading
 import time
 import os
 from datetime import datetime
-from AuthRoles import check_registrate
-from MAIN.start import send_start_by_user
-
-
-from initialize import bot, db, pays, pays_banker, pay_guard
 from telebot import custom_filters, types
 from telebot.types import Message
+
+
+from AuthRoles import check_registrate
+from MAIN.start import send_start_by_user
+from initialize import bot, pays, pays_banker, pay_guard
+
+from db import db
+from db_new import db_new
 
 from config_logger import logger
 from config_global import _ENV
@@ -29,8 +32,7 @@ from cb_filters import (AdminDefaultCallbackFilter,
                         AdminActionsCallbackFilter,
                         ClientActionsCallbackFilter, AdminMainCallbackFilter)
 
-from messages.users import (paid_subscribe_msg, end_trial_subscribe_msg,
-                            end_paid_subscribe_msg)
+from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
 from messages.workers import redactor_main_msg, admin_posting_msg
 
 from BlockTGBotSender import BlockTGBotSender
@@ -195,12 +197,12 @@ def check_future_post_for_sent():
     date_now = dt.datetime.now()
     lose_time_back = date_now - dt.timedelta(hours=lose_hours)
 
-    mas_posts = db.get_fut_all_posts()
+    mas_posts = db_new.get_all_posts()
 
     for post in mas_posts:
         if (post.date_time is not None) and (post.date_time < date_now) and (post.date_time > lose_time_back):
             send_future_pos_by_intime(post)
-            db.del_fut_post(post.id)
+            db_new.delete_post(post.id or 0)
 
             # TODO - Написать админу, что отложенный пост отправлен
             time.sleep(10)
@@ -304,7 +306,7 @@ def callback_inline(call: types.CallbackQuery):
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
     if call.data == 'adm_posting':
-        count_posts = len(db.get_fut_all_posts())
+        count_posts = len(db_new.get_all_posts())
         bot.send_message(
             chat_id,
             text=admin_posting_msg(count_posts),
@@ -316,7 +318,7 @@ def callback_inline(call: types.CallbackQuery):
         )
 
     if call.data == 'redactor_main':
-        count_fut_posts = len(db.get_fut_all_posts())
+        count_fut_posts = len(db_new.get_all_posts())
         bot.send_message(
             chat_id,
             text=redactor_main_msg(count_fut_posts),

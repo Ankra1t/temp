@@ -84,7 +84,7 @@ def callback_inline(call: CallbackQuery, bot: TeleBot):
         # for el in forex:
         #     db.add_forex(el['paire'], float(el['price']), el['help_paire'])
 
-        # db.delete_calculator_user(user_id)
+        # db_new.delete_calculator_user(user_id)
 
         # print(db.get_all_forex_btn())
         pass

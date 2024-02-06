@@ -38,7 +38,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, AdminPostsState.post_delete, chat_id)
 
     if type == 'list':
-        posts = db.get_fut_all_posts()
+        posts = db_new.get_all_posts()
 
         if len(posts) == 0:
             bot.edit_message_text(
@@ -101,10 +101,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             type = 'Всем'
 
         with bot.retrieve_data(user_id, chat_id) as data:
-            kind = data.get('kind')
             post_data: Post = data.get('post')
 
-        db.add_fut_post(post_data, kind)
+        db_new.add_post(post_data)
         bot.delete_state(user_id, chat_id)
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
@@ -120,11 +119,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_posts_back())
         if 'yes' in type:
             with bot.retrieve_data(user_id, chat_id) as data:
-                post_id = data.get('post_id')
+                post_id = data.get('post_id', 0)
             text = 'Пост успешно удалён!'
 
             if 'send' in type:
-                post = db.get_fut_post(post_id)
+                post = db_new.get_post(post_id)
 
                 if post is None:
                     return
@@ -155,7 +154,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
                 text = 'Пост успешно отправлен!'
 
-            db.del_fut_post(post_id)
+            db_new.delete_post(post_id)
 
             bot.delete_state(user_id, chat_id)
             bot.edit_message_text(text, chat_id, mes_id)

@@ -84,7 +84,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
             count_admins = len(db_new.get_all_workes())
-            count_fut_posts = len(db.get_fut_all_posts())
+            count_fut_posts = len(db_new.get_all_posts())
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)
 
@@ -252,9 +252,9 @@ def admin_action_callbacks(call: types.CallbackQuery):
 
         # Спрятать reply клаву
         bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Сообщение id={target_id}', reply_markup=None)
+                         text=f'Сообщение name={target_id}', reply_markup=None)
         bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Отправьте новый текст для id={target_id}',
+                         text=f'Отправьте новый текст для name={target_id}',
                          reply_markup=kb_inl_admin.kb_edit_single_text_cancel())
 
         bot.register_next_step_handler(
