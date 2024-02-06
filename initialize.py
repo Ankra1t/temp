@@ -25,7 +25,7 @@ bot = TeleBot(
 )
 
 pay_guard = GuardPaymentAccess(db)
-pays = Payments(db, token=cryptopay_token, network=Networks.MAIN_NET)
+pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
 pays_banker = PaymentsBanker(
     api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)
 pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
@@ -34,5 +34,5 @@ pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
 kb_inl_admin = Admin_kb_inlines()
 kb_inl_user = Clients_kb_inlines()
 
-text_editor = TextEditor(db, bot, kb_inl_admin)
-tariff_manager = TariffManager(db, bot, kb_inl_admin, kb_inl_user)
+text_editor = TextEditor(bot, kb_inl_admin)
+tariff_manager = TariffManager(bot, kb_inl_admin, kb_inl_user)

@@ -10,7 +10,6 @@ from AuthRoles import check_registrate
 from MAIN.start import send_start_by_user
 from initialize import bot, pays, pays_banker, pay_guard
 
-from db import db
 from db_new import db_new
 
 from config_logger import logger
@@ -41,14 +40,13 @@ from AuthMiddleWare import AuthMiddleWare
 from models import Post, Update, UpdateBBanker
 
 
-# TODO - переписать db
 # TODO - отформатировать этот файл
 # TODO - удаление тарифа
 # TODO - продумать все отлавливания ошибок
 # TODO - в callbacks -> keyboards удалить импорт kb_inl_admin
 
 
-bot.setup_middleware(AuthMiddleWare(bot, db))
+bot.setup_middleware(AuthMiddleWare(bot))
 
 commands_registration(bot)
 handlers_registration(bot)

@@ -12,7 +12,7 @@ from messages.workers import admin_main_msg
 from common.utils import set_state_data
 from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
-    kb_admin_users_back, kb_admin_workers_back,
+    kb_admin_users_back,
     send_admin_workers
 )
 from MAIN.states import AdminTariffState

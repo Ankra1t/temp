@@ -1,7 +1,6 @@
 import json
 import requests
 
-from db import db
 from db_new import db_new
 from common.vars import API_URL, HEADERS
 

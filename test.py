@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from db import db
 from db_new import db_new
 
 # azatFa  id 156045434
@@ -8,40 +7,9 @@ from db_new import db_new
 # db_new.delete_calculator_user(156045434)
 # db_new.add_worker(156045434, 'azatFa', 1)
 # db_new.del_worker(156045434)
-# db.curs.execute('DELETE FROM users')
-# db.connection.commit()
 
 # print(db_new.get_access_token())
 
-# query = ' '.join((
-#         'CREATE TABLE posts (',
-#         'id INTEGER PRIMARY KEY AUTOINCREMENT,',
-#         'content TEXT NOT NULL,',
-#         'mes_type VARCHAR(20) DEFAULT "text",',
-#         'direct VARCHAR(20) DEFAULT "Всем",',
-#         'media TEXT NULL,',
-#         'date_time TIMESTAMP NOT NULL,',
-#         'name TEXT NULL,',
-#         'open_price FLOAT NULL,',
-#         'stop_loss FLOAT NULL,',
-#         'ticker VARCHAR(20) NULL',
-#         ')',
-# ))
-# db.curs.execute(query)
-# db.connection.commit()
-
-# db.curs.execute('DELETE FROM users WHERE id < 1000')
-# db.connection.commit()
-
-# for i in range(1, 30):
-#         query = (
-#                 'INSERT INTO users(id, username, refer, count_sub, count_days, pay_money, balance, created_at) '
-#                 'VALUES(?, ?, ?, 0, 0, 0, 0, ?)'
-#         )
-#         params = (i, f'andww{i}', 0, datetime.now() - timedelta(days=i))
-
-#         db.curs.execute(query, params)
-#         db.connection.commit()
 
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)

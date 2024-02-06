@@ -3,7 +3,6 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from CALCULATE.callbacks.utils import choose_calculate_step
 
-from db import db
 from common.utils import set_state_data
 
 from CALCULATE.states.calculate import CalculateState

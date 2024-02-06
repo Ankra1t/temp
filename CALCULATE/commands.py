@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message
 from CALCULATE.callbacks.settings.keyboards import kb_settings_confirm
 
-from db import db
 from db_new import db_new
 
 from CALCULATE.common.messages import msg_support, msg_welcome

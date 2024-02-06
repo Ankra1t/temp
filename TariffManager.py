@@ -2,7 +2,6 @@ from telebot import types, TeleBot
 from datetime import datetime
 
 from keyboard_inlines import Admin_kb_inlines
-from db import Database
 from db_new import db_new
 from models import Price, Discount
 
@@ -10,8 +9,7 @@ from models import Price, Discount
 class TariffManager(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, db: Database, bot_instance: TeleBot, kb_inl_instance: Admin_kb_inlines, kb_inl_user_instance) -> None:
-        self.db = db
+    def __init__(self, bot_instance: TeleBot, kb_inl_instance: Admin_kb_inlines, kb_inl_user_instance) -> None:
         self.bot = bot_instance
         self.kb_inl = kb_inl_instance
         self.kb_inl_user = kb_inl_user_instance

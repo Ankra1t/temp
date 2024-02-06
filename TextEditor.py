@@ -1,15 +1,13 @@
 from telebot import types, TeleBot
 from config_logger import logger
 
-from db import Database
 from db_new import db_new
 
 
 class TextEditor(object):
     """Класс редактор текстов"""
 
-    def __init__(self, db: Database, bot: TeleBot, kb_inl_instance) -> None:
-        self.db = db
+    def __init__(self, bot: TeleBot, kb_inl_instance) -> None:
         self.bot = bot
         self.kb_inl = kb_inl_instance
 

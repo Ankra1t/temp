@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from MAIN.callbacks.user.pages import send_user_education
 
-from db import db
 from db_new import db_new
 
 from .keyboards import kb_user_lesson, kb_user_curs

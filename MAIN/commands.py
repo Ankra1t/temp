@@ -1,10 +1,8 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from config_logger import logger
 from initialize import pay_guard
 
-from db import db
 from db_new import db_new
 from keyboard_reply import kb_user_sup
 

@@ -4,7 +4,6 @@ from telebot.types import Message
 from typing import TypeVar, Any
 
 from db_new import db_new
-from db import db
 
 
 T = TypeVar('T', int, float)

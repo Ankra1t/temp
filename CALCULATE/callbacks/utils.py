@@ -2,7 +2,6 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new
 from initialize import pay_guard
 from common.utils import set_state_data

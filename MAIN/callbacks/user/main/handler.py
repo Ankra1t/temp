@@ -7,9 +7,7 @@ from MAIN.callbacks.user.pages import send_user_account
 from MAIN.common.utils import send_in_development
 
 from initialize import tariff_manager, kb_inl_user
-from db import db
 
-from .keyboards import kb_user_calculator
 from .filter import user_main_factory, UserMainCallbackFilter
 
 

@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db import db
 from db_new import db_new
 
 # TODO удалить
@@ -53,7 +52,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     elif type == 'show':
         # todo-fin: Что-то тут не работает, что-то достается из БД
-        # mas = db.get_other()
+        # mas = db_old.get_other()
         # for i in range(0, len(mas)):
         #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1])
         # bot.register_next_step_handler(message, admin_other_menu)

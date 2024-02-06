@@ -6,27 +6,6 @@ class Database:
         self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.curs = self.connection.cursor()
 
-    def get_pay_money(self, id: int):  # TODO
-        """Получить потраченную сумму юзера"""
-        query = "SELECT pay_money FROM users WHERE id = ?"
-        params = (id,)
-
-        try:
-            return int(self.curs.execute(query, params).fetchone()[0])
-        except Exception as e:
-            print(f'ERROR[get_pay_money]: {e}')
-            return None
-
-    def get_balance(self, id: int):  # TODO
-        """Получаем баланс юзера"""
-        query = "SELECT balance FROM users WHERE id = ?"
-        params = (id,)
-        try:
-            return int(self.curs.execute(query, params).fetchone()[0])
-        except Exception as e:
-            print(f'ERROR[get_balance]: {e}')
-            return None
-
     def get_users_with_sub(self):  # TODO
         """Получить список пользователей с активной подпиской"""
         try:
