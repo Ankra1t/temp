@@ -137,10 +137,10 @@ def handle_forex_help_pair(message: Message, bot: TeleBot):
     help_pair = help_pair.upper() if help_pair != '-' else None
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        pair = data['pair']
-        price = data['price']
+        pair = data.get('pair', '')
+        price = data.get('price', 0)
 
-    db.add_forex(pair, price, help_pair)
+    db_new.update_forex(pair, price, help_pair)
     bot.delete_state(user_id, chat_id)
     bot.send_message(
         chat_id, 'Пара успешно добавлен!\nВведите валютную пару:',

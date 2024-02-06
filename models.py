@@ -202,4 +202,4 @@ class Forex(BaseModel):
     id: int
     pair: str
     price: float
-    help_pair: str
+    help_pair: str | None

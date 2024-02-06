@@ -58,6 +58,39 @@ from db_new import db_new
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
 
+forexes = [{"pair": "AUD/CAD", "price": "0", "help_pair": "USD/CAD"},
+           {"pair": "AUD/CHF", "price": "0", "help_pair": "USD/CHF"},
+           {"pair": "AUD/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "CAD/CHF", "price": "0", "help_pair": "USD/CHF"},
+           {"pair": "CAD/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "CHF/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "EUR/AUD", "price": "0", "help_pair": "AUD/USD"},
+           {"pair": "EUR/CAD", "price": "0", "help_pair": "USD/CAD"},
+           {"pair": "EUR/CHF", "price": "0", "help_pair": "USD/CHF"},
+           {"pair": "EUR/GBP", "price": "0", "help_pair": "GBP/USD"},
+           {"pair": "EUR/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "EUR/NZD", "price": "0", "help_pair": "NZD/USD"},
+           {"pair": "GBP/AUD", "price": "0", "help_pair": "AUD/USD"},
+           {"pair": "GBP/CAD", "price": "0", "help_pair": "USD/CAD"},
+           {"pair": "GBP/CHF", "price": "0", "help_pair": "USD/CHF"},
+           {"pair": "GBP/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "GBP/NZD", "price": "0", "help_pair": "NZD/USD"},
+           {"pair": "NZD/CAD", "price": "0", "help_pair": "USD/CAD"},
+           {"pair": "NZD/CHF", "price": "0", "help_pair": "USD/CHF"},
+           {"pair": "NZD/JPY", "price": "0", "help_pair": "USD/JPY"},
+           {"pair": "NZD/USD", "price": "0.62625", "help_pair": ""},
+           {"pair": "GBP/USD", "price": "1.2936", "help_pair": ""},
+           {"pair": "EUR/USD", "price": "1.12044", "help_pair": ""},
+           {"pair": "AUD/USD", "price": "0.677", "help_pair": ""},
+           {"pair": "USD/JPY", "price": "139.608", "help_pair": ""},
+           {"pair": "USD/CHF", "price": "0.85793", "help_pair": ""},
+           {"pair": "USD/CAD", "price": "1.31632", "help_pair": ""},
+           {"pair": "USD/RUB", "price": "91.9445", "help_pair": ""}]
+
+for el in forexes:
+    db_new.update_forex(el['pair'], float(
+        el['price']), el['help_pair'] or None)
+
 ################################################################################################
 # if user_role == 0:
 #     if message.text == 'Купить':

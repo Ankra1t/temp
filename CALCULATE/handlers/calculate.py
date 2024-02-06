@@ -48,22 +48,22 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         return
 
     pair = pair.upper().replace(' ', '/')
-    price = db.get_price_forex(pair)
-    if price is None:
+
+    forex = db_new.get_forex(pair)
+    if forex is None:
         bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
             reply_markup=kb_cancel(user_id))
         return
 
-    # ЕСЛИ ПАРА xxx/USD
+    price = forex.price
+
     if '/USD' in pair:
         type_forex = 'xxx/USD'
-    # Если пара USD/xxx
     elif 'USD/' in pair:
         type_forex = 'USD/xxx'
-    # Если кросc
     else:
-        help_pair = db.get_help_pair_forex(pair)
+        help_pair = forex.help_pair
 
         if help_pair is None:
             print(f'ERROR: no help_pair of {pair}')
@@ -72,15 +72,15 @@ def handle_forex_pair(message: Message, bot: TeleBot):
             print('ERROR: help_pair doesn\'t contain USD')
             return
 
-        price = db.get_price_forex(help_pair)
-        if price is None:
+        forex_help = db_new.get_forex(help_pair)
+        if forex_help is None:
             print(f'ERROR: pair {help_pair} doesn\'t contain price')
             return
 
-        # ЕСЛИ ВСПОМОГ. xxx/USD
+        price = forex_help.price
+
         if '/USD' in help_pair:
             type_forex = 'CROSSxxx/USD'
-        # ЕСЛИ ВСПОМОГ. USD/xxx
         else:
             type_forex = 'CROSSUSD/xxx'
 
@@ -233,7 +233,8 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     pips = float(abs(diff) * 10000)
 
     if val_dep == 'RUB':
-        price_usd_rub = db.get_forex_rub_price()[0]
+        usd_rub_forex = db_new.get_forex('USD/RUB')
+        price_usd_rub = usd_rub_forex.price if (usd_rub_forex is not None) else 1
         deposit /= price_usd_rub
     risk = risk_percent / 100
 

@@ -82,11 +82,9 @@ def callback_inline(call: CallbackQuery, bot: TeleBot):
         #          {"pair": "USD/CAD", "price": "1.31632", "help_pair": ""},
         #          {"pair": "USD/RUB", "price": "91.9445", "help_pair": ""}]
         # for el in forex:
-        #     db.add_forex(el['pair'], float(el['price']), el['help_pair'])
+        #     db_new.update_forex(el['pair'], float(el['price']), el['help_pair'])
 
         # db_new.delete_calculator_user(user_id)
-
-        # print(db.get_all_forex_btn())
         pass
 
     bot.answer_callback_query(call.id)

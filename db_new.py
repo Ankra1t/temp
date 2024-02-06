@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker
+from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker
 
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
@@ -1279,21 +1279,46 @@ class Database:
             return False
 
     # Forexes
+    def _data_to_forex(self, data: DictRow):
+        return Forex(
+            id=data.get('id'),
+            pair=data.get('pair'),
+            price=data.get('price'),
+            help_pair=data.get('help_pair')
+        )
+
     def get_forex(self, pair: str):
-        query = 'SELECT * FROM tgbot_forexes WHERE pair = ?'
-    
-    
-    def update_forex(self, pair: str, price: float, help_pair: str | None = None):
-        query = 'INSERT INTO forexes (pair, price, help_pair) VALUES (?,?,?)'
-        params = (pair, price, help_pair)
+        query = 'SELECT * FROM tgbot_forexes WHERE pair = %s'
+        params = (pair,)
 
         try:
             self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_forex(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_forex]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_forex(self, pair: str, price: float, help_pair: str | None = None):
+        check_forex = self.get_forex(pair)
+        params = (pair, price, help_pair)
+
+        try:
+            if check_forex is None:
+                query = 'INSERT INTO tgbot_forexes (pair, price, help_pair) VALUES (%s, %s, %s)'
+                params = (pair, price, help_pair)
+            else:
+                query = 'UPDATE tgbot_forexes SET price = %s, help_pair = %s WHERE pair = %s'
+                params = (price, help_pair or check_forex.help_pair, pair)
+
+            self.curs.execute(query, params)
             self.connection.commit()
             return True
-        except:
+        except Exception as e:
+            print(f'ERROR[update_forex]: {e}')
+            self.connection.rollback()
             return False
-
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

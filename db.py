@@ -1,8 +1,4 @@
 import sqlite3
-from typing import Any, Literal, Optional
-
-from models import Post, PostDetails
-from db_new import BASE_VALUE_TYPE, LANGUAGES_TYPE, MARKETS_TYPE
 
 
 class Database:
@@ -58,50 +54,7 @@ class Database:
             print(f'ERROR[get_users_with_more_pay]: {e}')
             return []
 
-# ======================= // ANCHOR FOREX
-    def add_forex(self, pair: str, price: float, help_pair: str | None = None):
-        query = 'INSERT INTO forexes (pair, price, help_pair) VALUES (?,?,?)'
-        params = (pair, price, help_pair)
 
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except:
-            return False
-
-    def update_price_forex(self, price, pair):
-        self.curs.execute(
-            f"UPDATE forexes set price = ? WHERE pair = ?", (price, pair))
-        self.connection.commit()
-
-    def get_all_forex_btn(self):
-        # WHERE pair != 'USD/RUB'
-        result = self.curs.execute(
-            "SELECT DISTINCT pair FROM forexes ORDER BY pair COLLATE NOCASE ASC").fetchall()
-        return result
-
-    def get_forex_rub_price(self):
-        result = self.curs.execute(
-            "SELECT price FROM forexes WHERE pair = 'USD/RUB'").fetchone()
-        return result
-
-    def get_price_forex(self, pair: str) -> float | None:
-        try:
-            return self.curs.execute(
-                "SELECT price FROM forexes WHERE pair = ?", (pair,)).fetchone()[0]
-        except:
-            return None
-
-    def get_help_pair_forex(self, pair: str) -> str | None:
-        try:
-            return self.curs.execute(
-                "SELECT help_pair FROM forexes WHERE pair = ?", (pair,)).fetchone()[0]
-        except:
-            return None
-
-
-# ======================= // Управление Баном Пользователей
     def get_subsribe_users(self, today, date_bonus):
         res = self.curs.execute(f"SELECT u.id_idx, u.created_at, u.username, "
                                 f"u.count_sub, "
