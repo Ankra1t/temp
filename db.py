@@ -59,9 +59,9 @@ class Database:
             return []
 
 # ======================= // ANCHOR FOREX
-    def add_forex(self, paire: str, price: float, help_paire: str | None = None):
-        query = 'INSERT INTO forexes (paire, price, help_paire) VALUES (?,?,?)'
-        params = (paire, price, help_paire)
+    def add_forex(self, pair: str, price: float, help_pair: str | None = None):
+        query = 'INSERT INTO forexes (pair, price, help_pair) VALUES (?,?,?)'
+        params = (pair, price, help_pair)
 
         try:
             self.curs.execute(query, params)
@@ -70,33 +70,33 @@ class Database:
         except:
             return False
 
-    def update_price_forex(self, price, paire):
+    def update_price_forex(self, price, pair):
         self.curs.execute(
-            f"UPDATE forexes set price = ? WHERE paire = ?", (price, paire))
+            f"UPDATE forexes set price = ? WHERE pair = ?", (price, pair))
         self.connection.commit()
 
     def get_all_forex_btn(self):
-        # WHERE paire != 'USD/RUB'
+        # WHERE pair != 'USD/RUB'
         result = self.curs.execute(
-            "SELECT DISTINCT paire FROM forexes ORDER BY paire COLLATE NOCASE ASC").fetchall()
+            "SELECT DISTINCT pair FROM forexes ORDER BY pair COLLATE NOCASE ASC").fetchall()
         return result
 
     def get_forex_rub_price(self):
         result = self.curs.execute(
-            "SELECT price FROM forexes WHERE paire = 'USD/RUB'").fetchone()
+            "SELECT price FROM forexes WHERE pair = 'USD/RUB'").fetchone()
         return result
 
-    def get_price_forex(self, paire: str) -> float | None:
+    def get_price_forex(self, pair: str) -> float | None:
         try:
             return self.curs.execute(
-                "SELECT price FROM forexes WHERE paire = ?", (paire,)).fetchone()[0]
+                "SELECT price FROM forexes WHERE pair = ?", (pair,)).fetchone()[0]
         except:
             return None
 
-    def get_help_paire_forex(self, paire: str) -> str | None:
+    def get_help_pair_forex(self, pair: str) -> str | None:
         try:
             return self.curs.execute(
-                "SELECT help_paire FROM forexes WHERE paire = ?", (paire,)).fetchone()[0]
+                "SELECT help_pair FROM forexes WHERE pair = ?", (pair,)).fetchone()[0]
         except:
             return None
 

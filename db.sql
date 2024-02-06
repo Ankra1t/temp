@@ -21,9 +21,9 @@ create TABLE users(
 
 
 create TABLE forex(
-    paire VARCHAR(255),
+    pair VARCHAR(255),
     price numeric,
-    help_paire VARCHAR(255)
+    help_pair VARCHAR(255)
 );
 
 create TABLE orders(
@@ -34,7 +34,7 @@ create TABLE orders(
     time VARCHAR,
     dep VARCHAR,
     risk VARCHAR,
-    paire VARCHAR,
+    pair VARCHAR,
     symbol VARCHAR,
     open VARCHAR,
     stop VARCHAR,

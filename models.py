@@ -200,6 +200,6 @@ class Future(BaseModel):
 
 class Forex(BaseModel):
     id: int
-    paire: str
+    pair: str
     price: float
-    help_paire: str
+    help_pair: str

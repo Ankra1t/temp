@@ -1279,13 +1279,13 @@ class Database:
             return False
 
     # Forexes
-    def get_forex(self, paire: str):
-        query = 'SELECT * FROM tgbot_forexes WHERE paire = ?'
+    def get_forex(self, pair: str):
+        query = 'SELECT * FROM tgbot_forexes WHERE pair = ?'
     
     
-    def update_forex(self, paire: str, price: float, help_paire: str | None = None):
-        query = 'INSERT INTO forexes (paire, price, help_paire) VALUES (?,?,?)'
-        params = (paire, price, help_paire)
+    def update_forex(self, pair: str, price: float, help_pair: str | None = None):
+        query = 'INSERT INTO forexes (pair, price, help_pair) VALUES (?,?,?)'
+        params = (pair, price, help_pair)
 
         try:
             self.curs.execute(query, params)

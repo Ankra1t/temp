@@ -104,7 +104,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 'Введите валютную пару:', chat_id, mes_id,
                 reply_markup=kb_params_back()
             )
-            bot.set_state(user_id, AdminParamsState.forex_paire, chat_id)
+            bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
 
     bot.answer_callback_query(call.id)
 
