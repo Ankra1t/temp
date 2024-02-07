@@ -24,7 +24,8 @@ def handle_other_text(message: Message, bot: TeleBot):
 
     bot.send_message(
         chat_id, 'Применить изменения?',
-        reply_markup=kb_params_choice('change'))
+        reply_markup=kb_params_choice('change')
+    )
 
 
 def handle_future_name(message: Message, bot: TeleBot):
