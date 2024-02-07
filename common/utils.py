@@ -4,7 +4,6 @@ from telebot.types import Message
 from typing import TypeVar, Any
 
 from db_new import db_new
-from db import db
 
 
 T = TypeVar('T', int, float)
@@ -95,8 +94,8 @@ def get_calculation(
 
     rate = 1
     if ticker is not None:
-        fut = db.get_future(ticker)
-        rate = float(fut[3]) if fut is not None else 1
+        fut = db_new.get_future(ticker)
+        rate = fut.price_step if (fut is not None) else 1
 
     # Кол-во покупки
     count_bet = risk_value / diff_op_sl * rate

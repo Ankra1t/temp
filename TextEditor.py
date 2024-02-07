@@ -1,49 +1,46 @@
 from telebot import types, TeleBot
 from config_logger import logger
 
-from db import Database
+from db_new import db_new
 
 
 class TextEditor(object):
     """Класс редактор текстов"""
 
-    def __init__(self, db: Database, bot: TeleBot, kb_inl_instance) -> None:
-        self.db = db
+    def __init__(self, bot: TeleBot, kb_inl_instance) -> None:
         self.bot = bot
         self.kb_inl = kb_inl_instance
 
     def list_texts(self, chat: types.Chat):
         """Получить список текстов в админке для редактирования"""
-        list = self.db.get_list_texts()
-        if list:
+        list = db_new.get_texts()
+        if len(list) != 0:
             for i in range(0, len(list)):
-                text_id = list[i][0]
-                print(f'list[i] ')
-                print(list[i])
-                single_text = 'id={} label={} \n\n{}'.format(
-                    text_id, list[i][2], list[i][3])
+                text = list[i]
+
+                text_show = f'ID: <b>{text.id}</b> | <b>{text.name}</b>\n\n{text.message}'
+
                 self.bot.send_message(
-                    chat.id, single_text,
-                    reply_markup=self.kb_inl.kb_edit_single_text(text_id)
+                    chat.id, text_show,
+                    reply_markup=self.kb_inl.kb_edit_single_text(text.name)
                 )
         else:
             self.bot.send_message(
-                chat.id, 'Тестов для редактирования не найдено'
+                chat.id, 'Текстов для редактирования не найдено'
             )
 
-    def get_text(self, label):
+    def get_text(self, label: str):
         logger.info(f'-----> Запрошен приветственный текст из БД  ')
 
-        text = self.db.get_single_text(label)
-        if text:
-            content = text[3]
-            return content
-        raise Exception('Передан несуществующий в БД label')
-        # return ''
-
-    def save_content(self, text_id, content):
-        content = content.strip()
-        if content:
-            self.db.save_bot_text_by_id(text_id, content)
+        text = db_new.get_text_by_name(label)
+        if text is not None:
+            return text.message
         else:
-            raise Exception('Пустой текст затрет полностью старый текст!')
+            print('Передан несуществующий в БД label')
+            return ''
+
+    def save_content(self, name: str, content: str):
+        if content:
+            db_new.update_text(name, content)
+        else:
+            print('Пустой текст затрет полностью старый текст!')

@@ -8,8 +8,8 @@ class AdminParamsState(StatesGroup):
     future_step = State()
     future_price_step = State()
 
-    forex_paire = State()
+    forex_pair = State()
     forex_price = State()
-    forex_help_paire = State()
+    forex_help_pair = State()
 
     count_trial_days = State()

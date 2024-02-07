@@ -2,8 +2,8 @@ from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 
+from initialize import pay_guard
 from db_new import db_new, LANGUAGES
-from db import Database
 from GuardPaymentAccess import GuardPaymentAccess
 from AuthRoles import check_registrate, registration
 
@@ -11,18 +11,15 @@ from AuthRoles import check_registrate, registration
 class AuthMiddleWare(BaseMiddleware):
     """Класс защитник авторизации"""
 
-    def __init__(self, bot, db: Database, limit=2) -> None:
+    def __init__(self, bot, limit=2) -> None:
         self.last_time = {}
         self.limit = limit
         self.update_types = ['message', 'edited_message']
         self.bot = bot
-        self.db = db
 
     def pre_process(self, message: types.Message, data):
         user_id = message.from_user.id
         username = message.from_user.username
-
-        PayGuarder = GuardPaymentAccess(self.db)
 
         data['has_registered_now'] = False
 
@@ -42,7 +39,7 @@ class AuthMiddleWare(BaseMiddleware):
                 ref_id = 0
 
             registration(user_id, username, ref_id)
-            PayGuarder.set_trial(message)
+            pay_guard.set_trial(message)
 
             db_new.create_tg_user_tables(user_db_id)
 

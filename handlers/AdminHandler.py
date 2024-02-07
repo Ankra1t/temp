@@ -11,16 +11,13 @@ import variables as vars
 
 
 # Редактирование текстов
-def admin_edit_text(message: types.Message, text_id: int):
-    logger.info(
-        '-----> Получили username пользователя для установки нужной подписки ')
-
+def admin_edit_text(message: types.Message, name: str):
     try:
-        text_editor.save_content(text_id, message.text)
+        text_editor.save_content(name, message.text or '')
     except Exception as e:
         logger.error(f'Ошибка TextEditor.save_content [{e}]')
 
-    bot.send_message(message.chat.id, f'Текс под id={text_id} сохранен ...',
+    bot.send_message(message.chat.id, f'Текс под name={name} сохранен ...',
                      reply_markup=kb_inl_admin.kb_edit_single_text_updated())
 
 

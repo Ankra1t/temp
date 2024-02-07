@@ -1,17 +1,16 @@
 import re
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
 from BlockTGBotSender import BlockTGBotSender
 
 from CALCULATE.common.messages import msg_digit_error
-from MAIN.start import send_start_by_user
 from MAIN.states import AdminPostsState
 from MAIN.callbacks import kb_posts_back, kb_post_add_confirm, kb_post_confirm, send_admin_post, kb_posts
 from MAIN.common.utils import get_post_from_message
 
-from db import db
+from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
 from keyboard_reply import kb_live_cancel
 from messages.workers import admin_fut_posts_msg
@@ -282,7 +281,7 @@ def handle_action_post(action: Literal['send', 'delete']):
                 reply_markup=kb_posts_back())
             return
 
-        post = db.get_fut_post(post_id)
+        post = db_new.get_post(post_id)
 
         if post is None:
             bot.send_message(chat_id, f'Пост с ID: {post_id} - не существует!')

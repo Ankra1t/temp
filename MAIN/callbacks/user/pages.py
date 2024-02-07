@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new
 from initialize import text_editor
 
@@ -63,8 +62,9 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     referals = db_new.get_user_referals(user_id)
 
     count_ref = len(referals)
-    money = db.get_pay_money(user_id)
-    balance = db.get_balance(user_id)
+    # TODO - добавить потраченные деньги и баланс пользователя
+    money = 0
+    balance = 0
 
     bot.delete_state(user_id, chat_id)
 

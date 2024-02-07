@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from models import User, UserInfo, Subscribe
 
 from db_new import db_new
-from db import Database
 
 
 class GuardPaymentAccess():
@@ -21,15 +20,14 @@ class GuardPaymentAccess():
         - balance текущий баланс (pay_money - потраченная сумма)
     """
 
-    def __init__(self, db: Database) -> None:
-        self.db = db
+    def __init__(self) -> None:
         self.mess = ''
         self.dt_format = "%Y-%m-%d %I:%M"
         self.dt_format_admin_show = "%d/%m/%Y %I:%M"
         self.dt_format_user_show = "%d/%m/%Y"
 
     # Тестовые подписки
-    def set_trial(self, message: types.Message, custom_days = None):
+    def set_trial(self, message: types.Message, custom_days=None):
         """Дать новому пользователю тестовый период """
         current_trial_days = int(custom_days)
         if not custom_days:
@@ -132,26 +130,16 @@ class GuardPaymentAccess():
 
     def get_paid_users(self):
         """Получаем пользователей с активными подписками для платной рассылки сигналов"""
-        # Выбрать пользователей только с активной и действительной по дате подпиской
-        date_fin = datetime.now()
-        # date_fin = datetime.now() + timedelta(days=5)
-        date_bonus = date_fin + timedelta(days=2)
-        finish_date = date_fin.strftime(self.dt_format)
-
-        # Добавлена фильтрация бан пользователей
-        user_list = self.db.get_subsribe_users(finish_date, date_bonus)
-
-        return user_list
+        return db_new.get_subsribed_users()
 
     def get_paid_more1_users(self):
         """Получаем пользователей с больше чем одной подпиской"""
-        user_list = self.db.get_subsribe_more1_users()
-        return user_list
+        return db_new.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
     def valid_use_calc(self, user_id: int):
-
-        uses_count = db_new.get_calculator_uses_count(user_id) or 0
+        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
 
         # Проверять есть ли платная подписка
         if self.paid_user_product(user_id, 'calc'):
@@ -160,15 +148,13 @@ class GuardPaymentAccess():
         # Проверить есть ли остаток использований калькулятора
         if uses_count > 0:
             return True
-          
+
         return False
-    
+
     def paid_user_product(self, user_id, product=None):
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
-        client = db_new.get_user_by_id(user_id)
-
         # Проверяем текущие активные платные подписки
-        subscribes = db_new.get_active_subscribes_by_user_id(client.tg_id)
+        subscribes = db_new.get_active_subscribes_by_user_id(user_id)
 
         if not subscribes:
             return False
@@ -180,9 +166,9 @@ class GuardPaymentAccess():
             fin_date_subscribe_obj = sub_item.finish_dt
 
             if fin_date_subscribe_obj > now:
-                price_item = db_new.get_price_by_id(sub_item.prices_id)
+                price_item = db_new.get_price_by_id(sub_item.prices_id or 0)
 
-                if price_item.type_product == product:
+                if price_item is not None and price_item.type_product == product:
                     return True
             else:
                 db_new.set_deactivate_subscribe(sub_item.id)
