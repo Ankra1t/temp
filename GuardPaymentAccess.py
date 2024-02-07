@@ -31,9 +31,9 @@ class GuardPaymentAccess():
     # Тестовые подписки
     def set_trial(self, message: types.Message, custom_days = None):
         """Дать новому пользователю тестовый период """
-        current_trial_days = custom_days
+        current_trial_days = int(custom_days)
         if not custom_days:
-            current_trial_days = self.get_option_trial_days()
+            current_trial_days = int(self.get_option_trial_days())
 
         finish_date = datetime.now() + timedelta(days=current_trial_days)
 

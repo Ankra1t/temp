@@ -113,7 +113,7 @@ class BlockTGBotSender(object):
             # Учесть массовую рассылку отложенных постов
 
             users = db_new.get_all_users()
-            users = pay_guard.get_valid_users_for_signals()
+            # users = pay_guard.get_valid_users_for_signals()
             if not users:
                 return False
 

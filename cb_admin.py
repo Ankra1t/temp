@@ -2,8 +2,9 @@ from telebot import types
 from datetime import datetime
 from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
-from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
+from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager, base_statis
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
+from messages.statistics import admin_main_statistics
 import variables as vars
 from models import User
 from db_new import db_new
@@ -13,7 +14,8 @@ from common.utils import set_state_data
 from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
     kb_admin_users_back, kb_admin_workers_back,
-    send_admin_workers
+    send_admin_workers, kb_statistics,
+    kb_statistics_back
 )
 from MAIN.states import AdminTariffState
 
@@ -30,6 +32,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
+    message = call.message
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
@@ -61,6 +64,21 @@ def admin_main_callbacks(call: types.CallbackQuery):
             menu_msg('Параметры'), chat_id, mes_id,
             reply_markup=kb_params()
         )
+
+    if type == 'payment':
+
+        # Общие Показатели
+        count_subscribes = base_statis.count_payments()
+        summ_all_users = base_statis.summ_by_transactions()
+
+        bot.edit_message_text(
+            admin_main_statistics(count_subscribes, summ_all_users), chat_id, mes_id,
+            reply_markup=kb_statistics()
+        )
+
+        # Вывести всех участников по транзакциям
+    #     Вывести оплаченные транзакции
+
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
