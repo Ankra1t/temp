@@ -2,7 +2,6 @@ from telebot import types, TeleBot
 from datetime import datetime, timedelta
 
 from keyboard_inlines import Admin_kb_inlines
-from db import Database
 from db_new import db_new, Database as DatabaseNew
 from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
 
