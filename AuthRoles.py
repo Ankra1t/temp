@@ -55,13 +55,14 @@ def change_password(id: int, password: str):
 def check_registrate(tg_id: int):
     """Возвращает роль"""
     check_user = db_new.get_user_id_by_tg_id(tg_id)
-    check_worker = db.check_worker(tg_id)
-    user_role = None
+    worker_role = db_new.get_worker_role(tg_id)
 
-    if check_worker:
-        user_role = db.get_role(tg_id)
-    elif check_user != 0:
+    if worker_role is not None:
+        user_role = worker_role
+    elif check_user <= 0:
         user_role = 0
+    else:
+        user_role = None
 
     return user_role
 

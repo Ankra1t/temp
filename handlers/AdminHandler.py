@@ -92,9 +92,3 @@ def get_user_for_cancel_subscribe(message: types.Message):
         bot.register_next_step_handler(
             message, get_user_for_cancel_subscribe)
 
-
-# Изменить тех. поддержку
-def update_support(message: types.Message):
-    vars.sup_name = message.text
-    bot.send_message(message.chat.id, f'Новый аккаунт тех.поддерки: {vars.sup_name} ?',
-                     reply_markup=kb_inl_admin.workers_choice('update_support'))

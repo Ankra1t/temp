@@ -117,7 +117,8 @@ class Database:
             print(f'ERROR[get_all_users]: {e}')
             return []
 
-    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''): # !deprecated
+    # !deprecated
+    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = ''):
         """Получить список всех пользователей"""
         query = "SELECT * FROM users "
         # if filter == 'by_paid':
@@ -211,7 +212,8 @@ class Database:
         except Exception as e:
             print(f'ERROR[add_base_table]: {e}')
 
-    def get_user_base(self, id: int) -> dict[BASE_VALUE_TYPE, Any]: # !deprecated
+    # !deprecated
+    def get_user_base(self, id: int) -> dict[BASE_VALUE_TYPE, Any]:
         """Получить значения для автозаполнения пользователя"""
         query = 'SELECT base_deposit, base_risk_percent, base_currency FROM calc_user_settings WHERE id = ?'
         params = (id,)
@@ -230,7 +232,7 @@ class Database:
                 'base_currency': None
             }
 
-    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float): # !deprecated
+    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):  # !deprecated
         """Установить значения для автозаполения пользователя"""
         value = round(value, 2)
         query = f'INSERT INTO calc_user_settings ({type}, id) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET {type} = ?'
@@ -244,7 +246,7 @@ class Database:
             print(f'ERROR[set_user_base]: {e}')
             return False
 
-    def set_user_currency(self, user_id: int, value: str): # !deprecated
+    def set_user_currency(self, user_id: int, value: str):  # !deprecated
         """Установить значения для автозаполения пользователя"""
         query = f'UPDATE calc_user_settings SET base_currency = ? WHERE id = ?'
         params = (value, user_id)
@@ -268,7 +270,7 @@ class Database:
             print(f'ERROR[get_user_lang]: {e}')
             return None
 
-    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE): # !deprecated
+    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE):  # !deprecated
         """Установить язык пользователя"""
         if len(lang) > 5:
             return False
@@ -283,7 +285,7 @@ class Database:
             print(f'ERROR[set_user_lang]: {e}')
             return False
 
-    def get_calculator_users_id(self) -> list[int]: # !deprecated
+    def get_calculator_users_id(self) -> list[int]:  # !deprecated
         """Получить всех пользователей Калькулятора Бота"""
         query = 'SELECT id FROM calc_user_settings'
 
@@ -293,7 +295,7 @@ class Database:
             print(f'ERROR[get_calculator_users_id]: {e}')
             return []
 
-    def delete_calculator_user(self, user_id: int): # !deprecated
+    def delete_calculator_user(self, user_id: int):  # !deprecated
         """Удалить пользователя из калькулятора"""
         query = "DELETE FROM calc_user_settings WHERE id = ?"
         params = (user_id,)
@@ -305,7 +307,7 @@ class Database:
             print(f'ERROR[delete_calculator_user]: {e}')
             return False
 
-    def get_calculator_uses_count(self, user_id: int) -> int | None: # !deprecated
+    def get_calculator_uses_count(self, user_id: int) -> int | None:  # !deprecated
         """Получить количество использований калькулятора пользователем"""
         query = 'SELECT uses_count FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -316,7 +318,7 @@ class Database:
             print(f'ERROR[get_calculator_uses_count]: {e}')
             return None
 
-    def minus_calculator_uses_count(self, user_id: int): # !deprecated
+    def minus_calculator_uses_count(self, user_id: int):  # !deprecated
         """Минус 1 к значению использований у пользователя"""
         query = "UPDATE calc_user_settings SET uses_count = ? WHERE id = ?"
         uses_count = self.get_calculator_uses_count(user_id) or 1
@@ -332,7 +334,7 @@ class Database:
 
         pass
 
-    def get_calculator_tp_show(self, user_id: int): # !deprecated
+    def get_calculator_tp_show(self, user_id: int):  # !deprecated
         """Получить коэфициенты тейк профит на показ"""
         query = 'SELECT take_profit_to_show FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -343,7 +345,7 @@ class Database:
             print(f'ERROR[get_calculator_tp_show]: {e}')
             return None
 
-    def set_calculator_tp_show(self, user_id: int, tp: str): # !deprecated
+    def set_calculator_tp_show(self, user_id: int, tp: str):  # !deprecated
         """Установить коэфициенты тейк профит на показ"""
         query = "UPDATE calc_user_settings SET take_profit_to_show = ? WHERE id = ?"
         params = (tp, user_id)
@@ -356,7 +358,8 @@ class Database:
             print(f'ERROR[set_calculator_tp_show]: {e}')
             return False
 
-    def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None: # !deprecated
+    # !deprecated
+    def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None:
         """Получить рынок пользователя"""
         query = 'SELECT market FROM calc_user_settings WHERE id = ?'
         params = (user_id,)
@@ -367,7 +370,8 @@ class Database:
             print(f'ERROR[get_calculator_user_market]: {e}')
             return None
 
-    def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE): # !deprecated
+    # !deprecated
+    def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
         query = "UPDATE calc_user_settings SET market = ? WHERE id = ?"
         params = (market, user_id)
@@ -380,11 +384,9 @@ class Database:
             print(f'ERROR[set_calculator_user_market]: {e}')
             return False
 
-    # ================================= Рабочий персонал
-    # Гл.админ
-    def add_worker(self, id: int, username: str, role):
+    # ================================= Рабочий персонал # !deprecated
+    def add_worker(self, id: int, username: str, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        self.del_user(id)
         query = "INSERT INTO workers(id, username, role) VALUES(?, ?, ?)"
         params = (id, username, role)
 
@@ -414,7 +416,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Обычный админ
     def get_redactors(self):
         """Получить всех редакторов"""
         try:
@@ -423,7 +424,6 @@ class Database:
             print(f'ERROR[get_all_global_admins]: {e}')
             return []
 
-# Тех. поддержка
     def get_support(self):
         """Получение тех. поддержки"""
         try:
@@ -447,7 +447,6 @@ class Database:
             print(f'ERROR[update_sup]: {e}')
             return False
 
-    # Получаем список всех работников
     def get_all_workes(self):
         """Получить всех работников"""
         try:

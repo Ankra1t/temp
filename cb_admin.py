@@ -1,6 +1,6 @@
 from telebot import types
 from datetime import datetime
-from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe, update_support
+from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
 from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
@@ -11,13 +11,13 @@ from db_new import db_new
 from messages.workers import admin_main_msg
 from common.utils import set_state_data
 from MAIN.callbacks import (
-    kb_admin_workers_actions, kb_params, kb_posts,
-    kb_admin_users, kb_admin_users_back
+    kb_params, kb_posts, kb_admin_users,
+    kb_admin_users_back, kb_admin_workers_back,
+    send_admin_workers
 )
 from MAIN.states import AdminTariffState
 
-from cb_filters import (admin_default_factory, adm_action, admin_main_factory,
-                        admin_workerss_factory)
+from cb_filters import (admin_default_factory, adm_action, admin_main_factory)
 from config_logger import logger
 
 
@@ -44,10 +44,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
         )
 
     if type == 'workers':
-        bot.edit_message_text(
-            menu_msg('Работники'), chat_id, mes_id,
-            reply_markup=kb_inl_admin.workers()
-        )
+        send_admin_workers(bot, call.message, user_id)
 
     if type == 'fut_posts':
         bot.edit_message_text(
@@ -70,83 +67,14 @@ def admin_main_callbacks(call: types.CallbackQuery):
     bot.answer_callback_query(call.id)
 
 
-@bot.callback_query_handler(func=None, adminn_workerss=admin_workerss_factory.filter())
-def admin_workers_callbacks(call: types.CallbackQuery):
-    callback_data: dict = admin_workerss_factory.parse(call.data)
-    type = callback_data['type']
-    logger.info(f'Кастомное callback_query меню ***{type}***')
-
-    chat_id = call.message.chat.id
-    user_id = call.from_user.id
-    mes_id = call.message.id
-
-    if type == 'admins':
-        bot.edit_message_text(
-            menu_msg('Главные админы'), chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions('admin')
-        )
-
-    if type == 'redactors':
-        bot.edit_message_text(
-            menu_msg('Редакторы'), chat_id, mes_id,
-            reply_markup=kb_admin_workers_actions(
-                'redactor')
-        )
-
-    if type == 'support':
-        sup = db.get_support()
-        bot.edit_message_text(f'Тех.поддержка: {sup[0][2]}', chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_support())
-
-    if type == 'workers_list':
-        mas = db.get_all_workes()
-        res = ''
-        role = ''
-        for i in range(0, len(mas)):
-            if mas[i][2] == 1:
-                role = 'Гл.админ'
-            if mas[i][2] == 2:
-                role = 'Редактор'
-            if mas[i][2] == 3:
-                role = 'Тех.поддержка'
-            res += '\n' + str(mas[i][0]) + ' | ' + \
-                mas[i][1] + '\nДолжность: ' + role + '\n'
-        bot.edit_message_text(res, chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers())
-
-    bot.clear_step_handler(call.message)
-    bot.delete_state(user_id, chat_id)
-    bot.answer_callback_query(call.id)
-
-
 @bot.callback_query_handler(func=None, admin_default=admin_default_factory.filter())
 def admin_default_callbacks(call: types.CallbackQuery):
-    callback_data: dict[str, str] = admin_default_factory.parse(call.data)
-    type = callback_data['type']
-    logger.info(f'Кастомное callback_query меню ***{type}***')
+    callback_data = admin_default_factory.parse(call.data)
+    type = callback_data.get('type', '')
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
     user_id = call.from_user.id
-
-    if 'update_support' in type and type != 'update_support':
-        if 'yes' in type:
-            vars.sup_name = vars.sup_name.replace('@', '')
-            db.update_sup(vars.sup_name)
-            bot.edit_message_text('Изменено!', chat_id, mes_id)
-        if 'no' in type:
-            vars.sup_name = ''
-
-        sup = db.get_support()
-        bot.send_message(
-            chat_id, f'Тех.поддержка: {sup[0][2]}', reply_markup=kb_inl_admin.workers_support())
-
-    if type == 'update_support':
-        bot.edit_message_text('Отправьте ник ТГ для тех. поддержки с @',
-                              chat_id, mes_id,
-                              reply_markup=kb_inl_admin.workers_actions_back('support'))
-        bot.register_next_step_handler(
-            call.message, update_support)
 
     # ## Главное меню
     if type == 'go_main':
@@ -155,7 +83,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
             count_all = db_new.get_users_count()
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
-            count_admins = len(db.get_all_workes())
+            count_admins = len(db_new.get_all_workes())
             count_fut_posts = len(db.get_fut_all_posts())
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)

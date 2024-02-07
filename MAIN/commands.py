@@ -42,8 +42,9 @@ def _about_us(message: Message, bot: TeleBot):
 
 
 def _support(message: Message, bot: TeleBot):
-    sup = db.get_support()[0][2]
+    sup = db_new.get_support_name()
     msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
+
     bot.send_message(message.chat.id, msg, reply_markup=kb_user_sup(sup))
     bot.delete_state(message.from_user.id, message.chat.id)
 

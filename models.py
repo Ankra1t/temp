@@ -162,9 +162,19 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+
 # class Client(BaseModel):
 #     user: UserInfo | None = None
 #     subscribes: Optional[list[Subscribe], Subscribe, None] = None
+
+
+class Worker(BaseModel):
+    id: int
+    tg_id: int
+    username: str
+    role: int
+
+
 
 class PostDetails(BaseModel):
     name: str
