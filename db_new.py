@@ -632,8 +632,6 @@ class Database:
             self.connection.rollback()
             return False
 
-
-
     # # # # # # # #  Users
     def _data_to_user(self, data: DictRow):
         return UserInfo(
@@ -1300,7 +1298,7 @@ class Database:
             )
 
         query = """
-            INSERT INTO tgbot_posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
+            INSERT INTO tgbot_posts (content, message_type, media, direct, date_time, open_price, stop_loss, name, ticker)
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (post.content, post.mes_type, post.media,
@@ -1395,9 +1393,9 @@ class Database:
 
         try:
             if check_text is None:
-                query = 'UPDATE tgbot_texts SET message = %s, message_type = %s WHERE name = %s'
-            else:
                 query = 'INSERT INTO tgbot_texts(message, message_type, name) VALUES(%s, %s, %s)'
+            else:
+                query = 'UPDATE tgbot_texts SET message = %s, message_type = %s WHERE name = %s'
 
             params = (text, mes_type, name)
 

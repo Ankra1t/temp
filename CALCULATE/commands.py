@@ -14,7 +14,6 @@ def _start(message: Message, bot: TeleBot, data: dict):
     chat_id = message.chat.id
 
     has_registered_now = data.get('has_registered_now')
-
     if has_registered_now:
         bot.send_message(
             chat_id, msg_welcome(user_id),

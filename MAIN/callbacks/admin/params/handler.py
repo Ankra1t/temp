@@ -60,10 +60,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     elif type == 'change':
         bot.edit_message_text(
             'Что изменяем?', chat_id, mes_id,
-            reply_markup=kb_params_change())
-
-
-
+            reply_markup=kb_params_change()
+        )
     elif 'choice' in type:
         if 'yes' in type:
             with bot.retrieve_data(user_id, chat_id) as data:
