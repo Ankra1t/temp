@@ -422,7 +422,6 @@ class Database:
             )
         )
 
-
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(

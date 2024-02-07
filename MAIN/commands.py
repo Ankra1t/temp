@@ -60,6 +60,7 @@ def _calc(message: Message, bot: TeleBot):
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
+
     summ_all_users = base_statis.summ_by_transactions()
     print(f'summ_all_users ')
     print(summ_all_users)
@@ -68,6 +69,7 @@ def _test_check_func(message: Message, bot: TeleBot):
     base_statis.show_paid_users(message)
 
     return False
+
     users = pay_guard.get_valid_users_for_signals()
     print(f'users  ')
     print(users )

@@ -8,8 +8,11 @@ from common.utils import get_calculation
 
 from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
 from db_new import db_new
+
 from initialize import bot, pay_guard
 from models import Post, UserInfo
+
+
 
 
 def send_message_by_type(
@@ -113,7 +116,9 @@ class BlockTGBotSender(object):
             # Учесть массовую рассылку отложенных постов
 
             users = db_new.get_all_users()
+
             # users = pay_guard.get_valid_users_for_signals()
+
             if not users:
                 return False
 
