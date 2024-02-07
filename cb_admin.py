@@ -99,10 +99,12 @@ def admin_default_callbacks(call: types.CallbackQuery):
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
             count_all = db_new.get_users_count()
+
             count_with_sub = len(db.get_users_with_sub())
             count_old = len(db.get_users_with_more_pay())
             count_admins = len(db_new.get_all_workes())
             count_fut_posts = len(db.get_fut_all_posts())
+
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)
 

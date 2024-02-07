@@ -539,7 +539,25 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_all]: {e}')
+            print(f'ERROR[get_paid_transactions_summ]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_summ_period(self, start_date, fin_date):
+        """Суммы по транзакциям за период"""
+        query = ("SELECT sum(sum) FROM transactions "
+                 "WHERE (payment_date BETWEEN %s AND %s ) "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (start_date, fin_date, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_summ_period]: {e}')
             self.connection.rollback()
             return []
 

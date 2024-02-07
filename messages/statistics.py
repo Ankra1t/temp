@@ -23,11 +23,26 @@ def admin_statistics_periods(count_today=0, summ_today=0,
     return f"""
 <b>Продажи по периодам:</b>
 
-За сутки: {count_today} шт, сумма {summ_today} USDT
-За неделю: {count_week} шт, сумма {summ_week} USDT
-За месяц: {count_month} шт, сумма {summ_month} USDT
-За 6 месяцев: {count_half_year} шт, сумма {summ_half_year} USDT
-За 1 год: {count_year} шт, сумма {summ_year} USDT
+За сутки:  <b>{count_today} шт</b>, сумма <b>{summ_today} USDT</b>
+За неделю: <b>{count_week} шт</b>,  сумма <b>{summ_week} USDT</b>
+За месяц:  <b>{count_month} шт</b>, сумма <b>{summ_month} USDT</b>
+За 6 мес.: <b>{count_half_year} шт</b>, сумма <b>{summ_half_year} USDT</b>
+За 1 год:  <b>{count_year} шт</b>, сумма <b>{summ_year} USDT</b>
 
 Смотреть клиентов за выбранный период:
 """
+
+
+def admin_statistics_products(count_signals=0, summ_signals=0,
+                             count_calc=0, summ_calc=0,
+                             count_calc_signals=0, summ_calc_signals=0
+                             ):
+    return f"""
+<b>Продажи по продуктам:</b>
+
+Продукт "Сигналы":  <b>{count_signals} шт</b>, сумма <b>{summ_signals} USDT</b>
+Продукт "Калькулятор":  <b>{count_calc} шт</b>, сумма <b>{summ_calc} USDT</b>
+Продукт "Калькулятор+сигналы":  <b>{count_calc_signals} шт</b>, сумма <b>{summ_calc_signals} USDT</b>
+
+Выберите продукт:
+    """

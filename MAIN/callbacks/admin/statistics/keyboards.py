@@ -36,8 +36,8 @@ def kb_stats_periods():
     btn1 = getButton('Сегодня', 'stat_pay_period_choose', 'today')
     btn2 = getButton('За неделю', 'stat_pay_period_choose', 'week')
     btn3 = getButton('За месяц', 'stat_pay_period_choose', 'month' )
-    btn4 = getButton('За период', 'stat_pay_period_choose', 'start_to_end' )
-    btn5 = getButton('С даты по сегодня', 'stat_pay_period_choose', 'start_date' )
+    btn4 = getButton('За период', 'stat_pay_period_choose_start_to_end')
+    btn5 = getButton('С даты по сегодня', 'stat_pay_period_choose_start_date')
 
     keyboard.add(btn1, btn2)
     keyboard.add(btn3, btn4)
@@ -46,5 +46,16 @@ def kb_stats_periods():
     keyboard.add(kb_inl_admin.go_statistics_btn, kb_inl_admin.go_main_btn)
     return keyboard
 
+def kb_stats_products():
+    keyboard = InlineKeyboardMarkup(row_width=2)
 
+    btn1 = getButton('Сигналы', 'stat_pay_product_choose', 'calc')
+    btn2 = getButton('Калькулятор', 'stat_pay_product_choose', 'calc')
+    btn3 = getButton('Сигналы+калькулятор', 'stat_pay_product_choose', 'calc_signals' )
+
+    keyboard.add(btn1, btn2)
+    keyboard.add(btn3)
+
+    keyboard.add(kb_inl_admin.go_statistics_btn, kb_inl_admin.go_main_btn)
+    return keyboard
 
