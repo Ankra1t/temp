@@ -59,6 +59,29 @@ def _calc(message: Message, bot: TeleBot):
 
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
+
+    users = pay_guard.get_valid_users_for_signals()
+    print(f'users  ')
+    print(users )
+
+    return False
+    print(f'Получаем всех пользователей с подпиской - платной и пробной ')
+    clients = db_new.get_active_subscribes_all_users()
+    # print(f'clients ')
+    # print(clients)
+    # print(f'count {len(clients)}')
+    return False
+
+
+    print(f'Тестим обнуление старых платных подписок ')
+    db_new.set_unactive_subscribes('paid')
+    # print(f'Тестим обнуление старых TRIAL подписок ')
+    db_new.set_unactive_subscribes('trial')
+
+    return False
+
+
+
     # Мой тестовый клиент в телеграм
     user_id = 423
     client = db_new.get_user_by_id(user_id)
