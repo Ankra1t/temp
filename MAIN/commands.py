@@ -1,10 +1,10 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from config_logger import logger
-from initialize import pay_guard
 
-from db import db
+from config_logger import logger
+from initialize import pay_guard, base_statis
+
 from db_new import db_new
 from keyboard_reply import kb_user_sup
 
@@ -26,17 +26,17 @@ def _start(message: Message, bot: TeleBot, data: dict):
 
 
 def _faq(message: Message, bot: TeleBot):
-    logger.info(f'Запущена команда FAQ')
+    text = db_new.get_text_by_name('FAQ')
+    msg = text.message if (text is not None) else '*Ошибка*'
 
-    msg = db.get_other_by_name('FAQ') or '*Ошибка*'
     bot.send_message(message.chat.id, msg)
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
 def _about_us(message: Message, bot: TeleBot):
-    logger.info(f'Запущена команда "О нас"')
+    text = db_new.get_text_by_name('О нас')
+    msg = text.message if (text is not None) else '*Ошибка*'
 
-    msg = db.get_other_by_name('О нас') or '*Ошибка*'
     bot.send_message(message.chat.id, msg)
     bot.delete_state(message.from_user.id, message.chat.id)
 
@@ -59,6 +59,45 @@ def _calc(message: Message, bot: TeleBot):
 
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
+
+
+    per = 'today'
+    count_ = base_statis.count_payments('today')
+    print(f'count_ сколько пользователей за период {per}')
+    print(count_)
+
+    return False
+    summ_all_users = base_statis.summ_by_transactions()
+    print(f'summ_all_users ')
+    print(summ_all_users)
+
+    return False
+    base_statis.show_paid_users(message)
+
+    return False
+
+    users = pay_guard.get_valid_users_for_signals()
+    print(f'users  ')
+    print(users )
+
+    return False
+    print(f'Получаем всех пользователей с подпиской - платной и пробной ')
+    clients = db_new.get_active_subscribes_all_users()
+    # print(f'clients ')
+    # print(clients)
+    # print(f'count {len(clients)}')
+    return False
+
+
+    print(f'Тестим обнуление старых платных подписок ')
+    db_new.set_unactive_subscribes('paid')
+    # print(f'Тестим обнуление старых TRIAL подписок ')
+    db_new.set_unactive_subscribes('trial')
+
+    return False
+
+
+
     # Мой тестовый клиент в телеграм
     user_id = 423
     client = db_new.get_user_by_id(user_id)
@@ -71,7 +110,9 @@ def _test_check_func(message: Message, bot: TeleBot):
     subscribes = db_new.get_active_subscribes_by_user_id(client.tg_id)
     print(f'subscribes ')
     print(subscribes)
-    print(f'subscribes {subscribes.tg_user_id} prices_id {subscribes.prices_id} {subscribes.type}')
+    print(
+        f'subscribes {subscribes.tg_user_id} prices_id {subscribes.prices_id} {subscribes.type}')
+
 
 def commands_registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
@@ -90,5 +131,3 @@ def commands_registration(bot: TeleBot):
     reg_mes(_calc, commands=['calc'])
 
     reg_mes(_test_check_func, commands=['tasty'])
-
-

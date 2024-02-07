@@ -15,6 +15,8 @@ class Admin_kb_inlines(object):
             '🔙 Отложенные посты', callback_data=admin_main_factory.new(type='fut_posts'))
         self.go_params_btn = types.InlineKeyboardButton(
             '🔙 Параметры', callback_data=admin_main_factory.new(type='params'))
+        self.go_statistics_btn = types.InlineKeyboardButton(
+            '🔙 Оплата', callback_data=admin_main_factory.new(type='payment'))
 
     # Главная
     def main(self):
@@ -84,10 +86,10 @@ class Admin_kb_inlines(object):
         return keyboard
 
     # Редактирование текста клавиатуры
-    def kb_edit_single_text(self, text_id):
+    def kb_edit_single_text(self, text_name: str):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         edit = types.InlineKeyboardButton(text='Редактировать ✏️',
-                                          callback_data=adm_action.new(action='edit_bot_text', id=text_id))
+                                          callback_data=adm_action.new(action='edit_bot_text', id=text_name))
         keyboard.add(edit)
         return keyboard
 

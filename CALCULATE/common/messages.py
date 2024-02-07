@@ -23,6 +23,21 @@ market_translates = {
 
 
 # Основные страницы
+def msg_uses_count(user_id: int, count: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': {
+            'uses': 'Бесплатных расчетов',
+        },
+        'en': {
+            'uses': 'Free calculations',
+        }
+    }
+
+    return f'{text[lang]["uses"]}: <b>{count}</b>'
+
+
 def msg_main(user_id: int, uses_count: int):
     lang = get_lang(user_id)
 
@@ -47,7 +62,7 @@ def msg_main(user_id: int, uses_count: int):
         f'1. <b>{texts[lang]["1"]}</b>',
         f'2. <b>{texts[lang]["2"]}</b>',
         '',
-        f'{texts[lang]["uses"]}: <b>{uses_count}</b>'
+        msg_uses_count(user_id, uses_count)
     ))
 
 
@@ -276,7 +291,7 @@ def msg_ticker_not_found(user_id: int, ticker: str):
     ])
 
 
-def msg_paire_error(user_id: int):
+def msg_pair_error(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -287,7 +302,7 @@ def msg_paire_error(user_id: int):
     return f'❗️ {texts[lang]}:'
 
 
-def msg_paire_not_found(user_id: int, paire: str):
+def msg_pair_not_found(user_id: int, pair: str):
     lang = get_lang(user_id)
 
     texts = {
@@ -295,7 +310,7 @@ def msg_paire_not_found(user_id: int, paire: str):
         'en': 'There is no pair in the base'
     }
 
-    return f'❗️ {texts[lang]} {paire}:'
+    return f'❗️ {texts[lang]} {pair}:'
 
 
 def msg_digit_error(user_id: int):
@@ -477,7 +492,7 @@ def msg_calculate_forex_result(
     deposit: float,
     val_dep: str,
     risk_percent: float,
-    paire: str,
+    pair: str,
     open_price: float,
     stop_loss: float,
     take_profit_1: float,
@@ -492,7 +507,7 @@ def msg_calculate_forex_result(
         'ru': {
             'dep': 'Депозит',
             'risk': '% риска на сделку',
-            'paire': 'Валютная пара',
+            'pair': 'Валютная пара',
             'open': 'Цена открытия',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
@@ -503,7 +518,7 @@ def msg_calculate_forex_result(
         'en': {
             'dep': 'Deposit',
             'risk': '% risk of a deal',
-            'paire': 'Currency pair',
+            'pair': 'Currency pair',
             'open': 'Цена открытия',
             'sl': 'Stop loss',
             'tp': 'Take profit',
@@ -517,7 +532,7 @@ def msg_calculate_forex_result(
         f'{BULLET} {point[lang]["dep"]}: <b>{deposit} {val_dep}</b>',
         f'{BULLET} {point[lang]["risk"]}: <b>{risk_percent}</b>',
         '',
-        f'{BULLET} {point[lang]["paire"]}: <b>{paire}</b>',
+        f'{BULLET} {point[lang]["pair"]}: <b>{pair}</b>',
         f'{BULLET} {point[lang]["open"]}: <b>{open_price}</b>',
         f'{BULLET} {point[lang]["sl"]}: <b>{stop_loss}</b>',
         f'{BULLET} {point[lang]["tp"]}: <b>{round(take_profit_1, 2)} / {round(take_profit_2, 2)} / {round(take_profit_3, 2)}</b>',
@@ -573,7 +588,7 @@ def msg_enter_currency(user_id: int):
     return f'✍ {texts[lang]}:'
 
 
-def msg_enter_paire(user_id: int):
+def msg_enter_pair(user_id: int):
     lang = get_lang(user_id)
 
     texts = {

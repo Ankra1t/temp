@@ -7,7 +7,6 @@ from hashlib import sha256
 import json
 from datetime import datetime
 
-from db import Database
 from db_new import db_new
 from typing import Callable
 import requests
@@ -17,8 +16,7 @@ from models import Invoice, Price, Transactions, Update
 class Payments(object):
     """Класс обработки платежей, в том числе Cryptobot"""
 
-    def __init__(self, db: Database, token, network) -> None:
-        self.db = db
+    def __init__(self, token, network) -> None:
         self.dt_format = "%Y-%m-%d %I:%M"
         self.token = token
         self.network = network

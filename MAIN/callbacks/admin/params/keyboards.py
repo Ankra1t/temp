@@ -20,7 +20,8 @@ def kb_params():
     btn5 = getButton('Изменить пробный период', 'change_trial_days')
 
     keyboard.add(btn1, btn2)
-    keyboard.add(btn3, btn4)
+    keyboard.add(btn4)
+    # keyboard.add(btn3, btn4)
     keyboard.add(btn5)
     keyboard.add(kb_inl_admin.go_main_btn)
     return keyboard

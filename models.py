@@ -45,6 +45,7 @@ class Subscribe:
         type: str | None = None,
         prices_id: int | None = None,
         transactions_payed_id: int | None = None,
+        type_product: str | None = None
     ):
         self.id = id
         self.tg_user_id = tg_user_id
@@ -53,6 +54,7 @@ class Subscribe:
         self.active = active
         self.prices_id = prices_id
         self.transactions_payed_id = transactions_payed_id
+        self.type_product = type_product
 
 
 class User:
@@ -80,7 +82,7 @@ class Price:
         description: str | None = None,
         discount_percent: float | None = None,
         discount_findate: datetime | None = None,
-        type_product:  str | None = None
+        type_product: str | None = None
     ):
         self.id = id
         self.name = name
@@ -123,7 +125,6 @@ class Transactions:
         self.payment_date = payment_date
 
 
-
 class Purchase:
     def __init__(
         self,
@@ -151,7 +152,6 @@ class Purchase:
         self.create_date = create_date
 
 
-
 class UserInfo(BaseModel):
     id: int
     tg_id: int
@@ -160,12 +160,21 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+class Client(BaseModel):
+    user: UserInfo | None = None
+
+
+# class Client(BaseModel):
+#     user: UserInfo | None = None
+#     subscribes: Optional[list[Subscribe], Subscribe, None] = None
+
 
 class Worker(BaseModel):
     id: int
     tg_id: int
     username: str
     role: int
+
 
 
 class PostDetails(BaseModel):
@@ -184,3 +193,24 @@ class Post(BaseModel):
     date_time: datetime | None = None
     details: PostDetails | None = None
 
+
+class Text(BaseModel):
+    id: int
+    name: str
+    message: str
+    message_type: str
+    media_id: str
+
+
+class Future(BaseModel):
+    id: int
+    name: str
+    step: float
+    price_step: float
+
+
+class Forex(BaseModel):
+    id: int
+    pair: str
+    price: float
+    help_pair: str | None

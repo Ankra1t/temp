@@ -5,7 +5,8 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker
+from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker, Client
+
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
@@ -29,7 +30,6 @@ class Database:
             self.curs = self.connection.cursor(cursor_factory=DictCursor)
         except Exception as error:
             print(f"Ошибка при работе с PostgreSQL: {error}")
-
 
     # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
@@ -72,7 +72,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            print(f'ERROR[get_prices]: {e}')
+            print(f'ERROR[get_prices_by_product]: {e}')
             self.connection.rollback()
             return []
 
@@ -185,7 +185,6 @@ class Database:
             self.connection.rollback()
             return False
 
-
     # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
         return Subscribe(
@@ -242,10 +241,11 @@ class Database:
             self.connection.rollback()
             return None
 
+    # TODO - продумать данные функция работы с получнием пользователей с подпиской и без
     def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
         datetime_now = datetime.utcnow()
         query = (
-            'SELECT u.id_idx, u.created_at, u.username, u.count_sub, u.count_days, '
+            'SELECT u.id, u.created_at, u.username, u.count_sub, u.count_days, '
             'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
             'FROM subscribes AS sub, users AS u WHERE sub.finish_dt < %s '
             'AND sub.subscribe_type = %s AND sub.active = %s AND sub.tg_user_id = u.id'
@@ -348,7 +348,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_unactive_trial_subscribes]: {e}')
+            print(f'ERROR[set_unactive_subscribes]: {e}')
             self.connection.rollback()
             return False
 
@@ -382,6 +382,46 @@ class Database:
             self.connection.rollback()
             return None
 
+    def get_active_subscribes_all_users(self, ban: int = 0):
+        """Получить активные подписки для всех пользователей"""
+        query = (
+            'SELECT u.id AS id, u.username_tg AS username, u.id_telegram AS tg_id, '
+            'p.type_product AS type_product, '
+            'sub.id AS sub_id, '
+            'sub.finish_dt AS sub_finish, '
+            'ub.refer_id AS refer, u.ban AS ban, u.created_at AS created_at '
+            'FROM subscribes sub, users u, prices p, tgbotusers ub '
+            'WHERE '
+            '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
+            'AND sub.active = %s AND sub.tg_user_id = u.id_telegram '
+            'AND sub.prices_id = p.id '
+            'AND ub.user_id = u.id '
+            'AND u.ban = %s '
+        )
+        params = ('paid', 'trial', 1, ban)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return data
+            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+        except Exception as e:
+            print(f'ERROR[get_users_finished_subscribe]: {e}')
+            self.connection.rollback()
+            return []
+
+        pass
+
+    def _data_to_client(self, data: DictRow):
+        return Client(
+            user=UserInfo(
+                data.get('user_id')
+            ),
+            subscribes=Subscribe(
+
+            )
+        )
+
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(
@@ -397,6 +437,7 @@ class Database:
         )
 
     def add_transaction(self, trans: Transactions):
+
         query = (
             "INSERT INTO transactions"
             "(user_id, code, link, sum, currency, price_id, status) "
@@ -431,7 +472,7 @@ class Database:
             return None
 
     def get_paid_transactions_by_user(self, user_id: int):
-        """Получение тарифа"""
+        """Получить платные транзакции пользователя"""
         query = ("SELECT * FROM transactions "
                  "WHERE user_id = %s AND status = %s"
                  )
@@ -448,8 +489,80 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_paid_transactions_all(self):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT * FROM transactions "
+                 "WHERE status = %s"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_period(self, start_date, fin_date):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT * FROM transactions "
+                 "WHERE (payment_date BETWEEN %s AND %s ) "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (start_date, fin_date, status, )
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_summ(self):
+        """Суммы по транзакциям"""
+        query = ("SELECT sum(sum) FROM transactions "
+                 "WHERE status = %s"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_summ]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_summ_period(self, start_date, fin_date):
+        """Суммы по транзакциям за период"""
+        query = ("SELECT sum(sum) FROM transactions "
+                 "WHERE (payment_date BETWEEN %s AND %s ) "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (start_date, fin_date, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_summ_period]: {e}')
+            self.connection.rollback()
+            return []
+
     def get_purchases_by_user(self, user_id: int):
-        """Получение тарифа"""
+        """Получение покупок пользователя"""
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
                  "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
@@ -485,6 +598,29 @@ class Database:
             data.get('date'),
             data.get('create_date'),
         )
+
+    def get_purchases_all_users(self):
+        query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
+                 "t.sum AS real_sum, p.price AS tariff_price, "
+                 "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
+                 "t.created_at AS create_date "
+                 "FROM transactions t, prices p "
+                 "WHERE "
+                 "t.status = %s "
+                 "AND t.price_id = p.id"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            # return data
+            return list(map(lambda el: self._data_to_purchase(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            self.connection.rollback()
+            return []
 
     def set_transactions_complete(self, id: int):
         datetime_now = datetime.utcnow()
@@ -610,6 +746,38 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY + (
+            'WHERE u.ban = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= %s '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) > 0 '
+        )
+        params = (min_sub_count)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_subsribed_users]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_not_subscribed_users(self) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY + (
+            'WHERE u.ban = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) = 0 '
+        )
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_not_subscribed_users]: {e}')
+            self.connection.rollback()
+            return []
+
     def get_users_count(self):
         try:
             self.curs.execute("SELECT * FROM users")
@@ -665,6 +833,20 @@ class Database:
         """Получение пользователя"""
         query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
         params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_user(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_user_by_id]: {e}')
+            self.connection.rollback()
+            return None
+
+    def get_user_by_tg_id(self, tg_id: int):
+        """Получение пользователя"""
+        query = self.USER_INFO_QUERY + 'WHERE u.id_telegram = %s'
+        params = (tg_id,)
 
         try:
             self.curs.execute(query, params)
@@ -1087,6 +1269,245 @@ class Database:
             print(f'ERROR[get_option]: {e}')
             self.connection.rollback()
             return None
+
+    # Posts
+    def _data_to_post(self, data: DictRow):
+        open_price, stop_loss, name, ticker = (
+            data.get('open_price'),
+            data.get('stop_loss'),
+            data.get('name'),
+            data.get('ticker')
+        )
+        details = None
+
+        if (
+            open_price is not None
+            and stop_loss is not None
+            and name is not None
+            and ticker is not None
+        ):
+            details = PostDetails(
+                name=name,
+                open_price=open_price,
+                stop_loss=stop_loss,
+                ticker=ticker
+            )
+
+        return Post(
+            id=data.get('id'),
+            content=data.get('content'),
+            mes_type=data.get('message_type'),
+            media=data.get('media'),
+            direct=data.get('direct') or '',
+            date_time=data.get('date_time'),
+            details=details
+        )
+
+    def add_post(self, post: Post):
+        """Добавить отложенный пост"""
+        if post.details is None:
+            details = (None, None, None, None)
+        else:
+            details = (
+                post.details.open_price,
+                post.details.stop_loss,
+                post.details.name,
+                post.details.ticker
+            )
+
+        query = """
+            INSERT INTO tgbot_posts (content, message_type, media, direct, date_time, open_price, stop_loss, name, ticker)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (post.content, post.mes_type, post.media,
+                  post.direct, post.date_time, *details)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[add_post]: {e}')
+            self.connection.rollback()
+            return False
+
+    def delete_post(self, post_id: int):
+        """Удалить отложенный пост"""
+        try:
+            self.curs.execute(
+                "DELETE FROM tgbot_posts WHERE id = %s", (post_id,))
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[delete_post]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_all_posts(self) -> list[Post]:
+        """Получение отложенных постов"""
+        query = 'SELECT * FROM tgbot_posts'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_post(el), data))
+        except Exception as e:
+            print(f'ERROR[get_all_posts]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_post(self, id: int):
+        """Получить отложенный пост по id"""
+        query = 'SELECT * FROM tgbot_posts WHERE id = ?'
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_post(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_post]: {e}')
+            self.connection.rollback()
+            return None
+
+    # Texts
+    def _data_to_text(self, data: DictRow):
+        return Text(
+            id=data.get('id'),
+            name=data.get('name'),
+            message=data.get('message') or '',
+            message_type=data.get('message_type') or 'text',
+            media_id=data.get('media_id') or ''
+        )
+
+    def get_texts(self) -> list[Text]:
+        query = 'SELECT * FROM tgbot_texts'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_text(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_texts]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_text_by_name(self, name: str):
+        query = 'SELECT * FROM tgbot_texts WHERE name = %s'
+        params = (name,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_text(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_text_by_name]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_text(self, name: str, text: str):
+        mes_type = 'text'
+        check_text = self.get_text_by_name(name)
+
+        try:
+            if check_text is None:
+                query = 'INSERT INTO tgbot_texts(message, message_type, name) VALUES(%s, %s, %s)'
+            else:
+                query = 'UPDATE tgbot_texts SET message = %s, message_type = %s WHERE name = %s'
+
+            params = (text, mes_type, name)
+
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_text]: {e}')
+            self.connection.rollback()
+            return False
+
+    # Future
+    def _data_to_future(self, data: DictRow):
+        return Future(
+            id=data.get('id'),
+            name=data.get('name'),
+            step=data.get('step'),
+            price_step=data.get('price_step')
+        )
+
+    def get_future(self, name: str):
+        name = name.upper()
+        query = 'SELECT * FROM tgbot_futures WHERE name = %s'
+        params = (name,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_future(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_future]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_future(self, name: str, step: float, price_step: float):
+        check_future = self.get_future(name)
+
+        try:
+            if check_future is None:
+                query = 'INSERT INTO tgbot_futures(step, price_step, name) VALUES(%s, %s, %s)'
+            else:
+                query = 'UPDATE tgbot_futures SET step = %s, price_step = %s WHERE name = %s'
+
+            params = (step, price_step, name)
+
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_future]: {e}')
+            self.connection.rollback()
+            return False
+
+    # Forexes
+    def _data_to_forex(self, data: DictRow):
+        return Forex(
+            id=data.get('id'),
+            pair=data.get('pair'),
+            price=data.get('price'),
+            help_pair=data.get('help_pair')
+        )
+
+    def get_forex(self, pair: str):
+        query = 'SELECT * FROM tgbot_forexes WHERE pair = %s'
+        params = (pair,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_forex(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_forex]: {e}')
+            self.connection.rollback()
+            return None
+
+    def update_forex(self, pair: str, price: float, help_pair: str | None = None):
+        check_forex = self.get_forex(pair)
+        params = (pair, price, help_pair)
+
+        try:
+            if check_forex is None:
+                query = 'INSERT INTO tgbot_forexes (pair, price, help_pair) VALUES (%s, %s, %s)'
+                params = (pair, price, help_pair)
+            else:
+                query = 'UPDATE tgbot_forexes SET price = %s, help_pair = %s WHERE pair = %s'
+                params = (price, help_pair or check_forex.help_pair, pair)
+
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_forex]: {e}')
+            self.connection.rollback()
+            return False
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

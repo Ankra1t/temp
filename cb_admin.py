@@ -2,8 +2,10 @@ from telebot import types
 from datetime import datetime
 from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
-from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
+
+from initialize import bot, kb_inl_admin, text_editor, pay_guard, tariff_manager, base_statis
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
+from messages.statistics import admin_main_statistics
 import variables as vars
 from models import User
 from db_new import db_new
@@ -13,7 +15,8 @@ from common.utils import set_state_data
 from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
     kb_admin_users_back, kb_admin_workers_back,
-    send_admin_workers
+    send_admin_workers, kb_statistics,
+    kb_statistics_back
 )
 from MAIN.states import AdminTariffState
 
@@ -30,13 +33,15 @@ def admin_main_callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
+    message = call.message
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
         count_all = db_new.get_users_count()
-        count_with_sub = pay_guard.get_paid_users()
-        count_old = pay_guard.get_paid_more1_users()
-        text = admin_users_msg(count_all, len(count_with_sub), len(count_old))
+        count_with_sub = len(pay_guard.get_paid_users())
+        count_old = len(pay_guard.get_paid_more1_users())
+
+        text = admin_users_msg(count_all, count_with_sub, count_old)
 
         bot.edit_message_text(
             text, chat_id, mes_id,
@@ -62,6 +67,21 @@ def admin_main_callbacks(call: types.CallbackQuery):
             reply_markup=kb_params()
         )
 
+    if type == 'payment':
+
+        # Общие Показатели
+        count_subscribes = base_statis.count_payments()
+        summ_all_users = base_statis.summ_by_transactions()
+
+        bot.edit_message_text(
+            admin_main_statistics(count_subscribes, summ_all_users), chat_id, mes_id,
+            reply_markup=kb_statistics()
+        )
+
+        # Вывести всех участников по транзакциям
+    #     Вывести оплаченные транзакции
+
+
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
     bot.answer_callback_query(call.id)
@@ -81,10 +101,11 @@ def admin_default_callbacks(call: types.CallbackQuery):
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
             count_all = db_new.get_users_count()
-            count_with_sub = len(db.get_users_with_sub())
-            count_old = len(db.get_users_with_more_pay())
+            count_with_sub = len(pay_guard.get_paid_users())
+            count_old = len(pay_guard.get_paid_more1_users())
             count_admins = len(db_new.get_all_workes())
-            count_fut_posts = len(db.get_fut_all_posts())
+            count_fut_posts = len(db_new.get_all_posts())
+
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)
 
@@ -252,9 +273,9 @@ def admin_action_callbacks(call: types.CallbackQuery):
 
         # Спрятать reply клаву
         bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Сообщение id={target_id}', reply_markup=None)
+                         text=f'Сообщение name={target_id}', reply_markup=None)
         bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Отправьте новый текст для id={target_id}',
+                         text=f'Отправьте новый текст для name={target_id}',
                          reply_markup=kb_inl_admin.kb_edit_single_text_cancel())
 
         bot.register_next_step_handler(
