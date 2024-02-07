@@ -1,9 +1,8 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new
-from initialize import kb_inl_admin, pay_guard
+from initialize import pay_guard
 from models import User
 
 from MAIN.states import AdminUsersState

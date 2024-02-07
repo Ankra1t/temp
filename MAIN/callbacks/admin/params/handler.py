@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db import db
 from db_new import db_new
 
 # TODO удалить
@@ -53,7 +52,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     elif type == 'show':
         # todo-fin: Что-то тут не работает, что-то достается из БД
-        # mas = db.get_other()
+        # mas = db_old.get_other()
         # for i in range(0, len(mas)):
         #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1])
         # bot.register_next_step_handler(message, admin_other_menu)
@@ -68,10 +67,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     elif 'choice' in type:
         if 'yes' in type:
             with bot.retrieve_data(user_id, chat_id) as data:
-                name = data['name']
-                text = data['text']
+                name = data.get('name', '')
+                text = data.get('text', '')
 
-            db.update_other(name, text)
+            db_new.update_text(name, text)
 
             bot.send_message(chat_id, 'Успешно')
             bot.send_message(
@@ -96,13 +95,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if 'add_future' in type:
             bot.edit_message_text(
                 'Введите тикер фьючерса:', chat_id, mes_id,
-                reply_markup=kb_params_back())
+                reply_markup=kb_params_back()
+            )
             bot.set_state(user_id, AdminParamsState.future_name, chat_id)
         if 'add_forex' in type:
             bot.edit_message_text(
                 'Введите валютную пару:', chat_id, mes_id,
-                reply_markup=kb_params_back())
-            bot.set_state(user_id, AdminParamsState.forex_paire, chat_id)
+                reply_markup=kb_params_back()
+            )
+            bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
 
     bot.answer_callback_query(call.id)
 

@@ -13,7 +13,7 @@ class FutureCalcState(StatesGroup):
 
 
 class ForexCalcState(StatesGroup):
-    paire = State()
+    pair = State()
     val_dep = State()
 
     stop_loss = State()

@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db import db
 from db_new import db_new, BASE_VALUE_TYPE
 from common.utils import digit_accept, text_accept
 from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings

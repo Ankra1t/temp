@@ -86,10 +86,10 @@ class Admin_kb_inlines(object):
         return keyboard
 
     # Редактирование текста клавиатуры
-    def kb_edit_single_text(self, text_id):
+    def kb_edit_single_text(self, text_name: str):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         edit = types.InlineKeyboardButton(text='Редактировать ✏️',
-                                          callback_data=adm_action.new(action='edit_bot_text', id=text_id))
+                                          callback_data=adm_action.new(action='edit_bot_text', id=text_name))
         keyboard.add(edit)
         return keyboard
 

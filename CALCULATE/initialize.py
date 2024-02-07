@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 from telebot.custom_filters import StateFilter
 
-from db import db
 from AuthMiddleWare import AuthMiddleWare
 from config_global import TOKEN_CALC_BOT, _ENV
 
@@ -19,7 +18,7 @@ bot_calc = TeleBot(
     use_class_middlewares=True
 )
 
-bot_calc.setup_middleware(AuthMiddleWare(bot_calc, db))
+bot_calc.setup_middleware(AuthMiddleWare(bot_calc))
 
 
 def registration():

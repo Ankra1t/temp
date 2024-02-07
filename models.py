@@ -82,7 +82,7 @@ class Price:
         description: str | None = None,
         discount_percent: float | None = None,
         discount_findate: datetime | None = None,
-        type_product:  str | None = None
+        type_product: str | None = None
     ):
         self.id = id
         self.name = name
@@ -125,7 +125,6 @@ class Transactions:
         self.payment_date = payment_date
 
 
-
 class Purchase:
     def __init__(
         self,
@@ -151,7 +150,6 @@ class Purchase:
         self.duration_days = duration
         self.payment_date = payment_date
         self.create_date = create_date
-
 
 
 class UserInfo(BaseModel):
@@ -195,3 +193,24 @@ class Post(BaseModel):
     date_time: datetime | None = None
     details: PostDetails | None = None
 
+
+class Text(BaseModel):
+    id: int
+    name: str
+    message: str
+    message_type: str
+    media_id: str
+
+
+class Future(BaseModel):
+    id: int
+    name: str
+    step: float
+    price_step: float
+
+
+class Forex(BaseModel):
+    id: int
+    pair: str
+    price: float
+    help_pair: str | None

@@ -116,9 +116,9 @@ CREATE TABLE
   `forexes` (
     `id` integer not null primary key autoincrement,
     `created_at` datetime not null default CURRENT_TIMESTAMP,
-    `paire` varchar(255) null,
+    `pair` varchar(255) null,
     `price` FLOAT null,
-    `help_paire` varchar(255) null
+    `help_pair` varchar(255) null
   );
 
   CREATE TABLE

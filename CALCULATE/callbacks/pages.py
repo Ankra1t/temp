@@ -4,13 +4,13 @@ from telebot import TeleBot
 from db_new import db_new
 from initialize import pay_guard
 
-from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual
+from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual, msg_uses_count
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import kb_settings
 
 
-def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
+def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
@@ -21,7 +21,10 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
 
     if pay_guard.valid_use_calc(user_id):
-        text = msg_main(user_id, uses_count)
+        if is_new_calc:
+            text = msg_uses_count(user_id, uses_count)
+        else:
+            text = msg_main(user_id, uses_count)
         keyboard = kb_main(user_id)
     else:
         text = msg_no_uses(user_id)
