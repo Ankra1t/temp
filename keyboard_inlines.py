@@ -15,6 +15,8 @@ class Admin_kb_inlines(object):
             '🔙 Отложенные посты', callback_data=admin_main_factory.new(type='fut_posts'))
         self.go_params_btn = types.InlineKeyboardButton(
             '🔙 Параметры', callback_data=admin_main_factory.new(type='params'))
+        self.go_statistics_btn = types.InlineKeyboardButton(
+            '🔙 Оплата', callback_data=admin_main_factory.new(type='payment'))
 
     # Главная
     def main(self):

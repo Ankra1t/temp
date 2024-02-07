@@ -23,6 +23,9 @@ from .admin.params.handler import registration as _reg_admin_params
 from .admin.params.keyboards import (kb_params_change, kb_calculator, kb_params,
                                      kb_params_back, kb_params_choice)
 
+from .admin.statistics.handler import registration as _reg_admin_statistics
+from .admin.statistics.keyboards import (kb_statistics, kb_statistics_back)
+
 from .admin.posts.handler import registration as _reg_admin_posts
 from .admin.posts.keyboards import kb_posts, kb_posts_back, kb_post_add_confirm, kb_post_confirm, kb_post_kinds
 
@@ -44,6 +47,7 @@ def callbacks_registration(bot: _TB):
     _reg_admin_params(bot)
     _reg_admin_posts(bot)
     _reg_admin_users(bot)
+    _reg_admin_statistics(bot)
 
     _reg_user_main(bot)
     _reg_user_education(bot)

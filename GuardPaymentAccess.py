@@ -2,7 +2,7 @@ from typing import Literal
 from config_logger import logger
 from telebot import types
 from datetime import datetime, timedelta
-from models import User, Subscribe
+from models import User, UserInfo, Subscribe
 
 from db_new import db_new
 
@@ -29,9 +29,9 @@ class GuardPaymentAccess():
     # Тестовые подписки
     def set_trial(self, message: types.Message, custom_days = None):
         """Дать новому пользователю тестовый период """
-        current_trial_days = custom_days
+        current_trial_days = int(custom_days)
         if not custom_days:
-            current_trial_days = self.get_option_trial_days()
+            current_trial_days = int(self.get_option_trial_days())
 
         finish_date = datetime.now() + timedelta(days=current_trial_days)
 
@@ -155,13 +155,12 @@ class GuardPaymentAccess():
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
         client = db_new.get_user_by_id(user_id)
 
-        # Проверяем текущие активные платные подписки по продукту калькулятор
+        # Проверяем текущие активные платные подписки
         subscribes = db_new.get_active_subscribes_by_user_id(client.tg_id)
 
         if not subscribes:
             return False
 
-        # Найти транзакцию по продукту
         list_subscribes = subscribes
         now = datetime.now()
         for i in range(0, len(list_subscribes)):
@@ -177,6 +176,41 @@ class GuardPaymentAccess():
                 db_new.set_deactivate_subscribe(sub_item.id)
 
         return False
+
+    def get_valid_users_for_signals(self):
+        """Получить пользователей для рассылки сигналов"""
+
+        # Деактивируем просроченные подписки
+        db_new.set_unactive_subscribes('paid')
+        db_new.set_unactive_subscribes('trial')
+
+        # Получить пользователей с платной подпиской сигналы или сигналы+калькулятор
+        clients = db_new.get_active_subscribes_all_users()
+        print(f'кол-во len(clients) {len(clients)}')
+
+        # clients: list[Client] = db_new.get_active_subscribes_all_users()
+
+        if not clients:
+            return None
+
+        # Выбрать пользователей с продуктами "signals" и "calc_signals"
+        list_clients = clients
+        users = list()
+        for i in range(0, len(list_clients)):
+            client_item = list_clients[i]
+            if client_item['type_product'] == 'signals' or client_item['type_product'] == 'calc_signals':
+                print(f'Нужный клиент client_item ')
+                print(client_item)
+                users.append(UserInfo(
+                    id=client_item['id'],
+                    tg_id=client_item['tg_id'],
+                    username=client_item['username'] or '',
+                    refer=client_item['refer'] or -1,
+                    ban=client_item['ban'] or 0,
+                    registration_dt=client_item['created_at'] or datetime(2023, 5, 5)))
+
+        print(f"users count {len(users)}")
+        return users
 
     # # # Остальные методы
     def set_subscribe_unactive_many_users(self):

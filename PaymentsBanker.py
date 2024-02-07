@@ -14,7 +14,7 @@ from models import InvoiceBBanker, Transactions, UpdateBBanker, Price
 
 
 class PaymentsBanker(object):
-    """Класс обработки платежей, в том числе Cryptobot"""
+    """Класс обработки платежей, в том числе BitBanker"""
 
     def __init__(self, api_key, api_secret, bot_instance: TeleBot) -> None:
         self.bot = bot_instance
@@ -26,18 +26,7 @@ class PaymentsBanker(object):
         self.firm_name_header = 'The Clan'
         self._handlers = []
 
-    def set_field_invoice(self, attribute, value):
-        target_dict = {
-            'self': self,
-        }
-        target_obj = target_dict['self']
-        if not hasattr(target_obj, attribute):
-            print('Object {} does not have the "{}" attribute'.format(
-                target_obj, attribute))
-            return
-
-        setattr(target_obj, attribute, value)
-
+    # # # # # # # Создание платежа
     def create_invoice(self, asset, amount, description, payer, data_payments=''):
         """Создание чека для оплаты синхронно
         через API Bitbanker
@@ -82,48 +71,6 @@ class PaymentsBanker(object):
         invoice.asset = asset
         return invoice
 
-    def _create_sign(self, currency, amount, header, description):
-        """Создание подписи отдельно"""
-        text = '{}{}{}{}'.format(
-            currency, amount, header, description).encode('UTF-8')
-
-        logger.info(
-            f'-----> Сборка счета по параметрам currency, amount, header, description')
-        logger.info(f'-----> currency [{currency}] ')
-        logger.info(f'-----> amount [{amount}] ')
-        logger.info(f'-----> header [{header}] ')
-        logger.info(f'-----> description [{description}] ')
-        logger.info(f'cтрока ={text}=')
-
-        token = self.token.encode("UTF-8")
-
-        signature = hmac.digest(token, text, 'sha256')
-
-        logger.info(f'Подпись строки ={signature.hex()}=')
-
-        return signature.hex()
-
-    def _create_sign_secret(self, currency, amount, header, description):
-        """Создание подписи отдельно"""
-        text = '{}{}{}{}'.format(
-            currency, amount, header, description).encode('UTF-8')
-
-        logger.info(
-            f'-----> Сборка счета по параметрам currency, amount, header, description')
-        logger.info(f'-----> currency [{currency}] ')
-        logger.info(f'-----> amount [{amount}] ')
-        logger.info(f'-----> header [{header}] ')
-        logger.info(f'-----> description [{description}] ')
-        logger.info(f'cтрока ={text}=')
-
-        secret = self.secret.encode("UTF-8")
-
-        signature = hmac.digest(secret, text, 'sha256')
-
-        logger.info(f'Подпись строки ={signature.hex()}=')
-
-        return signature.hex()
-
     def _response_invoice(self, response):
         """Разобрать полученный ответ"""
 
@@ -164,6 +111,7 @@ class PaymentsBanker(object):
 
         return invoice
 
+
     def get_params_payservice(self, subscribe_name):
 
         sub = {}
@@ -192,56 +140,8 @@ class PaymentsBanker(object):
                 return math.ceil(tariff.price - ((tariff.price * tariff.discount.percent) / 100))
         return tariff.price
 
-    def set_transactions_for_wait(self, user_id, iv: InvoiceBBanker, price_id):
-        status = 'wait_payments'
-        db_new.add_transaction(Transactions(
-            user_id,
-            code=str(iv.invoice_id),
-            link=iv.pay_url,
-            sum=iv.amount,
-            currency=iv.asset,
-            price_id=price_id,
-            status=status
-        ))
 
-    def get_wait_transaction_for_complete(self, update: UpdateBBanker):
-        invoice = update.payload
-
-        # Ищем подписки только со статусом ожидания
-        status = 'wait_payments'
-        transaction_info = db_new.get_wait_transaction(
-            str(invoice.invoice_id), status)
-
-        print(f'transaction_info ')
-        print(transaction_info)
-        if transaction_info:
-            return {
-                'transaction_id': transaction_info.id,
-                'user_id': transaction_info.user_id,
-                'prices_id': transaction_info.price_id
-            }
-        return None
-
-    def get_wait_transaction_by_invoice_id(self, invoice_id, asset):
-        # Ищем подписки только со статусом ожидания
-        status = 'wait_payments'
-        transaction_info = db_new.get_wait_transaction(
-            invoice_id, status)
-
-        print(f'transaction_info ')
-        print(transaction_info)
-        if transaction_info:
-            return {
-                'transaction_id': transaction_info.id,
-                'user_id': transaction_info.user_id,
-                'prices_id': transaction_info.price_id,
-                'sum': transaction_info.sum
-            }
-        return None
-
-    def transactions_complete(self, transaction_id):
-        db_new.set_transactions_complete(transaction_id)
-
+    # # # # # # # Получение Webhooks
     def get_updates(self, request: Request) -> Response:
 
         # Тестируем апдейт
@@ -393,3 +293,111 @@ class PaymentsBanker(object):
             return handler
 
         return decorator
+
+
+    # # # # # # # Транзакции
+    def get_wait_transaction_by_invoice_id(self, invoice_id, asset):
+        # Ищем подписки только со статусом ожидания
+        status = 'wait_payments'
+        transaction_info = db_new.get_wait_transaction(
+            invoice_id, status)
+
+        print(f'transaction_info ')
+        print(transaction_info)
+        if transaction_info:
+            return {
+                'transaction_id': transaction_info.id,
+                'user_id': transaction_info.user_id,
+                'prices_id': transaction_info.price_id,
+                'sum': transaction_info.sum
+            }
+        return None
+
+    def transactions_complete(self, transaction_id):
+        db_new.set_transactions_complete(transaction_id)
+
+    def set_transactions_for_wait(self, user_id, iv: InvoiceBBanker, price_id):
+        status = 'wait_payments'
+        db_new.add_transaction(Transactions(
+            user_id,
+            code=str(iv.invoice_id),
+            link=iv.pay_url,
+            sum=iv.amount,
+            currency=iv.asset,
+            price_id=price_id,
+            status=status
+        ))
+
+    def get_wait_transaction_for_complete(self, update: UpdateBBanker):
+        invoice = update.payload
+
+        # Ищем подписки только со статусом ожидания
+        status = 'wait_payments'
+        transaction_info = db_new.get_wait_transaction(
+            str(invoice.invoice_id), status)
+
+        print(f'transaction_info ')
+        print(transaction_info)
+        if transaction_info:
+            return {
+                'transaction_id': transaction_info.id,
+                'user_id': transaction_info.user_id,
+                'prices_id': transaction_info.price_id
+            }
+        return None
+
+
+    # # # # # # # Служебные
+    def _create_sign(self, currency, amount, header, description):
+        """Создание подписи отдельно"""
+        text = '{}{}{}{}'.format(
+            currency, amount, header, description).encode('UTF-8')
+
+        logger.info(
+            f'-----> Сборка счета по параметрам currency, amount, header, description')
+        logger.info(f'-----> currency [{currency}] ')
+        logger.info(f'-----> amount [{amount}] ')
+        logger.info(f'-----> header [{header}] ')
+        logger.info(f'-----> description [{description}] ')
+        logger.info(f'cтрока ={text}=')
+
+        token = self.token.encode("UTF-8")
+
+        signature = hmac.digest(token, text, 'sha256')
+
+        logger.info(f'Подпись строки ={signature.hex()}=')
+
+        return signature.hex()
+
+    def _create_sign_secret(self, currency, amount, header, description):
+        """Создание подписи отдельно"""
+        text = '{}{}{}{}'.format(
+            currency, amount, header, description).encode('UTF-8')
+
+        logger.info(
+            f'-----> Сборка счета по параметрам currency, amount, header, description')
+        logger.info(f'-----> currency [{currency}] ')
+        logger.info(f'-----> amount [{amount}] ')
+        logger.info(f'-----> header [{header}] ')
+        logger.info(f'-----> description [{description}] ')
+        logger.info(f'cтрока ={text}=')
+
+        secret = self.secret.encode("UTF-8")
+
+        signature = hmac.digest(secret, text, 'sha256')
+
+        logger.info(f'Подпись строки ={signature.hex()}=')
+
+        return signature.hex()
+
+    def set_field_invoice(self, attribute, value):
+        target_dict = {
+            'self': self,
+        }
+        target_obj = target_dict['self']
+        if not hasattr(target_obj, attribute):
+            print('Object {} does not have the "{}" attribute'.format(
+                target_obj, attribute))
+            return
+
+        setattr(target_obj, attribute, value)

@@ -45,6 +45,7 @@ class Subscribe:
         type: str | None = None,
         prices_id: int | None = None,
         transactions_payed_id: int | None = None,
+        type_product: str | None = None
     ):
         self.id = id
         self.tg_user_id = tg_user_id
@@ -53,6 +54,7 @@ class Subscribe:
         self.active = active
         self.prices_id = prices_id
         self.transactions_payed_id = transactions_payed_id
+        self.type_product = type_product
 
 
 class User:
@@ -158,12 +160,21 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+class Client(BaseModel):
+    user: UserInfo | None = None
+
+
+# class Client(BaseModel):
+#     user: UserInfo | None = None
+#     subscribes: Optional[list[Subscribe], Subscribe, None] = None
+
 
 class Worker(BaseModel):
     id: int
     tg_id: int
     username: str
     role: int
+
 
 
 class PostDetails(BaseModel):
