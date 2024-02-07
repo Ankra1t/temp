@@ -162,6 +162,9 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+class Client(BaseModel):
+    user: UserInfo | None = None
+
 
 # class Client(BaseModel):
 #     user: UserInfo | None = None

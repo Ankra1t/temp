@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker
+from models import UserInfo, Price, Subscribe, Transactions, Purchase, Worker, Client
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
@@ -437,6 +437,7 @@ class Database:
         )
 
     def add_transaction(self, trans: Transactions):
+
         query = (
             "INSERT INTO transactions"
             "(user_id, code, link, sum, currency, price_id, status) "
@@ -471,7 +472,7 @@ class Database:
             return None
 
     def get_paid_transactions_by_user(self, user_id: int):
-        """Получение тарифа"""
+        """Получить платные транзакции пользователя"""
         query = ("SELECT * FROM transactions "
                  "WHERE user_id = %s AND status = %s"
                  )
@@ -488,8 +489,62 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_paid_transactions_all(self):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT * FROM transactions "
+                 "WHERE status = %s"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_period(self, start_date, fin_date):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT * FROM transactions "
+                 "WHERE (payment_date BETWEEN %s AND %s ) "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (start_date, fin_date, status, )
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_paid_transactions_summ(self):
+        """Суммы по транзакциям"""
+        query = ("SELECT sum(sum) FROM transactions "
+                 "WHERE status = %s"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
     def get_purchases_by_user(self, user_id: int):
-        """Получение тарифа"""
+        """Получение покупок пользователя"""
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
                  "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
@@ -526,6 +581,29 @@ class Database:
             data.get('create_date'),
         )
 
+    def get_purchases_all_users(self):
+        query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
+                 "t.sum AS real_sum, p.price AS tariff_price, "
+                 "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
+                 "t.created_at AS create_date "
+                 "FROM transactions t, prices p "
+                 "WHERE "
+                 "t.status = %s "
+                 "AND t.price_id = p.id"
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            # return data
+            return list(map(lambda el: self._data_to_purchase(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            self.connection.rollback()
+            return []
+
     def set_transactions_complete(self, id: int):
         datetime_now = datetime.utcnow()
         query = "UPDATE transactions set status = %s, payment_date = %s WHERE id = %s"
@@ -553,6 +631,8 @@ class Database:
             print(f'ERROR[del_transaction]: {e}')
             self.connection.rollback()
             return False
+
+
 
     # # # # # # # #  Users
     def _data_to_user(self, data: DictRow):
@@ -705,6 +785,20 @@ class Database:
         """Получение пользователя"""
         query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
         params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_user(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_user_by_id]: {e}')
+            self.connection.rollback()
+            return None
+
+    def get_user_by_tg_id(self, tg_id: int):
+        """Получение пользователя"""
+        query = self.USER_INFO_QUERY + 'WHERE u.id_telegram = %s'
+        params = (tg_id,)
 
         try:
             self.curs.execute(query, params)

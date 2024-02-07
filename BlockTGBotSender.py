@@ -1,3 +1,4 @@
+from typing import Literal
 from telebot import TeleBot
 from math import floor
 from time import sleep
@@ -10,6 +11,7 @@ from db_new import db_new
 
 from initialize import bot, pay_guard
 from models import Post, UserInfo
+
 
 
 
@@ -114,7 +116,9 @@ class BlockTGBotSender(object):
             # Учесть массовую рассылку отложенных постов
 
             users = db_new.get_all_users()
-            users = pay_guard.get_valid_users_for_signals()
+
+            # users = pay_guard.get_valid_users_for_signals()
+
             if not users:
                 return False
 

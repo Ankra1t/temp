@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from config_logger import logger
-from initialize import pay_guard
+from initialize import pay_guard, base_statis
 
 from db import db
 from db_new import db_new
@@ -59,6 +59,16 @@ def _calc(message: Message, bot: TeleBot):
 
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
+
+
+    summ_all_users = base_statis.summ_by_transactions()
+    print(f'summ_all_users ')
+    print(summ_all_users)
+
+    return False
+    base_statis.show_paid_users(message)
+
+    return False
 
     users = pay_guard.get_valid_users_for_signals()
     print(f'users  ')
