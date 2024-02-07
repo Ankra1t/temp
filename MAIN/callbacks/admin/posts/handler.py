@@ -1,8 +1,7 @@
-from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db import db
+from initialize import pay_guard
 from db_new import db_new
 from BlockTGBotSender import BlockTGBotSender
 from MAIN.callbacks import send_admin_post
@@ -129,15 +128,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                     return
 
                 if post.direct == 'Платным':
-                    users = db.get_users_with_sub()
-                    users_id = list(map(lambda user: user[9], users))
+                    users = pay_guard.get_paid_users()
                 elif post.direct == 'Бесплатным':
-                    users = db.get_users_without_sub()
-                    users_id = list(map(lambda user: user[9], users))
+                    users = db_new.get_not_subscribed_users()
                 else:
                     users = db_new.get_all_users()
-                    users_id = list(map(lambda u: u.tg_id, users))
 
+                users_id = list(map(lambda user: user.tg_id, users))
 
                 try:
                     pass

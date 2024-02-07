@@ -23,6 +23,21 @@ market_translates = {
 
 
 # Основные страницы
+def msg_uses_count(user_id: int, count: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': {
+            'uses': 'Бесплатных расчетов',
+        },
+        'en': {
+            'uses': 'Free calculations',
+        }
+    }
+
+    return f'{text[lang]["uses"]}: <b>{count}</b>'
+
+
 def msg_main(user_id: int, uses_count: int):
     lang = get_lang(user_id)
 
@@ -47,7 +62,7 @@ def msg_main(user_id: int, uses_count: int):
         f'1. <b>{texts[lang]["1"]}</b>',
         f'2. <b>{texts[lang]["2"]}</b>',
         '',
-        f'{texts[lang]["uses"]}: <b>{uses_count}</b>'
+        msg_uses_count(user_id, uses_count)
     ))
 
 

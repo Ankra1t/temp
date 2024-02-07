@@ -245,7 +245,7 @@ class Database:
     def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
         datetime_now = datetime.utcnow()
         query = (
-            'SELECT u.id_idx, u.created_at, u.username, u.count_sub, u.count_days, '
+            'SELECT u.id, u.created_at, u.username, u.count_sub, u.count_days, '
             'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
             'FROM subscribes AS sub, users AS u WHERE sub.finish_dt < %s '
             'AND sub.subscribe_type = %s AND sub.active = %s AND sub.tg_user_id = u.id'
@@ -607,6 +607,38 @@ class Database:
             return list(map(lambda u: self._data_to_user(u), data))
         except Exception as e:
             print(f'ERROR[get_banned_users]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY + (
+            'WHERE u.ban = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= %s '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) > 0 '
+        )
+        params = (min_sub_count)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_subsribed_users]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_not_subscribed_users(self) -> list[UserInfo]:
+        query = self.USER_INFO_QUERY + (
+            'WHERE u.ban = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) = 0 '
+        )
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
+        except Exception as e:
+            print(f'ERROR[get_not_subscribed_users]: {e}')
             self.connection.rollback()
             return []
 
@@ -1090,14 +1122,19 @@ class Database:
 
     # Posts
     def _data_to_post(self, data: DictRow):
-        open_price, stop_loss, name, ticker = data['open_price'], data['stop_loss'], data['name'], data['ticker']
+        open_price, stop_loss, name, ticker = (
+            data.get('open_price'),
+            data.get('stop_loss'),
+            data.get('name'),
+            data.get('ticker')
+        )
         details = None
 
         if (
-            open_price is None
-            and stop_loss is None
-            and name is None
-            and ticker is None
+            open_price is not None
+            and stop_loss is not None
+            and name is not None
+            and ticker is not None
         ):
             details = PostDetails(
                 name=name,
@@ -1107,12 +1144,12 @@ class Database:
             )
 
         return Post(
-            id=data['id'],
-            content=data['content'],
-            mes_type=data['message_type'],
-            media=data['media'],
-            direct=data['direct'],
-            date_time=data['date_time'],
+            id=data.get('id'),
+            content=data.get('content'),
+            mes_type=data.get('message_type'),
+            media=data.get('media'),
+            direct=data.get('direct') or '',
+            date_time=data.get('date_time'),
             details=details
         )
 
@@ -1129,7 +1166,7 @@ class Database:
             )
 
         query = """
-            INSERT INTO posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
+            INSERT INTO tgbot_posts (content, mes_type, media, direct, date_time, open_price, stop_loss, name, ticker)
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (post.content, post.mes_type, post.media,
@@ -1147,7 +1184,8 @@ class Database:
     def delete_post(self, post_id: int):
         """Удалить отложенный пост"""
         try:
-            self.curs.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+            self.curs.execute(
+                "DELETE FROM tgbot_posts WHERE id = %s", (post_id,))
             self.connection.commit()
             return True
         except Exception as e:
@@ -1157,7 +1195,7 @@ class Database:
 
     def get_all_posts(self) -> list[Post]:
         """Получение отложенных постов"""
-        query = 'SELECT * FROM posts'
+        query = 'SELECT * FROM tgbot_posts'
 
         try:
             self.curs.execute(query)
@@ -1170,7 +1208,7 @@ class Database:
 
     def get_post(self, id: int):
         """Получить отложенный пост по id"""
-        query = 'SELECT * FROM posts WHERE id = ?'
+        query = 'SELECT * FROM tgbot_posts WHERE id = ?'
         params = (id,)
 
         try:
@@ -1187,9 +1225,9 @@ class Database:
         return Text(
             id=data.get('id'),
             name=data.get('name'),
-            message=data.get('message', ''),
-            message_type=data.get('message_type', 'text'),
-            media_id=data.get('media_id', '')
+            message=data.get('message') or '',
+            message_type=data.get('message_type') or 'text',
+            media_id=data.get('media_id') or ''
         )
 
     def get_texts(self) -> list[Text]:

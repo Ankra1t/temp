@@ -7,7 +7,6 @@ from telebot.storage import StateMemoryStorage
 from config_global import TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 from config_logger import logger
 
-from db import db
 from keyboard_inlines import Admin_kb_inlines, Clients_kb_inlines
 from GuardPaymentAccess import GuardPaymentAccess
 from Payments import Payments
@@ -24,7 +23,7 @@ bot = TeleBot(
     use_class_middlewares=True
 )
 
-pay_guard = GuardPaymentAccess(db)
+pay_guard = GuardPaymentAccess()
 pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
 pays_banker = PaymentsBanker(
     api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)

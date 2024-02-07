@@ -199,7 +199,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(chat_id, mes)
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True)
+    send_main(message, bot, user_id, True, True)
 
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
@@ -233,7 +233,8 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
 
     if val_dep == 'RUB':
         usd_rub_forex = db_new.get_forex('USD/RUB')
-        price_usd_rub = usd_rub_forex.price if (usd_rub_forex is not None) else 1
+        price_usd_rub = usd_rub_forex.price if (
+            usd_rub_forex is not None) else 1
         deposit /= price_usd_rub
     risk = risk_percent / 100
 
@@ -266,7 +267,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(chat_id, message_res)
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True)
+    send_main(message, bot, user_id, True, True)
 
 
 # ? Выравнивание результатов

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from models import User, Subscribe
 
 from db_new import db_new
-from db import Database
 
 
 class GuardPaymentAccess():
@@ -21,8 +20,7 @@ class GuardPaymentAccess():
         - balance текущий баланс (pay_money - потраченная сумма)
     """
 
-    def __init__(self, db: Database) -> None:
-        self.db = db
+    def __init__(self) -> None:
         self.mess = ''
         self.dt_format = "%Y-%m-%d %I:%M"
         self.dt_format_admin_show = "%d/%m/%Y %I:%M"
@@ -132,21 +130,11 @@ class GuardPaymentAccess():
 
     def get_paid_users(self):
         """Получаем пользователей с активными подписками для платной рассылки сигналов"""
-        # Выбрать пользователей только с активной и действительной по дате подпиской
-        date_fin = datetime.now()
-        # date_fin = datetime.now() + timedelta(days=5)
-        date_bonus = date_fin + timedelta(days=2)
-        finish_date = date_fin.strftime(self.dt_format)
-
-        # Добавлена фильтрация бан пользователей
-        user_list = self.db.get_subsribe_users(finish_date, date_bonus)
-
-        return user_list
+        return db_new.get_subsribed_users()
 
     def get_paid_more1_users(self):
         """Получаем пользователей с больше чем одной подпиской"""
-        user_list = self.db.get_subsribe_more1_users()
-        return user_list
+        return db_new.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
     def valid_use_calc(self, user_id: int):

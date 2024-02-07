@@ -55,9 +55,14 @@ forexes = [{"pair": "AUD/CAD", "price": "0", "help_pair": "USD/CAD"},
            {"pair": "USD/CAD", "price": "1.31632", "help_pair": ""},
            {"pair": "USD/RUB", "price": "91.9445", "help_pair": ""}]
 
-for el in forexes:
-    db_new.update_forex(el['pair'], float(
-        el['price']), el['help_pair'] or None)
+
+print(
+    'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '
+    'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
+    'WHERE u.ban = 0 '
+    'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= %s '
+    'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) > 0 '
+)
 
 ################################################################################################
 # if user_role == 0:

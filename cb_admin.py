@@ -2,7 +2,7 @@ from telebot import types
 from datetime import datetime
 from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
-from initialize import bot, db, kb_inl_admin, text_editor, pay_guard, tariff_manager
+from initialize import bot, kb_inl_admin, text_editor, pay_guard, tariff_manager
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
 import variables as vars
 from models import User
@@ -82,8 +82,8 @@ def admin_default_callbacks(call: types.CallbackQuery):
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
             count_all = db_new.get_users_count()
-            count_with_sub = len(db.get_users_with_sub())
-            count_old = len(db.get_users_with_more_pay())
+            count_with_sub = len(pay_guard.get_paid_users())
+            count_old = len(pay_guard.get_paid_more1_users())
             count_admins = len(db_new.get_all_workes())
             count_fut_posts = len(db_new.get_all_posts())
             text = admin_main_msg(count_all, count_with_sub,

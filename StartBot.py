@@ -210,7 +210,7 @@ def check_future_post_for_sent():
 
 def send_future_pos_by_intime(post: Post):
     """Рассылка отложенных постов по времени"""
-    users_id = list(map(lambda user: user[9], pay_guard.get_paid_users()))
+    users_id = list(map(lambda user: user.tg_id, pay_guard.get_paid_users()))
 
     try:
         tgsender = BlockTGBotSender(users_id, post)
