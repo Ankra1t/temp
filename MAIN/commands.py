@@ -61,6 +61,12 @@ def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
 
+    per = 'today'
+    count_ = base_statis.count_payments('today')
+    print(f'count_ сколько пользователей за период {per}')
+    print(count_)
+
+    return False
     summ_all_users = base_statis.summ_by_transactions()
     print(f'summ_all_users ')
     print(summ_all_users)

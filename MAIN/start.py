@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from initialize import pay_guard, kb_inl_admin
+from initialize import pay_guard, base_statis, kb_inl_admin
 from keyboard_reply import kb_main_redactor, kb_main_support
 from db_new import db_new
 
@@ -33,10 +33,14 @@ def send_start_by_user(
 
     if user_role == 1:
         count_all = db_new.get_users_count()
-        count_with_sub = len(pay_guard.get_paid_users())
+        # todo-fin: Заменить кол-во транзакций на агрегацию пользователей (если у пользователя больше 2х подписок)
+        count_with_sub = base_statis.count_payments()
+        # count_with_sub = len(pay_guard.get_paid_users())
         count_old = len(pay_guard.get_paid_more1_users())
+        count_old = 0
         count_admins = len(db_new.get_all_workes())
-        count_fut_posts = len(db_new.get_all_posts())
+        count_fut_posts = len(db.get_fut_all_posts())
+        count_fut_posts = 0
 
         text = admin_main_msg(count_all, count_with_sub,
                               count_old, count_admins, count_fut_posts)

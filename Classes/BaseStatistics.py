@@ -18,10 +18,15 @@ class BaseStatistics(object):
         self.dt_format_user_show = "%d/%m/%Y"
 
     # # # # # # Вывод пользователей
+    def show_paid_users(self, message, period=None):
 
-    def show_paid_users(self, message):
         chat_id = message.chat.id
-        trans_list = self.db.get_paid_transactions_all()
+
+        if period:
+            start_date, fin_date = self.get_dates_by_period(period)
+            trans_list = self.db.get_paid_transactions_period(start_date, fin_date )
+        else:
+            trans_list = self.db.get_paid_transactions_all()
 
         if not trans_list:
             self.bot.send_message(
@@ -59,25 +64,11 @@ class BaseStatistics(object):
     # # # # # # Агрегаторы показателей
 
     def count_payments(self, period=None):
-        """Кол-во подписок"""
-        # Считаем кол-во транзакций
-        start_date = None
-        fin_date = None
+        """Кол-во платежей"""
 
-        fin_date = datetime.utcnow()
-        now = datetime.now()
-        if period == 'today':
-            fin_date = now - timedelta(days=1)
-        if period == 'week':
-            fin_date = now - timedelta(days=7)
-        if period == 'month':
-            fin_date = now - timedelta(days=30)
-        if period == 'half_year':
-            fin_date = now - timedelta(days=30 * 6)
-        if period == 'year':
-            fin_date = now - timedelta(days=365)
+        start_date, fin_date = self.get_dates_by_period(period)
 
-        if not start_date and not fin_date:
+        if not start_date or not fin_date:
             trans_list = self.db.get_paid_transactions_all()
         else:
             trans_list = self.db.get_paid_transactions_period(
@@ -85,11 +76,18 @@ class BaseStatistics(object):
 
         return len(trans_list) if trans_list else 0
 
-    def summ_by_transactions(self):
+    def summ_by_transactions(self, period=None):
         """Суммы по всем транзакциям"""
-        # Считаем кол-во транзакций
-        summ = self.db.get_paid_transactions_summ()
+
+        start_date, fin_date = self.get_dates_by_period(period)
+
+        if not start_date or not fin_date:
+            summ = self.db.get_paid_transactions_summ()
+        else:
+            summ = self.db.get_paid_transactions_summ_period(start_date, fin_date)
+
         return summ
+
 
     # # # # # # Специализированные показателей
 
@@ -121,13 +119,24 @@ class BaseStatistics(object):
                    )
         return template
 
-    def temp_block_users(self, users, count=8):
-        """Вывести пользователей блоками"""
-        template = """
-{}
-                """.format()
-        return template
 
     # # # # # # Вспомогательные методы
-    def get_client_by_transaction(self, trans: Transactions):
-        pass
+    def get_dates_by_period(self, period):
+        start_date = None
+        fin_date = None
+
+        fin_date = datetime.utcnow()
+        now = datetime.now()
+        if period == 'today':
+            start_date = now - timedelta(days=1)
+        if period == 'week':
+            start_date = now - timedelta(days=7)
+        if period == 'month':
+            start_date = now - timedelta(days=30)
+        if period == 'half_year':
+            start_date = now - timedelta(days=30 * 6)
+        if period == 'year':
+            start_date = now - timedelta(days=365)
+
+        return start_date, fin_date
+
