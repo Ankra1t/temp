@@ -27,8 +27,9 @@ class AuthMiddleWare(BaseMiddleware):
         if db_new.check_ban_user(user_db_id):
             return CancelUpdate()
 
-        user_role = check_registrate(user_id)
-
+        user_role = check_registrate(user_id) or 0
+        print(f'---------------user_role -----------------')
+        print(user_role)
         if user_role is None:
             ref_id = message.text
             ref_id = ref_id.split() if (ref_id is not None) else []
