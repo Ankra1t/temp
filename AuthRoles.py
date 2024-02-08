@@ -58,7 +58,7 @@ def check_registrate(tg_id: int):
 
     if worker_role is not None:
         user_role = worker_role
-    elif check_user <= 0:
+    elif check_user > 0:
         user_role = 0
     else:
         user_role = None

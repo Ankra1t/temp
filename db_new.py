@@ -1217,17 +1217,17 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_worker_role(self, id: int) -> int | None:
+    def get_worker_role(self, tg_id: int) -> int | None:
         """Узнать роль работника"""
         query = "SELECT role FROM tgbot_workers WHERE tg_user_id = %s"
-        params = (id,)
+        params = (tg_id,)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
             return data.get('role') if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_role]: {e}')
+            print(f'ERROR[get_worker_role]: {e}')
             self.connection.rollback()
             return None
 

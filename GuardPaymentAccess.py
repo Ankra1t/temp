@@ -29,9 +29,10 @@ class GuardPaymentAccess():
     # Тестовые подписки
     def set_trial(self, message: types.Message, custom_days=None):
         """Дать новому пользователю тестовый период """
-        current_trial_days = int(custom_days)
         if not custom_days:
             current_trial_days = int(self.get_option_trial_days())
+        else:
+            current_trial_days = int(custom_days)
 
         finish_date = datetime.now() + timedelta(days=current_trial_days)
 
@@ -55,9 +56,9 @@ class GuardPaymentAccess():
         print(days)
         db_new.set_option('count_trial_days_new_user', str(int(days)))
 
-    def get_option_trial_days(self):
+    def get_option_trial_days(self) -> int:
         days = db_new.get_option('count_trial_days_new_user')
-        return days
+        return days or 1
 
     def set_custom_paid_subscribe(self, user_id, count_days):
         """Дать пользователю платную подписку без оплаты"""

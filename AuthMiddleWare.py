@@ -1,6 +1,7 @@
 from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
+from NOTIFIER import notifier
 
 from initialize import pay_guard
 from db_new import db_new, LANGUAGES
@@ -30,6 +31,7 @@ class AuthMiddleWare(BaseMiddleware):
         user_role = check_registrate(user_id)
 
         if user_role is None:
+            # Проверяем реферальный id
             ref_id = message.text
             ref_id = ref_id.split() if (ref_id is not None) else []
 
@@ -38,18 +40,27 @@ class AuthMiddleWare(BaseMiddleware):
             else:
                 ref_id = 0
 
+            # Регистрация, пробный период, доавбление таблиц бота
             registration(user_id, username, ref_id)
             pay_guard.set_trial(message)
-
             db_new.create_tg_user_tables(user_db_id)
 
+            # Проверка языка
             lang = message.from_user.language_code.lower()
             lang = lang if (lang in LANGUAGES) else 'ru'
             db_new.set_user_lang(user_db_id, lang)
 
+            # Уведомление о регистрации
+            new_user = db_new.get_user_by_tg_id(user_id)
+            if new_user is not None:
+                notifier.send_user_is_registered(new_user)
+            else:
+                print(f'Ошибка регистрации пользователя tg_id = {user_id}')
+
             data['has_registered_now'] = True
             user_role = 0
 
+        # Если нет таблицы связаной с ботом, то создаем
         is_tg_tables = db_new.check_tg_user_tables(user_db_id)
         if not is_tg_tables and user_role == 0:
             db_new.create_tg_user_tables(user_db_id)
