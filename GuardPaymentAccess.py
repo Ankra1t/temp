@@ -56,9 +56,9 @@ class GuardPaymentAccess():
         print(days)
         db_new.set_option('count_trial_days_new_user', str(int(days)))
 
-    def get_option_trial_days(self):
+    def get_option_trial_days(self) -> int:
         days = db_new.get_option('count_trial_days_new_user')
-        return days
+        return days or 1
 
     def set_custom_paid_subscribe(self, user_id, count_days):
         """Дать пользователю платную подписку без оплаты"""
