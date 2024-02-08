@@ -5,7 +5,7 @@ from common.utils import set_state_data
 from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard
-from db_new import db_new
+from db_new import FILTER_TYPE, db_new
 from models import User
 from MAIN.states import AdminUsersState
 
@@ -15,10 +15,10 @@ from ..pages import send_admin_client
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
-    callback_data: dict = admin_users_factory.parse(call.data)
+    callback_data = admin_users_factory.parse(call.data)
 
     type: str = callback_data.get('type') or ''
-    filter: str = callback_data.get('filter') or ''
+    filter: FILTER_TYPE = callback_data.get('filter') or ''  # type: ignore
     client_db_id = int(callback_data.get('client_db_id') or 0)
     page = int(callback_data.get('page') or 1)
 
@@ -65,8 +65,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         pages = math.ceil(count / limit)
 
         mas_all_user = db_new.get_paginated_users(
-            limit, page,
-            'by_date_old' if filter == 'by_date_old' else ''
+            limit, page, filter
         )
         text = ''
 
@@ -76,7 +75,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             for user in mas_all_user:
                 tg_user_id = user.tg_id
 
-                nik = f'@{user.username}' if user.username != '' else 'Скрыт'
+                nik = f'| @{user.username}' if user.username != '' else ''
                 ban = '(BAN)' if user.ban == 1 else ''
 
                 user_subsriber = User()
@@ -90,11 +89,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 if user_subsriber.subscribe is not None:
                     fin_date = user_subsriber.subscribe.finish_dt.strftime(
                         '%d/%m/%Y')
-                    type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
+                    type_subscribe_show = f'({user_subsriber.subscribe.type})'
 
                 user_show = (
-                    f'\n{user.id} | {nik} {ban}'
-                    f'\nПодписка до: {fin_date}<b>{type_subscribe_show}</b>'
+                    f'\n{user.id} {nik} <b>{ban}</b>'
+                    f'\nПодписка до: <b>{fin_date}</b> {type_subscribe_show}'
                     f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>\n'
                 )
 
