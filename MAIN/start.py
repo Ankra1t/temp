@@ -39,7 +39,7 @@ def send_start_by_user(
         count_old = len(pay_guard.get_paid_more1_users())
         count_old = 0
         count_admins = len(db_new.get_all_workes())
-        count_fut_posts = len(db.get_fut_all_posts())
+        count_fut_posts = len(db_new.get_all_posts())
         count_fut_posts = 0
 
         text = admin_main_msg(count_all, count_with_sub,
