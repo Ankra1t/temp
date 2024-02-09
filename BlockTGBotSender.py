@@ -70,7 +70,7 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
             calc_text = '<b><u>Расчет по сигналу</u></b>\n'
             count_bet, value_bet, credit, take_profit, profit = get_calculation(
                 dep, risk, open_price,
-                stop_loss, ticker
+                stop_loss, False, [], ticker
             )
 
             calc_text += msg_calculate_result(

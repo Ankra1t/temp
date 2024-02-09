@@ -8,11 +8,17 @@ from db_new import db_new, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_settings_change_base, msg_settings_change_market, msg_settings_set_tp_show, msg_success_edit
+    msg_enter_risk_percent, msg_settings_change_base,
+    msg_settings_change_market, msg_settings_set_tp_show,
+    msg_split_settings, msg_success_edit
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
-from .keyboards import kb_change_base, kb_change_currency, kb_change_market, kb_change_tp_show, kb_choose_lang, kb_base_cancel, kb_settings
+from .keyboards import (
+    kb_change_base, kb_change_currency, kb_change_market,
+    kb_change_tp_show, kb_choose_lang, kb_base_cancel,
+    kb_settings, kb_split_ok, kb_split_settings
+)
 from ..pages import send_main, send_settings
 
 
@@ -104,6 +110,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             is_changed = False
 
+        if is_changed:
+            db_new.set_user_is_splitting(user_db_id, False)
+
         if is_changed or len(arr_type) == 2:
             db_new.set_calculator_tp_show(user_db_id, tp_show)
             bot.edit_message_text(
@@ -139,6 +148,50 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'reset':
         db_new.reset_user_settings(user_db_id)
+        send_settings(bot, call.message, user_id)
+
+    if type == 'split':
+        bot.edit_message_text(
+            msg_split_settings(user_id), chat_id, mes_id,
+            reply_markup=kb_split_settings(user_id)
+        )
+
+    if type == 'split_on' or type == 'split_off':
+        is_splitting = True if type == 'split_on' else False
+
+        if is_splitting:
+            split_values = db_new.get_user_split_values(user_db_id)
+            tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+
+            if split_values is None or (len(split_values) != len(tp_show)):
+                bot.edit_message_text(
+                    'Для включения "разделения" нужно установить значения',
+                    chat_id, mes_id, reply_markup=kb_split_ok(user_id)
+                )
+                return
+
+        db_new.set_user_is_splitting(user_db_id, is_splitting)
+
+        bot.edit_message_text(
+            msg_split_settings(user_id), chat_id, mes_id,
+            reply_markup=kb_split_settings(user_id)
+        )
+
+    if type == 'split_set_value':
+        tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+
+        tp_text = ''
+
+        for i, el in enumerate(tp_show):
+            tp_text += f'x{el}'
+            if i != len(tp_show) - 1:
+                tp_text += ' '
+
+        bot.edit_message_text(
+            f'Введите <b>проценты</b> разделения <u>через пробел</u> для каждого из тейк профитов (<b>{tp_text}</b>)\nСумма процентов должна быть равна 100%',
+            chat_id, mes_id
+        )
+        bot.set_state(user_id, SettingsState.split_values, chat_id)
 
     bot.answer_callback_query(call.id)
 

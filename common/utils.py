@@ -75,6 +75,8 @@ def get_calculation(
     risk_value: float,
     open_price: float,
     stop_loss: float,
+    is_splitting: bool,
+    split_values: list[float],
     ticker: str | None = None,
     tp_ratio: list[int] = [3, 4, 5],
 ):
@@ -108,6 +110,11 @@ def get_calculation(
     profit: list[float] = []
     for i, el in enumerate(tp_ratio):
         take_profit.append(open_price + (open_price - stop_loss) * el)
-        profit.append(risk_value * el)
+
+        rate = 1
+        if is_splitting:
+            rate = split_values[i] / 100
+
+        profit.append(risk_value * el * rate)
 
     return count_bet, value_bet, credit, take_profit, profit
