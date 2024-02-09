@@ -11,6 +11,7 @@ from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subs
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
+FILTER_TYPE = Literal['', 'by_date_old', 'by_paid']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
@@ -713,14 +714,17 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_paginated_users(self, limit=10, page=1, filter: Literal['', 'by_date_old'] = '') -> list[UserInfo]:
-        """Получить список всех пользователей"""
+    def get_paginated_users(self, limit=10, page=1, filter: FILTER_TYPE = '') -> list[UserInfo]:
+        """Получить постраничный список пользователей"""
         query = self.USER_INFO_QUERY
-        # if filter == 'by_paid':
-        #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
-        #     query += 'WHERE subscribes.active = 1 '
-        query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
-        query += f", u.id ASC "
+
+        if filter == 'by_paid':
+            query += 'LEFT JOIN (SELECT tg_user_id, active, max(finish_dt) as finish_dt FROM subscribes '
+            query += 'WHERE active = 1 GROUP BY tg_user_id, active) sub on u.id_telegram = sub.tg_user_id '
+            query += 'ORDER BY sub.active ASC, sub.finish_dt DESC '
+        else:
+            query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'}, u.id ASC "
+
         query += "LIMIT %s OFFSET %s "
 
         params = (limit, (page - 1) * limit)
@@ -749,13 +753,12 @@ class Database:
     def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
         query = self.USER_INFO_QUERY + (
             'WHERE u.ban = 0 '
-            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= %s '
-            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) > 0 '
+            f'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= {min_sub_count} '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) > 0 '
         )
-        params = (min_sub_count)
 
         try:
-            self.curs.execute(query, params)
+            self.curs.execute(query)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:
@@ -766,7 +769,7 @@ class Database:
     def get_not_subscribed_users(self) -> list[UserInfo]:
         query = self.USER_INFO_QUERY + (
             'WHERE u.ban = 0 '
-            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) = 0 '
         )
 
         try:
@@ -1214,17 +1217,17 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_worker_role(self, id: int) -> int | None:
+    def get_worker_role(self, tg_id: int) -> int | None:
         """Узнать роль работника"""
         query = "SELECT role FROM tgbot_workers WHERE tg_user_id = %s"
-        params = (id,)
+        params = (tg_id,)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
             return data.get('role') if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_role]: {e}')
+            print(f'ERROR[get_worker_role]: {e}')
             self.connection.rollback()
             return None
 
