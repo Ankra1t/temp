@@ -622,6 +622,33 @@ def msg_calculate_forex_result(
 
 
 # Ввод данных
+def msg_enter_split(user_id: int):
+    lang = get_lang(user_id)
+    tp_show = db_new.get_calculator_tp_show(user_id) or '345'
+
+    if len(tp_show) == 3:
+        example = '75 15 10'
+    elif len(tp_show) == 2:
+        example = '75 25'
+    else:
+        example = '100'
+
+    tp_text = ''
+    for i, el in enumerate(tp_show):
+        tp_text += f'x{el}'
+        if i != len(tp_show) - 1:
+            tp_text += ' '
+
+    return '\n'.join((
+        f'Введите <b>проценты</b> разделения <u>через пробел</u> для каждого из тейк профитов',
+        '',
+        f'Ваши тейк профиты: <b>{tp_text}</b>',
+        'Сумма процентов должна быть равна <b>100%</b>',
+        '',
+        f'Пример: <b>{example}</b>'
+    ))
+
+
 def msg_enter_future(user_id: int):
     lang = get_lang(user_id)
 

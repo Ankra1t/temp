@@ -7,7 +7,7 @@ from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings, kb_spl
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_currency,
-    msg_enter_risk_percent, msg_percent_error, msg_split_settings,
+    msg_enter_risk_percent, msg_enter_split, msg_percent_error, msg_split_settings,
     msg_success_base_set, msg_success_edit
 )
 
@@ -102,40 +102,34 @@ def handle_split_values(message: Message, bot: TeleBot):
 
     chat_id = message.chat.id
 
+    error_mes = 'Ошибка!\n' + msg_enter_split(user_id)
+
     value = text_accept(message)
     if value is None:
-        bot.send_message(
-            chat_id, 'Введите значения разделения текстом:'
-        )
+        bot.send_message(chat_id, error_mes)
         return
 
     value = value.replace('%', '')
     split_values = value.split(' ')
 
     if len(split_values) != len(tp_show):
-        bot.send_message(
-            chat_id, f'Введите значения разделения для каждого из {len(tp_show)} тейк профитов:'
-        )
+        bot.send_message(chat_id, error_mes)
         return
 
     values: list[float] = []
 
     for el in split_values:
         if not is_digit(el):
-            bot.send_message(
-                chat_id, f'Введите все значения разделения в виде числа:'
-            )
+            bot.send_message(chat_id, error_mes)
             return
 
         values.append(float(el))
 
     if sum(values) != 100:
-        bot.send_message(
-            chat_id, f'Значения в сумме должны давать 100%:'
-        )
+        bot.send_message(chat_id, error_mes)
         return
 
-    # TODO - Автовключение?
+    db_new.set_user_is_splitting(user_db_id, True)
 
     bot.delete_state(user_id, chat_id)
     db_new.set_user_split_values(user_db_id, values)
