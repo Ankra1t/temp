@@ -50,13 +50,13 @@ def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True)
             keyboard.add(btn_back, counter, btn_next)
 
     if filter == 'by_date_new':
-        filter_text = 'Фильтрация: "сначала старые"'
+        filter_text = 'Фильтровать по старым'
         new_filter = 'by_date_old'
     elif filter == 'by_paid':
-        filter_text = 'Фильтрация: "сначала новые"'
+        filter_text = 'Фильтровать по новым'
         new_filter = 'by_date_new'
     else:
-        filter_text = 'Фильтрация: "сначала оплатившие"'
+        filter_text = 'Фильтровать по оплатившим'
         new_filter = 'by_paid'
 
     btn_filter = getListButton(filter_text, 1, new_filter)
