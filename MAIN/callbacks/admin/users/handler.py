@@ -110,7 +110,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         else:
             filter_text = 'оплатившим'
 
-        text += f'Фильрация по <b>{filter_text}</b>'
+        text += f'\n| Фильрация по <b>{filter_text}</b> |'
 
         bot.edit_message_text(
             text or 'Нет пользователей', chat_id, mes_id,
