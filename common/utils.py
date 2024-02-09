@@ -111,7 +111,7 @@ def get_calculation(
     take_profit: list[float] = []
     profit: list[float] = []
     for i, el in enumerate(tp_ratio):
-        take_profit.append(open_price + abs(open_price - stop_loss) * el)
+        take_profit.append(open_price + (open_price - stop_loss) * el)
         profit.append(risk_value * el)
 
     return count_bet, value_bet, credit, risk_value, take_profit, profit
