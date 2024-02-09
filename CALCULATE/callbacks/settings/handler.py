@@ -8,7 +8,7 @@ from db_new import db_new, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_settings_change_base,
+    msg_enter_risk_percent, msg_enter_split, msg_settings_change_base,
     msg_settings_change_market, msg_settings_set_tp_show,
     msg_split_settings, msg_success_edit
 )
@@ -178,17 +178,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'split_set_value':
-        tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
-
-        tp_text = ''
-
-        for i, el in enumerate(tp_show):
-            tp_text += f'x{el}'
-            if i != len(tp_show) - 1:
-                tp_text += ' '
-
         bot.edit_message_text(
-            f'Введите <b>проценты</b> разделения <u>через пробел</u> для каждого из тейк профитов (<b>{tp_text}</b>)\nСумма процентов должна быть равна 100%',
+            msg_enter_split(user_id),
             chat_id, mes_id
         )
         bot.set_state(user_id, SettingsState.split_values, chat_id)
