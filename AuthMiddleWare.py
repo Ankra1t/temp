@@ -29,8 +29,7 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         user_role = check_registrate(user_id) or 0
-        print(f'---------------user_role -----------------')
-        print(user_role)
+
         if user_role is None:
             # Проверяем реферальный id
             ref_id = message.text

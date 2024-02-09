@@ -974,6 +974,36 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_user_risk_is_percent(self, user_id: int) -> bool:
+        query = 'SELECT risk_is_percent FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+
+            if data is not None and data.get('risk_is_percent') == 1:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f'ERROR[get_user_risk_is_percent]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_risk_is_percent(self, user_id: int, value: bool):
+        query = 'UPDATE tgcalc_user_settings SET risk_is_percent = %s WHERE user_id = %s'
+        params = (int(value), user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_risk_is_percent]: {e}')
+            self.connection.rollback()
+            return False
+
     def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
         """Получить язык пользователя"""
         query = 'SELECT lang FROM users WHERE id = %s'
@@ -1111,6 +1141,75 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_calculator_user_market]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_user_is_splitting(self, user_id: int) -> bool:
+        query = 'SELECT is_splitting FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return False if data is None else data.get('is_splitting') == 1
+        except Exception as e:
+            print(f'ERROR[get_user_is_splitting]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_is_splitting(self, user_id: int, value: bool):
+        query = 'UPDATE tgcalc_user_settings SET is_splitting = %s WHERE user_id = %s'
+        params = (int(value), user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_is_splitting]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_user_split_values(self, user_id: int) -> list[float] | None:
+        query = 'SELECT split_values FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if data is None else data.get('split_values')
+        except Exception as e:
+            print(f'ERROR[get_user_split_values]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_split_values(self, user_id: int, values: list[float]):
+        query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'
+        params = (values, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_split_values]: {e}')
+            self.connection.rollback()
+            return False
+
+    def reset_user_settings(self, user_id: int):
+        query = (
+            'UPDATE tgcalc_user_settings SET take_profit_to_show = %s, market = %s, base_currency = %s, '
+            'base_deposit = %s, base_risk_percent = %s '
+            'WHERE user_id = %s'
+        )
+        params = ('345', 'crypto', 'USD', None, None, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[reset_user_settings]: {e}')
             self.connection.rollback()
             return False
 

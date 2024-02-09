@@ -2,12 +2,14 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new, BASE_VALUE_TYPE
-from common.utils import digit_accept, text_accept
-from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
+from common.utils import digit_accept, is_digit, text_accept
+from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings, kb_split_settings
 from CALCULATE.states import SettingsState
-from CALCULATE.common.messages import msg_currency_error, msg_digit_error, msg_enter_currency, msg_enter_risk_percent, msg_percent_error, msg_success_base_set, msg_success_edit
-
-from AuthRoles import change_password
+from CALCULATE.common.messages import (
+    msg_currency_error, msg_digit_error, msg_enter_currency,
+    msg_enter_risk_percent, msg_percent_error, msg_split_settings,
+    msg_success_base_set, msg_success_edit
+)
 
 
 def handle_new_value(type: BASE_VALUE_TYPE):
@@ -20,19 +22,28 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         chat_id = message.chat.id
 
+        is_percent = False
+        if message.text is not None and message.text.endswith('%'):
+            is_percent = True
+            message.text = message.text.replace('%', '')
+
         value = digit_accept(message)
         if value is None:
             bot.send_message(chat_id, msg_digit_error(user_id),
                              reply_markup=kb_base_cancel(user_id))
             return
-        if type == 'base_risk_percent' and (value <= 0 or value >= 100):
-            bot.send_message(
-                chat_id,
-                msg_percent_error(user_id),
-                reply_markup=kb_base_cancel(user_id))
-            return
+
+        # if type == 'base_risk_percent' and (value <= 0 or value >= 100):
+        #     bot.send_message(
+        #         chat_id,
+        #         msg_percent_error(user_id),
+        #         reply_markup=kb_base_cancel(user_id)
+        #     )
+        #     return
 
         db_new.set_user_base(user_db_id, type, value)
+        if type == 'base_risk_percent':
+            db_new.set_user_risk_is_percent(user_db_id, is_percent)
 
         with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
@@ -51,6 +62,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
             send_settings(bot, message, user_id, True)
+
     return r_func
 
 
@@ -82,6 +94,57 @@ def handle_new_currency(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
 
 
+def handle_split_values(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+
+    chat_id = message.chat.id
+
+    value = text_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, 'Введите значения разделения текстом:'
+        )
+        return
+
+    value = value.replace('%', '')
+    split_values = value.split(' ')
+
+    if len(split_values) != len(tp_show):
+        bot.send_message(
+            chat_id, f'Введите значения разделения для каждого из {len(tp_show)} тейк профитов:'
+        )
+        return
+
+    values: list[float] = []
+
+    for el in split_values:
+        if not is_digit(el):
+            bot.send_message(
+                chat_id, f'Введите все значения разделения в виде числа:'
+            )
+            return
+
+        values.append(float(el))
+
+    if sum(values) != 100:
+        bot.send_message(
+            chat_id, f'Значения в сумме должны давать 100%:'
+        )
+        return
+
+    # TODO - Автовключение?
+
+    bot.delete_state(user_id, chat_id)
+    db_new.set_user_split_values(user_db_id, values)
+    bot.send_message(
+        chat_id, msg_split_settings(user_id),
+        reply_markup=kb_split_settings(user_id)
+    )
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -92,3 +155,4 @@ def registration(bot: TeleBot):
             state=SettingsState.risk_percent)
 
     reg_mes(handle_new_currency, state=SettingsState.currency)
+    reg_mes(handle_split_values, state=SettingsState.split_values)
