@@ -137,10 +137,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.deposit, chat_id)
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
-    if type == 'uses':
-        db_new.curs.execute(
-            f'UPDATE tgcalc_user_settings SET uses_count = 10 WHERE user_id = {user_db_id}')
-        db_new.connection.commit()
+    if type == 'reset':
+        db_new.reset_user_settings(user_db_id)
 
     bot.answer_callback_query(call.id)
 

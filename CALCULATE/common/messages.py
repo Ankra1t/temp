@@ -1,3 +1,4 @@
+from locale import currency
 from telebot import TeleBot
 from common.utils import float_to_print, get_decimal_count, get_lang, get_print_float
 
@@ -89,6 +90,13 @@ def msg_settings(user_id: int):
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     base = db_new.get_user_base(user_db_id)
+    deposit, risk, currency = (
+        base.get('base_deposit'),
+        base.get('base_risk_percent'),
+        base.get('base_currency') or 'USD'
+    )
+
+    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
     tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
     market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
 
@@ -96,7 +104,7 @@ def msg_settings(user_id: int):
         'ru': {
             'name': 'Настройки',
             'dep': 'Базовый депозит',
-            'risk': 'Базовый процент риска',
+            'risk': 'Базовый риск',
             'currency': 'Базовая валюта',
             'tp_show': 'Вывод расчета прибыли',
             'market': 'Рынок',
@@ -104,7 +112,7 @@ def msg_settings(user_id: int):
         'en': {
             'name': 'Settings',
             'dep': 'Default deposit',
-            'risk': 'Default risk percent',
+            'risk': 'Default risk',
             'currency': 'Default currency',
             'tp_show': 'Display calculation of profit',
             'market': 'Market',
@@ -118,9 +126,17 @@ def msg_settings(user_id: int):
     return '\n'.join((
         f'⚙️ <b><u>{texts[lang]["name"]}</u></b>',
         '',
-        f'{BULLET} {texts[lang]["dep"]}: <b>{float_to_print(base["base_deposit"])}</b>',
-        f'{BULLET} {texts[lang]["risk"]}: <b>{float_to_print(base["base_risk_percent"])}</b>',
-        f'{BULLET} {texts[lang]["currency"]}: <b>{base["base_currency"] or "-"}</b>',
+        (
+            f'{BULLET} {texts[lang]["dep"]}: <b>'
+            f'{f"{float_to_print(deposit)} {currency}" if deposit is not None else "-"}'
+            '</b>'
+        ),
+        (
+            f'{BULLET} {texts[lang]["risk"]}: <b>'
+            f'{f"{float_to_print(risk)}" if risk is not None else "-"}'
+            f'{"-" if risk is None else "%" if risk_is_percent else f" {currency}"}'
+            '</b>'
+        ),
         '',
         f'{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>',
         f'{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>'
@@ -362,33 +378,40 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
+    base_value = db_new.get_user_base(user_db_id)
+    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+
+    deposit: float | None = base_value.get('base_deposit')
+    risk: float | None = base_value.get('base_risk_percent') or 1.
+    currency: str = base_value.get('base_currency') or 'USD'
+
+    if risk_is_percent and (deposit is not None) and (risk is not None):
+        risk *= deposit * 0.01
 
     with bot.retrieve_data(user_id, chat_id) as data:
         type = data.get('calc_type')
         ticker = data.get('ticker')
-        deposit = data.get('deposit')
-        risk_percent = data.get('risk_percent')
         open_price = data.get('open_price')
 
     type_list = ['ticker', 'dep', 'risk', 'open']
     vars_dict = {
         'ticker': ticker,
         'dep': deposit,
-        'risk': risk_percent,
+        'risk': risk,
         'open': open_price,
     }
+
     point = {
         'ru': {
             'ticker': 'Тикер',
             'dep': 'Депозит',
-            'risk': 'Процент риска',
+            'risk': 'Риск на сделку',
             'open': 'Цена входа',
         },
         'en': {
             'ticker': 'Ticker',
             'dep': 'Deposit',
-            'risk': 'Risk percent',
+            'risk': 'Deal risk',
             'open': 'Entry price',
         }
     }
@@ -415,7 +438,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 def msg_calculate_result(
     user_id: int,
     deposit: float,
-    risk_percent: float,
     open_price: float,
     stop_loss: float,
     count_bet: float,
@@ -432,7 +454,6 @@ def msg_calculate_result(
     point = {
         'ru': {
             'dep': 'Депозит',
-            'risk': '% риска на сделку',
             'open': 'Цена открытия',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
@@ -444,7 +465,6 @@ def msg_calculate_result(
         },
         'en': {
             'dep': 'Deposit',
-            'risk': '% risk of a deal',
             'open': 'The open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
@@ -473,7 +493,7 @@ def msg_calculate_result(
 
     return '\n'.join([
         f'{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>',
-        f'{BULLET} {point[lang]["risk"]}: <b>{get_print_float(risk_percent)}%</b>',
+        f'{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>',
         '',
         f'{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>',
         f'{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>',
@@ -482,7 +502,6 @@ def msg_calculate_result(
         '',
         f'{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>',
         f'{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>',
-        f'{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>',
         f'{BULLET} {point[lang]["profit"]}: <b>{p_show}</b>',
     ])
 
@@ -570,8 +589,8 @@ def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите % риска на сделку',
-        'en': 'Enter % risk of a deal'
+        'ru': 'Введите <b>процент</b> риска от депозита <b>(со знаком %)</b> или сумму риска',
+        'en': 'Enter the <b>percentage</b> of risk by deposit <b>(with a % sign)</b> or the risk amount'
     }
 
     return f'✍ {texts[lang]}:'

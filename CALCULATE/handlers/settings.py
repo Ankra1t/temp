@@ -20,19 +20,28 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         chat_id = message.chat.id
 
+        is_percent = False
+        if message.text is not None and message.text.endswith('%'):
+            is_percent = True
+            message.text = message.text.replace('%', '')
+
         value = digit_accept(message)
         if value is None:
             bot.send_message(chat_id, msg_digit_error(user_id),
                              reply_markup=kb_base_cancel(user_id))
             return
-        if type == 'base_risk_percent' and (value <= 0 or value >= 100):
-            bot.send_message(
-                chat_id,
-                msg_percent_error(user_id),
-                reply_markup=kb_base_cancel(user_id))
-            return
+
+        # if type == 'base_risk_percent' and (value <= 0 or value >= 100):
+        #     bot.send_message(
+        #         chat_id,
+        #         msg_percent_error(user_id),
+        #         reply_markup=kb_base_cancel(user_id)
+        #     )
+        #     return
 
         db_new.set_user_base(user_db_id, type, value)
+        if type == 'base_risk_percent':
+            db_new.set_user_risk_is_percent(user_db_id, is_percent)
 
         with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
@@ -51,6 +60,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
             send_settings(bot, message, user_id, True)
+
     return r_func
 
 

@@ -93,23 +93,6 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
 def handle_deposit(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    value = digit_accept(message)
-    if value is None:
-        bot.send_message(chat_id, msg_digit_error(user_id),
-                         reply_markup=kb_cancel(user_id))
-        return
-
-    db_new.set_user_base(user_id, 'base_deposit', value)
-
-    set_state_data(bot, user_id, chat_id, {'deposit': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
-
-
-def handle_risk_percent(message: Message, bot: TeleBot):
-    user_id = message.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
@@ -120,16 +103,43 @@ def handle_risk_percent(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_digit_error(user_id),
                          reply_markup=kb_cancel(user_id))
         return
-    if value <= 0 or value >= 100:
+
+    db_new.set_user_base(user_db_id, 'base_deposit', value)
+
+    choose_calculate_step(bot, user_id, chat_id, mes_id)
+
+
+def handle_risk_percent(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    is_percent = False
+    if message.text is not None and message.text.endswith('%'):
+        is_percent = True
+        message.text = message.text.replace('%', '')
+
+    value = digit_accept(message)
+    if value is None:
         bot.send_message(
-            chat_id,
-            msg_percent_error(user_id),
-            reply_markup=kb_cancel(user_id))
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_cancel(user_id)
+        )
         return
 
-    db_new.set_user_base(user_db_id, 'base_risk_percent', value)
+    # if value <= 0 or value >= 100:
+    #     bot.send_message(
+    #         chat_id,
+    #         msg_percent_error(user_id),
+    #         reply_markup=kb_cancel(user_id)
+    #     )
+    #     return
 
-    set_state_data(bot, user_id, chat_id, {'risk_percent': value})
+    db_new.set_user_base(user_db_id, 'base_risk_percent', value)
+    db_new.set_user_risk_is_percent(user_db_id, is_percent)
+
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -176,22 +186,28 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        calc_type = data.get('calc_type')
-        deposit = data.get('deposit')
-        risk_percent = data.get('risk_percent')
         open_price = data.get('open_price')
         ticker = data.get('ticker')
 
     if open_price == stop_loss:
         bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+        return
 
-    count_bet, value_bet, credit, risk_value, take_profit, profit = get_calculation(
-        user_id, deposit, risk_percent, open_price,
-        stop_loss, ticker
+    base_values = db_new.get_user_base(user_db_id)
+    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+
+    deposit: float = base_values['base_deposit'] or 1.
+    risk_value: float = base_values['base_risk_percent'] or 1.
+
+    if risk_is_percent:
+        risk_value *= deposit * 0.01
+
+    count_bet, value_bet, credit, take_profit, profit = get_calculation(
+        deposit, risk_value, open_price, stop_loss, ticker
     )
 
     mes = msg_calculate_result(
-        user_id, deposit, risk_percent, open_price,
+        user_id, deposit, open_price,
         stop_loss, count_bet, value_bet, credit,
         risk_value, take_profit, profit
     )

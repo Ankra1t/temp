@@ -20,7 +20,7 @@ def kb_settings(user_id: int):
             'lang': 'Выбрать язык',
             'tp_show': 'Установить расчет прибыли',
             'market': 'Выбрать рынок',
-            'uses': 'Сброс использования',
+            'reset': 'Сбросить настройки',
             'back': 'Назад',
         },
         'en': {
@@ -28,7 +28,7 @@ def kb_settings(user_id: int):
             'lang': 'Choose language',
             'tp_show': 'Set calculation of profit',
             'market': 'Choose market',
-            'uses': 'Сброс использования',
+            'reset': 'Reset settings',
             'back': 'Back'
         }
     }
@@ -41,7 +41,7 @@ def kb_settings(user_id: int):
     btn_tp_show = getButton(texts[lang]["tp_show"], 'tp_show')
     btn_market = getButton(texts[lang]["market"], 'market')
 
-    btn_uses = getButton(texts[lang]["uses"], 'uses')
+    btn_uses = getButton(texts[lang]["reset"], 'reset')
 
     keyboard.add(btn_base, btn_market)
     keyboard.add(btn_tp_show, btn_lang)
