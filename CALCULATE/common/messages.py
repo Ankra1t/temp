@@ -559,7 +559,7 @@ def msg_calculate_result(
         '',
         ''.join((
             f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
-            f"\n{BULLET} {point[lang]['tp']}: <b>{split_show}</b>" if split_show != '' else ''
+            f"\n{BULLET} {point[lang]['split']}: <b>{split_show}</b>" if split_show != '' else ''
         )),
         f'{BULLET} {point[lang]["profit"]}: <b>{p_show}</b>',
     ])

@@ -84,6 +84,7 @@ def get_calculation(
     Returns:
         count_bet, value_bet, credit, take_profit, profit
     """
+    print(tp_ratio, split_values)
     if open_price == stop_loss:
         stop_loss = open_price - 0.01
 
