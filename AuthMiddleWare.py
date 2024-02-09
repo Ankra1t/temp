@@ -43,17 +43,19 @@ class AuthMiddleWare(BaseMiddleware):
 
             # Регистрация, пробный период, доавбление таблиц бота
             registration(user_id, username, ref_id)
-            pay_guard.set_trial(message)
-            db_new.create_tg_user_tables(user_db_id)
-
-            # Проверка языка
-            lang = message.from_user.language_code.lower()
-            lang = lang if (lang in LANGUAGES) else 'ru'
-            db_new.set_user_lang(user_db_id, lang)
-
-            # Уведомление о регистрации
             new_user = db_new.get_user_by_tg_id(user_id)
+
+            pay_guard.set_trial(message)
+
             if new_user is not None:
+                db_new.create_tg_user_tables(new_user.id)
+
+                # Проверка языка
+                lang = message.from_user.language_code.lower()
+                lang = lang if (lang in LANGUAGES) else 'ru'
+                db_new.set_user_lang(new_user.id, lang)
+
+                # Уведомление о регистрации
                 notifier.send_user_is_registered(new_user)
             else:
                 print(f'Ошибка регистрации пользователя tg_id = {user_id}')
