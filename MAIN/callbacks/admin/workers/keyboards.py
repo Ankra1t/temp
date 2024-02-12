@@ -6,13 +6,12 @@ from initialize import kb_inl_admin
 from .filter import admin_workers_factory
 
 
-def getButton(text: str, type: str, role: int = -1, id: int = -1, name: str = ''):
+def getButton(text: str, type: str, role: int = -1, id: int = -1):
     return InlineKeyboardButton(
         text, None,
         admin_workers_factory.new(
             type=type,
             id=id,
-            name=name,
             role=role
         )
     )
@@ -33,9 +32,9 @@ def kb_admin_workers():
     return keyboard
 
 
-def kb_admin_workers_confirm(id: int, name: str, worker: int, action: Literal['add', 'delete']):
+def kb_admin_workers_confirm(id: int, worker: int, action: Literal['add', 'delete']):
     def getThisButton(text: str, type: str):
-        return getButton(text, f'{action}_{type}', worker, id, name)
+        return getButton(text, f'{action}_{type}', worker, id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 

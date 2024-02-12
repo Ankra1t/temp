@@ -1257,15 +1257,21 @@ class Database:
     def _data_to_worker(self, data: DictRow):
         return Worker(
             id=data.get('id'),
-            tg_id=data.get('tg_user_id'),
-            username=data.get('tg_username'),
+            tg_id=data.get('id_telegram') or 0,
+            username=data.get('username_tg') or '',
             role=data.get('role')
         )
 
-    def add_worker(self, tg_id: int, username: str, role: int):
+    WORKER_QUERY = (
+        'SELECT w.user_id as id, w.role, u.id_telegram, u.username_tg FROM tgbot_workers as w '
+        'LEFT JOIN users as u ON u.id = w.user_id '
+    )
+
+    def add_worker(self, id: int, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        query = "INSERT INTO tgbot_workers(tg_user_id, tg_username, role) VALUES(%s, %s, %s)"
-        params = (tg_id, username, role)
+        datetime_now = datetime.utcnow()
+        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at) VALUES(%s, %s, %s, %s)"
+        params = (id, role, datetime_now, datetime_now)
 
         try:
             self.curs.execute(query, params)
@@ -1276,10 +1282,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def del_worker(self, tg_id: int):
+    def del_worker(self, id: int):
         """Удаление работника"""
-        query = 'DELETE FROM tgbot_workers WHERE tg_user_id = %s'
-        params = (tg_id,)
+        query = 'DELETE FROM tgbot_workers WHERE user_id = %s'
+        params = (id,)
 
         try:
             self.curs.execute(query, params)
@@ -1292,7 +1298,7 @@ class Database:
 
     def get_all_workes(self) -> list[Worker]:
         """Получить всех работников"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers'
+        query = self.WORKER_QUERY
 
         try:
             self.curs.execute(query)
@@ -1305,7 +1311,7 @@ class Database:
 
     def get_admins(self) -> list[Worker]:
         """Получить всех админов"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 1'
+        query = self.WORKER_QUERY + 'WHERE w.role = 1'
 
         try:
             self.curs.execute(query)
@@ -1318,7 +1324,7 @@ class Database:
 
     def get_redactors(self) -> list[Worker]:
         """Получить всех редакторов"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 2'
+        query = self.WORKER_QUERY + 'WHERE w.role = 2'
 
         try:
             self.curs.execute(query)
@@ -1331,35 +1337,35 @@ class Database:
 
     def get_support_name(self) -> str:
         """Получение тех. поддержки"""
-        query = 'SELECT tg_username FROM tgbot_workers WHERE role = 3'
+        query = self.WORKER_QUERY + 'WHERE w.role = 3'
 
         try:
             self.curs.execute(query)
             data = self.curs.fetchone()
-            return data.get('tg_username', '') if (data is not None) else ''
+            return data.get('username_tg', '') if (data is not None) else ''
         except Exception as e:
             print(f'ERROR[get_support_name]: {e}')
             self.connection.rollback()
             return ''
 
-    def update_support_name(self, username: str):
+    def update_support(self, id: int):
         """Изменение тех. поддержки"""
-        query = 'UPDATE tgbot_workers SET tg_username = %s WHERE role = 3'
-        params = username,
+        query = 'UPDATE tgbot_workers SET user_id = %s WHERE role = 3'
+        params = id,
 
         try:
             self.curs.execute(query, params)
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_support_name]: {e}')
+            print(f'ERROR[update_support]: {e}')
             self.connection.rollback()
             return False
 
-    def get_worker_role(self, tg_id: int) -> int | None:
+    def get_worker_role(self, id: int) -> int | None:
         """Узнать роль работника"""
-        query = "SELECT role FROM tgbot_workers WHERE tg_user_id = %s"
-        params = (tg_id,)
+        query = "SELECT role FROM tgbot_workers WHERE user_id = %s"
+        params = (id,)
 
         try:
             self.curs.execute(query, params)

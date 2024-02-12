@@ -138,7 +138,7 @@ def send_admin_workers_admin(
 
     if len(admins) != 0:
         for i in range(0, len(admins)):
-            res += f'\nID: {admins[i].tg_id} | Username: @{admins[i].username}'
+            res += f'\nID: {admins[i].id} | Username: @{admins[i].username}'
     else:
         res = '\nНет админов!'
 
@@ -169,7 +169,7 @@ def send_admin_workers_redactors(
 
     if len(redactors) != 0:
         for i in range(0, len(redactors)):
-            res += f'\nID: {redactors[i].tg_id} | Username: @{redactors[i].username}'
+            res += f'\nID: {redactors[i].id} | Username: @{redactors[i].username}'
     else:
         res = '\nНет редакторов!'
 

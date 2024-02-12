@@ -24,35 +24,20 @@ def handle_add_id(message: Message, bot: TeleBot):
         )
         return
 
-    set_state_data(bot, user_id, chat_id, {'id': id})
-    bot.set_state(user_id, AdminWorkersState.add_name, chat_id)
-    bot.send_message(
-        chat_id, 'Введите никнейм:',
-        reply_markup=kb_admin_workers_back(current_role)
-    )
+    user = db_new.get_user_by_id(id)
 
-
-def handle_add_name(message: Message, bot: TeleBot):
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    name = text_accept(message)
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        id = data.get('id')
-        current_role = data.get('role', 2)
-
-    if name is None:
+    if user is None:
         bot.send_message(
-            chat_id, 'Отправьте текст:',
+            chat_id, f'Пользователя с id <b>{id}</b> нет в базе.\nВведите другой id:',
             reply_markup=kb_admin_workers_back(current_role)
         )
         return
 
+    set_state_data(bot, user_id, chat_id, {'id': id})
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        chat_id, f'Добавить <b>@{name}</b> с id: <b>{id}</b>?',
-        reply_markup=kb_admin_workers_confirm(id, name, current_role, 'add')
+        chat_id, f'Добавить @{user.username} с id: <b>{id}</b>?',
+        reply_markup=kb_admin_workers_confirm(id, current_role, 'add')
     )
 
 
@@ -73,25 +58,25 @@ def handle_delete_id(message: Message, bot: TeleBot):
 
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        message.chat.id, text=f'Удалить <b>{id}</b>?',
+        message.chat.id, f'Удалить <b>{id}</b>?',
         reply_markup=kb_admin_workers_confirm(
-            id, '', current_role, action='delete')
+            id, current_role, action='delete'
+        )
     )
 
 
-def handle_support_name(message: Message, bot: TeleBot):
+def handle_support_id(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    support_name = text_accept(message)
-    if support_name is None:
+    support_id = digit_accept(message, int)
+    if support_id is None:
         bot.send_message(
-            chat_id, 'Введите ник текстом:'
+            chat_id, 'Введите id поддержки числом:'
         )
         return
 
-    support_name = support_name.replace('@', '')
-    db_new.update_support_name(support_name)
+    db_new.update_support(support_id)
 
     bot.delete_state(user_id, chat_id)
     send_admin_workers_support(bot, message, user_id, True)
@@ -102,8 +87,7 @@ def registration(bot: TeleBot):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
     reg_mes(handle_add_id, state=AdminWorkersState.add_id)
-    reg_mes(handle_add_name, state=AdminWorkersState.add_name)
 
     reg_mes(handle_delete_id, state=AdminWorkersState.delete_id)
 
-    reg_mes(handle_support_name, state=AdminWorkersState.update_support)
+    reg_mes(handle_support_id, state=AdminWorkersState.update_support)
