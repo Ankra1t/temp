@@ -1,6 +1,7 @@
 from .admin.tariff import AdminTariffState
 from .admin.workers import AdminWorkersState
 from .admin.params import AdminParamsState
+from .admin.statistics import AdminStatisticsState
 from .admin.posts import AdminPostsState
 from .admin.users import AdminUsersState
 

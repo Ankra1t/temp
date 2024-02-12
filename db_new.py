@@ -527,6 +527,26 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_paid_transactions_product(self, product):
+        """Получить все оплаченные транзакции по продукту"""
+        query = ("SELECT * "
+                 "FROM transactions t, prices p  "
+                 "WHERE t.price_id = p.id AND p.type_product = %s "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (product, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_product]: {e}')
+            self.connection.rollback()
+            return []
+
     def get_paid_transactions_summ(self):
         """Суммы по транзакциям"""
         query = ("SELECT sum(sum) FROM transactions "
@@ -561,6 +581,26 @@ class Database:
             print(f'ERROR[get_paid_transactions_summ_period]: {e}')
             self.connection.rollback()
             return []
+
+    def get_paid_transactions_summ_product(self, product):
+        """Суммы по транзакциям по продукту"""
+        query = ("SELECT sum(sum) "
+                 "FROM transactions t, prices p "
+                 "WHERE t.price_id = p.id AND p.type_product = %s "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (product, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_summ_product]: {e}')
+            self.connection.rollback()
+            return []
+
 
     def get_purchases_by_user(self, user_id: int):
         """Получение покупок пользователя"""
