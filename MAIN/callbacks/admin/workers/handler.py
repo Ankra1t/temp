@@ -16,7 +16,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     type = data.get('type', '')
     id = int(data.get('id', 0)) if is_digit(data.get('id', '')) else 0
-    name = data.get('name', '')
     role = int(data.get('role', -1)) if is_digit(data.get('role', '')) else -1
 
     user_id = call.from_user.id
@@ -39,6 +38,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.delete_state(user_id, chat_id)
         mas = db_new.get_all_workes()
         res = ''
+
         for i in range(0, len(mas)):
             show_role = ''
             if mas[i].role == 1:
@@ -48,7 +48,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             elif mas[i].role == 3:
                 show_role = 'Тех.поддержка'
 
-            res += f'\n@{mas[i].username} | {show_role}'
+            name = f'| @{mas[i].username}' if mas[i].username else ''
+
+            res += f'\nID: {mas[i].id} {name} | {show_role}'
 
         bot.edit_message_text(
             res, chat_id, mes_id,
@@ -58,7 +60,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     # Удаление/Добавление
     if type == 'delete' or type == 'add':
         if role == 1:
-            text = 'Отправьте ID гл. админа'
+            text = 'Отправьте ID админа'
         else:
             text = 'Отправьте ID редактора'
 
@@ -80,7 +82,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id
             )
         else:
-            db_new.add_worker(id, name, role)
+            db_new.add_worker(id, role)
             bot.edit_message_text('Успешно!', chat_id, mes_id)
 
     if type == 'delete_yes':
@@ -106,7 +108,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'update_support':
         bot.set_state(user_id, AdminWorkersState.update_support, chat_id)
         bot.edit_message_text(
-            'Отправьте ник ТГ для тех. поддержки:',
+            'Отправьте id для тех. поддержки:',
             chat_id, mes_id,
             reply_markup=kb_admin_workers_back(3)
         )
