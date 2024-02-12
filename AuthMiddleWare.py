@@ -28,7 +28,7 @@ class AuthMiddleWare(BaseMiddleware):
         if db_new.check_ban_user(user_db_id):
             return CancelUpdate()
 
-        user_role = check_registrate(user_id) or 0
+        user_role = check_registrate(user_id)
 
         if user_role is None:
             # Проверяем реферальный id

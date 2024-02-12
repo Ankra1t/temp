@@ -3,12 +3,10 @@ from telebot.types import CallbackQuery
 
 from db_new import db_new
 
-# TODO удалить
-from initialize import text_editor
 from initialize import base_statis
 
 from common.utils import set_state_data
-from MAIN.states import AdminParamsState
+from MAIN.states import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
 
 from .keyboards import kb_statistics_back, kb_stats_periods, kb_stats_products
@@ -53,19 +51,32 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     elif type == 'stat_pay_products':
 
         # Вывести показатели
+        count_signals = base_statis.count_by_product('signals')
+        count_calc = base_statis.count_by_product('calc')
+        count_calc_signals = base_statis.count_by_product('calc_signals')
+
+        summ_signals = base_statis.summ_by_product('signals')
+        summ_calc = base_statis.summ_by_product('calc')
+        summ_calc_signals = base_statis.summ_by_product('calc_signals')
 
 
         bot.edit_message_text(
-            admin_statistics_products(), chat_id, mes_id,
+            admin_statistics_products(count_signals=count_signals, summ_signals=summ_signals,
+                                      count_calc=count_calc, summ_calc=summ_calc,
+                                      count_calc_signals=count_calc_signals, summ_calc_signals=summ_calc_signals
+                                      ), chat_id, mes_id,
             reply_markup=kb_stats_products()
         )
 
     elif type == 'stat_pay_product_choose':
+
         clients_by_products = filter
+
         bot.edit_message_text(
-            f'Оплат по продукту не обнаружено', chat_id, mes_id,
+            f'Список клиентов с платежами, по выбранному продукту:', chat_id, mes_id,
             reply_markup=None
         )
+        base_statis.show_paid_users(call.message, product=clients_by_products)
         bot.send_message(
             chat_id,
             "Вернуться:",
@@ -79,6 +90,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
 
         base_statis.show_paid_users(call.message)
+
         bot.send_message(
             chat_id,
             "Вернуться:",
@@ -100,23 +112,22 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     elif type == 'stat_pay_period_choose_start_date':
-        print(f'Нажато {type} ')
 
-        # Установить статус
         bot.edit_message_text(
-            'Введите дату начала в формате dd.mm.yy:', chat_id, mes_id,
+            'Введите дату начала в формате DD.MM.YY', chat_id, mes_id,
             reply_markup=kb_statistics_back()
         )
+
+        bot.set_state(user_id, AdminStatisticsState.start_date_only, chat_id)
 
     elif type == 'stat_pay_period_choose_start_to_end':
-        print(f'Нажато {type} ')
-
         # Установить статус
         bot.edit_message_text(
             'Введите дату начала в формате dd.mm.yy:', chat_id, mes_id,
             reply_markup=kb_statistics_back()
         )
 
+        bot.set_state(user_id, AdminStatisticsState.start_date, chat_id)
 
     bot.answer_callback_query(call.id)
 
@@ -127,3 +138,5 @@ def registration(bot: TeleBot):
         _handle_callback,
         lambda _: True, pass_bot=True,
         admin_params=admin_statistics_factory.filter())
+
+

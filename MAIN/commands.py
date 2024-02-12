@@ -4,6 +4,7 @@ from telebot.types import Message
 
 from config_logger import logger
 from initialize import pay_guard, base_statis
+from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
 
 from db_new import db_new
 from keyboard_reply import kb_user_sup
@@ -60,6 +61,13 @@ def _calc(message: Message, bot: TeleBot):
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
+    # base_statis.dt_format = DATE_FORMAT
+    # base_statis.dt_format_admin_show = PRINT_DATE_FROMAT
+    print(f'base_statis даты заданы в initializate ')
+    print(base_statis.dt_format)
+    print(base_statis.dt_format_admin_show)
+
+    return False
 
     per = 'today'
     count_ = base_statis.count_payments('today')

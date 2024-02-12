@@ -78,10 +78,6 @@ def admin_main_callbacks(call: types.CallbackQuery):
             reply_markup=kb_statistics()
         )
 
-        # Вывести всех участников по транзакциям
-    #     Вывести оплаченные транзакции
-
-
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
     bot.answer_callback_query(call.id)
