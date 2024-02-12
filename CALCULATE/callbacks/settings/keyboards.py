@@ -1,5 +1,7 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from db_new import db_new
+
 from common.utils import get_lang
 from CALCULATE.common.messages import market_translates
 
@@ -20,7 +22,8 @@ def kb_settings(user_id: int):
             'lang': 'Выбрать язык',
             'tp_show': 'Установить расчет прибыли',
             'market': 'Выбрать рынок',
-            'uses': 'Сброс использования',
+            'split': 'Разделение профита',
+            'reset': 'Сбросить настройки',
             'back': 'Назад',
         },
         'en': {
@@ -28,7 +31,8 @@ def kb_settings(user_id: int):
             'lang': 'Choose language',
             'tp_show': 'Set calculation of profit',
             'market': 'Choose market',
-            'uses': 'Сброс использования',
+            'split': 'Profit splitting',
+            'reset': 'Reset settings',
             'back': 'Back'
         }
     }
@@ -41,10 +45,13 @@ def kb_settings(user_id: int):
     btn_tp_show = getButton(texts[lang]["tp_show"], 'tp_show')
     btn_market = getButton(texts[lang]["market"], 'market')
 
-    btn_uses = getButton(texts[lang]["uses"], 'uses')
+    btn_split = getButton(texts[lang]["split"], 'split')
+
+    btn_uses = getButton(texts[lang]["reset"], 'reset')
 
     keyboard.add(btn_base, btn_market)
     keyboard.add(btn_tp_show, btn_lang)
+    keyboard.add(btn_split)
     keyboard.add(btn_uses, btn_back)
     return keyboard
 
@@ -228,4 +235,52 @@ def kb_settings_confirm(user_id: int, action: str):
     btn2 = getButton(f'{texts[lang]["no"]}', action + '_confirm_no')
 
     keyboard.add(btn1, btn2)
+    return keyboard
+
+
+def kb_split_settings(user_id: int):
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    lang = get_lang(user_id)
+    is_splitting = db_new.get_user_is_splitting(user_db_id)
+
+    texts = {
+        'ru': {
+            'on': 'Вкл',
+            'off': 'Выкл',
+            'set': 'Выставить значения',
+            'back': 'Назад',
+        },
+        'en': {
+            'on': 'On',
+            'off': 'Off',
+            'set': 'Set values',
+            'back': 'Back',
+        }
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    if is_splitting:
+        btn_on_off = getButton(texts[lang]['off'], 'split_off')
+    else:
+        btn_on_off = getButton(texts[lang]['on'], 'split_on')
+
+    btn_set_value = getButton(texts[lang]['set'], 'split_set_value')
+    btn_back = getButton(texts[lang]['back'], 'go_settings')
+
+    keyboard.add(btn_on_off, btn_set_value)
+    keyboard.add(btn_back)
+
+    return keyboard
+
+
+def kb_split_ok(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+
+    btn = getButton('Ок' if lang == 'ru' else 'Ok', 'split')
+
+    keyboard.add(btn)
     return keyboard

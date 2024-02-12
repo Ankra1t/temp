@@ -45,10 +45,13 @@ def kb_main(user_id: int, is_access=True):
     btn_calc = getButton(texts[lang]['calc'], 'calc')
     btn_settings = getButton(texts[lang]['settings'], 'settings')
 
-    if is_access:
-        keyboard.add(btn_calc)
+    buttons = []
 
-    keyboard.add(btn_settings)
+    if is_access:
+        buttons.append(btn_calc)
+    buttons.append(btn_settings)
+
+    keyboard.add(*buttons)
     return keyboard
 
 

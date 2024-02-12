@@ -13,7 +13,8 @@ from .settings.handler import registration as _reg_settings
 from .settings.keyboards import (
     kb_settings, kb_base_cancel, kb_settings_confirm,
     kb_change_base, kb_choose_lang, kb_change_currency,
-    kb_change_market, kb_change_tp_show
+    kb_change_market, kb_change_tp_show, kb_split_settings,
+    kb_split_ok
 )
 
 

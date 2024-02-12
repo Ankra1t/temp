@@ -13,8 +13,6 @@ from initialize import bot, pay_guard
 from models import Post, UserInfo
 
 
-
-
 def send_message_by_type(
     bot: TeleBot,
     user_id: int,
@@ -58,32 +56,27 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
 
         user_db_id = db_new.get_user_id_by_tg_id(user_id)
         user_base_values = db_new.get_user_base(user_db_id)
+        risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+
         dep = user_base_values['base_deposit']
         risk = user_base_values['base_risk_percent']
 
         if dep is None or risk is None:
             calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
         else:
-            count_bet = floor(
-                (dep * risk / 100) /
-                (open_price - stop_loss)
-            )
-            summary_open_value = round(count_bet * open_price, 2)
-
-            credit = 1
-            if summary_open_value > dep:
-                credit = round(summary_open_value // dep + 1)
+            if risk_is_percent:
+                risk *= dep * 0.01
 
             calc_text = '<b><u>Расчет по сигналу</u></b>\n'
-            count_bet, value_bet, credit, risk_value, take_profit, profit = get_calculation(
-                user_id, dep, risk, open_price,
-                stop_loss, ticker
+            count_bet, value_bet, credit, take_profit, profit = get_calculation(
+                dep, risk, open_price,
+                stop_loss, False, [], ticker
             )
 
-            mes = msg_calculate_result(
-                user_id, dep, risk, open_price,
+            calc_text += msg_calculate_result(
+                user_id, dep, open_price,
                 stop_loss, count_bet, value_bet, credit,
-                risk_value, take_profit, profit
+                risk, take_profit, profit
             )
 
     signal_text += '\n\n' + post.content

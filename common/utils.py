@@ -71,26 +71,25 @@ def get_normal_text(message: Message):
 
 
 def get_calculation(
-    user_id: int,
     deposit: float,
-    risk_percent: float,
+    risk_value: float,
     open_price: float,
     stop_loss: float,
+    is_splitting: bool,
+    split_values: list[float],
     ticker: str | None = None,
     tp_ratio: list[int] = [3, 4, 5],
 ):
     """
     Returns:
-        count_bet, value_bet, credit, risk_value, take_profit, profit
+        count_bet, value_bet, credit, take_profit, profit
     """
+    print(tp_ratio, split_values)
     if open_price == stop_loss:
         stop_loss = open_price - 0.01
 
-    # Рзаница цены входа и стоп-лосса
+    # Разница цены входа и стоп-лосса
     diff_op_sl = abs(open_price - stop_loss)
-
-    # Размер риска
-    risk_value = deposit * risk_percent * 0.01
 
     rate = 1
     if ticker is not None:
@@ -111,7 +110,12 @@ def get_calculation(
     take_profit: list[float] = []
     profit: list[float] = []
     for i, el in enumerate(tp_ratio):
-        take_profit.append(open_price + abs(open_price - stop_loss) * el)
-        profit.append(risk_value * el)
+        take_profit.append(open_price + (open_price - stop_loss) * el)
 
-    return count_bet, value_bet, credit, risk_value, take_profit, profit
+        rate = 1
+        if is_splitting:
+            rate = split_values[i] / 100
+
+        profit.append(risk_value * el * rate)
+
+    return count_bet, value_bet, credit, take_profit, profit

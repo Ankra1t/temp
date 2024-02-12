@@ -89,6 +89,13 @@ def msg_settings(user_id: int):
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     base = db_new.get_user_base(user_db_id)
+    deposit, risk, currency = (
+        base.get('base_deposit'),
+        base.get('base_risk_percent'),
+        base.get('base_currency') or 'USD'
+    )
+
+    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
     tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
     market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
 
@@ -96,7 +103,7 @@ def msg_settings(user_id: int):
         'ru': {
             'name': 'Настройки',
             'dep': 'Базовый депозит',
-            'risk': 'Базовый процент риска',
+            'risk': 'Базовый риск',
             'currency': 'Базовая валюта',
             'tp_show': 'Вывод расчета прибыли',
             'market': 'Рынок',
@@ -104,7 +111,7 @@ def msg_settings(user_id: int):
         'en': {
             'name': 'Settings',
             'dep': 'Default deposit',
-            'risk': 'Default risk percent',
+            'risk': 'Default risk',
             'currency': 'Default currency',
             'tp_show': 'Display calculation of profit',
             'market': 'Market',
@@ -118,9 +125,17 @@ def msg_settings(user_id: int):
     return '\n'.join((
         f'⚙️ <b><u>{texts[lang]["name"]}</u></b>',
         '',
-        f'{BULLET} {texts[lang]["dep"]}: <b>{float_to_print(base["base_deposit"])}</b>',
-        f'{BULLET} {texts[lang]["risk"]}: <b>{float_to_print(base["base_risk_percent"])}</b>',
-        f'{BULLET} {texts[lang]["currency"]}: <b>{base["base_currency"] or "-"}</b>',
+        (
+            f'{BULLET} {texts[lang]["dep"]}: <b>'
+            f'{f"{float_to_print(deposit)} {currency}" if deposit is not None else "-"}'
+            '</b>'
+        ),
+        (
+            f'{BULLET} {texts[lang]["risk"]}: <b>'
+            f'{f"{float_to_print(risk)}" if risk is not None else ""}'
+            f'{"-" if risk is None else "%" if risk_is_percent else f" {currency}"}'
+            '</b>'
+        ),
         '',
         f'{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>',
         f'{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>'
@@ -171,12 +186,14 @@ def msg_settings_set_tp_show(user_id: int):
         'ru': {
             'name': 'Настройки',
             'subname': 'Установка расчета прибыли',
-            'now': 'Сейчас выводится'
+            'now': 'Сейчас выводится',
+            'note': 'При изменении данных значений выключается разделение прибыли'
         },
         'en': {
             'name': 'Settings',
             'subname': 'Set calculation of profit',
-            'now': 'Now displayed'
+            'now': 'Now displayed',
+            'note': 'When these values changes, the division of profit is turned off'
         }
     }
 
@@ -186,8 +203,51 @@ def msg_settings_set_tp_show(user_id: int):
 
     return '\n'.join((
         f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
+        f'{texts[lang]["note"]}',
         '',
         f'{texts[lang]["now"]}: <b>{result}</b>'
+    ))
+
+
+def msg_split_settings(user_id: int):
+    lang = get_lang(user_id)
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    is_splitting = db_new.get_user_is_splitting(user_db_id)
+    split_values = db_new.get_user_split_values(user_db_id)
+
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'subname': 'Разделение профита',
+            'split': 'Разделение',
+            'on': 'Включено',
+            'off': 'Выключено',
+        },
+        'en': {
+            'name': 'Settings',
+            'subname': 'Profit splitting',
+            'split': 'Splitting',
+            'on': 'Turned on',
+            'off': 'Turned off',
+        }
+    }
+
+    on_off = 'on' if is_splitting else 'off'
+
+    splitting = ''
+
+    if split_values is not None and len(split_values) != 0:
+        splitting = 'Разделение: '
+        for el in split_values:
+            splitting += f'{el}% '
+
+    return '\n'.join((
+        f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
+        '',
+        f'<b>{texts[lang][on_off]}</b>',
+        '',
+        splitting,
     ))
 
 
@@ -362,33 +422,40 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    currency = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
+    base_value = db_new.get_user_base(user_db_id)
+    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+
+    deposit: float | None = base_value.get('base_deposit')
+    risk: float | None = base_value.get('base_risk_percent')
+    currency: str = base_value.get('base_currency') or 'USD'
+
+    if risk_is_percent and (deposit is not None) and (risk is not None):
+        risk *= deposit * 0.01
 
     with bot.retrieve_data(user_id, chat_id) as data:
         type = data.get('calc_type')
         ticker = data.get('ticker')
-        deposit = data.get('deposit')
-        risk_percent = data.get('risk_percent')
         open_price = data.get('open_price')
 
     type_list = ['ticker', 'dep', 'risk', 'open']
     vars_dict = {
         'ticker': ticker,
         'dep': deposit,
-        'risk': risk_percent,
+        'risk': risk,
         'open': open_price,
     }
+
     point = {
         'ru': {
             'ticker': 'Тикер',
             'dep': 'Депозит',
-            'risk': 'Процент риска',
+            'risk': 'Риск на сделку',
             'open': 'Цена входа',
         },
         'en': {
             'ticker': 'Ticker',
             'dep': 'Deposit',
-            'risk': 'Risk percent',
+            'risk': 'Deal risk',
             'open': 'Entry price',
         }
     }
@@ -415,7 +482,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 def msg_calculate_result(
     user_id: int,
     deposit: float,
-    risk_percent: float,
     open_price: float,
     stop_loss: float,
     count_bet: float,
@@ -428,14 +494,16 @@ def msg_calculate_result(
     lang = get_lang(user_id)
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     currency: str = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
+    is_splitting = db_new.get_user_is_splitting(user_db_id)
+    split_values = db_new.get_user_split_values(user_db_id) or []
 
     point = {
         'ru': {
             'dep': 'Депозит',
-            'risk': '% риска на сделку',
             'open': 'Цена открытия',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
+            'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
             'credit': 'Кредитное плечо',
@@ -444,10 +512,10 @@ def msg_calculate_result(
         },
         'en': {
             'dep': 'Deposit',
-            'risk': '% risk of a deal',
             'open': 'The open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
+            'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
             'credit': 'Leverage',
@@ -462,27 +530,37 @@ def msg_calculate_result(
     )
 
     tp_show = ''
+    split_show = ''
     p_show = ''
     for i in range(len(take_profit)):
         tp_show += f'{get_print_float(take_profit[i], round_count)} {currency}'
         p_show += f'{get_print_float(profit[i], round_count)} {currency}'
 
+        if is_splitting:
+            split_show += f'{get_print_float(split_values[i], round_count)}% '
+
         if i != len(take_profit) - 1:
             tp_show += ' / '
             p_show += ' / '
 
+            if is_splitting:
+                split_show += ' / '
+
     return '\n'.join([
         f'{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>',
-        f'{BULLET} {point[lang]["risk"]}: <b>{get_print_float(risk_percent)}%</b>',
+        f'{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>',
         '',
         f'{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>',
         f'{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>',
-        f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
-        f'{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>',
         '',
+        f'{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>',
         f'{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>',
         f'{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>',
-        f'{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>',
+        '',
+        ''.join((
+            f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
+            f"\n{BULLET} {point[lang]['split']}: <b>{split_show}</b>" if split_show != '' else ''
+        )),
         f'{BULLET} {point[lang]["profit"]}: <b>{p_show}</b>',
     ])
 
@@ -544,6 +622,33 @@ def msg_calculate_forex_result(
 
 
 # Ввод данных
+def msg_enter_split(user_id: int):
+    lang = get_lang(user_id)
+    tp_show = db_new.get_calculator_tp_show(user_id) or '345'
+
+    if len(tp_show) == 3:
+        example = '75 15 10'
+    elif len(tp_show) == 2:
+        example = '75 25'
+    else:
+        example = '100'
+
+    tp_text = ''
+    for i, el in enumerate(tp_show):
+        tp_text += f'x{el}'
+        if i != len(tp_show) - 1:
+            tp_text += ' '
+
+    return '\n'.join((
+        f'Введите <b>проценты</b> разделения <u>через пробел</u> для каждого из тейк профитов',
+        '',
+        f'Ваши тейк профиты: <b>{tp_text}</b>',
+        'Сумма процентов должна быть равна <b>100%</b>',
+        '',
+        f'Пример: <b>{example}</b>'
+    ))
+
+
 def msg_enter_future(user_id: int):
     lang = get_lang(user_id)
 
@@ -570,8 +675,8 @@ def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите % риска на сделку',
-        'en': 'Enter % risk of a deal'
+        'ru': 'Введите <b>процент</b> риска от депозита <b>(со знаком %)</b> или сумму риска',
+        'en': 'Enter the <b>percentage</b> of risk by deposit <b>(with a % sign)</b> or the risk amount'
     }
 
     return f'✍ {texts[lang]}:'

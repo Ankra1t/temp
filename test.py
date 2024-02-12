@@ -68,9 +68,11 @@ from db_new import db_new
 
 # print(query)
 
-db_new.curs.execute('UPDATE users SET created_at = %s WHERE id <= 14',
-                    (datetime(2023, 8, 10, 5, 54),))
-db_new.connection.commit()
+# db_new.curs.execute('UPDATE users SET created_at = %s WHERE id <= 14',
+#                     (datetime(2023, 8, 10, 5, 54),))
+# db_new.connection.commit()
+
+print(int(False))
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '
