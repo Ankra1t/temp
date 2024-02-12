@@ -624,7 +624,9 @@ def msg_calculate_forex_result(
 # Ввод данных
 def msg_enter_split(user_id: int):
     lang = get_lang(user_id)
-    tp_show = db_new.get_calculator_tp_show(user_id) or '345'
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
 
     if len(tp_show) == 3:
         example = '75 15 10'
