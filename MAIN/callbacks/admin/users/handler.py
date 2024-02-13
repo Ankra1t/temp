@@ -18,7 +18,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data = admin_users_factory.parse(call.data)
 
     type: str = callback_data.get('type') or ''
-    filter: FILTER_TYPE = callback_data.get('filter') or ''  # type: ignore
+    filter: FILTER_TYPE = callback_data.get(
+        'filter') or 'by_date_new'  # type: ignore
     client_db_id = int(callback_data.get('client_db_id') or 0)
     page = int(callback_data.get('page') or 1)
 
@@ -102,6 +103,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 else:
                     text += user_show
 
+        if filter == 'by_date_new':
+            filter_text = 'новым'
+        elif filter == 'by_date_old':
+            filter_text = 'старым'
+        else:
+            filter_text = 'оплатившим'
+
+        text += f'\n| Фильрация по <b>{filter_text}</b> |'
+
         bot.edit_message_text(
             text or 'Нет пользователей', chat_id, mes_id,
             reply_markup=kb_admin_users_list(pages, page, filter)
@@ -170,7 +180,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         })
 
     if type == 'client_set_trial_custom':
-        bot.set_state(user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
+        bot.set_state(
+            user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
         print(f'Назначить пробную подписку пользователю handler')
         set_state_data(bot, user_id, chat_id, {
             'user_id': client_db_id,
