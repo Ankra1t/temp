@@ -10,14 +10,6 @@ from db_new import db_new
 class GuardPaymentAccess():
     """
     Класс защитник платного доступа, рассылки и бана
-
-    Взаимодействие с таблицами
-        pay (платежные шлюзы)
-        , prices (цены, тарифы)
-        , transactions (транзакции платежей)
-    users (платные пользователи)
-        - pay_money пополнения
-        - balance текущий баланс (pay_money - потраченная сумма)
     """
 
     def __init__(self) -> None:

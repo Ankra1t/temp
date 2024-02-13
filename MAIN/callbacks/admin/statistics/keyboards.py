@@ -20,7 +20,7 @@ def kb_statistics_back():
 def kb_statistics():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('По клиентам', 'stat_pay_clients')
+    btn1 = getButton('Все клиенты', 'stat_pay_clients')
     btn2 = getButton('По периодам', 'stat_pay_periods')
     btn3 = getButton('По продуктам', 'stat_pay_products')
 
@@ -49,7 +49,7 @@ def kb_stats_periods():
 def kb_stats_products():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Сигналы', 'stat_pay_product_choose', 'calc')
+    btn1 = getButton('Сигналы', 'stat_pay_product_choose', 'signals')
     btn2 = getButton('Калькулятор', 'stat_pay_product_choose', 'calc')
     btn3 = getButton('Сигналы+калькулятор', 'stat_pay_product_choose', 'calc_signals' )
 

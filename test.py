@@ -5,7 +5,7 @@ from db_new import db_new
 # ankrait id 6919899538
 
 # db_new.delete_calculator_user(156045434)
-# db_new.add_worker(156045434, 'azatFa', 1)
+# db_new.add_worker(156045434, 1)
 # db_new.del_worker(156045434)
 
 # print(db_new.get_access_token())
@@ -68,9 +68,11 @@ from db_new import db_new
 
 # print(query)
 
-db_new.curs.execute('UPDATE users SET created_at = %s WHERE id <= 14',
-                    (datetime(2023, 8, 10, 5, 54),))
-db_new.connection.commit()
+# db_new.curs.execute('UPDATE users SET created_at = %s WHERE id <= 14',
+#                     (datetime(2023, 8, 10, 5, 54),))
+# db_new.connection.commit()
+
+print(int(False))
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '

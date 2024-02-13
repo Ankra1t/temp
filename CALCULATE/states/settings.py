@@ -5,3 +5,5 @@ class SettingsState(StatesGroup):
     deposit = State()
     risk_percent = State()
     currency = State()
+
+    split_values = State()

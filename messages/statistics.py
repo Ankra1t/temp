@@ -44,5 +44,5 @@ def admin_statistics_products(count_signals=0, summ_signals=0,
 Продукт "Калькулятор":  <b>{count_calc} шт</b>, сумма <b>{summ_calc} USDT</b>
 Продукт "Калькулятор+сигналы":  <b>{count_calc_signals} шт</b>, сумма <b>{summ_calc_signals} USDT</b>
 
-Выберите продукт:
+Смотреть клиентов по выбранному продукту:
     """

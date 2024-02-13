@@ -45,12 +45,18 @@ class Database:
             data.get('discount_percent'),
             data.get('discount_findate'),
             data.get('type_product'),
+            data.get('switch_active'),
+            data.get('price_findate'),
         )
 
-    def get_prices(self, active: int) -> list[Price]:
+    def get_prices(self, active: int=1, switch_active = 1) -> list[Price]:
         """Получение тарифа"""
-        query = """SELECT * FROM prices WHERE active = %s"""
-        params = (active,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s"""
+            params = (active, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND switch_active = %s"""
+            params = (active, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -62,10 +68,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int) -> list[Price]:
+    def get_prices_by_product(self, product_id, active: int, switch_active = 1) -> list[Price]:
         """Получение тарифа по типу продукта"""
-        query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
-        params = (active, product_id,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
+            params = (active, product_id, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s AND switch_active = %s"""
+            params = (active, product_id, switch_active,)
 
         try:
             self.curs.execute(query, params)
@@ -77,9 +87,9 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int):
-        query = "SELECT * FROM prices WHERE id = %s"
-        params = (id,)
+    def get_price_by_id(self, id: int, switch_active = 1):
+        query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
+        params = (id, switch_active,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
@@ -91,10 +101,10 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_price_by_name(self, name: str):
+    def get_price_by_name(self, name: str, switch_active = 1):
         """Получение цены по имени"""
-        query = "SELECT * FROM prices WHERE name = %s "
-        params = (name,)
+        query = "SELECT * FROM prices WHERE name = %s AND switch_active = %s"
+        params = (name, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -423,6 +433,64 @@ class Database:
             )
         )
 
+    def switch_tariff(self, tariff_id: int, switch_active: int):
+        """Включить или выключить тариф"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE id = %s"
+        params = (switch_active, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def check_switch_tariff(self, tariff_id: int):
+        query = "SELECT switch_active FROM prices WHERE id = %s"
+        params = (tariff_id, )
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[check_switch_tariff]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_findate_tariff(self, tariff_id: int, date):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set price_findate = %s, updated_at = %s WHERE id = %s"
+        params = (date, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_findate_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def switch_off_finish_tariffs(self, today: str):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE price_findate < %s"
+        switch = 0
+        params = (switch, datetime_now, today)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_off_finish_tariffs]: {e}')
+            self.connection.rollback()
+            return False
+
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(
@@ -527,6 +595,26 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_paid_transactions_product(self, product):
+        """Получить все оплаченные транзакции по продукту"""
+        query = ("SELECT * "
+                 "FROM transactions t, prices p  "
+                 "WHERE t.price_id = p.id AND p.type_product = %s "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (product, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_product]: {e}')
+            self.connection.rollback()
+            return []
+
     def get_paid_transactions_summ(self):
         """Суммы по транзакциям"""
         query = ("SELECT sum(sum) FROM transactions "
@@ -561,6 +649,26 @@ class Database:
             print(f'ERROR[get_paid_transactions_summ_period]: {e}')
             self.connection.rollback()
             return []
+
+    def get_paid_transactions_summ_product(self, product):
+        """Суммы по транзакциям по продукту"""
+        query = ("SELECT sum(sum) "
+                 "FROM transactions t, prices p "
+                 "WHERE t.price_id = p.id AND p.type_product = %s "
+                 "AND status = %s "
+                 )
+        status = 'paid'
+        params = (product, status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_summ_product]: {e}')
+            self.connection.rollback()
+            return []
+
 
     def get_purchases_by_user(self, user_id: int):
         """Получение покупок пользователя"""
@@ -974,6 +1082,36 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_user_risk_is_percent(self, user_id: int) -> bool:
+        query = 'SELECT risk_is_percent FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+
+            if data is not None and data.get('risk_is_percent') == 1:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f'ERROR[get_user_risk_is_percent]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_risk_is_percent(self, user_id: int, value: bool):
+        query = 'UPDATE tgcalc_user_settings SET risk_is_percent = %s WHERE user_id = %s'
+        params = (int(value), user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_risk_is_percent]: {e}')
+            self.connection.rollback()
+            return False
+
     def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
         """Получить язык пользователя"""
         query = 'SELECT lang FROM users WHERE id = %s'
@@ -1114,19 +1252,94 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_user_is_splitting(self, user_id: int) -> bool:
+        query = 'SELECT is_splitting FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return False if data is None else data.get('is_splitting') == 1
+        except Exception as e:
+            print(f'ERROR[get_user_is_splitting]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_is_splitting(self, user_id: int, value: bool):
+        query = 'UPDATE tgcalc_user_settings SET is_splitting = %s WHERE user_id = %s'
+        params = (int(value), user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_is_splitting]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_user_split_values(self, user_id: int) -> list[float] | None:
+        query = 'SELECT split_values FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if data is None else data.get('split_values')
+        except Exception as e:
+            print(f'ERROR[get_user_split_values]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_split_values(self, user_id: int, values: list[float]):
+        query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'
+        params = (values, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_split_values]: {e}')
+            self.connection.rollback()
+            return False
+
+    def reset_user_settings(self, user_id: int):
+        query = (
+            'UPDATE tgcalc_user_settings SET take_profit_to_show = %s, market = %s, base_currency = %s, '
+            'base_deposit = %s, base_risk_percent = %s '
+            'WHERE user_id = %s'
+        )
+        params = ('345', 'crypto', 'USD', None, None, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[reset_user_settings]: {e}')
+            self.connection.rollback()
+            return False
+
     # Workers
     def _data_to_worker(self, data: DictRow):
         return Worker(
             id=data.get('id'),
-            tg_id=data.get('tg_user_id'),
-            username=data.get('tg_username'),
+            tg_id=data.get('id_telegram') or 0,
+            username=data.get('username_tg') or '',
             role=data.get('role')
         )
 
-    def add_worker(self, tg_id: int, username: str, role: int):
+    WORKER_QUERY = (
+        'SELECT w.user_id as id, w.role, u.id_telegram, u.username_tg FROM tgbot_workers as w '
+        'LEFT JOIN users as u ON u.id = w.user_id '
+    )
+
+    def add_worker(self, id: int, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        query = "INSERT INTO tgbot_workers(tg_user_id, tg_username, role) VALUES(%s, %s, %s)"
-        params = (tg_id, username, role)
+        datetime_now = datetime.utcnow()
+        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at) VALUES(%s, %s, %s, %s)"
+        params = (id, role, datetime_now, datetime_now)
 
         try:
             self.curs.execute(query, params)
@@ -1137,10 +1350,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def del_worker(self, tg_id: int):
+    def del_worker(self, id: int):
         """Удаление работника"""
-        query = 'DELETE FROM tgbot_workers WHERE tg_user_id = %s'
-        params = (tg_id,)
+        query = 'DELETE FROM tgbot_workers WHERE user_id = %s'
+        params = (id,)
 
         try:
             self.curs.execute(query, params)
@@ -1153,7 +1366,7 @@ class Database:
 
     def get_all_workes(self) -> list[Worker]:
         """Получить всех работников"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers'
+        query = self.WORKER_QUERY
 
         try:
             self.curs.execute(query)
@@ -1166,7 +1379,7 @@ class Database:
 
     def get_admins(self) -> list[Worker]:
         """Получить всех админов"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 1'
+        query = self.WORKER_QUERY + 'WHERE w.role = 1'
 
         try:
             self.curs.execute(query)
@@ -1179,7 +1392,7 @@ class Database:
 
     def get_redactors(self) -> list[Worker]:
         """Получить всех редакторов"""
-        query = 'SELECT id, tg_user_id, tg_username, role FROM tgbot_workers WHERE role = 2'
+        query = self.WORKER_QUERY + 'WHERE w.role = 2'
 
         try:
             self.curs.execute(query)
@@ -1192,35 +1405,35 @@ class Database:
 
     def get_support_name(self) -> str:
         """Получение тех. поддержки"""
-        query = 'SELECT tg_username FROM tgbot_workers WHERE role = 3'
+        query = self.WORKER_QUERY + 'WHERE w.role = 3'
 
         try:
             self.curs.execute(query)
             data = self.curs.fetchone()
-            return data.get('tg_username', '') if (data is not None) else ''
+            return data.get('username_tg', '') if (data is not None) else ''
         except Exception as e:
             print(f'ERROR[get_support_name]: {e}')
             self.connection.rollback()
             return ''
 
-    def update_support_name(self, username: str):
+    def update_support(self, id: int):
         """Изменение тех. поддержки"""
-        query = 'UPDATE tgbot_workers SET tg_username = %s WHERE role = 3'
-        params = username,
+        query = 'UPDATE tgbot_workers SET user_id = %s WHERE role = 3'
+        params = id,
 
         try:
             self.curs.execute(query, params)
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_support_name]: {e}')
+            print(f'ERROR[update_support]: {e}')
             self.connection.rollback()
             return False
 
-    def get_worker_role(self, tg_id: int) -> int | None:
+    def get_worker_role(self, id: int) -> int | None:
         """Узнать роль работника"""
-        query = "SELECT role FROM tgbot_workers WHERE tg_user_id = %s"
-        params = (tg_id,)
+        query = "SELECT role FROM tgbot_workers WHERE user_id = %s"
+        params = (id,)
 
         try:
             self.curs.execute(query, params)

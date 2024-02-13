@@ -1,6 +1,9 @@
 from telebot import types, TeleBot
 from datetime import datetime, timedelta
 
+from initialize import logger
+
+
 from keyboard_inlines import Admin_kb_inlines
 from db_new import db_new, Database as DatabaseNew
 from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
@@ -18,13 +21,17 @@ class BaseStatistics(object):
         self.dt_format_user_show = "%d/%m/%Y"
 
     # # # # # # Вывод пользователей
-    def show_paid_users(self, message, period=None):
-
+    def show_paid_users(self, message, period:str = None, product: str = None, start_to_fin: str = None):
         chat_id = message.chat.id
 
         if period:
             start_date, fin_date = self.get_dates_by_period(period)
             trans_list = self.db.get_paid_transactions_period(start_date, fin_date )
+        elif product:
+            trans_list = self.db.get_paid_transactions_product(product)
+        elif start_to_fin:
+            start_date, fin_date = start_to_fin.split('|')
+            trans_list = self.db.get_paid_transactions_period(start_date, fin_date)
         else:
             trans_list = self.db.get_paid_transactions_all()
 
@@ -33,6 +40,7 @@ class BaseStatistics(object):
                 message.chat.id,
                 'Оплат не обнаружено'
             )
+            return False
 
         tg_clients = {}
         for i in range(0, len(trans_list)):
@@ -60,6 +68,8 @@ class BaseStatistics(object):
             if user is not None:
                 msg = self.temp_client(user, tg_clients.get(el))
                 self.bot.send_message(chat_id, msg, reply_markup=None)
+            else:
+                logger.error(f"Пользователь tg_id {el} не найден - оплаты по нему не выводим")
 
     # # # # # # Агрегаторы показателей
 
@@ -67,7 +77,6 @@ class BaseStatistics(object):
         """Кол-во платежей"""
 
         start_date, fin_date = self.get_dates_by_period(period)
-
         if not start_date or not fin_date:
             trans_list = self.db.get_paid_transactions_all()
         else:
@@ -85,8 +94,25 @@ class BaseStatistics(object):
             summ = self.db.get_paid_transactions_summ()
         else:
             summ = self.db.get_paid_transactions_summ_period(start_date, fin_date)
+        print(f'период {period} summ [{summ}]')
+        return summ if summ else 0
 
+    def count_by_product(self, product=None):
+        """Кол-во платежей по каждому продукту"""
+        if not product:
+            return 0
+
+        trans_list = self.db.get_paid_transactions_product(product)
+        return len(trans_list) if trans_list else 0
+
+    def summ_by_product(self, product):
+        """Суммы платежей по каждому продукту"""
+        if not product:
+            return 0
+
+        summ = self.db.get_paid_transactions_summ_product(product)
         return summ
+
 
 
     # # # # # # Специализированные показателей
@@ -107,6 +133,8 @@ class BaseStatistics(object):
 
     def temp_client_purchase(self, purchase: Purchase):
         """Вывести одного пользователя"""
+        # payment_date_obj = datetime.strptime(purchase.payment_date, self.dt_format)
+        payment_date_str = purchase.payment_date.strftime(self.dt_format_admin_show)
         template = """
 ----------
 Куплено: "{}"
@@ -115,7 +143,7 @@ class BaseStatistics(object):
         """.format(purchase.price_name,
                    purchase.real_sum,
                    purchase.currency,
-                   purchase.payment_date
+                   payment_date_str
                    )
         return template
 
