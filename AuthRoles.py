@@ -56,7 +56,7 @@ def check_registrate(tg_id: int):
     user_db_id = db_new.get_user_id_by_tg_id(tg_id)
 
     worker_role = db_new.get_worker_role(user_db_id)
-
+    print(worker_role)
     if worker_role is not None:
         user_role = worker_role
     elif user_db_id > 0:
