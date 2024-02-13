@@ -40,27 +40,10 @@ def handle_start_date(message: Message, bot: TeleBot):
             chat_id, '<b>Неправильный формат</b> даты начала (<b>требуется DD.MM.YY</b>), введите дату в правильном формате',
             reply_markup=kb_statistics_back())
         return
-
-    # DATE_FORMAT
-    # value = datetime(year, month, day)
-    # value = datetime.now()
-
-    # datetime_pattern = r'^(0?[1-9]|[1-2]\d|3[0-1])[ .]+(0?[1-9]|1[0-2])(?:[ .]+(\d{4}|\d{2}))?(?:[ ]+([0-1]?\d|2[0-3])[: ]+([0-5]?\d))?$'
-    # value = re.search(datetime_pattern, mes_text)
-    # mes_text = text_accept(message) or '-'
-    # day = int(value.group(1))
-    # month = int(value.group(2))
-    # year = value.group(3)
-    # year = datetime.now().year
-
-    # with bot.retrieve_data(user_id, chat_id) as data:
-    #     kind = data.get('kind')
-    #     post: Post = data.get('post')
-    #     post.date_time = value
     
     if current_state == 'AdminStatisticsState:start_date':
         set_state_data(bot, user_id, chat_id, {'start_date_obj': start_date_obj})
-        # Запрашиваем дату окончания
+
         bot.send_message(
             chat_id,
             "Введите дату ОКОНЧАНИЯ ПЕРИОДА в формате DD.MM.YY",
@@ -70,7 +53,6 @@ def handle_start_date(message: Message, bot: TeleBot):
         bot.set_state(user_id, AdminStatisticsState.fin_date, chat_id)
 
     if current_state == 'AdminStatisticsState:start_date_only':
-        # Фильтруем по заданной стартовой и текущей дате - результат - вывод пользователей
         start_date_filter = start_date_obj.strftime(DATE_FORMAT)
         fin_date_filter = datetime.utcnow()
 

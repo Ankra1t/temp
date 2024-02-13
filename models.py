@@ -82,7 +82,9 @@ class Price:
         description: str | None = None,
         discount_percent: float | None = None,
         discount_findate: datetime | None = None,
-        type_product: str | None = None
+        type_product: str | None = None,
+        switch_active: int | None = None,
+        price_findate: datetime | None = None,
     ):
         self.id = id
         self.name = name
@@ -92,6 +94,8 @@ class Price:
         self.description = description
         self.img = image
         self.type_product = type_product
+        self.switch_active = switch_active
+        self.price_findate = price_findate
 
         if discount_percent is not None and discount_findate is not None:
             self.discount = Discount(

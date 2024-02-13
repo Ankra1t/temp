@@ -45,12 +45,18 @@ class Database:
             data.get('discount_percent'),
             data.get('discount_findate'),
             data.get('type_product'),
+            data.get('switch_active'),
+            data.get('price_findate'),
         )
 
-    def get_prices(self, active: int) -> list[Price]:
+    def get_prices(self, active: int=1, switch_active = 1) -> list[Price]:
         """Получение тарифа"""
-        query = """SELECT * FROM prices WHERE active = %s"""
-        params = (active,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s"""
+            params = (active, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND switch_active = %s"""
+            params = (active, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -62,10 +68,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int) -> list[Price]:
+    def get_prices_by_product(self, product_id, active: int, switch_active = 1) -> list[Price]:
         """Получение тарифа по типу продукта"""
-        query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
-        params = (active, product_id,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
+            params = (active, product_id, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s AND switch_active = %s"""
+            params = (active, product_id, switch_active,)
 
         try:
             self.curs.execute(query, params)
@@ -77,9 +87,9 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int):
-        query = "SELECT * FROM prices WHERE id = %s"
-        params = (id,)
+    def get_price_by_id(self, id: int, switch_active = 1):
+        query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
+        params = (id, switch_active,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
@@ -91,10 +101,10 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_price_by_name(self, name: str):
+    def get_price_by_name(self, name: str, switch_active = 1):
         """Получение цены по имени"""
-        query = "SELECT * FROM prices WHERE name = %s "
-        params = (name,)
+        query = "SELECT * FROM prices WHERE name = %s AND switch_active = %s"
+        params = (name, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -422,6 +432,64 @@ class Database:
 
             )
         )
+
+    def switch_tariff(self, tariff_id: int, switch_active: int):
+        """Включить или выключить тариф"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE id = %s"
+        params = (switch_active, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def check_switch_tariff(self, tariff_id: int):
+        query = "SELECT switch_active FROM prices WHERE id = %s"
+        params = (tariff_id, )
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[check_switch_tariff]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_findate_tariff(self, tariff_id: int, date):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set price_findate = %s, updated_at = %s WHERE id = %s"
+        params = (date, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_findate_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def switch_off_finish_tariffs(self, today: str):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE price_findate < %s"
+        switch = 0
+        params = (switch, datetime_now, today)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_off_finish_tariffs]: {e}')
+            self.connection.rollback()
+            return False
 
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):

@@ -19,3 +19,6 @@ class AdminTariffState(StatesGroup):
     edit_field_price = State()
     edit_field_image = State()
 
+    price_findate_count_days = State()
+    price_findate = State()
+
