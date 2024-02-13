@@ -19,6 +19,28 @@ class TariffManager(object):
 
     def deactivate_tariff(self, tariff_id):
         db_new.deactive_price(tariff_id)
+        
+    def on_off_tariff(self, tariff_id: int):
+        """Переключить тариф с одного положения на другое"""
+        switch = db_new.check_switch_tariff(tariff_id)
+        switch_put = 0 if switch else 1
+
+        if switch_put == 1:
+            # Если тариф включается, то обновляем дату окончания тарифа - значение null
+            self.set_findate_tariff(tariff_id, None)
+
+
+        db_new.switch_tariff(tariff_id, switch_put)
+
+        return switch_put
+
+    def set_findate_tariff(self, tariff_id, findate):
+        db_new.set_findate_tariff(tariff_id, findate)
+
+    def switch_off_finish_tariffs(self):
+        """Отключить тарифы с истекшим сроком"""
+        today = datetime.utcnow()
+        db_new.switch_off_finish_tariffs(today)
 
     def set_discount_tariff(self, id: int, discount: Discount):
         db_new.set_price_discount(
@@ -26,10 +48,14 @@ class TariffManager(object):
 
     def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None, product_id=None):
         list = None
+
+        # Перед показом тарифов отключить те, у которых закончился срок действия
+        self.switch_off_finish_tariffs()
+
         if product_id:
-            list = db_new.get_prices_by_product(product_id, 1)
+            list = db_new.get_prices_by_product(product_id, 1, None)
         else:
-            list = db_new.get_prices(1)
+            list = db_new.get_prices(1, None)
 
         if len(list) == 0:
             self.bot.send_message(
@@ -42,8 +68,9 @@ class TariffManager(object):
 
             tariff = list[i]
             desc_template = self.get_template_tariff_show_admin(tariff)
+            on_off_label = 'Отключить ⭕️' if tariff.switch_active == 1 else 'Включить ☑️'
             if mode == 'main':
-                kb = self.kb_inl.kb_tariff_options(tariff.id)
+                kb = self.kb_inl.kb_tariff_options(tariff.id, on_off_label=on_off_label)
             else:  # 'change_for_client'
                 kb = self.kb_inl.kb_tariff_options_choose(
                     f'{user_id}_{tariff.id}')
@@ -124,6 +151,10 @@ class TariffManager(object):
 
     def tariff_list_show(self, message: types.Message, product_id=None):
         list = None
+
+        # Перед показом тарифов отключить те, у которых закончился срок действия
+        self.switch_off_finish_tariffs()
+
         if product_id:
             list = db_new.get_prices_by_product(product_id, 1)
         else:
