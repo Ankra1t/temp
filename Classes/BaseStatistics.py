@@ -43,12 +43,13 @@ class BaseStatistics(object):
             return False
 
         tg_clients = {}
+        logger.info(f"Обрабатываем транзакции len(trans_list) [{len(trans_list)}]")
         for i in range(0, len(trans_list)):
             trans_item = trans_list[i]
             tg_id = trans_item.user_id
 
             # Формируем покупку
-            price = self.db.get_price_by_id(trans_item.price_id)
+            price = self.db.get_price_by_id(trans_item.price_id, None)
             purchase = Purchase(
                 user_id=tg_id,
                 price_name=price.name,
@@ -61,6 +62,8 @@ class BaseStatistics(object):
                 tg_id) else ''
             tg_clients[tg_id] = "{}{}".format(
                 full_purchases_text, purchase_text)
+
+        logger.info(f"Выводим список клиентов кол-во tg_clients [{len(tg_clients)}]")
 
         # Выводим список клиентов
         for i, el in enumerate(tg_clients):

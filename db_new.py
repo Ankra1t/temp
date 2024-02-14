@@ -88,8 +88,12 @@ class Database:
             return []
 
     def get_price_by_id(self, id: int, switch_active = 1):
-        query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
-        params = (id, switch_active,)
+        if not switch_active:
+            query = "SELECT * FROM prices WHERE id = %s"
+            params = (id,)
+        else:
+            query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
+            params = (id, switch_active,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
