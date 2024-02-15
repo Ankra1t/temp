@@ -85,30 +85,6 @@ class Admin_kb_inlines(object):
 
         return keyboard
 
-    # Редактирование текста клавиатуры
-    def kb_edit_single_text(self, text_name: str):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        edit = types.InlineKeyboardButton(text='Редактировать ✏️',
-                                          callback_data=adm_action.new(action='edit_bot_text', id=text_name))
-        keyboard.add(edit)
-        return keyboard
-
-    def kb_edit_single_text_cancel(self):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        cancel = types.InlineKeyboardButton(text='Отменить редактирование',
-                                            callback_data=admin_default_factory.new(type='go_main'))
-        keyboard.add(cancel)
-        return keyboard
-
-    def kb_edit_single_text_updated(self):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        go_main = types.InlineKeyboardButton(text='🔙 Главная',
-                                             callback_data=admin_default_factory.new(type='go_main'))
-
-        bot_texts_list = types.InlineKeyboardButton(text='Список текстов',
-                                                    callback_data=adm_action.new(action='bot_texts_list', id=''))
-        keyboard.add(go_main, bot_texts_list)
-        return keyboard
 
     # Меню Тарифы - добавление тарифов админом
     def kb_tariffs(self):

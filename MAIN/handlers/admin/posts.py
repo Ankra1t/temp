@@ -7,13 +7,16 @@ from BlockTGBotSender import BlockTGBotSender
 
 from CALCULATE.common.messages import msg_digit_error
 from MAIN.states import AdminPostsState
-from MAIN.callbacks import kb_posts_back, kb_post_add_confirm, kb_post_confirm, send_admin_post, kb_posts
+from MAIN.callbacks import (
+    kb_posts_back, kb_post_add_confirm, kb_post_confirm,
+    send_admin_post, kb_posts, kb_params
+)
 from MAIN.common.utils import get_post_from_message
 
 from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
 from keyboard_reply import kb_live_cancel
-from messages.workers import admin_fut_posts_msg
+from messages.workers import admin_fut_posts_msg, menu_msg
 from models import Post, PostDetails
 
 
@@ -105,7 +108,6 @@ def handle_new_post_ticker(message: Message, bot: TeleBot):
 def handle_new_post_signal(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
-    mes_id = message.id
 
     with bot.retrieve_data(user_id, chat_id) as state_data:
         kind = state_data.get('kind') or ''
@@ -305,6 +307,30 @@ def handle_action_post(action: Literal['send', 'delete']):
             reply_markup=kb_post_confirm(action))
 
     return r_func
+
+
+def handle_edit_text(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    text = text_accept(message)
+    if text is None:
+        bot.send_message(
+            chat_id, 'Введите контент текстом:',
+            reply_markup=kb_posts_back()
+        )
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        name = data.get('name', '')
+
+    db_new.update_text(name, text)
+    bot.delete_state(user_id, chat_id)
+    bot.edit_message_text(
+        menu_msg('Параметры'), chat_id, mes_id,
+        reply_markup=kb_params()
+    )
 
 
 def registration(bot: TeleBot):

@@ -2,23 +2,12 @@ from telebot import types
 from datetime import datetime
 from config_logger import logger
 
-from initialize import bot, text_editor, kb_inl_admin, pay_guard
+from initialize import bot, kb_inl_admin, pay_guard
 from models import User
 from db_new import db_new
 
 from MAIN.callbacks.admin.users.keyboards import kb_admin_users_back
 import variables as vars
-
-
-# Редактирование текстов
-def admin_edit_text(message: types.Message, name: str):
-    try:
-        text_editor.save_content(name, message.text or '')
-    except Exception as e:
-        logger.error(f'Ошибка TextEditor.save_content [{e}]')
-
-    bot.send_message(message.chat.id, f'Текс под name={name} сохранен ...',
-                     reply_markup=kb_inl_admin.kb_edit_single_text_updated())
 
 
 # Отменить подписку за период
