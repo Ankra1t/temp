@@ -196,18 +196,14 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     base_values = db_new.get_user_base(user_db_id)
     risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
     is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id) or []
-    tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
-    tp_ratio: list[int] = []
+    split_values = db_new.get_user_split_values(user_db_id)
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
     deposit: float = base_values['base_deposit'] or 1.
     risk_value: float = base_values['base_risk_percent'] or 1.
 
     if risk_is_percent:
         risk_value *= deposit * 0.01
-
-    for el in tp_show:
-        tp_ratio.append(int(el))
 
     count_bet, value_bet, credit, take_profit, profit = get_calculation(
         deposit, risk_value, open_price, stop_loss,

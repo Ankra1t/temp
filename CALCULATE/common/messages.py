@@ -96,7 +96,7 @@ def msg_settings(user_id: int):
     )
 
     risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
-    tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
     market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
 
     texts = {
@@ -119,7 +119,7 @@ def msg_settings(user_id: int):
     }
 
     tp_result = ''
-    for el in tp_show:
+    for el in tp_ratio:
         tp_result += f'x{el} '
 
     return '\n'.join((
@@ -180,7 +180,7 @@ def msg_settings_set_tp_show(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp_show: str = db_new.get_calculator_tp_show(user_db_id) or '345'
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
     texts = {
         'ru': {
@@ -198,7 +198,7 @@ def msg_settings_set_tp_show(user_id: int):
     }
 
     result = ''
-    for el in tp_show:
+    for el in tp_ratio:
         result += f'x{el} '
 
     return '\n'.join((
@@ -237,7 +237,7 @@ def msg_split_settings(user_id: int):
 
     splitting = ''
 
-    if split_values is not None and len(split_values) != 0:
+    if len(split_values) != 0:
         splitting = 'Разделение: '
         for el in split_values:
             splitting += f'{el}% '
@@ -248,6 +248,60 @@ def msg_split_settings(user_id: int):
         f'<b>{texts[lang][on_off]}</b>',
         '',
         splitting,
+    ))
+
+
+def msg_summury_profit_settings(user_id: int):
+    lang = get_lang(user_id)
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
+    is_splitting = db_new.get_user_is_splitting(user_db_id)
+    split_values = db_new.get_user_split_values(user_db_id)
+
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'subname': 'Вывод профита',
+            'take_profit': 'Ваш тейк профит',
+            'split': 'Разделение',
+            'on': 'включено',
+            'off': 'выключено',
+        },
+        'en': {
+            'name': 'Settings',
+            'subname': 'Summury profit',
+            'take_profit': 'Your take profit',
+            'split': 'Splitting',
+            'on': 'turned on',
+            'off': 'turned off',
+        }
+    }
+
+    info_result = ''
+
+    if is_splitting:
+        for i, el in enumerate(tp_ratio):
+            info_result += f'<b>x{el} ({split_values[i]}%)</b>'
+
+            if i == len(tp_ratio) - 1:
+                pass
+            elif i % 3 != 2:
+                info_result += ' - '
+            else:
+                info_result += '\n'
+    else:
+        info_result = f'{texts[lang]["take_profit"]}: '
+        for i, el in enumerate(tp_ratio):
+            info_result += f'<b>x{el}</b>'
+            if i != len(tp_ratio) - 1:
+                info_result += ' - '
+
+    return '\n'.join((
+        f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
+        '',
+        f'{texts[lang]["split"]}: <b>{texts[lang]["on" if is_splitting else "off"]}</b>',
+        f'{info_result}',
     ))
 
 
@@ -495,7 +549,7 @@ def msg_calculate_result(
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     currency: str = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
     is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id) or []
+    split_values = db_new.get_user_split_values(user_db_id)
 
     point = {
         'ru': {
@@ -626,19 +680,19 @@ def msg_enter_split(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
-    if len(tp_show) == 3:
+    if len(tp_ratio) == 3:
         example = '75 15 10'
-    elif len(tp_show) == 2:
+    elif len(tp_ratio) == 2:
         example = '75 25'
     else:
         example = '100'
 
     tp_text = ''
-    for i, el in enumerate(tp_show):
+    for i, el in enumerate(tp_ratio):
         tp_text += f'x{el}'
-        if i != len(tp_show) - 1:
+        if i != len(tp_ratio) - 1:
             tp_text += ' '
 
     return '\n'.join((
@@ -648,6 +702,88 @@ def msg_enter_split(user_id: int):
         'Сумма процентов должна быть равна <b>100%</b>',
         '',
         f'Пример: <b>{example}</b>'
+    ))
+
+
+def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
+    current_tp = tp_ratio.copy()
+    current_tp.sort()
+
+    tp_count = len(current_tp)
+
+    text = '<u>Установка тейк профита</u>\n'
+
+    if tp_count != 0:
+        text += 'Текущий выбор: <b>'
+
+        for el in current_tp:
+            text += f'x{el} '
+
+        text += '</b>'
+
+    text += '\n\nУчитывайте, что максимальный коэффициент тейк профита - <b>x10</b>\n'
+    text += 'Можно выбрать до <b>5</b> значений\n\n'
+
+    if tp_count == 0:
+        text += 'Выберите <b>первое</b> значение'
+    elif tp_count == 5:
+        text += 'Выберите действие'
+    else:
+        text += 'Выберите <b>следующее</b> значение'
+
+    return text
+
+
+def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float]):
+    sorted_tp, sorted_split = zip(*sorted(zip(tp_ratio, split)))
+
+    tp_count = len(tp_ratio)
+    split_count = len(split)
+
+    percents_sum = sum(split)
+    if abs(percents_sum - 100) < 0.1:
+        percents_sum = 100
+
+    text = '<u>Установка разделения профита</u>\n'
+
+    if tp_count != 0:
+        text += '<u>Текущий выбор</u>: <b>\n'
+
+        for i, el in enumerate(sorted_tp):
+            try:
+                percent = f'({sorted_split[i]}%)'
+            except:
+                percent = ''
+
+            text += f'x{el} {percent}'
+
+            if i == tp_count - 1:
+                pass
+            elif i % 3 == 2:
+                text += '\n'
+            else:
+                text += ' - '
+
+        text += '</b>'
+
+    if tp_count == 0:
+        text += 'Выберите <b>первое</b> значение тейк-профита'
+    elif tp_count == 5 or percents_sum == 100:
+        text += 'Выберите действие'
+    elif tp_count != split_count:
+        text += f'Введите <b>процент вывода</b> для тейк-профита <b>{tp_ratio[-1]}</b>'
+    else:
+        text += 'Выберите <b>следующее</b> значение тейк-профита'
+
+    return text
+
+
+def msg_enter_summury_profit_type(user_id: int):
+    return '\n'.join((
+        'Выберите вид разделения суммы:',
+        '',
+        '<i>*Простой - вывод профита при продажы 100% торговой позиции',
+        '*Разделение - вывод профита при разделении торговой позиции по нескольким тейк-профитам</i>'
     ))
 
 

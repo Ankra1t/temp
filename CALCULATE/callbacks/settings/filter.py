@@ -3,7 +3,7 @@ from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery
 
 
-settings_factory = CallbackData('type', prefix='settings')
+settings_factory = CallbackData('type', 'summury_type', 'take_profit', 'split', prefix='settings')
 
 
 class SettingsCallbackFilter(AdvancedCustomFilter):

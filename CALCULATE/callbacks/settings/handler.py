@@ -1,3 +1,4 @@
+import ast
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
@@ -8,7 +9,7 @@ from db_new import db_new, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_split, msg_settings_change_base,
+    msg_enter_risk_percent, msg_enter_split, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_settings_change_base,
     msg_settings_change_market, msg_settings_set_tp_show,
     msg_split_settings, msg_success_edit
 )
@@ -16,15 +17,32 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
-    kb_change_tp_show, kb_choose_lang, kb_base_cancel,
-    kb_settings, kb_split_ok, kb_split_settings
+    kb_change_tp_ratio, kb_choose_lang, kb_base_cancel,
+    kb_settings, kb_split_ok, kb_split_settings, kb_splitting, kb_summury_profit_type, kb_take_profit
 )
-from ..pages import send_main, send_settings
+from ..pages import send_main, send_settings, send_summury_profit_settings
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
+    summury_type = callback_data.get('summury_type', '')
+
+    temp_str_tp = callback_data.get('take_profit', '')
+    current_tp_ratio: list[int] = []
+    if temp_str_tp != '':
+        try:
+            current_tp_ratio = ast.literal_eval(temp_str_tp)
+        except:
+            current_tp_ratio = []
+
+    temp_str_split = callback_data.get('split', '')
+    current_split: list[float] = []
+    if temp_str_split != '':
+        try:
+            current_split = ast.literal_eval(temp_str_split)
+        except:
+            current_split = []
 
     user_id = call.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
@@ -93,20 +111,18 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'tp_show' in type:
-        tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+        tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
         is_changed = True
         arr_type = type.split('_')
 
         num, action = arr_type[-2], arr_type[-1]
 
         if action == 'off':
-            if len(tp_show) != 1:
-                tp_show = tp_show.replace(num, '')
+            if len(tp_ratio) != 1:
+                tp_ratio.remove(int(num))
         elif action == 'on':
-            tp_show = list(map(lambda x: int(x), tp_show))
-            tp_show.append(int(num))
-            tp_show.sort()
-            tp_show = ''.join(list(map(lambda x: str(x), tp_show)))
+            tp_ratio.append(int(num))
+            tp_ratio.sort()
         else:
             is_changed = False
 
@@ -114,10 +130,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             db_new.set_user_is_splitting(user_db_id, False)
 
         if is_changed or len(arr_type) == 2:
-            db_new.set_calculator_tp_show(user_db_id, tp_show)
+            db_new.set_calculator_tp_ratio(user_db_id, tp_ratio)
             bot.edit_message_text(
                 msg_settings_set_tp_show(user_id), chat_id, mes_id,
-                reply_markup=kb_change_tp_show(user_id, tp_show)
+                reply_markup=kb_change_tp_ratio(user_id, tp_ratio)
             )
 
     if 'market' in type:
@@ -161,9 +177,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if is_splitting:
             split_values = db_new.get_user_split_values(user_db_id)
-            tp_show = db_new.get_calculator_tp_show(user_db_id) or '345'
+            tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
-            if split_values is None or (len(split_values) != len(tp_show)):
+            if len(split_values) != len(tp_ratio):
                 bot.edit_message_text(
                     'Для включения "разделения" нужно установить значения',
                     chat_id, mes_id, reply_markup=kb_split_ok(user_id)
@@ -183,6 +199,65 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             chat_id, mes_id
         )
         bot.set_state(user_id, SettingsState.split_values, chat_id)
+
+    if type == 'summury_profit':
+        send_summury_profit_settings(bot, call.message, user_id)
+
+    if type == 'change_summury_profit':
+        if summury_type == '':
+            bot.edit_message_text(
+                msg_enter_summury_profit_type(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_summury_profit_type(user_id)
+            )
+        elif summury_type == 'default':
+            bot.edit_message_text(
+                msg_enter_take_profit(user_id, current_tp_ratio),
+                chat_id, mes_id,
+                reply_markup=kb_take_profit(user_id, current_tp_ratio)
+            )
+        elif summury_type == 'splitting':
+            if len(current_tp_ratio) == len(current_split):
+                bot.edit_message_text(
+                    msg_enter_splitting(
+                        user_id, current_tp_ratio, current_split),
+                    chat_id, mes_id,
+                    reply_markup=kb_splitting(
+                        user_id, current_tp_ratio, current_split
+                    )
+                )
+            else:
+                bot.set_state(user_id, '', chat_id)
+                set_state_data(bot, user_id, chat_id, {
+                    'take_profit': current_tp_ratio,
+                    'split': current_split
+                })
+                bot.edit_message_text(
+                    msg_enter_splitting(
+                        user_id, current_tp_ratio, current_split
+                    ),
+                    chat_id, mes_id,
+                    reply_markup=kb_splitting(
+                        user_id, current_tp_ratio, current_split, True
+                    )
+                )
+
+    if type == 'tp_save':
+        current_tp_ratio.sort()
+        db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
+        db_new.set_user_is_splitting(user_db_id, False)
+
+    if type == 'splitting_save':
+        current_tp_ratio.sort()
+        current_split.sort()
+
+        db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
+        db_new.set_user_is_splitting(user_db_id, True)
+        db_new.set_user_split_values(user_db_id, current_split)
+
+    if 'save' in type:
+        bot.edit_message_text('Изменено!', chat_id, mes_id)
+        send_summury_profit_settings(bot, call.message, user_id, True)
 
     bot.answer_callback_query(call.id)
 
