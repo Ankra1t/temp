@@ -734,7 +734,7 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
     return text
 
 
-def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float]):
+def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], is_last=False):
     sorted_tp, sorted_split = zip(*sorted(zip(tp_ratio, split)))
 
     tp_count = len(tp_ratio)
@@ -764,9 +764,14 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float]):
             else:
                 text += ' - '
 
-        text += '</b>'
+        text += '</b>\n'
+        text += f'<i>Сумма процентов:</i> <b>{percents_sum}</b>'
 
-    if tp_count == 0:
+    if is_last:
+        text += f'Оставшиеся <b>{round(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
+        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк профитов\n'
+        text += 'Выберите на <u>сколько частей</u> разделить остаток'
+    elif tp_count == 0:
         text += 'Выберите <b>первое</b> значение тейк-профита'
     elif tp_count == 5 or percents_sum == 100:
         text += 'Выберите действие'

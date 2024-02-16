@@ -8,7 +8,7 @@ from CALCULATE.common.messages import market_translates
 from .filter import settings_factory
 
 
-def getButton(text: str, type: str, summury_type='', take_profit: list[int] = [], split: list[float] = []):
+def getButton(text: str, type: str, summury_type='', take_profit: list[int] = [], split: list[float] = [], added_count: int = 0):
     return InlineKeyboardButton(
         text, None,
         callback_data=settings_factory.new(
@@ -438,6 +438,66 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     else:
         keyboard.add(btn_cancel)
 
+    return keyboard
+
+
+def kb_splitting_last(user_id: int, current_tp: list[int], current_split: list[float], added_count: int | None = None):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'last': 'Вывод оставшихся',
+            'save': 'Сохранить',
+            'cancel': 'Отмена',
+            'back': 'Назад',
+        },
+        'en': {
+            'last': 'Set for remaining',
+            'save': 'Save',
+            'cancel': 'Cancel',
+            'back': 'Back',
+        }
+    }
+
+    ratio_max = 4
+
+    percents_sum = sum(current_split)
+    if abs(percents_sum - 100) < 0.1:
+        percents_sum = 100
+
+    row_width = 4
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
+
+    if added_count is not None:
+        buttons = []
+        for el in range(1, ratio_max + 1):
+            new_tp, new_split = current_tp.copy(), current_split.copy()
+
+            max_tp = max(new_tp)
+            new_percent = round((100 - percents_sum) / el, 2)
+
+            for i in range(1, el + 1):
+                new_tp.append(max_tp + i)
+                new_split.append(new_percent)
+
+            btn = getButton(
+                str(el), 'change_summury_profit',
+                'splitting', new_tp, new_split, el
+            )
+            buttons.append(btn)
+
+        keyboard.add(*buttons)
+
+    btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+    btn_back = getButton(
+        texts[lang]['back'],
+        'change_summury_profit', 'splitting',
+        current_tp if (added_count is None) else current_tp[:-added_count],
+        current_split if (
+            added_count is None) else current_split[:-added_count],
+    )
+
+    keyboard.add(btn_back, btn_cancel)
     return keyboard
 
 

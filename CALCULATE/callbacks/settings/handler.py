@@ -9,16 +9,19 @@ from db_new import db_new, LANGUAGES
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_split, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_settings_change_base,
+    msg_enter_risk_percent, msg_enter_split, msg_enter_splitting,
+    msg_enter_summury_profit_type, msg_enter_take_profit,
     msg_settings_change_market, msg_settings_set_tp_show,
-    msg_split_settings, msg_success_edit
+    msg_split_settings, msg_success_edit,
+    msg_settings_change_base,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
     kb_change_tp_ratio, kb_choose_lang, kb_base_cancel,
-    kb_settings, kb_split_ok, kb_split_settings, kb_splitting, kb_summury_profit_type, kb_take_profit
+    kb_split_ok, kb_split_settings, kb_splitting, kb_splitting_last,
+    kb_summury_profit_type, kb_take_profit
 )
 from ..pages import send_main, send_settings, send_summury_profit_settings
 
@@ -43,6 +46,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             current_split = ast.literal_eval(temp_str_split)
         except:
             current_split = []
+
+    added_count = int(callback_data.get('added_count', 0))
 
     user_id = call.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
@@ -218,29 +223,28 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
         elif summury_type == 'splitting':
             if len(current_tp_ratio) == len(current_split):
-                bot.edit_message_text(
-                    msg_enter_splitting(
-                        user_id, current_tp_ratio, current_split),
-                    chat_id, mes_id,
-                    reply_markup=kb_splitting(
-                        user_id, current_tp_ratio, current_split
-                    )
+                kb = kb_splitting(
+                    user_id, current_tp_ratio, current_split
                 )
             else:
+                # kb = kb_splitting(
+                #     user_id, current_tp_ratio, current_split, True
+                # )
+                kb = None
+
                 bot.set_state(user_id, '', chat_id)
                 set_state_data(bot, user_id, chat_id, {
                     'take_profit': current_tp_ratio,
                     'split': current_split
                 })
-                bot.edit_message_text(
-                    msg_enter_splitting(
-                        user_id, current_tp_ratio, current_split
-                    ),
-                    chat_id, mes_id,
-                    reply_markup=kb_splitting(
-                        user_id, current_tp_ratio, current_split, True
-                    )
-                )
+
+            bot.edit_message_text(
+                msg_enter_splitting(
+                    user_id, current_tp_ratio, current_split
+                ),
+                chat_id, mes_id,
+                reply_markup=kb
+            )
 
     if type == 'tp_save':
         current_tp_ratio.sort()
@@ -258,6 +262,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'save' in type:
         bot.edit_message_text('Изменено!', chat_id, mes_id)
         send_summury_profit_settings(bot, call.message, user_id, True)
+
+    if type == 'splitting_last':
+        bot.edit_message_text(
+            msg_enter_splitting(
+                user_id, current_tp_ratio, current_split, True
+            ),
+            chat_id, mes_id,
+            reply_markup=kb_splitting_last(
+                user_id,
+                current_tp_ratio, current_split,
+                added_count
+            )
+        )
 
     bot.answer_callback_query(call.id)
 

@@ -15,7 +15,8 @@ from .settings.keyboards import (
     kb_change_base, kb_choose_lang, kb_change_currency,
     kb_change_market, kb_change_tp_ratio, kb_split_settings,
     kb_split_ok, kb_summury_profit, kb_summury_profit_type,
-    kb_summury_profit_cancel, kb_take_profit, kb_splitting
+    kb_summury_profit_cancel, kb_take_profit, kb_splitting,
+    kb_splitting_last
 )
 
 
