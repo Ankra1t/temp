@@ -30,6 +30,10 @@ bot = TeleBot(
 
 
 pay_guard = GuardPaymentAccess()
+pay_guard.dt_format = DATE_FORMAT
+pay_guard.dt_format_admin_show = PRINT_DATE_FROMAT
+pay_guard.dt_format_user_show = PRINT_DATE_FROMAT
+
 pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
 
 base_statis = BaseStatistics(db_new, bot)

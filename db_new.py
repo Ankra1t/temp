@@ -200,6 +200,24 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_first_tariff_by_product(self, product='signals', active=1, switch_active=1):
+        """Получить первый активный включенный тариф по продукту"""
+        query = "SELECT * FROM prices WHERE type_product = %s AND active=%s AND switch_active = %s"
+        params = (product, active, switch_active,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            return self._data_to_price(data)
+        except Exception as e:
+            print(f'ERROR[get_first_price_by_product]: {e}')
+            self.connection.rollback()
+            return None
+        pass
+
     # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
         return Subscribe(
@@ -210,15 +228,18 @@ class Database:
             data.get('subscribe_type'),
             data.get('prices_id'),
             data.get('transactions_payed_id'),
+            data.get('gift_admin'),
+            data.get('user_id'),
         )
 
     def add_subsbscribe(self, sub: Subscribe):
+        datetime_now = datetime.utcnow()
         query = ("INSERT INTO "
                  "subscribes (tg_user_id, finish_dt, "
-                 "subscribe_type, active, prices_id, transactions_payed_id) "
-                 "VALUES (%s, %s, %s, %s, %s, %s)")
+                 "subscribe_type, active, prices_id, transactions_payed_id, created_at, updated_at) "
+                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
         params = (sub.tg_user_id, sub.finish_dt, sub.type, sub.active,
-                  sub.prices_id, sub.transactions_payed_id,)
+                  sub.prices_id, sub.transactions_payed_id, datetime_now, datetime_now,)
 
         try:
             self.curs.execute(query, params)
@@ -277,10 +298,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def set_subscribe_unactive_by_user_id(self, user_id: int):
+    def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id=None):
         datetime_now = datetime.utcnow()
-        query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s"
-        params = (0, datetime_now, user_id,)
+        if tariff_id:
+            query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND prices_id = %s "
+            params = (0, datetime_now, user_id, tariff_id, )
+        else:
+            query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s"
+            params = (0, datetime_now, user_id,)
 
         try:
             self.curs.execute(query, params)
@@ -305,10 +330,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_trial_subscribe_unactive_by_user(self, user_id):
+    def set_trial_subscribe_unactive_by_user(self, tg_user_id):
         datetime_now = datetime.now().strftime(DATE_FORMAT)
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND subscribe_type = %s"
-        params = (0, datetime_now, user_id, 'trial')
+        params = (0, datetime_now, tg_user_id, 'trial')
 
         try:
             self.curs.execute(query, params)
@@ -579,6 +604,26 @@ class Database:
             print(f'ERROR[get_paid_transactions_all]: {e}')
             self.connection.rollback()
             return []
+
+    def get_paid_transactions_all_dry_users(self):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT DISTINCT user_id, id, code, link, sum, currency, price_id, status, payment_date FROM transactions "
+                 "WHERE status = %s "
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+
 
     def get_paid_transactions_period(self, start_date, fin_date):
         """Получить все оплаченные транзакции"""
@@ -865,12 +910,17 @@ class Database:
     def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
         query = self.USER_INFO_QUERY + (
             'WHERE u.ban = 0 '
-            f'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= {min_sub_count} '
+            f'AND '
+            f'(SELECT COUNT (*) FROM subscribes as sub '
+            f'WHERE sub.tg_user_id = u.id_telegram '
+            f'AND sub.transactions_payed_id IS NOT NULL '
+            f'AND sub.subscribe_type = %s) >= {min_sub_count} '
             'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) > 0 '
         )
-
+        params = ('paid',)
         try:
-            self.curs.execute(query)
+            self.curs.execute(query, params )
+            # self.curs.execute(query)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:

@@ -262,6 +262,15 @@ class Admin_kb_inlines(object):
         keyboard.add(admin_set_tariff_client)
         return keyboard
 
+    def kb_tariff_choose_for_user(self, tariff_id):
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        admin_set_tariff_client = types.InlineKeyboardButton(text='Выбрать для пользователя',
+                                                             callback_data=adm_action.new(action='admin_set_tariff_client',
+                                                                                          id=tariff_id))
+
+        keyboard.add(admin_set_tariff_client)
+        return keyboard
+
     def kb_tariff_findate(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         tariff_findate_period_day = types.InlineKeyboardButton(text='День', callback_data=adm_action.new(

@@ -19,7 +19,7 @@ class GuardPaymentAccess():
         self.dt_format_user_show = "%d/%m/%Y"
 
     # Тестовые подписки
-    def set_trial(self, message: types.Message, custom_days=None):
+    def set_trial(self, tg_user_id, custom_days=None, custom_tariff_id=None):
         """Дать новому пользователю тестовый период """
         if not custom_days:
             current_trial_days = int(self.get_option_trial_days())
@@ -28,9 +28,16 @@ class GuardPaymentAccess():
 
         finish_date = datetime.now() + timedelta(days=current_trial_days)
 
+        if not custom_tariff_id:
+            tariff = db_new.get_first_tariff_by_product('signals')
+            tariff_id = tariff.id
+        else:
+            tariff_id = custom_tariff_id
+
+
         subscribe = Subscribe(
-            message.from_user.id,
-            finish_date, 1, None, 'trial',
+            tg_user_id,
+            finish_date, 1, None, 'trial', prices_id=tariff_id
         )
 
         # self.delete_trial(message)
@@ -52,13 +59,13 @@ class GuardPaymentAccess():
         days = db_new.get_option('count_trial_days_new_user')
         return days or 1
 
-    def set_custom_paid_subscribe(self, user_id, count_days):
+    def set_custom_paid_subscribe(self, user_id, price_id=1, count_days=1):
         """Дать пользователю платную подписку без оплаты"""
         now = datetime.now()
         finish_date = now + timedelta(days=count_days)
 
         subscribe = Subscribe(
-            user_id, finish_date, 1, None, 'paid', 1, 1
+            user_id, finish_date, 1, None, 'paid', price_id, None
         )
         db_new.add_subsbscribe(subscribe)
 
@@ -87,9 +94,9 @@ class GuardPaymentAccess():
             return trial_id
         return False
 
-    def set_trial_subscribe_unactive_by_user(self, user_id):
+    def set_trial_subscribe_unactive_by_user(self, tg_user_id):
         """Отключить все пробные подписки у пользователя"""
-        db_new.set_trial_subscribe_unactive_by_user(user_id)
+        db_new.set_trial_subscribe_unactive_by_user(tg_user_id)
 
     # Платные подписки
     def set_paid_subscribe(self, transaction):
@@ -214,9 +221,9 @@ class GuardPaymentAccess():
         """Убираем активность у подписки по subscribe_id """
         db_new.set_subscribe_unactive(subscribe_id)
 
-    def set_subscribe_unactive_by_user_id(self, user_id):
+    def set_subscribe_unactive_by_user_id(self, user_id, tariff_id = None):
         """Убираем активность у подписки для одного пользователя по user_id"""
-        db_new.set_subscribe_unactive_by_user_id(user_id)
+        db_new.set_subscribe_unactive_by_user_id(user_id, tariff_id)
 
     # Управление подписками
     def get_current_subscribe_user(self, user: User):
@@ -275,3 +282,22 @@ class GuardPaymentAccess():
             'time_start': date_start_obj.strftime(self.dt_format_admin_show),
             'time_end': date_end_obj.strftime(self.dt_format_admin_show)
         }
+
+        # # # # # # Вспомогательные методы
+    def get_days_by_period(self, period):
+        days = 1
+
+        if period == 'week':
+            days = 7
+        if period == 'week2':
+            days = 7*2
+        if period == 'month':
+            days = 30
+        if period == 'month6':
+            days = 30 * 6
+        if period == 'year':
+            days = 365
+        if period == 'lifetime':
+            days = 365*80
+
+        return days

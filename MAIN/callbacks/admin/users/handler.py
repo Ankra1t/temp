@@ -4,10 +4,12 @@ from telebot.types import CallbackQuery
 from common.utils import set_state_data
 from common.vars import PRINT_DATE_FROMAT
 
-from initialize import kb_inl_admin, pay_guard
+from initialize import kb_inl_admin, pay_guard, tariff_manager
 from db_new import FILTER_TYPE, db_new
 from models import User
 from MAIN.states import AdminUsersState
+from messages.users import gift_subscribe_msg
+
 
 from .keyboards import kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_users_list
 from .filter import admin_users_factory, AdminUsersCallbackFilter
@@ -26,6 +28,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+    mess = call.message
 
     if type == 'cancel_subscribe':
         bot.edit_message_text(
@@ -118,19 +121,59 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'client_add_sub':
+        # Задать сначала тариф для выдачи подписки
         bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
         set_state_data(bot, user_id, chat_id, {
             'user_id': client_db_id,
         })
         bot.edit_message_text(
-            'Введите количество дней подписки:',
+            'Выберите тариф на базе которого выдать подписку:',
             chat_id, mes_id,
-            reply_markup=kb_admin_users_back()
+            reply_markup=kb_admin_users_back())
+
+        # Список тарифов с кнопкой выбрать
+        available_tariffs = tariff_manager.admin_tariff_list_custom_show(chat_id)
+        if not available_tariffs:
+            bot.send_message(
+                chat_id,
+                'Тарифов не обнаружено'
+            )
+
+    if type == 'choose_periods_for_tariffs':
+
+        with bot.retrieve_data(user_id, chat_id) as data:
+            tariff_id = data.get('tariff_id')
+            subscribe_user_id = data.get('user_id')
+
+            # Получить tg_user_id
+        user = db_new.get_user_by_id(subscribe_user_id)
+
+        # Считаем кол-во дней для выдачи по периоду
+        days = pay_guard.get_days_by_period(filter)
+
+        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
+        datetime_show = pay_guard.set_custom_paid_subscribe(
+            user.tg_id, tariff_id, int(days)
+        )
+
+        data_fin = datetime_show['admin']
+        bot.send_message(
+            chat_id,
+            f'Клиенту с id[{subscribe_user_id}] установлена платная подписка до {data_fin}'
+        )
+
+        bot.delete_state(user_id, chat_id)
+
+        send_admin_client(bot, mess, user_id, subscribe_user_id, True)
+
+        bot.send_message(
+            user.tg_id,
+            gift_subscribe_msg(datetime_show['user'])
         )
 
     if type == 'client_cancel_sub':
         bot.edit_message_text(
-            f'Отменить подписку пользователю с id[{client_db_id}?]',
+            f'Отменить все подписки пользователю с id[{client_db_id}?]',
             chat_id, mes_id,
             reply_markup=kb_admin_users_confirm('cancel_sub', client_db_id)
         )
@@ -158,7 +201,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             return
 
         if 'cancel_sub' in type:
-            pay_guard.set_subscribe_unactive_by_user_id(client_db_id)
+            print(f'client_db_id ')
+            print(client_db_id)
+            pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         if 'ban' in type:
             db_new.set_user_ban(user.id, abs(user.ban - 1))
 

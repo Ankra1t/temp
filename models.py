@@ -45,7 +45,9 @@ class Subscribe:
         type: str | None = None,
         prices_id: int | None = None,
         transactions_payed_id: int | None = None,
-        type_product: str | None = None
+        type_product: str | None = None,
+        gift_admin: int | None = None,
+        user_id: int | None = None
     ):
         self.id = id
         self.tg_user_id = tg_user_id
@@ -55,6 +57,8 @@ class Subscribe:
         self.prices_id = prices_id
         self.transactions_payed_id = transactions_payed_id
         self.type_product = type_product
+        self.gift_admin = gift_admin
+        self.user_id = user_id
 
 
 class User:
