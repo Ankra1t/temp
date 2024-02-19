@@ -1,26 +1,23 @@
-import ast
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from common.utils import set_state_data
 
 from db_new import db_new, LANGUAGES
 
+from common.utils import set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_split, msg_enter_splitting,
+    msg_enter_risk_percent, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit,
-    msg_settings_change_market,
-    msg_settings_set_tp_show, msg_split_settings, msg_success_edit,
-    msg_settings_change_base,
+    msg_settings_change_market, msg_success_edit, msg_settings_change_base,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
-    kb_change_tp_ratio, kb_choose_lang, kb_base_cancel,
-    kb_split_ok, kb_split_settings, kb_splitting, kb_splitting_last,
+    kb_choose_lang, kb_base_cancel,
+    kb_splitting, kb_splitting_last,
     kb_summury_profit_type, kb_take_profit
 )
 from ..pages import send_main, send_settings, send_summury_profit_settings
@@ -100,32 +97,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_change_base(user_id)
         )
 
-    if 'tp_show' in type:
-        tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-        is_changed = True
-        arr_type = type.split('_')
-
-        num, action = arr_type[-2], arr_type[-1]
-
-        if action == 'off':
-            if len(tp_ratio) != 1:
-                tp_ratio.remove(int(num))
-        elif action == 'on':
-            tp_ratio.append(int(num))
-            tp_ratio.sort()
-        else:
-            is_changed = False
-
-        if is_changed:
-            db_new.set_user_is_splitting(user_db_id, False)
-
-        if is_changed or len(arr_type) == 2:
-            db_new.set_calculator_tp_ratio(user_db_id, tp_ratio)
-            bot.edit_message_text(
-                msg_settings_set_tp_show(user_id), chat_id, mes_id,
-                reply_markup=kb_change_tp_ratio(user_id, tp_ratio)
-            )
-
     if 'market' in type:
         type_list = type.split('_')
 
@@ -155,40 +126,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'reset':
         db_new.reset_user_settings(user_db_id)
         send_settings(bot, call.message, user_id)
-
-    if type == 'split':
-        bot.edit_message_text(
-            msg_split_settings(user_id), chat_id, mes_id,
-            reply_markup=kb_split_settings(user_id)
-        )
-
-    if type == 'split_on' or type == 'split_off':
-        is_splitting = True if type == 'split_on' else False
-
-        if is_splitting:
-            split_values = db_new.get_user_split_values(user_db_id)
-            tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-
-            if len(split_values) != len(tp_ratio):
-                bot.edit_message_text(
-                    'Для включения "разделения" нужно установить значения',
-                    chat_id, mes_id, reply_markup=kb_split_ok(user_id)
-                )
-                return
-
-        db_new.set_user_is_splitting(user_db_id, is_splitting)
-
-        bot.edit_message_text(
-            msg_split_settings(user_id), chat_id, mes_id,
-            reply_markup=kb_split_settings(user_id)
-        )
-
-    if type == 'split_set_value':
-        bot.edit_message_text(
-            msg_enter_split(user_id),
-            chat_id, mes_id
-        )
-        bot.set_state(user_id, SettingsState.split_values, chat_id)
 
     if type == 'summury_profit':
         send_summury_profit_settings(bot, call.message, user_id)
@@ -220,7 +157,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         if abs(percents_sum - 100) < 0.1:
                             percents_sum = 100
                         new_percent = round(
-                            (100 - percents_sum) / add_count, 2)
+                            (100 - percents_sum) / add_count, 2
+                        )
 
                         for i in range(1, add_count + 1):
                             current_tp_ratio.append(max_tp + i)
@@ -252,10 +190,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     kb = None
                     bot.set_state(user_id, SettingsState.splitting, chat_id)
-                    set_state_data(bot, user_id, chat_id, {
-                        'take_profit': current_tp_ratio,
-                        'split': current_split
-                    })
                 bot.edit_message_text(
                     msg_enter_splitting(
                         user_id, current_tp_ratio, current_split
@@ -276,7 +210,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if type == 'splitting_save':
             sorted_tp, sorted_split = zip(
-                *sorted(zip(current_tp_ratio, current_split)))
+                *sorted(zip(current_tp_ratio, current_split))
+            )
             sorted_tp = list(sorted_tp)
             sorted_split = list(sorted_split)
 
@@ -291,14 +226,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             current_tp_ratio: list[int] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
+
         bot.edit_message_text(
             msg_enter_splitting(
                 user_id, current_tp_ratio, current_split, True
             ),
             chat_id, mes_id,
-            reply_markup=kb_splitting_last(
-                user_id
-            )
+            reply_markup=kb_splitting_last(user_id)
         )
 
     bot.answer_callback_query(call.id)

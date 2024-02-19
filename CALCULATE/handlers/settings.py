@@ -4,11 +4,11 @@ from CALCULATE.callbacks.settings.keyboards import kb_splitting
 
 from db_new import db_new, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
-from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings, kb_split_settings
+from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_currency,
-    msg_enter_risk_percent, msg_enter_split, msg_enter_splitting, msg_percent_error, msg_split_settings,
+    msg_enter_risk_percent, msg_enter_splitting,
     msg_success_base_set, msg_success_edit
 )
 
@@ -95,51 +95,6 @@ def handle_new_currency(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
 
 
-def handle_split_values(message: Message, bot: TeleBot):
-    user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id) or '345'
-
-    chat_id = message.chat.id
-
-    error_mes = 'Ошибка!\n' + msg_enter_split(user_id)
-
-    value = text_accept(message)
-    if value is None:
-        bot.send_message(chat_id, error_mes)
-        return
-
-    value = value.replace('%', '')
-    split_values = value.split(' ')
-
-    if len(split_values) != len(tp_ratio):
-        bot.send_message(chat_id, error_mes)
-        return
-
-    values: list[float] = []
-
-    for el in split_values:
-        if not is_digit(el):
-            bot.send_message(chat_id, error_mes)
-            return
-
-        values.append(float(el))
-
-    if sum(values) != 100:
-        bot.send_message(chat_id, error_mes)
-        return
-
-    db_new.set_user_is_splitting(user_db_id, True)
-
-    bot.delete_state(user_id, chat_id)
-    db_new.set_user_split_values(user_db_id, values)
-    bot.send_message(
-        chat_id, msg_split_settings(user_id),
-        reply_markup=kb_split_settings(user_id)
-    )
-
-
 def handle_splitting(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
@@ -189,5 +144,4 @@ def registration(bot: TeleBot):
             state=SettingsState.risk_percent)
 
     reg_mes(handle_new_currency, state=SettingsState.currency)
-    reg_mes(handle_split_values, state=SettingsState.split_values)
     reg_mes(handle_splitting, state=SettingsState.splitting)

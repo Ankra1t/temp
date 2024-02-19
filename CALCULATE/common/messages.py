@@ -176,81 +176,6 @@ def msg_settings_change_market(user_id: int):
     return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
 
 
-def msg_settings_set_tp_show(user_id: int):
-    lang = get_lang(user_id)
-
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-
-    texts = {
-        'ru': {
-            'name': 'Настройки',
-            'subname': 'Установка расчета прибыли',
-            'now': 'Сейчас выводится',
-            'note': 'При изменении данных значений выключается разделение прибыли'
-        },
-        'en': {
-            'name': 'Settings',
-            'subname': 'Set calculation of profit',
-            'now': 'Now displayed',
-            'note': 'When these values changes, the division of profit is turned off'
-        }
-    }
-
-    result = ''
-    for el in tp_ratio:
-        result += f'x{el} '
-
-    return '\n'.join((
-        f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
-        f'{texts[lang]["note"]}',
-        '',
-        f'{texts[lang]["now"]}: <b>{result}</b>'
-    ))
-
-
-def msg_split_settings(user_id: int):
-    lang = get_lang(user_id)
-
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id)
-
-    texts = {
-        'ru': {
-            'name': 'Настройки',
-            'subname': 'Разделение профита',
-            'split': 'Разделение',
-            'on': 'Включено',
-            'off': 'Выключено',
-        },
-        'en': {
-            'name': 'Settings',
-            'subname': 'Profit splitting',
-            'split': 'Splitting',
-            'on': 'Turned on',
-            'off': 'Turned off',
-        }
-    }
-
-    on_off = 'on' if is_splitting else 'off'
-
-    splitting = ''
-
-    if len(split_values) != 0:
-        splitting = 'Разделение: '
-        for el in split_values:
-            splitting += f'{el}% '
-
-    return '\n'.join((
-        f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
-        '',
-        f'<b>{texts[lang][on_off]}</b>',
-        '',
-        splitting,
-    ))
-
-
 def msg_summury_profit_settings(user_id: int):
     lang = get_lang(user_id)
 
@@ -676,35 +601,6 @@ def msg_calculate_forex_result(
 
 
 # Ввод данных
-def msg_enter_split(user_id: int):
-    lang = get_lang(user_id)
-
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-
-    if len(tp_ratio) == 3:
-        example = '75 15 10'
-    elif len(tp_ratio) == 2:
-        example = '75 25'
-    else:
-        example = '100'
-
-    tp_text = ''
-    for i, el in enumerate(tp_ratio):
-        tp_text += f'x{el}'
-        if i != len(tp_ratio) - 1:
-            tp_text += ' '
-
-    return '\n'.join((
-        f'Введите <b>проценты</b> разделения <u>через пробел</u> для каждого из тейк профитов',
-        '',
-        f'Ваши тейк профиты: <b>{tp_text}</b>',
-        'Сумма процентов должна быть равна <b>100%</b>',
-        '',
-        f'Пример: <b>{example}</b>'
-    ))
-
-
 def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
     current_tp = tp_ratio.copy()
     current_tp.sort()
