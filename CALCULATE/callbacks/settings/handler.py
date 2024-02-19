@@ -11,8 +11,8 @@ from CALCULATE.common.messages import (
     msg_choose_lang, msg_enter_currency, msg_enter_deposit,
     msg_enter_risk_percent, msg_enter_split, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit,
-    msg_settings_change_market, msg_settings_set_tp_show,
-    msg_split_settings, msg_success_edit,
+    msg_settings_change_market,
+    msg_settings_set_tp_show, msg_split_settings, msg_success_edit,
     msg_settings_change_base,
 )
 
@@ -29,25 +29,10 @@ from ..pages import send_main, send_settings, send_summury_profit_settings
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
+
     summury_type = callback_data.get('summury_type', '')
-
-    temp_str_tp = callback_data.get('take_profit', '')
-    current_tp_ratio: list[int] = []
-    if temp_str_tp != '':
-        try:
-            current_tp_ratio = ast.literal_eval(temp_str_tp)
-        except:
-            current_tp_ratio = []
-
-    temp_str_split = callback_data.get('split', '')
-    current_split: list[float] = []
-    if temp_str_split != '':
-        try:
-            current_split = ast.literal_eval(temp_str_split)
-        except:
-            current_split = []
-
-    added_count = int(callback_data.get('added_count', 0))
+    take_profit_add = callback_data.get('take_profit', '')
+    add_count = callback_data.get('add_count', '')
 
     user_id = call.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
@@ -215,64 +200,104 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_summury_profit_type(user_id)
             )
-        elif summury_type == 'default':
-            bot.edit_message_text(
-                msg_enter_take_profit(user_id, current_tp_ratio),
-                chat_id, mes_id,
-                reply_markup=kb_take_profit(user_id, current_tp_ratio)
-            )
-        elif summury_type == 'splitting':
-            if len(current_tp_ratio) == len(current_split):
-                kb = kb_splitting(
-                    user_id, current_tp_ratio, current_split
+            bot.delete_state(user_id, chat_id)
+            bot.set_state(user_id, SettingsState.summury_profit, chat_id)
+        else:
+            with bot.retrieve_data(user_id, chat_id) as data:
+                current_tp_ratio: list[int] = data.get('take_profit', [])
+                current_split: list[float] = data.get('split', [])
+
+                if add_count != '':
+                    add_count = int(add_count)
+
+                    if add_count < 0:
+                        current_tp_ratio = current_tp_ratio[:add_count]
+                        current_split = current_split[:add_count]
+                    else:
+                        max_tp = max(current_tp_ratio)
+
+                        percents_sum = sum(current_split)
+                        if abs(percents_sum - 100) < 0.1:
+                            percents_sum = 100
+                        new_percent = round(
+                            (100 - percents_sum) / add_count, 2)
+
+                        for i in range(1, add_count + 1):
+                            current_tp_ratio.append(max_tp + i)
+                            current_split.append(new_percent)
+
+                if take_profit_add != '':
+                    take_profit_add = int(take_profit_add)
+                    current_tp_ratio.append(int(take_profit_add))
+
+                data['take_profit'] = current_tp_ratio
+                data['split'] = current_split
+
+            if summury_type == 'default':
+                bot.edit_message_text(
+                    msg_enter_take_profit(user_id, current_tp_ratio),
+                    chat_id, mes_id,
+                    reply_markup=kb_take_profit(user_id, current_tp_ratio)
                 )
-            else:
-                # kb = kb_splitting(
-                #     user_id, current_tp_ratio, current_split, True
-                # )
-                kb = None
-
-                bot.set_state(user_id, '', chat_id)
-                set_state_data(bot, user_id, chat_id, {
-                    'take_profit': current_tp_ratio,
-                    'split': current_split
-                })
-
-            bot.edit_message_text(
-                msg_enter_splitting(
-                    user_id, current_tp_ratio, current_split
-                ),
-                chat_id, mes_id,
-                reply_markup=kb
-            )
-
-    if type == 'tp_save':
-        current_tp_ratio.sort()
-        db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
-        db_new.set_user_is_splitting(user_db_id, False)
-
-    if type == 'splitting_save':
-        current_tp_ratio.sort()
-        current_split.sort()
-
-        db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
-        db_new.set_user_is_splitting(user_db_id, True)
-        db_new.set_user_split_values(user_db_id, current_split)
+            elif summury_type == 'splitting':
+                if add_count != '':
+                    kb = kb_splitting(
+                        user_id, current_tp_ratio, current_split,
+                        False, add_count
+                    )
+                elif len(current_tp_ratio) == len(current_split):
+                    kb = kb_splitting(
+                        user_id, current_tp_ratio, current_split
+                    )
+                else:
+                    kb = None
+                    bot.set_state(user_id, SettingsState.splitting, chat_id)
+                    set_state_data(bot, user_id, chat_id, {
+                        'take_profit': current_tp_ratio,
+                        'split': current_split
+                    })
+                bot.edit_message_text(
+                    msg_enter_splitting(
+                        user_id, current_tp_ratio, current_split
+                    ),
+                    chat_id, mes_id,
+                    reply_markup=kb
+                )
 
     if 'save' in type:
+        with bot.retrieve_data(user_id, chat_id) as data:
+            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_split: list[float] = data.get('split', [])
+
+        if type == 'tp_save':
+            current_tp_ratio.sort()
+            db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
+            db_new.set_user_is_splitting(user_db_id, False)
+
+        if type == 'splitting_save':
+            sorted_tp, sorted_split = zip(
+                *sorted(zip(current_tp_ratio, current_split)))
+            sorted_tp = list(sorted_tp)
+            sorted_split = list(sorted_split)
+
+            db_new.set_calculator_tp_ratio(user_db_id, sorted_tp)
+            db_new.set_user_split_values(user_db_id, sorted_split)
+            db_new.set_user_is_splitting(user_db_id, True)
+
         bot.edit_message_text('Изменено!', chat_id, mes_id)
         send_summury_profit_settings(bot, call.message, user_id, True)
 
     if type == 'splitting_last':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_split: list[float] = data.get('split', [])
         bot.edit_message_text(
             msg_enter_splitting(
                 user_id, current_tp_ratio, current_split, True
             ),
             chat_id, mes_id,
             reply_markup=kb_splitting_last(
-                user_id,
-                current_tp_ratio, current_split,
-                added_count
+                user_id
             )
         )
 

@@ -8,14 +8,14 @@ from CALCULATE.common.messages import market_translates
 from .filter import settings_factory
 
 
-def getButton(text: str, type: str, summury_type='', take_profit: list[int] = [], split: list[float] = [], added_count: int = 0):
+def getButton(text: str, type: str, summury_type='', take_profit: int | None = None, add_count: int | None = None):
     return InlineKeyboardButton(
         text, None,
         callback_data=settings_factory.new(
             type=type,
             summury_type=summury_type,
-            take_profit=take_profit,
-            split=split
+            take_profit=take_profit or '',
+            add_count=add_count or '',
         ))
 
 
@@ -54,7 +54,8 @@ def kb_settings(user_id: int):
 
     btn_split = getButton(texts[lang]["split"], 'split')
     btn_take_profit = getButton(
-        texts[lang]["summury_profit"], 'summury_profit')
+        texts[lang]["summury_profit"], 'summury_profit'
+    )
 
     btn_uses = getButton(texts[lang]["reset"], 'reset')
 
@@ -349,18 +350,18 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
             if el not in current_tp:
                 btn = getButton(
                     f'x{el}', f'change_summury_profit',
-                    'default', [*current_tp, el]
+                    'default', el
                 )
                 buttons.append(btn)
             if len(buttons) == row_width or (el == tp_max and len(buttons) != 0):
                 keyboard.add(*buttons)
                 buttons = []
 
-    btn_save = getButton(texts[lang]['save'], 'tp_save', '', current_tp)
+    btn_save = getButton(texts[lang]['save'], 'tp_save')
     btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
     btn_back = getButton(
         texts[lang]['back'],
-        'change_summury_profit', 'default', current_tp[:-1]
+        'change_summury_profit', 'default', None, -1
     )
 
     if len(current_tp) != 0:
@@ -371,7 +372,8 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
     return keyboard
 
 
-def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], percent_entering=False):
+def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], percent_entering=False, added_count=0):
+    added_count = max(added_count, 1)
     lang = get_lang(user_id)
 
     texts = {
@@ -392,7 +394,7 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     tp_max = 10
 
     percents_sum = sum(current_split)
-    if abs(percents_sum - 100) < 0.1:
+    if abs(percents_sum - 100) < 0.2:
         percents_sum = 100
 
     row_width = 4
@@ -400,12 +402,12 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
 
     buttons = []
 
-    if not percent_entering and (len(current_tp) != 5 or percents_sum != 100):
+    if not percent_entering and len(current_tp) != 5 and percents_sum != 100:
         for el in range(2, tp_max + 1):
             if el not in current_tp:
                 btn = getButton(
                     f'x{el}', f'change_summury_profit',
-                    'splitting', [*current_tp, el], current_split
+                    'splitting', el
                 )
                 buttons.append(btn)
             if len(buttons) == row_width or (el == tp_max and len(buttons) != 0):
@@ -415,20 +417,17 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     if percents_sum == 100:
         btn_save = getButton(
             texts[lang]['save'],
-            'splitting_save', '',
-            current_tp, current_split
+            'splitting_save'
         )
     else:
         btn_save = getButton(
             texts[lang]['last'],
-            'splitting_last', '',
-            current_tp, current_split
+            'splitting_last'
         )
     btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
     btn_back = getButton(
         texts[lang]['back'],
-        'change_summury_profit', 'splitting',
-        current_tp[:-1], current_split[:-1]
+        'change_summury_profit', 'splitting', None, -added_count
     )
 
     if percent_entering:
@@ -441,7 +440,7 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     return keyboard
 
 
-def kb_splitting_last(user_id: int, current_tp: list[int], current_split: list[float], added_count: int | None = None):
+def kb_splitting_last(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -461,40 +460,23 @@ def kb_splitting_last(user_id: int, current_tp: list[int], current_split: list[f
 
     ratio_max = 4
 
-    percents_sum = sum(current_split)
-    if abs(percents_sum - 100) < 0.1:
-        percents_sum = 100
-
     row_width = 4
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    if added_count is not None:
-        buttons = []
-        for el in range(1, ratio_max + 1):
-            new_tp, new_split = current_tp.copy(), current_split.copy()
+    buttons = []
+    for el in range(1, ratio_max + 1):
+        btn = getButton(
+            str(el), 'change_summury_profit',
+            'splitting', None, el
+        )
+        buttons.append(btn)
 
-            max_tp = max(new_tp)
-            new_percent = round((100 - percents_sum) / el, 2)
-
-            for i in range(1, el + 1):
-                new_tp.append(max_tp + i)
-                new_split.append(new_percent)
-
-            btn = getButton(
-                str(el), 'change_summury_profit',
-                'splitting', new_tp, new_split, el
-            )
-            buttons.append(btn)
-
-        keyboard.add(*buttons)
+    keyboard.add(*buttons)
 
     btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
     btn_back = getButton(
         texts[lang]['back'],
         'change_summury_profit', 'splitting',
-        current_tp if (added_count is None) else current_tp[:-added_count],
-        current_split if (
-            added_count is None) else current_split[:-added_count],
     )
 
     keyboard.add(btn_back, btn_cancel)

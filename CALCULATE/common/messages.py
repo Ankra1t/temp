@@ -719,9 +719,9 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
         for el in current_tp:
             text += f'x{el} '
 
-        text += '</b>'
+        text += '</b>\n'
 
-    text += '\n\nУчитывайте, что максимальный коэффициент тейк профита - <b>x10</b>\n'
+    text += '\nУчитывайте, что максимальный коэффициент тейк профита - <b>x10</b>\n'
     text += 'Можно выбрать до <b>5</b> значений\n\n'
 
     if tp_count == 0:
@@ -735,10 +735,13 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
 
 
 def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], is_last=False):
-    sorted_tp, sorted_split = zip(*sorted(zip(tp_ratio, split)))
-
     tp_count = len(tp_ratio)
     split_count = len(split)
+
+    if tp_count == 0 or split_count == 0:
+        sorted_tp, sorted_split = [], []
+    else:
+        sorted_tp, sorted_split = zip(*sorted(zip(tp_ratio, split)))
 
     percents_sum = sum(split)
     if abs(percents_sum - 100) < 0.1:
@@ -746,8 +749,8 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
 
     text = '<u>Установка разделения профита</u>\n'
 
-    if tp_count != 0:
-        text += '<u>Текущий выбор</u>: <b>\n'
+    if tp_count != 0 and split_count != 0:
+        text += '\n<u>Текущий выбор</u>: <b>\n'
 
         for i, el in enumerate(sorted_tp):
             try:
@@ -757,7 +760,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
 
             text += f'x{el} {percent}'
 
-            if i == tp_count - 1:
+            if i == len(sorted_tp) - 1:
                 pass
             elif i % 3 == 2:
                 text += '\n'
@@ -765,8 +768,9 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
                 text += ' - '
 
         text += '</b>\n'
-        text += f'<i>Сумма процентов:</i> <b>{percents_sum}</b>'
+        text += f'<i>Сумма процентов:</i> <b>{percents_sum}</b>\n'
 
+    text += '\n'
     if is_last:
         text += f'Оставшиеся <b>{round(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
         text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк профитов\n'
@@ -776,7 +780,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
     elif tp_count == 5 or percents_sum == 100:
         text += 'Выберите действие'
     elif tp_count != split_count:
-        text += f'Введите <b>процент вывода</b> для тейк-профита <b>{tp_ratio[-1]}</b>'
+        text += f'Введите <b>процент вывода</b> для тейк-профита <b>x{tp_ratio[-1]}</b>'
     else:
         text += 'Выберите <b>следующее</b> значение тейк-профита'
 

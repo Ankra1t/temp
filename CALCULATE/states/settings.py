@@ -7,4 +7,6 @@ class SettingsState(StatesGroup):
     currency = State()
 
     split_values = State()
+
+    summury_profit = State()
     splitting = State()

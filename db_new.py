@@ -1139,7 +1139,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return data.get('take_profit_ratio') if (data is not None) else default_ratio
+            return data.get('take_profit_ratio') or default_ratio  if (data is not None) else default_ratio
         except Exception as e:
             print(f'ERROR[get_calculator_tp_ratio]: {e}')
             self.connection.rollback()
@@ -1220,7 +1220,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return [] if data is None else data.get('split_values')
+            return [] if data is None else data.get('split_values') or []
         except Exception as e:
             print(f'ERROR[get_user_split_values]: {e}')
             self.connection.rollback()

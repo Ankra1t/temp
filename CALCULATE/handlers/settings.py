@@ -3,7 +3,7 @@ from telebot.types import Message
 from CALCULATE.callbacks.settings.keyboards import kb_splitting
 
 from db_new import db_new, BASE_VALUE_TYPE
-from common.utils import digit_accept, is_digit, text_accept
+from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings, kb_split_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -152,7 +152,8 @@ def handle_splitting(message: Message, bot: TeleBot):
 
     enter_mes = msg_enter_splitting(user_id, current_tp, current_split)
 
-    message.text = message.text.replace('%', '') if message.text is not None else ''
+    message.text = message.text.replace(
+        '%', '') if message.text is not None else ''
 
     value = digit_accept(message)
     if value is None:
@@ -162,12 +163,20 @@ def handle_splitting(message: Message, bot: TeleBot):
         )
         return
 
+    if sum(current_split) + value > 100:
+        bot.send_message(
+            chat_id,
+            '<i>Сумма процентов превысила 100</i>\n' + enter_mes
+        )
+        return
+
     current_split.append(value)
     bot.send_message(
         chat_id, msg_enter_splitting(user_id, current_tp, current_split),
         reply_markup=kb_splitting(user_id, current_tp, current_split)
     )
-    bot.delete_state(user_id, chat_id)
+    set_state_data(bot, user_id, chat_id, {'split': current_split})
+    bot.set_state(user_id, SettingsState.summury_profit, chat_id)
 
 
 def registration(bot: TeleBot):
