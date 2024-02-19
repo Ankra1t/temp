@@ -39,11 +39,11 @@ class AuthMiddleWare(BaseMiddleware):
             else:
                 ref_id = 0
 
-            # Регистрация, пробный период, доавбление таблиц бота
+            # Регистрация, пробный период, добавление таблиц бота
             registration(user_id, username, ref_id)
             new_user = db_new.get_user_by_tg_id(user_id)
 
-            pay_guard.set_trial(message)
+            pay_guard.set_trial(user_id)
 
             if new_user is not None:
                 db_new.create_tg_user_tables(new_user.id)

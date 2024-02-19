@@ -19,9 +19,9 @@ from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
     kb_admin_users_back, kb_admin_workers_back,
     send_admin_workers, kb_statistics,
-    kb_statistics_back
+    kb_statistics_back, kb_admin_choose_periods
 )
-from MAIN.states import AdminTariffState
+from MAIN.states import AdminTariffState, AdminUsersState
 
 from cb_filters import (admin_default_factory, adm_action, admin_main_factory)
 from config_logger import logger
@@ -41,8 +41,12 @@ def admin_main_callbacks(call: types.CallbackQuery):
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
         count_all = db_new.get_users_count()
-        count_with_sub = len(pay_guard.get_paid_users())
+
+        # count_with_sub = len(pay_guard.get_paid_users())
         count_old = len(pay_guard.get_paid_more1_users())
+        count_with_sub = base_statis.count_payments_dry()
+        # count_old = base_statis.count_payments_dry()
+
 
         text = admin_users_msg(count_all, count_with_sub, count_old)
 
@@ -73,11 +77,11 @@ def admin_main_callbacks(call: types.CallbackQuery):
     if type == 'payment':
 
         # Общие Показатели
-        count_subscribes = base_statis.count_payments()
+        count_payments = base_statis.count_payments()
         summ_all_users = base_statis.summ_by_transactions()
 
         bot.edit_message_text(
-            admin_main_statistics(count_subscribes, summ_all_users), chat_id, mes_id,
+            admin_main_statistics(count_payments, summ_all_users), chat_id, mes_id,
             reply_markup=kb_statistics()
         )
 
@@ -100,10 +104,14 @@ def admin_default_callbacks(call: types.CallbackQuery):
         logger.info(f'-----> Выбрано меню ***{type}*** ')
         try:
             count_all = db_new.get_users_count()
-            count_with_sub = len(pay_guard.get_paid_users())
-            count_old = len(pay_guard.get_paid_more1_users())
             count_admins = len(db_new.get_all_workes())
             count_fut_posts = len(db_new.get_all_posts())
+
+            # count_with_sub = len(pay_guard.get_paid_users())
+            count_old = len(pay_guard.get_paid_more1_users())
+            count_with_sub = base_statis.count_payments_dry()
+            # count_old = base_statis.count_payments_dry()
+
 
             text = admin_main_msg(count_all, count_with_sub,
                                   count_old, count_admins, count_fut_posts)
@@ -290,7 +298,9 @@ def admin_action_callbacks(call: types.CallbackQuery):
         )
 
     # ##### ------------------ Отменить подписку для пользователя
+    # [deprecated - реализовано в другом функционале с State состояниями]
     if action == 'user_cancel_subscribe':
+        # !! установить tariff_id
         pay_guard.set_subscribe_unactive_by_user_id(target_id)
         user = vars.user_dict[call.message.chat.id]
         bot.send_message(chat_id=call.message.chat.id,
@@ -310,8 +320,14 @@ def admin_action_callbacks(call: types.CallbackQuery):
 
     # ##### ------------------ Назначить новый тариф для пользователя
     if action == 'admin_set_tariff_client':
-        pass
-        # деактивировать старый
+        # Запросить кол-во дней или выбрать период
+        bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'tariff_id': target_id,
+        })
+        bot.send_message(chat_id,
+                         text='Введите <b>количество дней</b> подписки, или выберите период:',
+                         reply_markup=kb_admin_choose_periods())
 
     # ##### ------------------ Удалить тариф
     if action == 'deactivate_tariff':
@@ -437,7 +453,6 @@ def admin_action_callbacks(call: types.CallbackQuery):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        print(f'выбран id тарифа target_id [{tariff_id}] выбран период target_id [{target_id}] ')
         price_findate_obj = datetime.now()
         if target_id == 'day':
             price_findate_obj = datetime.now() + timedelta(days=1)
