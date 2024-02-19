@@ -177,7 +177,7 @@ class Admin_kb_inlines(object):
 
 
 
-    def kb_tariff_options(self, tariff_id):
+    def kb_tariff_options(self, tariff_id, on_off_label='Отключить ⭕️'):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         deactivate_tariff = types.InlineKeyboardButton(text='Удалить ❌',
                                                        callback_data=adm_action.new(action='deactivate_tariff', id=tariff_id))
@@ -186,9 +186,16 @@ class Admin_kb_inlines(object):
         edit_tariff = types.InlineKeyboardButton(text='Редактировать тариф ✏️',
                                                          callback_data=adm_action.new(action='edit_tariff',
                                                                                       id=tariff_id))
+        on_off_tariff = types.InlineKeyboardButton(text=f'{on_off_label}',
+                                                 callback_data=adm_action.new(action='on_off_tariff',
+                                                                              id=tariff_id))
+        tempor_day_tariff = types.InlineKeyboardButton(text='Срок действия',
+                                                 callback_data=adm_action.new(action='tempor_day_tariff',
+                                                                              id=tariff_id))
 
         keyboard.add(deactivate_tariff, add_discount_tariff)
-        keyboard.add(edit_tariff)
+        keyboard.add(edit_tariff, on_off_tariff)
+        keyboard.add(tempor_day_tariff)
         return keyboard
 
     def kb_change_tariff_fields(self, tariff_id):
@@ -229,6 +236,48 @@ class Admin_kb_inlines(object):
                                                                                           id=user_tariff))
 
         keyboard.add(admin_set_tariff_client)
+        return keyboard
+
+    def kb_tariff_choose_for_user(self, tariff_id):
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        admin_set_tariff_client = types.InlineKeyboardButton(text='Выбрать для пользователя',
+                                                             callback_data=adm_action.new(action='admin_set_tariff_client',
+                                                                                          id=tariff_id))
+
+        keyboard.add(admin_set_tariff_client)
+        return keyboard
+
+    def kb_tariff_findate(self):
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        tariff_findate_period_day = types.InlineKeyboardButton(text='День', callback_data=adm_action.new(
+            action='tariff_findate_period',
+            id='day'
+        ))
+        tariff_findate_period_day3 = types.InlineKeyboardButton(text='3 дня', callback_data=adm_action.new(
+            action='tariff_findate_period',
+            id='day3'
+        ))
+        tariff_findate_period_week = types.InlineKeyboardButton(text='Неделя', callback_data=adm_action.new(
+            action='tariff_findate_period',
+            id='week'
+        ))
+        tariff_findate_period_month = types.InlineKeyboardButton(text='Месяц', callback_data=adm_action.new(
+            action='tariff_findate_period',
+            id='month'
+        ))
+        tariff_findate = types.InlineKeyboardButton(text='Задать дату окончания', callback_data=adm_action.new(
+            action='tempor_day_tariff_count',
+            id=''
+        ))
+
+        go_main = self.go_main_btn
+        tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
+                                                  callback_data=admin_default_factory.new(type='tariffs_list'))
+
+        keyboard.add(tariff_findate_period_day, tariff_findate_period_day3)
+        keyboard.add(tariff_findate_period_week, tariff_findate_period_month)
+        keyboard.add(tariff_findate)
+        keyboard.add(go_main, tariffs_list)
         return keyboard
 
     def kb_add_sub_subscribe(self):

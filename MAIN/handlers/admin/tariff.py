@@ -1,14 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from gettext import find
 from telebot import TeleBot
 from telebot.types import Message
 
 from common.utils import digit_accept, text_accept, set_state_data
+from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
+
 
 from MAIN.states import AdminTariffState
 
 from db_new import db_new
-from initialize import kb_inl_admin, tariff_manager
+from initialize import kb_inl_admin, tariff_manager, logger
 from models import Discount, Price
 
 
@@ -241,7 +243,7 @@ def handle_discount_percent(message: Message, bot: TeleBot):
                    {'discount_percent': discount_percent})
     bot.set_state(user_id, AdminTariffState.discount_fin_date, chat_id)
     bot.send_message(
-        chat_id, 'Введите дату окончания скидки в формате DD.MM.YYYY',
+        chat_id, 'Введите дату окончания скидки в формате DD.MM.YY',
         reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
 
@@ -257,7 +259,7 @@ def handle_discount_fin_date(message: Message, bot: TeleBot):
         return
 
     try:
-        fin_date_obj = datetime.strptime(discount_findate, '%d.%m.%Y')
+        fin_date_obj = datetime.strptime(discount_findate, '%d.%m.%y')
     except:
         bot.send_message(
             chat_id, 'Неправильно введена дата окончания скидки',
@@ -265,19 +267,85 @@ def handle_discount_fin_date(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        tarrif_id = data.get('discount_id')
+        tariff_id = data.get('discount_id')
         discount_percent = data.get('discount_percent')
 
     discount = Discount(percent=discount_percent, findate=fin_date_obj)
-    tariff_manager.set_discount_tariff(tarrif_id, discount)
-    date_admin_show = fin_date_obj.strftime('%d/%m/%Y')
+    tariff_manager.set_discount_tariff(tariff_id, discount)
+    date_admin_show = fin_date_obj.strftime(PRINT_DATE_FROMAT)
+    # date_admin_show = fin_date_obj.strftime('%d/%m/%Y')
 
     bot.send_message(
-        chat_id, f'Тарифу id {tarrif_id} добавлена скидка {discount.percent}% до {date_admin_show}',
+        chat_id, f'Тарифу id {tariff_id} добавлена скидка {discount.percent}% до {date_admin_show}',
         reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
 
     bot.delete_state(user_id, chat_id)
 
+
+def handle_price_findate_count_days(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    days = digit_accept(message, int)
+
+    if days is None or days == 0:
+        bot.send_message(
+            chat_id, 'Введите количество дней более 0',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+        return
+    
+    with bot.retrieve_data(user_id, chat_id) as data:
+        tariff_id = data.get('tariff_id')
+
+    price_findate_obj = datetime.now() + timedelta(days=days)
+
+    findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
+    findate_show = price_findate_obj.strftime(PRINT_DATE_FROMAT)
+
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+
+    bot.send_message(
+        chat_id,
+        f"Тариф id = {tariff_id} будет действовать до {findate_show} и потом автоматически отключится",
+        reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+    )
+
+    bot.delete_state(user_id, chat_id)
+
+def handle_price_findate(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    price_findate = text_accept(message)
+
+    try:
+        price_findate_obj = datetime.strptime(price_findate, '%d.%m.%y')
+    except Exception as e:
+        price_findate_obj = None
+        logger.error(f'Ошибка handle_price_findate [{e}]')
+
+    if not price_findate or not price_findate_obj:
+        bot.send_message(
+            chat_id, 'Неправильно введена дата окончания тарифа (необходимо в <b>формате DD.MM.YY</b>)',
+            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        tariff_id = data.get('tariff_id')
+
+    findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
+    findate_show = price_findate_obj.strftime(PRINT_DATE_FROMAT)
+
+    # Задаем дату окончания тарифа
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+
+    bot.send_message(
+        chat_id,
+        f"Тариф id = {tariff_id} будет действовать до {findate_show} и потом автоматически отключится",
+        reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+    )
+
+    bot.delete_state(user_id, chat_id)
 
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
@@ -297,3 +365,6 @@ def registration(bot: TeleBot):
     reg_mes(handle_description, state=AdminTariffState.edit_field_description)
     reg_mes(handle_price, state=AdminTariffState.edit_field_price)
     reg_mes(handle_image, state=AdminTariffState.edit_field_image)
+
+    reg_mes(handle_price_findate_count_days, state=AdminTariffState.price_findate_count_days)
+    reg_mes(handle_price_findate, state=AdminTariffState.price_findate)

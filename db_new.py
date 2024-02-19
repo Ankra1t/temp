@@ -11,7 +11,7 @@ from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subs
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
-FILTER_TYPE = Literal['', 'by_date_old', 'by_paid']
+FILTER_TYPE = Literal['by_date_new', 'by_date_old', 'by_paid']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
@@ -45,12 +45,18 @@ class Database:
             data.get('discount_percent'),
             data.get('discount_findate'),
             data.get('type_product'),
+            data.get('switch_active'),
+            data.get('price_findate'),
         )
 
-    def get_prices(self, active: int) -> list[Price]:
+    def get_prices(self, active: int=1, switch_active = 1) -> list[Price]:
         """Получение тарифа"""
-        query = """SELECT * FROM prices WHERE active = %s"""
-        params = (active,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s"""
+            params = (active, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND switch_active = %s"""
+            params = (active, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -62,10 +68,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int) -> list[Price]:
+    def get_prices_by_product(self, product_id, active: int, switch_active = 1) -> list[Price]:
         """Получение тарифа по типу продукта"""
-        query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
-        params = (active, product_id,)
+        if not switch_active:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
+            params = (active, product_id, )
+        else:
+            query = """SELECT * FROM prices WHERE active = %s AND type_product = %s AND switch_active = %s"""
+            params = (active, product_id, switch_active,)
 
         try:
             self.curs.execute(query, params)
@@ -77,9 +87,13 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int):
-        query = "SELECT * FROM prices WHERE id = %s"
-        params = (id,)
+    def get_price_by_id(self, id: int, switch_active = 1):
+        if not switch_active:
+            query = "SELECT * FROM prices WHERE id = %s"
+            params = (id,)
+        else:
+            query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
+            params = (id, switch_active,)
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
@@ -91,10 +105,10 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_price_by_name(self, name: str):
+    def get_price_by_name(self, name: str, switch_active = 1):
         """Получение цены по имени"""
-        query = "SELECT * FROM prices WHERE name = %s "
-        params = (name,)
+        query = "SELECT * FROM prices WHERE name = %s AND switch_active = %s"
+        params = (name, switch_active, )
 
         try:
             self.curs.execute(query, params)
@@ -186,6 +200,24 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_first_tariff_by_product(self, product='signals', active=1, switch_active=1):
+        """Получить первый активный включенный тариф по продукту"""
+        query = "SELECT * FROM prices WHERE type_product = %s AND active=%s AND switch_active = %s"
+        params = (product, active, switch_active,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            return self._data_to_price(data)
+        except Exception as e:
+            print(f'ERROR[get_first_price_by_product]: {e}')
+            self.connection.rollback()
+            return None
+        pass
+
     # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
         return Subscribe(
@@ -196,15 +228,18 @@ class Database:
             data.get('subscribe_type'),
             data.get('prices_id'),
             data.get('transactions_payed_id'),
+            data.get('gift_admin'),
+            data.get('user_id'),
         )
 
     def add_subsbscribe(self, sub: Subscribe):
+        datetime_now = datetime.utcnow()
         query = ("INSERT INTO "
                  "subscribes (tg_user_id, finish_dt, "
-                 "subscribe_type, active, prices_id, transactions_payed_id) "
-                 "VALUES (%s, %s, %s, %s, %s, %s)")
+                 "subscribe_type, active, prices_id, transactions_payed_id, created_at, updated_at) "
+                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
         params = (sub.tg_user_id, sub.finish_dt, sub.type, sub.active,
-                  sub.prices_id, sub.transactions_payed_id,)
+                  sub.prices_id, sub.transactions_payed_id, datetime_now, datetime_now,)
 
         try:
             self.curs.execute(query, params)
@@ -263,10 +298,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def set_subscribe_unactive_by_user_id(self, user_id: int):
+    def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id=None):
         datetime_now = datetime.utcnow()
-        query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s"
-        params = (0, datetime_now, user_id,)
+        if tariff_id:
+            query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND prices_id = %s "
+            params = (0, datetime_now, user_id, tariff_id, )
+        else:
+            query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s"
+            params = (0, datetime_now, user_id,)
 
         try:
             self.curs.execute(query, params)
@@ -291,10 +330,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_trial_subscribe_unactive_by_user(self, user_id):
+    def set_trial_subscribe_unactive_by_user(self, tg_user_id):
         datetime_now = datetime.now().strftime(DATE_FORMAT)
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND subscribe_type = %s"
-        params = (0, datetime_now, user_id, 'trial')
+        params = (0, datetime_now, tg_user_id, 'trial')
 
         try:
             self.curs.execute(query, params)
@@ -386,28 +425,25 @@ class Database:
     def get_active_subscribes_all_users(self, ban: int = 0):
         """Получить активные подписки для всех пользователей"""
         query = (
-            'SELECT u.id AS id, u.username_tg AS username, u.id_telegram AS tg_id, '
-            'p.type_product AS type_product, '
-            'sub.id AS sub_id, '
-            'sub.finish_dt AS sub_finish, '
-            'ub.refer_id AS refer, u.ban AS ban, u.created_at AS created_at '
+            'SELECT u.id AS id, u.id_telegram AS id_telegram, u.username_tg AS username_tg,  '
+            'ub.refer_id AS refer_id, u.ban AS ban, u.created_at AS created_at '
             'FROM subscribes sub, users u, prices p, tgbotusers ub '
             'WHERE '
             '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
             'AND sub.active = %s AND sub.tg_user_id = u.id_telegram '
             'AND sub.prices_id = p.id '
             'AND ub.user_id = u.id '
+            'AND (p.type_product = %s OR p.type_product = %s) '
             'AND u.ban = %s '
         )
-        params = ('paid', 'trial', 1, ban)
+        params = ('paid', 'trial', 1, 'signals', 'calc_signals', ban, )
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            return data
-            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_users_finished_subscribe]: {e}')
+            print(f'ERROR[get_active_subscribes_all_users]: {e}')
             self.connection.rollback()
             return []
 
@@ -422,6 +458,64 @@ class Database:
 
             )
         )
+
+    def switch_tariff(self, tariff_id: int, switch_active: int):
+        """Включить или выключить тариф"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE id = %s"
+        params = (switch_active, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def check_switch_tariff(self, tariff_id: int):
+        query = "SELECT switch_active FROM prices WHERE id = %s"
+        params = (tariff_id, )
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return data[0] if (data is not None) else 0
+        except Exception as e:
+            print(f'ERROR[check_switch_tariff]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_findate_tariff(self, tariff_id: int, date):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set price_findate = %s, updated_at = %s WHERE id = %s"
+        params = (date, datetime_now, tariff_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_findate_tariff]: {e}')
+            self.connection.rollback()
+            return False
+
+    def switch_off_finish_tariffs(self, today: str):
+        """Установить дату окончания тарифа"""
+        datetime_now = datetime.utcnow()
+        query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE price_findate < %s"
+        switch = 0
+        params = (switch, datetime_now, today)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[switch_off_finish_tariffs]: {e}')
+            self.connection.rollback()
+            return False
 
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
@@ -507,6 +601,26 @@ class Database:
             print(f'ERROR[get_paid_transactions_all]: {e}')
             self.connection.rollback()
             return []
+
+    def get_paid_transactions_all_dry_users(self):
+        """Получить все оплаченные транзакции"""
+        query = ("SELECT DISTINCT user_id, id, code, link, sum, currency, price_id, status, payment_date FROM transactions "
+                 "WHERE status = %s "
+                 )
+        status = 'paid'
+        params = (status,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            return list(map(lambda el: self._data_to_transaction(el), data))
+        except Exception as e:
+            print(f'ERROR[get_paid_transactions_all]: {e}')
+            self.connection.rollback()
+            return []
+
+
 
     def get_paid_transactions_period(self, start_date, fin_date):
         """Получить все оплаченные транзакции"""
@@ -754,7 +868,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_paginated_users(self, limit=10, page=1, filter: FILTER_TYPE = '') -> list[UserInfo]:
+    def get_paginated_users(self, limit=10, page=1, filter: FILTER_TYPE = 'by_date_new') -> list[UserInfo]:
         """Получить постраничный список пользователей"""
         query = self.USER_INFO_QUERY
 
@@ -793,12 +907,17 @@ class Database:
     def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
         query = self.USER_INFO_QUERY + (
             'WHERE u.ban = 0 '
-            f'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= {min_sub_count} '
+            f'AND '
+            f'(SELECT COUNT (*) FROM subscribes as sub '
+            f'WHERE sub.tg_user_id = u.id_telegram '
+            f'AND sub.transactions_payed_id IS NOT NULL '
+            f'AND sub.subscribe_type = %s) >= {min_sub_count} '
             'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) > 0 '
         )
-
+        params = ('paid',)
         try:
-            self.curs.execute(query)
+            self.curs.execute(query, params )
+            # self.curs.execute(query)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:

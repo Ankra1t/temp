@@ -81,6 +81,7 @@ def invoice_paid_prev(update: Update) -> None:
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
+
             pay_guard.set_trial_subscribe_unactive_by_user(
                 transaction['user_id'])
             # trial_id = pay_guard.check_trial_active_by_user(
