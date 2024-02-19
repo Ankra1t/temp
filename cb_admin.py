@@ -274,28 +274,6 @@ def admin_action_callbacks(call: types.CallbackQuery):
     mes_id = call.message.id
     user_id = call.from_user.id
 
-    # ##### ------------------ Редактируем сообщения из БД
-    if action == 'edit_bot_text':
-        logger.info(f'-----> Действие ***{action}*** ')
-
-        # Спрятать reply клаву
-        bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Сообщение name={target_id}', reply_markup=None)
-        bot.send_message(chat_id=call.message.chat.id,
-                         text=f'Отправьте новый текст для name={target_id}',
-                         reply_markup=kb_inl_admin.kb_edit_single_text_cancel())
-
-        bot.register_next_step_handler(
-            call.message, admin_edit_text, target_id)
-
-    # ##### ------------------ Показать список текстов для редактирования
-    if action == 'bot_texts_list':
-        # Список текстов как при реплай кнопке
-        text_editor.list_texts(call.message.chat)
-        bot.send_message(
-            call.message.chat.id, menu_msg('Параметры'),
-            reply_markup=kb_params()
-        )
 
     # ##### ------------------ Отменить подписку для пользователя
     # [deprecated - реализовано в другом функционале с State состояниями]

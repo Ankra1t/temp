@@ -1248,22 +1248,25 @@ class Database:
 
         pass
 
-    def get_calculator_tp_show(self, user_id: int):
+    def get_calculator_tp_ratio(self, user_id: int) -> list[int]:
         """Получить коэфициенты тейк профит на показ"""
-        query = 'SELECT take_profit_to_show FROM tgcalc_user_settings WHERE user_id = %s'
+        default_ratio = [3, 4, 5]
+
+        query = 'SELECT take_profit_ratio FROM tgcalc_user_settings WHERE user_id = %s'
         params = (user_id,)
+
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return data.get('take_profit_to_show') if (data is not None) else None
+            return data.get('take_profit_ratio') or default_ratio  if (data is not None) else default_ratio
         except Exception as e:
-            print(f'ERROR[get_calculator_tp_show]: {e}')
+            print(f'ERROR[get_calculator_tp_ratio]: {e}')
             self.connection.rollback()
-            return None
+            return default_ratio
 
-    def set_calculator_tp_show(self, user_id: int, tp: str):
+    def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
         """Установить коэфициенты тейк профит на показ"""
-        query = "UPDATE tgcalc_user_settings SET take_profit_to_show = %s WHERE user_id = %s"
+        query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s"
         params = (tp, user_id)
 
         try:
@@ -1271,7 +1274,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_calculator_tp_show]: {e}')
+            print(f'ERROR[set_calculator_tp_ratio]: {e}')
             self.connection.rollback()
             return False
 
@@ -1329,18 +1332,18 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_user_split_values(self, user_id: int) -> list[float] | None:
+    def get_user_split_values(self, user_id: int) -> list[float]:
         query = 'SELECT split_values FROM tgcalc_user_settings WHERE user_id = %s'
         params = (user_id,)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return None if data is None else data.get('split_values')
+            return [] if data is None else data.get('split_values') or []
         except Exception as e:
             print(f'ERROR[get_user_split_values]: {e}')
             self.connection.rollback()
-            return None
+            return []
 
     def set_user_split_values(self, user_id: int, values: list[float]):
         query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'

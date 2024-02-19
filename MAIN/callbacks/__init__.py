@@ -20,8 +20,10 @@ from .admin.users.keyboards import (
 )
 
 from .admin.params.handler import registration as _reg_admin_params
-from .admin.params.keyboards import (kb_params_change, kb_calculator, kb_params,
-                                     kb_params_back, kb_params_choice)
+from .admin.params.keyboards import (
+    kb_params_change, kb_calculator, kb_params,
+    kb_params_back, kb_params_choice, kb_edit_text
+)
 
 from .admin.statistics.handler import registration as _reg_admin_statistics
 from .admin.statistics.keyboards import (kb_statistics, kb_statistics_back)

@@ -1,5 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from MAIN.states.admin.posts import AdminPostsState
 
 from db_new import db_new
 
@@ -11,13 +12,13 @@ from common.utils import set_state_data
 from MAIN.states import AdminParamsState
 from messages.workers import menu_msg
 
-from .keyboards import kb_calculator, kb_params_back, kb_params_change, kb_params
+from .keyboards import kb_calculator, kb_edit_text, kb_params_back, kb_params_change, kb_params
 from .filter import admin_params_factory, AdminParamsCallbackFilter
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
-    callback_data: dict = admin_params_factory.parse(call.data)
-    type = callback_data['type']
+    callback_data = admin_params_factory.parse(call.data)
+    type = callback_data.get('type', '')
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
@@ -34,9 +35,37 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     elif type == 'update_texts':
-        text_editor.list_texts(call.message.chat)
+        texts = db_new.get_texts()
+        if len(texts) != 0:
+            for i in range(len(texts)):
+                text = texts[i]
+                text_show = f'ID: <b>{text.id}</b> | <b>{text.name}</b>\n\n{text.message}'
+
+                bot.send_message(
+                    chat_id, text_show,
+                    reply_markup=kb_edit_text(text.name)
+                )
+
+            bot.send_message(
+                chat_id, 'Выберите текст для редактирования 👆',
+                reply_markup=kb_params_back()
+            )
+        else:
+            bot.send_message(
+                chat_id, 'Текстов для редактирования не найдено',
+                reply_markup=kb_params_back()
+            )
+
+    elif 'edit_text' in type:
+        text_name = type.split('+')[-1]
+
+        bot.set_state(user_id, AdminPostsState.edit_text, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'name': text_name
+        })
         bot.send_message(
-            chat_id, 'Выберите текст для редактирования 👆',
+            chat_id,
+            f'Отправьте новый текст для name={text_name}',
             reply_markup=kb_params_back()
         )
 

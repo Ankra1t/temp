@@ -63,7 +63,7 @@ class AuthMiddleWare(BaseMiddleware):
 
         # Если нет таблицы связаной с ботом, то создаем
         is_tg_tables = db_new.check_tg_user_tables(user_db_id)
-        if not is_tg_tables and user_role == 0:
+        if not is_tg_tables:
             db_new.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
