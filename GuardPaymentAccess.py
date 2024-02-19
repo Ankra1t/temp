@@ -178,36 +178,17 @@ class GuardPaymentAccess():
     def get_valid_users_for_signals(self):
         """Получить пользователей для рассылки сигналов"""
 
-        # Деактивируем просроченные подписки
+        # Деактивируем подписки с просроченной датой действия
         db_new.set_unactive_subscribes('paid')
         db_new.set_unactive_subscribes('trial')
 
         # Получить пользователей с платной подпиской сигналы или сигналы+калькулятор
-        clients = db_new.get_active_subscribes_all_users()
-        print(f'кол-во len(clients) {len(clients)}')
+        users = db_new.get_active_subscribes_all_users()
+        # print(f'кол-во len(users) {len(users)}')
 
-        # clients: list[Client] = db_new.get_active_subscribes_all_users()
-
-        if not clients:
+        if not users:
             return None
 
-        # Выбрать пользователей с продуктами "signals" и "calc_signals"
-        list_clients = clients
-        users = list()
-        for i in range(0, len(list_clients)):
-            client_item = list_clients[i]
-            if client_item['type_product'] == 'signals' or client_item['type_product'] == 'calc_signals':
-                print(f'Нужный клиент client_item ')
-                print(client_item)
-                users.append(UserInfo(
-                    id=client_item['id'],
-                    tg_id=client_item['tg_id'],
-                    username=client_item['username'] or '',
-                    refer=client_item['refer'] or -1,
-                    ban=client_item['ban'] or 0,
-                    registration_dt=client_item['created_at'] or datetime(2023, 5, 5)))
-
-        print(f"users count {len(users)}")
         return users
 
     # # # Остальные методы

@@ -425,28 +425,25 @@ class Database:
     def get_active_subscribes_all_users(self, ban: int = 0):
         """Получить активные подписки для всех пользователей"""
         query = (
-            'SELECT u.id AS id, u.username_tg AS username, u.id_telegram AS tg_id, '
-            'p.type_product AS type_product, '
-            'sub.id AS sub_id, '
-            'sub.finish_dt AS sub_finish, '
-            'ub.refer_id AS refer, u.ban AS ban, u.created_at AS created_at '
+            'SELECT u.id AS id, u.id_telegram AS id_telegram, u.username_tg AS username_tg,  '
+            'ub.refer_id AS refer_id, u.ban AS ban, u.created_at AS created_at '
             'FROM subscribes sub, users u, prices p, tgbotusers ub '
             'WHERE '
             '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
             'AND sub.active = %s AND sub.tg_user_id = u.id_telegram '
             'AND sub.prices_id = p.id '
             'AND ub.user_id = u.id '
+            'AND (p.type_product = %s OR p.type_product = %s) '
             'AND u.ban = %s '
         )
-        params = ('paid', 'trial', 1, ban)
+        params = ('paid', 'trial', 1, 'signals', 'calc_signals', ban, )
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            return data
-            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_users_finished_subscribe]: {e}')
+            print(f'ERROR[get_active_subscribes_all_users]: {e}')
             self.connection.rollback()
             return []
 

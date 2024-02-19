@@ -61,6 +61,12 @@ def _calc(message: Message, bot: TeleBot):
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
+    users = pay_guard.get_valid_users_for_signals()
+    print(f'users ')
+    print(users)
+    return False
+    
+    
     # tariff_manager.switch_off_finish_tariffs()
     tariff = db_new.get_first_tariff_by_product()
     print(f'tariff ')
