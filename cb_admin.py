@@ -1,6 +1,6 @@
 from telebot import types
 from datetime import datetime, timedelta
-from handlers.AdminHandler import admin_edit_text, get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
+from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
 
 from initialize import bot, kb_inl_admin, text_editor, pay_guard, tariff_manager, base_statis
