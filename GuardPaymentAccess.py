@@ -18,7 +18,7 @@ class GuardPaymentAccess():
         self.dt_format_admin_show = "%d/%m/%Y %I:%M"
         self.dt_format_user_show = "%d/%m/%Y"
 
-    # Тестовые подписки
+    # Пробные подписки
     def set_trial(self, tg_user_id, custom_days=None, custom_tariff_id=None):
         """Дать новому пользователю тестовый период """
         if not custom_days:

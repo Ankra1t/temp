@@ -2,6 +2,8 @@ from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 from NOTIFIER import notifier
+from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
+
 
 from initialize import pay_guard
 from db_new import db_new, LANGUAGES
@@ -43,8 +45,6 @@ class AuthMiddleWare(BaseMiddleware):
             registration(user_id, username, ref_id)
             new_user = db_new.get_user_by_tg_id(user_id)
 
-            pay_guard.set_trial(user_id)
-
             if new_user is not None:
                 db_new.create_tg_user_tables(new_user.id)
 
@@ -55,6 +55,16 @@ class AuthMiddleWare(BaseMiddleware):
 
                 # Уведомление о регистрации
                 notifier.send_user_is_registered(new_user)
+
+                # Назначение тестовой подписки новому пользователю
+                pay_guard.set_trial(user_id)
+
+                notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
+                    user_id=new_user.id,
+                    user_nike='@'+new_user.username if new_user.username else new_user.tg_id,
+                    days=pay_guard.get_option_trial_days()
+                ))
+
             else:
                 print(f'Ошибка регистрации пользователя tg_id = {user_id}')
 
