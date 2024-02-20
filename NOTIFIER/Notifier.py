@@ -29,7 +29,7 @@ class Notifier():
             self._send_by_type(type, user, text, media_id)
 
     def send_user_is_registered(self, new_user: UserInfo):
-        message = f'<b>Зарегестрирован новый пользователь</b>\n\n'
+        message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
         if new_user.username != '':
             message += f'@{new_user.username}\n'
         message += f'Дата и время: {new_user.registration_dt.strftime(PRINT_DATE_FROMAT)}'
