@@ -117,6 +117,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if 'no' in type:
             send_main(call.message, bot, user_id, True)
         if 'yes' in type:
+            # Переход к логике ввода базовых значений
             bot.edit_message_text(
                 msg_enter_deposit(user_id), chat_id, mes_id
             )
@@ -124,35 +125,48 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
     if type == 'reset':
+        # Сброс настроек калькулятора до начальных
         db_new.reset_user_settings(user_db_id)
         send_settings(bot, call.message, user_id)
 
     if type == 'summury_profit':
+        # Вывод страницы с "Выводом профита" и его изменением
         send_summury_profit_settings(bot, call.message, user_id)
 
     if type == 'change_summury_profit':
+        # Если summury_type не задан, то выводим страницу для выбора типа
+        # Два типа: с разделением и без
         if summury_type == '':
             bot.edit_message_text(
                 msg_enter_summury_profit_type(user_id),
                 chat_id, mes_id,
                 reply_markup=kb_summury_profit_type(user_id)
             )
+
+            # Стираем state и задаем новый
+            # State ничего не отслеживает, задается для сохранения данных
             bot.delete_state(user_id, chat_id)
             bot.set_state(user_id, SettingsState.summury_profit, chat_id)
         else:
             with bot.retrieve_data(user_id, chat_id) as data:
+                # Получаем текущие данные
                 current_tp_ratio: list[int] = data.get('take_profit', [])
                 current_split: list[float] = data.get('split', [])
 
+                # Проверяем задано ли кол-во на добавление/удаление
                 if add_count != '':
                     add_count = int(add_count)
 
+                    # Если число меньше нуля - удаляем это кол-во из массивов
+                    # Для случая, если пользователь нажимает на кнопку "Назад"
                     if add_count < 0:
                         current_tp_ratio = current_tp_ratio[:add_count]
                         current_split = current_split[:add_count]
                     else:
+                        # Ищем текущий максимальный тейк профит
                         max_tp = max(current_tp_ratio)
 
+                        # Разделяем остатки процентов на кол-во добавляемых
                         percents_sum = sum(current_split)
                         if abs(percents_sum - 100) < 0.1:
                             percents_sum = 100
@@ -160,17 +174,20 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                             (100 - percents_sum) / add_count, 2
                         )
 
+                        # Добавляем значения
                         for i in range(1, add_count + 1):
                             current_tp_ratio.append(max_tp + i)
                             current_split.append(new_percent)
 
+                # Добавление тейк профита, если есть задано
                 if take_profit_add != '':
-                    take_profit_add = int(take_profit_add)
                     current_tp_ratio.append(int(take_profit_add))
 
+                # Сохраняем данные в state
                 data['take_profit'] = current_tp_ratio
                 data['split'] = current_split
 
+            # Далее выводим страницу по summury_type
             if summury_type == 'default':
                 bot.edit_message_text(
                     msg_enter_take_profit(user_id, current_tp_ratio),
@@ -179,15 +196,18 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             elif summury_type == 'splitting':
                 if add_count != '':
+                    # Если было добавлено больше одного элемента
                     kb = kb_splitting(
-                        user_id, current_tp_ratio, current_split,
-                        False, add_count
+                        user_id, current_tp_ratio, current_split, add_count
                     )
                 elif len(current_tp_ratio) == len(current_split):
+                    # Если кол-во тейк профитов и процентов одинаково,
+                    # то даем выбрать следующий тейк профит
                     kb = kb_splitting(
                         user_id, current_tp_ratio, current_split
                     )
                 else:
+                    # Иначе даем ввести процент для последнего выбранного тейк профита
                     kb = None
                     bot.set_state(user_id, SettingsState.splitting, chat_id)
                 bot.edit_message_text(
@@ -203,12 +223,15 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             current_tp_ratio: list[int] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
 
+        # При сохранении тейк профита без разделения
         if type == 'tp_save':
             current_tp_ratio.sort()
             db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
             db_new.set_user_is_splitting(user_db_id, False)
 
+        # При сохранении вывода с разделением
         if type == 'splitting_save':
+            # Сортируем по возрастанию тейк профитов
             sorted_tp, sorted_split = zip(
                 *sorted(zip(current_tp_ratio, current_split))
             )
@@ -219,6 +242,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             db_new.set_user_split_values(user_db_id, sorted_split)
             db_new.set_user_is_splitting(user_db_id, True)
 
+        # Выводим сообщения
         bot.edit_message_text('Изменено!', chat_id, mes_id)
         send_summury_profit_settings(bot, call.message, user_id, True)
 
