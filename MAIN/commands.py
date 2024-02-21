@@ -13,6 +13,10 @@ from CALCULATE.callbacks import send_manual_page, send_main
 from MAIN.start import send_start_by_user
 
 
+from NOTIFIER import notifier
+from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
+
+
 def _start(message: Message, bot: TeleBot, data: dict):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -61,11 +65,24 @@ def _calc(message: Message, bot: TeleBot):
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
+    user_id = 777
+    print(f'Удаляем пользователя - с id{user_id} ')
+
+
+    return False
+    new_user = db_new.get_user_by_tg_id(message.from_user.id)
+    notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
+        user_id=new_user.id,
+        user_nike='@' + new_user.username if new_user.username else new_user.tg_id,
+        days=pay_guard.get_option_trial_days()
+    ))
+
+    return False
     users = pay_guard.get_valid_users_for_signals()
     print(f'users ')
     print(users)
     return False
-    
+
     
     # tariff_manager.switch_off_finish_tariffs()
     tariff = db_new.get_first_tariff_by_product()

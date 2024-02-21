@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, Literal, Optional
+import random
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
 
@@ -1019,6 +1020,23 @@ class Database:
             self.connection.rollback()
             return None
 
+    def fake_add_user_db(self, tg_id, tg_username=None):
+        datetime_now = datetime.utcnow()
+        query = ("INSERT INTO users(name, email, id_telegram, username_tg, date_register, password, created_at, updated_at) "
+                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)")
+        r = random.randint(1, 1000)
+        params = (f'fake_name_{r}', f'{r}@gmail{r}.com', tg_id, tg_username,
+                  datetime_now, f'{r}pass', datetime_now, datetime_now)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[fake_add_user_db]: {e}')
+            self.connection.rollback()
+            return False
+
     # Users - Lessons
     def add_lesson_count(self, id: int):
         query = "UPDATE tgbotusers set lesson_count = %s WHERE user_id = %s"
@@ -1778,6 +1796,8 @@ class Database:
             print(f'ERROR[update_forex]: {e}')
             self.connection.rollback()
             return False
+
+
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

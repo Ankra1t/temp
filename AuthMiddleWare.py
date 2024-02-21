@@ -66,12 +66,12 @@ class AuthMiddleWare(BaseMiddleware):
                 ))
 
             else:
-                print(f'Ошибка регистрации пользователя tg_id = {user_id}')
+                print(f'Ошибка регистрации пользователя tg_id = {user_id} {username}')
 
             data['has_registered_now'] = True
             user_role = 0
 
-        # Если нет таблицы связаной с ботом, то создаем
+        # Если нет таблицы связанной с ботом, то создаем
         is_tg_tables = db_new.check_tg_user_tables(user_db_id)
         if not is_tg_tables:
             db_new.create_tg_user_tables(user_db_id)

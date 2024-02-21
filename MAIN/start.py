@@ -21,15 +21,16 @@ def send_start_by_user(
 ):
     bot.delete_state(user_id, chat_id)
 
+    new_user = False
     if user_role == 0:
         if has_registered_now:
             # bot.send_message(
             #     chat_id, welcome_trial_subscribe_msg()
             # )
-            # todo-fin: Назначаем тестовую подписку
+            new_user = True
             pass
 
-        send_user_main(bot, message, user_id, True)
+        send_user_main(bot, message, user_id, True, new_user)
 
     if user_role == 1:
         count_all = db_new.get_users_count()

@@ -11,11 +11,14 @@ from .education.keyboards import kb_user_education, kb_user_pages
 from .account.keyboards import kb_user_account
 
 
-def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False):
+def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
     chat_id = message.chat.id
     mes_id = message.id
 
     text = text_editor.get_text('welcome_user')
+    if not new_user:
+        text = text_editor.get_text('user_restart_bot') or 'Доброго времени. Выберите действие'
+
     keyboard = kb_user_main()
 
     bot.delete_state(user_id, chat_id)
