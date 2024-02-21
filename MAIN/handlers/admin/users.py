@@ -17,7 +17,7 @@ def handle_client_search(message: Message, bot: TeleBot):
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        filter = data.get('filter') or ''
+        sort_by = data.get('sort_by') or ''
         page = data.get('page') or 1
 
     client_name_id = text_accept(message)
@@ -25,7 +25,7 @@ def handle_client_search(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Введите id или имя пользователя текстом:',
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         return
 
@@ -41,14 +41,14 @@ def handle_client_search(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Пользователя не существует.\nВведите id или имя пользователя:',
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         return
 
     send_admin_client(
         bot, message, user_id,
         client.id, True,
-        filter, page
+        sort_by, page
     )
 
     bot.delete_state(user_id, chat_id)

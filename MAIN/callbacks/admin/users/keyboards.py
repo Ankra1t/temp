@@ -5,9 +5,9 @@ from .filter import admin_users_factory
 from initialize import kb_inl_admin
 
 
-def getButton(text: str, type: str, filter='', page=1, client_db_id=0):
+def getButton(text: str, type: str, sort_by='', page=1, client_db_id=0):
     return InlineKeyboardButton(text, None, admin_users_factory.new(
-        type=type, filter=filter, client_db_id=client_db_id, page=page
+        type=type, sort_by=sort_by, client_db_id=client_db_id, page=page
     ))
 
 
@@ -24,11 +24,11 @@ def kb_admin_users():
     return keyboard
 
 
-def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True):
-    def getListButton(text: str, new_page: int, new_filter=None):
-        new_filter = new_filter if (new_filter is not None) else filter
+def kb_admin_users_list(pages: int, page: int, sort_by: str = '', is_filter=True):
+    def getListButton(text: str, new_page: int, new_sort_by: str | None = None):
+        new_sort_by = new_sort_by or sort_by
         btn_type = 'client_list' if is_filter else 'ban_list'
-        return getButton(text, btn_type, new_filter, new_page)
+        return getButton(text, btn_type, new_sort_by, new_page)
 
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
@@ -39,7 +39,7 @@ def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True)
     btn_back = getListButton('Назад', page - 1)
 
     counter = getButton(f'{page}/{pages}', 'counter')
-    search = getButton('🔎 Поиск пользователя', 'client_search', filter, page)
+    search = getButton('🔎 Поиск пользователя', 'client_search', sort_by, page)
 
     if pages > 1:
         if page == 1:
@@ -49,10 +49,10 @@ def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True)
         else:
             keyboard.add(btn_back, counter, btn_next)
 
-    if filter == 'by_date_new':
+    if sort_by == 'by_date_new':
         filter_text = 'Фильтровать по старым'
         new_filter = 'by_date_old'
-    elif filter == 'by_paid':
+    elif sort_by == 'by_paid':
         filter_text = 'Фильтровать по новым'
         new_filter = 'by_date_new'
     else:
@@ -70,7 +70,7 @@ def kb_admin_users_list(pages: int, page: int, filter: str = '', is_filter=True)
     return keyboard
 
 
-def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, filter=''):
+def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, sort_by=''):
     def getClientButton(text: str, type: str):
         return getButton(text, type, '', 1, client_db_id)
 
@@ -89,9 +89,9 @@ def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, filter=''):
         'Выдать пробный доступ', 'client_set_trial_custom'
     )
 
-    # if filter != '' or page != 1:
+    # if sort_by != '' or page != 1:
     #     btn_client_list = getButton(
-    #         '👨‍💻 Список клиентов', 'client_list', filter, page
+    #         '👨‍💻 Список клиентов', 'client_list', sort_by, page
     #     )
     # else:
     #     btn_client_list = kb_inl_admin.go_users_btn
@@ -103,12 +103,12 @@ def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, filter=''):
     return keyboard
 
 
-def kb_admin_users_cancel(filter='', page=1):
+def kb_admin_users_cancel(sort_by='', page=1):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    # if filter != '' or page != 1:
+    # if sort_by != '' or page != 1:
     #     btn_client_list = getButton(
-    #         '👨‍💻 Список клиентов', 'client_list', filter, page
+    #         '👨‍💻 Список клиентов', 'client_list', sort_by, page
     #     )
     # else:
     #     btn_client_list = kb_inl_admin.go_users_btn
@@ -134,12 +134,13 @@ def kb_admin_users_confirm(type_info: str, client_db_id: int):
 def kb_admin_choose_periods():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    week = getButton('Неделя', 'choose_periods_for_tariffs', filter='week' )
-    week2 = getButton('2 Недели', 'choose_periods_for_tariffs', filter='week2' )
-    month = getButton('Месяц', 'choose_periods_for_tariffs', filter='month' )
-    month6 = getButton('6 мес', 'choose_periods_for_tariffs', filter='month6' )
-    year = getButton('Год', 'choose_periods_for_tariffs', filter='year' )
-    lifetime = getButton('Пожизненно', 'choose_periods_for_tariffs', filter='lifetime' )
+    week = getButton('Неделя', 'choose_periods_for_tariffs', sort_by='week')
+    week2 = getButton('2 Недели', 'choose_periods_for_tariffs', sort_by='week2')
+    month = getButton('Месяц', 'choose_periods_for_tariffs', sort_by='month')
+    month6 = getButton('6 мес', 'choose_periods_for_tariffs', sort_by='month6')
+    year = getButton('Год', 'choose_periods_for_tariffs', sort_by='year')
+    lifetime = getButton(
+        'Пожизненно', 'choose_periods_for_tariffs', sort_by='lifetime')
 
     keyboard.add(week, week2)
     keyboard.add(month, month6)

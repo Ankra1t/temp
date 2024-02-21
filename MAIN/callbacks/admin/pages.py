@@ -53,7 +53,7 @@ def send_admin_client(
     user_id: int,
     client_db_id: int,
     is_first=False,
-    filter='',
+    sort_by='',
     page=1
 ):
     chat_id = message.chat.id
@@ -87,7 +87,7 @@ def send_admin_client(
         '',
         '<b>Выберите действие 👇</b>'
     ))
-    keyboard = kb_admin_client_info(client_db_id, is_banned, page, filter)
+    keyboard = kb_admin_client_info(client_db_id, is_banned, page, sort_by)
 
     if is_first:
         bot.send_message(

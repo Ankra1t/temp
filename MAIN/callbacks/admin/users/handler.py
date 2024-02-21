@@ -5,7 +5,7 @@ from common.utils import set_state_data
 from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard, tariff_manager
-from db_new import FILTER_TYPE, db_new
+from db_new import SORT_BY_TYPE, db_new
 from models import User
 from MAIN.states import AdminUsersState
 from messages.users import gift_subscribe_msg
@@ -20,8 +20,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data = admin_users_factory.parse(call.data)
 
     type: str = callback_data.get('type') or ''
-    filter: FILTER_TYPE = callback_data.get(
-        'filter') or 'by_date_new'  # type: ignore
+    sort_by: SORT_BY_TYPE = callback_data.get(
+        'sort_by') or 'by_date_new'  # type: ignore
     client_db_id = int(callback_data.get('client_db_id') or 0)
     page = int(callback_data.get('page') or 1)
 
@@ -59,7 +59,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             text,
             chat_id, mes_id,
-            reply_markup=kb_admin_users_list(pages, page, filter, False)
+            reply_markup=kb_admin_users_list(pages, page, sort_by, False)
         )
 
     if type == 'client_list':
@@ -69,7 +69,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         pages = math.ceil(count / limit)
 
         mas_all_user = db_new.get_paginated_users(
-            limit, page, filter
+            limit, page, sort_by
         )
         text = ''
 
@@ -101,23 +101,23 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                     f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>\n'
                 )
 
-                if (user_subsriber.subscribe is not None) and (filter == 'by_paid'):
+                if (user_subsriber.subscribe is not None) and (sort_by == 'by_paid'):
                     text = user_show + text
                 else:
                     text += user_show
 
-        if filter == 'by_date_new':
-            filter_text = 'новым'
-        elif filter == 'by_date_old':
-            filter_text = 'старым'
+        if sort_by == 'by_date_new':
+            sort_by_text = 'новым'
+        elif sort_by == 'by_date_old':
+            sort_by_text = 'старым'
         else:
-            filter_text = 'оплатившим'
+            sort_by_text = 'оплатившим'
 
-        text += f'\n| Фильрация по <b>{filter_text}</b> |'
+        text += f'\n| Фильрация по <b>{sort_by_text}</b> |'
 
         bot.edit_message_text(
             text or 'Нет пользователей', chat_id, mes_id,
-            reply_markup=kb_admin_users_list(pages, page, filter)
+            reply_markup=kb_admin_users_list(pages, page, sort_by)
         )
 
     if type == 'client_add_sub':
@@ -145,11 +145,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             tariff_id = data.get('tariff_id')
             subscribe_user_id = data.get('user_id')
 
-            # Получить tg_user_id
+        # Получить tg_user_id
         user = db_new.get_user_by_id(subscribe_user_id)
 
         # Считаем кол-во дней для выдачи по периоду
-        days = pay_guard.get_days_by_period(filter)
+        days = pay_guard.get_days_by_period(sort_by)
 
         pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
         datetime_show = pay_guard.set_custom_paid_subscribe(
@@ -216,11 +216,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             'Введите id или имя пользователя:',
             chat_id, mes_id,
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         bot.set_state(user_id, AdminUsersState.client_search, chat_id)
         set_state_data(bot, user_id, chat_id, {
-            'filter': filter,
+            'sort_by': sort_by,
             'page': page
         })
 
@@ -241,7 +241,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_admin_client(
             bot, call.message,
             user_id, client_db_id,
-            True, filter, page
+            True, sort_by, page
         )
 
     bot.answer_callback_query(call.id)

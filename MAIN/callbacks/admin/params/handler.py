@@ -1,6 +1,5 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from MAIN.states.admin.posts import AdminPostsState
 
 from db_new import db_new
 
@@ -59,7 +58,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     elif 'edit_text' in type:
         text_name = type.split('+')[-1]
 
-        bot.set_state(user_id, AdminPostsState.edit_text, chat_id)
+        bot.set_state(user_id, AdminParamsState.text, chat_id)
         set_state_data(bot, user_id, chat_id, {
             'name': text_name
         })

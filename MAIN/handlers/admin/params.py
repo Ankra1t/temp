@@ -19,7 +19,8 @@ def handle_other_text(message: Message, bot: TeleBot):
 
     set_state_data(
         bot, user_id, chat_id, {
-            'text': get_normal_text(message)}
+            'text': get_normal_text(message)
+        }
     )
 
     bot.send_message(

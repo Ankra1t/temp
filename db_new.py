@@ -11,7 +11,7 @@ from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subs
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
-FILTER_TYPE = Literal['by_date_new', 'by_date_old', 'by_paid']
+SORT_BY_TYPE = Literal['by_date_new', 'by_date_old', 'by_paid']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
@@ -868,16 +868,16 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_paginated_users(self, limit=10, page=1, filter: FILTER_TYPE = 'by_date_new') -> list[UserInfo]:
+    def get_paginated_users(self, limit=10, page=1, sort_by: SORT_BY_TYPE = 'by_date_new') -> list[UserInfo]:
         """Получить постраничный список пользователей"""
         query = self.USER_INFO_QUERY
 
-        if filter == 'by_paid':
+        if sort_by == 'by_paid':
             query += 'LEFT JOIN (SELECT tg_user_id, active, max(finish_dt) as finish_dt FROM subscribes '
             query += 'WHERE active = 1 GROUP BY tg_user_id, active) sub on u.id_telegram = sub.tg_user_id '
             query += 'ORDER BY sub.active ASC, sub.finish_dt DESC '
         else:
-            query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'}, u.id ASC "
+            query += f"ORDER BY u.created_at {'ASC' if sort_by == 'by_date_old' else 'DESC'}, u.id ASC "
 
         query += "LIMIT %s OFFSET %s "
 
