@@ -1,7 +1,7 @@
 import json
 import requests
 
-from db_new import db_new
+from db_new import db_new, DB_PG_USER, DB_PG_HOST
 from common.vars import API_URL, HEADERS
 
 
@@ -14,6 +14,12 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         'username_tg': username
     }
 
+    if DB_PG_USER == 'postgres' and DB_PG_HOST == '127.0.0.1':
+        # Регаем в локальной базе пользователя
+        print(f'Регистрируем фейково пользователя user_id [{user_id}]  username [{username}] ')
+        db_new.fake_add_user_db(user_id, username)
+        return True
+
     try:
         response = requests.post(
             f'{API_URL}/auth/tg_register',
@@ -24,6 +30,7 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         print(response.json())
     except:
         return False
+
 
     return response.status_code == 200
 
