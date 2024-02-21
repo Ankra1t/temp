@@ -1,6 +1,5 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from MAIN.states.admin.posts import AdminPostsState
 
 from db_new import db_new
 

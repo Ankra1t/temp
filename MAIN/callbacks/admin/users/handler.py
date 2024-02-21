@@ -1,17 +1,18 @@
 import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from MAIN.common.utils import get_short_user_info
 from common.utils import set_state_data
 from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard, tariff_manager
-from db_new import FILTER_TYPE, db_new
+from db_new import SORT_BY_TYPE, db_new
 from models import User
 from MAIN.states import AdminUsersState
 from messages.users import gift_subscribe_msg
 
 
-from .keyboards import kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_users_list
+from .keyboards import kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_client_list
 from .filter import admin_users_factory, AdminUsersCallbackFilter
 from ..pages import send_admin_client
 
@@ -19,11 +20,13 @@ from ..pages import send_admin_client
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data = admin_users_factory.parse(call.data)
 
-    type: str = callback_data.get('type') or ''
-    filter: FILTER_TYPE = callback_data.get(
-        'filter') or 'by_date_new'  # type: ignore
-    client_db_id = int(callback_data.get('client_db_id') or 0)
-    page = int(callback_data.get('page') or 1)
+    type: str = callback_data.get('type', '')
+    sort_by: SORT_BY_TYPE = callback_data.get(
+        'sort_by', 'new'
+    )  # type: ignore
+    filter: str = callback_data.get('filter', '')
+    client_db_id = int(callback_data.get('client_db_id', 0))
+    page = int(callback_data.get('page', 1))
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
@@ -36,89 +39,97 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_inl_admin.users_cancel_subscribe()
         )
 
-    if type == 'ban_list':
-        limit = 10
-        users = db_new.get_banned_users()
-        count = len(users)
-
-        pages = math.ceil(count / limit)
-
-        users = users[(page - 1) * limit:page * limit]
-        text = ''
-
-        if len(users) == 0:
-            text = 'Нет забаненных пользователей'
-        else:
-            for user in users:
-                nik = f'@{user.username}' if (
-                    user.username is not None) else 'Скрыт'
-                ban = '(BAN)' if user.ban == 1 else ''
-
-                text += f'\n{ban} {user.tg_id} | {nik}\n'
-
+    if type == 'lists':
         bot.edit_message_text(
-            text,
-            chat_id, mes_id,
-            reply_markup=kb_admin_users_list(pages, page, filter, False)
+            'Выберите <u>список</u> клиентов', chat_id, mes_id,
+            reply_markup=kb_admin_choose_list()
         )
 
     if type == 'client_list':
-        limit = 6
-        count = db_new.get_users_count()
+        if filter == '':
+            # Значения для постраничного вывода
+            limit = 6
+            users_count = db_new.get_users_count()
+            pages_count = math.ceil(users_count / limit)
 
-        pages = math.ceil(count / limit)
+            users = db_new.get_paginated_users(
+                limit, page, sort_by
+            )
 
-        mas_all_user = db_new.get_paginated_users(
-            limit, page, filter
-        )
-        text = ''
+            text = '<b>Все клиенты</b>\n'
 
-        if len(mas_all_user) == 0:
-            text = 'Нет пользователей'
-        else:
-            for user in mas_all_user:
-                tg_user_id = user.tg_id
+            if len(users) == 0:
+                text += '\nНет пользователей'
+            else:
+                for user in users:
+                    text += '\n' + get_short_user_info(user) + '\n'
 
-                nik = f'| @{user.username}' if user.username != '' else ''
-                ban = '(BAN)' if user.ban == 1 else ''
+                sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
+                text += f'\n| Сортировка по <b>{sort_by_text}</b> |'
 
-                user_subsriber = User()
-                user_subsriber.id = tg_user_id
-                user_subsriber = pay_guard.get_current_subscribe_user(
-                    user_subsriber)
-
-                fin_date = 'нет подписок'
-                type_subscribe_show = ''
-
-                if user_subsriber.subscribe is not None:
-                    fin_date = user_subsriber.subscribe.finish_dt.strftime(
-                        '%d/%m/%Y')
-                    type_subscribe_show = f'({user_subsriber.subscribe.type})'
-
-                user_show = (
-                    f'\n{user.id} {nik} <b>{ban}</b>'
-                    f'\nПодписка до: <b>{fin_date}</b> {type_subscribe_show}'
-                    f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>\n'
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_admin_client_list(
+                    pages_count, page, sort_by, filter
                 )
+            )
 
-                if (user_subsriber.subscribe is not None) and (filter == 'by_paid'):
-                    text = user_show + text
-                else:
-                    text += user_show
+        if filter == 'ban':
+            limit = 10
+            users_count = len(db_new.get_banned_users())
+            pages_count = math.ceil(users_count / limit)
 
-        if filter == 'by_date_new':
-            filter_text = 'новым'
-        elif filter == 'by_date_old':
-            filter_text = 'старым'
-        else:
-            filter_text = 'оплатившим'
+            users = db_new.get_banned_users(limit, page, sort_by)
+            text = '⛔️  <b>Забаненные</b>\n'
 
-        text += f'\n| Фильрация по <b>{filter_text}</b> |'
+            if len(users) == 0:
+                text += '\nНет пользователей'
+            else:
+                for user in users:
+                    nik = f'@{user.username}' if (
+                        user.username is not None) else 'Скрыт'
+                    ban = '(BAN)' if user.ban == 1 else ''
 
-        bot.edit_message_text(
-            text or 'Нет пользователей', chat_id, mes_id,
-            reply_markup=kb_admin_users_list(pages, page, filter)
-        )
+                    text += f'\n{ban} {user.tg_id} | {nik}\n'
+
+            bot.edit_message_text(
+                text,
+                chat_id, mes_id,
+                reply_markup=kb_admin_client_list(
+                    pages_count, page, sort_by, filter
+                )
+            )
+
+        if filter == 'paid':
+            users = db_new.get_subsribed_users()
+
+            text = '💵 <b>Платные</b>\n'
+            if len(users) == 0:
+                text += '\nНет пользователей'
+            else:
+                for user in users:
+                    text += '\n' + get_short_user_info(user) + '\n'
+
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_admin_users_cancel(sort_by, page, filter)
+            )
+
+        if filter == 'new':
+            users = db_new.get_paginated_users(10, 1, 'new')
+
+            text = '<b>Новые пользователи</b>\n'
+
+            if len(users) == 0:
+                text += '\nНет пользователей'
+            else:
+                for user in users:
+                    text += '\n' + get_short_user_info(user) + '\n'
+
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_admin_users_cancel(sort_by, page, filter)
+            )
 
     if type == 'client_add_sub':
         # Задать сначала тариф для выдачи подписки
@@ -132,7 +143,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_admin_users_back())
 
         # Список тарифов с кнопкой выбрать
-        available_tariffs = tariff_manager.admin_tariff_list_custom_show(chat_id)
+        available_tariffs = tariff_manager.admin_tariff_list_custom_show(
+            chat_id)
         if not available_tariffs:
             bot.send_message(
                 chat_id,
@@ -140,16 +152,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
 
     if type == 'choose_periods_for_tariffs':
-
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
             subscribe_user_id = data.get('user_id')
 
-            # Получить tg_user_id
+        # Получить tg_user_id
         user = db_new.get_user_by_id(subscribe_user_id)
 
         # Считаем кол-во дней для выдачи по периоду
-        days = pay_guard.get_days_by_period(filter)
+        days = pay_guard.get_days_by_period(sort_by)
 
         pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
         datetime_show = pay_guard.set_custom_paid_subscribe(
@@ -201,8 +212,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             return
 
         if 'cancel_sub' in type:
-            print(f'client_db_id ')
-            print(client_db_id)
             pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         if 'ban' in type:
             db_new.set_user_ban(user.id, abs(user.ban - 1))
@@ -212,15 +221,22 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'confirm_no' in type:
         bot.edit_message_text('Отменено!', chat_id, mes_id)
 
+    if 'confirm' in type:
+        send_admin_client(
+            bot, call.message,
+            user_id, client_db_id,
+            True, sort_by, page
+        )
+
     if type == 'client_search':
         bot.edit_message_text(
             'Введите id или имя пользователя:',
             chat_id, mes_id,
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         bot.set_state(user_id, AdminUsersState.client_search, chat_id)
         set_state_data(bot, user_id, chat_id, {
-            'filter': filter,
+            'sort_by': sort_by,
             'page': page
         })
 
@@ -235,13 +251,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'Введите количество дней ПРОБНОЙ подписки:',
             chat_id, mes_id,
             reply_markup=kb_admin_users_back()
-        )
-
-    if 'confirm' in type:
-        send_admin_client(
-            bot, call.message,
-            user_id, client_db_id,
-            True, filter, page
         )
 
     bot.answer_callback_query(call.id)

@@ -206,12 +206,6 @@ class GuardPaymentAccess():
         """Убираем активность у подписки для одного пользователя по user_id"""
         db_new.set_subscribe_unactive_by_user_id(user_id, tariff_id)
 
-    # Управление подписками
-    def get_current_subscribe_user(self, user: User):
-        """Получить текущую активную подписку пользователя"""
-        user.subscribe = db_new.get_current_subscribe_user(user.id or 0)
-        return user
-
     def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
         if user.subscribe is None:
             return

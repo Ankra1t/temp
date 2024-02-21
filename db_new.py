@@ -12,7 +12,7 @@ from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subs
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
-FILTER_TYPE = Literal['by_date_new', 'by_date_old', 'by_paid']
+SORT_BY_TYPE = Literal['new', 'old']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
@@ -50,7 +50,7 @@ class Database:
             data.get('price_findate'),
         )
 
-    def get_prices(self, active: int=1, switch_active = 1) -> list[Price]:
+    def get_prices(self, active: int = 1, switch_active=1) -> list[Price]:
         """Получение тарифа"""
         if not switch_active:
             query = """SELECT * FROM prices WHERE active = %s"""
@@ -69,7 +69,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int, switch_active = 1) -> list[Price]:
+    def get_prices_by_product(self, product_id, active: int, switch_active=1) -> list[Price]:
         """Получение тарифа по типу продукта"""
         if not switch_active:
             query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
@@ -88,7 +88,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int, switch_active = 1):
+    def get_price_by_id(self, id: int, switch_active=1):
         if not switch_active:
             query = "SELECT * FROM prices WHERE id = %s"
             params = (id,)
@@ -106,7 +106,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_price_by_name(self, name: str, switch_active = 1):
+    def get_price_by_name(self, name: str, switch_active=1):
         """Получение цены по имени"""
         query = "SELECT * FROM prices WHERE name = %s AND switch_active = %s"
         params = (name, switch_active, )
@@ -621,8 +621,6 @@ class Database:
             self.connection.rollback()
             return []
 
-
-
     def get_paid_transactions_period(self, start_date, fin_date):
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
@@ -715,7 +713,6 @@ class Database:
             print(f'ERROR[get_paid_transactions_summ_product]: {e}')
             self.connection.rollback()
             return []
-
 
     def get_purchases_by_user(self, user_id: int):
         """Получение покупок пользователя"""
@@ -869,20 +866,18 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_paginated_users(self, limit=10, page=1, filter: FILTER_TYPE = 'by_date_new') -> list[UserInfo]:
+    def get_paginated_users(self, limit=6, page=1, sort_by: SORT_BY_TYPE = 'new') -> list[UserInfo]:
         """Получить постраничный список пользователей"""
         query = self.USER_INFO_QUERY
-
-        if filter == 'by_paid':
-            query += 'LEFT JOIN (SELECT tg_user_id, active, max(finish_dt) as finish_dt FROM subscribes '
-            query += 'WHERE active = 1 GROUP BY tg_user_id, active) sub on u.id_telegram = sub.tg_user_id '
-            query += 'ORDER BY sub.active ASC, sub.finish_dt DESC '
-        else:
-            query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'}, u.id ASC "
-
+        query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
         query += "LIMIT %s OFFSET %s "
-
         params = (limit, (page - 1) * limit)
+
+        # if sort_by == 'by_paid':
+        #     query += 'LEFT JOIN (SELECT tg_user_id, active, max(finish_dt) as finish_dt FROM subscribes '
+        #     query += 'WHERE active = 1 GROUP BY tg_user_id, active) sub on u.id_telegram = sub.tg_user_id '
+        #     query += 'ORDER BY sub.active ASC, sub.finish_dt DESC '
+        # else:
 
         try:
             self.curs.execute(query, params)
@@ -893,11 +888,19 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_banned_users(self) -> list[UserInfo]:
-        query = self.USER_INFO_QUERY + 'WHERE u.ban = 1'
+    def get_banned_users(self, limit: int | None = None, page=1, sort_by: SORT_BY_TYPE = 'new') -> list[UserInfo]:
+        """
+            Получение забаненных пользователей\n
+            Если не задан лимит, то вернуться все забаненные пользователи
+        """
+        query = self.USER_INFO_QUERY + 'WHERE u.ban = 1 '
+        query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
+        if limit is not None:
+            query += "LIMIT %s OFFSET %s "
+            params = (limit, (page - 1) * limit)
 
         try:
-            self.curs.execute(query)
+            self.curs.execute(query, params)
             data = self.curs.fetchall()
             return list(map(lambda u: self._data_to_user(u), data))
         except Exception as e:
@@ -916,9 +919,9 @@ class Database:
             'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) > 0 '
         )
         params = ('paid',)
+
         try:
-            self.curs.execute(query, params )
-            # self.curs.execute(query)
+            self.curs.execute(query, params)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:
@@ -1276,7 +1279,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return data.get('take_profit_ratio') or default_ratio  if (data is not None) else default_ratio
+            return data.get('take_profit_ratio') or default_ratio if (data is not None) else default_ratio
         except Exception as e:
             print(f'ERROR[get_calculator_tp_ratio]: {e}')
             self.connection.rollback()

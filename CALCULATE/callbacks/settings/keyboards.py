@@ -234,6 +234,9 @@ def kb_summury_profit(user_id: int):
 
 
 def kb_summury_profit_type(user_id: int):
+    """
+        Выбор типа вывода профита
+    """
     lang = get_lang(user_id)
 
     texts = {
@@ -264,6 +267,9 @@ def kb_summury_profit_type(user_id: int):
 
 
 def kb_take_profit(user_id: int, current_tp: list[int]):
+    """
+        Выбор значения коэфицента для тейк профита
+    """
     lang = get_lang(user_id)
 
     texts = {
@@ -279,14 +285,18 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         }
     }
 
+    # Максимальный тейк профит
     tp_max = 10
+    # Максимальное кол-во тейк профитов
+    tp_count_max = 5
 
     row_width = 4
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     buttons = []
 
-    if len(current_tp) != 5:
+    # Если кол-во тейк профитов еще не максимальное - выводим кнопки
+    if len(current_tp) != tp_count_max:
         for el in range(2, tp_max + 1):
             if el not in current_tp:
                 btn = getButton(
@@ -298,8 +308,13 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
                 keyboard.add(*buttons)
                 buttons = []
 
+    # Сохранение выбранного
     btn_save = getButton(texts[lang]['save'], 'tp_save')
+
+    # Отмена, выход к выбору типа
     btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+
+    # Шаг назад, убираем последний тейк профит
     btn_back = getButton(
         texts[lang]['back'],
         'change_summury_profit', 'default', None, -1
@@ -307,13 +322,16 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
     if len(current_tp) != 0:
         keyboard.add(btn_back, btn_cancel, btn_save)
-    else:
+    else: # Если еще ничего не выбрано, выводим только кнопку отмены
         keyboard.add(btn_cancel)
 
     return keyboard
 
 
-def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], percent_entering=False, added_count=0):
+def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], added_count=0):
+    """
+        Выбор значения коэфицента для тейк профита, для выставления процентов
+    """
     added_count = max(added_count, 1)
     lang = get_lang(user_id)
 
@@ -332,7 +350,10 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         }
     }
 
+    # Максимальный тейк профит
     tp_max = 10
+    # Максимальное кол-во тейк профитов
+    tp_count_max = 5
 
     percents_sum = sum(current_split)
     if abs(percents_sum - 100) < 0.2:
@@ -343,7 +364,8 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
 
     buttons = []
 
-    if not percent_entering and len(current_tp) != 5 and percents_sum != 100:
+    # Если кол-во не максимульное и сумма процентов не 100
+    if len(current_tp) != tp_count_max and percents_sum != 100:
         for el in range(2, tp_max + 1):
             if el not in current_tp:
                 btn = getButton(
@@ -355,33 +377,39 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
                 keyboard.add(*buttons)
                 buttons = []
 
+    # Кнопка сохранения, если сумма процентов равна 100
     if percents_sum == 100:
         btn_save = getButton(
             texts[lang]['save'],
             'splitting_save'
         )
+    # Иначе кнопка для распределения остатка
     else:
         btn_save = getButton(
             texts[lang]['last'],
             'splitting_last'
         )
+
+    # Отмена, выход к выбору типа
     btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+    # Шаг назад, убираем последний тейк профит и его процент
     btn_back = getButton(
         texts[lang]['back'],
         'change_summury_profit', 'splitting', None, -added_count
     )
 
-    if percent_entering:
-        keyboard.add(btn_back, btn_cancel)
-    elif len(current_tp) != 0:
+    if len(current_tp) != 0:
         keyboard.add(btn_back, btn_cancel, btn_save)
-    else:
+    else: # Если еще ничего не выбрано, выводим только кнопку отмены
         keyboard.add(btn_cancel)
 
     return keyboard
 
 
 def kb_splitting_last(user_id: int):
+    """
+        Вывод кнопок выбора числа, на которое разделиться остаток
+    """
     lang = get_lang(user_id)
 
     texts = {
@@ -422,4 +450,3 @@ def kb_splitting_last(user_id: int):
 
     keyboard.add(btn_back, btn_cancel)
     return keyboard
-

@@ -1,9 +1,11 @@
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
+from common.vars import PRINT_DATE_FROMAT
 
+from db_new import db_new
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from models import Post
+from models import Post, User, UserInfo
 
 
 def get_post_from_message(bot: TeleBot, message: Message):
@@ -51,3 +53,31 @@ def get_print_signal_info(open_price: float, stop_loss: float):
         f'Цена входа: <b>{get_print_float(open_price, round_count)}</b>',
         f'Стоп лосс: <b>{get_print_float(stop_loss, round_count)}</b>'
     ))
+
+
+def get_short_user_info(user: UserInfo):
+    if user.username != '':
+        nik = f'| @{user.username} '
+    elif user.tg_id > 0:
+        nik = f'| {user.tg_id} '
+    else:
+        nik = ''
+
+    ban = '| (BAN)' if user.ban == 1 else ''
+
+    user_subsribe = db_new.get_current_subscribe_user(user.id)
+
+    if user_subsribe is None:
+        sub_show = 'нет подписок'
+    else:
+        fin_date = user_subsribe.finish_dt.strftime(PRINT_DATE_FROMAT)
+        type_subscribe_show = f'({user_subsribe.type})'
+        sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
+
+    user_show = (
+        f'{user.id} {nik}<b>{ban}</b>'
+        f'\nПодписка до: {sub_show}'
+        f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>'
+    )
+
+    return user_show

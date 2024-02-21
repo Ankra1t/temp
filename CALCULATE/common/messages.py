@@ -640,7 +640,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
         sorted_tp, sorted_split = zip(*sorted(zip(tp_ratio, split)))
 
     percents_sum = sum(split)
-    if abs(percents_sum - 100) < 0.1:
+    if abs(percents_sum - 100) < 0.2:
         percents_sum = 100
 
     text = '<u>Установка разделения профита</u>\n'
