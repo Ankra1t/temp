@@ -4,7 +4,8 @@ from telebot.types import CallbackQuery
 
 
 admin_users_factory = CallbackData(
-    'type', 'sort_by', 'client_db_id', 'page', prefix='admin_users')
+    'type', 'sort_by', 'client_db_id', 'page', 'filter', prefix='admin_users'
+)
 
 
 class AdminUsersCallbackFilter(AdvancedCustomFilter):

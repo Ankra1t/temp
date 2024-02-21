@@ -63,17 +63,14 @@ def send_admin_client(
     if client is None:
         return
 
-    user_check = User()
-    user_check.id = client.tg_id
-    user_subsriber = pay_guard.get_current_subscribe_user(user_check)
+    user_subsribe = db_new.get_current_subscribe_user(client.id)
 
     fin_date = 'нет'
     type_subscribe_show = ''
 
-    if user_subsriber.subscribe is not None:
-        fin_date = user_subsriber.subscribe.finish_dt.strftime(
-            '%d/%m/%Y')
-        type_subscribe_show = f' тип {user_subsriber.subscribe.type}'
+    if user_subsribe is not None:
+        fin_date = user_subsribe.finish_dt.strftime('%d/%m/%Y')
+        type_subscribe_show = f' тип {user_subsribe.type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''
     count_ref = len(db_new.get_user_referals(client_db_id))

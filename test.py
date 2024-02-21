@@ -64,7 +64,7 @@ from db_new import db_new
 # # if filter == 'by_paid':
 # #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
 # #     query += 'WHERE subscribes.active = 1 '
-# query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+# query += f"ORDER BY u.created_at {'ASC' if filter == 'old' else 'DESC'} "
 # query += f", u.id ASC "
 # query += "LIMIT %s OFFSET %s "
 
