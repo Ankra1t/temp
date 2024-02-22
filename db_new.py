@@ -533,14 +533,14 @@ class Database:
         )
 
     def add_transaction(self, trans: Transactions):
-
+        datetime_now = datetime.utcnow()
         query = (
             "INSERT INTO transactions"
-            "(user_id, code, link, sum, currency, price_id, status) "
-            "VALUES(%s, %s, %s, %s, %s, %s, %s)"
+            "(user_id, code, link, sum, currency, price_id, status, created_at, updated_at) "
+            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
         )
         params = (trans.user_id, trans.code, trans.link, trans.sum,
-                  trans.currency, trans.price_id, trans.status)
+                  trans.currency, trans.price_id, trans.status, datetime_now, datetime_now)
 
         try:
             self.curs.execute(query, params)
@@ -553,7 +553,7 @@ class Database:
 
     def get_wait_transaction(self, code: str, status: str):
         query = (
-            "SELECT id, user_id, price_id, sum FROM transactions "
+            "SELECT * FROM transactions "
             "WHERE code = %s AND status = %s"
         )
         params = (code, status)
@@ -777,8 +777,8 @@ class Database:
 
     def set_transactions_complete(self, id: int):
         datetime_now = datetime.utcnow()
-        query = "UPDATE transactions set status = %s, payment_date = %s WHERE id = %s"
-        params = ('paid', datetime_now, id, )
+        query = "UPDATE transactions set status = %s, payment_date = %s, created_at = %s WHERE id = %s"
+        params = ('paid', datetime_now, datetime_now, id, )
 
         try:
             self.curs.execute(query, params)

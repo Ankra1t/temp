@@ -116,18 +116,23 @@ class Payments(object):
 
     def get_wait_transaction_for_complete(self, update: Update):
         invoice = update.payload
-        # Ищем подписки только со статусом ожидания
-        transaction_info = db_new.get_wait_transaction(
-            str(invoice.invoice_id), 'wait_payments'
-        )
 
-        if transaction_info is not None:
-            return {
-                'transaction_id': transaction_info.id,
-                'user_id': transaction_info.user_id,
-                'prices_id': transaction_info.price_id
-            }
+        # Ищем подписки только со статусом ожидания
+        status = 'wait_payments'
+        transaction = db_new.get_wait_transaction(
+            str(invoice.invoice_id), status)
+
+        # if transaction_info is not None:
+        #     return {
+        #         'transaction_id': transaction_info.id,
+        #         'user_id': transaction_info.user_id,
+        #         'prices_id': transaction_info.price_id
+        #     }
+        # return None
+        if transaction:
+            return transaction
         return None
+
 
     def transactions_complete(self, transaction_id):
         db_new.set_transactions_complete(transaction_id)
@@ -168,6 +173,11 @@ class Payments(object):
 
         logger.info(f'-----> Неправильная сигнатура запроса, что-то поменять ')
         return Response('ERROR', 400)
+
+    def get_updates_check(self, update: Update):
+        for handler in self._handlers:
+            logger.info(f'!! Дернули все зареганные обработчики')
+            handler(update)
 
     def check_signature(self, body_text: str, crypto_pay_signature: str) -> bool:
         """

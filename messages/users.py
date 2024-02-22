@@ -18,9 +18,9 @@ def gift_trial_subscribe_msg(end_date):
 Поздравляем админ выдал вам тестовый период до {end_date}.
 """
 
-def paid_subscribe_msg(end_date):
+def paid_subscribe_msg(end_date, tariff_name):
     return f"""
-Благодарим за продление платной подписки, рассылка сигналов будет работать до {end_date}
+Благодарим за оплату подписки, <b>"{tariff_name}"</b> будет действовать <b>до {end_date}</b>
 """
 
 def welcome_msg():

@@ -2,7 +2,7 @@ from typing import Literal
 from config_logger import logger
 from telebot import types
 from datetime import datetime, timedelta
-from models import User, UserInfo, Subscribe
+from models import User, UserInfo, Subscribe, Transactions
 
 from db_new import db_new
 
@@ -99,16 +99,16 @@ class GuardPaymentAccess():
         db_new.set_trial_subscribe_unactive_by_user(tg_user_id)
 
     # Платные подписки
-    def set_paid_subscribe(self, transaction):
+    def set_paid_subscribe(self, transaction: Transactions):
         """Добавить платную подписку для пользователя по результату оплаты (транзакция paid)"""
         subscribe_days = self.get_subscribe_days_prices_id(
-            transaction['prices_id'])
+            transaction.price_id)
 
         finish_date = datetime.now() + timedelta(days=subscribe_days)
 
         subscribe = Subscribe(
-            transaction['user_id'], finish_date, 1, None, 'paid',
-            transaction['prices_id'], transaction['transaction_id']
+            transaction.user_id, finish_date, 1, None, 'paid',
+            transaction.price_id, transaction.id
         )
         db_new.add_subsbscribe(subscribe)
 

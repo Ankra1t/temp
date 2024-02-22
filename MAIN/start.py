@@ -37,8 +37,8 @@ def send_start_by_user(
         # todo-fin: Заменить кол-во транзакций на агрегацию пользователей (если у пользователя больше 2х подписок)
         count_with_sub = base_statis.count_payments()
         # count_with_sub = len(pay_guard.get_paid_users())
-        count_old = len(pay_guard.get_paid_more1_users())
         count_old = 0
+        count_old = len(pay_guard.get_paid_more1_users())
         count_admins = len(db_new.get_all_workes())
         count_fut_posts = len(db_new.get_all_posts())
         count_fut_posts = 0
