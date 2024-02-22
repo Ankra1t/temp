@@ -5,6 +5,9 @@ from datetime import datetime
 from telebot import custom_filters, types
 from telebot.types import Message
 
+from NOTIFIER import notifier
+from NOTIFIER.messages import mess_user_paid
+
 
 from AuthRoles import check_registrate
 from MAIN.start import send_start_by_user
@@ -25,6 +28,7 @@ from MAIN.callbacks import callbacks_registration
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
+from common.vars import PRINT_DATE_FROMAT
 
 from keyboard_reply import *
 from cb_filters import (AdminDefaultCallbackFilter,
@@ -70,20 +74,26 @@ def invoice_paid_prev(update: Update) -> None:
 
         if transaction:
             logger.info('-----> Нашли нужную транзакцию '
-                        'далее transactions_complete [{}]'.format(transaction['transaction_id']))
+                        'далее transactions_complete [{}]'.format(transaction.id))
+
+            bot.send_message(
+                transaction.user_id,
+                'Ваш платеж подтвержден и находиться в обработке'
+            )
 
             # Завершаем транзакцию
-            pays.transactions_complete(transaction['transaction_id'])
+            pays.transactions_complete(transaction.id)
 
             # Добавить платную подписку
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-            finish_date = finish_date_obj.strftime('%d/%m/%Y')
+            finish_date = finish_date_obj.strftime(PRINT_DATE_FROMAT)
+            tariff = db_new.get_price_by_id(transaction.price_id, None)
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
 
             pay_guard.set_trial_subscribe_unactive_by_user(
-                transaction['user_id'])
+                transaction.user_id)
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
@@ -93,9 +103,20 @@ def invoice_paid_prev(update: Update) -> None:
 
             # Отправляем сообщение пользователю
             bot.send_message(
-                transaction['user_id'],
-                text=paid_subscribe_msg(finish_date)
+                transaction.user_id,
+                text=paid_subscribe_msg(finish_date, tariff.name),
             )
+
+            # Сообщение в бот уведомлений об оплате
+            summ_full = f"{transaction.sum} {transaction.currency}"
+            user = db_new.get_user_by_tg_id(transaction.user_id)
+            notifier.send_notification('text', mess_user_paid(
+                user_id=user.id,
+                user_nike='@' + user.username if user.username else user.tg_id,
+                summ_paid=summ_full,
+                tariff_name=tariff.name,
+                finish_date=finish_date
+            ))
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
@@ -116,24 +137,25 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
         if transaction:
             logger.info('-----> Нашли нужную транзакцию '
-                        'далее transactions_complete [{}]'.format(transaction['transaction_id']))
+                        'далее transactions_complete [{}]'.format(transaction.id))
 
             bot.send_message(
-                transaction['user_id'],
+                transaction.user_id,
                 'Ваш платеж подтвержден и находиться в обработке'
             )
 
             # Завершаем транзакцию
-            pays_banker.transactions_complete(transaction['transaction_id'])
+            pays_banker.transactions_complete(transaction.id)
 
             # Добавить платную подписку
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-            finish_date = finish_date_obj.strftime('%d/%m/%Y %d/%m/%Y в %H:%i')
+            finish_date = finish_date_obj.strftime(PRINT_DATE_FROMAT)
+            tariff = db_new.get_price_by_id(transaction.price_id, None)
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
             pay_guard.set_trial_subscribe_unactive_by_user(
-                transaction['user_id'])
+                transaction.user_id)
             # trial_id = pay_guard.check_trial_active_by_user(
             #     transaction['user_id'])
             # if trial_id:
@@ -144,9 +166,20 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
             # Отправляем сообщение пользователю
             bot.send_message(
-                transaction['user_id'],
-                text=paid_subscribe_msg(finish_date),
+                transaction.user_id,
+                text=paid_subscribe_msg(finish_date, tariff.name),
             )
+
+            # Сообщение в бот уведомлений об оплате
+            summ_full = f"{transaction.sum} {transaction.currency}"
+            user = db_new.get_user_by_tg_id(transaction.user_id)
+            notifier.send_notification('text', mess_user_paid(
+                user_id=user.id,
+                user_nike='@' + user.username if user.username else user.tg_id,
+                summ_paid=summ_full,
+                tariff_name=tariff.name,
+                finish_date=finish_date
+            ))
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
