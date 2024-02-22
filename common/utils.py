@@ -34,10 +34,6 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
         print(f'Ошибка в записи данных state [{e}]')
 
 
-def float_to_print(val: float | None):
-    return round(val, 2) if val is not None else '-'
-
-
 def get_lang(tg_id: int):
     user_db_id = db_new.get_user_id_by_tg_id(tg_id)
     return db_new.get_user_lang(user_db_id) or 'ru'
@@ -84,7 +80,7 @@ def get_calculation(
     Returns:
         count_bet, value_bet, credit, take_profit, profit
     """
-    print(tp_ratio, split_values)
+
     if open_price == stop_loss:
         stop_loss = open_price - 0.01
 

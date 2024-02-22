@@ -1382,10 +1382,10 @@ class Database:
     def reset_user_settings(self, user_id: int):
         query = (
             'UPDATE tgcalc_user_settings SET take_profit_to_show = %s, market = %s, base_currency = %s, '
-            'base_deposit = %s, base_risk_percent = %s '
+            'base_deposit = %s, base_risk_percent = %s, take_profit_ratio = %s, split_values = %s, is_splitting = %s '
             'WHERE user_id = %s'
         )
-        params = ('345', 'crypto', 'USD', None, None, user_id)
+        params = ('345', 'crypto', 'USD', None, None, [3, 4, 5], None, 0, user_id)
 
         try:
             self.curs.execute(query, params)

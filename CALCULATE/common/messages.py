@@ -1,5 +1,5 @@
 from telebot import TeleBot
-from common.utils import float_to_print, get_decimal_count, get_lang, get_print_float
+from common.utils import get_decimal_count, get_lang, get_print_float
 
 from db_new import db_new
 
@@ -127,12 +127,12 @@ def msg_settings(user_id: int):
         '',
         (
             f'{BULLET} {texts[lang]["dep"]}: <b>'
-            f'{f"{float_to_print(deposit)} {currency}" if deposit is not None else "-"}'
+            f'{f"{get_print_float(deposit)} {currency}" if deposit is not None else "-"}'
             '</b>'
         ),
         (
             f'{BULLET} {texts[lang]["risk"]}: <b>'
-            f'{f"{float_to_print(risk)}" if risk is not None else ""}'
+            f'{f"{get_print_float(risk)}" if risk is not None else ""}'
             f'{"-" if risk is None else "%" if risk_is_percent else f" {currency}"}'
             '</b>'
         ),

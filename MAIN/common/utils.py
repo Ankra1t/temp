@@ -34,7 +34,7 @@ def get_post_from_message(bot: TeleBot, message: Message):
 
 
 def get_calculator_btn_link():
-    return InlineKeyboardButton("В калькулятор", "https://t.me/fpcalcbot")
+    return InlineKeyboardButton("⌨️ В калькулятор", "https://t.me/fpcalcbot")
 
 
 def send_in_development(bot: TeleBot, message: Message):

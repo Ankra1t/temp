@@ -42,15 +42,15 @@ def kb_settings(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_base = getButton(texts[lang]["base"], 'go_change_base')
-    btn_lang = getButton(texts[lang]["lang"], 'choose_lang')
-    btn_market = getButton(texts[lang]["market"], 'market')
+    btn_base = getButton('🎚 ' + texts[lang]["base"], 'go_change_base')
+    btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
+    btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
 
     btn_summury_profit = getButton(
-        texts[lang]["summury_profit"], 'summury_profit'
+        '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
     )
 
-    btn_reset = getButton(texts[lang]["reset"], 'reset')
+    btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
     btn_back = getButton(texts[lang]["back"], 'go_main')
 
     keyboard.add(btn_base, btn_market)
@@ -84,8 +84,7 @@ def kb_change_base(user_id: int):
     btn_back = getButton(texts[lang]['back'], 'go_settings')
 
     keyboard.add(btn_dep, btn_risk)
-    keyboard.add(btn_currency)
-    keyboard.add(btn_back)
+    keyboard.add(btn_currency, btn_back)
     return keyboard
 
 
@@ -203,8 +202,8 @@ def kb_settings_confirm(user_id: int, action: str):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton(f'{texts[lang]["yes"]}', action + '_confirm_yes')
-    btn2 = getButton(f'{texts[lang]["no"]}', action + '_confirm_no')
+    btn1 = getButton(f'✅ {texts[lang]["yes"]}', action + '_confirm_yes')
+    btn2 = getButton(f'❌ {texts[lang]["no"]}', action + '_confirm_no')
 
     keyboard.add(btn1, btn2)
     return keyboard
@@ -226,7 +225,7 @@ def kb_summury_profit(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_change = getButton(texts[lang]['change'], 'change_summury_profit')
+    btn_change = getButton(f"✏️ {texts[lang]['change']}", 'change_summury_profit')
     btn_back = getButton(texts[lang]['back'], 'go_settings')
 
     keyboard.add(btn_change, btn_back)
@@ -309,10 +308,10 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
                 buttons = []
 
     # Сохранение выбранного
-    btn_save = getButton(texts[lang]['save'], 'tp_save')
+    btn_save = getButton('✅ ' + texts[lang]['save'], 'tp_save')
 
     # Отмена, выход к выбору типа
-    btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
 
     # Шаг назад, убираем последний тейк профит
     btn_back = getButton(
@@ -322,7 +321,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
     if len(current_tp) != 0:
         keyboard.add(btn_back, btn_cancel, btn_save)
-    else: # Если еще ничего не выбрано, выводим только кнопку отмены
+    else:  # Если еще ничего не выбрано, выводим только кнопку отмены
         keyboard.add(btn_cancel)
 
     return keyboard
@@ -337,13 +336,13 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
 
     texts = {
         'ru': {
-            'last': 'Вывод оставшихся',
+            'last': 'Остаток',
             'save': 'Сохранить',
             'cancel': 'Отмена',
             'back': 'Назад',
         },
         'en': {
-            'last': 'Set for remaining',
+            'last': 'Remains',
             'save': 'Save',
             'cancel': 'Cancel',
             'back': 'Back',
@@ -380,18 +379,19 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     # Кнопка сохранения, если сумма процентов равна 100
     if percents_sum == 100:
         btn_save = getButton(
-            texts[lang]['save'],
+            '✅ ' + texts[lang]['save'],
             'splitting_save'
         )
     # Иначе кнопка для распределения остатка
     else:
         btn_save = getButton(
-            texts[lang]['last'],
+            '✏️ ' + texts[lang]['last'],
             'splitting_last'
         )
 
     # Отмена, выход к выбору типа
-    btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
+
     # Шаг назад, убираем последний тейк профит и его процент
     btn_back = getButton(
         texts[lang]['back'],
@@ -400,7 +400,7 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
 
     if len(current_tp) != 0:
         keyboard.add(btn_back, btn_cancel, btn_save)
-    else: # Если еще ничего не выбрано, выводим только кнопку отмены
+    else:  # Если еще ничего не выбрано, выводим только кнопку отмены
         keyboard.add(btn_cancel)
 
     return keyboard
@@ -414,14 +414,10 @@ def kb_splitting_last(user_id: int):
 
     texts = {
         'ru': {
-            'last': 'Вывод оставшихся',
-            'save': 'Сохранить',
             'cancel': 'Отмена',
             'back': 'Назад',
         },
         'en': {
-            'last': 'Set for remaining',
-            'save': 'Save',
             'cancel': 'Cancel',
             'back': 'Back',
         }
@@ -442,7 +438,7 @@ def kb_splitting_last(user_id: int):
 
     keyboard.add(*buttons)
 
-    btn_cancel = getButton(texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
     btn_back = getButton(
         texts[lang]['back'],
         'change_summury_profit', 'splitting',

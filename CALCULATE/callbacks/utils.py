@@ -36,7 +36,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif calc_type == 'forex' and val_dep is None:
         text += msg_enter_currency(user_id)
         state = ForexCalcState.val_dep
-        keyboard = kb_forex_val()
+        keyboard = kb_forex_val(user_id)
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)
         state = FutureCalcState.ticker

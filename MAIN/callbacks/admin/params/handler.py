@@ -78,13 +78,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, AdminParamsState.count_trial_days, chat_id)
 
-    elif type == 'show':
-        # todo-fin: Что-то тут не работает, что-то достается из БД
-        # mas = db_old.get_other()
-        # for i in range(0, len(mas)):
-        #     bot.send_message(message.chat.id, text=mas[i][0] + '\n---------------\n' + mas[i][1])
-        # bot.register_next_step_handler(message, admin_other_menu)
-        pass
     elif type == 'change':
         bot.edit_message_text(
             'Что изменяем?', chat_id, mes_id,

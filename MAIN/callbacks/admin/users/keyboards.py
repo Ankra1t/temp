@@ -36,7 +36,7 @@ def kb_admin_choose_list():
 
     ban = getThisButton('⛔️ Забаненные', 'ban')
     paid = getThisButton('💵 Платные', 'paid')
-    new = getThisButton('Новые клиенты', 'new')
+    new = getThisButton('🆕 Новые клиенты', 'new')
     back = kb_inl_admin.go_users_btn
 
     keyboard.add(ban, paid)
@@ -58,7 +58,7 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
     btn_back = getThisButton('Назад', page - 1)
 
     counter = getButton(f'{page}/{pages}', 'counter')
-    search = getButton('🔎 Поиск пользователя', 'client_search', sort_by, page)
+    search = getButton('🔎 Поиск клиента', 'client_search', sort_by, page)
 
     if pages > 1:
         if page == 1:
@@ -91,16 +91,16 @@ def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, sort_by='')
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_ban = getClientButton(
-        'Разбанить' if is_banned else 'Забанить', 'client_ban'
+        '✅ Разбанить' if is_banned else '🚫 Забанить', 'client_ban'
     )
     btn_remove_sub = getClientButton(
-        'Отменить подписку', 'client_cancel_sub'
+        '➖ Отменить подписку', 'client_cancel_sub'
     )
     btn_add_sub = getClientButton(
-        'Выдать подписку', 'client_add_sub'
+        '➕ Выдать подписку', 'client_add_sub'
     )
     btn_add_trial_sub = getClientButton(
-        'Выдать пробный доступ', 'client_set_trial_custom'
+        '🎁 Выдать пробный доступ', 'client_set_trial_custom'
     )
 
     # if sort_by != '' or page != 1:
@@ -141,8 +141,8 @@ def kb_admin_users_confirm(type_info: str, client_db_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_yes = getConfimButton('Да', 'yes')
-    btn_no = getConfimButton('Нет', 'no')
+    btn_yes = getConfimButton('✅ Да', 'yes')
+    btn_no = getConfimButton('❌ Нет', 'no')
 
     keyboard.add(btn_yes, btn_no)
     return keyboard

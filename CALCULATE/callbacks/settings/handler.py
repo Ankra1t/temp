@@ -126,8 +126,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'reset':
         # Сброс настроек калькулятора до начальных
-        db_new.reset_user_settings(user_db_id)
-        send_settings(bot, call.message, user_id)
+        try:
+            db_new.reset_user_settings(user_db_id)
+            send_settings(bot, call.message, user_id)
+        except:
+            # Нет изменений - ничего не изменяется
+            pass
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением

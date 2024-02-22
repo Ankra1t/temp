@@ -6,7 +6,7 @@ from CALCULATE.callbacks.utils import choose_calculate_step
 from common.utils import set_state_data
 
 from CALCULATE.states.calculate import CalculateState
-from CALCULATE.callbacks import kb_cancel, kb_forex_val
+from CALCULATE.callbacks import kb_cancel
 
 
 # ======================= // ANCHOR Переменные

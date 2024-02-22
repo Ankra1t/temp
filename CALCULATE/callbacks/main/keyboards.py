@@ -5,6 +5,13 @@ from common.utils import get_lang
 from .filter import main_factory
 
 
+def getButton(text: str, type: str):
+    return InlineKeyboardButton(
+        text, None,
+        main_factory.new(type=type)
+    )
+
+
 def cancel_btn(user_id: int):
     lang = get_lang(user_id)
     texts = {
@@ -12,8 +19,7 @@ def cancel_btn(user_id: int):
         'en': 'Cancel'
     }
 
-    return InlineKeyboardButton(
-        texts[lang], callback_data=main_factory.new(type='cancel'))
+    return getButton(texts[lang], 'cancel')
 
 
 def kb_cancel(user_id: int):
@@ -23,11 +29,6 @@ def kb_cancel(user_id: int):
 
 
 def kb_main(user_id: int, is_access=True):
-    def getButton(text: str, type: str):
-        return InlineKeyboardButton(
-            text, None,
-            callback_data=main_factory.new(type=type))
-
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -42,11 +43,10 @@ def kb_main(user_id: int, is_access=True):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_calc = getButton(texts[lang]['calc'], 'calc')
-    btn_settings = getButton(texts[lang]['settings'], 'settings')
+    btn_calc = getButton('⌨️ ' + texts[lang]['calc'], 'calc')
+    btn_settings = getButton('⚙️ ' + texts[lang]['settings'], 'settings')
 
     buttons = []
-
     if is_access:
         buttons.append(btn_calc)
     buttons.append(btn_settings)
@@ -55,11 +55,11 @@ def kb_main(user_id: int, is_access=True):
     return keyboard
 
 
-def kb_forex_val():
+def kb_forex_val(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton(text='USD', callback_data="USD")
-    btn2 = InlineKeyboardButton(text='RUB', callback_data="RUB")
+    btn1 = InlineKeyboardButton('USD', callback_data="USD")
+    btn2 = InlineKeyboardButton('RUB', callback_data="RUB")
 
     keyboard.add(btn1, btn2)
-    keyboard.add(cancel_btn(0))
+    keyboard.add(cancel_btn(user_id))
     return keyboard
