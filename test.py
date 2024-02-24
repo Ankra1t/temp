@@ -74,8 +74,13 @@ from db_new import db_new
 #                     (datetime(2023, 8, 10, 5, 54),))
 # db_new.connection.commit()
 
-a = []
-print(a[:-1])
+a = """
+		asdasd
+		asdasd
+		asd
+"""
+
+print(a)
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '

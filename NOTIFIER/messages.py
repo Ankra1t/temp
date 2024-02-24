@@ -1,4 +1,3 @@
-
 def mess_set_trial_subsctibe_new_user(user_id: int, user_nike='', days=0):
     return f"""
 <b>Назначен пробный доступ:</b>
