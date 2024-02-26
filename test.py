@@ -16,15 +16,6 @@ from db_new import db_new
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
 
-# a = db_new.get_user_by_tg_id(-1)
-# dt: datetime = a[1]
-
-# if a is not None:
-#     dt = a.date_time or datetime.now()
-#
-# data = db_new.get_all_users()
-# print(data)
-
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
 
@@ -74,13 +65,6 @@ from db_new import db_new
 #                     (datetime(2023, 8, 10, 5, 54),))
 # db_new.connection.commit()
 
-a = """
-		asdasd
-		asdasd
-		asd
-"""
-
-print(a)
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '

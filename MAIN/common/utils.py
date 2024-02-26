@@ -1,5 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
+from common.dt import get_str_by_datetime
 from common.vars import PRINT_DATE_FROMAT
 
 from db_new import db_new
@@ -70,14 +71,14 @@ def get_short_user_info(user: UserInfo):
     if user_subsribe is None:
         sub_show = 'нет подписок'
     else:
-        fin_date = user_subsribe.finish_dt.strftime(PRINT_DATE_FROMAT)
+        fin_date = get_str_by_datetime(user_subsribe.finish_dt)
         type_subscribe_show = f'({user_subsribe.type})'
         sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
 
     user_show = (
         f'{user.id} {nik}<b>{ban}</b>'
         f'\nПодписка до: {sub_show}'
-        f'\nЗарегестрирован <b>{user.registration_dt.strftime(PRINT_DATE_FROMAT)}</b>'
+        f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
     )
 
     return user_show

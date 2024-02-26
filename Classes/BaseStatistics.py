@@ -1,9 +1,10 @@
-from telebot import types, TeleBot
-from datetime import datetime, timedelta
+from telebot import TeleBot
+from datetime import timedelta
 
 from initialize import logger
 
 
+from common.dt import get_datetime_now, get_str_by_datetime
 from keyboard_inlines import Admin_kb_inlines
 from db_new import db_new, Database as DatabaseNew
 from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
@@ -15,10 +16,6 @@ class BaseStatistics(object):
     def __init__(self, db: DatabaseNew, bot_instance: TeleBot) -> None:
         self.db = db
         self.bot = bot_instance
-
-        self.dt_format = "%Y-%m-%d %I:%M"
-        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
-        self.dt_format_user_show = "%d/%m/%Y"
 
     # # # # # # Вывод пользователей
     def show_paid_users(self, message, period:str = None, product: str = None, start_to_fin: str = None):
@@ -139,8 +136,7 @@ class BaseStatistics(object):
 
     def temp_client_purchase(self, purchase: Purchase):
         """Вывести одного пользователя"""
-        # payment_date_obj = datetime.strptime(purchase.payment_date, self.dt_format)
-        payment_date_str = purchase.payment_date.strftime(self.dt_format_admin_show)
+        payment_date_str = get_str_by_datetime(purchase.payment_date)
         template = """
 ----------
 Куплено: "{}"
@@ -159,8 +155,8 @@ class BaseStatistics(object):
         start_date = None
         fin_date = None
 
-        fin_date = datetime.utcnow()
-        now = datetime.now()
+        fin_date = get_datetime_now()
+        now = get_datetime_now()
         if period == 'today':
             start_date = now - timedelta(days=1)
         if period == 'week':

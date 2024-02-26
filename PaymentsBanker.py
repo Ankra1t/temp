@@ -5,11 +5,11 @@ from flask import Response, Request
 import math
 import hmac
 import json
-from datetime import datetime
 
 from typing import Callable
 import requests
 from db_new import db_new
+from common.dt import get_datetime_now
 from models import InvoiceBBanker, Transactions, UpdateBBanker, Price
 
 
@@ -18,7 +18,6 @@ class PaymentsBanker(object):
 
     def __init__(self, api_key, api_secret, bot_instance: TeleBot) -> None:
         self.bot = bot_instance
-        self.dt_format = "%Y-%m-%d %I:%M"
         self.token = api_key
         self.secret = api_secret
         self.method = 'POST'
@@ -133,7 +132,7 @@ class PaymentsBanker(object):
 
     def check_discount_price(self, tariff: Price):
         if tariff.discount is not None:
-            now = datetime.now()
+            now = get_datetime_now()
             fin_date_discount = tariff.discount.findate
             if fin_date_discount > now:
                 # return tariff.price - ((tariff.price*tariff.discount.percent)/100))

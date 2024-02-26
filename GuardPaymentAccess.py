@@ -2,9 +2,11 @@ from typing import Literal
 from config_logger import logger
 from telebot import types
 from datetime import datetime, timedelta
-from models import User, UserInfo, Subscribe
 
+from common.vars import DATE_FORMAT
+from common.dt import get_datetime_now, get_str_by_datetime
 from db_new import db_new
+from models import User, UserInfo, Subscribe
 
 
 class GuardPaymentAccess():
@@ -14,9 +16,6 @@ class GuardPaymentAccess():
 
     def __init__(self) -> None:
         self.mess = ''
-        self.dt_format = "%Y-%m-%d %I:%M"
-        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
-        self.dt_format_user_show = "%d/%m/%Y"
 
     # Пробные подписки
     def set_trial(self, tg_user_id, custom_days=None, custom_tariff_id=None):
@@ -26,7 +25,7 @@ class GuardPaymentAccess():
         else:
             current_trial_days = int(custom_days)
 
-        finish_date = datetime.now() + timedelta(days=current_trial_days)
+        finish_date = get_datetime_now() + timedelta(days=current_trial_days)
 
         if not custom_tariff_id:
             tariff = db_new.get_first_tariff_by_product('signals')
@@ -43,10 +42,9 @@ class GuardPaymentAccess():
         # self.delete_trial(message)
         db_new.add_subsbscribe(subscribe)
 
-        finish_date_show_user = finish_date.strftime(
-            self.dt_format_user_show)
-        finish_date_show_admin = finish_date.strftime(
-            self.dt_format_admin_show)
+        # TODO
+        finish_date_show_user = get_str_by_datetime(finish_date)
+        finish_date_show_admin = get_str_by_datetime(finish_date)
 
         return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
 
@@ -61,7 +59,7 @@ class GuardPaymentAccess():
 
     def set_custom_paid_subscribe(self, user_id, price_id=1, count_days=1):
         """Дать пользователю платную подписку без оплаты"""
-        now = datetime.now()
+        now = get_datetime_now()
         finish_date = now + timedelta(days=count_days)
 
         subscribe = Subscribe(
@@ -69,10 +67,9 @@ class GuardPaymentAccess():
         )
         db_new.add_subsbscribe(subscribe)
 
-        finish_date_show_user = finish_date.strftime(
-            self.dt_format_user_show)
-        finish_date_show_admin = finish_date.strftime(
-            self.dt_format_admin_show)
+        # TODO
+        finish_date_show_user = get_str_by_datetime(finish_date)
+        finish_date_show_admin = get_str_by_datetime(finish_date)
 
         return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
 
@@ -104,7 +101,7 @@ class GuardPaymentAccess():
         subscribe_days = self.get_subscribe_days_prices_id(
             transaction['prices_id'])
 
-        finish_date = datetime.now() + timedelta(days=subscribe_days)
+        finish_date = get_datetime_now() + timedelta(days=subscribe_days)
 
         subscribe = Subscribe(
             transaction['user_id'], finish_date, 1, None, 'paid',
@@ -160,7 +157,7 @@ class GuardPaymentAccess():
             return False
 
         list_subscribes = subscribes
-        now = datetime.now()
+        now = get_datetime_now()
         for i in range(0, len(list_subscribes)):
             sub_item = list_subscribes[i]
             fin_date_subscribe_obj = sub_item.finish_dt
@@ -221,13 +218,13 @@ class GuardPaymentAccess():
         else:
             finish_date = current_date_obj - timedelta(days=int(days))
 
-        finish_date = finish_date.strftime(self.dt_format)
+        finish_date = finish_date.strftime(DATE_FORMAT)
         db_new.set_subscribe_findate(subscribe_id or 0, finish_date)
         return finish_date
 
     def cancel_subscribes_for_time_type(self, time_type, count):
         """Отменить подписку за прошедший период"""
-        time_start_obj = datetime.now()
+        time_start_obj = get_datetime_now()
 
         if time_type == 'hours':
             time_start_obj -= timedelta(hours=count)
@@ -235,8 +232,8 @@ class GuardPaymentAccess():
         if time_type == 'days':
             time_start_obj -= timedelta(days=count)
 
-        time_start = time_start_obj.strftime(self.dt_format)
-        time_end = datetime.now().strftime(self.dt_format)
+        time_start = time_start_obj.strftime(DATE_FORMAT)
+        time_end = get_datetime_now().strftime(DATE_FORMAT)
 
         logger.info(f'-----> Начало отмены дата {time_start}')
         logger.info(f'-----> Конец отмены дата {time_end}')
@@ -244,18 +241,18 @@ class GuardPaymentAccess():
         db_new.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
-            'time_start': time_start_obj.strftime(self.dt_format_admin_show),
-            'time_end': datetime.now().strftime(self.dt_format_admin_show)
+            'time_start': get_str_by_datetime(time_start_obj),
+            'time_end': get_str_by_datetime(get_datetime_now())
         }
 
     def cancel_subscribes_for_time_period(self, date_start_obj: datetime, date_end_obj: datetime):
-        time_start = date_start_obj.strftime(self.dt_format)
-        time_end = date_end_obj.strftime(self.dt_format)
+        time_start = date_start_obj.strftime(DATE_FORMAT)
+        time_end = date_end_obj.strftime(DATE_FORMAT)
         db_new.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
-            'time_start': date_start_obj.strftime(self.dt_format_admin_show),
-            'time_end': date_end_obj.strftime(self.dt_format_admin_show)
+            'time_start': get_str_by_datetime(date_start_obj),
+            'time_end': get_str_by_datetime(date_end_obj)
         }
 
         # # # # # # Вспомогательные методы

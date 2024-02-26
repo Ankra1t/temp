@@ -4,6 +4,7 @@ from datetime import datetime
 from keyboard_inlines import Admin_kb_inlines
 from db_new import db_new
 from models import Price, Discount
+from common.dt import get_datetime_now, get_str_by_datetime
 
 
 class TariffManager(object):
@@ -13,9 +14,6 @@ class TariffManager(object):
         self.bot = bot_instance
         self.kb_inl = kb_inl_instance
         self.kb_inl_user = kb_inl_user_instance
-        self.dt_format = "%Y-%m-%d %I:%M"
-        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
-        self.dt_format_user_show = "%d/%m/%Y"
 
     def deactivate_tariff(self, tariff_id):
         db_new.deactive_price(tariff_id)
@@ -39,7 +37,7 @@ class TariffManager(object):
 
     def switch_off_finish_tariffs(self):
         """Отключить тарифы с истекшим сроком"""
-        today = datetime.utcnow()
+        today = get_datetime_now()
         db_new.switch_off_finish_tariffs(today)
 
     def set_discount_tariff(self, id: int, discount: Discount):
@@ -166,7 +164,7 @@ class TariffManager(object):
             )
 
     def is_active_discount(self, tariff):
-        date_now = datetime.now()
+        date_now = get_datetime_now()
         if tariff.discount:
             if tariff.discount.percent > 0 and tariff.discount.findate > date_now:
                 return True
@@ -174,7 +172,7 @@ class TariffManager(object):
         return False
 
     def is_inactive_discount(self, tariff):
-        date_now = datetime.now()
+        date_now = get_datetime_now()
         if tariff.discount:
             if tariff.discount.percent > 0 and tariff.discount.findate < date_now:
                 return True
@@ -203,7 +201,7 @@ class TariffManager(object):
             tariff = list[i]
             discount_show = ''
             if tariff.discount is not None:
-                now = datetime.now()
+                now = get_datetime_now()
                 fin_date_discount = tariff.discount.findate
                 if fin_date_discount > now:
                     discount_show = f'\n\n<b>Скидка {str(round(tariff.discount.percent))}%</b>'
@@ -250,7 +248,7 @@ class TariffManager(object):
 
     def get_template_discount_show(self, tariff: Price):
         """Получить описание согласно шаблону и данным тарифа """
-        findate = tariff.discount.findate.strftime(self.dt_format_admin_show)
+        findate = get_str_by_datetime(tariff.discount.findate)
         template = """
 id {} <b>{}</b> (стоимость {} {})
 <b>скидка {}%</b> до {}
