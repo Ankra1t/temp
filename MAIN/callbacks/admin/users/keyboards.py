@@ -20,7 +20,7 @@ def kb_admin_users():
 
     lists = getButton('📋 Списки', 'lists')
     search = getButton('🔎 Поиск клиента', 'client_search')
-    clients = getButton('👨‍💻 Все клиенты', 'client_list', '', 1)
+    clients = getButton('👨‍💻 Все клиенты', 'client_list', 'new', 1)
     main = kb_inl_admin.go_main_btn
 
     keyboard.add(clients, lists)
@@ -69,10 +69,10 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
             keyboard.add(btn_back, counter, btn_next)
 
     if sort_by == 'new':
-        filter_text = 'Фильтровать по старым'
+        filter_text = 'Сортировать по старым'
         new_filter = 'old'
     else:
-        filter_text = 'Фильтровать по новым'
+        filter_text = 'Сортировать по новым'
         new_filter = 'new'
 
     btn_filter = getThisButton(filter_text, 1, new_filter)

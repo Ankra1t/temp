@@ -1405,8 +1405,8 @@ class Database:
     def add_worker(self, id: int, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
         datetime_now = get_datetime_now()
-        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at) VALUES(%s, %s, %s, %s)"
-        params = (id, role, datetime_now, datetime_now)
+        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at, tg_user_id) VALUES(%s, %s, %s, %s, %s)"
+        params = (id, role, datetime_now, datetime_now, 0)
 
         try:
             self.curs.execute(query, params)
