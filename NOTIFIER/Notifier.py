@@ -11,7 +11,7 @@ MESSAGE_TYPE = Literal['text', 'photo', 'video']
 class Notifier():
     def __init__(self, bot: TeleBot) -> None:
         self.bot = bot
-        self.users = (156045434,)
+        self.users = (156045434, 396355273, 774944610 )
 
     def _send_by_type(self, type: MESSAGE_TYPE, user_id: int, text: str, media_id: str | None = None):
         try:
@@ -29,7 +29,7 @@ class Notifier():
             self._send_by_type(type, user, text, media_id)
 
     def send_user_is_registered(self, new_user: UserInfo):
-        message = f'<b>Зарегестрирован новый пользователь</b>\n\n'
+        message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
         if new_user.username != '':
             message += f'@{new_user.username}\n'
         message += f'Дата и время: {new_user.registration_dt.strftime(PRINT_DATE_FROMAT)}'

@@ -6,4 +6,5 @@ class SettingsState(StatesGroup):
     risk_percent = State()
     currency = State()
 
-    split_values = State()
+    summury_profit = State()
+    splitting = State()

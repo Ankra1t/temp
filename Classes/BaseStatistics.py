@@ -116,7 +116,10 @@ class BaseStatistics(object):
         summ = self.db.get_paid_transactions_summ_product(product)
         return summ
 
-
+    def count_payments_dry(self):
+        """Кол-во плативших пользователей по транзакциям"""
+        trans_list = self.db.get_paid_transactions_all_dry_users()
+        return len(trans_list) if trans_list else 0
 
     # # # # # # Специализированные показателей
 

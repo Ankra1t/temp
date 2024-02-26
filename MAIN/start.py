@@ -21,23 +21,24 @@ def send_start_by_user(
 ):
     bot.delete_state(user_id, chat_id)
 
+    new_user = False
     if user_role == 0:
         if has_registered_now:
             # bot.send_message(
             #     chat_id, welcome_trial_subscribe_msg()
             # )
-            # todo-fin: Назначаем тестовую подписку
+            new_user = True
             pass
 
-        send_user_main(bot, message, user_id, True)
+        send_user_main(bot, message, user_id, True, new_user)
 
     if user_role == 1:
         count_all = db_new.get_users_count()
         # todo-fin: Заменить кол-во транзакций на агрегацию пользователей (если у пользователя больше 2х подписок)
         count_with_sub = base_statis.count_payments()
         # count_with_sub = len(pay_guard.get_paid_users())
-        count_old = len(pay_guard.get_paid_more1_users())
         count_old = 0
+        count_old = len(pay_guard.get_paid_more1_users())
         count_admins = len(db_new.get_all_workes())
         count_fut_posts = len(db_new.get_all_posts())
         count_fut_posts = 0

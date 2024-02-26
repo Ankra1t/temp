@@ -17,7 +17,7 @@ def handle_client_search(message: Message, bot: TeleBot):
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        filter = data.get('filter') or ''
+        sort_by = data.get('sort_by') or ''
         page = data.get('page') or 1
 
     client_name_id = text_accept(message)
@@ -25,7 +25,7 @@ def handle_client_search(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Введите id или имя пользователя текстом:',
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         return
 
@@ -41,14 +41,14 @@ def handle_client_search(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Пользователя не существует.\nВведите id или имя пользователя:',
-            reply_markup=kb_admin_users_cancel(filter, page)
+            reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         return
 
     send_admin_client(
         bot, message, user_id,
         client.id, True,
-        filter, page
+        sort_by, page
     )
 
     bot.delete_state(user_id, chat_id)
@@ -73,13 +73,17 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         )
 
     with bot.retrieve_data(user_id, chat_id) as data:
+        tariff_id = data.get('tariff_id')
         subscribe_user_id = data.get('user_id')
 
-    if current_state == 'AdminUsersState:subscribe_days':
-        pay_guard.set_subscribe_unactive_by_user_id(subscribe_user_id)
+    # Получить tg_user_id
+    user = db_new.get_user_by_id(subscribe_user_id)
 
+    if current_state == 'AdminUsersState:subscribe_days':
+        # !!! деактивировать старые платные и пробные подписки
+        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
         datetime_show = pay_guard.set_custom_paid_subscribe(
-            subscribe_user_id, int(days)
+            user.tg_id, tariff_id, int(days)
         )
 
         data_fin = datetime_show['admin']
@@ -90,14 +94,14 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
         bot.send_message(
-            subscribe_user_id,
+            user.tg_id,
             gift_subscribe_msg(datetime_show['user'])
         )
 
     if current_state == 'AdminUsersState:trial_subscribe_days_get_days':
         try:
-            pay_guard.set_trial_subscribe_unactive_by_user(subscribe_user_id)
-            datetime_show = pay_guard.set_trial(message, days)
+            pay_guard.set_trial_subscribe_unactive_by_user(user.tg_id)
+            datetime_show = pay_guard.set_trial(user.tg_id, days)
             
             data_fin = datetime_show['admin']
             bot.send_message(
@@ -107,7 +111,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
             send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
             bot.send_message(
-                subscribe_user_id,
+                user.tg_id,
                 gift_trial_subscribe_msg(datetime_show['user'])
             )
         except Exception as e:

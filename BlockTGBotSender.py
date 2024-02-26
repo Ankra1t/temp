@@ -91,7 +91,11 @@ class BlockTGBotSender(object):
             self, users: list[int], post: Post
     ):
         # Ограничение телеграм на кол-во сообщений разным пользователям в сек (с запасом)
-        self.c_tg = 25
+        self.c_tg = 26
+        # Кол-во сообщений на одного пользователя
+        self.c_by_user = 2
+        # Безопасная пауза
+        self.p_by_user = 0.01
 
         self.users = users
         self.post = post
@@ -104,13 +108,12 @@ class BlockTGBotSender(object):
         log_send_ok.info(f'Начало рассылки------------------>>>')
 
         if calc_test:
-            # Внедряем проверку платных, пробных пользователей
             # Внедряем анализ качества пользователей - оптимизация рассылки
             # Учесть массовую рассылку отложенных постов
 
-            users = db_new.get_all_users()
+            # users = db_new.get_all_users()
 
-            # users = pay_guard.get_valid_users_for_signals()
+            users = pay_guard.get_valid_users_for_signals()
 
             if not users:
                 return False
@@ -126,14 +129,17 @@ class BlockTGBotSender(object):
             user_i: UserInfo = users_info[i]
 
             if current_batch < self.c_tg:
+                username = '@' + user_i.username if user_i.username else 'Скрыт'
                 try:
                     i += 1
                     self.send_by_type(user)
-                    current_batch += 1
+                    current_batch += self.c_by_user
+                    log_send_ok.info(f'Отправлено tg_id{user} db_id{user_i.id} username->{username} ')
                 except Exception as e:
-                    err_mess = f'Ошибка пользователя {user} username->@{user_i.username} : {e}'
+                    err_mess = f'Ошибка пользователя tg_id{user} db_id{user_i.id} username->{username} : {e}'
                     print(err_mess)
                     log_send_fails.error(err_mess)
+                sleep(self.p_by_user)
             else:
                 sleep(1)
                 current_batch = 0

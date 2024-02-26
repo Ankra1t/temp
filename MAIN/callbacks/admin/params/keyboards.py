@@ -67,3 +67,11 @@ def kb_params_choice(action: str):
 
     keyboard.add(yes, no)
     return keyboard
+
+
+def kb_edit_text(text_name: str):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    edit = getButton('Редактировать ✏️', f'edit_text+{text_name}')
+
+    keyboard.add(edit)
+    return keyboard

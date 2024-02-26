@@ -15,13 +15,16 @@ from .admin.workers.keyboards import (
 
 from .admin.users.handler import registration as _reg_admin_users
 from .admin.users.keyboards import (
-    kb_admin_users, kb_admin_users_back, kb_admin_users_list,
-    kb_admin_client_info, kb_admin_users_confirm, kb_admin_users_cancel
+    kb_admin_users, kb_admin_users_back, kb_admin_client_list,
+    kb_admin_client_info, kb_admin_users_confirm, kb_admin_users_cancel, kb_admin_choose_periods,
+    kb_admin_choose_list
 )
 
 from .admin.params.handler import registration as _reg_admin_params
-from .admin.params.keyboards import (kb_params_change, kb_calculator, kb_params,
-                                     kb_params_back, kb_params_choice)
+from .admin.params.keyboards import (
+    kb_params_change, kb_calculator, kb_params,
+    kb_params_back, kb_params_choice, kb_edit_text
+)
 
 from .admin.statistics.handler import registration as _reg_admin_statistics
 from .admin.statistics.keyboards import (kb_statistics, kb_statistics_back)

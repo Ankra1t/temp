@@ -67,6 +67,8 @@ class TariffManager(object):
         for i in range(0, len(list)):
 
             tariff = list[i]
+
+
             desc_template = self.get_template_tariff_show_admin(tariff)
             on_off_label = 'Отключить ⭕️' if tariff.switch_active == 1 else 'Включить ☑️'
             if mode == 'main':
@@ -96,6 +98,36 @@ class TariffManager(object):
                 if 'wrong file identifier' in str(e):
                     print(
                         f'Скорей всего не отправилась картинка созданная в другом боте')
+
+    def admin_tariff_list_custom_show(self, chat_id, mode='choose_subscribe', product_id=None):
+        tariff_list = None
+
+        # Перед показом тарифов отключить те, у которых закончился срок действия
+        self.switch_off_finish_tariffs()
+        print(f'Здесь выключили тарифы с истекшим сроком действия ')
+        if product_id:
+            tariff_list = db_new.get_prices_by_product(product_id, 1, switch_active=1)
+        else:
+            tariff_list = db_new.get_prices(1, switch_active=1)
+
+        if not tariff_list:
+            return False
+
+        for i in range(0, len(tariff_list)):
+
+            tariff = tariff_list[i]
+            if mode == 'choose_subscribe':
+                desc_template = self.get_template_tariff_choose_for_user_show(tariff)
+                kb = self.kb_inl.kb_tariff_choose_for_user(tariff.id)
+
+                self.bot.send_message(
+                    chat_id,
+                    desc_template,
+                    reply_markup=kb
+                )
+
+        return True
+
 
     def admin_discount_list(self, message: types.Message, type_discount='active'):
         list = db_new.get_prices(1)
@@ -259,3 +291,16 @@ id={} <b>\"{}\"</b>
 <i>действует {} дн.</i>
         """.format(tariff.name, str(tariff.price), tariff.currency, tariff.description, tariff.duration_days)
         return template
+    
+    def get_template_tariff_choose_for_user_show(self, tariff: Price):
+        """Получить краткое описание тарифа """
+        template = """
+<b>id={} "{}"</b>
+Продукт "{}" (<i>стандартно действует {} дн.</i>)
+                """.format(tariff.id,
+                           tariff.name,
+                           tariff.type_product,
+                           tariff.duration_days
+                           )
+        return template
+

@@ -4,10 +4,10 @@ from telebot import TeleBot
 from db_new import db_new
 from initialize import pay_guard
 
-from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual, msg_uses_count
+from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual, msg_summury_profit_settings, msg_uses_count
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_settings
+from .settings.keyboards import kb_settings, kb_summury_profit
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
@@ -83,4 +83,23 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
             InputMediaPhoto(photo, text, 'MarkDown'),
             chat_id, mes_id,
             reply_markup=keyboard
+        )
+
+
+def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    text = msg_summury_profit_settings(user_id)
+    kb = kb_summury_profit(user_id)
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=kb
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb
         )

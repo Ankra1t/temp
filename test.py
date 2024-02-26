@@ -1,4 +1,6 @@
+import ast
 from datetime import datetime, timedelta, timezone
+from email.policy import strict
 from db_new import db_new
 
 # azatFa  id 156045434
@@ -62,7 +64,7 @@ from db_new import db_new
 # # if filter == 'by_paid':
 # #     query += 'INNER JOIN subscribes ON users.id = subscribes.user_id '
 # #     query += 'WHERE subscribes.active = 1 '
-# query += f"ORDER BY u.created_at {'ASC' if filter == 'by_date_old' else 'DESC'} "
+# query += f"ORDER BY u.created_at {'ASC' if filter == 'old' else 'DESC'} "
 # query += f", u.id ASC "
 # query += "LIMIT %s OFFSET %s "
 
@@ -72,7 +74,8 @@ from db_new import db_new
 #                     (datetime(2023, 8, 10, 5, 54),))
 # db_new.connection.commit()
 
-print(int(False))
+a = []
+print(a[:-1])
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '

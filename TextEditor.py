@@ -11,24 +11,6 @@ class TextEditor(object):
         self.bot = bot
         self.kb_inl = kb_inl_instance
 
-    def list_texts(self, chat: types.Chat):
-        """Получить список текстов в админке для редактирования"""
-        list = db_new.get_texts()
-        if len(list) != 0:
-            for i in range(0, len(list)):
-                text = list[i]
-
-                text_show = f'ID: <b>{text.id}</b> | <b>{text.name}</b>\n\n{text.message}'
-
-                self.bot.send_message(
-                    chat.id, text_show,
-                    reply_markup=self.kb_inl.kb_edit_single_text(text.name)
-                )
-        else:
-            self.bot.send_message(
-                chat.id, 'Текстов для редактирования не найдено'
-            )
-
     def get_text(self, label: str):
         logger.info(f'-----> Запрошен приветственный текст из БД  ')
 
