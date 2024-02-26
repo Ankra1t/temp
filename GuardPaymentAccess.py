@@ -29,7 +29,7 @@ class GuardPaymentAccess():
 
         if not custom_tariff_id:
             tariff = db_new.get_first_tariff_by_product('signals')
-            tariff_id = tariff.id
+            tariff_id = tariff.id if (tariff is not None) else None
         else:
             tariff_id = custom_tariff_id
 
@@ -39,7 +39,6 @@ class GuardPaymentAccess():
             finish_date, 1, None, 'trial', prices_id=tariff_id
         )
 
-        # self.delete_trial(message)
         db_new.add_subsbscribe(subscribe)
 
         # TODO
@@ -72,10 +71,6 @@ class GuardPaymentAccess():
         finish_date_show_admin = get_str_by_datetime(finish_date)
 
         return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
-
-    def delete_trial(self, message: types.Message):
-        """Удаление тестового период из БД"""
-        db_new.del_transaction(message.from_user.id)
 
     def check_trial_active_by_user(self, user_id):
         """Проверить есть ли у пользователя тестовая подписка"""

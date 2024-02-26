@@ -455,15 +455,15 @@ class Database:
 
         pass
 
-    def _data_to_client(self, data: DictRow):
-        return Client(
-            user=UserInfo(
-                data.get('user_id')
-            ),
-            subscribes=Subscribe(
+    # def _data_to_client(self, data: DictRow):
+    #     return Client(
+    #         user=UserInfo(
+    #             data.get('user_id')
+    #         ),
+    #         subscribes=Subscribe(
 
-            )
-        )
+    #         )
+    #     )
 
     def switch_tariff(self, tariff_id: int, switch_active: int):
         """Включить или выключить тариф"""
@@ -572,7 +572,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_paid_transactions_by_user(self, user_id: int):
+    def get_paid_transactions_by_user(self, user_id: int) -> list[Transactions]:
         """Получить платные транзакции пользователя"""
         query = ("SELECT * FROM transactions "
                  "WHERE user_id = %s AND status = %s"
@@ -590,7 +590,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_all(self):
+    def get_paid_transactions_all(self) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
                  "WHERE status = %s"
@@ -608,7 +608,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_all_dry_users(self):
+    def get_paid_transactions_all_dry_users(self) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT DISTINCT user_id, id, code, link, sum, currency, price_id, status, payment_date FROM transactions "
                  "WHERE status = %s "
@@ -626,7 +626,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_period(self, start_date, fin_date):
+    def get_paid_transactions_period(self, start_date, fin_date) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
                  "WHERE (payment_date BETWEEN %s AND %s ) "
@@ -645,7 +645,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_product(self, product):
+    def get_paid_transactions_product(self, product) -> list[Transactions]:
         """Получить все оплаченные транзакции по продукту"""
         query = ("SELECT * "
                  "FROM transactions t, prices p  "
@@ -700,7 +700,7 @@ class Database:
             self.connection.rollback()
             return 0
 
-    def get_paid_transactions_summ_product(self, product):
+    def get_paid_transactions_summ_product(self, product) -> int:
         """Суммы по транзакциям по продукту"""
         query = ("SELECT sum(sum) "
                  "FROM transactions t, prices p "
@@ -717,9 +717,9 @@ class Database:
         except Exception as e:
             print(f'ERROR[get_paid_transactions_summ_product]: {e}')
             self.connection.rollback()
-            return []
+            return 0
 
-    def get_purchases_by_user(self, user_id: int):
+    def get_purchases_by_user(self, user_id: int) -> list[Purchase]:
         """Получение покупок пользователя"""
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
@@ -736,7 +736,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            # return data
+
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
             print(f'ERROR[get_paid_transactions_by_user]: {e}')
@@ -757,7 +757,7 @@ class Database:
             data.get('create_date'),
         )
 
-    def get_purchases_all_users(self):
+    def get_purchases_all_users(self) -> list[Purchase]:
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
                  "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
@@ -773,7 +773,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            # return data
+
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
             print(f'ERROR[get_paid_transactions_by_user]: {e}')
@@ -791,20 +791,6 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_transactions_complete]: {e}')
-            self.connection.rollback()
-            return False
-
-    def del_transaction(self, user_id: int):
-        """Deprecated: транзакции удалять нельзя"""
-        query = "DELETE FROM transactions WHERE user_id = %s"
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[del_transaction]: {e}')
             self.connection.rollback()
             return False
 
