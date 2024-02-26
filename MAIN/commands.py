@@ -3,7 +3,12 @@ from telebot.types import Message
 
 
 from config_logger import logger
-from initialize import pay_guard, base_statis, tariff_manager
+from initialize import pay_guard, base_statis, tariff_manager, pays, pays_banker
+
+from models import Update, Invoice, UpdateBBanker, InvoiceBBanker
+
+
+
 from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
 
 from db_new import db_new
@@ -66,8 +71,65 @@ def _manual(message: Message, bot: TeleBot):
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
 
-    user_id = 777
-    print(f'Удаляем пользователя - с id{user_id} ')
+    return False
+    # Дерагаем оплату - проверяем проводку и применение подписки пользователю
+    # Update
+    # pay_load = Invoice(
+    #     invoice_id=1,
+    #     status='',
+    #     asset='',
+    #     amount=0.01,
+    #     pay_url= 'url',
+    #     description='Описалово',
+    #     allow_comments=False,
+    #     allow_anonymous=False
+    # )
+    # update = Update(
+    #     update_id=1,
+    #     update_type='',
+    #     request_date='',
+    #     payload=pay_load,
+    # )
+
+    # Оплата через CryptoBot pay
+    update = Update
+    update.payload = Invoice
+    update.payload.status = 'paid'
+    # 6278837 # сигналы # amount = 21
+    # 6278846 # калькулятор # amount = 30
+    # 6278848 # калькулятор+сигналы # amount = 50
+    update.payload.invoice_id = 6278848
+    update.payload.amount = 0.05
+    update.payload.asset = 'USDT'
+    print(f'update Тестируем активацию подписки по апдейту')
+    print(update)
+    # invoice_paid(update)
+
+    # pays.get_updates_check(update) # invoice_paid_prev
+
+    return False
+
+    # Оплата через BitBanker
+    update = UpdateBBanker()
+    payload = InvoiceBBanker()
+
+    # 2lwKEFfwP396OzHVgviLlB # калькулятор+сигналы # amount = 50
+    payload.status = 'paid'
+    payload.invoice_id = '2lwKEFfwP396OzHVgviLlB'
+    payload.amount = 50
+    payload.asset = 'USDT'
+    update.payload = payload
+
+
+
+    # pays_banker.get_updates_check(update) # invoice_paid
+
+
+
+
+    return False
+    # user_id = 777
+    # print(f'Удаляем пользователя - с id{user_id} ')
 
     return False
     new_user = db_new.get_user_by_tg_id(message.from_user.id)

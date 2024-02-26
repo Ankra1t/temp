@@ -261,6 +261,11 @@ class PaymentsBanker(object):
         }
         """
 
+    def get_updates_check(self, update: UpdateBBanker):
+        for handler in self._handlers:
+            logger.info(f'!! Дернули все зареганные обработчики')
+            handler(update)
+
     def _check_signature_request(self, bitbanker_signature: str, currency, amount, header, description) -> bool:
 
         self_sign = self._create_sign(currency, amount, header, description)
@@ -332,17 +337,20 @@ class PaymentsBanker(object):
 
         # Ищем подписки только со статусом ожидания
         status = 'wait_payments'
-        transaction_info = db_new.get_wait_transaction(
+        transaction = db_new.get_wait_transaction(
             str(invoice.invoice_id), status)
 
-        print(f'transaction_info ')
-        print(transaction_info)
-        if transaction_info:
-            return {
-                'transaction_id': transaction_info.id,
-                'user_id': transaction_info.user_id,
-                'prices_id': transaction_info.price_id
-            }
+        # print(f'transaction_info ')
+        # print(transaction_info)
+        # if transaction_info:
+        #     return {
+        #         'transaction_id': transaction_info.id,
+        #         'user_id': transaction_info.user_id,
+        #         'prices_id': transaction_info.price_id
+        #     }
+        # return None
+        if transaction:
+            return transaction
         return None
 
 
