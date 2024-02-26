@@ -35,11 +35,11 @@ def kb_admin_choose_list():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     ban = getThisButton('⛔️ Забаненные', 'ban')
-    paid = getThisButton('💵 Платные', 'paid')
+    # paid = getThisButton('💵 Платные', 'paid')
     new = getThisButton('🆕 Новые клиенты', 'new')
     back = kb_inl_admin.go_users_btn
 
-    keyboard.add(ban, paid)
+    keyboard.add(ban)
     keyboard.add(new, back)
     return keyboard
 

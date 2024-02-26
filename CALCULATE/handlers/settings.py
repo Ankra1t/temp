@@ -117,7 +117,7 @@ def handle_splitting(message: Message, bot: TeleBot):
     if sum(current_split) + value > 100:
         bot.send_message(
             chat_id,
-            '<i>Сумма процентов превысила 100</i>\n' + enter_mes
+            '<i>Суммарный процент превысил 100</i>\n' + enter_mes
         )
         return
 
