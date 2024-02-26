@@ -1,3 +1,4 @@
+from typing import Literal
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from db_new import db_new
@@ -27,7 +28,7 @@ def kb_settings(user_id: int):
             'lang': 'Выбрать язык',
             'market': 'Выбрать рынок',
             'reset': 'Сбросить настройки',
-            'summury_profit': 'Вывод профита',
+            'summury_profit': 'Деление профита',
             'back': 'Назад',
         },
         'en': {
@@ -35,7 +36,7 @@ def kb_settings(user_id: int):
             'lang': 'Choose language',
             'market': 'Choose market',
             'reset': 'Reset settings',
-            'summury_profit': 'Summury profit',
+            'summury_profit': 'Profit division',
             'back': 'Back'
         }
     }
@@ -103,7 +104,7 @@ def kb_base_cancel(user_id: int):
     return keyboard
 
 
-def kb_change_currency(user_id: int):
+def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     lang = get_lang(user_id)
 
     back = {
@@ -117,14 +118,18 @@ def kb_change_currency(user_id: int):
     currency_list = ['USD', 'USDT', 'EUR', 'RUB', 'CNY', 'JPY']
     buttons: list[InlineKeyboardButton] = []
     for i, el in enumerate(currency_list):
-        btn = getButton(el, f'set_currency+{el}')
+        btn = getButton(el, f'set_currency_{type}+{el}')
         buttons.append(btn)
 
         if len(buttons) == row_width or (i + 1 == len(currency_list) and len(buttons) != 0):
             keyboard.add(*buttons)
             buttons = []
 
-    btn_back = getButton(back[lang], 'go_settings')
+    if type == 'calc':
+        btn_back = getButton(back[lang], 'go_main')
+    else:
+        btn_back = getButton(back[lang], 'go_settings')
+
     keyboard.add(btn_back)
     return keyboard
 
@@ -225,7 +230,8 @@ def kb_summury_profit(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_change = getButton(f"✏️ {texts[lang]['change']}", 'change_summury_profit')
+    btn_change = getButton(
+        f"✏️ {texts[lang]['change']}", 'change_summury_profit')
     btn_back = getButton(texts[lang]['back'], 'go_settings')
 
     keyboard.add(btn_change, btn_back)
@@ -297,12 +303,12 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
     # Если кол-во тейк профитов еще не максимальное - выводим кнопки
     if len(current_tp) != tp_count_max:
         for el in range(2, tp_max + 1):
-            if el not in current_tp:
-                btn = getButton(
-                    f'x{el}', f'change_summury_profit',
-                    'default', el
-                )
-                buttons.append(btn)
+            added = '✅ ' if el in current_tp else ''
+            btn = getButton(
+                f'{added}x{el}', f'change_summury_profit',
+                'default', el
+            )
+            buttons.append(btn)
             if len(buttons) == row_width or (el == tp_max and len(buttons) != 0):
                 keyboard.add(*buttons)
                 buttons = []
@@ -311,7 +317,8 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
     btn_save = getButton('✅ ' + texts[lang]['save'], 'tp_save')
 
     # Отмена, выход к выбору типа
-    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton(
+        '⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
 
     # Шаг назад, убираем последний тейк профит
     btn_back = getButton(
@@ -366,7 +373,8 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     # Если кол-во не максимульное и сумма процентов не 100
     if len(current_tp) != tp_count_max and percents_sum != 100:
         for el in range(2, tp_max + 1):
-            if el not in current_tp:
+            max_tp = max([*current_tp, 0])
+            if el > max_tp:
                 btn = getButton(
                     f'x{el}', f'change_summury_profit',
                     'splitting', el
@@ -390,7 +398,8 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         )
 
     # Отмена, выход к выбору типа
-    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton(
+        '⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
 
     # Шаг назад, убираем последний тейк профит и его процент
     btn_back = getButton(
@@ -438,7 +447,8 @@ def kb_splitting_last(user_id: int):
 
     keyboard.add(*buttons)
 
-    btn_cancel = getButton('⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
+    btn_cancel = getButton(
+        '⚠️ ' + texts[lang]['cancel'], 'change_summury_profit')
     btn_back = getButton(
         texts[lang]['back'],
         'change_summury_profit', 'splitting',
