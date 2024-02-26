@@ -14,12 +14,12 @@ def getButton(text: str, type: str, page: int | None = None, num_les: int | None
 def kb_user_education():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton("Терминология", 'terms')
-    btn2 = getButton("Бесплатный курс", 'curs')
-    btn3 = getButton("Назад", 'back')
+    btn_term = getButton("🔬 Терминология", 'terms')
+    btn_curs = getButton("🎁 Бесплатный курс", 'curs')
+    btn_back = getButton("Назад", 'back')
 
-    keyboard.add(btn1, btn2)
-    keyboard.add(btn3)
+    keyboard.add(btn_term, btn_curs)
+    keyboard.add(btn_back)
     return keyboard
 
 

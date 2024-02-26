@@ -7,7 +7,7 @@ from common.utils import digit_accept, get_calculation, set_state_data, text_acc
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
-    msg_calculate, msg_calculate_forex_result, msg_calculate_result,
+    msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
     msg_digit_error, msg_enter_stop_loss, msg_pair_error,
     msg_pair_not_found, msg_percent_error,
     msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
@@ -88,6 +88,25 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         'price': price,
         'pair': pair,
     })
+    choose_calculate_step(bot, user_id, chat_id, mes_id)
+
+
+def handle_currency(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    value = text_accept(message)
+    if value is None or len(value) > 10:
+        bot.send_message(
+            chat_id, msg_currency_error(user_id),
+            reply_markup=kb_cancel(user_id))
+        return
+
+    db_new.set_user_currency(user_db_id, value)
+
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -315,6 +334,8 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_deposit, state=CalculateState.deposit)
     reg_mes(handle_risk_percent, state=CalculateState.risk_percent)
+    reg_mes(handle_currency, state=CalculateState.currency)
+
     reg_mes(handle_open_price, state=CalculateState.open_price)
     reg_mes(handle_stop_loss, state=CalculateState.stop_loss)
 

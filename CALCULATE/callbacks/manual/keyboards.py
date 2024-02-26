@@ -9,7 +9,8 @@ def kb_manual(user_id: int, num_page: int, max_page: int):
     def getButton(text: str, type: str):
         return InlineKeyboardButton(
             text, None,
-            manual_factory.new(type=type, page=num_page))
+            manual_factory.new(type=type, page=num_page)
+        )
 
     lang = get_lang(user_id)
     texts = {

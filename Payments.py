@@ -5,11 +5,11 @@ import math
 from hmac import HMAC
 from hashlib import sha256
 import json
-from datetime import datetime
 
 from db_new import db_new
 from typing import Callable
 import requests
+from common.dt import get_datetime_now
 from models import Invoice, Price, Transactions, Update
 
 
@@ -17,7 +17,6 @@ class Payments(object):
     """Класс обработки платежей, в том числе Cryptobot"""
 
     def __init__(self, token, network) -> None:
-        self.dt_format = "%Y-%m-%d %I:%M"
         self.token = token
         self.network = network
         self.method = 'GET'
@@ -95,7 +94,7 @@ class Payments(object):
 
     def check_discount_price(self, tariff: Price):
         if tariff.discount is not None:
-            now = datetime.now()
+            now = get_datetime_now()
             fin_date_discount = tariff.discount.findate
             if fin_date_discount > now:
                 # return tariff.price - ((tariff.price*tariff.discount.percent)/100))
