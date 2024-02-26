@@ -1,24 +1,22 @@
 import threading
 import time
 import os
-from datetime import datetime
+from datetime import timedelta
 from telebot import custom_filters, types
 from telebot.types import Message
 
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_user_paid
 
-
 from AuthRoles import check_registrate
 from MAIN.start import send_start_by_user
+from common.dt import get_datetime_now, get_str_by_datetime
 from initialize import bot, pays, pays_banker, pay_guard
 
 from db_new import db_new
 
 from config_logger import logger
 from config_global import _ENV
-
-import datetime as dt
 
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
@@ -86,8 +84,10 @@ def invoice_paid_prev(update: Update) -> None:
 
             # Добавить платную подписку
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-            finish_date = finish_date_obj.strftime(PRINT_DATE_FROMAT)
+            finish_date = get_str_by_datetime(finish_date_obj)
+
             tariff = db_new.get_price_by_id(transaction.price_id, None)
+
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
@@ -149,8 +149,10 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
             # Добавить платную подписку
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-            finish_date = finish_date_obj.strftime(PRINT_DATE_FROMAT)
+            finish_date = get_str_by_datetime(finish_date_obj)
+
             tariff = db_new.get_price_by_id(transaction.price_id, None)
+
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
@@ -226,8 +228,8 @@ def get_admin_livepost(message: types.Message):
 # ======================== ПЛАНОВЫЕ ФУНКЦИИ ==============
 def check_future_post_for_sent():
     lose_hours = 4
-    date_now = dt.datetime.now()
-    lose_time_back = date_now - dt.timedelta(hours=lose_hours)
+    date_now = get_datetime_now()
+    lose_time_back = date_now - timedelta(hours=lose_hours)
 
     mas_posts = db_new.get_all_posts()
 
@@ -281,7 +283,7 @@ def check_finish_paid_subscribe():
     users = list(map(lambda user: user[9],
                  pay_guard.get_users_note_fin_paid()))
     if users:
-        fin_date = datetime.now().strftime('%d.%m.%Y')
+        fin_date = get_str_by_datetime(get_datetime_now())
 
         text = end_paid_subscribe_msg(fin_date)
 

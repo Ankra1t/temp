@@ -61,10 +61,9 @@ class AuthMiddleWare(BaseMiddleware):
 
                 notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
                     user_id=new_user.id,
-                    user_nike='@'+new_user.username if new_user.username else new_user.tg_id,
+                    user_nike=f'@{new_user.username}' if new_user.username else str(new_user.tg_id),
                     days=pay_guard.get_option_trial_days()
                 ))
-
             else:
                 print(f'Ошибка регистрации пользователя tg_id = {user_id} {username}')
 

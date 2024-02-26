@@ -143,7 +143,7 @@ class Purchase:
         real_sum: float | None = None,
         tariff_price: float | None = None,
         currency: str | None = None,
-        duration: int = None,
+        duration: int | None = None,
         payment_date: str | None = None,
         create_date: str | None = None,
 

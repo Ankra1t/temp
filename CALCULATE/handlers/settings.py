@@ -7,7 +7,7 @@ from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_digit_error, msg_enter_currency,
+    msg_currency_error, msg_digit_error, msg_enter_currency, msg_enter_deposit,
     msg_enter_risk_percent, msg_enter_splitting,
     msg_success_base_set, msg_success_edit
 )
@@ -51,14 +51,12 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         if action == 'welcome':
             if type == 'base_deposit':
-                state = SettingsState.risk_percent
-                text = msg_enter_risk_percent(user_id)
+                bot.set_state(user_id, SettingsState.risk_percent, chat_id)
+                bot.send_message(chat_id, msg_enter_risk_percent(user_id))
             else:
-                state = SettingsState.currency
-                text = msg_enter_currency(user_id)
-
-            bot.set_state(user_id, state, chat_id)
-            bot.send_message(chat_id, text)
+                bot.delete_state(user_id, chat_id)
+                bot.send_message(chat_id, msg_success_base_set(user_id))
+                send_settings(bot, message, user_id, True)
         else:
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
@@ -86,13 +84,11 @@ def handle_new_currency(message: Message, bot: TeleBot):
         action = data.get('action')
 
     if action == 'welcome':
-        bot.send_message(chat_id, msg_success_base_set(user_id))
-        send_main(message, bot, user_id, True)
+        bot.set_state(user_id, SettingsState.deposit, chat_id)
+        bot.send_message(chat_id, msg_enter_deposit(user_id))
     else:
         bot.send_message(chat_id, msg_success_edit(user_id))
         send_settings(bot, message, user_id, True)
-
-    bot.delete_state(user_id, chat_id)
 
 
 def handle_splitting(message: Message, bot: TeleBot):

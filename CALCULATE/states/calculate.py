@@ -3,6 +3,8 @@ from telebot.handler_backends import State, StatesGroup
 
 class CalculateState(StatesGroup):
     deposit = State()
+    currency = State()
+
     risk_percent = State()
     open_price = State()
     stop_loss = State()
