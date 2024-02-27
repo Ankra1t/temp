@@ -1,14 +1,17 @@
+from datetime import datetime, timedelta
 from telebot import types
 from telebot.handler_backends import BaseMiddleware
 from telebot.handler_backends import CancelUpdate
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
+from messages.users import welcome_trial_subscribe_msg
 
 
-from initialize import pay_guard
+from initialize import pay_guard, serv_tasks
 from db_new import db_new, LANGUAGES
 from GuardPaymentAccess import GuardPaymentAccess
 from AuthRoles import check_registrate, registration
+
 
 
 class AuthMiddleWare(BaseMiddleware):
@@ -58,6 +61,9 @@ class AuthMiddleWare(BaseMiddleware):
 
                 # Назначение тестовой подписки новому пользователю
                 pay_guard.set_trial(user_id)
+                # Запланировать сообщение о пробной подписке через час
+                # date_1hour =  datetime.now() + timedelta(hours=1)
+                # serv_tasks.plan_message(user_id, date_1hour, welcome_trial_subscribe_msg(pay_guard.get_option_trial_days()))
 
                 notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
                     user_id=new_user.id,

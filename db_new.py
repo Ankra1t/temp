@@ -6,8 +6,8 @@ from psycopg2.extras import DictCursor, DictRow
 
 from common.vars import DATE_FORMAT
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker, Client
-
+from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker, \
+    Client, Task
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
@@ -1023,6 +1023,7 @@ class Database:
             self.connection.rollback()
             return None
 
+    # # # # # # # #  Users Сервисные запросы
     def fake_add_user_db(self, tg_id, tg_username=None):
         datetime_now = datetime.utcnow()
         query = ("INSERT INTO users(name, email, id_telegram, username_tg, date_register, password, created_at, updated_at) "
@@ -1039,6 +1040,26 @@ class Database:
             print(f'ERROR[fake_add_user_db]: {e}')
             self.connection.rollback()
             return False
+
+    def set_task(self, task: Task):
+        """Запланировать задание"""
+        datetime_now = datetime.utcnow()
+        query = ("INSERT INTO tgbot_service_tasks("
+                 "type_task, user_id, date_action, type_message, text, media_id, "
+                 "active, created_at, updated_at) "
+                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        params = (task.type_task, task.user_id, task.date_action, task.message.type_message, task.message.text, task.message.media_id,
+                  task.active, datetime_now, datetime_now, )
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_task]: {e}')
+            self.connection.rollback()
+            return False
+        pass
 
     # Users - Lessons
     def add_lesson_count(self, id: int):

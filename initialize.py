@@ -18,6 +18,7 @@ from PaymentsBanker import PaymentsBanker
 from TariffManager import TariffManager
 from TextEditor import TextEditor
 from Classes.BaseStatistics import BaseStatistics
+from Classes.ServiceTasks import ServiceTasks
 
 
 state_storage = StateMemoryStorage()
@@ -37,6 +38,7 @@ pay_guard.dt_format_user_show = PRINT_DATE_FROMAT
 pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
 
 base_statis = BaseStatistics(db_new, bot)
+serv_tasks = ServiceTasks(db_new, bot)
 
 base_statis.dt_format = DATE_FORMAT
 base_statis.dt_format_admin_show = PRINT_DATE_FROMAT
