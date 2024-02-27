@@ -23,7 +23,7 @@ def kb_admin_workers():
     btn_admins = getButton('Админы', 'admins')
     btn_redactors = getButton('Редакторы', 'redactors')
     btn_support = getButton('Поддержка', 'support')
-    btn_list = getButton('Список раб.', 'workers_list')
+    btn_list = getButton('Список работников', 'workers_list')
     btn_back = kb_inl_admin.go_main_btn
 
     keyboard.add(btn_admins, btn_redactors)
@@ -38,8 +38,8 @@ def kb_admin_workers_confirm(id: int, worker: int, action: Literal['add', 'delet
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getThisButton('Да', 'yes')
-    btn2 = getThisButton('Нет', 'no')
+    btn1 = getThisButton('✅ Да', 'yes')
+    btn2 = getThisButton('❌ Нет', 'no')
 
     keyboard.add(btn1, btn2)
     return keyboard
@@ -48,8 +48,8 @@ def kb_admin_workers_confirm(id: int, worker: int, action: Literal['add', 'delet
 def kb_admin_workers_actions(worker: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Добавить', 'add', worker)
-    btn2 = getButton('Удалить', 'delete', worker)
+    btn1 = getButton('✅ Добавить', 'add', worker)
+    btn2 = getButton('❌ Удалить', 'delete', worker)
     btnback = getButton(
         'Назад',
         'workers'
@@ -60,11 +60,8 @@ def kb_admin_workers_actions(worker: int):
     return keyboard
 
 
-def kb_admin_workers_back(worker: int | None = None):
+def kb_admin_workers_back(worker: int = -1):
     keyboard = InlineKeyboardMarkup(row_width=2)
-
-    if worker is None:
-        worker = -1
 
     type = {
         1: 'admins',
@@ -81,7 +78,7 @@ def kb_admin_workers_back(worker: int | None = None):
 def kb_admin_workers_support():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_change = getButton('Изменить', 'update_support')
+    btn_change = getButton('✏️ Изменить', 'update_support')
     btn_back = getButton('Назад', 'workers')
 
     keyboard.add(btn_change, btn_back)

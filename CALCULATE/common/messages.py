@@ -1,5 +1,5 @@
 from telebot import TeleBot
-from common.utils import float_to_print, get_decimal_count, get_lang, get_print_float
+from common.utils import get_decimal_count, get_lang, get_print_float
 
 from db_new import db_new
 
@@ -56,14 +56,14 @@ def msg_main(user_id: int, uses_count: int):
         }
     }
 
-    return '\n'.join((
-        f'⚡️ <b><u>{texts[lang]["name"]}</u></b>',
-        '',
-        f'1. <b>{texts[lang]["1"]}</b>',
-        f'2. <b>{texts[lang]["2"]}</b>',
-        '',
-        msg_uses_count(user_id, uses_count)
-    ))
+    return f"""
+⚡️ <b><u>{texts[lang]["name"]}</u></b>
+
+1. <b>{texts[lang]["1"]}</b>
+2. <b>{texts[lang]["2"]}</b>
+
+{msg_uses_count(user_id, uses_count)}
+"""
 
 
 def msg_no_uses(user_id: int):
@@ -78,16 +78,18 @@ def msg_no_uses(user_id: int):
             '2': 'Go to the signal bot for buying access'
         },
     }
-    return '\n'.join((
-        f'❗️ {text[lang]["1"]}',
-        f'{text[lang]["2"]}',
-    ))
+
+    return f"""
+❗️ {text[lang]["1"]}
+{text[lang]["2"]}
+"""
 
 
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
     base = db_new.get_user_base(user_db_id)
     deposit, risk, currency = (
         base.get('base_deposit'),
@@ -122,24 +124,19 @@ def msg_settings(user_id: int):
     for el in tp_ratio:
         tp_result += f'x{el} '
 
-    return '\n'.join((
-        f'⚙️ <b><u>{texts[lang]["name"]}</u></b>',
-        '',
-        (
-            f'{BULLET} {texts[lang]["dep"]}: <b>'
-            f'{f"{float_to_print(deposit)} {currency}" if deposit is not None else "-"}'
-            '</b>'
-        ),
-        (
-            f'{BULLET} {texts[lang]["risk"]}: <b>'
-            f'{f"{float_to_print(risk)}" if risk is not None else ""}'
-            f'{"-" if risk is None else "%" if risk_is_percent else f" {currency}"}'
-            '</b>'
-        ),
-        '',
-        f'{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>',
-        f'{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>'
-    ))
+    show_deposit = f"{get_print_float(deposit)} {currency}" if deposit is not None else "-"
+    show_risk = (str(get_print_float(risk)) +
+                 ("%" if risk_is_percent else f" {currency}") if risk is not None else "-")
+
+    return f"""
+⚙️ <b><u>{texts[lang]["name"]}</u></b>
+
+{BULLET} {texts[lang]["dep"]}: <b>{show_deposit}</b>
+{BULLET} {texts[lang]["risk"]}: <b>{show_risk}</b>
+
+{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
+{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
+"""
 
 
 def msg_settings_change_base(user_id: int):
@@ -187,7 +184,7 @@ def msg_summury_profit_settings(user_id: int):
     texts = {
         'ru': {
             'name': 'Настройки',
-            'subname': 'Вывод профита',
+            'subname': 'Деление профита',
             'take_profit': 'Ваш тейк профит',
             'split': 'Разделение',
             'on': 'включено',
@@ -195,7 +192,7 @@ def msg_summury_profit_settings(user_id: int):
         },
         'en': {
             'name': 'Settings',
-            'subname': 'Summury profit',
+            'subname': 'Profit division',
             'take_profit': 'Your take profit',
             'split': 'Splitting',
             'on': 'turned on',
@@ -222,12 +219,12 @@ def msg_summury_profit_settings(user_id: int):
             if i != len(tp_ratio) - 1:
                 info_result += ' - '
 
-    return '\n'.join((
-        f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>',
-        '',
-        f'{texts[lang]["split"]}: <b>{texts[lang]["on" if is_splitting else "off"]}</b>',
-        f'{info_result}',
-    ))
+    return f"""
+⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>
+
+{texts[lang]["split"]}: <b>{texts[lang]["on" if is_splitting else "off"]}</b>
+{info_result}
+"""
 
 
 def msg_support(user_id: int):
@@ -258,12 +255,12 @@ def msg_welcome(user_id: int):
         }
     }
 
-    return '\n'.join((
-        f'⚡️ {texts[lang]["1"]}! 🚀',
-        f'{texts[lang]["2"]}',
-        '',
-        f'{texts[lang]["3"]}',
-    ))
+    return f"""
+⚡️ {texts[lang]["1"]}! 🚀
+{texts[lang]["2"]}
+
+{texts[lang]["3"]}
+"""
 
 
 def msg_success_base_set(user_id):
@@ -280,10 +277,10 @@ def msg_success_base_set(user_id):
         },
     }
 
-    return '\n'.join((
-        f'✅ {texts[lang]["1"]}!',
-        f'{texts[lang]["2"]} ⚙️'
-    ))
+    return f"""
+✅ {texts[lang]["1"]}!
+{texts[lang]["2"]} ⚙️
+"""
 
 
 # Базовые
@@ -324,10 +321,10 @@ def msg_ticker_not_found(user_id: int, ticker: str):
         }
     }
 
-    return '\n'.join([
-        f'❗️ {texts[lang]["1"]} {ticker}',
-        f'{texts[lang]["2"]}:'
-    ])
+    return f"""
+❗️ {texts[lang]["1"]} {ticker}
+{texts[lang]["2"]}:
+"""
 
 
 def msg_pair_error(user_id: int):
@@ -450,7 +447,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             else:
                 text += (
                     f'{BULLET} {point[lang][el]}: '
-                    f'<b>{get_print_float(item, get_decimal_count(item))} {currency}</b>\n'
+                    f'<b>{get_print_float(item, 4)} {currency}</b>\n'
                 )
 
     text += '\n'
@@ -482,6 +479,7 @@ def msg_calculate_result(
             'open': 'Цена открытия',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
+            'conclusion': 'Вывод',
             'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
@@ -494,6 +492,7 @@ def msg_calculate_result(
             'open': 'The open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
+            'conclusion': 'Conclusion',
             'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
@@ -508,40 +507,48 @@ def msg_calculate_result(
         get_decimal_count(stop_loss)
     )
 
-    tp_show = ''
-    split_show = ''
     p_show = ''
+    conclusion = '<b>'
     for i in range(len(take_profit)):
-        tp_show += f'{get_print_float(take_profit[i], round_count)} {currency}'
-        p_show += f'{get_print_float(profit[i], round_count)} {currency}'
+        p_show += f'{get_print_float(profit[i], round_count)}'
 
         if is_splitting:
-            split_show += f'{get_print_float(split_values[i], round_count)}% '
+            percent = split_values[i]
+        else:
+            percent = 100
+
+        count = get_print_float(count_bet * percent * 0.01, 2)
+        tp = get_print_float(take_profit[i], round_count)
+
+        conclusion += f'{count} - {tp} {currency} - {get_print_float(percent)}%'
 
         if i != len(take_profit) - 1:
-            tp_show += ' / '
+            conclusion += '\n'
             p_show += ' / '
+        else:
+            conclusion += '</b>'
 
-            if is_splitting:
-                split_show += ' / '
+    n_char = '\n'
+    return f"""
+{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
+{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
 
-    return '\n'.join([
-        f'{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>',
-        f'{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>',
-        '',
-        f'{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>',
-        f'{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>',
-        '',
-        f'{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>',
-        f'{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>',
-        f'{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>',
-        '',
-        ''.join((
-            f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
-            f"\n{BULLET} {point[lang]['split']}: <b>{split_show}</b>" if split_show != '' else ''
-        )),
-        f'{BULLET} {point[lang]["profit"]}: <b>{p_show}</b>',
-    ])
+{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>
+{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
+
+{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
+{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>
+
+{BULLET} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
+{conclusion}
+
+{BULLET} {point[lang]["profit"]} ({currency}): <b>{p_show}</b>
+"""
+# {''.join((
+#     f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
+#     f'{n_char}{BULLET} {point[lang]["split"]}: <b>{split_show}</b>'  if split_show != '' else ''
+# ))}
 
 
 def msg_calculate_forex_result(
@@ -650,7 +657,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
 
         for i, el in enumerate(sorted_tp):
             try:
-                percent = f'({sorted_split[i]}%)'
+                percent = f'({get_print_float(sorted_split[i])}%)'
             except:
                 percent = ''
 
@@ -664,11 +671,11 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
                 text += ' - '
 
         text += '</b>\n'
-        text += f'<i>Сумма процентов:</i> <b>{percents_sum}</b>\n'
+        text += f'<i>Суммарный процент:</i> <b>{get_print_float(percents_sum)}</b>\n'
 
     text += '\n'
     if is_last:
-        text += f'Оставшиеся <b>{round(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
+        text += f'Оставшиеся <b>{get_print_float(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
         text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк профитов\n'
         text += 'Выберите на <u>сколько частей</u> разделить остаток'
     elif tp_count == 0:
@@ -684,12 +691,12 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
 
 
 def msg_enter_summury_profit_type(user_id: int):
-    return '\n'.join((
-        'Выберите вид разделения суммы:',
-        '',
-        '<i>*Простой - вывод профита при продажы 100% торговой позиции',
-        '*Разделение - вывод профита при разделении торговой позиции по нескольким тейк-профитам</i>'
-    ))
+    return """
+Выберите вид разделения суммы:
+
+<i>*Простой - без деления профита, продажа 100% торговой позиции
+*Разделение - продажа торговой позиции разделяется по нескольким тейк-профитам</i>
+"""
 
 
 def msg_enter_future(user_id: int):
@@ -718,11 +725,23 @@ def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите <b>процент</b> риска от депозита <b>(со знаком %)</b> или сумму риска',
-        'en': 'Enter the <b>percentage</b> of risk by deposit <b>(with a % sign)</b> or the risk amount'
+        'ru': {
+            '1': 'Введите <u>риск</u> на сделку',
+            '2': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
+            '3': '<i>Без знаков</i> - для ввода кокретной суммы риска',
+        },
+        'en': {
+            '1': 'Enter <u>risk</u> to the deal',
+            '2': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
+            '3': '<i>Without signs</i> - for entering a cloth amount of risk',
+        },
     }
 
-    return f'✍ {texts[lang]}:'
+    return f"""✍ {texts[lang]['1']}
+
+{texts[lang]['2']}
+{texts[lang]['3']}
+"""
 
 
 def msg_enter_currency(user_id: int):

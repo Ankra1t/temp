@@ -1,5 +1,6 @@
 from typing import Literal
 from telebot import TeleBot
+from common.dt import get_str_by_datetime
 from common.vars import PRINT_DATE_FROMAT
 
 from models import UserInfo
@@ -32,6 +33,6 @@ class Notifier():
         message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
         if new_user.username != '':
             message += f'@{new_user.username}\n'
-        message += f'Дата и время: {new_user.registration_dt.strftime(PRINT_DATE_FROMAT)}'
+        message += f'Дата и время: {get_str_by_datetime(new_user.registration_dt)}'
 
         self.send_notification('text', message)

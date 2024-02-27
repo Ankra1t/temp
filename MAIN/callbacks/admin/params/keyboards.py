@@ -13,11 +13,10 @@ def getButton(text: str, type: str):
 def kb_params():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Калькулятор', 'calculator')
-    btn2 = getButton('Изменить тексты', 'update_texts')
-    btn3 = getButton('Показать', 'show')
+    btn1 = getButton('⌨️ Калькулятор', 'calculator')
+    btn2 = getButton('✏️ Изменить тексты', 'update_texts')
     btn4 = getButton('Изменить', 'change')
-    btn5 = getButton('Изменить пробный период', 'change_trial_days')
+    btn5 = getButton('🎁 Изменить пробный период', 'change_trial_days')
 
     keyboard.add(btn1, btn2)
     keyboard.add(btn4)
@@ -30,8 +29,8 @@ def kb_params():
 def kb_calculator():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Добавить фьючерс', 'calculator_add_future')
-    btn2 = getButton('Добавить валютную пару', 'calculator_add_forex')
+    btn1 = getButton('💲 Добавить фьючерс', 'calculator_add_future')
+    btn2 = getButton('💱 Добавить валютную пару', 'calculator_add_forex')
     btn_link = get_calculator_btn_link()
 
     keyboard.add(btn1, btn2)
@@ -62,8 +61,8 @@ def kb_params_choice(action: str):
 
     def getBtn(txt, type): return getButton(txt, f'{action}_choice_{type}')
 
-    yes = getBtn('Да', 'yes')
-    no = getBtn('Нет', 'no')
+    yes = getBtn('✅ Да', 'yes')
+    no = getBtn('❌ Нет', 'no')
 
     keyboard.add(yes, no)
     return keyboard
@@ -71,7 +70,7 @@ def kb_params_choice(action: str):
 
 def kb_edit_text(text_name: str):
     keyboard = InlineKeyboardMarkup(row_width=2)
-    edit = getButton('Редактировать ✏️', f'edit_text+{text_name}')
+    edit = getButton('✏️ Редактировать', f'edit_text+{text_name}')
 
     keyboard.add(edit)
     return keyboard

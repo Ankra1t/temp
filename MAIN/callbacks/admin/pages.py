@@ -2,12 +2,11 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
-from initialize import pay_guard
 
 from MAIN.common.utils import get_print_signal_info
-from common.vars import PRINT_DATE_FROMAT
+from common.dt import get_str_by_datetime
 from messages.workers import menu_msg
-from models import Post, User
+from models import Post
 
 from .users.keyboards import kb_admin_client_info
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
@@ -29,7 +28,7 @@ def send_admin_post(
         '',
         f'ID: <b>{post.id}</b>\n' if post.id is not None else ''
         f'Тип: <b>{"Сигнал" if post.details is None else "Пост"}</b>',
-        f'Дата и время поста: <b>{post.date_time.strftime(PRINT_DATE_FROMAT)}</b>\n' if post.date_time is not None else ''
+        f'Дата и время поста: <b>{get_str_by_datetime(post.date_time)}</b>\n' if post.date_time is not None else ''
         f'Ограничение: <b>{post.direct}</b>',
     ))
 
@@ -69,7 +68,7 @@ def send_admin_client(
     type_subscribe_show = ''
 
     if user_subsribe is not None:
-        fin_date = user_subsribe.finish_dt.strftime('%d/%m/%Y')
+        fin_date = get_str_by_datetime(user_subsribe.finish_dt)
         type_subscribe_show = f' тип {user_subsribe.type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''

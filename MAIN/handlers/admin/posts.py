@@ -12,6 +12,7 @@ from MAIN.callbacks import (
     send_admin_post, kb_posts, kb_params
 )
 from MAIN.common.utils import get_post_from_message
+from common.dt import get_datetime_now
 
 from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
@@ -216,7 +217,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         month = int(value.group(2))
         year = value.group(3)
         if year is None:
-            year = datetime.now().year
+            year = get_datetime_now().year
         elif len(year) == 2:
             year = int(f'20{year}')
         else:
@@ -233,7 +234,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
                 reply_markup=kb_posts_back())
             return
     else:
-        value = datetime.now()
+        value = get_datetime_now()
 
     with bot.retrieve_data(user_id, chat_id) as data:
         kind = data.get('kind')
@@ -260,7 +261,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
             reply_markup=kb_posts()
         )
     else:
-        dt = post.date_time or datetime.now()
+        dt = post.date_time or get_datetime_now()
         send_admin_post(bot, chat_id, post)
 
         bot.set_state(user_id, AdminPostsState.confirm_add, chat_id)

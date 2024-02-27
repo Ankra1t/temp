@@ -1,6 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from CALCULATE.callbacks.utils import choose_calculate_step
 
 from db_new import db_new, LANGUAGES
 
@@ -65,8 +66,20 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             db_new.set_user_currency(user_db_id, currency)
 
-            bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
-            send_settings(bot, call.message, user_id, True)
+            if 'welcome' in type:
+                bot.set_state(user_id, SettingsState.deposit, chat_id)
+                bot.edit_message_text(
+                    msg_enter_deposit(user_id), chat_id, mes_id
+                )
+            else:
+                bot.edit_message_text(
+                    msg_success_edit(user_id), chat_id, mes_id
+                )
+
+                if 'calc' in type:
+                    choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+                else:
+                    send_settings(bot, call.message, user_id, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False
@@ -119,15 +132,20 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if 'yes' in type:
             # Переход к логике ввода базовых значений
             bot.edit_message_text(
-                msg_enter_deposit(user_id), chat_id, mes_id
+                msg_enter_currency(user_id), chat_id, mes_id,
+                reply_markup=kb_change_currency(user_id, 'welcome')
             )
-            bot.set_state(user_id, SettingsState.deposit, chat_id)
+            bot.set_state(user_id, SettingsState.currency, chat_id)
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
     if type == 'reset':
         # Сброс настроек калькулятора до начальных
-        db_new.reset_user_settings(user_db_id)
-        send_settings(bot, call.message, user_id)
+        try:
+            db_new.reset_user_settings(user_db_id)
+            send_settings(bot, call.message, user_id)
+        except:
+            # Нет изменений - ничего не изменяется
+            pass
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
@@ -179,9 +197,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                             current_tp_ratio.append(max_tp + i)
                             current_split.append(new_percent)
 
-                # Добавление тейк профита, если есть задано
+                # Добавление тейк профита, если задано
                 if take_profit_add != '':
-                    current_tp_ratio.append(int(take_profit_add))
+                    tp_temp = int(take_profit_add)
+                    if tp_temp in current_tp_ratio:
+                        current_tp_ratio.remove(tp_temp)
+                    else:
+                        current_tp_ratio.append(tp_temp)
 
                 # Сохраняем данные в state
                 data['take_profit'] = current_tp_ratio

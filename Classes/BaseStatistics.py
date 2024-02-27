@@ -1,9 +1,11 @@
-from telebot import types, TeleBot
-from datetime import datetime, timedelta
+from telebot import TeleBot
+from telebot.types import Message
+from datetime import timedelta
 
 from initialize import logger
 
 
+from common.dt import get_datetime_now, get_str_by_datetime
 from keyboard_inlines import Admin_kb_inlines
 from db_new import db_new, Database as DatabaseNew
 from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
@@ -16,22 +18,20 @@ class BaseStatistics(object):
         self.db = db
         self.bot = bot_instance
 
-        self.dt_format = "%Y-%m-%d %I:%M"
-        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
-        self.dt_format_user_show = "%d/%m/%Y"
-
     # # # # # # Вывод пользователей
-    def show_paid_users(self, message, period:str = None, product: str = None, start_to_fin: str = None):
+    def show_paid_users(self, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
         chat_id = message.chat.id
 
         if period:
             start_date, fin_date = self.get_dates_by_period(period)
-            trans_list = self.db.get_paid_transactions_period(start_date, fin_date )
+            trans_list = self.db.get_paid_transactions_period(
+                start_date, fin_date)
         elif product:
             trans_list = self.db.get_paid_transactions_product(product)
         elif start_to_fin:
             start_date, fin_date = start_to_fin.split('|')
-            trans_list = self.db.get_paid_transactions_period(start_date, fin_date)
+            trans_list = self.db.get_paid_transactions_period(
+                start_date, fin_date)
         else:
             trans_list = self.db.get_paid_transactions_all()
 
@@ -43,7 +43,8 @@ class BaseStatistics(object):
             return False
 
         tg_clients = {}
-        logger.info(f"Обрабатываем транзакции len(trans_list) [{len(trans_list)}]")
+        logger.info(
+            f"Обрабатываем транзакции len(trans_list) [{len(trans_list)}]")
         for i in range(0, len(trans_list)):
             trans_item = trans_list[i]
             tg_id = trans_item.user_id
@@ -63,7 +64,8 @@ class BaseStatistics(object):
             tg_clients[tg_id] = "{}{}".format(
                 full_purchases_text, purchase_text)
 
-        logger.info(f"Выводим список клиентов кол-во tg_clients [{len(tg_clients)}]")
+        logger.info(
+            f"Выводим список клиентов кол-во tg_clients [{len(tg_clients)}]")
 
         # Выводим список клиентов
         for i, el in enumerate(tg_clients):
@@ -72,7 +74,8 @@ class BaseStatistics(object):
                 msg = self.temp_client(user, tg_clients.get(el))
                 self.bot.send_message(chat_id, msg, reply_markup=None)
             else:
-                logger.error(f"Пользователь tg_id {el} не найден - оплаты по нему не выводим")
+                logger.error(
+                    f"Пользователь tg_id {el} не найден - оплаты по нему не выводим")
 
     # # # # # # Агрегаторы показателей
 
@@ -96,7 +99,8 @@ class BaseStatistics(object):
         if not start_date or not fin_date:
             summ = self.db.get_paid_transactions_summ()
         else:
-            summ = self.db.get_paid_transactions_summ_period(start_date, fin_date)
+            summ = self.db.get_paid_transactions_summ_period(
+                start_date, fin_date)
         print(f'период {period} summ [{summ}]')
         return summ if summ else 0
 
@@ -139,8 +143,7 @@ class BaseStatistics(object):
 
     def temp_client_purchase(self, purchase: Purchase):
         """Вывести одного пользователя"""
-        # payment_date_obj = datetime.strptime(purchase.payment_date, self.dt_format)
-        payment_date_str = purchase.payment_date.strftime(self.dt_format_admin_show)
+        payment_date_str = get_str_by_datetime(purchase.payment_date)
         template = """
 ----------
 Куплено: "{}"
@@ -153,14 +156,14 @@ class BaseStatistics(object):
                    )
         return template
 
-
     # # # # # # Вспомогательные методы
+
     def get_dates_by_period(self, period):
         start_date = None
         fin_date = None
 
-        fin_date = datetime.utcnow()
-        now = datetime.now()
+        fin_date = get_datetime_now()
+        now = get_datetime_now()
         if period == 'today':
             start_date = now - timedelta(days=1)
         if period == 'week':
@@ -173,4 +176,3 @@ class BaseStatistics(object):
             start_date = now - timedelta(days=365)
 
         return start_date, fin_date
-

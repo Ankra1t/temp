@@ -20,7 +20,7 @@ def kb_admin_users():
 
     lists = getButton('📋 Списки', 'lists')
     search = getButton('🔎 Поиск клиента', 'client_search')
-    clients = getButton('👨‍💻 Все клиенты', 'client_list', '', 1)
+    clients = getButton('👨‍💻 Все клиенты', 'client_list', 'new', 1)
     main = kb_inl_admin.go_main_btn
 
     keyboard.add(clients, lists)
@@ -35,11 +35,11 @@ def kb_admin_choose_list():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     ban = getThisButton('⛔️ Забаненные', 'ban')
-    paid = getThisButton('💵 Платные', 'paid')
-    new = getThisButton('Новые клиенты', 'new')
+    # paid = getThisButton('💵 Платные', 'paid')
+    new = getThisButton('🆕 Новые клиенты', 'new')
     back = kb_inl_admin.go_users_btn
 
-    keyboard.add(ban, paid)
+    keyboard.add(ban)
     keyboard.add(new, back)
     return keyboard
 
@@ -58,7 +58,7 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
     btn_back = getThisButton('Назад', page - 1)
 
     counter = getButton(f'{page}/{pages}', 'counter')
-    search = getButton('🔎 Поиск пользователя', 'client_search', sort_by, page)
+    search = getButton('🔎 Поиск клиента', 'client_search', sort_by, page)
 
     if pages > 1:
         if page == 1:
@@ -69,10 +69,10 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
             keyboard.add(btn_back, counter, btn_next)
 
     if sort_by == 'new':
-        filter_text = 'Фильтровать по старым'
+        filter_text = 'Сортировать по старым'
         new_filter = 'old'
     else:
-        filter_text = 'Фильтровать по новым'
+        filter_text = 'Сортировать по новым'
         new_filter = 'new'
 
     btn_filter = getThisButton(filter_text, 1, new_filter)
@@ -91,16 +91,16 @@ def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, sort_by='')
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_ban = getClientButton(
-        'Разбанить' if is_banned else 'Забанить', 'client_ban'
+        '✅ Разбанить' if is_banned else '🚫 Забанить', 'client_ban'
     )
     btn_remove_sub = getClientButton(
-        'Отменить подписку', 'client_cancel_sub'
+        '➖ Отменить подписку', 'client_cancel_sub'
     )
     btn_add_sub = getClientButton(
-        'Выдать подписку', 'client_add_sub'
+        '➕ Выдать подписку', 'client_add_sub'
     )
     btn_add_trial_sub = getClientButton(
-        'Выдать пробный доступ', 'client_set_trial_custom'
+        '🎁 Выдать пробный доступ', 'client_set_trial_custom'
     )
 
     # if sort_by != '' or page != 1:
@@ -141,8 +141,8 @@ def kb_admin_users_confirm(type_info: str, client_db_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_yes = getConfimButton('Да', 'yes')
-    btn_no = getConfimButton('Нет', 'no')
+    btn_yes = getConfimButton('✅ Да', 'yes')
+    btn_no = getConfimButton('❌ Нет', 'no')
 
     keyboard.add(btn_yes, btn_no)
     return keyboard

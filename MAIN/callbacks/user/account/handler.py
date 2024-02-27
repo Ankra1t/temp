@@ -109,7 +109,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'referral':
         referals = db_new.get_user_referals(user_id)
         count_ref = len(referals)
-        intext = msg_referral(count_ref)
+        intext = msg_referral(count_ref, bot.get_me().username, user_id)
+
         bot.send_message(
             chat_id, text=intext,
             reply_markup=kb_user_referral()

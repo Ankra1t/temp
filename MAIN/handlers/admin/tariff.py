@@ -5,6 +5,7 @@ from telebot.types import Message
 
 from common.utils import digit_accept, text_accept, set_state_data
 from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
+from common.dt import get_datetime_now, get_str_by_datetime
 
 
 from MAIN.states import AdminTariffState
@@ -270,10 +271,12 @@ def handle_discount_fin_date(message: Message, bot: TeleBot):
         tariff_id = data.get('discount_id')
         discount_percent = data.get('discount_percent')
 
+    fin_date_obj = fin_date_obj - timedelta(hours=3)
+
     discount = Discount(percent=discount_percent, findate=fin_date_obj)
     tariff_manager.set_discount_tariff(tariff_id, discount)
-    date_admin_show = fin_date_obj.strftime(PRINT_DATE_FROMAT)
-    # date_admin_show = fin_date_obj.strftime('%d/%m/%Y')
+
+    date_admin_show = get_str_by_datetime(fin_date_obj)
 
     bot.send_message(
         chat_id, f'Тарифу id {tariff_id} добавлена скидка {discount.percent}% до {date_admin_show}',
@@ -293,16 +296,14 @@ def handle_price_findate_count_days(message: Message, bot: TeleBot):
             chat_id, 'Введите количество дней более 0',
             reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
-    
+
     with bot.retrieve_data(user_id, chat_id) as data:
         tariff_id = data.get('tariff_id')
 
-    price_findate_obj = datetime.now() + timedelta(days=days)
+    findate_set_db = get_datetime_now() + timedelta(days=days)
+    findate_show = get_str_by_datetime(findate_set_db)
 
-    findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
-    findate_show = price_findate_obj.strftime(PRINT_DATE_FROMAT)
-
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
 
     bot.send_message(
         chat_id,
@@ -333,11 +334,11 @@ def handle_price_findate(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         tariff_id = data.get('tariff_id')
 
-    findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
-    findate_show = price_findate_obj.strftime(PRINT_DATE_FROMAT)
+    findate_set_db = (price_findate_obj - timedelta(hours=3))
+    findate_show = get_str_by_datetime(findate_set_db)
 
     # Задаем дату окончания тарифа
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
 
     bot.send_message(
         chat_id,

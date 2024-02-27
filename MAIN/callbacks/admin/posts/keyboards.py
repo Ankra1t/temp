@@ -12,10 +12,10 @@ def getButton(text: str, type: str):
 def kb_posts():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Добавить пост', 'add')
-    btn2 = getButton('Удалить пост', 'delete')
-    btn3 = getButton('Смотреть все отл. посты', 'list')
-    btn4 = getButton('Отправить сейчас', 'send_now')
+    btn1 = getButton('📝 Добавить пост', 'add')
+    btn2 = getButton('❌ Удалить пост', 'delete')
+    btn3 = getButton('🔎 Все посты', 'list')
+    btn4 = getButton('✉️ Отправить сейчас', 'send_now')
 
     keyboard.add(btn1, btn2)
     keyboard.add(btn3)
@@ -26,8 +26,8 @@ def kb_posts():
 def kb_post_kinds():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Информационный', 'choose_kind_post')
-    btn2 = getButton('Сигнал', 'choose_kind_signal')
+    btn1 = getButton('ℹ️ Информационный', 'choose_kind_post')
+    btn2 = getButton('📈 Сигнал', 'choose_kind_signal')
 
     keyboard.add(btn1, btn2)
     keyboard.add(kb_inl_admin.go_fut_posts_btn, kb_inl_admin.go_main_btn)
@@ -44,8 +44,8 @@ def kb_post_add_confirm():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     prefix = 'add_'
-    btn1 = getButton('Платным', prefix + 'private')
-    btn2 = getButton('Всем', prefix + 'all')
+    btn1 = getButton('💵 Платным', prefix + 'private')
+    btn2 = getButton('👨‍💻 Всем', prefix + 'all')
     btn3 = getButton('Бесплатным', prefix + 'public')
 
     keyboard.add(btn1, btn2)
@@ -57,8 +57,8 @@ def kb_post_add_confirm():
 def kb_post_confirm(type: str):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_yes = getButton('Да', type + '_confirm_yes')
-    btn_no = getButton('Нет', type + '_confirm_no')
+    btn_yes = getButton('✅ Да', type + '_confirm_yes')
+    btn_no = getButton('❌ Нет', type + '_confirm_no')
 
     keyboard.add(btn_yes, btn_no)
     return keyboard

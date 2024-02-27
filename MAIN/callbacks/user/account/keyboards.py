@@ -12,32 +12,34 @@ def getButton(text: str, type: str):
 
 def kb_user_account():
     keyboard = InlineKeyboardMarkup(row_width=2)
+
     # btn1 = getButton("Купить сигналы на месяц", 'buy_month')
-    btn2 = getButton("Реферальная система", 'referral')
-    btn3 = getButton("Мои покупки", 'purchases')
-    # btn_password = getButton('Изменить пароль', 'password')
-    btn4 = getButton("Главная", 'main')
+    referral = getButton("🌐 Рефералка", 'referral')
+    purchases = getButton("🛍 Мои покупки", 'purchases')
+    # password = getButton('Изменить пароль', 'password')
+    back = getButton("Назад", 'main')
     # btn5 = getButton("Пополнить баланс")
 
     # keyboard.add(btn1)
-    keyboard.add(btn2)
-    keyboard.add(btn3)
-    keyboard.add(btn4)
+    keyboard.add(referral, purchases)
+    keyboard.add(back)
     return keyboard
 
 
 def kb_user_referral():
     keyboard = InlineKeyboardMarkup(row_width=2)
-    btn1 = getButton("Список рефералов", 'referral_list')
+
+    btn1 = getButton("📋 Список рефералов", 'referral_list')
     btn2 = getButton("Назад", 'back')
 
     keyboard.add(btn1, btn2)
     return keyboard
 
-def kb_user_referral_list():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    btn1 = getButton("Список рефералов", 'referral_list')
-    btn2 = getButton("Назад", 'back')
 
-    keyboard.add(btn1, btn2)
+def kb_user_referral_list():
+    keyboard = InlineKeyboardMarkup()
+
+    btn_back = getButton("Назад", 'referral')
+
+    keyboard.add(btn_back)
     return keyboard

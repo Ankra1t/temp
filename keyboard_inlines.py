@@ -6,7 +6,6 @@ from cb_filters import (admin_default_factory, adm_action, client_action,
 class Admin_kb_inlines(object):
 
     def __init__(self) -> None:
-        self.dt_format = "%Y-%m-%d %I:%M"
         self.go_main_btn = types.InlineKeyboardButton(
             '🔙 Главная', callback_data=admin_default_factory.new(type='go_main'))
         self.go_users_btn = types.InlineKeyboardButton(
@@ -293,9 +292,6 @@ class Admin_kb_inlines(object):
 
 
 class Clients_kb_inlines(object):
-    def __init__(self) -> None:
-        self.dt_format = "%Y-%m-%d %I:%M"
-
     # ## Клиент нажал купить
     def kb_pay(self, tariff_id):
         keyboard = types.InlineKeyboardMarkup(row_width=2)

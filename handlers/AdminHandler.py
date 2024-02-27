@@ -14,7 +14,7 @@ import variables as vars
 def get_start_date_cancel_subscribe(message: types.Message):
     logger.info(
         f'-----> Получили ДАТУ ОТ которой отменить подписку date_start')
-    date_start = (message.text or '').strip()
+    date_start = message.text or ''
 
     if date_start:
         date_start_obj = datetime.strptime(date_start, '%d.%m.%Y')
@@ -35,7 +35,7 @@ def get_start_date_cancel_subscribe(message: types.Message):
 def get_end_date_cancel_subscribe(message: types.Message, date_start_obj):
     logger.info(
         f'-----> Получили ДАТУ ДО которой отменить подписку date_start')
-    date_end = (message.text or '').strip()
+    date_end = message.text or ''
 
     if date_end:
         date_end_obj = datetime.strptime(date_end, '%d.%m.%Y')

@@ -2,8 +2,7 @@ from telebot import types
 from datetime import datetime, timedelta
 from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
-
-from initialize import bot, kb_inl_admin, text_editor, pay_guard, tariff_manager, base_statis
+from initialize import bot, kb_inl_admin, pay_guard, tariff_manager, base_statis
 from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
 from messages.statistics import admin_main_statistics
 import variables as vars
@@ -12,14 +11,13 @@ from db_new import db_new
 
 from messages.workers import admin_main_msg
 from common.utils import set_state_data
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
-
+from common.vars import DATE_FORMAT
+from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
-    kb_admin_users_back, kb_admin_workers_back,
+    kb_admin_users_back, kb_admin_choose_periods,
     send_admin_workers, kb_statistics,
-    kb_statistics_back, kb_admin_choose_periods
 )
 from MAIN.states import AdminTariffState, AdminUsersState
 
@@ -133,7 +131,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
         fin_date = pay_guard.update_user_subscribe_findate(user, 'add')
 
         finish_date_obj = datetime.strptime(fin_date or '', '%Y-%m-%d %H:%M')
-        fin_date = finish_date_obj.strftime('%d/%m/%Y')
+        fin_date = get_str_by_datetime(finish_date_obj)
 
         bot.send_message(
             chat_id,
@@ -431,18 +429,18 @@ def admin_action_callbacks(call: types.CallbackQuery):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        price_findate_obj = datetime.now()
+        price_findate_obj = get_datetime_now()
         if target_id == 'day':
-            price_findate_obj = datetime.now() + timedelta(days=1)
+            price_findate_obj += timedelta(days=1)
         elif target_id == 'day3':
-            price_findate_obj = datetime.now() + timedelta(days=3)
+            price_findate_obj += timedelta(days=3)
         elif target_id == 'week':
-            price_findate_obj = datetime.now() + timedelta(days=7)
+            price_findate_obj += timedelta(days=7)
         elif target_id == 'month':
-            price_findate_obj = datetime.now() + timedelta(days=30)
+            price_findate_obj += timedelta(days=30)
 
         findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
-        findate_show = price_findate_obj.strftime(PRINT_DATE_FROMAT)
+        findate_show = get_str_by_datetime(price_findate_obj)
 
         # Задаем дату окончания тарифа
         tariff_manager.set_findate_tariff(tariff_id, findate_set_db)

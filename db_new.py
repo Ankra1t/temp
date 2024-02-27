@@ -4,10 +4,14 @@ import random
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
 
-from common.vars import DATE_FORMAT
+from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
-from models import Forex, Future, Post, PostDetails, Text, UserInfo, Price, Subscribe, Transactions, Purchase, Worker, \
-    Client, Task
+
+from models import (
+    Forex, Future, Post, PostDetails,
+    Text, UserInfo, Price, Subscribe,
+    Transactions, Purchase, Worker, Client, Task
+)
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
@@ -125,7 +129,7 @@ class Database:
 
     def update_price(self, name: str, price: float):
         """Обновить цену"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set price = %s, updated_at = %s WHERE name = %s"
         params = (price, datetime_now, name)
 
@@ -140,7 +144,7 @@ class Database:
 
     def update_price_field(self, field, value, price_id: int):
         """Обновить цену"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = f"UPDATE prices set {field} = %s, updated_at = %s WHERE id = %s"
         params = (value, datetime_now, price_id, )
 
@@ -155,7 +159,7 @@ class Database:
 
     def add_price(self, data: Price):
         """Добавление цены"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = ("INSERT INTO prices "
                  "(name, currency, price, description, img, duration_days, type_product, "
                  "updated_at, created_at) "
@@ -173,7 +177,7 @@ class Database:
 
     def deactive_price(self, id: int):
         """Установить цену не активной"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set active = 0, updated_at = %s WHERE id = %s"
         params = (datetime_now, id,)
 
@@ -188,7 +192,7 @@ class Database:
 
     def set_price_discount(self, id: int, percent: float, fin_date: datetime):
         """Установка скидки тарифу"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set discount_percent = %s, discount_findate = %s, updated_at = %s WHERE id = %s"
         params = (percent, fin_date, datetime_now, id,)
 
@@ -234,7 +238,7 @@ class Database:
         )
 
     def add_subsbscribe(self, sub: Subscribe):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = ("INSERT INTO "
                  "subscribes (tg_user_id, finish_dt, "
                  "subscribe_type, active, prices_id, transactions_payed_id, created_at, updated_at) "
@@ -280,7 +284,7 @@ class Database:
 
     # TODO - продумать данные функция работы с получнием пользователей с подпиской и без
     def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = (
             'SELECT u.id, u.created_at, u.username, u.count_sub, u.count_days, '
             'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
@@ -300,7 +304,7 @@ class Database:
             return []
 
     def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id=None):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         if tariff_id:
             query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND prices_id = %s "
             params = (0, datetime_now, user_id, tariff_id, )
@@ -318,7 +322,7 @@ class Database:
             return False
 
     def set_subscribe_unactive(self, subscribe_id: int):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE id = %s"
         params = (0, datetime_now, subscribe_id)
 
@@ -332,7 +336,7 @@ class Database:
             return False
 
     def set_trial_subscribe_unactive_by_user(self, tg_user_id):
-        datetime_now = datetime.now().strftime(DATE_FORMAT)
+        datetime_now = get_datetime_now()
         query = "UPDATE subscribes set active = %s, updated_at = %s WHERE tg_user_id = %s AND subscribe_type = %s"
         params = (0, datetime_now, tg_user_id, 'trial')
 
@@ -346,7 +350,8 @@ class Database:
             return False
 
     def set_subscribe_findate(self, subscribe_id: int, finish_date: str):
-        datetime_now = datetime.utcnow()
+        # TODO finish_date as datetime
+        datetime_now = get_datetime_now()
         query = "UPDATE subscribes set finish_dt = %s, updated_at = %s WHERE id = %s"
         params = (finish_date, datetime_now, subscribe_id,)
 
@@ -360,7 +365,7 @@ class Database:
             return False
 
     def set_deactivate_subscribe(self, subscribe_id):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = (
             'UPDATE subscribes set active = %s, updated_at = %s '
             'WHERE id = %s'
@@ -377,7 +382,7 @@ class Database:
             return False
 
     def set_unactive_subscribes(self, type: SUBSCRIBE_TYPE):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = (
             'UPDATE subscribes set active = %s, updated_at = %s '
             'WHERE finish_dt < %s AND subscribe_type = %s'
@@ -394,7 +399,7 @@ class Database:
             return False
 
     def set_unactive_subscribe_for_time(self, time_start: str, time_end: str):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = (
             "UPDATE subscribes set active = %s, updated_at = %s "
             "WHERE (updated_at BETWEEN %s AND %s ) AND active = %s"
@@ -450,19 +455,19 @@ class Database:
 
         pass
 
-    def _data_to_client(self, data: DictRow):
-        return Client(
-            user=UserInfo(
-                data.get('user_id')
-            ),
-            subscribes=Subscribe(
+    # def _data_to_client(self, data: DictRow):
+    #     return Client(
+    #         user=UserInfo(
+    #             data.get('user_id')
+    #         ),
+    #         subscribes=Subscribe(
 
-            )
-        )
+    #         )
+    #     )
 
     def switch_tariff(self, tariff_id: int, switch_active: int):
         """Включить или выключить тариф"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE id = %s"
         params = (switch_active, datetime_now, tariff_id)
 
@@ -489,7 +494,7 @@ class Database:
 
     def set_findate_tariff(self, tariff_id: int, date):
         """Установить дату окончания тарифа"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set price_findate = %s, updated_at = %s WHERE id = %s"
         params = (date, datetime_now, tariff_id)
 
@@ -504,7 +509,7 @@ class Database:
 
     def switch_off_finish_tariffs(self, today: str):
         """Установить дату окончания тарифа"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE prices set switch_active = %s, updated_at = %s WHERE price_findate < %s"
         switch = 0
         params = (switch, datetime_now, today)
@@ -567,7 +572,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_paid_transactions_by_user(self, user_id: int):
+    def get_paid_transactions_by_user(self, user_id: int) -> list[Transactions]:
         """Получить платные транзакции пользователя"""
         query = ("SELECT * FROM transactions "
                  "WHERE user_id = %s AND status = %s"
@@ -585,7 +590,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_all(self):
+    def get_paid_transactions_all(self) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
                  "WHERE status = %s"
@@ -603,7 +608,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_all_dry_users(self):
+    def get_paid_transactions_all_dry_users(self) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT DISTINCT user_id, id, code, link, sum, currency, price_id, status, payment_date FROM transactions "
                  "WHERE status = %s "
@@ -621,7 +626,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_period(self, start_date, fin_date):
+    def get_paid_transactions_period(self, start_date, fin_date) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
                  "WHERE (payment_date BETWEEN %s AND %s ) "
@@ -640,7 +645,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_product(self, product):
+    def get_paid_transactions_product(self, product) -> list[Transactions]:
         """Получить все оплаченные транзакции по продукту"""
         query = ("SELECT * "
                  "FROM transactions t, prices p  "
@@ -660,7 +665,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_summ(self):
+    def get_paid_transactions_summ(self) -> int:
         """Суммы по транзакциям"""
         query = ("SELECT sum(sum) FROM transactions "
                  "WHERE status = %s"
@@ -675,9 +680,9 @@ class Database:
         except Exception as e:
             print(f'ERROR[get_paid_transactions_summ]: {e}')
             self.connection.rollback()
-            return []
+            return 0
 
-    def get_paid_transactions_summ_period(self, start_date, fin_date):
+    def get_paid_transactions_summ_period(self, start_date, fin_date) -> int:
         """Суммы по транзакциям за период"""
         query = ("SELECT sum(sum) FROM transactions "
                  "WHERE (payment_date BETWEEN %s AND %s ) "
@@ -693,9 +698,9 @@ class Database:
         except Exception as e:
             print(f'ERROR[get_paid_transactions_summ_period]: {e}')
             self.connection.rollback()
-            return []
+            return 0
 
-    def get_paid_transactions_summ_product(self, product):
+    def get_paid_transactions_summ_product(self, product) -> int:
         """Суммы по транзакциям по продукту"""
         query = ("SELECT sum(sum) "
                  "FROM transactions t, prices p "
@@ -712,9 +717,9 @@ class Database:
         except Exception as e:
             print(f'ERROR[get_paid_transactions_summ_product]: {e}')
             self.connection.rollback()
-            return []
+            return 0
 
-    def get_purchases_by_user(self, user_id: int):
+    def get_purchases_by_user(self, user_id: int) -> list[Purchase]:
         """Получение покупок пользователя"""
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
@@ -731,7 +736,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            # return data
+
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
             print(f'ERROR[get_paid_transactions_by_user]: {e}')
@@ -752,7 +757,7 @@ class Database:
             data.get('create_date'),
         )
 
-    def get_purchases_all_users(self):
+    def get_purchases_all_users(self) -> list[Purchase]:
         query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
                  "t.sum AS real_sum, p.price AS tariff_price, "
                  "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
@@ -768,7 +773,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            # return data
+
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
             print(f'ERROR[get_paid_transactions_by_user]: {e}')
@@ -776,7 +781,7 @@ class Database:
             return []
 
     def set_transactions_complete(self, id: int):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = "UPDATE transactions set status = %s, payment_date = %s, created_at = %s WHERE id = %s"
         params = ('paid', datetime_now, datetime_now, id, )
 
@@ -786,20 +791,6 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_transactions_complete]: {e}')
-            self.connection.rollback()
-            return False
-
-    def del_transaction(self, user_id: int):
-        """Deprecated: транзакции удалять нельзя"""
-        query = "DELETE FROM transactions WHERE user_id = %s"
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[del_transaction]: {e}')
             self.connection.rollback()
             return False
 
@@ -1025,7 +1016,7 @@ class Database:
 
     # # # # # # # #  Users Сервисные запросы
     def fake_add_user_db(self, tg_id, tg_username=None):
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = ("INSERT INTO users(name, email, id_telegram, username_tg, date_register, password, created_at, updated_at) "
                  "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)")
         r = random.randint(1, 1000)
@@ -1403,10 +1394,11 @@ class Database:
     def reset_user_settings(self, user_id: int):
         query = (
             'UPDATE tgcalc_user_settings SET take_profit_to_show = %s, market = %s, base_currency = %s, '
-            'base_deposit = %s, base_risk_percent = %s '
+            'base_deposit = %s, base_risk_percent = %s, take_profit_ratio = %s, split_values = %s, is_splitting = %s '
             'WHERE user_id = %s'
         )
-        params = ('345', 'crypto', 'USD', None, None, user_id)
+        params = ('345', 'crypto', 'USD', None,
+                  None, [3, 4, 5], None, 0, user_id)
 
         try:
             self.curs.execute(query, params)
@@ -1433,9 +1425,9 @@ class Database:
 
     def add_worker(self, id: int, role: int):
         """Добваление работника (1 = админ, 2 = редактор)"""
-        datetime_now = datetime.utcnow()
-        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at) VALUES(%s, %s, %s, %s)"
-        params = (id, role, datetime_now, datetime_now)
+        datetime_now = get_datetime_now()
+        query = "INSERT INTO tgbot_workers(user_id, role, created_at, updated_at, tg_user_id) VALUES(%s, %s, %s, %s, %s)"
+        params = (id, role, datetime_now, datetime_now, 0)
 
         try:
             self.curs.execute(query, params)
@@ -1556,7 +1548,7 @@ class Database:
 
     # Options
     def set_option(self, name, value):
-        datetime_now = datetime.now()
+        datetime_now = get_datetime_now()
         query = "UPDATE tgbot_options set value = %s, updated_at = %s WHERE name_option = %s"
         params = (value, datetime_now, name,)
 
@@ -1820,8 +1812,6 @@ class Database:
             print(f'ERROR[update_forex]: {e}')
             self.connection.rollback()
             return False
-
-
 
 
 db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

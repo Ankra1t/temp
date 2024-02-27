@@ -17,6 +17,7 @@ from db_new import db_new
 from keyboard_reply import kb_user_sup
 
 from CALCULATE.callbacks import send_manual_page, send_main
+from CALCULATE.commands import _start as _calc
 from MAIN.start import send_start_by_user
 
 
@@ -66,8 +67,8 @@ def _manual(message: Message, bot: TeleBot):
     send_manual_page(message, bot, 1, message.from_user.id, True)
 
 
-def _calc(message: Message, bot: TeleBot):
-    send_main(message, bot, message.from_user.id, True)
+# def _calc(message: Message, bot: TeleBot):
+#     send_main(message, bot, message.from_user.id, True)
 
 
 def _test_check_func(message: Message, bot: TeleBot):
@@ -136,7 +137,6 @@ def _test_check_func(message: Message, bot: TeleBot):
     # user_id = 777
     # print(f'Удаляем пользователя - с id{user_id} ')
 
-
     return False
     new_user = db_new.get_user_by_tg_id(message.from_user.id)
     notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
@@ -151,14 +151,13 @@ def _test_check_func(message: Message, bot: TeleBot):
     print(users)
     return False
 
-    
     # tariff_manager.switch_off_finish_tariffs()
     tariff = db_new.get_first_tariff_by_product()
     print(f'tariff ')
     print(tariff)
-    print(f'tariff.name [{tariff.name}] tariff.id [{tariff.id}] tariff.type_product [{tariff.type_product}]')
+    print(
+        f'tariff.name [{tariff.name}] tariff.id [{tariff.id}] tariff.type_product [{tariff.type_product}]')
     return False
-
 
 
 def commands_registration(bot: TeleBot):
