@@ -32,7 +32,7 @@ class TariffManager(object):
 
         return switch_put
 
-    def set_findate_tariff(self, tariff_id, findate):
+    def set_findate_tariff(self, tariff_id: int, findate: datetime | None):
         db_new.set_findate_tariff(tariff_id, findate)
 
     def switch_off_finish_tariffs(self):

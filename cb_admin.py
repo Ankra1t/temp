@@ -130,12 +130,11 @@ def admin_default_callbacks(call: types.CallbackQuery):
 
         fin_date = pay_guard.update_user_subscribe_findate(user, 'add')
 
-        finish_date_obj = datetime.strptime(fin_date or '', '%Y-%m-%d %H:%M')
-        fin_date = get_str_by_datetime(finish_date_obj)
+        show_fin_date = get_str_by_datetime(fin_date)
 
         bot.send_message(
             chat_id,
-            f'Подписка клиента id {user.id} удачно изменена, новая дата {fin_date}',
+            f'Подписка клиента id {user.id} удачно изменена, новая дата {show_fin_date}',
             reply_markup=kb_admin_users_back()
         )
         bot.delete_state(user_id, chat_id)
@@ -439,11 +438,10 @@ def admin_action_callbacks(call: types.CallbackQuery):
         elif target_id == 'month':
             price_findate_obj += timedelta(days=30)
 
-        findate_set_db = price_findate_obj.strftime(DATE_FORMAT)
         findate_show = get_str_by_datetime(price_findate_obj)
 
         # Задаем дату окончания тарифа
-        tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+        tariff_manager.set_findate_tariff(tariff_id, price_findate_obj)
 
         bot.send_message(
             chat_id,

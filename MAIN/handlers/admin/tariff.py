@@ -303,7 +303,7 @@ def handle_price_findate_count_days(message: Message, bot: TeleBot):
     findate_set_db = get_datetime_now() + timedelta(days=days)
     findate_show = get_str_by_datetime(findate_set_db)
 
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
 
     bot.send_message(
         chat_id,
@@ -338,7 +338,7 @@ def handle_price_findate(message: Message, bot: TeleBot):
     findate_show = get_str_by_datetime(findate_set_db)
 
     # Задаем дату окончания тарифа
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
 
     bot.send_message(
         chat_id,
