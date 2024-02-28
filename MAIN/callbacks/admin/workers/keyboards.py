@@ -50,9 +50,9 @@ def kb_admin_workers_actions(worker: int):
 
     btn1 = getButton('✅ Добавить', 'add', worker)
     btn2 = getButton('❌ Удалить', 'delete', worker)
+
     btnback = getButton(
-        'Назад',
-        'workers'
+        'Назад', 'workers'
     )
 
     keyboard.add(btn1, btn2)
