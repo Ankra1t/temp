@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Literal
 
 
@@ -6,7 +6,7 @@ DT_PRINT_TYPE = Literal['date', 'time', 'datetime']
 
 
 def get_datetime_now():
-    return datetime.now(timezone.utc)
+    return datetime.utcnow()
 
 
 def get_str_by_datetime(dt: datetime, type: DT_PRINT_TYPE = 'datetime') -> str:

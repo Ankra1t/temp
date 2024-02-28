@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
-from gettext import find
 from telebot import TeleBot
 from telebot.types import Message
 
 from common.utils import digit_accept, text_accept, set_state_data
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
 from common.dt import get_datetime_now, get_str_by_datetime
-
 
 from MAIN.states import AdminTariffState
 

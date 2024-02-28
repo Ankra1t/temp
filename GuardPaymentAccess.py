@@ -1,9 +1,6 @@
 from typing import Literal
-from config_logger import logger
-from telebot import types
 from datetime import datetime, timedelta
 
-from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 from db_new import db_new
 from models import User, UserInfo, Subscribe, Transactions

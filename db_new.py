@@ -785,7 +785,7 @@ class Database:
             username=data.get('username_tg') or '',
             refer=data.get('refer_id') or -1,
             ban=data.get('ban') or 0,
-            registration_dt=data.get('created_at') or datetime(2023, 5, 5)
+            registration_dt=data.get('created_at') or datetime(2012, 12, 12)
         )
 
     USER_INFO_QUERY = (

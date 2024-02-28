@@ -3,7 +3,6 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from MAIN.common.utils import get_short_user_info
 from common.utils import set_state_data
-from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard, tariff_manager
 from db_new import SORT_BY_TYPE, db_new
@@ -12,7 +11,10 @@ from MAIN.states import AdminUsersState
 from messages.users import gift_subscribe_msg
 
 
-from .keyboards import kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_client_list
+from .keyboards import (
+    kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel,
+    kb_admin_users_confirm, kb_admin_client_list
+)
 from .filter import admin_users_factory, AdminUsersCallbackFilter
 from ..pages import send_admin_client
 

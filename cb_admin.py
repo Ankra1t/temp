@@ -1,5 +1,5 @@
 from telebot import types
-from datetime import datetime, timedelta
+from datetime import timedelta
 from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 
 from initialize import bot, kb_inl_admin, pay_guard, tariff_manager, base_statis
@@ -9,15 +9,13 @@ import variables as vars
 from models import User
 from db_new import db_new
 
-from messages.workers import admin_main_msg
 from common.utils import set_state_data
-from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.callbacks import (
     kb_params, kb_posts, kb_admin_users,
     kb_admin_users_back, kb_admin_choose_periods,
-    send_admin_workers, kb_statistics,
+    send_admin_workers, kb_statistics, send_admin_main
 )
 from MAIN.states import AdminTariffState, AdminUsersState
 
@@ -34,7 +32,6 @@ def admin_main_callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
-    message = call.message
 
     if type == 'users':
         logger.info(f'-----> Нажали меню пользователи ')
@@ -44,7 +41,6 @@ def admin_main_callbacks(call: types.CallbackQuery):
         count_old = len(pay_guard.get_paid_more1_users())
         count_with_sub = base_statis.count_payments_dry()
         # count_old = base_statis.count_payments_dry()
-
 
         text = admin_users_msg(count_all, count_with_sub, count_old)
 
@@ -79,7 +75,8 @@ def admin_main_callbacks(call: types.CallbackQuery):
         summ_all_users = base_statis.summ_by_transactions()
 
         bot.edit_message_text(
-            admin_main_statistics(count_payments, summ_all_users), chat_id, mes_id,
+            admin_main_statistics(
+                count_payments, summ_all_users), chat_id, mes_id,
             reply_markup=kb_statistics()
         )
 
@@ -99,29 +96,7 @@ def admin_default_callbacks(call: types.CallbackQuery):
 
     # ## Главное меню
     if type == 'go_main':
-        logger.info(f'-----> Выбрано меню ***{type}*** ')
-        try:
-            count_all = db_new.get_users_count()
-            count_admins = len(db_new.get_all_workes())
-            count_fut_posts = len(db_new.get_all_posts())
-
-            # count_with_sub = len(pay_guard.get_paid_users())
-            count_old = len(pay_guard.get_paid_more1_users())
-            count_with_sub = base_statis.count_payments_dry()
-            # count_old = base_statis.count_payments_dry()
-
-
-            text = admin_main_msg(count_all, count_with_sub,
-                                  count_old, count_admins, count_fut_posts)
-
-            bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=kb_inl_admin.main()
-            )
-
-            bot.clear_step_handler(call.message)
-        except Exception as e:
-            logger.error(f'Ошибка type_menu == go_main[{e}]')
+        send_admin_main(bot, call.message, user_id)
 
     # ## Добавить _ кол-во дней к подписке
     if type == 'add_days_subscribe':
@@ -130,7 +105,9 @@ def admin_default_callbacks(call: types.CallbackQuery):
 
         fin_date = pay_guard.update_user_subscribe_findate(user, 'add')
 
-        show_fin_date = get_str_by_datetime(fin_date)
+        show_fin_date = '-'
+        if fin_date is not None:
+            show_fin_date = get_str_by_datetime(fin_date)
 
         bot.send_message(
             chat_id,
@@ -271,7 +248,6 @@ def admin_action_callbacks(call: types.CallbackQuery):
     mes_id = call.message.id
     user_id = call.from_user.id
 
-
     # ##### ------------------ Отменить подписку для пользователя
     # [deprecated - реализовано в другом функционале с State состояниями]
     if action == 'user_cancel_subscribe':
@@ -410,7 +386,8 @@ def admin_action_callbacks(call: types.CallbackQuery):
 
     # ##### ------------------ Задать кол-во дней действия тарифа
     if action == 'tempor_day_tariff':
-        bot.set_state(user_id, AdminTariffState.price_findate_count_days, chat_id)
+        bot.set_state(
+            user_id, AdminTariffState.price_findate_count_days, chat_id)
         set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
         bot.send_message(
             chat_id, f'Отправьте <b>кол-во дней действия тарифа</b> id = {target_id} или выберите период действия:',

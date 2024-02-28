@@ -1,7 +1,6 @@
 from typing import Literal
 from telebot import TeleBot
 from common.dt import get_str_by_datetime
-from common.vars import PRINT_DATE_FROMAT
 
 from models import UserInfo
 
@@ -12,7 +11,7 @@ MESSAGE_TYPE = Literal['text', 'photo', 'video']
 class Notifier():
     def __init__(self, bot: TeleBot) -> None:
         self.bot = bot
-        self.users = (156045434, 396355273, 774944610 )
+        self.users = (156045434, 396355273, 774944610)
 
     def _send_by_type(self, type: MESSAGE_TYPE, user_id: int, text: str, media_id: str | None = None):
         try:

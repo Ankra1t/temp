@@ -3,7 +3,8 @@ from telebot import TeleBot as _TB
 from .admin.pages import (
     send_admin_post, send_admin_client,
     send_admin_workers, send_admin_workers_support,
-    send_admin_workers_admin, send_admin_workers_support
+    send_admin_workers_admin, send_admin_workers_support,
+    send_admin_main
 )
 from .user.pages import send_user_education, send_user_main, send_user_terms, send_user_account
 

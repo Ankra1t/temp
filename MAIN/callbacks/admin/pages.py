@@ -2,14 +2,52 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
+from initialize import kb_inl_admin, pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
-from messages.workers import menu_msg
+from messages.workers import admin_main_msg, menu_msg
 from models import Post
 
 from .users.keyboards import kb_admin_client_info
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
+
+
+def send_admin_main(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    count_all = db_new.get_users_count()
+    count_admins = len(db_new.get_all_workes())
+    count_fut_posts = len(db_new.get_all_posts())
+
+    count_old = len(pay_guard.get_paid_more1_users())
+    count_with_sub = base_statis.count_payments_dry()
+
+    keyboard = kb_inl_admin.main()
+    text = admin_main_msg(
+        count_all, count_with_sub, count_old,
+        count_admins, count_fut_posts
+    )
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
 
 def send_admin_post(
