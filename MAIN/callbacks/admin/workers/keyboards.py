@@ -1,7 +1,7 @@
 from typing import Literal
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from initialize import kb_inl_admin
+from common.keyboard import back_txt
 
 from .filter import admin_workers_factory
 
@@ -24,7 +24,7 @@ def kb_admin_workers():
     btn_redactors = getButton('Редакторы', 'redactors')
     btn_support = getButton('Поддержка', 'support')
     btn_list = getButton('Список работников', 'workers_list')
-    btn_back = kb_inl_admin.go_main_btn
+    btn_back = getButton(back_txt(), 'go_main')
 
     keyboard.add(btn_admins, btn_redactors)
     keyboard.add(btn_support, btn_list)
@@ -50,9 +50,9 @@ def kb_admin_workers_actions(worker: int):
 
     btn1 = getButton('✅ Добавить', 'add', worker)
     btn2 = getButton('❌ Удалить', 'delete', worker)
+
     btnback = getButton(
-        'Назад',
-        'workers'
+        back_txt(), 'workers'
     )
 
     keyboard.add(btn1, btn2)
@@ -69,7 +69,7 @@ def kb_admin_workers_back(worker: int = -1):
         3: 'support',
         -1: 'workers'
     }
-    back_btn = getButton('Назад', type[worker])
+    back_btn = getButton(back_txt(), type[worker])
 
     keyboard.add(back_btn)
     return keyboard
@@ -79,7 +79,7 @@ def kb_admin_workers_support():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_change = getButton('✏️ Изменить', 'update_support')
-    btn_back = getButton('Назад', 'workers')
+    btn_back = getButton(back_txt(), 'workers')
 
     keyboard.add(btn_change, btn_back)
     return keyboard

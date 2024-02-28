@@ -1,20 +1,22 @@
 import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
 from MAIN.common.utils import get_short_user_info
+from MAIN.states import AdminUsersState
 from common.utils import set_state_data
-from common.vars import PRINT_DATE_FROMAT
 
 from initialize import kb_inl_admin, pay_guard, tariff_manager
 from db_new import SORT_BY_TYPE, db_new
-from models import User
-from MAIN.states import AdminUsersState
 from messages.users import gift_subscribe_msg
 
 
-from .keyboards import kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel, kb_admin_users_confirm, kb_admin_client_list
+from .keyboards import (
+    kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel,
+    kb_admin_users_confirm, kb_admin_client_list
+)
 from .filter import admin_users_factory, AdminUsersCallbackFilter
-from ..pages import send_admin_client
+from ..pages import send_admin_client, send_admin_main, send_admin_users
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -31,7 +33,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
-    mess = call.message
+
+    if type == 'go_main':
+        send_admin_main(bot, call.message, user_id)
+
+    if type == 'go_users':
+        send_admin_users(bot, call.message, user_id)
 
     if type == 'cancel_subscribe':
         bot.edit_message_text(
@@ -175,7 +182,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.delete_state(user_id, chat_id)
 
-        send_admin_client(bot, mess, user_id, subscribe_user_id, True)
+        send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
 
         bot.send_message(
             user.tg_id,

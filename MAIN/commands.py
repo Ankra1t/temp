@@ -3,20 +3,15 @@ from datetime import datetime, timedelta
 from telebot import TeleBot
 from telebot.types import Message
 
-
 from config_logger import logger
 from initialize import pay_guard, base_statis, tariff_manager, pays, pays_banker, serv_tasks
 
 from models import Update, Invoice, UpdateBBanker, InvoiceBBanker
 
-
-
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
-
 from db_new import db_new
 from keyboard_reply import kb_user_sup
 
-from CALCULATE.callbacks import send_manual_page, send_main
+from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
 from MAIN.start import send_start_by_user
 
@@ -34,7 +29,7 @@ def _start(message: Message, bot: TeleBot, data: dict):
     has_registered_now: bool = data.get('has_registered_now') or False
 
     send_start_by_user(
-        bot, message, user_id, chat_id,
+        bot, message, user_id,
         user_role, has_registered_now,
     )
 

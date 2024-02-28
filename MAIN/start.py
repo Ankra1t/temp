@@ -5,47 +5,27 @@ from initialize import pay_guard, base_statis, kb_inl_admin
 from keyboard_reply import kb_main_redactor, kb_main_support
 from db_new import db_new
 
-from MAIN.callbacks import send_user_main
+from MAIN.callbacks import send_user_main, send_admin_main
 
-from messages.users import welcome_trial_subscribe_msg
-from messages.workers import admin_main_msg, redactor_main_msg, support_main_msg
+from messages.workers import redactor_main_msg, support_main_msg
 
 
 def send_start_by_user(
         bot: TeleBot,
         message: Message,
         user_id: int,
-        chat_id: int,
         user_role: int,
         has_registered_now=False
 ):
+    chat_id = message.chat.id
     bot.delete_state(user_id, chat_id)
 
     new_user = False
     if user_role == 0:
-        if has_registered_now:
-            # bot.send_message(
-            #     chat_id, welcome_trial_subscribe_msg()
-            # )
-            new_user = True
-            pass
-
-        send_user_main(bot, message, user_id, True, new_user)
+        send_user_main(bot, message, user_id, True, has_registered_now)
 
     if user_role == 1:
-        count_all = db_new.get_users_count()
-        # todo-fin: Заменить кол-во транзакций на агрегацию пользователей (если у пользователя больше 2х подписок)
-        count_with_sub = base_statis.count_payments()
-        # count_with_sub = len(pay_guard.get_paid_users())
-        count_old = 0
-        count_old = len(pay_guard.get_paid_more1_users())
-        count_admins = len(db_new.get_all_workes())
-        count_fut_posts = len(db_new.get_all_posts())
-        count_fut_posts = 0
-
-        text = admin_main_msg(count_all, count_with_sub,
-                              count_old, count_admins, count_fut_posts)
-        bot.send_message(chat_id, text, reply_markup=kb_inl_admin.main())
+        send_admin_main(bot, message, user_id, True)
 
     if user_role == 2:
         count_fut_posts = len(db_new.get_all_posts())

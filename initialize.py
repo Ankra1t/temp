@@ -7,9 +7,6 @@ from telebot.storage import StateMemoryStorage
 from config_global import TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 from config_logger import logger
 
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
-
-
 from db_new import db_new
 from keyboard_inlines import Admin_kb_inlines, Clients_kb_inlines
 from GuardPaymentAccess import GuardPaymentAccess

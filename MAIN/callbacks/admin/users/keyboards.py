@@ -1,8 +1,8 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from .filter import admin_users_factory
+from common.keyboard import back_txt
 
-from initialize import kb_inl_admin
+from .filter import admin_users_factory
 
 
 def getButton(text: str, type: str, sort_by='', page=1, client_db_id=0, filter=''):
@@ -21,7 +21,7 @@ def kb_admin_users():
     lists = getButton('📋 Списки', 'lists')
     search = getButton('🔎 Поиск клиента', 'client_search')
     clients = getButton('👨‍💻 Все клиенты', 'client_list', 'new', 1)
-    main = kb_inl_admin.go_main_btn
+    main = getButton(back_txt(), 'go_main')
 
     keyboard.add(clients, lists)
     keyboard.add(search, main)
@@ -34,13 +34,13 @@ def kb_admin_choose_list():
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    ban = getThisButton('⛔️ Забаненные', 'ban')
+    ban = getThisButton('⛔️ Бан', 'ban')
     # paid = getThisButton('💵 Платные', 'paid')
-    new = getThisButton('🆕 Новые клиенты', 'new')
-    back = kb_inl_admin.go_users_btn
+    new = getThisButton('🆕 Новые', 'new')
+    back = getButton(back_txt(), 'go_users')
 
-    keyboard.add(ban)
-    keyboard.add(new, back)
+    keyboard.add(ban, new)
+    keyboard.add(back)
     return keyboard
 
 
@@ -58,7 +58,6 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
     btn_back = getThisButton('Назад', page - 1)
 
     counter = getButton(f'{page}/{pages}', 'counter')
-    search = getButton('🔎 Поиск клиента', 'client_search', sort_by, page)
 
     if pages > 1:
         if page == 1:
@@ -76,10 +75,11 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
         new_filter = 'new'
 
     btn_filter = getThisButton(filter_text, 1, new_filter)
+    search = getButton('🔎 Поиск', 'client_search', sort_by, page)
+    back = getButton(back_txt(), 'go_users')
 
     keyboard.add(btn_filter)
-    keyboard.add(search)
-    keyboard.add(kb_inl_admin.go_users_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(search, back)
 
     return keyboard
 
@@ -109,11 +109,11 @@ def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, sort_by='')
     #     )
     # else:
     #     btn_client_list = kb_inl_admin.go_users_btn
-    btn_client_list = kb_inl_admin.go_users_btn
+    back = getButton(back_txt(), 'go_users')
 
     keyboard.add(btn_add_sub, btn_remove_sub)
     keyboard.add(btn_add_trial_sub)
-    keyboard.add(btn_ban, btn_client_list)
+    keyboard.add(btn_ban, back)
     return keyboard
 
 
@@ -127,9 +127,9 @@ def kb_admin_users_cancel(sort_by='', page=1, filter=''):
     # else:
     #     btn_cancel = kb_inl_admin.go_users_btn
     if filter != '':
-        btn_cancel = getButton('Назад', 'lists')
+        btn_cancel = getButton(back_txt(), 'lists')
     else:
-        btn_cancel = kb_inl_admin.go_users_btn
+        btn_cancel = getButton(back_txt(), 'go_users')
 
     keyboard.add(btn_cancel)
     return keyboard
@@ -159,15 +159,19 @@ def kb_admin_choose_periods():
     year = getButton('Год', 'choose_periods_for_tariffs', sort_by='year')
     lifetime = getButton(
         'Пожизненно', 'choose_periods_for_tariffs', sort_by='lifetime')
+    back = getButton(back_txt(), 'go_users')
 
     keyboard.add(week, week2)
     keyboard.add(month, month6)
     keyboard.add(year, lifetime)
-    keyboard.add(kb_inl_admin.go_users_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(back)
     return keyboard
 
 
 def kb_admin_users_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(kb_inl_admin.go_users_btn, kb_inl_admin.go_main_btn)
+
+    back = getButton(back_txt(), 'go_users')
+    keyboard.add(back)
+
     return keyboard
