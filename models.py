@@ -222,3 +222,17 @@ class Forex(BaseModel):
     pair: str
     price: float
     help_pair: str | None
+
+class TaskMessage(BaseModel):
+    type_message: str = 'text'
+    text: str = 'text'
+    media_id: str | None = None
+
+class Task(BaseModel):
+    id: int | None = None
+    type_task: str = 'send_message'
+    user_id: int | None = None
+    date_action: datetime | None = None
+    message: TaskMessage | None = None
+    active: int = 1
+

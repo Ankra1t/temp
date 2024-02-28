@@ -15,6 +15,7 @@ from PaymentsBanker import PaymentsBanker
 from TariffManager import TariffManager
 from TextEditor import TextEditor
 from Classes.BaseStatistics import BaseStatistics
+from Classes.ServiceTasks import ServiceTasks
 
 
 state_storage = StateMemoryStorage()
@@ -29,6 +30,7 @@ bot = TeleBot(
 pay_guard = GuardPaymentAccess()
 pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
 base_statis = BaseStatistics(db_new, bot)
+serv_tasks = ServiceTasks(db_new, bot)
 
 pays_banker = PaymentsBanker(
     api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)

@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
+
 from telebot import TeleBot
 from telebot.types import Message
 
-from initialize import pay_guard
+from config_logger import logger
+from initialize import pay_guard, base_statis, tariff_manager, pays, pays_banker, serv_tasks
 
 from models import Update, Invoice, UpdateBBanker, InvoiceBBanker
 
@@ -15,6 +18,7 @@ from MAIN.start import send_start_by_user
 
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
+from messages.users import welcome_trial_subscribe_msg
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -64,6 +68,9 @@ def _manual(message: Message, bot: TeleBot):
 
 def _test_check_func(message: Message, bot: TeleBot):
     print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
+
+    date_1hour = datetime.now() + timedelta(hours=1)
+    serv_tasks.plan_message(423, date_1hour, welcome_trial_subscribe_msg(pay_guard.get_option_trial_days()))
 
     return False
     # Дерагаем оплату - проверяем проводку и применение подписки пользователю
