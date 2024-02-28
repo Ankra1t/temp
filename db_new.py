@@ -350,7 +350,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id: int | None=None):
+    def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id: int | None = None):
         if tariff_id:
             query = "UPDATE subscribes set active = %s WHERE tg_user_id = %s AND prices_id = %s "
             params = (0, user_id, tariff_id, )
@@ -867,8 +867,11 @@ class Database:
             Получение забаненных пользователей\n
             Если не задан лимит, то вернуться все забаненные пользователи
         """
+        params = None
+
         query = self.USER_INFO_QUERY + 'WHERE u.ban = 1 '
         query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
+
         if limit is not None:
             query += "LIMIT %s OFFSET %s "
             params = (limit, (page - 1) * limit)

@@ -7,8 +7,11 @@ from common.utils import is_digit, set_state_data
 from MAIN.states import AdminWorkersState
 
 from .filter import admin_workers_factory, AdminWorkersCallbackFilter
-from .keyboards import kb_admin_workers_actions, kb_admin_workers_back
-from ..pages import send_admin_workers, send_admin_workers_admin, send_admin_workers_redactors, send_admin_workers_support
+from .keyboards import kb_admin_workers_back
+from ..pages import (
+    send_admin_main, send_admin_workers, send_admin_workers_admin,
+    send_admin_workers_redactors, send_admin_workers_support
+)
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -21,6 +24,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
+
+    if type == 'go_main':
+        send_admin_main(bot, call.message, user_id)
 
     if type == 'workers':
         send_admin_workers(bot, call.message, user_id)

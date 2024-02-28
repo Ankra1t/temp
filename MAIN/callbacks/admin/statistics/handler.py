@@ -1,26 +1,29 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db_new import db_new
-
 from initialize import base_statis
 
-from common.utils import set_state_data
 from MAIN.states import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
 
 from .keyboards import kb_statistics_back, kb_stats_periods, kb_stats_products
 from .filter import admin_statistics_factory, AdminStatisticsCallbackFilter
-
+from ..pages import send_admin_main, send_admin_payment
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
-    callback_data: dict = admin_statistics_factory.parse(call.data)
-    type = callback_data['type']
-    filter: str = callback_data.get('filter') or ''
+    callback_data = admin_statistics_factory.parse(call.data)
+    type = callback_data.get('type', '')
+    filter = callback_data.get('filter', '')
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    if type == 'go_main':
+        send_admin_main(bot, call.message, user_id)
+
+    if type == 'go_payment':
+        send_admin_payment(bot, call.message, user_id)
 
     if type == 'stat_pay_periods':
 

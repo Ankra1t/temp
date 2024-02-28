@@ -2,7 +2,7 @@ from db_new import db_new
 
 
 def admin_main_msg(count_all: int, count_with_sub: int, count_sub_more_1: int, count_admins: int, count_fut_post: int):
-    return f"""🏠 <b></u>Главная</u></b>
+    return f"""🏠 <b><u>Главная</u></b>
 
 В базе: {count_all}
 Платных: {count_with_sub}

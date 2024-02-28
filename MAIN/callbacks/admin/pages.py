@@ -6,11 +6,13 @@ from initialize import kb_inl_admin, pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
-from messages.workers import admin_main_msg, menu_msg
+from messages.statistics import admin_main_statistics
+from messages.workers import admin_main_msg, admin_users_msg, menu_msg
 from models import Post
 
-from .users.keyboards import kb_admin_client_info
+from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
+from .statistics.keyboards import kb_statistics
 
 
 def send_admin_main(
@@ -21,6 +23,9 @@ def send_admin_main(
 ):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
     count_all = db_new.get_users_count()
     count_admins = len(db_new.get_all_workes())
@@ -46,8 +51,67 @@ def send_admin_main(
             reply_markup=keyboard
         )
 
+
+def send_admin_users(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
+
+    count_all = db_new.get_users_count()
+
+    count_old = len(pay_guard.get_paid_more1_users())
+    count_with_sub = base_statis.count_payments_dry()
+
+    text = admin_users_msg(count_all, count_with_sub, count_old)
+    keyboard = kb_admin_users()
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_payment(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
+
+    count_payments = base_statis.count_payments()
+    summ_all_users = base_statis.summ_by_transactions()
+
+    text = admin_main_statistics(count_payments, summ_all_users)
+    keyboard = kb_statistics()
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
 
 
 def send_admin_post(
@@ -95,6 +159,9 @@ def send_admin_client(
 ):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
     client = db_new.get_user_by_id(client_db_id)
     if client is None:
@@ -144,6 +211,9 @@ def send_admin_workers(
     chat_id = message.chat.id
     mes_id = message.id
 
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
+
     text = menu_msg('Работники')
     keyboard = kb_admin_workers()
 
@@ -155,8 +225,6 @@ def send_admin_workers(
             reply_markup=keyboard
         )
 
-    bot.delete_state(user_id, chat_id)
-
 
 def send_admin_workers_admin(
     bot: TeleBot,
@@ -166,6 +234,9 @@ def send_admin_workers_admin(
 ):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
     res = '<b>Админы</b>\n'
     admins = db_new.get_admins()
@@ -186,8 +257,6 @@ def send_admin_workers_admin(
             reply_markup=keyboard
         )
 
-    bot.delete_state(user_id, chat_id)
-
 
 def send_admin_workers_redactors(
     bot: TeleBot,
@@ -197,6 +266,9 @@ def send_admin_workers_redactors(
 ):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
     res = '<b>Редакторы</b>\n'
     redactors = db_new.get_redactors()
@@ -217,8 +289,6 @@ def send_admin_workers_redactors(
             reply_markup=keyboard
         )
 
-    bot.delete_state(user_id, chat_id)
-
 
 def send_admin_workers_support(
     bot: TeleBot,
@@ -228,6 +298,9 @@ def send_admin_workers_support(
 ):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
 
     sup = db_new.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
@@ -242,5 +315,3 @@ def send_admin_workers_support(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
-
-    bot.delete_state(user_id, chat_id)

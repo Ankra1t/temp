@@ -1,9 +1,10 @@
 from telebot import types
 from datetime import timedelta
-from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
+from MAIN.callbacks.admin.pages import send_admin_payment
 
+from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 from initialize import bot, kb_inl_admin, pay_guard, tariff_manager, base_statis
-from messages.workers import admin_users_msg, admin_fut_posts_msg, menu_msg
+from messages.workers import admin_fut_posts_msg, menu_msg
 from messages.statistics import admin_main_statistics
 import variables as vars
 from models import User
@@ -13,9 +14,9 @@ from common.utils import set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.callbacks import (
-    kb_params, kb_posts, kb_admin_users,
+    kb_params, kb_posts, kb_statistics,
     kb_admin_users_back, kb_admin_choose_periods,
-    send_admin_workers, kb_statistics, send_admin_main
+    send_admin_workers, send_admin_users, send_admin_main
 )
 from MAIN.states import AdminTariffState, AdminUsersState
 
@@ -34,20 +35,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
     mes_id = call.message.id
 
     if type == 'users':
-        logger.info(f'-----> Нажали меню пользователи ')
-        count_all = db_new.get_users_count()
-
-        # count_with_sub = len(pay_guard.get_paid_users())
-        count_old = len(pay_guard.get_paid_more1_users())
-        count_with_sub = base_statis.count_payments_dry()
-        # count_old = base_statis.count_payments_dry()
-
-        text = admin_users_msg(count_all, count_with_sub, count_old)
-
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=kb_admin_users()
-        )
+        send_admin_users(bot, call.message, user_id)
 
     if type == 'workers':
         send_admin_workers(bot, call.message, user_id)
@@ -69,16 +57,7 @@ def admin_main_callbacks(call: types.CallbackQuery):
         )
 
     if type == 'payment':
-
-        # Общие Показатели
-        count_payments = base_statis.count_payments()
-        summ_all_users = base_statis.summ_by_transactions()
-
-        bot.edit_message_text(
-            admin_main_statistics(
-                count_payments, summ_all_users), chat_id, mes_id,
-            reply_markup=kb_statistics()
-        )
+        send_admin_payment(bot, call.message, user_id)
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
