@@ -181,7 +181,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         current_tp_ratio = current_tp_ratio[:add_count]
                         current_split = current_split[:add_count]
                     else:
-                        # Ищем текущий максимальный тейк профит
+                        # Ищем текущий максимальный тейк-профит
                         max_tp = max(current_tp_ratio)
 
                         # Разделяем остатки процентов на кол-во добавляемых
@@ -197,7 +197,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                             current_tp_ratio.append(max_tp + i)
                             current_split.append(new_percent)
 
-                # Добавление тейк профита, если задано
+                # Добавление тейк-профита, если задано
                 if take_profit_add != '':
                     tp_temp = int(take_profit_add)
                     if tp_temp in current_tp_ratio:
@@ -223,13 +223,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         user_id, current_tp_ratio, current_split, add_count
                     )
                 elif len(current_tp_ratio) == len(current_split):
-                    # Если кол-во тейк профитов и процентов одинаково,
-                    # то даем выбрать следующий тейк профит
+                    # Если кол-во тейк-профитов и процентов одинаково,
+                    # то даем выбрать следующий тейк-профит
                     kb = kb_splitting(
                         user_id, current_tp_ratio, current_split
                     )
                 else:
-                    # Иначе даем ввести процент для последнего выбранного тейк профита
+                    # Иначе даем ввести процент для последнего выбранного тейк-профита
                     kb = None
                     bot.set_state(user_id, SettingsState.splitting, chat_id)
                 bot.edit_message_text(
@@ -245,7 +245,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             current_tp_ratio: list[int] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
 
-        # При сохранении тейк профита без разделения
+        # При сохранении тейк-профита без разделения
         if type == 'tp_save':
             current_tp_ratio.sort()
             db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
@@ -253,7 +253,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         # При сохранении вывода с разделением
         if type == 'splitting_save':
-            # Сортируем по возрастанию тейк профитов
+            # Сортируем по возрастанию тейк-профитов
             sorted_tp, sorted_split = zip(
                 *sorted(zip(current_tp_ratio, current_split))
             )

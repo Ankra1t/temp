@@ -5,6 +5,7 @@ from db_new import db_new
 
 
 BULLET = '✦'
+POINT = '•'
 
 market_translates = {
     'ru': {
@@ -107,7 +108,7 @@ def msg_settings(user_id: int):
             'dep': 'Базовый депозит',
             'risk': 'Базовый риск',
             'currency': 'Базовая валюта',
-            'tp_show': 'Вывод расчета прибыли',
+            'tp_show': 'Деление профита',
             'market': 'Рынок',
         },
         'en': {
@@ -115,7 +116,7 @@ def msg_settings(user_id: int):
             'dep': 'Default deposit',
             'risk': 'Default risk',
             'currency': 'Default currency',
-            'tp_show': 'Display calculation of profit',
+            'tp_show': 'Profit division',
             'market': 'Market',
         },
     }
@@ -185,7 +186,7 @@ def msg_summury_profit_settings(user_id: int):
         'ru': {
             'name': 'Настройки',
             'subname': 'Деление профита',
-            'take_profit': 'Ваш тейк профит',
+            'take_profit': 'Ваш тейк-профит',
             'split': 'Разделение',
             'on': 'включено',
             'off': 'выключено',
@@ -477,29 +478,29 @@ def msg_calculate_result(
     point = {
         'ru': {
             'dep': 'Депозит',
-            'open': 'Цена открытия',
+            'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
-            'conclusion': 'Вывод',
+            'conclusion': 'При цене',
             'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
             'credit': 'Кредитное плечо',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль'
+            'profit': 'Общая прибыль'
         },
         'en': {
             'dep': 'Deposit',
             'open': 'The open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
-            'conclusion': 'Conclusion',
+            'conclusion': 'At a price',
             'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
             'credit': 'Leverage',
             'risk_val': 'The risk of a deal',
-            'profit': 'Profit'
+            'profit': 'General profit'
         }
     }
 
@@ -509,7 +510,7 @@ def msg_calculate_result(
     )
 
     p_show = ''
-    conclusion = '<b>'
+    conclusion = ''
     for i in range(len(take_profit)):
         p_show += f'{get_print_float(profit[i], round_count)}'
 
@@ -521,30 +522,28 @@ def msg_calculate_result(
         count = get_print_float(count_bet * percent * 0.01, 2)
         tp = get_print_float(take_profit[i], round_count)
 
-        conclusion += f'  {i + 1}) {count} - {tp} {currency} - x{tp_ratio[i]} ({get_print_float(percent)}%)'
+        conclusion += f'  <b>x{tp_ratio[i]}</b>: <u>{tp}<u> {currency} (<b>{count} монет</b>) -- {get_print_float(percent)}%'
 
         if i != len(take_profit) - 1:
             conclusion += '\n'
             p_show += ' / '
-        else:
-            conclusion += '</b>'
 
     n_char = '\n'
     return f"""
-{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
-{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
+{POINT} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
+{point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
 
-{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>
-{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
+{POINT} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>
+{point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
 
-{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
-{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
-{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>
+{point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
+{point[lang]["credit"]}: <b>{credit} к 1</b>
 
-{BULLET} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
+{POINT} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
 {conclusion}
 
-{BULLET} {point[lang]["profit"]} (<b>{currency}</b>): <b>{p_show}</b>
+{POINT} {point[lang]["profit"]} (<b>{currency}</b>): <b>{p_show}</b>
 """
 # {''.join((
 #     f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
@@ -573,23 +572,23 @@ def msg_calculate_forex_result(
             'dep': 'Депозит',
             'risk': '% риска на сделку',
             'pair': 'Валютная пара',
-            'open': 'Цена открытия',
+            'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
             'lot': 'Лот',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль'
+            'profit': 'Общая прибыль'
         },
         'en': {
             'dep': 'Deposit',
             'risk': '% risk of a deal',
             'pair': 'Currency pair',
-            'open': 'Цена открытия',
+            'open': 'Цена входа',
             'sl': 'Stop loss',
             'tp': 'Take profit',
             'lot': 'Lot',
             'risk_val': 'The risk of a deal',
-            'profit': 'Profit'
+            'profit': 'General profit'
         }
     }
 
@@ -615,7 +614,7 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
 
     tp_count = len(current_tp)
 
-    text = '<u>Установка тейк профита</u>\n'
+    text = '<u>Установка тейк-профита</u>\n'
 
     if tp_count != 0:
         text += 'Текущий выбор: <b>'
@@ -625,7 +624,7 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
 
         text += '</b>\n'
 
-    text += '\nУчитывайте, что максимальный коэффициент тейк профита - <b>x10</b>\n'
+    text += '\nУчитывайте, что максимальный коэффициент тейк-профита - <b>x10</b>\n'
     text += 'Можно выбрать до <b>5</b> значений\n\n'
 
     if tp_count == 0:
@@ -677,7 +676,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
     text += '\n'
     if is_last:
         text += f'Оставшиеся <b>{get_print_float(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
-        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк профитов\n'
+        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк-профитов\n'
         text += 'Выберите на <u>сколько частей</u> разделить остаток'
     elif tp_count == 0:
         text += 'Выберите <b>первое</b> значение тейк-профита'
@@ -696,7 +695,7 @@ def msg_enter_summury_profit_type(user_id: int):
 Выберите вид разделения суммы:
 
 <i>*Простой - без деления профита, продажа 100% торговой позиции
-*Разделение - продажа торговой позиции разделяется по нескольким тейк-профитам</i>
+*Разделение - продажа торговой позиции разделяется на несколько тейк-профитов</i>
 """
 
 
@@ -836,7 +835,7 @@ msg_manual = ["""
               """
 *4.* Вводите исходные данные для расчета объема
 
-*а. Цена открытия. *
+*а. Цена входа. *
 
 место, где находится Ваш уровень, откуда Вы готовы войти в сделку (либо на покупку (лонг), либо продажу (шорт)). 
 

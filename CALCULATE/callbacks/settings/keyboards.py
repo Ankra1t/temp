@@ -40,7 +40,7 @@ def kb_settings(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_base = getButton('🎚 ' + texts[lang]["base"], 'go_change_base')
+    btn_base = getButton('📊 ' + texts[lang]["base"], 'go_change_base')
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
 
@@ -246,7 +246,7 @@ def kb_summury_profit_type(user_id: int):
 
 def kb_take_profit(user_id: int, current_tp: list[int]):
     """
-        Выбор значения коэфицента для тейк профита
+        Выбор значения коэфицента для тейк-профита
     """
     lang = get_lang(user_id)
 
@@ -259,9 +259,9 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         }
     }
 
-    # Максимальный тейк профит
+    # Максимальный тейк-профит
     tp_max = 10
-    # Максимальное кол-во тейк профитов
+    # Максимальное кол-во тейк-профитов
     tp_count_max = 5
 
     row_width = 4
@@ -269,7 +269,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
     buttons = []
 
-    # Если кол-во тейк профитов еще не максимальное - выводим кнопки
+    # Если кол-во тейк-профитов еще не максимальное - выводим кнопки
     if len(current_tp) != tp_count_max:
         for el in range(2, tp_max + 1):
             added = '✅ ' if el in current_tp else ''
@@ -290,7 +290,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         cancel_txt(lang), 'change_summury_profit'
     )
 
-    # Шаг назад, убираем последний тейк профит
+    # Шаг назад, убираем последний тейк-профит
     btn_back = getButton(
         back_txt(lang),
         'change_summury_profit', 'default', None, -1
@@ -306,7 +306,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
 def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], added_count=0):
     """
-        Выбор значения коэфицента для тейк профита, для выставления процентов
+        Выбор значения коэфицента для тейк-профита, для выставления процентов
     """
     added_count = max(added_count, 1)
     lang = get_lang(user_id)
@@ -322,9 +322,9 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         }
     }
 
-    # Максимальный тейк профит
+    # Максимальный тейк-профит
     tp_max = 10
-    # Максимальное кол-во тейк профитов
+    # Максимальное кол-во тейк-профитов
     tp_count_max = 5
 
     percents_sum = sum(current_split)
@@ -367,7 +367,7 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     btn_cancel = getButton(
         cancel_txt(lang), 'change_summury_profit')
 
-    # Шаг назад, убираем последний тейк профит и его процент
+    # Шаг назад, убираем последний тейк-профит и его процент
     btn_back = getButton(
         back_txt(lang),
         'change_summury_profit', 'splitting', None, -added_count

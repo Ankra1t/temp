@@ -1268,7 +1268,7 @@ class Database:
         pass
 
     def get_calculator_tp_ratio(self, user_id: int) -> list[int]:
-        """Получить коэфициенты тейк профит на показ"""
+        """Получить коэфициенты тейк-профит на показ"""
         default_ratio = [3, 4, 5]
 
         query = 'SELECT take_profit_ratio FROM tgcalc_user_settings WHERE user_id = %s'
@@ -1284,7 +1284,7 @@ class Database:
             return default_ratio
 
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
-        """Установить коэфициенты тейк профит на показ"""
+        """Установить коэфициенты тейк-профит на показ"""
         query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s"
         params = (tp, user_id)
 
