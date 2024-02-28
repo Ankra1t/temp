@@ -3,8 +3,6 @@ from telebot.types import CallbackQuery
 
 from db_new import db_new
 
-# TODO удалить
-from initialize import text_editor
 from initialize import pay_guard
 
 from common.utils import set_state_data
@@ -13,6 +11,7 @@ from messages.workers import menu_msg
 
 from .keyboards import kb_calculator, kb_edit_text, kb_params_back, kb_params_change, kb_params
 from .filter import admin_params_factory, AdminParamsCallbackFilter
+from ..pages import send_admin_main, send_admin_params
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -22,6 +21,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    if type == 'go_main':
+        send_admin_main(bot, call.message, user_id)
+
+    if type == 'go_params':
+        send_admin_params(bot, call.message, user_id)
 
     if type == 'calculator':
         sup = db_new.get_support_name()
@@ -83,6 +88,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'Что изменяем?', chat_id, mes_id,
             reply_markup=kb_params_change()
         )
+
     elif 'choice' in type:
         if 'yes' in type:
             with bot.retrieve_data(user_id, chat_id) as data:
@@ -92,9 +98,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             db_new.update_text(name, text)
 
             bot.send_message(chat_id, 'Успешно')
-            bot.send_message(
-                chat_id, menu_msg('Параметры'),
-                reply_markup=kb_params())
+            send_admin_params(bot, call.message, user_id, True)
+
         if 'no' in type:
             bot.edit_message_text(
                 'Что изменяем?', chat_id, mes_id,
@@ -110,6 +115,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_params_back())
         bot.set_state(user_id, AdminParamsState.text, chat_id)
         set_state_data(bot, user_id, chat_id, {'name': name})
+
     elif 'calculator' in type:
         if 'add_future' in type:
             bot.edit_message_text(

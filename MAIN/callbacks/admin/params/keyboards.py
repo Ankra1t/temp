@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from initialize import kb_inl_admin
+from common.keyboard import back_txt
 from MAIN.common.utils import get_calculator_btn_link
 
 from .filter import admin_params_factory
@@ -13,16 +13,17 @@ def getButton(text: str, type: str):
 def kb_params():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('⌨️ Калькулятор', 'calculator')
-    btn2 = getButton('✏️ Изменить тексты', 'update_texts')
-    btn4 = getButton('Изменить', 'change')
-    btn5 = getButton('🎁 Изменить пробный период', 'change_trial_days')
+    btn_calc = getButton('⌨️ Калькулятор', 'calculator')
+    btn_texts = getButton('✏️ Изменить тексты', 'update_texts')
+    btn_change = getButton('Изменить', 'change')
+    btn_trial = getButton('🎁 Изменить пробный период', 'change_trial_days')
 
-    keyboard.add(btn1, btn2)
-    keyboard.add(btn4)
-    # keyboard.add(btn3, btn4)
-    keyboard.add(btn5)
-    keyboard.add(kb_inl_admin.go_main_btn)
+    back = getButton(back_txt(), 'go_main')
+
+    keyboard.add(btn_calc, btn_texts)
+    keyboard.add(btn_change)
+    keyboard.add(btn_trial)
+    keyboard.add(back)
     return keyboard
 
 
@@ -31,11 +32,12 @@ def kb_calculator():
 
     btn1 = getButton('💲 Добавить фьючерс', 'calculator_add_future')
     btn2 = getButton('💱 Добавить валютную пару', 'calculator_add_forex')
+    back = getButton(back_txt(), 'go_params')
     btn_link = get_calculator_btn_link()
 
     keyboard.add(btn1, btn2)
     keyboard.add(btn_link)
-    keyboard.add(kb_inl_admin.go_params_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(back)
     return keyboard
 
 
@@ -44,15 +46,17 @@ def kb_params_change():
 
     btn1 = getButton('FAQ', 'change_faq')
     btn2 = getButton('О нас', 'change_about_us')
+    back = getButton(back_txt(), 'go_params')
 
     keyboard.add(btn1, btn2)
-    keyboard.add(kb_inl_admin.go_params_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(back)
     return keyboard
 
 
 def kb_params_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(kb_inl_admin.go_params_btn, kb_inl_admin.go_main_btn)
+    back = getButton(back_txt(), 'go_params')
+    keyboard.add(back)
     return keyboard
 
 

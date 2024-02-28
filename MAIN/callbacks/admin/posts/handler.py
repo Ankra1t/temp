@@ -3,16 +3,14 @@ from telebot.types import CallbackQuery
 
 from initialize import pay_guard
 from db_new import db_new
-from BlockTGBotSender import BlockTGBotSender
-from MAIN.callbacks import send_admin_post
 from MAIN.states import AdminPostsState
-from messages.workers import admin_fut_posts_msg
 from common.utils import set_state_data
 from models import Post
 from MAIN.callbacks.admin.workers.handler import _handle_callback
 
 from .keyboards import kb_post_kinds, kb_posts, kb_posts_back
 from .filter import admin_posts_factory, AdminPostsCallbackFilter
+from ..pages import send_admin_post, send_admin_fut_posts, send_admin_main
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -22,6 +20,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    if type == 'go_main':
+        send_admin_main(bot, call.message, user_id)
+
+    if type == 'go_posts':
+        send_admin_fut_posts(bot, call.message, user_id)
 
     if type == 'add':
         bot.edit_message_text(
@@ -50,10 +54,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         for i in range(len(posts)):
             send_admin_post(bot, chat_id, posts[i])
 
-        bot.send_message(
-            chat_id, admin_fut_posts_msg(),
-            reply_markup=kb_posts()
-        )
+        send_admin_fut_posts(bot, call.message, user_id, True)
 
     if type == 'send_now':
         bot.edit_message_text('Отправьте ID поста, чтобы его разослать сейчас',
@@ -106,10 +107,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.delete_state(user_id, chat_id)
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
-        bot.send_message(
-            chat_id, admin_fut_posts_msg(),
-            reply_markup=kb_posts()
-        )
+        send_admin_fut_posts(bot, call.message, user_id, True)
+
 
     if 'confirm' in type:
         if 'no':
@@ -155,10 +154,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
             bot.delete_state(user_id, chat_id)
             bot.edit_message_text(text, chat_id, mes_id)
-            bot.send_message(
-                chat_id, admin_fut_posts_msg(),
-                reply_markup=kb_posts()
-            )
+            send_admin_fut_posts(bot, call.message, user_id, True)
+
 
     bot.answer_callback_query(call.id)
 
