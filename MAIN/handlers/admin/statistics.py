@@ -4,8 +4,8 @@ from telebot.types import Message
 
 from initialize import logger
 
-from common.utils import digit_accept, text_accept, set_state_data
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
+from common.utils import text_accept, set_state_data
+from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import base_statis
@@ -13,7 +13,6 @@ from initialize import base_statis
 from MAIN.states import AdminStatisticsState
 from MAIN.callbacks import kb_statistics_back
 
-from db_new import db_new
 # from initialize import kb_inl_admin, tariff_manager
 # from models import Discount, Price
 

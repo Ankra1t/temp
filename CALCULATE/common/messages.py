@@ -472,6 +472,7 @@ def msg_calculate_result(
     currency: str = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
     is_splitting = db_new.get_user_is_splitting(user_db_id)
     split_values = db_new.get_user_split_values(user_db_id)
+    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
     point = {
         'ru': {
@@ -520,7 +521,7 @@ def msg_calculate_result(
         count = get_print_float(count_bet * percent * 0.01, 2)
         tp = get_print_float(take_profit[i], round_count)
 
-        conclusion += f'{count} - {tp} {currency} - {get_print_float(percent)}%'
+        conclusion += f'  {i + 1}) {count} - {tp} {currency} - x{tp_ratio[i]} ({get_print_float(percent)}%)'
 
         if i != len(take_profit) - 1:
             conclusion += '\n'
@@ -543,7 +544,7 @@ def msg_calculate_result(
 {BULLET} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
 {conclusion}
 
-{BULLET} {point[lang]["profit"]} ({currency}): <b>{p_show}</b>
+{BULLET} {point[lang]["profit"]} (<b>{currency}</b>): <b>{p_show}</b>
 """
 # {''.join((
 #     f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',

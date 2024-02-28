@@ -1,9 +1,6 @@
 from typing import Literal
-from config_logger import logger
-from telebot import types
 from datetime import datetime, timedelta
 
-from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from db_new import db_new
@@ -164,7 +161,7 @@ class GuardPaymentAccess():
                 if price_item is not None and price_item.type_product == product:
                     return True
             else:
-                db_new.set_deactivate_subscribe(sub_item.id)
+                db_new.set_deactivate_subscribe(sub_item.id or 0)
 
         return False
 
@@ -214,41 +211,33 @@ class GuardPaymentAccess():
         else:
             finish_date = current_date_obj - timedelta(days=int(days))
 
-        finish_date = finish_date.strftime(DATE_FORMAT)
         db_new.set_subscribe_findate(subscribe_id or 0, finish_date)
         return finish_date
 
     def cancel_subscribes_for_time_type(self, time_type, count):
         """Отменить подписку за прошедший период"""
-        time_start_obj = get_datetime_now()
+        time_start = get_datetime_now()
+        time_end = get_datetime_now()
 
         if time_type == 'hours':
-            time_start_obj -= timedelta(hours=count)
+            time_start -= timedelta(hours=count)
 
         if time_type == 'days':
-            time_start_obj -= timedelta(days=count)
-
-        time_start = time_start_obj.strftime(DATE_FORMAT)
-        time_end = get_datetime_now().strftime(DATE_FORMAT)
-
-        logger.info(f'-----> Начало отмены дата {time_start}')
-        logger.info(f'-----> Конец отмены дата {time_end}')
+            time_start -= timedelta(days=count)
 
         db_new.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
-            'time_start': get_str_by_datetime(time_start_obj),
-            'time_end': get_str_by_datetime(get_datetime_now())
+            'time_start': get_str_by_datetime(time_start),
+            'time_end': get_str_by_datetime(time_end)
         }
 
-    def cancel_subscribes_for_time_period(self, date_start_obj: datetime, date_end_obj: datetime):
-        time_start = date_start_obj.strftime(DATE_FORMAT)
-        time_end = date_end_obj.strftime(DATE_FORMAT)
+    def cancel_subscribes_for_time_period(self, time_start: datetime, time_end: datetime):
         db_new.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
-            'time_start': get_str_by_datetime(date_start_obj),
-            'time_end': get_str_by_datetime(date_end_obj)
+            'time_start': get_str_by_datetime(time_start),
+            'time_end': get_str_by_datetime(time_end)
         }
 
         # # # # # # Вспомогательные методы

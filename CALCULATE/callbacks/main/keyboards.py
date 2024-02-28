@@ -1,5 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from common.keyboard import cancel_txt
 from common.utils import get_lang
 
 from .filter import main_factory
@@ -14,12 +15,8 @@ def getButton(text: str, type: str):
 
 def cancel_btn(user_id: int):
     lang = get_lang(user_id)
-    texts = {
-        'ru': 'Отмена',
-        'en': 'Cancel'
-    }
 
-    return getButton(texts[lang], 'cancel')
+    return getButton(cancel_txt(lang), 'cancel')
 
 
 def kb_cancel(user_id: int):

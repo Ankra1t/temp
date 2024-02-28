@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
-from gettext import find
 from telebot import TeleBot
 from telebot.types import Message
 
 from common.utils import digit_accept, text_accept, set_state_data
-from common.vars import DATE_FORMAT, PRINT_DATE_FROMAT
 from common.dt import get_datetime_now, get_str_by_datetime
-
 
 from MAIN.states import AdminTariffState
 
@@ -303,7 +300,7 @@ def handle_price_findate_count_days(message: Message, bot: TeleBot):
     findate_set_db = get_datetime_now() + timedelta(days=days)
     findate_show = get_str_by_datetime(findate_set_db)
 
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
 
     bot.send_message(
         chat_id,
@@ -338,7 +335,7 @@ def handle_price_findate(message: Message, bot: TeleBot):
     findate_show = get_str_by_datetime(findate_set_db)
 
     # Задаем дату окончания тарифа
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db.strftime(DATE_FORMAT))
+    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
 
     bot.send_message(
         chat_id,

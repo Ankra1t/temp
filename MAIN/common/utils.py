@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
 from common.dt import get_str_by_datetime
-from common.vars import PRINT_DATE_FROMAT
 
 from db_new import db_new
 from common.utils import get_decimal_count, get_print_float, get_normal_text

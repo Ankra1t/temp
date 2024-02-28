@@ -26,7 +26,6 @@ from MAIN.callbacks import callbacks_registration
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
-from common.vars import PRINT_DATE_FROMAT
 
 from keyboard_reply import *
 from cb_filters import (AdminDefaultCallbackFilter,
@@ -384,7 +383,7 @@ def callback_inline(call: types.CallbackQuery):
     if call.data == 'live_cancel':
         bot.delete_state(user_id, chat_id)
         bot.edit_message_text('Отменено!', chat_id, mes_id)
-        send_start_by_user(bot, call.message, user_id, chat_id, user_role)
+        send_start_by_user(bot, call.message, user_id, user_role)
 
     bot.answer_callback_query(call.id)
 
