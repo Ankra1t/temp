@@ -9,7 +9,7 @@ from CALCULATE.common.messages import msg_digit_error
 from MAIN.states import AdminPostsState
 from MAIN.callbacks import (
     kb_posts_back, kb_post_add_confirm, kb_post_confirm,
-    send_admin_post, kb_posts, kb_params
+    send_admin_post, send_admin_params
 )
 from MAIN.common.utils import get_post_from_message
 from common.dt import get_datetime_now
@@ -17,7 +17,6 @@ from common.dt import get_datetime_now
 from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
 from keyboard_reply import kb_live_cancel
-from messages.workers import admin_fut_posts_msg, menu_msg
 from models import Post, PostDetails
 
 
@@ -256,10 +255,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         tg_sender.send()
 
         bot.delete_state(user_id, chat_id)
-        bot.send_message(
-            chat_id, admin_fut_posts_msg(),
-            reply_markup=kb_posts()
-        )
+        send_admin_params(bot, message, user_id, True)
     else:
         dt = post.date_time or get_datetime_now()
         send_admin_post(bot, chat_id, post)
@@ -328,10 +324,7 @@ def handle_edit_text(message: Message, bot: TeleBot):
 
     db_new.update_text(name, text)
     bot.delete_state(user_id, chat_id)
-    bot.edit_message_text(
-        menu_msg('Параметры'), chat_id, mes_id,
-        reply_markup=kb_params()
-    )
+    send_admin_params(bot, message, user_id)
 
 
 def registration(bot: TeleBot):

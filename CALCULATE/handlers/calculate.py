@@ -4,7 +4,7 @@ from telebot.types import Message
 from db_new import db_new
 from common.utils import digit_accept, get_calculation, set_state_data, text_accept
 
-from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main
+from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main, kb_set_calc_stats
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
@@ -235,8 +235,13 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         risk_value, take_profit, profit
     )
 
+    mes += '\n\nХотите учесть расчеты в статистике?'
+
     db_new.minus_calculator_uses_count(user_db_id)
-    bot.send_message(chat_id, mes)
+    bot.send_message(
+        chat_id, mes,
+        reply_markup=kb_set_calc_stats(user_id)
+    )
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True, True)
 
@@ -246,7 +251,6 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
-    mes_id = message.id
 
     stop_loss = digit_accept(message)
     if stop_loss is None:

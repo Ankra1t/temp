@@ -7,8 +7,8 @@ from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_digit_error, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_splitting,
+    msg_currency_error, msg_digit_error, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_success_base_set, msg_success_edit
 )
 
@@ -75,7 +75,8 @@ def handle_new_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         bot.send_message(
             chat_id, msg_currency_error(user_id),
-            reply_markup=kb_base_cancel(user_id))
+            reply_markup=kb_base_cancel(user_id)
+        )
         return
 
     db_new.set_user_currency(user_db_id, value.upper())
@@ -103,8 +104,8 @@ def handle_splitting(message: Message, bot: TeleBot):
 
     enter_mes = msg_enter_splitting(user_id, current_tp, current_split)
 
-    message.text = message.text.replace(
-        '%', '') if message.text is not None else ''
+    message.text = message.text.replace('%', '') if (
+        message.text is not None) else ''
 
     value = digit_accept(message)
     if value is None:
@@ -130,6 +131,75 @@ def handle_splitting(message: Message, bot: TeleBot):
     bot.set_state(user_id, SettingsState.summury_profit, chat_id)
 
 
+def handle_day_risk(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+
+    value = text_accept(message)
+
+    enter_mes = msg_enter_day_risk(user_id)
+    keyboard = kb_base_cancel(user_id)
+
+    if value is None:
+        bot.send_message(
+            chat_id,
+            'Введите значение текстом\n' + enter_mes,
+            reply_markup=keyboard
+        )
+        return
+
+    is_percent = value.endswith('%')
+    value = value.replace('%', '')
+
+    if not is_digit(value):
+        bot.send_message(
+            chat_id,
+            'Введите число\n' + enter_mes,
+            reply_markup=keyboard
+        )
+        return
+
+    value = float(value)
+
+    db_new.set_user_day_risk(user_db_id, value, is_percent)
+    bot.send_message(chat_id, msg_success_edit(user_id))
+    send_settings(bot, message, user_id, True)
+
+
+def handle_round_count(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+
+    value = digit_accept(message, int)
+
+    enter_mes = msg_enter_round_count(user_id)
+    keyboard = kb_base_cancel(user_id)
+
+    if value is None:
+        bot.send_message(
+            chat_id,
+            'Введите число\n' + enter_mes,
+            reply_markup=keyboard
+        )
+        return
+
+    if value < 0 or value > 5:
+        bot.send_message(
+            chat_id,
+            'Введите число от 0 до 5\n' + enter_mes,
+            reply_markup=keyboard
+        )
+        return
+
+    db_new.set_user_round_count(user_db_id, value)
+    bot.send_message(chat_id, msg_success_edit(user_id))
+    send_settings(bot, message, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -138,6 +208,10 @@ def registration(bot: TeleBot):
             state=SettingsState.deposit)
     reg_mes(handle_new_value('base_risk_percent'),
             state=SettingsState.risk_percent)
+    reg_mes(handle_day_risk,
+            state=SettingsState.day_risk)
+    reg_mes(handle_round_count,
+            state=SettingsState.round_count)
 
     reg_mes(handle_new_currency, state=SettingsState.currency)
     reg_mes(handle_splitting, state=SettingsState.splitting)

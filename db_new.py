@@ -1268,7 +1268,7 @@ class Database:
         pass
 
     def get_calculator_tp_ratio(self, user_id: int) -> list[int]:
-        """Получить коэфициенты тейк профит на показ"""
+        """Получить коэфициенты тейк-профит на показ"""
         default_ratio = [3, 4, 5]
 
         query = 'SELECT take_profit_ratio FROM tgcalc_user_settings WHERE user_id = %s'
@@ -1284,7 +1284,7 @@ class Database:
             return default_ratio
 
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
-        """Установить коэфициенты тейк профит на показ"""
+        """Установить коэфициенты тейк-профит на показ"""
         query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s"
         params = (tp, user_id)
 
@@ -1377,14 +1377,85 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_user_day_risk(self, user_id: int) -> tuple[float, bool] | None:
+        """
+            Возвращает tuple[float, bool]:
+                float - значение риска, True - если значение в процентах
+            :Либо None - если не задано
+        """
+        query = 'SELECT day_risk FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            value = str(data.get('day_risk', ''))
+
+            is_percent = value.endswith('%')
+            value = value.replace('%', '')
+
+            return float(value), is_percent
+        except Exception as e:
+            print(f'ERROR[get_user_day_risk]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_day_risk(self, user_id: int, value: float, is_percent=False):
+        result = f'{value}{"%" if is_percent else ""}'
+
+        query = 'UPDATE tgcalc_user_settings SET day_risk = %s WHERE user_id = %s'
+        params = (result, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_day_risk]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_user_round_count(self, user_id: int) -> int | None:
+        query = 'SELECT round_count FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            return data.get('round_count')
+        except Exception as e:
+            print(f'ERROR[get_user_round_count]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_round_count(self, user_id: int, value: int):
+        query = 'UPDATE tgcalc_user_settings SET round_count = %s WHERE user_id = %s'
+        params = (value, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_round_count]: {e}')
+            self.connection.rollback()
+            return False
+
     def reset_user_settings(self, user_id: int):
         query = (
-            'UPDATE tgcalc_user_settings SET take_profit_to_show = %s, market = %s, base_currency = %s, '
-            'base_deposit = %s, base_risk_percent = %s, take_profit_ratio = %s, split_values = %s, is_splitting = %s '
+            'UPDATE tgcalc_user_settings SET market = %s, '
+            'base_currency = %s, base_deposit = %s, base_risk_percent = %s, '
+            'take_profit_ratio = %s, split_values = %s, is_splitting = %s '
             'WHERE user_id = %s'
         )
-        params = ('345', 'crypto', 'USD', None,
-                  None, [3, 4, 5], None, 0, user_id)
+        params = ('crypto', None, None, None,
+                  [3, 4, 5], None, 0, user_id)
 
         try:
             self.curs.execute(query, params)
