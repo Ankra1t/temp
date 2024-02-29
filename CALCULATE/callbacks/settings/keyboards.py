@@ -63,12 +63,16 @@ def kb_change_base(user_id: int):
         'ru': {
             'dep': 'Депозит',
             'risk': 'Процент риска',
+            'day_risk': 'Риск на день',
             'currency': 'Валюта',
+            'round_count': 'Округление',
         },
         'en': {
             'dep': 'Deposit',
             'risk': 'Risk percent',
+            'day_risk': 'Daily risk',
             'currency': 'Currency',
+            'round_count': 'Rounding',
         }
     }
 
@@ -77,10 +81,14 @@ def kb_change_base(user_id: int):
     btn_dep = getButton(texts[lang]['dep'], 'set_deposit')
     btn_risk = getButton(texts[lang]['risk'], 'set_risk_percent')
     btn_currency = getButton(texts[lang]['currency'], 'set_currency')
+    btn_day_risk = getButton(texts[lang]['day_risk'], 'set_day_risk')
+    btn_round_count = getButton(texts[lang]['round_count'], 'set_round_count')
+
     btn_back = getButton(back_txt(lang), 'go_settings')
 
     keyboard.add(btn_dep, btn_risk)
-    keyboard.add(btn_currency, btn_back)
+    keyboard.add(btn_currency, btn_day_risk)
+    keyboard.add(btn_round_count, btn_back)
     return keyboard
 
 

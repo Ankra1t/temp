@@ -1,11 +1,12 @@
 from telebot import TeleBot
-from common.utils import get_decimal_count, get_lang, get_print_float
 
-from db_new import db_new
+from common.utils import get_decimal_count, get_lang, get_print_float
+from db_new import LANGUAGES_TYPE, db_new
 
 
 BULLET = '✦'
 POINT = '•'
+TAB = '   '
 
 market_translates = {
     'ru': {
@@ -21,6 +22,23 @@ market_translates = {
         'forex': 'Forex'
     }
 }
+
+
+def get_risk_annotation(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            '1': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
+            '2': '<i>Без знаков</i> - для ввода точной суммы риска',
+        },
+        'en': {
+            '1': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
+            '2': '<i>Without signs</i> - for entering a cloth amount of risk',
+        }
+    }
+
+    return f"""{texts[lang]['1']}
+{texts[lang]['2']}
+"""
 
 
 # Основные страницы
@@ -98,6 +116,9 @@ def msg_settings(user_id: int):
         base.get('base_currency') or 'USD'
     )
 
+    day_risk = db_new.get_user_day_risk(user_db_id)
+    round_count = db_new.get_user_round_count(user_db_id)
+
     risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
     tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
     market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
@@ -107,17 +128,22 @@ def msg_settings(user_id: int):
             'name': 'Настройки',
             'dep': 'Базовый депозит',
             'risk': 'Базовый риск',
+            'day_risk': 'Риск на день',
+            'round_count': 'Округление до',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
             'market': 'Рынок',
+            'round_count': 'Округление',
         },
         'en': {
             'name': 'Settings',
             'dep': 'Default deposit',
             'risk': 'Default risk',
+            'day_risk': 'Daily risk',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
+            'round_count': 'Rounding',
         },
     }
 
@@ -129,14 +155,25 @@ def msg_settings(user_id: int):
     show_risk = (str(get_print_float(risk)) +
                  ("%" if risk_is_percent else f" {currency}") if risk is not None else "-")
 
+    if day_risk is None:
+        show_day_risk = '-'
+    else:
+        show_day_risk = (f'{get_print_float(day_risk[0])}' +
+                         ('%' if day_risk[1] else f' {currency}'))
+
+    show_round = str(round_count) if (round_count is not None) else '-'
+
     return f"""
 ⚙️ <b><u>{texts[lang]["name"]}</u></b>
 
-{BULLET} {texts[lang]["dep"]}: <b>{show_deposit}</b>
-{BULLET} {texts[lang]["risk"]}: <b>{show_risk}</b>
+{POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
+{POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
+{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 
-{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
-{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
+{POINT} {texts[lang]["round_count"]}: <b>{show_round}</b>
+
+{POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
+{POINT} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
 """
 
 
@@ -474,6 +511,7 @@ def msg_calculate_result(
     is_splitting = db_new.get_user_is_splitting(user_db_id)
     split_values = db_new.get_user_split_values(user_db_id)
     tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
+    user_round_count = db_new.get_user_round_count(user_db_id)
 
     point = {
         'ru': {
@@ -508,6 +546,7 @@ def msg_calculate_result(
         get_decimal_count(open_price),
         get_decimal_count(stop_loss)
     )
+    round_count = min(round_count, user_round_count or 5)
 
     p_show = ''
     conclusion = ''
@@ -522,7 +561,7 @@ def msg_calculate_result(
         count = get_print_float(count_bet * percent * 0.01, 2)
         tp = get_print_float(take_profit[i], round_count)
 
-        conclusion += f'  <b>x{tp_ratio[i]}</b>: <u>{tp}<u> {currency} (<b>{count} монет</b>) -- {get_print_float(percent)}%'
+        conclusion += f'  <b>x{tp_ratio[i]}</b>: <u>{tp} {currency}</u> (<b>{count} монет</b>) — {get_print_float(percent)}%'
 
         if i != len(take_profit) - 1:
             conclusion += '\n'
@@ -531,24 +570,20 @@ def msg_calculate_result(
     n_char = '\n'
     return f"""
 {POINT} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
-{point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
+{TAB}{point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
 
 {POINT} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>
-{point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
+{TAB}{point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
 
-{point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
-{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
-{point[lang]["credit"]}: <b>{credit} к 1</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
+{TAB}{point[lang]["credit"]}: <b>{credit} к 1</b>
 
-{POINT} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
+{POINT} {point[lang]['conclusion']}:
 {conclusion}
 
 {POINT} {point[lang]["profit"]} (<b>{currency}</b>): <b>{p_show}</b>
 """
-# {''.join((
-#     f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
-#     f'{n_char}{BULLET} {point[lang]["split"]}: <b>{split_show}</b>'  if split_show != '' else ''
-# ))}
 
 
 def msg_calculate_forex_result(
@@ -725,22 +760,46 @@ def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
+        'ru': 'Введите <u>риск</u> на сделку',
+        'en': 'Enter <u>risk</u> to the deal',
+    }
+
+    return f"""✍ {texts[lang]}
+
+{get_risk_annotation(lang)}
+"""
+
+
+def msg_enter_day_risk(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите <u>риск на день</u>',
+        'en': 'Enter <u>daily risk</u>',
+    }
+
+    return f"""✍ {texts[lang]}
+
+{get_risk_annotation(lang)}
+"""
+
+
+def msg_enter_round_count(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
         'ru': {
-            '1': 'Введите <u>риск</u> на сделку',
-            '2': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
-            '3': '<i>Без знаков</i> - для ввода точной суммы риска',
+            'main': 'Введите <u>количество знаков</u> после запятой',
+            'max': '<i>Максимум</i>: <b>5</b>'
         },
         'en': {
-            '1': 'Enter <u>risk</u> to the deal',
-            '2': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
-            '3': '<i>Without signs</i> - for entering a cloth amount of risk',
+            'main': 'Enter the <u>number of signs</u> after dot',
+            'max': '<i>Maximum</i>: <b>5</b>'
         },
     }
 
-    return f"""✍ {texts[lang]['1']}
-
-{texts[lang]['2']}
-{texts[lang]['3']}
+    return f"""✍ {texts[lang]['main']}
+{texts[lang]['max']}
 """
 
 
@@ -797,6 +856,17 @@ def msg_choose_lang(user_id: int):
     }
 
     return f'🌐 {texts[lang]}'
+
+
+def msg_confirm_reset(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Вы действительно хотите <b>сбросить</b> все настройки',
+        'en': 'Do you really want to drop </b> all settings?',
+    }
+
+    return f'⚠️ {texts[lang]}?'
 
 
 # Инструкция к калькулятору

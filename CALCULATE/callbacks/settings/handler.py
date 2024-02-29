@@ -8,8 +8,8 @@ from db_new import db_new, LANGUAGES
 from common.utils import set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_splitting,
+    msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit,
     msg_settings_change_market, msg_success_edit, msg_settings_change_base,
 )
@@ -17,7 +17,7 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
-    kb_choose_lang, kb_base_cancel,
+    kb_choose_lang, kb_base_cancel, kb_settings_confirm,
     kb_splitting, kb_splitting_last,
     kb_summury_profit_type, kb_take_profit
 )
@@ -52,6 +52,22 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_base_cancel(user_id)
         )
         bot.set_state(user_id, SettingsState.risk_percent, chat_id)
+
+    if type == 'set_day_risk':
+        bot.edit_message_text(
+            msg_enter_day_risk(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_base_cancel(user_id)
+        )
+        bot.set_state(user_id, SettingsState.day_risk, chat_id)
+
+    if type == 'set_round_count':
+        bot.edit_message_text(
+            msg_enter_round_count(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_base_cancel(user_id)
+        )
+        bot.set_state(user_id, SettingsState.round_count, chat_id)
 
     if 'set_currency' in type:
         if type == 'set_currency':
@@ -138,14 +154,22 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.currency, chat_id)
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
-    if type == 'reset':
-        # Сброс настроек калькулятора до начальных
-        try:
-            db_new.reset_user_settings(user_db_id)
+    if 'reset' in type:
+        if '_yes' in type:
+            try:
+                # Сброс настроек калькулятора до начальных
+                db_new.reset_user_settings(user_db_id)
+                send_settings(bot, call.message, user_id)
+            except:
+                # Нет изменений - ничего не изменяется
+                pass
+        elif '_no' in type:
             send_settings(bot, call.message, user_id)
-        except:
-            # Нет изменений - ничего не изменяется
-            pass
+        else:
+            bot.edit_message_text(
+                msg_confirm_reset(user_id), chat_id, mes_id,
+                reply_markup=kb_settings_confirm(user_id, 'reset')
+            )
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
