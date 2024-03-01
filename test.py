@@ -65,7 +65,11 @@ from db_new import db_new
 #                     (datetime(2023, 8, 10, 5, 54),))
 # db_new.connection.commit()
 
-print('1.0'.isdigit())
+db_new.curs.execute("""
+ALTER TABLE tgcalc_user_settings
+ADD trading_style VARCHAR(255);
+""")
+db_new.connection.commit()
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '
 #     'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '

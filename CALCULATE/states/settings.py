@@ -8,6 +8,7 @@ class SettingsState(StatesGroup):
     currency = State()
 
     round_count = State()
+    trading_style = State()
 
     summury_profit = State()
     splitting = State()

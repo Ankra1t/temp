@@ -1389,7 +1389,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            if data is None:
+            if data is None or data.get('day_risk') is None:
                 return None
 
             value = str(data.get('day_risk', ''))
@@ -1447,14 +1447,44 @@ class Database:
             self.connection.rollback()
             return False
 
+    def get_user_trading_style(self, user_id: int) -> str | None:
+        query = 'SELECT trading_style FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            return data.get('trading_style')
+        except Exception as e:
+            print(f'ERROR[get_user_trading_style]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_trading_style(self, user_id: int, value: str):
+        query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s'
+        params = (value, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_trading_style]: {e}')
+            self.connection.rollback()
+            return False
+
     def reset_user_settings(self, user_id: int):
         query = (
-            'UPDATE tgcalc_user_settings SET market = %s, '
+            'UPDATE tgcalc_user_settings SET market = %s, trading_style = %s, '
+            'day_risk = %s, round_count = %s, '
             'base_currency = %s, base_deposit = %s, base_risk_percent = %s, '
             'take_profit_ratio = %s, split_values = %s, is_splitting = %s '
             'WHERE user_id = %s'
         )
-        params = ('crypto', None, None, None,
+        params = ('crypto', None, None, None, None, None, None,
                   [3, 4, 5], None, 0, user_id)
 
         try:

@@ -7,7 +7,7 @@ from .manual.handler import registration as _reg_manual
 from .manual.keyboards import kb_manual
 
 from .main.handler import registration as _reg_main
-from .main.keyboards import kb_main, kb_cancel, cancel_btn, kb_forex_val, kb_set_calc_stats, kb_freeze_calc
+from .main.keyboards import kb_main, kb_cancel, cancel_btn, kb_forex_val, kb_set_calc_stats, kb_freeze_calc, kb_deal_result
 
 from .settings.handler import registration as _reg_settings
 from .settings.keyboards import (
@@ -15,6 +15,7 @@ from .settings.keyboards import (
     kb_change_base, kb_choose_lang, kb_change_currency,
     kb_change_market, kb_splitting_last, kb_take_profit,
     kb_summury_profit, kb_summury_profit_type, kb_splitting,
+    kb_trading_style
 )
 
 
