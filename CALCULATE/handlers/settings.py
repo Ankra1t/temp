@@ -8,7 +8,7 @@ from CALCULATE.callbacks import kb_base_cancel, send_main, send_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style,
     msg_success_base_set, msg_success_edit
 )
 
@@ -54,9 +54,8 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                 bot.set_state(user_id, SettingsState.risk_percent, chat_id)
                 bot.send_message(chat_id, msg_enter_risk_percent(user_id))
             else:
-                bot.delete_state(user_id, chat_id)
-                bot.send_message(chat_id, msg_success_base_set(user_id))
-                send_settings(bot, message, user_id, True)
+                bot.set_state(user_id, SettingsState.trading_style, chat_id)
+                bot.send_message(chat_id, msg_enter_trading_style(user_id))
         else:
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
@@ -200,6 +199,35 @@ def handle_round_count(message: Message, bot: TeleBot):
     send_settings(bot, message, user_id, True)
 
 
+def handle_trading_style(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+
+    value = text_accept(message)
+
+    if value is None:
+        bot.send_message(
+            chat_id,
+            'Введите стиль текстом\n' + msg_enter_trading_style(user_id),
+            reply_markup=kb_base_cancel(user_id)
+        )
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action')
+
+    if action == 'welcome':
+        bot.delete_state(user_id, chat_id)
+        bot.send_message(chat_id, msg_success_base_set(user_id))
+        send_settings(bot, message, user_id, True)
+    else:
+        db_new.set_user_trading_style(user_db_id, value.lower())
+        bot.send_message(chat_id, msg_success_edit(user_id))
+        send_settings(bot, message, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -212,6 +240,8 @@ def registration(bot: TeleBot):
             state=SettingsState.day_risk)
     reg_mes(handle_round_count,
             state=SettingsState.round_count)
+    reg_mes(handle_trading_style,
+            state=SettingsState.trading_style)
 
     reg_mes(handle_new_currency, state=SettingsState.currency)
     reg_mes(handle_splitting, state=SettingsState.splitting)

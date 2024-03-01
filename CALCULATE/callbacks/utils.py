@@ -2,7 +2,6 @@ from locale import currency
 from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
-from CALCULATE.callbacks.settings.keyboards import kb_change_currency
 
 from db_new import db_new
 from initialize import pay_guard
@@ -10,9 +9,10 @@ from common.utils import set_state_data
 from .main.keyboards import kb_cancel, kb_forex_val
 from .pages import send_main
 
+from CALCULATE.callbacks.settings.keyboards import kb_change_currency, kb_trading_style
 from CALCULATE.common.messages import (
     msg_calculate, msg_enter_currency, msg_enter_deposit, msg_enter_future,
-    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent
+    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_trading_style
 )
 from CALCULATE.states import CalculateState, FutureCalcState, ForexCalcState
 
@@ -28,6 +28,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     res = db_new.get_user_base(user_db_id)
 
     deposit, risk_percent, currency = res.get('base_deposit'), res.get('base_risk_percent'), res.get('base_currency')
+    trading_style = db_new.get_user_trading_style(user_db_id)
 
     text = msg_calculate(bot, user_id, chat_id)
     keyboard = kb_cancel(user_id)
@@ -52,6 +53,9 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif risk_percent is None:
         text += msg_enter_risk_percent(user_id)
         state = CalculateState.risk_percent
+    elif trading_style is None:
+        text += msg_enter_trading_style(user_id)
+        state = CalculateState.trading_style
     else:
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price

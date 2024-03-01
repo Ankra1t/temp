@@ -8,7 +8,7 @@ from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main, kb_
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
-    msg_digit_error, msg_enter_stop_loss, msg_pair_error,
+    msg_digit_error, msg_enter_stop_loss, msg_enter_trading_style, msg_pair_error,
     msg_pair_not_found, msg_percent_error,
     msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
 )
@@ -159,6 +159,30 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     db_new.set_user_base(user_db_id, 'base_risk_percent', value)
     db_new.set_user_risk_is_percent(user_db_id, is_percent)
 
+    choose_calculate_step(bot, user_id, chat_id, mes_id)
+
+
+def handle_trading_style(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    value = text_accept(message)
+
+    if value is None:
+        bot.send_message(
+            chat_id,
+            'Введите стиль текстом\n' + msg_enter_trading_style(user_id),
+            reply_markup=kb_cancel(user_id)
+        )
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action')
+
+    db_new.set_user_trading_style(user_db_id, value.lower())
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -339,6 +363,8 @@ def registration(bot: TeleBot):
     reg_mes(handle_deposit, state=CalculateState.deposit)
     reg_mes(handle_risk_percent, state=CalculateState.risk_percent)
     reg_mes(handle_currency, state=CalculateState.currency)
+
+    reg_mes(handle_trading_style, state=CalculateState.trading_style)
 
     reg_mes(handle_open_price, state=CalculateState.open_price)
     reg_mes(handle_stop_loss, state=CalculateState.stop_loss)

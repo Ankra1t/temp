@@ -118,6 +118,7 @@ def msg_settings(user_id: int):
 
     day_risk = db_new.get_user_day_risk(user_db_id)
     round_count = db_new.get_user_round_count(user_db_id)
+    style = db_new.get_user_trading_style(user_db_id)
 
     risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
     tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
@@ -130,6 +131,7 @@ def msg_settings(user_id: int):
             'risk': 'Базовый риск',
             'day_risk': 'Риск на день',
             'round_count': 'Округление до',
+            'trading_style': 'Стиль',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
             'market': 'Рынок',
@@ -140,10 +142,11 @@ def msg_settings(user_id: int):
             'dep': 'Default deposit',
             'risk': 'Default risk',
             'day_risk': 'Daily risk',
+            'round_count': 'Rounding',
+            'trading_style': 'Style',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
-            'round_count': 'Rounding',
         },
     }
 
@@ -171,6 +174,7 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 
 {POINT} {texts[lang]["round_count"]}: <b>{show_round}</b>
+{POINT} {texts[lang]["trading_style"]}: <b>{style or '-'}</b>
 
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 {POINT} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
@@ -781,6 +785,26 @@ def msg_enter_day_risk(user_id: int):
     return f"""✍ {texts[lang]}
 
 {get_risk_annotation(lang)}
+"""
+
+
+def msg_enter_trading_style(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'choose': 'Выберите <u>стиль торговли</u> из списка ниже',
+            'enter': 'Либо введите <i>свой вариант</i>'
+        },
+        'en': {
+            'choose': 'Select <u>trading style</u> from the list below',
+            'enter': 'Or enter <i>your option</i>'
+        },
+    }
+
+    return f"""✍ {texts[lang]['choose']}
+
+{texts[lang]['enter']}:
 """
 
 

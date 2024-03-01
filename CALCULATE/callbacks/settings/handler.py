@@ -10,7 +10,7 @@ from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
-    msg_enter_summury_profit_type, msg_enter_take_profit,
+    msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style,
     msg_settings_change_market, msg_success_edit, msg_settings_change_base,
 )
 
@@ -19,7 +19,7 @@ from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
     kb_choose_lang, kb_base_cancel, kb_settings_confirm,
     kb_splitting, kb_splitting_last,
-    kb_summury_profit_type, kb_take_profit
+    kb_summury_profit_type, kb_take_profit, kb_trading_style
 )
 from ..pages import send_main, send_settings, send_summury_profit_settings
 
@@ -28,6 +28,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
 
+    trading_style = callback_data.get('trading_style', '')
     summury_type = callback_data.get('summury_type', '')
     take_profit_add = callback_data.get('take_profit', '')
     add_count = callback_data.get('add_count', '')
@@ -68,6 +69,21 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_base_cancel(user_id)
         )
         bot.set_state(user_id, SettingsState.round_count, chat_id)
+
+    if 'trading_style' in type:
+        if trading_style == '':
+            bot.set_state(user_id, SettingsState.trading_style, chat_id)
+            bot.edit_message_text(
+                msg_enter_trading_style(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_trading_style(user_id)
+            )
+        else:
+            db_new.set_user_trading_style(user_db_id, trading_style.lower())
+            bot.edit_message_text(
+                msg_success_edit(user_id), chat_id, mes_id
+            )
+            send_settings(bot, call.message, user_id, True)
 
     if 'set_currency' in type:
         if type == 'set_currency':

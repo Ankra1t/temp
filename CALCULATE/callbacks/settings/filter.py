@@ -4,7 +4,8 @@ from telebot.types import CallbackQuery
 
 
 settings_factory = CallbackData(
-    'type', 'summury_type', 'take_profit', 'add_count', prefix='settings'
+    'type', 'summury_type', 'take_profit', 'add_count', 'trading_style',
+    prefix='settings'
 )
 
 
