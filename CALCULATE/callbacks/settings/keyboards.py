@@ -434,31 +434,22 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
+    def getThisButton(text: str, style: str):
+        return getButton(
+            text, f'style_{type}',
+            trading_style=style
+        )
+
     lang = get_lang(user_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_1 = getButton(
-        'Пробой', 'trading_style',
-        trading_style='пробой уровня'
-    )
-    btn_2 = getButton(
-        'Отбой', 'trading_style',
-        trading_style='отбой от уровня'
-    )
-    btn_3 = getButton(
-        'Ложные', 'trading_style',
-        trading_style='ложные пробои'
-    )
-    btn_4 = getButton(
-        'Скользящие', 'trading_style',
-        trading_style='скользящие средние'
-    )
-    btn_5 = getButton(
-        'high/low', 'trading_style',
-        trading_style='торговля на high/low'
-    )
+    btn_1 = getThisButton('Пробой', 'пробой уровня')
+    btn_2 = getThisButton('Отбой','отбой от уровня')
+    btn_3 = getThisButton('Ложные', 'ложные пробои')
+    btn_4 = getThisButton('Скользящие', 'скользящие средние')
+    btn_5 = getThisButton('high/low', 'торговля на high/low')
 
     if type == 'calc':
         btn_cancel = getButton(cancel_txt(lang), 'go_main')

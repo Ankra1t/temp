@@ -171,10 +171,10 @@ def msg_settings(user_id: int):
 
 {POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
-{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
-
-{POINT} {texts[lang]["round_count"]}: <b>{show_round}</b>
 {POINT} {texts[lang]["trading_style"]}: <b>{style or '-'}</b>
+
+{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
+{POINT} {texts[lang]["round_count"]}: <b>{show_round}</b>
 
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 {POINT} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
@@ -305,7 +305,7 @@ def msg_welcome(user_id: int):
 """
 
 
-def msg_success_base_set(user_id):
+def msg_success_base_set(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -557,21 +557,18 @@ def msg_calculate_result(
     for i in range(len(take_profit)):
         p_show += f'{get_print_float(profit[i], round_count)}'
 
-        if is_splitting:
-            percent = split_values[i]
-        else:
-            percent = 100
-
-        count = get_print_float(count_bet * percent * 0.01, 2)
         tp = get_print_float(take_profit[i], round_count)
 
-        conclusion += f'  <b>x{tp_ratio[i]}</b>: <u>{tp} {currency}</u> (<b>{count} монет</b>) — {get_print_float(percent)}%'
+        conclusion += f'  <b>x{tp_ratio[i]}</b>: <u>{tp} {currency}</u>'
+        if is_splitting:
+            percent = split_values[i]
+            count = get_print_float(count_bet * percent * 0.01, 2)
+            conclusion += f'(<b>{count} монет</b>) — {get_print_float(percent)}%'
 
         if i != len(take_profit) - 1:
             conclusion += '\n'
             p_show += ' / '
 
-    n_char = '\n'
     return f"""
 {POINT} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
 {TAB}{point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
