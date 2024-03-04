@@ -105,7 +105,7 @@ def handle_currency(message: Message, bot: TeleBot):
             reply_markup=kb_cancel(user_id))
         return
 
-    db_new.set_user_currency(user_db_id, value)
+    db_new.set_user_currency(user_db_id, value.upper())
 
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 

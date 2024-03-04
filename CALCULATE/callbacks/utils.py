@@ -27,7 +27,8 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     res = db_new.get_user_base(user_db_id)
 
-    deposit, risk_percent, currency = res.get('base_deposit'), res.get('base_risk_percent'), res.get('base_currency')
+    deposit, risk_percent, currency = res.get('base_deposit'), res.get(
+        'base_risk_percent'), res.get('base_currency')
     trading_style = db_new.get_user_trading_style(user_db_id)
 
     text = msg_calculate(bot, user_id, chat_id)
@@ -56,6 +57,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif trading_style is None:
         text += msg_enter_trading_style(user_id)
         state = CalculateState.trading_style
+        keyboard = kb_trading_style(user_id, 'calc')
     else:
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price
