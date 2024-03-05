@@ -52,7 +52,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
         else:
             is_cancel = False
-            db_new.set_calculation_in_stat(stat_id, True)
 
             calc_info = db_new.get_calculation(stat_id)
             if calc_info is None:
@@ -61,6 +60,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             risk_value = calc_info.risk_value
 
             if k == '-':
+                db_new.set_calculation_in_stat(stat_id, True)
                 db_new.set_calculation_profit(stat_id, -risk_value)
     #             bot.edit_message_text(
     #                 """Вы превысили суточный процент риска...
@@ -74,6 +74,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     #                 reply_markup=kb_freeze_calc()
     #             )
             elif k != 'cancel':
+                db_new.set_calculation_in_stat(stat_id, True)
                 db_new.set_calculation_profit(stat_id, risk_value * int(k))
             else:
                 is_cancel = True
