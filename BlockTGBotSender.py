@@ -57,9 +57,12 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
         user_db_id = db_new.get_user_id_by_tg_id(user_id)
         user_base_values = db_new.get_user_base(user_db_id)
         risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+        tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
+        style = db_new.get_user_trading_style(user_db_id)
 
         dep = user_base_values['base_deposit']
         risk = user_base_values['base_risk_percent']
+        currency = user_base_values['base_currency'] or 'USD'
 
         if dep is None or risk is None:
             calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
@@ -76,7 +79,8 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
             calc_text += msg_calculate_result(
                 user_id, dep, open_price,
                 stop_loss, count_bet, value_bet, credit,
-                risk, take_profit, profit
+                risk, take_profit, profit, False, [], currency,
+                tp_ratio, style or '-', None
             )
 
     signal_text += '\n\n' + post.content

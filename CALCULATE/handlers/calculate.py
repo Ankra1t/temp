@@ -1,3 +1,4 @@
+from locale import currency
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -12,6 +13,7 @@ from CALCULATE.common.messages import (
     msg_pair_not_found, msg_percent_error,
     msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
 )
+from models import Calculation
 
 
 def handle_future_ticker(message: Message, bot: TeleBot):
@@ -241,9 +243,13 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     is_splitting = db_new.get_user_is_splitting(user_db_id)
     split_values = db_new.get_user_split_values(user_db_id)
     tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
+    market = db_new.get_calculator_user_market(user_db_id) or 'crypto'
+    trading_style = db_new.get_user_trading_style(user_db_id) or ''
+    round_count = db_new.get_user_round_count(user_db_id)
 
     deposit: float = base_values['base_deposit'] or 1.
     risk_value: float = base_values['base_risk_percent'] or 1.
+    currency = base_values['base_currency'] or 'USD'
 
     if risk_is_percent:
         risk_value *= deposit * 0.01
@@ -256,15 +262,31 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     mes = msg_calculate_result(
         user_id, deposit, open_price,
         stop_loss, count_bet, value_bet, credit,
-        risk_value, take_profit, profit
+        risk_value, take_profit, profit, is_splitting,
+        split_values, currency, tp_ratio, trading_style, round_count
     )
+
+    calc_info = Calculation(
+        deposit=deposit,
+        risk_value=risk_value,
+        open_price=open_price,
+        stop_loss=stop_loss,
+        round_count=round_count,
+        currency=currency,
+        market=market,
+        tp_ratio=tp_ratio,
+        split_values=split_values,
+        trading_style=trading_style
+    )
+
+    new_id = db_new.add_calculation(user_db_id, calc_info)
 
     mes += '\n\nХотите учесть расчеты в статистике?'
 
     db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(
         chat_id, mes,
-        reply_markup=kb_set_calc_stats(user_id)
+        reply_markup=kb_set_calc_stats(user_id, new_id)
     )
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True, True)
