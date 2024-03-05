@@ -1499,6 +1499,9 @@ class Database:
     # Calc Stats
     def _data_to_calculations(self, data: DictRow):
         return Calculation(
+            id=data.get('id'),
+            profit=data.get('profit'),
+            in_stat=data.get('in_stat'),
             deposit=data.get('deposit'),
             risk_value=data.get('risk_value'),
             open_price=data.get('open_price'),
