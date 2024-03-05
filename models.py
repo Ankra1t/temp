@@ -256,7 +256,7 @@ class UserCalcSettings(BaseModel):
 class Calculation(BaseModel):
     id: int = 0
     profit: float | None = None
-    in_stats: bool = False
+    in_stat: bool = False
 
     deposit: float
     risk_value: float
