@@ -8,7 +8,7 @@ from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
 
 from models import (
-    Forex, Future, Post, PostDetails,
+    Calculation, Forex, Future, Post, PostDetails,
     Text, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Client, Task
 )
@@ -1495,6 +1495,113 @@ class Database:
             print(f'ERROR[reset_user_settings]: {e}')
             self.connection.rollback()
             return False
+
+    # Calc Stats
+    def _data_to_calculations(self, data: DictRow):
+        return Calculation(
+            deposit=data.get('deposit'),
+            risk_value=data.get('risk_value'),
+            open_price=data.get('open_price'),
+            stop_loss=data.get('stop_loss'),
+            round_count=data.get('round_count'),
+            currency=data.get('currency'),
+            trading_style=data.get('trading_style'),
+            market=data.get('market'),
+            tp_ratio=data.get('tp_ratio'),
+            split_values=data.get('split_values'),
+        )
+
+    def add_calculation(self, user_id: int, value: Calculation):
+        query = (
+            'INSERT INTO calculations (user_id, deposit, risk_value, open_price, stop_loss, round_count, '
+            'currency, trading_style, market, tp_ratio, split_values) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+        )
+        params = (
+            user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
+            value.round_count, value.currency, value.trading_style, value.market,
+            value.tp_ratio, value.split_values
+        )
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                raise Exception('Ошибка с записью в БД')
+
+            self.connection.commit()
+            return int(data.get('id'))
+        except Exception as e:
+            print(f'ERROR[add_calculations]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_calculation_profit(self, id: int, value: float):
+        query = 'UPDATE calculations SET profit = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_calculations_profit]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_calculation_in_stat(self, id: int, value: bool):
+        query = 'UPDATE calculations SET in_stat = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_calculation_in_stat]: {e}')
+            self.connection.rollback()
+            return False
+
+    def get_all_calculation(self) -> list[Calculation]:
+        query = 'SELECT * FROM calculations'
+
+        try:
+            self.curs.execute(query)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_calculations(el), data))
+        except Exception as e:
+            print(f'ERROR[get_all_calculation]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_calculations_by_user(self, user_id: int, saved=False) -> list[Calculation]:
+        query = 'SELECT * FROM calculations WHERE user_id = %s'
+        params = user_id,
+        if saved:
+            query += ' AND in_stat = %s'
+            params = user_id, True
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_calculations(el), data))
+        except Exception as e:
+            print(f'ERROR[get_calculations_by_user]: {e}')
+            self.connection.rollback()
+            return []
+
+    def get_calculation(self, id: int):
+        query = 'SELECT * FROM calculations WHERE id = %s'
+        params = id,
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return self._data_to_calculations(data) if (data is not None) else None
+        except Exception as e:
+            print(f'ERROR[get_calculation]: {e}')
+            self.connection.rollback()
+            return None
 
     # Workers
     def _data_to_worker(self, data: DictRow):

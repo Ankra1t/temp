@@ -1,3 +1,4 @@
+from locale import currency
 from pydantic import BaseModel
 from typing import Union, Optional
 from datetime import datetime
@@ -168,6 +169,7 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+
 class Client(BaseModel):
     user: UserInfo | None = None
 
@@ -182,7 +184,6 @@ class Worker(BaseModel):
     tg_id: int
     username: str
     role: int
-
 
 
 class PostDetails(BaseModel):
@@ -223,10 +224,12 @@ class Forex(BaseModel):
     price: float
     help_pair: str | None
 
+
 class TaskMessage(BaseModel):
     type_message: str = 'text'
     text: str = 'text'
     media_id: str | None = None
+
 
 class Task(BaseModel):
     id: int | None = None
@@ -236,3 +239,32 @@ class Task(BaseModel):
     message: TaskMessage | None = None
     active: int = 1
 
+
+class UserCalcSettings(BaseModel):
+    deposit: float | None
+    risk: float | None
+    risk_is_percent: bool
+    currency: str | None
+    market: str
+    tp_ratio: list[int]
+    split_values: list[float] | None
+    trading_style: str | None
+    round_count: int | None
+    day_risk: tuple[float, bool] | None
+
+
+class Calculation(BaseModel):
+    id: int = 0
+    profit: float | None = None
+    in_stats: bool = False
+
+    deposit: float
+    risk_value: float
+    open_price: float
+    stop_loss: float
+    round_count: int | None
+    currency: str
+    trading_style: str
+    market: str
+    tp_ratio: list[int]
+    split_values: list[float] | None

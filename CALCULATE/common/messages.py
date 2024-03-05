@@ -508,14 +508,14 @@ def msg_calculate_result(
     risk_value: float,
     take_profit: list[float],
     profit: list[float],
+    is_splitting: bool,
+    split_values: list[float],
+    currency: str,
+    tp_ratio: list[int],
+    style: str,
+    user_round_count: int | None
 ):
     lang = get_lang(user_id)
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    currency: str = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
-    is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-    user_round_count = db_new.get_user_round_count(user_db_id)
 
     point = {
         'ru': {
@@ -527,20 +527,20 @@ def msg_calculate_result(
             'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
-            'credit': 'Кредитное плечо',
+            'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
             'profit': 'Общая прибыль'
         },
         'en': {
             'dep': 'Deposit',
-            'open': 'The open price',
+            'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
             'conclusion': 'At a price',
             'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
-            'credit': 'Leverage',
+            'style': 'Trading style',
             'risk_val': 'The risk of a deal',
             'profit': 'General profit'
         }
@@ -578,7 +578,7 @@ def msg_calculate_result(
 
 {POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
-{TAB}{point[lang]["credit"]}: <b>{credit} к 1</b>
+{TAB}{point[lang]["style"]}: <b>{style.capitalize()}</b>
 
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
@@ -619,7 +619,7 @@ def msg_calculate_forex_result(
             'dep': 'Deposit',
             'risk': '% risk of a deal',
             'pair': 'Currency pair',
-            'open': 'Цена входа',
+            'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
             'lot': 'Lot',
@@ -800,7 +800,6 @@ def msg_enter_trading_style(user_id: int):
     }
 
     return f"""✍ {texts[lang]['choose']}
-
 {texts[lang]['enter']}:
 """
 

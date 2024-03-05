@@ -8,10 +8,10 @@ from db_new import db_new
 from .filter import main_factory
 
 
-def getButton(text: str, type: str):
+def getButton(text: str, type: str, stat_id = 0):
     return InlineKeyboardButton(
         text, None,
-        main_factory.new(type=type)
+        main_factory.new(type=type, stat_id=stat_id)
     )
 
 
@@ -33,10 +33,12 @@ def kb_main(user_id: int, is_access=True):
         'ru': {
             'calc': 'Новый расчёт',
             'settings': 'Настройки',
+            'stats': 'Статистика',
         },
         'en': {
             'calc': 'New calculation',
             'settings': 'Settings',
+            'stats': 'Stats',
         }
     }
 
@@ -44,6 +46,7 @@ def kb_main(user_id: int, is_access=True):
 
     btn_calc = getButton('⌨️ ' + texts[lang]['calc'], 'calc')
     btn_settings = getButton('⚙️ ' + texts[lang]['settings'], 'settings')
+    btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
     buttons = []
     if is_access:
@@ -51,6 +54,7 @@ def kb_main(user_id: int, is_access=True):
     buttons.append(btn_settings)
 
     keyboard.add(*buttons)
+    keyboard.add(btn_stats)
     return keyboard
 
 
@@ -64,7 +68,7 @@ def kb_forex_val(user_id: int):
     return keyboard
 
 
-def kb_set_calc_stats(user_id: int):
+def kb_set_calc_stats(user_id: int, stat_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -77,7 +81,7 @@ def kb_set_calc_stats(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_deal = getButton('✅ ' + texts[lang]['save'], 'profit+')
+    btn_deal = getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
 
     keyboard.add(btn_deal)
 
@@ -100,7 +104,7 @@ def kb_freeze_calc():
     return keyboard
 
 
-def kb_deal_result(user_id: int):
+def kb_deal_result(user_id: int, stat_id: int):
     lang = get_lang(user_id)
 
     row_width = 3
@@ -111,13 +115,13 @@ def kb_deal_result(user_id: int):
 
     buttons = []
     for i, el in enumerate(tp):
-        btn = getButton(f'x{el}', f'profit+{el}')
+        btn = getButton(f'x{el}', f'profit+{el}', stat_id)
         buttons.append(btn)
         if len(buttons) == row_width or (i == len(tp) - 1 and len(buttons) != 0):
             keyboard.add(*buttons)
 
-    btn_low = getButton('🔻 Минус', 'profit+-')
-    btn_back = getButton(cancel_txt(lang), 'cancel')
+    btn_low = getButton('🔻 Минус', 'profit+-', stat_id)
+    btn_back = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
 
     keyboard.add(btn_low, btn_back)
 
