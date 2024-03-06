@@ -1,19 +1,17 @@
-from locale import currency
 from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
-from common.utils import digit_accept, get_calculation, set_state_data, text_accept
+from common.utils import digit_accept, set_state_data, text_accept
+from models import Calculation
 
 from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main, kb_set_calc_stats
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
     msg_digit_error, msg_enter_stop_loss, msg_enter_trading_style, msg_pair_error,
-    msg_pair_not_found, msg_percent_error,
-    msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
+    msg_pair_not_found, msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
 )
-from models import Calculation
 
 
 def handle_future_ticker(message: Message, bot: TeleBot):
@@ -158,7 +156,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     )
     #     return
 
-    db_new.set_user_base(user_db_id, 'base_risk_percent', value)
+    db_new.set_user_base(user_db_id, 'base_risk', value)
     db_new.set_user_risk_is_percent(user_db_id, is_percent)
 
     choose_calculate_step(bot, user_id, chat_id, mes_id)
@@ -238,48 +236,32 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
         return
 
-    base_values = db_new.get_user_base(user_db_id)
-    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
-    is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-    market = db_new.get_calculator_user_market(user_db_id) or 'crypto'
-    trading_style = db_new.get_user_trading_style(user_db_id) or ''
-    round_count = db_new.get_user_round_count(user_db_id)
+    u_base = db_new.get_calc_user_settings(user_db_id)
+    if u_base is None:
+        return
 
-    deposit: float = base_values['base_deposit'] or 1.
-    risk_value: float = base_values['base_risk_percent'] or 1.
-    currency = base_values['base_currency'] or 'USD'
-
-    if risk_is_percent:
+    deposit = u_base.deposit or 1.
+    risk_value = u_base.risk[0] if (u_base.risk is not None) else 1.
+    if u_base.risk is not None and u_base.risk[1]:
         risk_value *= deposit * 0.01
 
-    count_bet, value_bet, credit, take_profit, profit = get_calculation(
-        deposit, risk_value, open_price, stop_loss,
-        is_splitting, split_values, ticker, tp_ratio
-    )
-
-    mes = msg_calculate_result(
-        user_id, deposit, open_price,
-        stop_loss, count_bet, value_bet, credit,
-        risk_value, take_profit, profit, is_splitting,
-        split_values, currency, tp_ratio, trading_style, round_count
-    )
-
     calc_info = Calculation(
+        user_id=user_db_id,
         deposit=deposit,
         risk_value=risk_value,
         open_price=open_price,
         stop_loss=stop_loss,
-        round_count=round_count,
-        currency=currency,
-        market=market,
-        tp_ratio=tp_ratio,
-        split_values=split_values,
-        trading_style=trading_style
+        round_count=u_base.round_count,
+        currency=u_base.currency or 'USD',
+        market=u_base.market,
+        tp_ratio=u_base.tp_ratio,
+        split_values=u_base.split_values,
+        trading_style=u_base.trading_style or ''
     )
 
-    new_id = db_new.add_calculation(user_db_id, calc_info)
+    mes = msg_calculate_result(user_id, calc_info)
+
+    new_id = db_new.add_calculation(calc_info)
 
     mes += '\n\nХотите учесть расчеты в статистике?'
 

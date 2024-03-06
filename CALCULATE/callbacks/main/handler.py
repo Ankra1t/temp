@@ -2,7 +2,6 @@ from datetime import timedelta
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 from CALCULATE.common.messages import msg_calculate_result
-from common.utils import get_calculation
 
 from db_new import db_new
 from common.dt import get_datetime_now, get_str_by_datetime
@@ -26,7 +25,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'calc':
-        market = db_new.get_calculator_user_market(user_db_id) or 'crypto'
+        market = getattr(db_new.get_calc_user_settings(user_db_id), 'market', None) or 'crypto'
         choose_first_calculate_step(bot, user_id, call.message, market, True)
 
     if type == 'cancel':
@@ -79,21 +78,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             else:
                 is_cancel = True
 
-            is_splitting = calc_info.split_values is not None and len(
-                calc_info.split_values) != 0
-
-            count_bet, value_bet, credit, take_profit, profit = get_calculation(
-                calc_info.deposit, risk_value, calc_info.open_price, calc_info.stop_loss,
-                is_splitting, calc_info.split_values or [], None, calc_info.tp_ratio
-            )
-
-            mes = msg_calculate_result(
-                user_id, calc_info.deposit, calc_info.open_price,
-                calc_info.stop_loss, count_bet, value_bet, credit,
-                risk_value, take_profit, profit, is_splitting,
-                calc_info.split_values or [], calc_info.currency, calc_info.tp_ratio,
-                calc_info.trading_style, calc_info.round_count
-            )
+            mes = msg_calculate_result(user_id, calc_info)
 
             if is_cancel:
                 mes += '\n\nХотите учесть расчеты в статистике?'

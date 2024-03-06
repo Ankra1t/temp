@@ -111,7 +111,8 @@ def kb_deal_result(user_id: int, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp = db_new.get_calculator_tp_ratio(user_db_id)
+    u_base = db_new.get_calc_user_settings(user_db_id)
+    tp = u_base.tp_ratio if (u_base is not None) else []
 
     buttons = []
     for i, el in enumerate(tp):

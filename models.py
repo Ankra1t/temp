@@ -1,7 +1,9 @@
-from locale import currency
 from pydantic import BaseModel
-from typing import Union, Optional
+from typing import Literal, Union, Optional
 from datetime import datetime
+
+
+MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 
 
 class Invoice(BaseModel):
@@ -241,11 +243,11 @@ class Task(BaseModel):
 
 
 class UserCalcSettings(BaseModel):
+    user_id: int
     deposit: float | None
-    risk: float | None
-    risk_is_percent: bool
+    risk: tuple[float, bool] | None
     currency: str | None
-    market: str
+    market: MARKETS_TYPE
     tp_ratio: list[int]
     split_values: list[float] | None
     trading_style: str | None
@@ -257,14 +259,15 @@ class Calculation(BaseModel):
     id: int = 0
     profit: float | None = None
     in_stat: bool = False
+    user_id: int
 
     deposit: float
     risk_value: float
     open_price: float
     stop_loss: float
-    round_count: int | None
     currency: str
     trading_style: str
-    market: str
+    market: MARKETS_TYPE
     tp_ratio: list[int]
+    round_count: int | None = None
     split_values: list[float] | None
