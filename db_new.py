@@ -1287,7 +1287,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_user_split_values(self, user_id: int, values: list[float]):
+    def set_user_split_values(self, user_id: int, values: list[float] | None):
         query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'
         params = (values, user_id)
 

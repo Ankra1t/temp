@@ -297,7 +297,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if type == 'tp_save':
             current_tp_ratio.sort()
             db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
-            db_new.set_user_split_values(user_db_id, [])
+            db_new.set_user_split_values(user_db_id, None)
 
         # При сохранении вывода с разделением
         if type == 'splitting_save':

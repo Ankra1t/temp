@@ -557,7 +557,7 @@ def msg_calculate_result(
 
             count = get_print_float(count_bet * rate, 2)
 
-            conclusion += f'(<b>{count} монет</b>) — {get_print_float(percent, round_count)}%'
+            conclusion += f' (<b>{count} монет</b>) — {get_print_float(percent, round_count)}%'
 
         p_show += f'{get_print_float(calc.risk_value * tp_ratio_i * rate, round_count)}'
 
