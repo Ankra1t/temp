@@ -18,7 +18,7 @@ CREATE TABLE
     "id" integer not null primary key,
     "created_at" datetime not null default CURRENT_TIMESTAMP,
     "base_deposit" FLOAT NULL,
-    "base_risk_percent" FLOAT NULL,
+    "base_risk" FLOAT NULL,
   );
 
   CREATE TABLE

@@ -1,8 +1,7 @@
 import ast
 from datetime import datetime, timedelta, timezone
-from email.policy import strict
 from db_new import db_new
-from models import Calculation
+from initialize import bot
 
 # azatFa  id 156045434
 # ankrait id 6919899538
@@ -16,6 +15,8 @@ from models import Calculation
 
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
+
+print(bot.get_webhook_info())
 
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
@@ -61,21 +62,7 @@ from models import Calculation
 # query += "LIMIT %s OFFSET %s "
 
 # print(query)
-db_new.add_calculation(
-    436, Calculation(
-        id=1,
-        deposit=1,
-        risk_value=1,
-        stop_loss=1,
-        open_price=1,
-        round_count=1,
-        currency='ASD',
-        trading_style='asd',
-        market='asd',
-        tp_ratio=[1, 2, 3],
-        split_values=None
-    )
-)
+
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '
 #     'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '

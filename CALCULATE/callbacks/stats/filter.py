@@ -3,11 +3,11 @@ from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery
 
 
-main_factory = CallbackData('type', prefix='main')
+stats_factory = CallbackData('type', 'stat_id', prefix='stats')
 
 
-class MainCallbackFilter(AdvancedCustomFilter):
-    key = 'main'
+class StatsCallbackFilter(AdvancedCustomFilter):
+    key = 'stats'
 
     def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)

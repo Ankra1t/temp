@@ -6,7 +6,7 @@ from telebot.types import Message
 from db_new import db_new
 from initialize import pay_guard
 from common.utils import set_state_data
-from .main.keyboards import kb_cancel, kb_forex_val
+from .main.keyboards import kb_main_cancel, kb_forex_val
 from .pages import send_main
 
 from CALCULATE.callbacks.settings.keyboards import kb_change_currency, kb_trading_style
@@ -25,14 +25,13 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         val_dep = data.get('val_dep')
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    res = db_new.get_user_base(user_db_id)
+    u_base = db_new.get_calc_user_settings(user_db_id)
 
-    deposit, risk_percent, currency = res.get('base_deposit'), res.get(
-        'base_risk_percent'), res.get('base_currency')
-    trading_style = db_new.get_user_trading_style(user_db_id)
+    if u_base is None:
+        return
 
     text = msg_calculate(bot, user_id, chat_id)
-    keyboard = kb_cancel(user_id)
+    keyboard = kb_main_cancel(user_id)
 
     if calc_type == 'forex' and pair is None:
         text += msg_enter_pair(user_id)
@@ -44,17 +43,17 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)
         state = FutureCalcState.ticker
-    elif currency is None:
+    elif u_base.currency is None:
         text += msg_enter_currency(user_id)
         state = CalculateState.currency
         keyboard = kb_change_currency(user_id, 'calc')
-    elif deposit is None:
+    elif u_base.deposit is None:
         text += msg_enter_deposit(user_id)
         state = CalculateState.deposit
-    elif risk_percent is None:
+    elif u_base.risk is None:
         text += msg_enter_risk_percent(user_id)
         state = CalculateState.risk_percent
-    elif trading_style is None:
+    elif u_base.trading_style is None:
         text += msg_enter_trading_style(user_id)
         state = CalculateState.trading_style
         keyboard = kb_trading_style(user_id, 'calc')
@@ -74,9 +73,11 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
             reply_markup=keyboard)
 
 
-def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
-                                type: Literal['crypto', 'future', 'paper', 'forex'],
-                                is_edit=False):
+def choose_first_calculate_step(
+    bot: TeleBot, user_id: int, message: Message,
+    type: Literal['crypto', 'future', 'paper', 'forex'],
+    is_edit=False
+):
     chat_id = message.chat.id
     mes_id = message.id
 

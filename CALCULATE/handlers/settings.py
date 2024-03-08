@@ -33,7 +33,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                              reply_markup=kb_base_cancel(user_id))
             return
 
-        # if type == 'base_risk_percent' and (value <= 0 or value >= 100):
+        # if type == 'base_risk' and (value <= 0 or value >= 100):
         #     bot.send_message(
         #         chat_id,
         #         msg_percent_error(user_id),
@@ -42,7 +42,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         #     return
 
         db_new.set_user_base(user_db_id, type, value)
-        if type == 'base_risk_percent':
+        if type == 'base_risk':
             db_new.set_user_risk_is_percent(user_db_id, is_percent)
 
         with bot.retrieve_data(user_id, chat_id) as data:
@@ -237,7 +237,7 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_new_value('base_deposit'),
             state=SettingsState.deposit)
-    reg_mes(handle_new_value('base_risk_percent'),
+    reg_mes(handle_new_value('base_risk'),
             state=SettingsState.risk_percent)
     reg_mes(handle_day_risk,
             state=SettingsState.day_risk)

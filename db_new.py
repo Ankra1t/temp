@@ -9,18 +9,17 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 
 from models import (
     Calculation, Forex, Future, Post, PostDetails,
-    Text, UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Client, Task
+    Text, UserCalcSettings, UserInfo, Price, Subscribe,
+    Transactions, Purchase, Worker, Client, Task, MARKETS_TYPE
 )
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
-BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk_percent', 'base_currency']
+BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk', 'base_currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
 LANGUAGES_TYPE = Literal['ru', 'en']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
-MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 
 
 class Database:
@@ -1099,29 +1098,39 @@ class Database:
             return False
 
     # Users - Settings
-    def get_user_base(self, id: int) -> dict[BASE_VALUE_TYPE, Any]:
-        """Получить значения для автозаполнения пользователя"""
-        query = (
-            'SELECT base_deposit, base_risk_percent, base_currency FROM tgcalc_user_settings '
-            'WHERE user_id = %s'
+    def _data_to_user_calc(self, data: DictRow):
+        risk_value = data.get('base_risk')
+        risk = None if (risk_value is None) else (risk_value, data.get('risk_is_percent'))
+
+        return UserCalcSettings(
+            user_id=data.get('user_id'),
+            deposit=data.get('base_deposit'),
+            risk=risk,
+            currency=data.get('base_currency'),
+            market=data.get('market') or 'crypto',
+            tp_ratio=data.get('take_profit_ratio'),
+            split_values=data.get('split_values'),
+            trading_style=data.get('trading_style'),
+            round_count=data.get('round_count'),
+            day_risk=data.get('day_risk')
         )
-        params = (id,)
+
+    def get_calc_user_settings(self, user_id: int):
+        query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s'
+        params = user_id,
+
         try:
             self.curs.execute(query, params)
+
             data = self.curs.fetchone()
-            return {
-                'base_deposit': None if (data is None) else data.get('base_deposit'),
-                'base_risk_percent': None if (data is None) else data.get('base_risk_percent'),
-                'base_currency': None if (data is None) else data.get('base_currency')
-            }
+            if data is None:
+                raise Exception(f'Таблица пользователя [ID={user_id}] не найдена')
+
+            return self._data_to_user_calc(data)
         except Exception as e:
-            print(f'ERROR[get_user_base]: {e}')
+            print(f'ERROR[get_calc_user_settings]: {e}')
             self.connection.rollback()
-            return {
-                'base_deposit': None,
-                'base_risk_percent': None,
-                'base_currency': None
-            }
+            return None
 
     def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
         """Установить значения для автозаполения пользователя"""
@@ -1152,26 +1161,9 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_user_risk_is_percent(self, user_id: int) -> bool:
-        query = 'SELECT risk_is_percent FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-
-            if data is not None and data.get('risk_is_percent') == 1:
-                return True
-            else:
-                return False
-        except Exception as e:
-            print(f'ERROR[get_user_risk_is_percent]: {e}')
-            self.connection.rollback()
-            return False
-
     def set_user_risk_is_percent(self, user_id: int, value: bool):
         query = 'UPDATE tgcalc_user_settings SET risk_is_percent = %s WHERE user_id = %s'
-        params = (int(value), user_id)
+        params = (value, user_id)
 
         try:
             self.curs.execute(query, params)
@@ -1267,22 +1259,6 @@ class Database:
 
         pass
 
-    def get_calculator_tp_ratio(self, user_id: int) -> list[int]:
-        """Получить коэфициенты тейк-профит на показ"""
-        default_ratio = [3, 4, 5]
-
-        query = 'SELECT take_profit_ratio FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return data.get('take_profit_ratio') or default_ratio if (data is not None) else default_ratio
-        except Exception as e:
-            print(f'ERROR[get_calculator_tp_ratio]: {e}')
-            self.connection.rollback()
-            return default_ratio
-
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
         """Установить коэфициенты тейк-профит на показ"""
         query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s"
@@ -1296,20 +1272,6 @@ class Database:
             print(f'ERROR[set_calculator_tp_ratio]: {e}')
             self.connection.rollback()
             return False
-
-    def get_calculator_user_market(self, user_id: int) -> MARKETS_TYPE | None:
-        """Получить рынок пользователя"""
-        query = 'SELECT market FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return None if data is None else data['market']
-        except Exception as e:
-            print(f'ERROR[get_calculator_user_market]: {e}')
-            self.connection.rollback()
-            return None
 
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
@@ -1325,46 +1287,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_user_is_splitting(self, user_id: int) -> bool:
-        query = 'SELECT is_splitting FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return False if data is None else data.get('is_splitting') == 1
-        except Exception as e:
-            print(f'ERROR[get_user_is_splitting]: {e}')
-            self.connection.rollback()
-            return False
-
-    def set_user_is_splitting(self, user_id: int, value: bool):
-        query = 'UPDATE tgcalc_user_settings SET is_splitting = %s WHERE user_id = %s'
-        params = (int(value), user_id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[set_user_is_splitting]: {e}')
-            self.connection.rollback()
-            return False
-
-    def get_user_split_values(self, user_id: int) -> list[float]:
-        query = 'SELECT split_values FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return [] if data is None else data.get('split_values') or []
-        except Exception as e:
-            print(f'ERROR[get_user_split_values]: {e}')
-            self.connection.rollback()
-            return []
-
-    def set_user_split_values(self, user_id: int, values: list[float]):
+    def set_user_split_values(self, user_id: int, values: list[float] | None):
         query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'
         params = (values, user_id)
 
@@ -1376,32 +1299,6 @@ class Database:
             print(f'ERROR[set_user_split_values]: {e}')
             self.connection.rollback()
             return False
-
-    def get_user_day_risk(self, user_id: int) -> tuple[float, bool] | None:
-        """
-            Возвращает tuple[float, bool]:
-                float - значение риска, True - если значение в процентах
-            :Либо None - если не задано
-        """
-        query = 'SELECT day_risk FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None or data.get('day_risk') is None:
-                return None
-
-            value = str(data.get('day_risk', ''))
-
-            is_percent = value.endswith('%')
-            value = value.replace('%', '')
-
-            return float(value), is_percent
-        except Exception as e:
-            print(f'ERROR[get_user_day_risk]: {e}')
-            self.connection.rollback()
-            return None
 
     def set_user_day_risk(self, user_id: int, value: float, is_percent=False):
         result = f'{value}{"%" if is_percent else ""}'
@@ -1418,22 +1315,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_user_round_count(self, user_id: int) -> int | None:
-        query = 'SELECT round_count FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return None
-
-            return data.get('round_count')
-        except Exception as e:
-            print(f'ERROR[get_user_round_count]: {e}')
-            self.connection.rollback()
-            return None
-
     def set_user_round_count(self, user_id: int, value: int):
         query = 'UPDATE tgcalc_user_settings SET round_count = %s WHERE user_id = %s'
         params = (value, user_id)
@@ -1446,22 +1327,6 @@ class Database:
             print(f'ERROR[set_user_round_count]: {e}')
             self.connection.rollback()
             return False
-
-    def get_user_trading_style(self, user_id: int) -> str | None:
-        query = 'SELECT trading_style FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return None
-
-            return data.get('trading_style')
-        except Exception as e:
-            print(f'ERROR[get_user_trading_style]: {e}')
-            self.connection.rollback()
-            return None
 
     def set_user_trading_style(self, user_id: int, value: str):
         query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s'
@@ -1480,12 +1345,12 @@ class Database:
         query = (
             'UPDATE tgcalc_user_settings SET market = %s, trading_style = %s, '
             'day_risk = %s, round_count = %s, '
-            'base_currency = %s, base_deposit = %s, base_risk_percent = %s, '
-            'take_profit_ratio = %s, split_values = %s, is_splitting = %s '
+            'base_currency = %s, base_deposit = %s, base_risk = %s, '
+            'take_profit_ratio = %s, split_values = %s '
             'WHERE user_id = %s'
         )
         params = ('crypto', None, None, None, None, None, None,
-                  [3, 4, 5], None, 0, user_id)
+                  [3, 4, 5], None, user_id)
 
         try:
             self.curs.execute(query, params)
@@ -1500,6 +1365,7 @@ class Database:
     def _data_to_calculations(self, data: DictRow):
         return Calculation(
             id=data.get('id'),
+            user_id=data.get('user_id'),
             profit=data.get('profit'),
             in_stat=data.get('in_stat'),
             deposit=data.get('deposit'),
@@ -1514,14 +1380,14 @@ class Database:
             split_values=data.get('split_values'),
         )
 
-    def add_calculation(self, user_id: int, value: Calculation):
+    def add_calculation(self, value: Calculation):
         query = (
             'INSERT INTO calculations (user_id, deposit, risk_value, open_price, stop_loss, round_count, '
             'currency, trading_style, market, tp_ratio, split_values) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
         params = (
-            user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
+            value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
             value.round_count, value.currency, value.trading_style, value.market,
             value.tp_ratio, value.split_values
         )
