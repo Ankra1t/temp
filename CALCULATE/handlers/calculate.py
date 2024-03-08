@@ -5,7 +5,7 @@ from db_new import db_new
 from common.utils import digit_accept, set_state_data, text_accept
 from models import Calculation
 
-from CALCULATE.callbacks import kb_cancel, choose_calculate_step, send_main, kb_set_calc_stats
+from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, send_main, kb_set_calc_stats
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
@@ -28,7 +28,7 @@ def handle_future_ticker(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             msg_ticker_not_found(user_id, ticker),
-            reply_markup=kb_cancel(user_id)
+            reply_markup=kb_main_cancel(user_id)
         )
         return
 
@@ -52,7 +52,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     if forex is None:
         bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
-            reply_markup=kb_cancel(user_id))
+            reply_markup=kb_main_cancel(user_id))
         return
 
     price = forex.price
@@ -102,7 +102,7 @@ def handle_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         bot.send_message(
             chat_id, msg_currency_error(user_id),
-            reply_markup=kb_cancel(user_id))
+            reply_markup=kb_main_cancel(user_id))
         return
 
     db_new.set_user_currency(user_db_id, value.upper())
@@ -120,7 +120,7 @@ def handle_deposit(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         bot.send_message(chat_id, msg_digit_error(user_id),
-                         reply_markup=kb_cancel(user_id))
+                         reply_markup=kb_main_cancel(user_id))
         return
 
     db_new.set_user_base(user_db_id, 'base_deposit', value)
@@ -144,7 +144,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_cancel(user_id)
+            reply_markup=kb_main_cancel(user_id)
         )
         return
 
@@ -152,7 +152,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     bot.send_message(
     #         chat_id,
     #         msg_percent_error(user_id),
-    #         reply_markup=kb_cancel(user_id)
+    #         reply_markup=kb_main_cancel(user_id)
     #     )
     #     return
 
@@ -175,7 +175,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
         bot.send_message(
             chat_id,
             'Введите стиль текстом\n' + msg_enter_trading_style(user_id),
-            reply_markup=kb_cancel(user_id)
+            reply_markup=kb_main_cancel(user_id)
         )
         return
 
@@ -193,7 +193,7 @@ def handle_open_price(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         bot.send_message(chat_id, 'Введите число:',
-                         reply_markup=kb_cancel(user_id))
+                         reply_markup=kb_main_cancel(user_id))
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -211,7 +211,7 @@ def handle_open_price(message: Message, bot: TeleBot):
     bot.set_state(user_id, state, chat_id)
     bot.send_message(
         chat_id, text,
-        reply_markup=kb_cancel(user_id)
+        reply_markup=kb_main_cancel(user_id)
     )
 
 
@@ -225,7 +225,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     stop_loss = digit_accept(message)
     if stop_loss is None:
         bot.send_message(chat_id, msg_digit_error(user_id),
-                         reply_markup=kb_cancel(user_id))
+                         reply_markup=kb_main_cancel(user_id))
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -283,7 +283,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     stop_loss = digit_accept(message)
     if stop_loss is None:
         bot.send_message(chat_id, 'Введите число:',
-                         reply_markup=kb_cancel(user_id))
+                         reply_markup=kb_main_cancel(user_id))
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:

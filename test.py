@@ -1,6 +1,7 @@
 import ast
 from datetime import datetime, timedelta, timezone
 from db_new import db_new
+from initialize import bot
 
 # azatFa  id 156045434
 # ankrait id 6919899538
@@ -15,10 +16,7 @@ from db_new import db_new
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
 
-data = db_new.get_calc_user_settings(123)
-trading_style = getattr(data, 'split_values', None)
-
-print(trading_style)
+print(bot.get_webhook_info())
 
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())

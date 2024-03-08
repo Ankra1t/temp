@@ -273,6 +273,40 @@ def msg_support(user_id: int):
     return f'{texts[lang]}👇'
 
 
+def msg_stats(user_id: int):
+    lang = get_lang(user_id)
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    all_stats = db_new.get_calculations_by_user(user_db_id)
+    saved_stats = db_new.get_calculations_by_user(user_db_id, True)
+
+    profit = 0
+    for el in saved_stats:
+        profit += el.profit or 0
+
+    texts = {
+        'ru': {},
+        'en': {}
+    }
+
+    return f"""📊 <u><b>Статистика</b></u>
+
+{POINT} Всего расчетов: <b>{len(all_stats)}</b>
+{POINT} Сохраненных расчетов: <b>{len(saved_stats)}</b>
+{POINT} Общий профит: <b>{profit}</b>
+"""
+
+
+def msg_freeze_calc(user_id: int):
+    return """Вы превысили суточный процент риска...
+
+<b>Желаете приостановить торговлю на некоторое время?</b>
+Выберите <i>количество часов</i> заморозки.
+
+На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли.
+"""
+
+
 # Первые сообщения
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
@@ -545,7 +579,7 @@ def msg_calculate_result(
         rate = 1
         tp_ratio_i = calc.tp_ratio[i]
         tp_i = get_print_float(
-            calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i,
+            max(calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i, 0),
             round_count
         )
 
@@ -559,7 +593,7 @@ def msg_calculate_result(
 
             conclusion += f' (<b>{count} монет</b>) — {get_print_float(percent, round_count)}%'
 
-        p_show += f'{get_print_float(calc.risk_value * tp_ratio_i * rate, round_count)}'
+        p_show += f'{get_print_float(abs(calc.open_price - tp_i) * rate * count_bet, round_count)}'
 
         if i != len(calc.tp_ratio) - 1:
             conclusion += '\n'

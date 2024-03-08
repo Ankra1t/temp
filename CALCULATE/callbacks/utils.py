@@ -6,7 +6,7 @@ from telebot.types import Message
 from db_new import db_new
 from initialize import pay_guard
 from common.utils import set_state_data
-from .main.keyboards import kb_cancel, kb_forex_val
+from .main.keyboards import kb_main_cancel, kb_forex_val
 from .pages import send_main
 
 from CALCULATE.callbacks.settings.keyboards import kb_change_currency, kb_trading_style
@@ -31,7 +31,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         return
 
     text = msg_calculate(bot, user_id, chat_id)
-    keyboard = kb_cancel(user_id)
+    keyboard = kb_main_cancel(user_id)
 
     if calc_type == 'forex' and pair is None:
         text += msg_enter_pair(user_id)
@@ -73,9 +73,11 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
             reply_markup=keyboard)
 
 
-def choose_first_calculate_step(bot: TeleBot, user_id: int, message: Message,
-                                type: Literal['crypto', 'future', 'paper', 'forex'],
-                                is_edit=False):
+def choose_first_calculate_step(
+    bot: TeleBot, user_id: int, message: Message,
+    type: Literal['crypto', 'future', 'paper', 'forex'],
+    is_edit=False
+):
     chat_id = message.chat.id
     mes_id = message.id
 
