@@ -263,8 +263,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     new_id = db_new.add_calculation(calc_info)
 
-    mes += '\n\nХотите учесть расчеты в статистике?'
-
     db_new.minus_calculator_uses_count(user_db_id)
     bot.send_message(
         chat_id, mes,

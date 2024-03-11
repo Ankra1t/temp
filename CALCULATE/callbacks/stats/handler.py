@@ -1,12 +1,14 @@
 from datetime import timedelta
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from common.utils import set_state_data
 
 from db_new import db_new
 from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_freeze_calc
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
+from CALCULATE.states import StatsState
 
-from .keyboards import kb_deal_result, kb_freeze_calc, kb_set_calc_stats
+from .keyboards import kb_deal_profit_minus, kb_deal_result, kb_freeze_calc, kb_set_calc_stats
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main
 
@@ -22,7 +24,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-
     if 'time' in type:
         _, time = type.split('+')
         date = get_datetime_now() + timedelta(hours=int(time))
@@ -33,6 +34,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'profit' in type:
+        bot.delete_state(user_id, chat_id)
         _, profit = type.split('+')
 
         if profit == '':
@@ -47,33 +49,44 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             if calc_info is None:
                 return
 
-            risk_value = calc_info.risk_value
-
             if profit == '-':
-                db_new.set_calculation_in_stat(stat_id, True)
-                db_new.set_calculation_profit(stat_id, -risk_value)
+                bot.set_state(user_id, StatsState.loss, chat_id)
+                set_state_data(bot, user_id, chat_id, {'stat_id': stat_id})
+                bot.edit_message_text(
+                    msg_enter_profit_minus(user_id),
+                    chat_id, mes_id,
+                    reply_markup=kb_deal_profit_minus(user_id, stat_id)
+                )
+            else:
+                if profit == 'loss':
+                    db_new.set_calculation_in_stat(stat_id, True)
+                    db_new.set_calculation_profit(
+                        stat_id, -calc_info.risk_value)
+                elif profit != 'cancel':
+                    pr = (
+                        abs(calc_info.open_price -
+                            max(calc_info.open_price +
+                                (calc_info.open_price - calc_info.stop_loss) * int(profit), 0)
+                            ) * calc_info.risk_value /
+                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.01)
+                    )
+
+                    db_new.set_calculation_in_stat(stat_id, True)
+                    db_new.set_calculation_profit(stat_id, pr)
+                else:
+                    is_cancel = True
+
+                mes = msg_calculate_result(user_id, calc_info)
+
+                if is_cancel:
+                    keyboard = kb_set_calc_stats(user_id, stat_id)
+                else:
+                    mes += '\n\n✅ Расчет сохранен!'
+                    keyboard = None
 
                 bot.edit_message_text(
-                    msg_freeze_calc(user_id),
-                    chat_id, mes_id,
-                    reply_markup=kb_freeze_calc(user_id)
+                    mes, chat_id, mes_id, reply_markup=keyboard
                 )
-            elif profit != 'cancel':
-                db_new.set_calculation_in_stat(stat_id, True)
-                db_new.set_calculation_profit(stat_id, risk_value * int(profit))
-            else:
-                is_cancel = True
-
-            mes = msg_calculate_result(user_id, calc_info)
-
-            if is_cancel:
-                mes += '\n\nХотите учесть расчеты в статистике?'
-                keyboard = kb_set_calc_stats(user_id, stat_id)
-            else:
-                mes += '\n\n✅ Расчет сохранен!'
-                keyboard = None
-
-            bot.edit_message_text(mes, chat_id, mes_id, reply_markup=keyboard)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

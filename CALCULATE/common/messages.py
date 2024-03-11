@@ -897,6 +897,17 @@ def msg_enter_stop_loss(user_id: int):
     return f'✍ {text}'
 
 
+def msg_enter_profit_minus(user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        text = 'Введите убыток по этой сделке:'
+    else:
+        text = 'Enter a loss of this transaction:'
+
+    return f'✍ {text}'
+
+
 def msg_choose_lang(user_id: int):
     lang = get_lang(user_id)
 
