@@ -40,7 +40,7 @@ def kb_settings(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_base = getButton('🎚 ' + texts[lang]["base"], 'go_change_base')
+    btn_base = getButton('📊 ' + texts[lang]["base"], 'go_change_base')
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
 
