@@ -1,6 +1,9 @@
+from locale import currency
 from telebot import TeleBot
+from datetime import datetime
+from common.dt import get_str_by_datetime
 
-from common.utils import get_decimal_count, get_lang, get_print_float
+from common.utils import get_lang, get_print_float
 from db_new import LANGUAGES_TYPE, db_new
 from models import Calculation
 
@@ -102,6 +105,25 @@ def msg_no_uses(user_id: int):
     return f"""
 ❗️ {text[lang]["1"]}
 {text[lang]["2"]}
+"""
+
+
+def msg_main_freeze(user_id: int, freeze_dt: datetime):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'name': 'Меню',
+        },
+        'en': {
+            'name': 'Menu',
+        }
+    }
+
+    return f"""
+⚡️ <b><u>{texts[lang]["name"]}</u></b>
+
+❄️ Калькулятор заморожен до <b>{get_str_by_datetime(freeze_dt)}</b>
 """
 
 
@@ -280,9 +302,25 @@ def msg_stats(user_id: int):
     all_stats = db_new.get_calculations_by_user(user_db_id)
     saved_stats = db_new.get_calculations_by_user(user_db_id, True)
 
+    user_settings = db_new.get_calc_user_settings(user_db_id)
+
+    currency = 'USD'
+    if user_settings is not None:
+        currency = user_settings.currency or currency
+
+    tp_count = 0
+    sl_count = 0
+
     profit = 0
-    for el in saved_stats:
-        profit += el.profit or 0
+    for stat in saved_stats:
+        stat_profit = stat.profit or 0
+
+        if stat_profit > 0:
+            tp_count += 1
+        if stat_profit < 0:
+            sl_count += 1
+
+        profit += stat_profit
 
     texts = {
         'ru': {},
@@ -291,17 +329,27 @@ def msg_stats(user_id: int):
 
     return f"""📊 <u><b>Статистика</b></u>
 
-{POINT} Всего расчетов: <b>{len(all_stats)}</b>
-{POINT} Сохраненных расчетов: <b>{len(saved_stats)}</b>
-{POINT} Общий профит: <b>{profit}</b>
+{POINT} Всего расчетов: <b>{len(all_stats)} шт.</b>
+
+{POINT} Тейк-профит: <b>{tp_count} шт.</b>
+{POINT} Стоп-лосс: <b>{sl_count} шт.</b>
+{POINT} Общее: <b>{len(saved_stats)} шт.</b>
+
+{POINT} Сумма: <b>{get_print_float(profit)} {currency}</b>
 """
 
 
-def msg_freeze_calc(user_id: int):
-    return """Вы превысили суточный процент риска...
+def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=False):
+    if is_percent:
+        risk_show = f'<b>{get_print_float(risk_value)}%</b> от депозита'
+    else:
+        risk_show = f'<b>{get_print_float(risk_value)} {currency}</b>'
 
+    return f"""⚠️ Вы превысили суточный процент риска на {risk_show}.
 <b>Желаете приостановить торговлю на некоторое время?</b>
-Выберите <i>количество часов</i> заморозки.
+
+✍️ Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>.
+✍️ Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>.
 
 На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли.
 """
@@ -538,26 +586,26 @@ def msg_calculate_result(
             'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
-            'conclusion': 'При цене',
+            'conclusion': 'Тейк-профит',
             'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
             'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
-            'profit': 'Общая прибыль'
+            'profit': 'Прибыль по сделке'
         },
         'en': {
             'dep': 'Deposit',
             'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
-            'conclusion': 'At a price',
+            'conclusion': 'Take-profit',
             'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
             'style': 'Trading style',
             'risk_val': 'The risk of a deal',
-            'profit': 'General profit'
+            'profit': 'Profit'
         }
     }
 
@@ -613,7 +661,7 @@ def msg_calculate_result(
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
 
-{POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>): <b>{p_show}</b>
+{POINT} {point[lang]["profit"]}: <b>{p_show}</b>
 """
 
 
@@ -893,6 +941,17 @@ def msg_enter_stop_loss(user_id: int):
         text = 'Введите цену стоп лосса:'
     else:
         text = 'Enter the stop loss price'
+
+    return f'✍ {text}'
+
+
+def msg_enter_profit_minus(user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        text = 'Введите убыток по этой сделке:'
+    else:
+        text = 'Enter a loss of this transaction:'
 
     return f'✍ {text}'
 

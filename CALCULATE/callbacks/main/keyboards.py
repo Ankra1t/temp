@@ -25,7 +25,7 @@ def kb_main_cancel(user_id: int):
     return keyboard
 
 
-def kb_main(user_id: int, is_access=True):
+def kb_main(user_id: int, is_access=True, is_new_calc=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -49,10 +49,11 @@ def kb_main(user_id: int, is_access=True):
     buttons = []
     if is_access:
         buttons.append(btn_calc)
-    buttons.append(btn_settings)
+    if not is_new_calc:
+        buttons.append(btn_settings)
+    buttons.append(btn_stats)
 
     keyboard.add(*buttons)
-    keyboard.add(btn_stats)
     return keyboard
 
 

@@ -8,7 +8,7 @@ from db_new import db_new
 from .filter import stats_factory
 
 
-def getButton(text: str, type: str, stat_id = 0):
+def getButton(text: str, type: str, stat_id=0):
     return InlineKeyboardButton(
         text, None,
         stats_factory.new(type=type, stat_id=stat_id)
@@ -32,7 +32,6 @@ def kb_stats(user_id: int):
 
     keyboard.add(btn_deal)
     return keyboard
-
 
 
 def kb_set_calc_stats(user_id: int, stat_id: int):
@@ -77,9 +76,8 @@ def kb_deal_result(user_id: int, stat_id: int):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
-    tp = u_base.tp_ratio if (u_base is not None) else []
+    calc_info = db_new.get_calculation(stat_id)
+    tp: list[int] = getattr(calc_info, 'tp_ratio', [])
 
     buttons = []
     for i, el in enumerate(tp):
@@ -93,4 +91,24 @@ def kb_deal_result(user_id: int, stat_id: int):
 
     keyboard.add(btn_low, btn_back)
 
+    return keyboard
+
+
+def kb_deal_profit_minus(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+    texts = {
+        'ru': {
+            'loss': 'Ровно',
+        },
+        'en': {
+            'loss': 'Ровно',
+        }
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_cancel = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
+    btn_loss = getButton(texts[lang]['loss'], 'profit+loss', stat_id)
+
+    keyboard.add(btn_loss, btn_cancel)
     return keyboard

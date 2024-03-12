@@ -259,6 +259,7 @@ class Calculation(BaseModel):
     id: int = 0
     profit: float | None = None
     in_stat: bool = False
+    stat_dt: datetime | None = None
     user_id: int
 
     deposit: float

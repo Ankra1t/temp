@@ -15,8 +15,9 @@ from initialize import bot
 
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
-
-print(bot.get_webhook_info())
+a = datetime.now()
+b = datetime.now() - timedelta(days=1)
+print(a.date())
 
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
