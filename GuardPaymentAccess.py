@@ -31,7 +31,6 @@ class GuardPaymentAccess():
         else:
             tariff_id = custom_tariff_id
 
-
         subscribe = Subscribe(
             tg_user_id,
             finish_date, 1, None, 'trial', prices_id=tariff_id
@@ -129,14 +128,23 @@ class GuardPaymentAccess():
     # Проверить может ли пользователь работать с калькулятором
     def valid_use_calc(self, user_id: int):
         user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+        freeze_dt = db_new.get_user_calc_freeze(user_db_id)
+
         uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
+        is_sub = self.paid_user_product(user_id, 'calc')
+        valid_use = uses_count > 0 or is_sub
 
-        # Проверять есть ли платная подписка
-        if self.paid_user_product(user_id, 'calc'):
-            return True
+        if freeze_dt is not None and (freeze_dt < get_datetime_now() or not valid_use):
+            db_new.set_user_calc_freeze(user_db_id, None)
+            freeze_dt = None
 
-        # Проверить есть ли остаток использований калькулятора
-        if uses_count > 0:
+        # Проверка на заморозку
+        if freeze_dt is not None:
+            return False
+
+        # Проверять есть ли платная подписка или остаток использований калькулятора
+        if valid_use:
             return True
 
         return False
@@ -192,7 +200,7 @@ class GuardPaymentAccess():
         """Убираем активность у подписки по subscribe_id """
         db_new.set_subscribe_unactive(subscribe_id)
 
-    def set_subscribe_unactive_by_user_id(self, user_id, tariff_id = None):
+    def set_subscribe_unactive_by_user_id(self, user_id, tariff_id=None):
         """Убираем активность у подписки для одного пользователя по user_id"""
         db_new.set_subscribe_unactive_by_user_id(user_id, tariff_id)
 
@@ -247,7 +255,7 @@ class GuardPaymentAccess():
         if period == 'week':
             days = 7
         if period == 'week2':
-            days = 7*2
+            days = 7 * 2
         if period == 'month':
             days = 30
         if period == 'month6':
@@ -255,6 +263,6 @@ class GuardPaymentAccess():
         if period == 'year':
             days = 365
         if period == 'lifetime':
-            days = 365*80
+            days = 365 * 80
 
         return days

@@ -1100,7 +1100,17 @@ class Database:
     # Users - Settings
     def _data_to_user_calc(self, data: DictRow):
         risk_value = data.get('base_risk')
-        risk = None if (risk_value is None) else (risk_value, data.get('risk_is_percent'))
+        risk = None if (risk_value is None) else (
+            risk_value, data.get('risk_is_percent'))
+
+        day_risk = None
+        if data.get('day_risk') is not None:
+            value = str(data.get('day_risk', ''))
+
+            is_percent = value.endswith('%')
+            value = value.replace('%', '')
+
+            day_risk = float(value), is_percent
 
         return UserCalcSettings(
             user_id=data.get('user_id'),
@@ -1112,7 +1122,7 @@ class Database:
             split_values=data.get('split_values'),
             trading_style=data.get('trading_style'),
             round_count=data.get('round_count'),
-            day_risk=data.get('day_risk')
+            day_risk=day_risk,
         )
 
     def get_calc_user_settings(self, user_id: int):
@@ -1124,7 +1134,8 @@ class Database:
 
             data = self.curs.fetchone()
             if data is None:
-                raise Exception(f'Таблица пользователя [ID={user_id}] не найдена')
+                raise Exception(
+                    f'Таблица пользователя [ID={user_id}] не найдена')
 
             return self._data_to_user_calc(data)
         except Exception as e:
@@ -1233,6 +1244,7 @@ class Database:
         """Получить количество использований калькулятора пользователем"""
         query = 'SELECT uses_count FROM tgcalc_user_settings WHERE user_id = %s'
         params = (user_id,)
+
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
@@ -1257,7 +1269,31 @@ class Database:
             self.connection.rollback()
             return False
 
-        pass
+    def get_user_calc_freeze(self, user_id: int) -> datetime | None:
+        query = 'SELECT freeze_dt FROM tgcalc_user_settings WHERE user_id = %s'
+        params = (user_id,)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            return None if (data is None) else data.get('freeze_dt')
+        except Exception as e:
+            print(f'ERROR[get_user_calc_freeze]: {e}')
+            self.connection.rollback()
+            return None
+
+    def set_user_calc_freeze(self, user_id: int, value: datetime | None):
+        query = "UPDATE tgcalc_user_settings SET freeze_dt = %s WHERE user_id = %s"
+        params = (value, user_id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_calc_freeze]: {e}')
+            self.connection.rollback()
+            return False
 
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
         """Установить коэфициенты тейк-профит на показ"""
@@ -1368,6 +1404,7 @@ class Database:
             user_id=data.get('user_id'),
             profit=data.get('profit'),
             in_stat=data.get('in_stat'),
+            stat_dt=data.get('stat_dt'),
             deposit=data.get('deposit'),
             risk_value=data.get('risk_value'),
             open_price=data.get('open_price'),
@@ -1419,8 +1456,8 @@ class Database:
             return False
 
     def set_calculation_in_stat(self, id: int, value: bool):
-        query = 'UPDATE calculations SET in_stat = %s WHERE id = %s'
-        params = (value, id)
+        query = 'UPDATE calculations SET in_stat = %s, stat_dt = %s WHERE id = %s'
+        params = (value, get_datetime_now(), id)
 
         try:
             self.curs.execute(query, params)

@@ -6,8 +6,7 @@ from initialize import logger
 
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from keyboard_inlines import Admin_kb_inlines
-from db_new import db_new, Database as DatabaseNew
+from db_new import Database as DatabaseNew
 from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
 
 

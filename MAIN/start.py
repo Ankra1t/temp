@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from initialize import pay_guard, base_statis, kb_inl_admin
 from keyboard_reply import kb_main_redactor, kb_main_support
 from db_new import db_new
 
