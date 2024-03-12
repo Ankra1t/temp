@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
+from initialize import calcService
 from db_new import db_new
 from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
@@ -59,9 +60,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             else:
                 if profit == 'loss':
-                    db_new.set_calculation_in_stat(stat_id, True)
-                    db_new.set_calculation_profit(
-                        stat_id, -calc_info.risk_value)
+                    calcService.set_profit(stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
                     pr = (
                         abs(calc_info.open_price -
@@ -70,9 +69,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                             ) * calc_info.risk_value /
                         max(abs(calc_info.open_price - calc_info.stop_loss), 0.01)
                     )
-
-                    db_new.set_calculation_in_stat(stat_id, True)
-                    db_new.set_calculation_profit(stat_id, pr)
+                    calcService.set_profit(stat_id, pr)
                 else:
                     is_cancel = True
 

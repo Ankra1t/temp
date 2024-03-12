@@ -114,4 +114,3 @@ def get_calculation(
         profit.append(risk_value * el * rate)
 
     return count_bet, value_bet, credit, take_profit, profit
-

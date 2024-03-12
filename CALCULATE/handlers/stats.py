@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from initialize import calcService
 from db_new import db_new
 from common.utils import digit_accept
 
@@ -26,8 +27,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
         )
         return
 
-    db_new.set_calculation_in_stat(stat_id, True)
-    a = db_new.set_calculation_profit(stat_id, -abs(value))
+    calcService.set_profit(stat_id, -abs(value))
 
     calc_info = db_new.get_calculation(stat_id)
     if calc_info is None:

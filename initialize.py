@@ -3,6 +3,7 @@ from aiocryptopay import Networks
 from aiocryptopay import AioCryptoPay, Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
+from Classes.CalculationService import CalculationService
 
 from config_global import TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 from config_logger import logger
@@ -35,6 +36,8 @@ serv_tasks = ServiceTasks(db_new, bot)
 pays_banker = PaymentsBanker(
     api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)
 pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
+
+calcService = CalculationService(bot, db_new)
 
 
 kb_inl_admin = Admin_kb_inlines()
