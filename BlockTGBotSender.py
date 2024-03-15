@@ -4,13 +4,12 @@ from math import floor
 from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
-from common.utils import get_calculation
 
 from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
 from db_new import db_new
 
 from initialize import bot, pay_guard
-from models import Post, UserInfo
+from models import Calculation, Post, UserInfo
 
 
 def send_message_by_type(
@@ -55,29 +54,32 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
         )
 
         user_db_id = db_new.get_user_id_by_tg_id(user_id)
-        user_base_values = db_new.get_user_base(user_db_id)
-        risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+        u_base = db_new.get_calc_user_settings(user_db_id)
 
-        dep = user_base_values['base_deposit']
-        risk = user_base_values['base_risk_percent']
-
-        if dep is None or risk is None:
+        if u_base is None or (u_base.deposit is None or u_base.risk is None):
             calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
         else:
-            if risk_is_percent:
-                risk *= dep * 0.01
+            if u_base.risk[1]:
+                risk_value = u_base.deposit * u_base.risk[0] * 0.01
+            else:
+                risk_value = u_base.risk[0]
 
             calc_text = '<b><u>Расчет по сигналу</u></b>\n'
-            count_bet, value_bet, credit, take_profit, profit = get_calculation(
-                dep, risk, open_price,
-                stop_loss, False, [], ticker
+
+            calc_info = Calculation(
+                user_id=0,
+                deposit=u_base.deposit,
+                risk_value=risk_value,
+                open_price=open_price,
+                stop_loss=stop_loss,
+                currency=ticker,
+                market='crypto',  # !
+                tp_ratio=u_base.tp_ratio,
+                split_values=u_base.split_values,
+                trading_style='-'
             )
 
-            calc_text += msg_calculate_result(
-                user_id, dep, open_price,
-                stop_loss, count_bet, value_bet, credit,
-                risk, take_profit, profit
-            )
+            calc_text += msg_calculate_result(user_id, calc_info)
 
     signal_text += '\n\n' + post.content
 
@@ -134,7 +136,8 @@ class BlockTGBotSender(object):
                     i += 1
                     self.send_by_type(user)
                     current_batch += self.c_by_user
-                    log_send_ok.info(f'Отправлено tg_id{user} db_id{user_i.id} username->{username} ')
+                    log_send_ok.info(
+                        f'Отправлено tg_id{user} db_id{user_i.id} username->{username} ')
                 except Exception as e:
                     err_mess = f'Ошибка пользователя tg_id{user} db_id{user_i.id} username->{username} : {e}'
                     print(err_mess)

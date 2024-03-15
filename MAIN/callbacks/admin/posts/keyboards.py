@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from initialize import kb_inl_admin
+from common.keyboard import back_txt
 
 from .filter import admin_posts_factory
 
@@ -17,9 +17,11 @@ def kb_posts():
     btn3 = getButton('🔎 Все посты', 'list')
     btn4 = getButton('✉️ Отправить сейчас', 'send_now')
 
+    back = getButton(back_txt(), 'go_main')
+
     keyboard.add(btn1, btn2)
     keyboard.add(btn3)
-    keyboard.add(btn4, kb_inl_admin.go_main_btn)
+    keyboard.add(btn4, back)
     return keyboard
 
 
@@ -30,13 +32,16 @@ def kb_post_kinds():
     btn2 = getButton('📈 Сигнал', 'choose_kind_signal')
 
     keyboard.add(btn1, btn2)
-    keyboard.add(kb_inl_admin.go_fut_posts_btn, kb_inl_admin.go_main_btn)
+    back = getButton(back_txt(), 'go_posts')
+
+    keyboard.add(back)
     return keyboard
 
 
 def kb_posts_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(kb_inl_admin.go_fut_posts_btn, kb_inl_admin.go_main_btn)
+    back = getButton(back_txt(), 'go_posts')
+    keyboard.add(back)
     return keyboard
 
 
@@ -48,9 +53,11 @@ def kb_post_add_confirm():
     btn2 = getButton('👨‍💻 Всем', prefix + 'all')
     btn3 = getButton('Бесплатным', prefix + 'public')
 
+    back = getButton(back_txt(), 'go_posts')
+
     keyboard.add(btn1, btn2)
     # keyboard.add(btn3)
-    keyboard.add(kb_inl_admin.go_fut_posts_btn, kb_inl_admin.go_main_btn)
+    keyboard.add(back)
     return keyboard
 
 

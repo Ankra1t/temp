@@ -1,6 +1,9 @@
 from pydantic import BaseModel
-from typing import Union, Optional
+from typing import Literal, Union, Optional
 from datetime import datetime
+
+
+MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
 
 
 class Invoice(BaseModel):
@@ -168,6 +171,7 @@ class UserInfo(BaseModel):
     ban: int
     registration_dt: datetime
 
+
 class Client(BaseModel):
     user: UserInfo | None = None
 
@@ -182,7 +186,6 @@ class Worker(BaseModel):
     tg_id: int
     username: str
     role: int
-
 
 
 class PostDetails(BaseModel):
@@ -223,10 +226,12 @@ class Forex(BaseModel):
     price: float
     help_pair: str | None
 
+
 class TaskMessage(BaseModel):
     type_message: str = 'text'
     text: str = 'text'
     media_id: str | None = None
+
 
 class Task(BaseModel):
     id: int | None = None
@@ -236,3 +241,34 @@ class Task(BaseModel):
     message: TaskMessage | None = None
     active: int = 1
 
+
+class UserCalcSettings(BaseModel):
+    user_id: int
+    deposit: float | None
+    risk: tuple[float, bool] | None
+    currency: str | None
+    market: MARKETS_TYPE
+    tp_ratio: list[int]
+    split_values: list[float] | None
+    trading_style: str | None
+    round_count: int | None
+    day_risk: tuple[float, bool] | None
+
+
+class Calculation(BaseModel):
+    id: int = 0
+    profit: float | None = None
+    in_stat: bool = False
+    stat_dt: datetime | None = None
+    user_id: int
+
+    deposit: float
+    risk_value: float
+    open_price: float
+    stop_loss: float
+    currency: str
+    trading_style: str
+    market: MARKETS_TYPE
+    tp_ratio: list[int]
+    round_count: int | None = None
+    split_values: list[float] | None

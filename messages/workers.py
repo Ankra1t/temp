@@ -1,6 +1,3 @@
-from db_new import db_new
-
-
 def admin_main_msg(count_all: int, count_with_sub: int, count_sub_more_1: int, count_admins: int, count_fut_post: int):
     return f"""🏠 <b><u>Главная</u></b>
 
@@ -36,9 +33,7 @@ def menu_msg(title: str):
 Действия:
 """
 
-def admin_fut_posts_msg():
-    posts_count = len(db_new.get_all_posts())
-
+def admin_fut_posts_msg(posts_count: int):
     return f"""📋 <b><u>Отложенные посты</u></b>
 
 Количество: <b>{posts_count}</b>

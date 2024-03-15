@@ -6,7 +6,7 @@ from CALCULATE.callbacks.utils import choose_calculate_step
 from common.utils import set_state_data
 
 from CALCULATE.states.calculate import CalculateState
-from CALCULATE.callbacks import kb_cancel
+from CALCULATE.callbacks import kb_main_cancel
 
 
 # ======================= // ANCHOR Переменные
@@ -47,7 +47,7 @@ def callback_inline(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'val_dep': type})
         bot.edit_message_text(
             'Введите размер депозита:', chat_id, mes_id,
-            reply_markup=kb_cancel(user_id)
+            reply_markup=kb_main_cancel(user_id)
         )
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 

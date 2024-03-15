@@ -4,18 +4,15 @@ from MAIN.callbacks.admin.pages import send_admin_payment
 
 from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
 from initialize import bot, kb_inl_admin, pay_guard, tariff_manager, base_statis
-from messages.workers import admin_fut_posts_msg, menu_msg
-from messages.statistics import admin_main_statistics
+from messages.workers import menu_msg
 import variables as vars
 from models import User
-from db_new import db_new
 
 from common.utils import set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.callbacks import (
-    kb_params, kb_posts, kb_statistics,
-    kb_admin_users_back, kb_admin_choose_periods,
+    kb_params, kb_admin_users_back, kb_admin_choose_periods,
     send_admin_workers, send_admin_users, send_admin_main
 )
 from MAIN.states import AdminTariffState, AdminUsersState
@@ -41,20 +38,14 @@ def admin_main_callbacks(call: types.CallbackQuery):
         send_admin_workers(bot, call.message, user_id)
 
     if type == 'fut_posts':
-        bot.edit_message_text(
-            admin_fut_posts_msg(), chat_id, mes_id,
-            reply_markup=kb_posts()
-        )
+        pass
 
     if type == 'tariffs':
         bot.edit_message_text('Действия с тарифами', chat_id, mes_id,
                               reply_markup=kb_inl_admin.kb_tariffs())
 
     if type == 'params':
-        bot.edit_message_text(
-            menu_msg('Параметры'), chat_id, mes_id,
-            reply_markup=kb_params()
-        )
+        pass
 
     if type == 'payment':
         send_admin_payment(bot, call.message, user_id)

@@ -1,7 +1,7 @@
 import ast
 from datetime import datetime, timedelta, timezone
-from email.policy import strict
 from db_new import db_new
+from initialize import bot
 
 # azatFa  id 156045434
 # ankrait id 6919899538
@@ -15,6 +15,9 @@ from db_new import db_new
 
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
+a = datetime.now()
+b = datetime.now() - timedelta(days=1)
+print(a.date())
 
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
@@ -60,11 +63,6 @@ from db_new import db_new
 # query += "LIMIT %s OFFSET %s "
 
 # print(query)
-
-# db_new.curs.execute('UPDATE users SET created_at = %s WHERE id <= 14',
-#                     (datetime(2023, 8, 10, 5, 54),))
-# db_new.connection.commit()
-
 
 # print(
 #     'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at '

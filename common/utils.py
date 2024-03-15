@@ -44,7 +44,7 @@ def get_print_float(value: float, round_count: int | None = None):
         return int(value)
 
     if round_count is not None:
-        return round(value, max(round_count, 6))
+        return round(value, min(round_count, 5))
 
     if round(value, 2) == value:
         return round(value, 2)
@@ -71,8 +71,7 @@ def get_calculation(
     risk_value: float,
     open_price: float,
     stop_loss: float,
-    is_splitting: bool,
-    split_values: list[float],
+    split_values: list[float] | None,
     ticker: str | None = None,
     tp_ratio: list[int] = [3, 4, 5],
 ):
@@ -109,10 +108,9 @@ def get_calculation(
         take_profit.append(open_price + (open_price - stop_loss) * el)
 
         rate = 1
-        if is_splitting:
+        if split_values is not None:
             rate = split_values[i] / 100
 
         profit.append(risk_value * el * rate)
 
     return count_bet, value_bet, credit, take_profit, profit
-

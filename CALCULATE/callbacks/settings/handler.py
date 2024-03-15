@@ -8,17 +8,17 @@ from db_new import db_new, LANGUAGES
 from common.utils import set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_lang, msg_enter_currency, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_splitting,
-    msg_enter_summury_profit_type, msg_enter_take_profit,
-    msg_settings_change_market, msg_success_edit, msg_settings_change_base,
+    msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
+    msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style,
+    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
-    kb_choose_lang, kb_base_cancel,
-    kb_splitting, kb_splitting_last,
+    kb_choose_lang, kb_base_cancel, kb_settings_confirm,
+    kb_splitting, kb_splitting_last, kb_trading_style,
     kb_summury_profit_type, kb_take_profit
 )
 from ..pages import send_main, send_settings, send_summury_profit_settings
@@ -28,6 +28,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
 
+    trading_style = callback_data.get('trading_style', '')
     summury_type = callback_data.get('summury_type', '')
     take_profit_add = callback_data.get('take_profit', '')
     add_count = callback_data.get('add_count', '')
@@ -53,6 +54,47 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, SettingsState.risk_percent, chat_id)
 
+    if type == 'set_day_risk':
+        bot.edit_message_text(
+            msg_enter_day_risk(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_base_cancel(user_id)
+        )
+        bot.set_state(user_id, SettingsState.day_risk, chat_id)
+
+    if type == 'set_round_count':
+        bot.edit_message_text(
+            msg_enter_round_count(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_base_cancel(user_id)
+        )
+        bot.set_state(user_id, SettingsState.round_count, chat_id)
+
+    if 'style' in type:
+        if trading_style == '':
+            bot.set_state(user_id, SettingsState.trading_style, chat_id)
+            bot.edit_message_text(
+                msg_enter_trading_style(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_trading_style(user_id)
+            )
+        else:
+            db_new.set_user_trading_style(user_db_id, trading_style.lower())
+
+            if 'calc' in type:
+                choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+            else:
+                if 'welcome' in type:
+                    bot.edit_message_text(
+                        msg_success_base_set(user_id), chat_id, mes_id
+                    )
+                else:
+                    bot.edit_message_text(
+                        msg_success_edit(user_id), chat_id, mes_id
+                    )
+
+                send_settings(bot, call.message, user_id, True)
+
     if 'set_currency' in type:
         if type == 'set_currency':
             bot.edit_message_text(
@@ -63,8 +105,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.currency, chat_id)
         else:
             _, currency = type.split('+')
-
-            db_new.set_user_currency(user_db_id, currency)
+            db_new.set_user_currency(user_db_id, currency.upper())
 
             if 'welcome' in type:
                 bot.set_state(user_id, SettingsState.deposit, chat_id)
@@ -72,13 +113,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     msg_enter_deposit(user_id), chat_id, mes_id
                 )
             else:
-                bot.edit_message_text(
-                    msg_success_edit(user_id), chat_id, mes_id
-                )
-
                 if 'calc' in type:
                     choose_calculate_step(bot, user_id, chat_id, mes_id, True)
                 else:
+                    bot.edit_message_text(
+                        msg_success_edit(user_id), chat_id, mes_id
+                    )
                     send_settings(bot, call.message, user_id, True)
 
     if 'choose_lang' in type:
@@ -138,14 +178,22 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.currency, chat_id)
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
 
-    if type == 'reset':
-        # Сброс настроек калькулятора до начальных
-        try:
-            db_new.reset_user_settings(user_db_id)
+    if 'reset' in type:
+        if '_yes' in type:
+            try:
+                # Сброс настроек калькулятора до начальных
+                db_new.reset_user_settings(user_db_id)
+                send_settings(bot, call.message, user_id)
+            except:
+                # Нет изменений - ничего не изменяется
+                pass
+        elif '_no' in type:
             send_settings(bot, call.message, user_id)
-        except:
-            # Нет изменений - ничего не изменяется
-            pass
+        else:
+            bot.edit_message_text(
+                msg_confirm_reset(user_id), chat_id, mes_id,
+                reply_markup=kb_settings_confirm(user_id, 'reset')
+            )
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
@@ -181,7 +229,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         current_tp_ratio = current_tp_ratio[:add_count]
                         current_split = current_split[:add_count]
                     else:
-                        # Ищем текущий максимальный тейк профит
+                        # Ищем текущий максимальный тейк-профит
                         max_tp = max(current_tp_ratio)
 
                         # Разделяем остатки процентов на кол-во добавляемых
@@ -197,7 +245,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                             current_tp_ratio.append(max_tp + i)
                             current_split.append(new_percent)
 
-                # Добавление тейк профита, если задано
+                # Добавление тейк-профита, если задано
                 if take_profit_add != '':
                     tp_temp = int(take_profit_add)
                     if tp_temp in current_tp_ratio:
@@ -223,13 +271,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         user_id, current_tp_ratio, current_split, add_count
                     )
                 elif len(current_tp_ratio) == len(current_split):
-                    # Если кол-во тейк профитов и процентов одинаково,
-                    # то даем выбрать следующий тейк профит
+                    # Если кол-во тейк-профитов и процентов одинаково,
+                    # то даем выбрать следующий тейк-профит
                     kb = kb_splitting(
                         user_id, current_tp_ratio, current_split
                     )
                 else:
-                    # Иначе даем ввести процент для последнего выбранного тейк профита
+                    # Иначе даем ввести процент для последнего выбранного тейк-профита
                     kb = None
                     bot.set_state(user_id, SettingsState.splitting, chat_id)
                 bot.edit_message_text(
@@ -245,15 +293,15 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             current_tp_ratio: list[int] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
 
-        # При сохранении тейк профита без разделения
+        # При сохранении тейк-профита без разделения
         if type == 'tp_save':
             current_tp_ratio.sort()
             db_new.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
-            db_new.set_user_is_splitting(user_db_id, False)
+            db_new.set_user_split_values(user_db_id, None)
 
         # При сохранении вывода с разделением
         if type == 'splitting_save':
-            # Сортируем по возрастанию тейк профитов
+            # Сортируем по возрастанию тейк-профитов
             sorted_tp, sorted_split = zip(
                 *sorted(zip(current_tp_ratio, current_split))
             )
@@ -262,7 +310,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             db_new.set_calculator_tp_ratio(user_db_id, sorted_tp)
             db_new.set_user_split_values(user_db_id, sorted_split)
-            db_new.set_user_is_splitting(user_db_id, True)
 
         # Выводим сообщения
         bot.edit_message_text('Изменено!', chat_id, mes_id)

@@ -7,12 +7,14 @@ from initialize import kb_inl_admin, pay_guard, base_statis
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
 from messages.statistics import admin_main_statistics
-from messages.workers import admin_main_msg, admin_users_msg, menu_msg
+from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
 from models import Post
 
 from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
 from .statistics.keyboards import kb_statistics
+from .posts.keyboards import kb_posts
+from .params.keyboards import kb_params
 
 
 def send_admin_main(
@@ -101,6 +103,62 @@ def send_admin_payment(
 
     text = admin_main_statistics(count_payments, summ_all_users)
     keyboard = kb_statistics()
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_fut_posts(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
+
+    posts_count = len(db_new.get_all_posts())
+
+    text = admin_fut_posts_msg(posts_count)
+    keyboard = kb_posts()
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_params(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+    bot.clear_step_handler(message)
+
+    text = menu_msg('Параметры')
+    keyboard = kb_params()
 
     if is_first:
         bot.send_message(

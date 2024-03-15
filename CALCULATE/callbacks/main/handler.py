@@ -5,7 +5,7 @@ from db_new import db_new
 
 from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
-from ..pages import send_settings, send_main
+from ..pages import send_settings, send_main, send_stats
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -15,17 +15,19 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
-    chat_id = call.message.chat.id
-
     if type == 'calc':
-        market = db_new.get_calculator_user_market(user_db_id) or 'crypto'
+        u_base = db_new.get_calc_user_settings(user_db_id)
+        market = u_base.market if (u_base is not None) else 'crypto'
         choose_first_calculate_step(bot, user_id, call.message, market, True)
 
-    if type == 'cancel':
+    if type == 'go_main':
         send_main(call.message, bot, user_id)
 
     if type == 'settings':
         send_settings(bot, call.message, user_id)
+
+    if type == 'stats':
+        send_stats(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

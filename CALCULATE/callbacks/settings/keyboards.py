@@ -8,7 +8,14 @@ from CALCULATE.common.messages import market_translates
 from .filter import settings_factory
 
 
-def getButton(text: str, type: str, summury_type='', take_profit: int | None = None, add_count: int | None = None):
+def getButton(
+    text: str,
+    type: str,
+    summury_type='',
+    take_profit: int | None = None,
+    add_count: int | None = None,
+    trading_style: str | None = None
+):
     return InlineKeyboardButton(
         text, None,
         callback_data=settings_factory.new(
@@ -16,6 +23,7 @@ def getButton(text: str, type: str, summury_type='', take_profit: int | None = N
             summury_type=summury_type,
             take_profit=take_profit or '',
             add_count=add_count or '',
+            trading_style=trading_style or '',
         ))
 
 
@@ -24,16 +32,18 @@ def kb_settings(user_id: int):
     texts = {
         'ru': {
             'base': 'Базовые значения',
-            'lang': 'Выбрать язык',
-            'market': 'Выбрать рынок',
-            'reset': 'Сбросить настройки',
+            'lang': 'Язык',
+            'market': 'Рынок',
+            'style': 'Стиль',
+            'reset': 'Сброс',
             'summury_profit': 'Деление профита',
         },
         'en': {
             'base': 'Base values',
-            'lang': 'Choose language',
-            'market': 'Choose market',
-            'reset': 'Reset settings',
+            'lang': 'Language',
+            'market': 'Market',
+            'style': 'Style',
+            'reset': 'Reset',
             'summury_profit': 'Profit division',
         }
     }
@@ -43,6 +53,7 @@ def kb_settings(user_id: int):
     btn_base = getButton('📊 ' + texts[lang]["base"], 'go_change_base')
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
+    btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
 
     btn_summury_profit = getButton(
         '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
@@ -52,8 +63,9 @@ def kb_settings(user_id: int):
     btn_back = getButton(back_txt(lang), 'go_main')
 
     keyboard.add(btn_base, btn_market)
-    keyboard.add(btn_summury_profit, btn_lang)
-    keyboard.add(btn_reset, btn_back)
+    keyboard.add(btn_style, btn_summury_profit)
+    keyboard.add(btn_lang, btn_reset)
+    keyboard.add(btn_back)
     return keyboard
 
 
@@ -63,12 +75,16 @@ def kb_change_base(user_id: int):
         'ru': {
             'dep': 'Депозит',
             'risk': 'Процент риска',
+            'day_risk': 'Риск на день',
             'currency': 'Валюта',
+            'round_count': 'Округление',
         },
         'en': {
             'dep': 'Deposit',
             'risk': 'Risk percent',
+            'day_risk': 'Daily risk',
             'currency': 'Currency',
+            'round_count': 'Rounding',
         }
     }
 
@@ -77,10 +93,14 @@ def kb_change_base(user_id: int):
     btn_dep = getButton(texts[lang]['dep'], 'set_deposit')
     btn_risk = getButton(texts[lang]['risk'], 'set_risk_percent')
     btn_currency = getButton(texts[lang]['currency'], 'set_currency')
+    btn_day_risk = getButton(texts[lang]['day_risk'], 'set_day_risk')
+    btn_round_count = getButton(texts[lang]['round_count'], 'set_round_count')
+
     btn_back = getButton(back_txt(lang), 'go_settings')
 
     keyboard.add(btn_dep, btn_risk)
-    keyboard.add(btn_currency, btn_back)
+    keyboard.add(btn_currency, btn_day_risk)
+    keyboard.add(btn_round_count, btn_back)
     return keyboard
 
 
@@ -246,7 +266,7 @@ def kb_summury_profit_type(user_id: int):
 
 def kb_take_profit(user_id: int, current_tp: list[int]):
     """
-        Выбор значения коэфицента для тейк профита
+        Выбор значения коэфицента для тейк-профита
     """
     lang = get_lang(user_id)
 
@@ -259,9 +279,9 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         }
     }
 
-    # Максимальный тейк профит
+    # Максимальный тейк-профит
     tp_max = 10
-    # Максимальное кол-во тейк профитов
+    # Максимальное кол-во тейк-профитов
     tp_count_max = 5
 
     row_width = 4
@@ -269,7 +289,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
     buttons = []
 
-    # Если кол-во тейк профитов еще не максимальное - выводим кнопки
+    # Если кол-во тейк-профитов еще не максимальное - выводим кнопки
     if len(current_tp) != tp_count_max:
         for el in range(2, tp_max + 1):
             added = '✅ ' if el in current_tp else ''
@@ -290,7 +310,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         cancel_txt(lang), 'change_summury_profit'
     )
 
-    # Шаг назад, убираем последний тейк профит
+    # Шаг назад, убираем последний тейк-профит
     btn_back = getButton(
         back_txt(lang),
         'change_summury_profit', 'default', None, -1
@@ -306,7 +326,7 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
 
 def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], added_count=0):
     """
-        Выбор значения коэфицента для тейк профита, для выставления процентов
+        Выбор значения коэфицента для тейк-профита, для выставления процентов
     """
     added_count = max(added_count, 1)
     lang = get_lang(user_id)
@@ -322,9 +342,9 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         }
     }
 
-    # Максимальный тейк профит
+    # Максимальный тейк-профит
     tp_max = 10
-    # Максимальное кол-во тейк профитов
+    # Максимальное кол-во тейк-профитов
     tp_count_max = 5
 
     percents_sum = sum(current_split)
@@ -367,7 +387,7 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     btn_cancel = getButton(
         cancel_txt(lang), 'change_summury_profit')
 
-    # Шаг назад, убираем последний тейк профит и его процент
+    # Шаг назад, убираем последний тейк-профит и его процент
     btn_back = getButton(
         back_txt(lang),
         'change_summury_profit', 'splitting', None, -added_count
@@ -411,4 +431,33 @@ def kb_splitting_last(user_id: int):
     )
 
     keyboard.add(btn_back, btn_cancel)
+    return keyboard
+
+
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
+    def getThisButton(text: str, style: str):
+        return getButton(
+            text, f'style_{type}',
+            trading_style=style
+        )
+
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_1 = getThisButton('Пробой', 'пробой уровня')
+    btn_2 = getThisButton('Отбой','отбой от уровня')
+    btn_3 = getThisButton('Ложные', 'ложные пробои')
+    btn_4 = getThisButton('Скользящие', 'скользящие средние')
+    btn_5 = getThisButton('high/low', 'торговля на high/low')
+
+    if type == 'calc':
+        btn_cancel = getButton(cancel_txt(lang), 'go_main')
+    else:
+        btn_cancel = getButton(cancel_txt(lang), 'go_settings')
+
+    keyboard.add(btn_1, btn_2)
+    keyboard.add(btn_4, btn_3)
+    keyboard.add(btn_5, btn_cancel)
+
     return keyboard

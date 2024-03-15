@@ -1,10 +1,16 @@
+from locale import currency
 from telebot import TeleBot
-from common.utils import get_decimal_count, get_lang, get_print_float
+from datetime import datetime
+from common.dt import get_str_by_datetime
 
-from db_new import db_new
+from common.utils import get_lang, get_print_float
+from db_new import LANGUAGES_TYPE, db_new
+from models import Calculation
 
 
 BULLET = '✦'
+POINT = '•'
+TAB = '   '
 
 market_translates = {
     'ru': {
@@ -20,6 +26,23 @@ market_translates = {
         'forex': 'Forex'
     }
 }
+
+
+def get_risk_annotation(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            '1': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
+            '2': '<i>Без знаков</i> - для ввода точной суммы риска',
+        },
+        'en': {
+            '1': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
+            '2': '<i>Without signs</i> - for entering a cloth amount of risk',
+        }
+    }
+
+    return f"""{texts[lang]['1']}
+{texts[lang]['2']}
+"""
 
 
 # Основные страницы
@@ -85,57 +108,87 @@ def msg_no_uses(user_id: int):
 """
 
 
+def msg_main_freeze(user_id: int, freeze_dt: datetime):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'name': 'Меню',
+        },
+        'en': {
+            'name': 'Menu',
+        }
+    }
+
+    return f"""
+⚡️ <b><u>{texts[lang]["name"]}</u></b>
+
+❄️ Калькулятор заморожен до <b>{get_str_by_datetime(freeze_dt)}</b>
+"""
+
+
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
 
-    base = db_new.get_user_base(user_db_id)
-    deposit, risk, currency = (
-        base.get('base_deposit'),
-        base.get('base_risk_percent'),
-        base.get('base_currency') or 'USD'
-    )
-
-    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-    market: str = db_new.get_calculator_user_market(user_db_id) or 'crypto'
+    u_base = db_new.get_calc_user_settings(user_db_id)
+    if u_base is None:
+        return ''
 
     texts = {
         'ru': {
             'name': 'Настройки',
             'dep': 'Базовый депозит',
             'risk': 'Базовый риск',
+            'day_risk': 'Риск на день',
+            'round_count': 'Округление до',
+            'trading_style': 'Стиль',
             'currency': 'Базовая валюта',
-            'tp_show': 'Вывод расчета прибыли',
+            'tp_show': 'Деление профита',
             'market': 'Рынок',
+            'round_count': 'Округление',
         },
         'en': {
             'name': 'Settings',
             'dep': 'Default deposit',
             'risk': 'Default risk',
+            'day_risk': 'Daily risk',
+            'round_count': 'Rounding',
+            'trading_style': 'Style',
             'currency': 'Default currency',
-            'tp_show': 'Display calculation of profit',
+            'tp_show': 'Profit division',
             'market': 'Market',
         },
     }
 
+    currency = u_base.currency or 'USD'
+
     tp_result = ''
-    for el in tp_ratio:
+    for el in u_base.tp_ratio:
         tp_result += f'x{el} '
 
-    show_deposit = f"{get_print_float(deposit)} {currency}" if deposit is not None else "-"
-    show_risk = (str(get_print_float(risk)) +
-                 ("%" if risk_is_percent else f" {currency}") if risk is not None else "-")
+    show_deposit = f"{get_print_float(u_base.deposit)} {currency}" if (
+        u_base.deposit is not None) else "-"
+
+    show_risk = (str(get_print_float(u_base.risk[0])) +
+                 ("%" if u_base.risk[1] else f" {currency}")) if (u_base.risk is not None) else "-"
+
+    show_day_risk = (f'{get_print_float(u_base.day_risk[0])}' +
+                     ('%' if u_base.day_risk[1] else f' {currency}')) if (u_base.day_risk is not None) else "-"
 
     return f"""
 ⚙️ <b><u>{texts[lang]["name"]}</u></b>
 
-{BULLET} {texts[lang]["dep"]}: <b>{show_deposit}</b>
-{BULLET} {texts[lang]["risk"]}: <b>{show_risk}</b>
+{POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
+{POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
+{POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
 
-{BULLET} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
-{BULLET} {texts[lang]["market"]}: <b>{market_translates[lang][market]}</b>
+{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
+{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
+
+{POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
+{POINT} {texts[lang]["market"]}: <b>{market_translates[lang][u_base.market]}</b>
 """
 
 
@@ -177,15 +230,15 @@ def msg_summury_profit_settings(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
-    is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id)
+    u_base = db_new.get_calc_user_settings(user_db_id)
+    tp_ratio = u_base.tp_ratio if (u_base is not None) else []
+    split_values = u_base.split_values if (u_base is not None) else None
 
     texts = {
         'ru': {
             'name': 'Настройки',
             'subname': 'Деление профита',
-            'take_profit': 'Ваш тейк профит',
+            'take_profit': 'Ваш тейк-профит',
             'split': 'Разделение',
             'on': 'включено',
             'off': 'выключено',
@@ -202,7 +255,9 @@ def msg_summury_profit_settings(user_id: int):
 
     info_result = ''
 
-    if is_splitting:
+    if split_values is not None:
+        on_off = "on"
+
         for i, el in enumerate(tp_ratio):
             info_result += f'<b>x{el} ({split_values[i]}%)</b>'
 
@@ -213,6 +268,8 @@ def msg_summury_profit_settings(user_id: int):
             else:
                 info_result += '\n'
     else:
+        on_off = "off"
+
         info_result = f'{texts[lang]["take_profit"]}: '
         for i, el in enumerate(tp_ratio):
             info_result += f'<b>x{el}</b>'
@@ -222,7 +279,7 @@ def msg_summury_profit_settings(user_id: int):
     return f"""
 ⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>
 
-{texts[lang]["split"]}: <b>{texts[lang]["on" if is_splitting else "off"]}</b>
+{texts[lang]["split"]}: <b>{texts[lang][on_off]}</b>
 {info_result}
 """
 
@@ -236,6 +293,66 @@ def msg_support(user_id: int):
     }
 
     return f'{texts[lang]}👇'
+
+
+def msg_stats(user_id: int):
+    lang = get_lang(user_id)
+
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    all_stats = db_new.get_calculations_by_user(user_db_id)
+    saved_stats = db_new.get_calculations_by_user(user_db_id, True)
+
+    user_settings = db_new.get_calc_user_settings(user_db_id)
+
+    currency = 'USD'
+    if user_settings is not None:
+        currency = user_settings.currency or currency
+
+    tp_count = 0
+    sl_count = 0
+
+    profit = 0
+    for stat in saved_stats:
+        stat_profit = stat.profit or 0
+
+        if stat_profit > 0:
+            tp_count += 1
+        if stat_profit < 0:
+            sl_count += 1
+
+        profit += stat_profit
+
+    texts = {
+        'ru': {},
+        'en': {}
+    }
+
+    return f"""📊 <u><b>Статистика</b></u>
+
+{POINT} Всего расчетов: <b>{len(all_stats)} шт.</b>
+
+{POINT} Тейк-профит: <b>{tp_count} шт.</b>
+{POINT} Стоп-лосс: <b>{sl_count} шт.</b>
+{POINT} Общее: <b>{len(saved_stats)} шт.</b>
+
+{POINT} Сумма: <b>{get_print_float(profit)} {currency}</b>
+"""
+
+
+def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=False):
+    if is_percent:
+        risk_show = f'<b>{get_print_float(risk_value)}%</b> от депозита'
+    else:
+        risk_show = f'<b>{get_print_float(risk_value)} {currency}</b>'
+
+    return f"""⚠️ Вы превысили суточный процент риска на {risk_show}.
+<b>Желаете приостановить торговлю на некоторое время?</b>
+
+✍️ Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>.
+✍️ Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>.
+
+На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли.
+"""
 
 
 # Первые сообщения
@@ -263,7 +380,7 @@ def msg_welcome(user_id: int):
 """
 
 
-def msg_success_base_set(user_id):
+def msg_success_base_set(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -398,15 +515,17 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    base_value = db_new.get_user_base(user_db_id)
-    risk_is_percent = db_new.get_user_risk_is_percent(user_db_id)
+    u_base = db_new.get_calc_user_settings(user_db_id)
+    if u_base is None:
+        return ''
 
-    deposit: float | None = base_value.get('base_deposit')
-    risk: float | None = base_value.get('base_risk_percent')
-    currency: str = base_value.get('base_currency') or 'USD'
+    deposit = u_base.deposit
+    risk = u_base.risk
+    currency = u_base.currency or 'USD'
 
-    if risk_is_percent and (deposit is not None) and (risk is not None):
-        risk *= deposit * 0.01
+    risk_value = risk[0] if (risk is not None) else None
+    if (risk is not None) and risk[1] and (deposit is not None):
+        risk_value = risk[0] * deposit * 0.01
 
     with bot.retrieve_data(user_id, chat_id) as data:
         type = data.get('calc_type')
@@ -417,7 +536,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     vars_dict = {
         'ticker': ticker,
         'dep': deposit,
-        'risk': risk,
+        'risk': risk_value,
         'open': open_price,
     }
 
@@ -457,99 +576,93 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 
 def msg_calculate_result(
     user_id: int,
-    deposit: float,
-    open_price: float,
-    stop_loss: float,
-    count_bet: float,
-    value_bet: float,
-    credit: int,
-    risk_value: float,
-    take_profit: list[float],
-    profit: list[float],
+    calc: Calculation
 ):
     lang = get_lang(user_id)
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    currency: str = db_new.get_user_base(user_db_id)['base_currency'] or 'USD'
-    is_splitting = db_new.get_user_is_splitting(user_db_id)
-    split_values = db_new.get_user_split_values(user_db_id)
-    tp_ratio = db_new.get_calculator_tp_ratio(user_db_id)
 
     point = {
         'ru': {
             'dep': 'Депозит',
-            'open': 'Цена открытия',
+            'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
-            'conclusion': 'Вывод',
+            'conclusion': 'Тейк-профит',
             'split': 'Разделение',
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
-            'credit': 'Кредитное плечо',
+            'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль'
+            'profit': 'Прибыль по сделке'
         },
         'en': {
             'dep': 'Deposit',
-            'open': 'The open price',
+            'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
-            'conclusion': 'Conclusion',
+            'conclusion': 'Take-profit',
             'split': 'Split',
             'count': 'Purchase',
             'sum': 'Buy on',
-            'credit': 'Leverage',
+            'style': 'Trading style',
             'risk_val': 'The risk of a deal',
             'profit': 'Profit'
         }
     }
 
-    round_count = max(
-        get_decimal_count(open_price),
-        get_decimal_count(stop_loss)
-    )
+    # Округление
+    round_count = calc.round_count or 5
+
+    # Кол-во покупки
+    count_bet = (
+        calc.risk_value /
+        max(abs(calc.open_price - calc.stop_loss), 0.01)
+    )  # * rate
+
+    # Сумма покупки
+    value_bet = count_bet * calc.open_price
 
     p_show = ''
-    conclusion = '<b>'
-    for i in range(len(take_profit)):
-        p_show += f'{get_print_float(profit[i], round_count)}'
+    conclusion = ''
+    for i in range(len(calc.tp_ratio)):
+        rate = 1
+        tp_ratio_i = calc.tp_ratio[i]
+        tp_i = get_print_float(
+            max(calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i, 0),
+            round_count
+        )
 
-        if is_splitting:
-            percent = split_values[i]
-        else:
-            percent = 100
+        conclusion += f'  <b>x{tp_ratio_i}</b>: <u>{tp_i} {calc.currency}</u>'
 
-        count = get_print_float(count_bet * percent * 0.01, 2)
-        tp = get_print_float(take_profit[i], round_count)
+        if calc.split_values is not None and len(calc.split_values) != 0:
+            percent = calc.split_values[i]
+            rate = percent / 100
 
-        conclusion += f'  {i + 1}) {count} - {tp} {currency} - x{tp_ratio[i]} ({get_print_float(percent)}%)'
+            count = get_print_float(count_bet * rate, 2)
 
-        if i != len(take_profit) - 1:
+            conclusion += f' (<b>{count} монет</b>) — {get_print_float(percent, round_count)}%'
+
+        p_show += f'{get_print_float(abs(calc.open_price - tp_i) * rate * count_bet, round_count)}'
+
+        if i != len(calc.tp_ratio) - 1:
             conclusion += '\n'
             p_show += ' / '
-        else:
-            conclusion += '</b>'
 
-    n_char = '\n'
     return f"""
-{BULLET} {point[lang]["dep"]}: <b>{get_print_float(deposit)} {currency}</b>
-{BULLET} {point[lang]["risk_val"]}: <b>{get_print_float(risk_value)} {currency}</b>
+{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
+{TAB}{point[lang]["risk_val"]}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 
-{BULLET} {point[lang]["open"]}: <b>{get_print_float(open_price, round_count)} {currency}</b>
-{BULLET} {point[lang]["sl"]}: <b>{get_print_float(stop_loss, round_count)} {currency}</b>
+{POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
+{TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
 
-{BULLET} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
-{BULLET} {point[lang]["sum"]}: <b>{get_print_float(value_bet)} {currency}</b>
-{BULLET} {point[lang]["credit"]}: <b>{credit} к 1</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
+{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
 
-{BULLET} {point[lang]['conclusion']} <i>(кол-во, цена, процент)</i>:
+{POINT} {point[lang]['conclusion']}:
 {conclusion}
 
-{BULLET} {point[lang]["profit"]} (<b>{currency}</b>): <b>{p_show}</b>
+{POINT} {point[lang]["profit"]}: <b>{p_show}</b>
 """
-# {''.join((
-#     f'{BULLET} {point[lang]["tp"]}: <b>{tp_show}</b>',
-#     f'{n_char}{BULLET} {point[lang]["split"]}: <b>{split_show}</b>'  if split_show != '' else ''
-# ))}
 
 
 def msg_calculate_forex_result(
@@ -573,23 +686,23 @@ def msg_calculate_forex_result(
             'dep': 'Депозит',
             'risk': '% риска на сделку',
             'pair': 'Валютная пара',
-            'open': 'Цена открытия',
+            'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
             'lot': 'Лот',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль'
+            'profit': 'Общая прибыль'
         },
         'en': {
             'dep': 'Deposit',
             'risk': '% risk of a deal',
             'pair': 'Currency pair',
-            'open': 'Цена открытия',
+            'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
             'lot': 'Lot',
             'risk_val': 'The risk of a deal',
-            'profit': 'Profit'
+            'profit': 'General profit'
         }
     }
 
@@ -615,7 +728,7 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
 
     tp_count = len(current_tp)
 
-    text = '<u>Установка тейк профита</u>\n'
+    text = '<u>Установка тейк-профита</u>\n'
 
     if tp_count != 0:
         text += 'Текущий выбор: <b>'
@@ -625,7 +738,7 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
 
         text += '</b>\n'
 
-    text += '\nУчитывайте, что максимальный коэффициент тейк профита - <b>x10</b>\n'
+    text += '\nУчитывайте, что максимальный коэффициент тейк-профита - <b>x10</b>\n'
     text += 'Можно выбрать до <b>5</b> значений\n\n'
 
     if tp_count == 0:
@@ -677,7 +790,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
     text += '\n'
     if is_last:
         text += f'Оставшиеся <b>{get_print_float(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
-        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк профитов\n'
+        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк-профитов\n'
         text += 'Выберите на <u>сколько частей</u> разделить остаток'
     elif tp_count == 0:
         text += 'Выберите <b>первое</b> значение тейк-профита'
@@ -696,7 +809,7 @@ def msg_enter_summury_profit_type(user_id: int):
 Выберите вид разделения суммы:
 
 <i>*Простой - без деления профита, продажа 100% торговой позиции
-*Разделение - продажа торговой позиции разделяется по нескольким тейк-профитам</i>
+*Разделение - продажа торговой позиции разделяется на несколько тейк-профитов</i>
 """
 
 
@@ -726,22 +839,65 @@ def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
+        'ru': 'Введите <u>риск</u> на сделку',
+        'en': 'Enter <u>risk</u> to the deal',
+    }
+
+    return f"""✍ {texts[lang]}
+
+{get_risk_annotation(lang)}
+"""
+
+
+def msg_enter_day_risk(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите <u>риск на день</u>',
+        'en': 'Enter <u>daily risk</u>',
+    }
+
+    return f"""✍ {texts[lang]}
+
+{get_risk_annotation(lang)}
+"""
+
+
+def msg_enter_trading_style(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
         'ru': {
-            '1': 'Введите <u>риск</u> на сделку',
-            '2': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
-            '3': '<i>Без знаков</i> - для ввода точной суммы риска',
+            'choose': 'Выберите <u>стиль торговли</u> из списка ниже',
+            'enter': 'Либо введите <i>свой вариант</i>'
         },
         'en': {
-            '1': 'Enter <u>risk</u> to the deal',
-            '2': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
-            '3': '<i>Without signs</i> - for entering a cloth amount of risk',
+            'choose': 'Select <u>trading style</u> from the list below',
+            'enter': 'Or enter <i>your option</i>'
         },
     }
 
-    return f"""✍ {texts[lang]['1']}
+    return f"""✍ {texts[lang]['choose']}
+{texts[lang]['enter']}:
+"""
 
-{texts[lang]['2']}
-{texts[lang]['3']}
+
+def msg_enter_round_count(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Введите <u>количество знаков</u> после запятой',
+            'max': '<i>Максимум</i>: <b>5</b>'
+        },
+        'en': {
+            'main': 'Enter the <u>number of signs</u> after dot',
+            'max': '<i>Maximum</i>: <b>5</b>'
+        },
+    }
+
+    return f"""✍ {texts[lang]['main']}
+{texts[lang]['max']}
 """
 
 
@@ -789,6 +945,17 @@ def msg_enter_stop_loss(user_id: int):
     return f'✍ {text}'
 
 
+def msg_enter_profit_minus(user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        text = 'Введите убыток по этой сделке:'
+    else:
+        text = 'Enter a loss of this transaction:'
+
+    return f'✍ {text}'
+
+
 def msg_choose_lang(user_id: int):
     lang = get_lang(user_id)
 
@@ -798,6 +965,17 @@ def msg_choose_lang(user_id: int):
     }
 
     return f'🌐 {texts[lang]}'
+
+
+def msg_confirm_reset(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Вы действительно хотите <b>сбросить</b> все настройки',
+        'en': 'Do you really want to drop </b> all settings?',
+    }
+
+    return f'⚠️ {texts[lang]}?'
 
 
 # Инструкция к калькулятору
@@ -836,7 +1014,7 @@ msg_manual = ["""
               """
 *4.* Вводите исходные данные для расчета объема
 
-*а. Цена открытия. *
+*а. Цена входа. *
 
 место, где находится Ваш уровень, откуда Вы готовы войти в сделку (либо на покупку (лонг), либо продажу (шорт)). 
 

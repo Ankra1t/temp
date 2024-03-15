@@ -23,7 +23,7 @@ from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
 from MAIN.callbacks import callbacks_registration
 
-from CALCULATE.callbacks import kb_cancel, choose_calculate_step
+from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
 
@@ -334,7 +334,7 @@ def callback_inline(call: types.CallbackQuery):
         set_state_data(bot, user_id, chat_id, {'val_dep': call.data})
         bot.edit_message_text(
             'Введите размер депозита:', chat_id, mes_id,
-            reply_markup=kb_cancel(user_id)
+            reply_markup=kb_main_cancel(user_id)
         )
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 

@@ -1,13 +1,18 @@
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
+from common.dt import get_datetime_now
 
 from db_new import db_new
 from initialize import pay_guard
 
-from CALCULATE.common.messages import msg_main, msg_no_uses, msg_settings, msg_manual, msg_summury_profit_settings, msg_uses_count
+from CALCULATE.common.messages import (
+    msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_stats, msg_summury_profit_settings, msg_uses_count
+)
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import kb_settings, kb_summury_profit
+from .stats.keyboards import kb_stats
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
@@ -18,17 +23,22 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
 
     bot.delete_state(user_id, chat_id)
 
-    uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
+    is_valid_use = pay_guard.valid_use_calc(user_id)
 
-    if pay_guard.valid_use_calc(user_id):
+    uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
+    freeze_dt = db_new.get_user_calc_freeze(user_db_id)
+
+    if is_valid_use:
         if is_new_calc:
             text = msg_uses_count(user_id, uses_count)
         else:
             text = msg_main(user_id, uses_count)
-        keyboard = kb_main(user_id)
+    elif freeze_dt is not None:
+        text = msg_main_freeze(user_id, freeze_dt)
     else:
         text = msg_no_uses(user_id)
-        keyboard = kb_main(user_id, False)
+
+    keyboard = kb_main(user_id, is_valid_use, is_new_calc)
 
     if is_first:
         bot.send_message(
@@ -92,6 +102,25 @@ def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, i
 
     text = msg_summury_profit_settings(user_id)
     kb = kb_summury_profit(user_id)
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=kb
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+
+def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    text = msg_stats(user_id)
+    kb = kb_stats(user_id)
 
     if is_first:
         bot.send_message(
