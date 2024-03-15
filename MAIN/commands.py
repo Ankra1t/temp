@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from telebot import TeleBot
 from telebot.types import Message
 
-from config_logger import logger
-from initialize import pay_guard, base_statis, tariff_manager, pays, pays_banker, serv_tasks
+from initialize import pay_guard, serv_tasks
 
 from models import Update, Invoice, UpdateBBanker, InvoiceBBanker
 
@@ -62,97 +61,10 @@ def _manual(message: Message, bot: TeleBot):
     send_manual_page(message, bot, 1, message.from_user.id, True)
 
 
-# def _calc(message: Message, bot: TeleBot):
-#     send_main(message, bot, message.from_user.id, True)
-
-
-def _test_check_func(message: Message, bot: TeleBot):
-    print(f'🎶 🎶 🎶 🎶 🎶 🎶 Проверяем код!!!! 🎶 🎶 🎶 🎶 🎶 🎶')
-
-    date_1hour = datetime.now() + timedelta(hours=1)
-    serv_tasks.plan_message(423, date_1hour, welcome_trial_subscribe_msg(pay_guard.get_option_trial_days()))
-
-    return False
-    # Дерагаем оплату - проверяем проводку и применение подписки пользователю
-    # Update
-    # pay_load = Invoice(
-    #     invoice_id=1,
-    #     status='',
-    #     asset='',
-    #     amount=0.01,
-    #     pay_url= 'url',
-    #     description='Описалово',
-    #     allow_comments=False,
-    #     allow_anonymous=False
-    # )
-    # update = Update(
-    #     update_id=1,
-    #     update_type='',
-    #     request_date='',
-    #     payload=pay_load,
-    # )
-
-    # Оплата через CryptoBot pay
-    update = Update
-    update.payload = Invoice
-    update.payload.status = 'paid'
-    # 6278837 # сигналы # amount = 21
-    # 6278846 # калькулятор # amount = 30
-    # 6278848 # калькулятор+сигналы # amount = 50
-    update.payload.invoice_id = 6278848
-    update.payload.amount = 0.05
-    update.payload.asset = 'USDT'
-    print(f'update Тестируем активацию подписки по апдейту')
-    print(update)
-    # invoice_paid(update)
-
-    # pays.get_updates_check(update) # invoice_paid_prev
-
-    return False
-
-    # Оплата через BitBanker
-    update = UpdateBBanker()
-    payload = InvoiceBBanker()
-
-    # 2lwKEFfwP396OzHVgviLlB # калькулятор+сигналы # amount = 50
-    payload.status = 'paid'
-    payload.invoice_id = '2lwKEFfwP396OzHVgviLlB'
-    payload.amount = 50
-    payload.asset = 'USDT'
-    update.payload = payload
-
-
-
-    # pays_banker.get_updates_check(update) # invoice_paid
-
-
-
-
-    return False
-    # user_id = 777
-    # print(f'Удаляем пользователя - с id{user_id} ')
-
-    return False
-    new_user = db_new.get_user_by_tg_id(message.from_user.id)
-    notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
-        user_id=new_user.id,
-        user_nike='@' + new_user.username if new_user.username else new_user.tg_id,
-        days=pay_guard.get_option_trial_days()
-    ))
-
-    return False
-    users = pay_guard.get_valid_users_for_signals()
-    print(f'users ')
-    print(users)
-    return False
-
-    # tariff_manager.switch_off_finish_tariffs()
-    tariff = db_new.get_first_tariff_by_product()
-    print(f'tariff ')
-    print(tariff)
-    print(
-        f'tariff.name [{tariff.name}] tariff.id [{tariff.id}] tariff.type_product [{tariff.type_product}]')
-    return False
+def _test(message: Message, bot: TeleBot):
+    CHAT_KEY = -1002104767484
+    chat = bot.get_chat(CHAT_KEY)
+    print(chat.has_hidden_members)
 
 
 def commands_registration(bot: TeleBot):
@@ -171,4 +83,7 @@ def commands_registration(bot: TeleBot):
     reg_mes(_manual, commands=['manual'])
     reg_mes(_calc, commands=['calc'])
 
-    reg_mes(_test_check_func, commands=['tasty'])
+    reg_mes(_test, commands=['test11'])
+
+    bot.register_channel_post_handler(_test, pass_bot=True)
+    bot.register_chat_member_handler(_test, pass_bot=True)
