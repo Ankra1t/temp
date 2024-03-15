@@ -11,7 +11,7 @@ def getButton(text: str, type: str):
 def kb_user_main():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    # btn1 = getButton("Сигналы", 'signals')
+    # btn1 = getButton("Рекомендации", 'signals')
     btn2 = getButton("💰 Купить", 'buy')
     # btn3 = getButton("Обучение", 'education')
     btn4 = getButton("⌨️ Калькулятор", 'calculator')

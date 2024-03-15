@@ -90,10 +90,11 @@ def kb_users_bill(price, pay_link):
     return keyboard
 
 
-# ======================= // ANCHOR ССЫЛКА НА БОТА С СИГНАЛАМИ
+# ======================= // ANCHOR ССЫЛКА НА БОТА С РЕКОМЕНДАЦИЯМИ
 def kb_link_main_bot():
     keyboard = InlineKeyboardMarkup(row_width=1)
     btn = InlineKeyboardButton(
-        text="Сигналы", url="https://t.me/ForPeoplePrivate_bot")
+        text="Рекомендация", url="https://t.me/ForPeoplePrivate_bot"
+    )
     keyboard.add(btn)
     return keyboard
