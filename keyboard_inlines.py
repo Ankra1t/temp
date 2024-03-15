@@ -107,7 +107,7 @@ class Admin_kb_inlines(object):
         tariffs_list_all = types.InlineKeyboardButton(text='По всем продуктам',
                                                   callback_data=admin_default_factory.new(type='tariffs_list_all'))
 
-        tariffs_list_by_product_signals = types.InlineKeyboardButton(text='📈 Сигналы',
+        tariffs_list_by_product_signals = types.InlineKeyboardButton(text='📈 Рекомендация',
                                                                 callback_data=adm_action.new(
                                                                     action='tariffs_list_by_product',
                                                                     id='signals'))
@@ -115,7 +115,7 @@ class Admin_kb_inlines(object):
                                                              callback_data=adm_action.new(
                                                                  action='tariffs_list_by_product',
                                                                  id='calc'))
-        tariffs_list_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Сигналы',
+        tariffs_list_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
                                                                      callback_data=adm_action.new(
                                                                          action='tariffs_list_by_product',
                                                                          id='calc_signals'))
@@ -131,14 +131,14 @@ class Admin_kb_inlines(object):
         tariffs_list = types.InlineKeyboardButton(text='Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
 
-        add_tariff_product_signals = types.InlineKeyboardButton(text='Сигналы',
+        add_tariff_product_signals = types.InlineKeyboardButton(text='Рекомендация',
                                                        callback_data=adm_action.new(action='add_tariff_product',
                                                                                     id='signals'))
         add_tariff_product_calc = types.InlineKeyboardButton(text='Калькулятор',
                                                                 callback_data=adm_action.new(
                                                                     action='add_tariff_product',
                                                                     id='calc'))
-        add_tariff_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Сигналы',
+        add_tariff_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
                                                              callback_data=adm_action.new(
                                                                  action='add_tariff_product',
                                                                  id='calc_signals'))
@@ -344,7 +344,7 @@ class Clients_kb_inlines(object):
     # ## Выбрать продукт для показа тарифов
     def kb_select_products(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
-        tariffs_for_user_by_product_signals = types.InlineKeyboardButton(text='Сигналы',
+        tariffs_for_user_by_product_signals = types.InlineKeyboardButton(text='Рекомендация',
                                                                      callback_data=client_action.new(
                                                                          action='tariffs_for_user_by_product',
                                                                          id='signals'))
@@ -352,7 +352,7 @@ class Clients_kb_inlines(object):
                                                                   callback_data=client_action.new(
                                                                       action='tariffs_for_user_by_product',
                                                                       id='calc'))
-        tariffs_for_user_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Сигналы',
+        tariffs_for_user_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
                                                                           callback_data=client_action.new(
                                                                               action='tariffs_for_user_by_product',
                                                                               id='calc_signals'))

@@ -118,7 +118,7 @@ class GuardPaymentAccess():
         return db_new.get_users_finished_subscribe('paid')
 
     def get_paid_users(self):
-        """Получаем пользователей с активными подписками для платной рассылки сигналов"""
+        """Получаем пользователей с активными подписками для платной рассылки рекомендаций"""
         return db_new.get_subsribed_users()
 
     def get_paid_more1_users(self):
@@ -174,13 +174,13 @@ class GuardPaymentAccess():
         return False
 
     def get_valid_users_for_signals(self):
-        """Получить пользователей для рассылки сигналов"""
+        """Получить пользователей для рассылки рекомендаций"""
 
         # Деактивируем подписки с просроченной датой действия
         db_new.set_unactive_subscribes('paid')
         db_new.set_unactive_subscribes('trial')
 
-        # Получить пользователей с платной подпиской сигналы или сигналы+калькулятор
+        # Получить пользователей с платной подпиской рекомендации или рекомендации+калькулятор
         users = db_new.get_active_subscribes_all_users()
         # print(f'кол-во len(users) {len(users)}')
 

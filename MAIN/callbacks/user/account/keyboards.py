@@ -13,7 +13,7 @@ def getButton(text: str, type: str):
 def kb_user_account():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    # btn1 = getButton("Купить сигналы на месяц", 'buy_month')
+    # btn1 = getButton("Купить рекомендации на месяц", 'buy_month')
     referral = getButton("🌐 Рефералка", 'referral')
     purchases = getButton("🛍 Мои покупки", 'purchases')
     # password = getButton('Изменить пароль', 'password')

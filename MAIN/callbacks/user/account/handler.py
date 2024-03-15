@@ -33,7 +33,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if len(purchases_list) == 0:
             bot.send_message(
                 chat_id,
-                '<b>- - - Сигналы:</b>'
+                '<b>- - - Рекомендации:</b>'
             )
             bot.send_message(
                 chat_id,
@@ -71,7 +71,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
             bot.send_message(
                 chat_id,
-                '<b>- - -Сигналы:</b>'
+                '<b>- - -Рекомендации:</b>'
             )
             if len(product_list['signals']):
                 for i in range(0, len(product_list['signals'])):

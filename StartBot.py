@@ -374,7 +374,7 @@ def callback_inline(call: types.CallbackQuery):
 
     if call.data == 'live_signal':
         bot.edit_message_text(
-            'Введите название сигнала:',
+            'Введите название рекомендации:',
             chat_id, mes_id,
             reply_markup=kb_live_cancel()
         )
