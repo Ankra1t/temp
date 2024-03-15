@@ -75,7 +75,7 @@ print(a.date())
 ################################################################################################
 # if user_role == 0:
 #     if message.text == 'Купить':
-#         subscribe_name = 'Подписка на месяц на сигналы'
+#         subscribe_name = 'Подписка на месяц на рекомендации'
 
 #         try:
 #             subscribe = pays.get_params_payservice(subscribe_name)

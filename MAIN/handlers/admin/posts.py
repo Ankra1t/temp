@@ -184,7 +184,7 @@ def handle_new_post_content(message: Message, bot: TeleBot):
 
     if kind == 'signal':
         state = AdminPostsState.name
-        text = 'Введите название сигнала:'
+        text = 'Введите название рекомендаций:'
     else:
         state = AdminPostsState.datetime
         text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'

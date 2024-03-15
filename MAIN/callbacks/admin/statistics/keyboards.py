@@ -58,9 +58,9 @@ def kb_stats_periods():
 def kb_stats_products():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton('Сигналы', 'stat_pay_product_choose', 'signals')
+    btn1 = getButton('Рекомендации', 'stat_pay_product_choose', 'signals')
     btn2 = getButton('Калькулятор', 'stat_pay_product_choose', 'calc')
-    btn3 = getButton('Сигналы+калькулятор',
+    btn3 = getButton('Рекомендации+калькулятор',
                      'stat_pay_product_choose', 'calc_signals')
 
     back = getButton(back_txt(), 'go_payment')

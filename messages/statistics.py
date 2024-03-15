@@ -36,9 +36,9 @@ def admin_statistics_products(count_signals=0, summ_signals=0,
                              ):
     return f"""<b><u>Продажи по продуктам</u></b>
 
-Продукт "Сигналы":  <b>{count_signals} шт</b>, сумма <b>{summ_signals} USDT</b>
+Продукт "Рекомендации":  <b>{count_signals} шт</b>, сумма <b>{summ_signals} USDT</b>
 Продукт "Калькулятор":  <b>{count_calc} шт</b>, сумма <b>{summ_calc} USDT</b>
-Продукт "Калькулятор+сигналы":  <b>{count_calc_signals} шт</b>, сумма <b>{summ_calc_signals} USDT</b>
+Продукт "Калькулятор+Рекомендации":  <b>{count_calc_signals} шт</b>, сумма <b>{summ_calc_signals} USDT</b>
 
 Смотреть клиентов по выбранному продукту:
     """

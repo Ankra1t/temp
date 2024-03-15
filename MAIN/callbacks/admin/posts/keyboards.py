@@ -29,7 +29,7 @@ def kb_post_kinds():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn1 = getButton('ℹ️ Информационный', 'choose_kind_post')
-    btn2 = getButton('📈 Сигнал', 'choose_kind_signal')
+    btn2 = getButton('📈 Рекомендация', 'choose_kind_signal')
 
     keyboard.add(btn1, btn2)
     back = getButton(back_txt(), 'go_posts')

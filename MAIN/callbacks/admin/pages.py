@@ -187,7 +187,7 @@ def send_admin_post(
         post.content,
         '',
         f'ID: <b>{post.id}</b>\n' if post.id is not None else ''
-        f'Тип: <b>{"Сигнал" if post.details is None else "Пост"}</b>',
+        f'Тип: <b>{"Рекомендация" if post.details is None else "Пост"}</b>',
         f'Дата и время поста: <b>{get_str_by_datetime(post.date_time)}</b>\n' if post.date_time is not None else ''
         f'Ограничение: <b>{post.direct}</b>',
     ))

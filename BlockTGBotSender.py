@@ -57,14 +57,14 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
         u_base = db_new.get_calc_user_settings(user_db_id)
 
         if u_base is None or (u_base.deposit is None or u_base.risk is None):
-            calc_text = 'Для получения расчетов по сигналу введите все базовые значения в настройках калькулятора'
+            calc_text = 'Для получения расчетов по рекомендации введите все базовые значения в настройках калькулятора'
         else:
             if u_base.risk[1]:
                 risk_value = u_base.deposit * u_base.risk[0] * 0.01
             else:
                 risk_value = u_base.risk[0]
 
-            calc_text = '<b><u>Расчет по сигналу</u></b>\n'
+            calc_text = '<b><u>Расчет по рекомендации</u></b>\n'
 
             calc_info = Calculation(
                 user_id=0,
