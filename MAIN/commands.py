@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-
+from re import M
 from telebot import TeleBot
 from telebot.types import Message
-
-from initialize import pay_guard, serv_tasks
-
-from models import Update, Invoice, UpdateBBanker, InvoiceBBanker
 
 from db_new import db_new
 from keyboard_reply import kb_user_sup
@@ -13,11 +8,7 @@ from keyboard_reply import kb_user_sup
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
 from MAIN.start import send_start_by_user
-
-
-from NOTIFIER import notifier
-from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
-from messages.users import welcome_trial_subscribe_msg
+from MAIN.callbacks import send_site_code
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -61,6 +52,10 @@ def _manual(message: Message, bot: TeleBot):
     send_manual_page(message, bot, 1, message.from_user.id, True)
 
 
+def _site(message: Message, bot: TeleBot):
+    send_site_code(bot, message, message.from_user.id, True)
+
+
 def _test(message: Message, bot: TeleBot):
     CHAT_KEY = -1002104767484
     chat = bot.get_chat(CHAT_KEY)
@@ -82,6 +77,7 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_manual, commands=['manual'])
     reg_mes(_calc, commands=['calc'])
+    reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
 

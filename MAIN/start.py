@@ -19,7 +19,6 @@ def send_start_by_user(
     chat_id = message.chat.id
     bot.delete_state(user_id, chat_id)
 
-    new_user = False
     if user_role == 0:
         send_user_main(bot, message, user_id, True, has_registered_now)
 
