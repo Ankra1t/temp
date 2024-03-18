@@ -14,3 +14,9 @@ def msg_referral(ref_count: int, bot_name: str, user_id: int):
 
 https://t.me/{bot_name}/?start={user_id}
 """
+
+def msg_site_login():
+    return f"""<b><u>Вход на сайт</u></b>
+
+👇 Нажмите на кнопку для перехода на сайт
+"""
