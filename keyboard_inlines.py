@@ -36,6 +36,8 @@ class Admin_kb_inlines(object):
                                           callback_data=getCbData('params'))
         btn6 = types.InlineKeyboardButton("Тарифы",
                                           callback_data=getCbData('tariffs'))
+        btn_site_code = types.InlineKeyboardButton("Войти на сайт",
+                                          callback_data=getCbData('site_code'))
         # btn3 = types.InlineKeyboardButton("Постинг")
         # btn5 = types.InlineKeyboardButton("Другое")
         # btn6 = types.InlineKeyboardButton("Главная")
@@ -43,6 +45,7 @@ class Admin_kb_inlines(object):
         keyboard.add(btn1, btn2)
         keyboard.add(btn3, btn4)
         keyboard.add(btn5, btn6)
+        keyboard.add(btn_site_code)
         return keyboard
 
 

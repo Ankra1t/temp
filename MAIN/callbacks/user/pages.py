@@ -1,6 +1,4 @@
-import asyncio
-import threading
-import time
+from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -95,24 +93,34 @@ def send_user_tariffs(bot: TeleBot, message: Message, user_id: int):
     pass
 
 
-def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False):
+def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
     chat_id = message.chat.id
     mes_id = message.id
 
-    new_code = get_site_code(user_id)
+    new_code = prev_code or get_site_code(user_id)
 
     text = msg_site_login()
-    keyboard = kb_site_login(new_code or '')
+    keyboard = kb_site_login(new_code or '', is_reset)
 
-    if is_first:
-        new_message = bot.send_message(
-            chat_id, text,
-            reply_markup=keyboard
-        )
-    else:
-        new_message = message
-        bot.edit_message_text(
-            text,
-            chat_id, mes_id,
-            reply_markup=keyboard
-        )
+    try:
+        if is_first:
+            new_message = bot.send_message(
+                chat_id, text,
+                reply_markup=keyboard
+            )
+        else:
+            new_message = message
+            bot.edit_message_text(
+                text,
+                chat_id, mes_id,
+                reply_markup=keyboard
+            )
+    except:
+        print('[send_site_code]: сообщение не изменено!')
+
+    if is_reset:
+        code = new_code or ''
+        def get_default():
+            send_site_code(bot, new_message, user_id, False, False, code)
+
+        Timer(3, get_default).start()

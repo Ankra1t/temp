@@ -1,10 +1,11 @@
 from telebot import types
 from datetime import timedelta
-from MAIN.callbacks.admin.pages import send_admin_payment
 
+from MAIN.callbacks import (
+    send_admin_fut_posts, send_admin_params, send_admin_payment, send_site_code
+)
 from handlers.AdminHandler import get_start_date_cancel_subscribe, get_user_for_cancel_subscribe
-from initialize import bot, kb_inl_admin, pay_guard, tariff_manager, base_statis
-from messages.workers import menu_msg
+from initialize import bot, kb_inl_admin, pay_guard, tariff_manager
 import variables as vars
 from models import User
 
@@ -12,7 +13,7 @@ from common.utils import set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.callbacks import (
-    kb_params, kb_admin_users_back, kb_admin_choose_periods,
+    kb_admin_users_back, kb_admin_choose_periods,
     send_admin_workers, send_admin_users, send_admin_main
 )
 from MAIN.states import AdminTariffState, AdminUsersState
@@ -38,17 +39,20 @@ def admin_main_callbacks(call: types.CallbackQuery):
         send_admin_workers(bot, call.message, user_id)
 
     if type == 'fut_posts':
-        pass
+        send_admin_fut_posts(bot, call.message, user_id)
 
     if type == 'tariffs':
         bot.edit_message_text('Действия с тарифами', chat_id, mes_id,
                               reply_markup=kb_inl_admin.kb_tariffs())
 
     if type == 'params':
-        pass
+        send_admin_params(bot, call.message, user_id)
 
     if type == 'payment':
         send_admin_payment(bot, call.message, user_id)
+
+    if type == 'site_code':
+        send_site_code(bot, call.message, user_id)
 
     bot.clear_step_handler(call.message)
     bot.delete_state(user_id, chat_id)
