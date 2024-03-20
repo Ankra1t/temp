@@ -576,12 +576,15 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 
 def msg_calculate_result(
     user_id: int,
-    calc: Calculation
+    calc: Calculation,
+    pair='',
+    price=0.,
 ):
     lang = get_lang(user_id)
 
     point = {
         'ru': {
+            'pair': 'Валютная пара',
             'dep': 'Депозит',
             'open': 'Цена входа',
             'sl': 'Стоп лосс',
@@ -595,6 +598,7 @@ def msg_calculate_result(
             'profit': 'Прибыль по сделке'
         },
         'en': {
+            'pair': 'Currency pair',
             'dep': 'Deposit',
             'open': 'Open price',
             'sl': 'Stop loss',
@@ -648,13 +652,15 @@ def msg_calculate_result(
             p_show += ' / '
 
     return f"""
+{POINT} {point[lang]["pair"]}: <b>{pair} {price}</b>
+
 {POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
 {TAB}{point[lang]["risk_val"]}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
 {TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
 
-{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {'монет' if pair == '' else ''}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 {TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
 
@@ -708,15 +714,14 @@ def msg_calculate_forex_result(
 
     return '\n'.join([
         f'{BULLET} {point[lang]["dep"]}: <b>{deposit} {val_dep}</b>',
-        f'{BULLET} {point[lang]["risk"]}: <b>{risk_percent}</b>',
+        f'{BULLET} {point[lang]["risk_val"]}: <b>{risk_value} {val_dep}</b>',
         '',
         f'{BULLET} {point[lang]["pair"]}: <b>{pair}</b>',
         f'{BULLET} {point[lang]["open"]}: <b>{open_price}</b>',
         f'{BULLET} {point[lang]["sl"]}: <b>{stop_loss}</b>',
         f'{BULLET} {point[lang]["tp"]}: <b>{round(take_profit_1, 2)} / {round(take_profit_2, 2)} / {round(take_profit_3, 2)}</b>',
-        f'{BULLET} {point[lang]["lot"]}: <b>{round(lot, 2)}</b>',
+        f'{BULLET} {point[lang]["lot"]}: <b>{lot}</b>',
         '',
-        f'{BULLET} {point[lang]["risk_val"]}: <b>{risk_value} {val_dep}</b>',
         f'{BULLET} {point[lang]["profit"]}: <b>{round(risk_value * 2, 2)} / {round(risk_value * 3, 2)} / {round(risk_value * 4, 2)}</b>'
     ])
 
@@ -912,7 +917,7 @@ def msg_enter_currency(user_id: int):
     return f'✍ {texts[lang]}:'
 
 
-def msg_enter_pair(user_id: int):
+def msg_enter_pair(user_id: int, prices: dict[str, float] | None):
     lang = get_lang(user_id)
 
     texts = {
@@ -920,7 +925,16 @@ def msg_enter_pair(user_id: int):
         'en': 'Enter the currency pair'
     }
 
-    return f'✍ {texts[lang]} (XXX XXX):'
+    rates = ''
+    if prices is not None:
+        rates = '<u>Курс</u>'
+        for pair in prices.keys():
+            rates += f'\n<b>{pair} {round(prices[pair], 4)}</b>'
+
+    return f"""{rates}
+
+✍ {texts[lang]} (XXX XXX):
+"""
 
 
 def msg_enter_open_price(user_id: int):

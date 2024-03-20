@@ -4,9 +4,9 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
-from initialize import pay_guard
+from initialize import pay_guard, currencyService
 from common.utils import set_state_data
-from .main.keyboards import kb_main_cancel, kb_forex_val
+from .main.keyboards import kb_main_cancel
 from .pages import send_main
 
 from CALCULATE.callbacks.settings.keyboards import kb_change_currency, kb_trading_style
@@ -22,7 +22,6 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         calc_type = data.get('calc_type')
         ticker = data.get('ticker')
         pair = data.get('pair')
-        val_dep = data.get('val_dep')
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     u_base = db_new.get_calc_user_settings(user_db_id)
@@ -34,12 +33,11 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     keyboard = kb_main_cancel(user_id)
 
     if calc_type == 'forex' and pair is None:
-        text += msg_enter_pair(user_id)
+        prices = currencyService.getPairsPrice(
+            ['USD/RUB', 'USD/EUR', 'USD/JPY']
+        ) or None
+        text += msg_enter_pair(user_id, prices)
         state = ForexCalcState.pair
-    elif calc_type == 'forex' and val_dep is None:
-        text += msg_enter_currency(user_id)
-        state = ForexCalcState.val_dep
-        keyboard = kb_forex_val(user_id)
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)
         state = FutureCalcState.ticker

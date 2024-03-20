@@ -55,13 +55,3 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False):
 
     keyboard.add(*buttons)
     return keyboard
-
-
-def kb_forex_val(user_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton('USD', callback_data="USD")
-    btn2 = InlineKeyboardButton('RUB', callback_data="RUB")
-
-    keyboard.add(btn1, btn2)
-    keyboard.add(cancel_btn(user_id))
-    return keyboard

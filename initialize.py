@@ -3,9 +3,8 @@ from aiocryptopay import Networks
 from aiocryptopay import AioCryptoPay, Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
-from Classes.CalculationService import CalculationService
 
-from config_global import TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
+from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 from config_logger import logger
 
 from db_new import db_new
@@ -17,6 +16,8 @@ from TariffManager import TariffManager
 from TextEditor import TextEditor
 from Classes.BaseStatistics import BaseStatistics
 from Classes.ServiceTasks import ServiceTasks
+from Classes.CalculationService import CalculationService
+from Classes.CurrencyService import CurrencyService
 
 
 state_storage = StateMemoryStorage()
@@ -38,6 +39,7 @@ pays_banker = PaymentsBanker(
 pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
 
 calcService = CalculationService(bot, db_new)
+currencyService = CurrencyService(CURRENCYAPI_KEY)
 
 
 kb_inl_admin = Admin_kb_inlines()
