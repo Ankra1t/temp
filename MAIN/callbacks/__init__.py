@@ -7,7 +7,7 @@ from .admin.pages import (
     send_admin_main, send_admin_users, send_admin_payment,
     send_admin_fut_posts, send_admin_params
 )
-from .user.pages import send_user_education, send_user_main, send_user_terms, send_user_account
+from .user.pages import send_user_education, send_user_main, send_user_terms, send_user_account, send_site_code
 
 from .admin.workers.handler import registration as _reg_admin_workers
 from .admin.workers.keyboards import (
@@ -36,7 +36,7 @@ from .admin.posts.keyboards import kb_posts, kb_posts_back, kb_post_add_confirm,
 
 
 from .user.main.handler import registration as _reg_user_main
-from .user.main.keyboards import kb_user_main, kb_user_calculator
+from .user.main.keyboards import kb_user_main, kb_user_calculator, kb_site_login
 
 from .user.education.handler import registration as _reg_user_education
 from .user.education.keyboards import kb_user_education, kb_user_curs, kb_user_pages

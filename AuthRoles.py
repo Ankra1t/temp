@@ -1,7 +1,9 @@
+from typing import Literal
 import json
 import requests
 
-from db_new import db_new, DB_PG_USER, DB_PG_HOST
+from db_new import db_new
+from config_global import DB_PG_NAME
 from common.vars import API_URL, HEADERS
 
 
@@ -14,9 +16,10 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         'username_tg': username
     }
 
-    if DB_PG_USER == 'postgres' and DB_PG_HOST == '127.0.0.1':
+    if DB_PG_NAME == 'dev_postgre_lar_db':
         # Регаем в локальной базе пользователя
-        print(f'Регистрируем фейково пользователя user_id [{user_id}]  username [{username}] ')
+        print(
+            f'Регистрируем фейково пользователя user_id [{user_id}]  username [{username}] ')
         db_new.fake_add_user_db(user_id, username)
         return True
 
@@ -31,8 +34,28 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
     except:
         return False
 
-
     return response.status_code == 200
+
+
+def get_site_code(user_id: int) -> str | Literal[False]:
+    access_token = db_new.get_access_token() or ''
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+
+    data: dict[str, str | int] = {
+        'user_id': user_db_id,
+        'tg_api_auth_token': access_token,
+    }
+
+    try:
+        response = requests.post(
+            f'{API_URL}/auth/site_code',
+            json.dumps(data).encode(), headers=HEADERS
+        )
+
+        result = response.json()
+        return result.get('code', False)
+    except:
+        return False
 
 
 def change_password(id: int, password: str):

@@ -1,12 +1,14 @@
+from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
 from initialize import text_editor
+from AuthRoles import get_site_code
 
-from MAIN.common.messages import default_menu
+from MAIN.common.messages import default_menu, msg_site_login
 from messages.education import termins
-from .main.keyboards import kb_user_main
+from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
 from .account.keyboards import kb_user_account
 
@@ -15,9 +17,17 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     chat_id = message.chat.id
     mes_id = message.id
 
+    if not new_user and message.text is not None and len(message.text.split()) == 2:
+        _, code = message.text.split()
+        if code == 'site':
+            send_site_code(bot, message, user_id, True)
+            return
+
     text = text_editor.get_text('welcome_user')
     if not new_user:
-        text = text_editor.get_text('user_restart_bot') or 'Доброго времени. Выберите действие'
+        text = text_editor.get_text(
+            'user_restart_bot'
+        ) or 'Доброго времени. Выберите действие'
 
     keyboard = kb_user_main()
 
@@ -81,3 +91,36 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
 def send_user_tariffs(bot: TeleBot, message: Message, user_id: int):
 
     pass
+
+
+def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    new_code = prev_code or get_site_code(user_id)
+
+    text = msg_site_login()
+    keyboard = kb_site_login(new_code or '', is_reset)
+
+    try:
+        if is_first:
+            new_message = bot.send_message(
+                chat_id, text,
+                reply_markup=keyboard
+            )
+        else:
+            new_message = message
+            bot.edit_message_text(
+                text,
+                chat_id, mes_id,
+                reply_markup=keyboard
+            )
+    except:
+        print('[send_site_code]: сообщение не изменено!')
+
+    if is_reset:
+        code = new_code or ''
+        def get_default():
+            send_site_code(bot, new_message, user_id, False, False, code)
+
+        Timer(3, get_default).start()

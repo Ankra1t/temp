@@ -2,11 +2,10 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from CALCULATE.callbacks import send_main
-from MAIN.callbacks import send_user_education
-from MAIN.callbacks.user.pages import send_user_account
+from MAIN.callbacks import send_user_education, send_user_account, send_user_main, send_site_code
 from MAIN.common.utils import send_in_development
 
-from initialize import tariff_manager, kb_inl_user
+from initialize import kb_inl_user
 
 from .filter import user_main_factory, UserMainCallbackFilter
 
@@ -18,6 +17,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    if type == 'main':
+        send_user_main(bot, call.message, user_id)
 
     if type == 'education':
         send_user_education(bot, call.message, user_id)
@@ -32,11 +34,16 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_in_development(bot, call.message)
 
     if type == 'buy':
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text=f'Какой продукт вас интересует?',
-                              reply_markup=kb_inl_user.kb_select_products())
+        bot.edit_message_text(
+            'Какой продукт вас интересует?',
+            chat_id, mes_id,
+            reply_markup=kb_inl_user.kb_select_products()
+        )
         # tariff_manager.tariff_list_show(call.message)
 
+    if 'site' in type:
+        is_reset = 'reset' in type
+        send_site_code(bot, call.message, user_id, False, is_reset)
 
     bot.answer_callback_query(call.id)
 
