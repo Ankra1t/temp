@@ -92,7 +92,7 @@ def handle_duration(message: Message, bot: TeleBot):
 
 
 def handle_price(message: Message, bot: TeleBot):
-    price = digit_accept(message, int)
+    price = digit_accept(message)
 
     chat_id = message.chat.id
     user_id = message.from_user.id
