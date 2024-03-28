@@ -120,6 +120,7 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     if is_reset:
         code = new_code or ''
+
         def get_default():
             send_site_code(bot, new_message, user_id, False, False, code)
 

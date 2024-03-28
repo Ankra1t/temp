@@ -212,7 +212,7 @@ class TariffManager(object):
                 if tariff.img:
                     self.bot.send_photo(chat_id=message.chat.id,
                                         photo=tariff.img,
-                                        caption=desc_template + discount_show,
+                                        # caption=desc_template + discount_show,
                                         reply_markup=self.kb_inl_user.kb_pay(tariff.id))
                 else:
                     self.bot.send_message(chat_id=message.chat.id,

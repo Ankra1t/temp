@@ -1407,7 +1407,6 @@ class Database:
         forex = None
         if (pair is not None) and (pair_price is not None) and (cross_prices is not None):
             pairs = str(pair).split('/')
-            print(pairs)
             forex = ForexInfo(
                 pair=(pairs[0], pairs[1]),
                 price=pair_price,

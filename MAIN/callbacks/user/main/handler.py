@@ -1,8 +1,9 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from AuthRoles import check_registrate
 from CALCULATE.callbacks import send_main
-from MAIN.callbacks import send_user_education, send_user_account, send_user_main, send_site_code
+from MAIN.callbacks import send_user_education, send_user_account, send_site_code, send_admin_main, send_user_main
 from MAIN.common.utils import send_in_development
 
 from initialize import kb_inl_user
@@ -18,8 +19,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
+    role = check_registrate(user_id) or 0
+
     if type == 'main':
-        send_user_main(bot, call.message, user_id)
+        if role == 1:
+            send_admin_main(bot, call.message, user_id)
+        else:
+            send_user_main(bot, call.message, user_id)
 
     if type == 'education':
         send_user_education(bot, call.message, user_id)
