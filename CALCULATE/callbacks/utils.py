@@ -21,7 +21,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_type = data.get('calc_type')
         ticker = data.get('ticker')
-        pair = data.get('pair')
+        forex = data.get('forex')
 
     user_db_id = db_new.get_user_id_by_tg_id(user_id)
     u_base = db_new.get_calc_user_settings(user_db_id)
@@ -32,7 +32,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     text = msg_calculate(bot, user_id, chat_id)
     keyboard = kb_main_cancel(user_id)
 
-    if calc_type == 'forex' and pair is None:
+    if calc_type == 'forex' and forex is None:
         prices = currencyService.getPairsPrice(
             ['USD/RUB', 'USD/EUR', 'USD/JPY']
         ) or None

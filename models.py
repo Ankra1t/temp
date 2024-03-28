@@ -255,6 +255,12 @@ class UserCalcSettings(BaseModel):
     day_risk: tuple[float, bool] | None
 
 
+class ForexInfo(BaseModel):
+    pair: tuple[str, str]
+    price: float
+    cross_prices: dict[str, float]
+
+
 class Calculation(BaseModel):
     id: int = 0
     profit: float | None = None
@@ -272,3 +278,5 @@ class Calculation(BaseModel):
     tp_ratio: list[int]
     round_count: int | None = None
     split_values: list[float] | None
+
+    forex_info: ForexInfo | None = None

@@ -1,8 +1,10 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from initialize import currencyService
 from db_new import db_new, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
+
 from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, send_settings
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -78,6 +80,13 @@ def handle_new_currency(message: Message, bot: TeleBot):
             chat_id, msg_currency_error(user_id),
             reply_markup=kb_base_cancel(user_id)
         )
+        return
+
+    check = currencyService.getPrice('USD', value)
+    if not check:
+        bot.send_message(
+            chat_id, 'Валюта не найдена\n' + msg_currency_error(user_id),
+            reply_markup=kb_base_cancel(user_id))
         return
 
     db_new.set_user_currency(user_db_id, value.upper())
