@@ -577,18 +577,24 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 def msg_calculate_result(
     user_id: int,
     calc: Calculation,
-    pair='',
-    price=0.,
+):
+    if calc.forex_info is not None:
+        return msg_calculate_forex_result(user_id, calc)
+    else:
+        return msg_calculate_crypto_result(user_id, calc)
+
+
+def msg_calculate_crypto_result(
+    user_id: int,
+    calc: Calculation,
 ):
     lang = get_lang(user_id)
 
     point = {
         'ru': {
-            'pair': 'Валютная пара',
             'dep': 'Депозит',
             'open': 'Цена входа',
             'sl': 'Стоп лосс',
-            'tp': 'Тейк профит',
             'conclusion': 'Тейк-профит',
             'split': 'Разделение',
             'count': 'Приобретаем',
@@ -598,11 +604,9 @@ def msg_calculate_result(
             'profit': 'Прибыль по сделке'
         },
         'en': {
-            'pair': 'Currency pair',
             'dep': 'Deposit',
             'open': 'Open price',
             'sl': 'Stop loss',
-            'tp': 'Take profit',
             'conclusion': 'Take-profit',
             'split': 'Split',
             'count': 'Purchase',
@@ -651,16 +655,13 @@ def msg_calculate_result(
             conclusion += '\n'
             p_show += ' / '
 
-    return f"""
-{POINT} {point[lang]["pair"]}: <b>{pair} {price}</b>
-
-{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
+    return f"""{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
 {TAB}{point[lang]["risk_val"]}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
 {TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
 
-{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {'монет' if pair == '' else ''}</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 {TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
 
@@ -673,57 +674,128 @@ def msg_calculate_result(
 
 def msg_calculate_forex_result(
     user_id: int,
-    deposit: float,
-    val_dep: str,
-    risk_percent: float,
-    pair: str,
-    open_price: float,
-    stop_loss: float,
-    take_profit_1: float,
-    take_profit_2: float,
-    take_profit_3: float,
-    lot: float,
-    risk_value: float,
+    calc: Calculation,
 ):
+    if calc.forex_info is None:
+        return 'Ошибка'
+
+    pair = '/'.join(calc.forex_info.pair)
+    LOT = pow(10, 5)
+
     lang = get_lang(user_id)
 
     point = {
         'ru': {
-            'dep': 'Депозит',
-            'risk': '% риска на сделку',
             'pair': 'Валютная пара',
+            'dep': 'Депозит',
             'open': 'Цена входа',
             'sl': 'Стоп лосс',
             'tp': 'Тейк профит',
-            'lot': 'Лот',
+            'conclusion': 'Тейк-профит',
+            'split': 'Разделение',
+            'count': 'Приобретаем',
+            'sum': 'Покупаем на',
+            'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
-            'profit': 'Общая прибыль'
+            'profit': 'Прибыль по сделке'
         },
         'en': {
-            'dep': 'Deposit',
-            'risk': '% risk of a deal',
             'pair': 'Currency pair',
+            'dep': 'Deposit',
             'open': 'Open price',
             'sl': 'Stop loss',
             'tp': 'Take profit',
-            'lot': 'Lot',
+            'conclusion': 'Take-profit',
+            'split': 'Split',
+            'count': 'Purchase',
+            'sum': 'Buy on',
+            'style': 'Trading style',
             'risk_val': 'The risk of a deal',
-            'profit': 'General profit'
+            'profit': 'Profit'
         }
     }
 
-    return '\n'.join([
-        f'{BULLET} {point[lang]["dep"]}: <b>{deposit} {val_dep}</b>',
-        f'{BULLET} {point[lang]["risk_val"]}: <b>{risk_value} {val_dep}</b>',
-        '',
-        f'{BULLET} {point[lang]["pair"]}: <b>{pair}</b>',
-        f'{BULLET} {point[lang]["open"]}: <b>{open_price}</b>',
-        f'{BULLET} {point[lang]["sl"]}: <b>{stop_loss}</b>',
-        f'{BULLET} {point[lang]["tp"]}: <b>{round(take_profit_1, 2)} / {round(take_profit_2, 2)} / {round(take_profit_3, 2)}</b>',
-        f'{BULLET} {point[lang]["lot"]}: <b>{lot}</b>',
-        '',
-        f'{BULLET} {point[lang]["profit"]}: <b>{round(risk_value * 2, 2)} / {round(risk_value * 3, 2)} / {round(risk_value * 4, 2)}</b>'
-    ])
+    # Валюта торговли
+    trading_currency = calc.forex_info.pair[1]
+
+    # Округление
+    round_count = calc.round_count or 5
+    # Окургление pips
+    round_pips = 2 if 'JPY' in pair else 4
+
+    # Сумма покупки
+    value_bet = (
+        calc.risk_value /
+        (max(abs(calc.open_price - calc.stop_loss), 0.000001))
+    )
+    # Кол-во покупки
+    count_bet = value_bet / LOT
+
+    if calc.currency == calc.forex_info.pair[1]:
+        value_bet *= calc.open_price
+    elif calc.currency == calc.forex_info.pair[0]:
+        count_bet *= calc.stop_loss
+        value_bet = count_bet * LOT
+    else:
+        BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
+        yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
+        count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
+        value_bet = count_bet * LOT * \
+            calc.forex_info.cross_prices.get(yyyBASE, 1)
+
+    p_show = ''
+    conclusion = ''
+    for i in range(len(calc.tp_ratio)):
+        rate = 1
+        tp_ratio_i = calc.tp_ratio[i]
+        tp_i = get_print_float(
+            max(calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i, 0),
+            round_count
+        )
+
+        conclusion += f'  <b>x{tp_ratio_i}</b>: <u>{tp_i} {trading_currency}</u>'
+
+        if calc.split_values is not None and len(calc.split_values) != 0:
+            percent = calc.split_values[i]
+            rate = percent / 100
+
+            count = get_print_float(count_bet * rate, 2)
+
+            conclusion += f' (<b>{count} лота</b>) — {get_print_float(percent, round_count)}%'
+
+        profit = abs(calc.open_price - tp_i) * rate * count_bet * pow(10, 5)
+        if calc.forex_info.pair[0] == calc.currency:
+            profit /= calc.stop_loss
+        elif calc.forex_info.pair[1] != calc.currency:
+            profit /= calc.forex_info.cross_prices.get(
+                f'{calc.currency}/{calc.forex_info.pair[1]}', 1
+            )
+
+        p_show += f'{get_print_float(profit, round_count)}'
+
+        if i != len(calc.tp_ratio) - 1:
+            conclusion += '\n'
+            p_show += ' / '
+
+    return f"""
+{POINT} {point[lang]["pair"]}: <b>{pair}</b>
+
+{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
+{TAB}{point[lang]["risk_val"]}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
+
+{POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.forex_info.pair[1]}</b>
+{TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.forex_info.pair[1]}</b>
+
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} лота</b>
+{TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
+{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
+
+{POINT} {point[lang]['conclusion']}:
+{conclusion}
+
+{POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>):
+  <b>{p_show}</b>
+"""
 
 
 # Ввод данных

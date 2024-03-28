@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import Any, Literal, Optional
 import random
 import psycopg2
@@ -8,7 +9,7 @@ from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
 
 from models import (
-    Calculation, Forex, Future, Post, PostDetails,
+    Calculation, Forex, ForexInfo, Future, Post, PostDetails,
     Text, UserCalcSettings, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Client, Task, MARKETS_TYPE
 )
@@ -1399,6 +1400,20 @@ class Database:
 
     # Calc Stats
     def _data_to_calculations(self, data: DictRow):
+        pair = data.get('pair')
+        pair_price = data.get('pair_price')
+        cross_prices = data.get('cross_prices')
+
+        forex = None
+        if (pair is not None) and (pair_price is not None) and (cross_prices is not None):
+            pairs = str(pair).split('/')
+            print(pairs)
+            forex = ForexInfo(
+                pair=(pairs[0], pairs[1]),
+                price=pair_price,
+                cross_prices=json.loads(cross_prices)
+            )
+
         return Calculation(
             id=data.get('id'),
             user_id=data.get('user_id'),
@@ -1415,18 +1430,30 @@ class Database:
             market=data.get('market'),
             tp_ratio=data.get('tp_ratio'),
             split_values=data.get('split_values'),
+            forex_info=forex
         )
 
     def add_calculation(self, value: Calculation):
         query = (
             'INSERT INTO calculations (user_id, deposit, risk_value, open_price, stop_loss, round_count, '
-            'currency, trading_style, market, tp_ratio, split_values) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            'currency, trading_style, market, tp_ratio, split_values, pair, pair_price, cross_prices) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
+
+        pair_price = getattr(value.forex_info, 'price')
+
+        pair = getattr(value.forex_info, 'pair')
+        if pair is not None:
+            pair = '/'.join(pair)
+
+        cross_prices = getattr(value.forex_info, 'cross_prices')
+        if cross_prices is not None:
+            cross_prices = json.dumps(cross_prices)
+
         params = (
             value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
             value.round_count, value.currency, value.trading_style, value.market,
-            value.tp_ratio, value.split_values
+            value.tp_ratio, value.split_values, pair, pair_price, cross_prices
         )
 
         try:

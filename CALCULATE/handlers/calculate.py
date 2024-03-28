@@ -1,10 +1,9 @@
-from locale import currency
 from telebot import TeleBot
 from telebot.types import Message
 
 from initialize import currencyService
 from db_new import db_new
-from models import Calculation
+from models import Calculation, ForexInfo
 
 from common.utils import digit_accept, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, send_main, kb_set_calc_stats
@@ -51,28 +50,35 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     pair = pair.upper().replace(' ', '/')
 
     pair_arr = pair.split('/')
-    if len(pair_arr) != 2:
+    if len(pair_arr) != 2 or pair_arr[0] == pair_arr[1]:
         bot.send_message(chat_id, msg_pair_error(user_id))
         return
 
-    price = currencyService.getPrice(pair_arr[0], pair_arr[1])
-    if price == False:
+    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_settings = db_new.get_calc_user_settings(user_db_id)
+    user_currency = getattr(user_settings, 'currency') or 'USD'
+
+    pairs = [pair]
+    if user_currency not in pair:
+        pairs.append(f'{user_currency}/{pair_arr[1]}')
+        pairs.append(f'{pair_arr[0]}/{user_currency}')
+
+    prices = currencyService.getPairsPrice(pairs)
+
+    if prices == False:
         bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
             reply_markup=kb_main_cancel(user_id))
         return
 
-    if '/USD' in pair:
-        type_forex = 'xxx/USD'
-    elif 'USD/' in pair:
-        type_forex = 'USD/xxx'
-    else:
-        type_forex = 'CROSSUSD/xxx'
+    forex = ForexInfo(
+        pair=(pair_arr[0], pair_arr[1]),
+        price=prices.get(pair, 1),
+        cross_prices=prices
+    )
 
     set_state_data(bot, user_id, chat_id, {
-        'forex_type': type_forex,
-        'price': price,
-        'pair': pair,
+        'forex': forex,
     })
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
@@ -88,6 +94,13 @@ def handle_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         bot.send_message(
             chat_id, msg_currency_error(user_id),
+            reply_markup=kb_main_cancel(user_id))
+        return
+
+    check = currencyService.getPrice('USD', value)
+    if not check:
+        bot.send_message(
+            chat_id, 'Валюта не найдена\n' + msg_currency_error(user_id),
             reply_markup=kb_main_cancel(user_id))
         return
 
@@ -272,9 +285,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         open_price = float(data.get('open_price', 0))
-        price = float(data.get('price', 0))
-        forex_type = data.get('forex_type', 0)
-        pair = data.get('pair')
+        forex = data.get('forex')
 
     u_base = db_new.get_calc_user_settings(user_db_id)
     if u_base is None:
@@ -296,53 +307,18 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         market=u_base.market,
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
-        trading_style=u_base.trading_style or ''
+        trading_style=u_base.trading_style or '',
+        forex_info=forex
     )
 
-    diff = open_price - stop_loss
-    take_profit_2 = open_price + diff * 2
-    take_profit_3 = open_price + diff * 3
-    take_profit_4 = open_price + diff * 4
-
-    pips = abs(diff) * 10000
-
-    if u_base.currency == 'RUB':
-        usd_rub_price = currencyService.getPrice('USD', 'RUB') or 1.
-        deposit /= usd_rub_price
-
-    lot = 0
-    if forex_type == 'xxx/USD':
-        lot = (risk_value) / pips
-    if forex_type == 'USD/xxx':
-        lot = (risk_value * stop_loss) / pips
-    if forex_type == 'CROSSxxx/USD':
-        lot = (risk_value) / (pips * price)
-    if forex_type == 'CROSSUSD/xxx':
-        lot = (risk_value * price) / pips
-
-    lot /= 10
-    if 'JPY' in pair:
-        pips /= 100
-
-    message_res = msg_calculate_forex_result(
-        user_id, deposit, u_base.currency or 'USD', 0,
-        pair, open_price, stop_loss, take_profit_2,
-        take_profit_3, take_profit_4, lot, risk_value
-    )
-
-    # db_new.minus_calculator_uses_count(user_db_id)
-    # bot.send_message(chat_id, message_res)
-    # bot.delete_state(user_id, chat_id)
-    # send_main(message, bot, user_id, True, True)
-
-    mes = msg_calculate_result(user_id, calc_info, pair, round(price, 4))
+    mes = msg_calculate_forex_result(user_id, calc_info)
 
     new_id = db_new.add_calculation(calc_info)
     db_new.minus_calculator_uses_count(user_db_id)
 
     bot.send_message(
         chat_id, mes,
-        # reply_markup=kb_set_calc_stats(user_id, new_id)
+        reply_markup=kb_set_calc_stats(user_id, new_id)
     )
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True, True)
