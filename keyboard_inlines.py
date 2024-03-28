@@ -37,7 +37,7 @@ class Admin_kb_inlines(object):
         btn6 = types.InlineKeyboardButton("Тарифы",
                                           callback_data=getCbData('tariffs'))
         btn_site_code = types.InlineKeyboardButton("Войти на сайт",
-                                          callback_data=getCbData('site_code'))
+                                                   callback_data=getCbData('site_code'))
         # btn3 = types.InlineKeyboardButton("Постинг")
         # btn5 = types.InlineKeyboardButton("Другое")
         # btn6 = types.InlineKeyboardButton("Главная")
@@ -48,8 +48,8 @@ class Admin_kb_inlines(object):
         keyboard.add(btn_site_code)
         return keyboard
 
-
     # Отмена подписки
+
     def users_cancel_subscribe(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         subscribe_cancel_time = types.InlineKeyboardButton(
@@ -87,16 +87,16 @@ class Admin_kb_inlines(object):
 
         return keyboard
 
-
     # Меню Тарифы - добавление тарифов админом
+
     def kb_tariffs(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         tariffs_list = types.InlineKeyboardButton(text='Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
         discount_list_active = types.InlineKeyboardButton(text='Скидки работают',
-                                                  callback_data=admin_default_factory.new(type='discount_list_active'))
+                                                          callback_data=admin_default_factory.new(type='discount_list_active'))
         discount_list_inactive = types.InlineKeyboardButton(text='Скидки прошли',
-                                                  callback_data=admin_default_factory.new(type='discount_list_inactive'))
+                                                            callback_data=admin_default_factory.new(type='discount_list_inactive'))
         add_tariff = types.InlineKeyboardButton(text='Добавить тариф',
                                                 callback_data=admin_default_factory.new(type='add_tariff'))
 
@@ -108,23 +108,24 @@ class Admin_kb_inlines(object):
     def kb_select_tariff_products(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         tariffs_list_all = types.InlineKeyboardButton(text='По всем продуктам',
-                                                  callback_data=admin_default_factory.new(type='tariffs_list_all'))
+                                                      callback_data=admin_default_factory.new(type='tariffs_list_all'))
 
         tariffs_list_by_product_signals = types.InlineKeyboardButton(text='📈 Рекомендация',
-                                                                callback_data=adm_action.new(
-                                                                    action='tariffs_list_by_product',
-                                                                    id='signals'))
-        tariffs_list_by_product_calc = types.InlineKeyboardButton(text='🧮 Калькулятор',
-                                                             callback_data=adm_action.new(
-                                                                 action='tariffs_list_by_product',
-                                                                 id='calc'))
-        tariffs_list_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
                                                                      callback_data=adm_action.new(
                                                                          action='tariffs_list_by_product',
-                                                                         id='calc_signals'))
+                                                                         id='signals'))
+        tariffs_list_by_product_calc = types.InlineKeyboardButton(text='🧮 Калькулятор',
+                                                                  callback_data=adm_action.new(
+                                                                      action='tariffs_list_by_product',
+                                                                      id='calc'))
+        tariffs_list_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
+                                                                          callback_data=adm_action.new(
+                                                                              action='tariffs_list_by_product',
+                                                                              id='calc_signals'))
 
         keyboard.add(tariffs_list_all)
-        keyboard.add(tariffs_list_by_product_signals, tariffs_list_by_product_calc)
+        keyboard.add(tariffs_list_by_product_signals,
+                     tariffs_list_by_product_calc)
         keyboard.add(tariffs_list_by_product_calc_signals)
         keyboard.add(self.go_main_btn)
         return keyboard
@@ -135,16 +136,16 @@ class Admin_kb_inlines(object):
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
 
         add_tariff_product_signals = types.InlineKeyboardButton(text='Рекомендация',
-                                                       callback_data=adm_action.new(action='add_tariff_product',
-                                                                                    id='signals'))
+                                                                callback_data=adm_action.new(action='add_tariff_product',
+                                                                                             id='signals'))
         add_tariff_product_calc = types.InlineKeyboardButton(text='Калькулятор',
-                                                                callback_data=adm_action.new(
-                                                                    action='add_tariff_product',
-                                                                    id='calc'))
-        add_tariff_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
                                                              callback_data=adm_action.new(
                                                                  action='add_tariff_product',
-                                                                 id='calc_signals'))
+                                                                 id='calc'))
+        add_tariff_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
+                                                                     callback_data=adm_action.new(
+                                                                         action='add_tariff_product',
+                                                                         id='calc_signals'))
 
         keyboard.add(add_tariff_product_signals, add_tariff_product_calc)
         keyboard.add(add_tariff_product_calc_signals)
@@ -177,8 +178,6 @@ class Admin_kb_inlines(object):
         keyboard.add(self.go_main_btn)
         return keyboard
 
-
-
     def kb_tariff_options(self, tariff_id, on_off_label='Отключить ⭕️'):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         deactivate_tariff = types.InlineKeyboardButton(text='Удалить ❌',
@@ -186,14 +185,14 @@ class Admin_kb_inlines(object):
         add_discount_tariff = types.InlineKeyboardButton(text='Добавить скидку 🏷',
                                                          callback_data=adm_action.new(action='add_discount_tariff', id=tariff_id))
         edit_tariff = types.InlineKeyboardButton(text='Редактировать тариф ✏️',
-                                                         callback_data=adm_action.new(action='edit_tariff',
-                                                                                      id=tariff_id))
+                                                 callback_data=adm_action.new(action='edit_tariff',
+                                                                              id=tariff_id))
         on_off_tariff = types.InlineKeyboardButton(text=f'{on_off_label}',
-                                                 callback_data=adm_action.new(action='on_off_tariff',
-                                                                              id=tariff_id))
+                                                   callback_data=adm_action.new(action='on_off_tariff',
+                                                                                id=tariff_id))
         tempor_day_tariff = types.InlineKeyboardButton(text='Срок действия',
-                                                 callback_data=adm_action.new(action='tempor_day_tariff',
-                                                                              id=tariff_id))
+                                                       callback_data=adm_action.new(action='tempor_day_tariff',
+                                                                                    id=tariff_id))
 
         keyboard.add(deactivate_tariff, add_discount_tariff)
         keyboard.add(edit_tariff, on_off_tariff)
@@ -203,18 +202,18 @@ class Admin_kb_inlines(object):
     def kb_change_tariff_fields(self, tariff_id):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         change_tariff_name = types.InlineKeyboardButton(text='Название',
-                                                       callback_data=adm_action.new(action='change_tariff_name', id=tariff_id))
+                                                        callback_data=adm_action.new(action='change_tariff_name', id=tariff_id))
         change_tariff_description = types.InlineKeyboardButton(text='Описание',
-                                                        callback_data=adm_action.new(action='change_tariff_description',
-                                                                                     id=tariff_id))
+                                                               callback_data=adm_action.new(action='change_tariff_description',
+                                                                                            id=tariff_id))
         change_tariff_price = types.InlineKeyboardButton(text='Стоимость',
-                                                               callback_data=adm_action.new(
-                                                                   action='change_tariff_price',
-                                                                   id=tariff_id))
-        change_tariff_duration = types.InlineKeyboardButton(text='Кол-во дней',
                                                          callback_data=adm_action.new(
-                                                             action='change_tariff_duration',
+                                                             action='change_tariff_price',
                                                              id=tariff_id))
+        change_tariff_duration = types.InlineKeyboardButton(text='Кол-во дней',
+                                                            callback_data=adm_action.new(
+                                                                action='change_tariff_duration',
+                                                                id=tariff_id))
 
         change_tariff_image = types.InlineKeyboardButton(text='Постер (картинку)',
                                                          callback_data=adm_action.new(
@@ -223,7 +222,6 @@ class Admin_kb_inlines(object):
         go_main = self.go_main_btn
         tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
-
 
         keyboard.add(change_tariff_name, change_tariff_description)
         keyboard.add(change_tariff_price, change_tariff_duration)
@@ -298,10 +296,10 @@ class Clients_kb_inlines(object):
     # ## Клиент нажал купить
     def kb_pay(self, tariff_id):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
-        pay_tariff = types.InlineKeyboardButton(text='Купить',
-                                                callback_data=client_action.new(
-                                                    action='pay_tariff',
-                                                    id=tariff_id))
+        pay_tariff = types.InlineKeyboardButton(
+            text='💵 Купить',
+            callback_data=client_action.new(action='pay_tariff',id=tariff_id)
+        )
 
         keyboard.add(pay_tariff)
         return keyboard
@@ -321,7 +319,6 @@ class Clients_kb_inlines(object):
             text=f"Оплатить {price} через BitBanker", url=pay_link2)
         pay_link_btn1 = types.InlineKeyboardButton(
             text=f"Оплатить {price} через CryptoBot", url=pay_link1)
-
 
         keyboard.add(pay_link_btn2)
         keyboard.add(pay_link_btn1)
@@ -348,18 +345,19 @@ class Clients_kb_inlines(object):
     def kb_select_products(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         tariffs_for_user_by_product_signals = types.InlineKeyboardButton(text='Рекомендация',
-                                                                     callback_data=client_action.new(
-                                                                         action='tariffs_for_user_by_product',
-                                                                         id='signals'))
+                                                                         callback_data=client_action.new(
+                                                                             action='tariffs_for_user_by_product',
+                                                                             id='signals'))
         tariffs_for_user_by_product_calc = types.InlineKeyboardButton(text='Калькулятор',
-                                                                  callback_data=client_action.new(
-                                                                      action='tariffs_for_user_by_product',
-                                                                      id='calc'))
+                                                                      callback_data=client_action.new(
+                                                                          action='tariffs_for_user_by_product',
+                                                                          id='calc'))
         tariffs_for_user_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
-                                                                          callback_data=client_action.new(
-                                                                              action='tariffs_for_user_by_product',
-                                                                              id='calc_signals'))
+                                                                              callback_data=client_action.new(
+                                                                                  action='tariffs_for_user_by_product',
+                                                                                  id='calc_signals'))
 
-        keyboard.add(tariffs_for_user_by_product_signals, tariffs_for_user_by_product_calc)
+        keyboard.add(tariffs_for_user_by_product_signals,
+                     tariffs_for_user_by_product_calc)
         keyboard.add(tariffs_for_user_by_product_calc_signals)
         return keyboard
