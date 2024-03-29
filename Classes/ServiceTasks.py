@@ -1,9 +1,7 @@
 from telebot import types, TeleBot
 from datetime import datetime, timedelta
 
-from initialize import logger
-
-from db_new import db_new, Database as DatabaseNew
+from db_new import Database
 from models import Task, TaskMessage
 
 
@@ -11,7 +9,7 @@ from models import Task, TaskMessage
 class ServiceTasks(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, db: DatabaseNew, bot_instance: TeleBot) -> None:
+    def __init__(self, db: Database, bot_instance: TeleBot) -> None:
         self.db = db
         self.bot = bot_instance
 

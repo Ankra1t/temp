@@ -8,7 +8,8 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from MAIN.states import AdminTariffState
 
 from db_new import db_new
-from initialize import kb_inl_admin, tariff_manager, logger
+from initialize import kb_inl_admin, tariff_manager
+from config_logger import logger
 from models import Discount, Price
 
 

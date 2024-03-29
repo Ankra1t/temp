@@ -2,12 +2,11 @@ from telebot import TeleBot
 from telebot.types import Message
 from datetime import timedelta
 
-from initialize import logger
-
+from config_logger import logger
 
 from common.dt import get_datetime_now, get_str_by_datetime
 from db_new import Database as DatabaseNew
-from models import Price, Discount, Client, UserInfo, Transactions, Subscribe, Purchase
+from models import UserInfo, Purchase
 
 
 class BaseStatistics(object):

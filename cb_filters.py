@@ -7,7 +7,6 @@ admin_main_factory = CallbackData('type', prefix='admin_main')
 admin_default_factory = CallbackData('type', prefix='admin_default')
 
 adm_action = CallbackData('action', 'id', prefix='adm_act')
-client_action = CallbackData('action', 'id', prefix='cl_act')
 
 
 class AdminMainCallbackFilter(AdvancedCustomFilter):
@@ -30,9 +29,3 @@ class AdminActionsCallbackFilter(AdvancedCustomFilter):
     def check(self, call: types.CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
-
-class ClientActionsCallbackFilter(AdvancedCustomFilter):
-    key = 'action'
-
-    def check(self, call: types.CallbackQuery, config: CallbackDataFilter):
-        return config.check(call)

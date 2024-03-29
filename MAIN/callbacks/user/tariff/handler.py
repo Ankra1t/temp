@@ -1,35 +1,40 @@
-from initialize import bot, kb_inl_user, pays, pays_banker, tariff_manager
+from telebot import TeleBot
+from telebot.types import CallbackQuery
 
-from telebot import types
-
-from cb_filters import client_action
+from initialize import pays, pays_banker
 from config_logger import logger
+from models import Invoice
+from db_new import db_new
 
-from models import Invoice, InvoiceBBanker
+from MAIN.common.messages import msg_user_tariff
+from MAIN.callbacks import send_user_tariffs
+
+from .filter import user_tariff_factory, UserTariffCallbackFilter
+from .keyboards import (
+    kb_bill_many, kb_bill_cryptobot, kb_user_tariff_back, kb_tariff_pay
+)
 
 
-@bot.callback_query_handler(func=None, action=client_action.filter())
-def client_action_callbacks(call: types.CallbackQuery):
-    callback_data: dict = client_action.parse(callback_data=call.data)
-    action, target_id = callback_data['action'], callback_data['id']
-    # action, target_id, user_id = callback_data['action'], callback_data['id'], callback_data['user_id']
+def _handle_callback(call: CallbackQuery, bot: TeleBot):
+    callback_data: dict = user_tariff_factory.parse(call.data)
+    type = callback_data.get('type', '')
+    target_id = callback_data.get('tariff_id', '')
 
-    user_id = call.from_user.id
     chat_id = call.message.chat.id
+    user_id = call.from_user.id
     mes_id = call.message.id
 
-    logger.info(f'Кнопка client callback_query ***{action}***')
-    logger.info(f'Элемент client target_id ***{target_id}***')
-    logger.info(f'Элемент client user_id ***{user_id}***')
+    if type == 'go_tariff':
+        send_user_tariffs(bot, call.message, user_id)
 
-    if action == 'pay_tariff':
-        logger.info(f'-----> Действие ***{action}*** ')
+    if type == 'pay_tariff':
         tariff = pays.get_params_payservice_by_id(target_id)
 
         # Сообщение, что идет создание платежа
         edit_wait_mess = bot.send_message(
             call.message.chat.id,
-            '⏳ Подготавливаем для вас возможные способы оплаты, подождите, пожалуйста ... ')
+            '⏳ Подготавливаем для вас возможные способы оплаты, подождите, пожалуйста ...'
+        )
 
         if tariff is None:
             return
@@ -51,13 +56,15 @@ def client_action_callbacks(call: types.CallbackQuery):
             # Формируем транзакцию от CryptoBot Payments для ожидания оплаты
             try:
                 pays.set_transactions_for_wait(
-                    user_id, invoice_to_send, tariff.id)
+                    user_id, invoice_to_send, tariff.id or 0)
                 logger.info(
-                    f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж ')
+                    f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж'
+                )
 
             except Exception as e:
                 logger.error(
-                    f'Ошибка CryptoBot set_transactions_for_wait[{e}]')
+                    f'Ошибка CryptoBot set_transactions_for_wait[{e}]'
+                )
 
             # Отправить пользователю счет для оплаты со ссылкой
             show_price = '{} {}'.format(
@@ -69,7 +76,7 @@ def client_action_callbacks(call: types.CallbackQuery):
         # Пока делаем целые
         final_price = int(pays_banker.check_discount_price(tariff))
         invoice_to_send_bb = None
-        if final_price > 50 or final_price == 50:
+        if final_price >= 50:
 
             try:
                 for_client = "Оплатить " + tariff.name
@@ -82,9 +89,6 @@ def client_action_callbacks(call: types.CallbackQuery):
                 logger.error(f'Ошибка в pays_banker.create_invoice [{e}]')
 
             if invoice_to_send_bb:
-                # if invoice_to_send_bb is None:
-                #     return
-
                 logger.info(
                     f'Получен чек от BitBanker invoice_to_send [{invoice_to_send_bb}]')
 
@@ -110,16 +114,9 @@ def client_action_callbacks(call: types.CallbackQuery):
                         tariff.name),
                     chat_id,
                     edit_wait_mess.message_id,
-                    reply_markup=kb_inl_user.kb_bill_many(
-                        show_price, pay_link1, pay_link2
-                    )
+                    reply_markup=kb_bill_many(
+                        show_price, pay_link1, pay_link2 or '')
                 )
-                # bot.send_message(
-                #     call.message.chat.id, '❗️ Выберите удобный способ оплаты (регистрация не требуется)'.format(tariff.name),
-                #     reply_markup=kb_inl_user.kb_bill_many(
-                #         show_price, pay_link1, pay_link2
-                #     )
-                # )
 
             else:
                 bot.edit_message_text(
@@ -127,29 +124,55 @@ def client_action_callbacks(call: types.CallbackQuery):
                         tariff.name),
                     chat_id,
                     edit_wait_mess.message_id,
-                    reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
+                    reply_markup=kb_bill_cryptobot(show_price, pay_link1)
                 )
-                # bot.send_message(
-                #     call.message.chat.id, '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(tariff.name),
-                #     reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
-                # )
-                # bot.send_message(
-                #     call.message.chat.id,
-                #     '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
-                # )
 
         else:
             bot.edit_message_text(
-                '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(tariff.name),
+                '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(
+                    tariff.name),
                 chat_id,
                 edit_wait_mess.message_id,
-                reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
+                reply_markup=kb_bill_cryptobot(show_price, pay_link1)
             )
-            # bot.send_message(
-            #     call.message.chat.id, '❗️ После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>'.format(tariff.name),
-            #     reply_markup=kb_inl_user.kb_bill(show_price, pay_link1)
-            # )
 
-    if action == 'tariffs_for_user_by_product':
-        logger.info(f'-----> Действие ***{action}*** ')
-        tariff_manager.tariff_list_show(call.message, product_id=target_id)
+    if type == 'get_tariff':
+        tariff = db_new.get_first_tariff_by_product(target_id)
+
+        if tariff is None:
+            bot.edit_message_text(
+                'Тариф не найден', chat_id,
+                reply_markup=kb_user_tariff_back(user_id)
+            )
+        else:
+            tariff_id = tariff.id or 0
+            msg_tariff = msg_user_tariff(user_id, tariff)
+
+            try:
+                if tariff.img:
+                    bot.send_photo(
+                        chat_id, tariff.img,
+                        # caption=desc_template + discount_show,
+                        reply_markup=kb_tariff_pay(tariff_id)
+                    )
+                    bot.delete_message(chat_id, mes_id)
+                else:
+                    bot.send_message(
+                        chat_id, msg_tariff,
+                        reply_markup=kb_tariff_pay(tariff_id)
+                    )
+            except:
+                print(
+                    f'Проблема с отправкой тарифа [id={tariff_id}] пользователю'
+                )
+
+    bot.answer_callback_query(call.id)
+
+
+def registration(bot: TeleBot):
+    bot.add_custom_filter(UserTariffCallbackFilter())
+    bot.register_callback_query_handler(
+        _handle_callback,
+        lambda _: True, pass_bot=True,
+        user_tariff=user_tariff_factory.filter()
+    )

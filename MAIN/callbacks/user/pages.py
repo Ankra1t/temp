@@ -8,9 +8,11 @@ from AuthRoles import get_site_code
 
 from MAIN.common.messages import default_menu, msg_site_login
 from messages.education import termins
+
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
 from .account.keyboards import kb_user_account
+from .tariff.keyboards import kb_choose_products
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
@@ -88,9 +90,23 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     )
 
 
-def send_user_tariffs(bot: TeleBot, message: Message, user_id: int):
+def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
 
-    pass
+    text = 'Какой продукт вас интересует?'
+    keyboard = kb_choose_products()
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
 
 
 def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
