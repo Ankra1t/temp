@@ -3,17 +3,18 @@ from telebot.types import CallbackQuery
 
 from AuthRoles import check_registrate
 from CALCULATE.callbacks import send_main
-from MAIN.callbacks import send_user_education, send_user_account, send_site_code, send_admin_main, send_user_main
+from MAIN.callbacks import (
+    send_user_education, send_user_account, send_site_code,
+    send_admin_main, send_user_main, send_user_tariffs
+)
 from MAIN.common.utils import send_in_development
-
-from initialize import kb_inl_user
 
 from .filter import user_main_factory, UserMainCallbackFilter
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = user_main_factory.parse(call.data)
-    type = callback_data['type']
+    type = callback_data.get('type', '')
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
@@ -40,12 +41,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_in_development(bot, call.message)
 
     if type == 'buy':
-        bot.edit_message_text(
-            'Какой продукт вас интересует?',
-            chat_id, mes_id,
-            reply_markup=kb_inl_user.kb_select_products()
-        )
-        # tariff_manager.tariff_list_show(call.message)
+        send_user_tariffs(bot, call.message, user_id)
 
     if 'site' in type:
         is_reset = 'reset' in type
@@ -59,4 +55,5 @@ def registration(bot: TeleBot):
     bot.register_callback_query_handler(
         _handle_callback,
         lambda _: True, pass_bot=True,
-        user_main=user_main_factory.filter())
+        user_main=user_main_factory.filter()
+    )

@@ -5,10 +5,9 @@ from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 
 from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
-from config_logger import logger
 
 from db_new import db_new
-from keyboard_inlines import Admin_kb_inlines, Clients_kb_inlines
+from keyboard_inlines import Admin_kb_inlines
 from GuardPaymentAccess import GuardPaymentAccess
 from Payments import Payments
 from PaymentsBanker import PaymentsBanker
@@ -43,7 +42,6 @@ currencyService = CurrencyService(CURRENCYAPI_KEY)
 
 
 kb_inl_admin = Admin_kb_inlines()
-kb_inl_user = Clients_kb_inlines()
 
 text_editor = TextEditor(bot, kb_inl_admin)
-tariff_manager = TariffManager(bot, kb_inl_admin, kb_inl_user)
+tariff_manager = TariffManager(bot, kb_inl_admin)

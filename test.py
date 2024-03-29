@@ -15,9 +15,6 @@ from initialize import bot
 
 # db_new.add_user(-1, 'asd', 0)
 # db_new.del_user(-1)
-a = datetime.now()
-b = datetime.now() - timedelta(days=1)
-print(a.date())
 
 # db_new.curs.execute("SELECT * FROM tgbotusers")
 # print(db_new.curs.fetchall())
@@ -71,41 +68,3 @@ print(a.date())
 #     'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram) >= %s '
 #     'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.avtive = 1) > 0 '
 # )
-
-################################################################################################
-# if user_role == 0:
-#     if message.text == 'Купить':
-#         subscribe_name = 'Подписка на месяц на рекомендации'
-
-#         try:
-#             subscribe = pays.get_params_payservice(subscribe_name)
-#         except Exception as e:
-#             logger.error(f'Ошибка в get_params_payservice [{e}]')
-
-#         try:
-#             for_client = "Услуга " + subscribe['sub_name']
-#             invoice_to_send: Invoice = pays.create_invoice(subscribe['currency'], subscribe['amount'],
-#                                                            for_client)
-#         except Exception as e:
-#             logger.error(f'Ошибка в Pays.create_invoice [{e}]')
-
-#         logger.info(
-#             f'Получен чек от Cryptobot invoice_to_send [{invoice_to_send}]')
-
-#         # Формируем транзакцию для ожидания оплаты
-#         try:
-#             pays.set_transactions_for_wait(
-#                 message, invoice_to_send, subscribe['price_id'])
-#             logger.info(
-#                 f'-----> Транзакция удачно сохранена ждем платеж ')
-
-#         except Exception as e:
-#             logger.error(f'Ошибка set_transactions_for_wait[{e}]')
-
-#         # Отправить пользователю счет для оплаты со ссылкой
-#         show_price = '{} {}'.format(
-#             str(invoice_to_send.amount), invoice_to_send.asset)
-#         pay_link = invoice_to_send.pay_url
-
-#         bot.send_message(message.chat.id, text='{}'.format(invoice_to_send.description),
-#                          reply_markup=kb_users_bill(show_price, pay_link))

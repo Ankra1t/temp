@@ -2,10 +2,10 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db_new import db_new
-from keyboard_reply import kb_user_sup
 
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
+from CALCULATE.common.keyboard import kb_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code
 
@@ -40,10 +40,12 @@ def _about_us(message: Message, bot: TeleBot):
 
 
 def _support(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+
     sup = db_new.get_support_name()
     msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
 
-    bot.send_message(message.chat.id, msg, reply_markup=kb_user_sup(sup))
+    bot.send_message(message.chat.id, msg, reply_markup=kb_support(user_id, sup))
     bot.delete_state(message.from_user.id, message.chat.id)
 
 

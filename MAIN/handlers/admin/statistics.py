@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from telebot import TeleBot
 from telebot.types import Message
 
-from initialize import logger
+from config_logger import logger
 
 from common.utils import text_accept, set_state_data
 from common.vars import DATE_FORMAT
@@ -12,9 +12,6 @@ from initialize import base_statis
 
 from MAIN.states import AdminStatisticsState
 from MAIN.callbacks import kb_statistics_back
-
-# from initialize import kb_inl_admin, tariff_manager
-# from models import Discount, Price
 
 
 def handle_start_date(message: Message, bot: TeleBot):

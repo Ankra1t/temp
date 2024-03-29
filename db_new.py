@@ -54,14 +54,16 @@ class Database:
             data.get('price_findate'),
         )
 
-    def get_prices(self, active: int = 1, switch_active=1) -> list[Price]:
+    def get_prices(self, active: int = 1, switch_active: int | None=None) -> list[Price]:
         """Получение тарифа"""
-        if not switch_active:
+        self.switch_off_finish_tariffs()
+
+        if switch_active is None:
             query = """SELECT * FROM prices WHERE active = %s"""
-            params = (active, )
+            params = (active,)
         else:
             query = """SELECT * FROM prices WHERE active = %s AND switch_active = %s"""
-            params = (active, switch_active, )
+            params = (active, switch_active)
 
         try:
             self.curs.execute(query, params)
@@ -73,14 +75,16 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int, switch_active=1) -> list[Price]:
+    def get_prices_by_product(self, product_id, active: int, switch_active: int | None = None) -> list[Price]:
         """Получение тарифа по типу продукта"""
-        if not switch_active:
+        self.switch_off_finish_tariffs()
+
+        if switch_active is None:
             query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
-            params = (active, product_id, )
+            params = (active, product_id)
         else:
             query = """SELECT * FROM prices WHERE active = %s AND type_product = %s AND switch_active = %s"""
-            params = (active, product_id, switch_active,)
+            params = (active, product_id, switch_active)
 
         try:
             self.curs.execute(query, params)
@@ -200,7 +204,7 @@ class Database:
 
     def get_first_tariff_by_product(self, product='signals', active=1, switch_active=1):
         """Получить первый активный включенный тариф по продукту"""
-        query = "SELECT * FROM prices WHERE type_product = %s AND active=%s AND switch_active = %s"
+        query = "SELECT * FROM prices WHERE type_product = %s AND active = %s AND switch_active = %s"
         params = (product, active, switch_active,)
 
         try:
@@ -214,7 +218,6 @@ class Database:
             print(f'ERROR[get_first_price_by_product]: {e}')
             self.connection.rollback()
             return None
-        pass
 
     def switch_tariff(self, tariff_id: int, switch_active: int):
         """Включить или выключить тариф"""
@@ -256,11 +259,11 @@ class Database:
             self.connection.rollback()
             return False
 
-    def switch_off_finish_tariffs(self, today: datetime):
+    def switch_off_finish_tariffs(self):
         """Установить дату окончания тарифа"""
         query = "UPDATE prices set switch_active = %s WHERE price_findate < %s"
         switch = 0
-        params = (switch, today)
+        params = (switch, get_datetime_now())
 
         try:
             self.curs.execute(query, params)
@@ -1020,7 +1023,7 @@ class Database:
 
     def set_task(self, task: Task):
         """Запланировать задание"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = ("INSERT INTO tgbot_service_tasks("
                  "type_task, user_id, date_action, type_message, text, media_id, "
                  "active, created_at, updated_at) "

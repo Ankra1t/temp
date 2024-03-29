@@ -28,9 +28,10 @@ from MAIN.common.utils import get_post_from_message
 from common.utils import set_state_data
 
 from keyboard_reply import *
-from cb_filters import (AdminDefaultCallbackFilter,
-                        AdminActionsCallbackFilter,
-                        ClientActionsCallbackFilter, AdminMainCallbackFilter)
+from cb_filters import (
+    AdminDefaultCallbackFilter, AdminActionsCallbackFilter,
+    AdminMainCallbackFilter
+)
 
 from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
 from messages.workers import redactor_main_msg, admin_posting_msg
@@ -58,12 +59,6 @@ callbacks_registration(bot)
 # Обработать успешный платеж через CryptoBot
 @pays.pay_handler()
 def invoice_paid_prev(update: Update) -> None:
-
-    # print(f'update_info ')
-    # print(update)
-    # print(f'update.payload по сути оплаченный чек')
-    # print(update.payload)
-
     # Найти по invoice_id транзакцию
     if update.payload.status == 'paid':
 
@@ -304,7 +299,6 @@ def check_finish_paid_subscribe():
 
 
 # Импортировать свой обработчик колбэков
-import cb_client
 import cb_admin
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
@@ -313,8 +307,6 @@ bot.add_custom_filter(AdminMainCallbackFilter())
 
 bot.add_custom_filter(AdminDefaultCallbackFilter())
 bot.add_custom_filter(AdminActionsCallbackFilter())
-
-bot.add_custom_filter(ClientActionsCallbackFilter())
 
 
 bot.enable_save_next_step_handlers(delay=2)
@@ -415,7 +407,6 @@ try:
     if os.getenv("MODE_BOT") and os.getenv("MODE_BOT") == 'dev':
         if _ENV != 'calc':
             bot.infinity_polling()
-
 
 
 except Exception as e:

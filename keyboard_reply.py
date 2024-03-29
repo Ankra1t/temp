@@ -1,10 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from initialize import kb_inl_admin
-
 # ===================== REDACTOR
-
-
 def kb_main_redactor():
     keyboard = InlineKeyboardMarkup(row_width=2)
     btn3 = InlineKeyboardButton(
@@ -47,54 +43,4 @@ def kb_live_cancel():
     return keyboard
 
 
-# ====================== USERS
-def kb_user_menu():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    btn_yes = InlineKeyboardButton(
-        text="О нас", callback_data="user_about_us")
-    btn_no = InlineKeyboardButton(text="FAQ", callback_data="user_faq")
-    btn_no3 = InlineKeyboardButton(
-        text="Тех.поддержка", callback_data="user_sup")
 
-    keyboard.add(btn_yes, btn_no, btn_no3)
-    return keyboard
-
-
-def kb_user_go_back():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    btn_back = InlineKeyboardButton(
-        text="Назад⬅️", callback_data="user_go_back")
-    keyboard.add(btn_back)
-    return keyboard
-
-
-def kb_user_sup(link: str):
-    link = link.replace('@', '')
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn = InlineKeyboardButton(
-        "Перейти к оператору", f'https://t.me/{link}'
-    )
-
-    keyboard.add(btn, kb_inl_admin.go_main_btn)
-
-    return keyboard
-
-
-# ========= Кальклуятор
-def kb_users_bill(price, pay_link):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    btn = InlineKeyboardButton(
-        text=f"Оплатить {price} через CryptoBot", url=pay_link)
-    keyboard.add(btn)
-    return keyboard
-
-
-# ======================= // ANCHOR ССЫЛКА НА БОТА С РЕКОМЕНДАЦИЯМИ
-def kb_link_main_bot():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    btn = InlineKeyboardButton(
-        text="Рекомендация", url="https://t.me/ForPeoplePrivate_bot"
-    )
-    keyboard.add(btn)
-    return keyboard

@@ -10,10 +10,9 @@ from common.dt import get_datetime_now, get_str_by_datetime
 class TariffManager(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, bot_instance: TeleBot, kb_inl_instance: Admin_kb_inlines, kb_inl_user_instance) -> None:
+    def __init__(self, bot_instance: TeleBot, kb_inl_instance: Admin_kb_inlines) -> None:
         self.bot = bot_instance
         self.kb_inl = kb_inl_instance
-        self.kb_inl_user = kb_inl_user_instance
 
     def deactivate_tariff(self, tariff_id):
         db_new.deactive_price(tariff_id)
@@ -35,20 +34,12 @@ class TariffManager(object):
     def set_findate_tariff(self, tariff_id: int, findate: datetime | None):
         db_new.set_findate_tariff(tariff_id, findate)
 
-    def switch_off_finish_tariffs(self):
-        """Отключить тарифы с истекшим сроком"""
-        today = get_datetime_now()
-        db_new.switch_off_finish_tariffs(today)
-
     def set_discount_tariff(self, id: int, discount: Discount):
         db_new.set_price_discount(
             id, discount.percent, discount.findate)
 
     def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None, product_id=None):
         list = None
-
-        # Перед показом тарифов отключить те, у которых закончился срок действия
-        self.switch_off_finish_tariffs()
 
         if product_id:
             list = db_new.get_prices_by_product(product_id, 1, None)
@@ -100,9 +91,6 @@ class TariffManager(object):
     def admin_tariff_list_custom_show(self, chat_id, mode='choose_subscribe', product_id=None):
         tariff_list = None
 
-        # Перед показом тарифов отключить те, у которых закончился срок действия
-        self.switch_off_finish_tariffs()
-        print(f'Здесь выключили тарифы с истекшим сроком действия ')
         if product_id:
             tariff_list = db_new.get_prices_by_product(product_id, 1, switch_active=1)
         else:
@@ -179,52 +167,6 @@ class TariffManager(object):
 
         return False
 
-    def tariff_list_show(self, message: types.Message, product_id=None):
-        list = None
-
-        # Перед показом тарифов отключить те, у которых закончился срок действия
-        self.switch_off_finish_tariffs()
-
-        if product_id:
-            list = db_new.get_prices_by_product(product_id, 1)
-        else:
-            list = db_new.get_prices(1)
-
-        if len(list) == 0:
-
-            self.bot.send_message(
-                message.chat.id,
-                'Тарифов не обнаружено'
-            )
-
-        for i in range(0, len(list)):
-            tariff = list[i]
-            discount_show = ''
-            if tariff.discount is not None:
-                now = get_datetime_now()
-                fin_date_discount = tariff.discount.findate
-                if fin_date_discount > now:
-                    discount_show = f'\n\n<b>Скидка {str(round(tariff.discount.percent))}%</b>'
-
-            desc_template = self.get_template_tariff_show(tariff)
-
-            try:
-                if tariff.img:
-                    self.bot.send_photo(chat_id=message.chat.id,
-                                        photo=tariff.img,
-                                        # caption=desc_template + discount_show,
-                                        reply_markup=self.kb_inl_user.kb_pay(tariff.id))
-                else:
-                    self.bot.send_message(chat_id=message.chat.id,
-                                          text=desc_template + discount_show,
-                                          reply_markup=self.kb_inl_user.kb_pay(tariff.id))
-
-            except Exception as e:
-                print(f'Проблемы с отправкой тарифа tariff_list_show {e}')
-                if 'wrong file identifier' in str(e):
-                    print(
-                        f'Скорей всего не отправилась картинка созданная в другом боте')
-
     def change_fields_tariff_show(self, tariff_id, change_text):
         tariff = db_new.get_price_by_id(tariff_id)
         return self.get_template_change_tariff_show(tariff, change_text)
@@ -280,16 +222,6 @@ id={} <b>\"{}\"</b>
                    )
         return template
 
-    def get_template_tariff_show(self, tariff: Price):
-        """Получить описание согласно шаблону и данным тарифа для клиента """
-        template = """
-{}
-{} {}
-{}
-<i>действует {} дн.</i>
-        """.format(tariff.name, str(tariff.price), tariff.currency, tariff.description, tariff.duration_days)
-        return template
-    
     def get_template_tariff_choose_for_user_show(self, tariff: Price):
         """Получить краткое описание тарифа """
         template = """

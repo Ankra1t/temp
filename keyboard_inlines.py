@@ -1,6 +1,7 @@
 from telebot import types
-from cb_filters import (admin_default_factory, adm_action, client_action,
-                        admin_main_factory)
+from cb_filters import (
+    admin_default_factory, adm_action, admin_main_factory
+)
 
 
 class Admin_kb_inlines(object):
@@ -291,73 +292,3 @@ class Admin_kb_inlines(object):
         keyboard.add(self.go_users_btn)
         return keyboard
 
-
-class Clients_kb_inlines(object):
-    # ## Клиент нажал купить
-    def kb_pay(self, tariff_id):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        pay_tariff = types.InlineKeyboardButton(
-            text='💵 Купить',
-            callback_data=client_action.new(action='pay_tariff',id=tariff_id)
-        )
-
-        keyboard.add(pay_tariff)
-        return keyboard
-
-    # ## Клиенту выставлен счет через Cryptobot со ссылкой оплаты
-    def kb_bill(self, price, pay_link):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        pay_link_btn = types.InlineKeyboardButton(
-            text=f"Оплатить {price} через CryptoBot", url=pay_link)
-        keyboard.add(pay_link_btn)
-        return keyboard
-
-    # ## Клиенту выставлен счет через BitBanker и Cryptobot со ссылками оплаты
-    def kb_bill_many(self, price, pay_link1, pay_link2):
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        pay_link_btn2 = types.InlineKeyboardButton(
-            text=f"Оплатить {price} через BitBanker", url=pay_link2)
-        pay_link_btn1 = types.InlineKeyboardButton(
-            text=f"Оплатить {price} через CryptoBot", url=pay_link1)
-
-        keyboard.add(pay_link_btn2)
-        keyboard.add(pay_link_btn1)
-        return keyboard
-
-    # ## Клиенту выставлен счет через BitBanker со ссылкой оплаты
-    def kb_bill_bitbanker(self, price, pay_link2):
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        pay_link_btn2 = types.InlineKeyboardButton(
-            text=f"Оплатить {price}", url=pay_link2)
-
-        keyboard.add(pay_link_btn2)
-        return keyboard
-
-    # ## Клиенту выставлен счет через BitBanker со ссылкой оплаты
-    # def kb_bill_bb(self, price, pay_link):
-    #     keyboard = types.InlineKeyboardMarkup(row_width=2)
-    #     pay_link_btn = types.InlineKeyboardButton(
-    #         text=f"Оплатить {price} через BitBanker", url=pay_link)
-    #     keyboard.add(pay_link_btn)
-    #     return keyboard
-
-    # ## Выбрать продукт для показа тарифов
-    def kb_select_products(self):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        tariffs_for_user_by_product_signals = types.InlineKeyboardButton(text='Рекомендация',
-                                                                         callback_data=client_action.new(
-                                                                             action='tariffs_for_user_by_product',
-                                                                             id='signals'))
-        tariffs_for_user_by_product_calc = types.InlineKeyboardButton(text='Калькулятор',
-                                                                      callback_data=client_action.new(
-                                                                          action='tariffs_for_user_by_product',
-                                                                          id='calc'))
-        tariffs_for_user_by_product_calc_signals = types.InlineKeyboardButton(text='Калькулятор + Рекомендация',
-                                                                              callback_data=client_action.new(
-                                                                                  action='tariffs_for_user_by_product',
-                                                                                  id='calc_signals'))
-
-        keyboard.add(tariffs_for_user_by_product_signals,
-                     tariffs_for_user_by_product_calc)
-        keyboard.add(tariffs_for_user_by_product_calc_signals)
-        return keyboard
