@@ -1023,7 +1023,7 @@ class Database:
 
     def set_task(self, task: Task):
         """Запланировать задание"""
-        datetime_now = datetime.utcnow()
+        datetime_now = get_datetime_now()
         query = ("INSERT INTO tgbot_service_tasks("
                  "type_task, user_id, date_action, type_message, text, media_id, "
                  "active, created_at, updated_at) "

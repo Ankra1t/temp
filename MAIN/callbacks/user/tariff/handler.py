@@ -24,8 +24,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
-    if type == 'go_tariff':
-        send_user_tariffs(bot, call.message, user_id)
+    if 'go_tariff' in type:
+        del_mes = 'del' in type
+
+        send_user_tariffs(bot, call.message, user_id, del_mes)
+
+        if del_mes:
+            bot.delete_message(chat_id, mes_id)
 
     if type == 'pay_tariff':
         tariff = pays.get_params_payservice_by_id(target_id)
@@ -35,6 +40,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             call.message.chat.id,
             '⏳ Подготавливаем для вас возможные способы оплаты, подождите, пожалуйста ...'
         )
+        bot.delete_message(chat_id, mes_id)
 
         if tariff is None:
             return

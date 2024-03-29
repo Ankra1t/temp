@@ -166,6 +166,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         # Получить tg_user_id
         user = db_new.get_user_by_id(subscribe_user_id)
 
+        if user is None:
+            print(f'Error[choose_periods_for_tariffs]: user_id={subscribe_user_id}')
+            return
+
         # Считаем кол-во дней для выдачи по периоду
         days = pay_guard.get_days_by_period(sort_by)
 
