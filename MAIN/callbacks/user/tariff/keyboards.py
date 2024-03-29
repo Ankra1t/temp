@@ -13,6 +13,7 @@ def getButton(text: str, type: str, tariff_id: int | str = ''):
         )
     )
 
+
 def kb_user_tariff_back(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
@@ -83,9 +84,10 @@ def kb_choose_products():
         'Калькулятор', 'get_tariff', 'calc'
     )
     btn_calc_signals = getButton(
-        'Калькулятор + Рекомендация', 'get_tariff', 'calc_signals'
+        'PRO', 'get_tariff', 'calc_signals'
     )
+    btn_back = getButton(back_txt(), 'go_main')
 
     keyboard.add(btn_signal, btn_calc)
-    keyboard.add(btn_calc_signals)
+    keyboard.add(btn_calc_signals, btn_back)
     return keyboard
