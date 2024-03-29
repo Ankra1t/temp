@@ -8,7 +8,6 @@ from db_new import LANGUAGES_TYPE, db_new
 from models import Calculation
 
 
-BULLET = '✦'
 POINT = '•'
 TAB = '   '
 
@@ -143,7 +142,7 @@ def msg_settings(user_id: int):
             'risk': 'Базовый риск',
             'day_risk': 'Риск на день',
             'round_count': 'Округление до',
-            'trading_style': 'Стиль',
+            'trading_style': 'Стиль торговли',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
             'market': 'Рынок',
@@ -155,7 +154,7 @@ def msg_settings(user_id: int):
             'risk': 'Default risk',
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
-            'trading_style': 'Style',
+            'trading_style': 'Trading style',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
@@ -562,10 +561,10 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
         item = vars_dict[el]
         if item is not None:
             if item == 'ticker':
-                text += f'{BULLET} {point[lang][el]}: <b>{item}</b>\n'
+                text += f'{POINT} {point[lang][el]}: <b>{item}</b>\n'
             else:
                 text += (
-                    f'{BULLET} {point[lang][el]}: '
+                    f'{POINT} {point[lang][el]}: '
                     f'<b>{get_print_float(item, 4)} {currency}</b>\n'
                 )
 
@@ -989,7 +988,7 @@ def msg_enter_currency(user_id: int):
     return f'✍ {texts[lang]}:'
 
 
-def msg_enter_pair(user_id: int, prices: dict[str, float] | None):
+def msg_enter_pair(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -997,16 +996,7 @@ def msg_enter_pair(user_id: int, prices: dict[str, float] | None):
         'en': 'Enter the currency pair'
     }
 
-    rates = ''
-    if prices is not None:
-        rates = '<u>Курс</u>'
-        for pair in prices.keys():
-            rates += f'\n<b>{pair} {round(prices[pair], 4)}</b>'
-
-    return f"""{rates}
-
-✍ {texts[lang]} (XXX XXX):
-"""
+    return f"""✍ {texts[lang]} (XXX XXX):"""
 
 
 def msg_enter_open_price(user_id: int):

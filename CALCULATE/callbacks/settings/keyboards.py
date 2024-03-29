@@ -34,7 +34,7 @@ def kb_settings(user_id: int):
             'base': 'Базовые значения',
             'lang': 'Язык',
             'market': 'Рынок',
-            'style': 'Стиль',
+            'style': 'Стиль торговли',
             'reset': 'Сброс',
             'summury_profit': 'Деление профита',
         },
@@ -42,7 +42,7 @@ def kb_settings(user_id: int):
             'base': 'Base values',
             'lang': 'Language',
             'market': 'Market',
-            'style': 'Style',
+            'style': 'trading style',
             'reset': 'Reset',
             'summury_profit': 'Profit division',
         }

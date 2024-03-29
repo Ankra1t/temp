@@ -1442,15 +1442,11 @@ class Database:
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
 
-        pair_price = getattr(value.forex_info, 'price')
-
-        pair = getattr(value.forex_info, 'pair')
-        if pair is not None:
-            pair = '/'.join(pair)
-
-        cross_prices = getattr(value.forex_info, 'cross_prices')
-        if cross_prices is not None:
-            cross_prices = json.dumps(cross_prices)
+        pair_price = pair = cross_prices = None
+        if value.forex_info is not None:
+            pair_price = value.forex_info.price
+            pair = '/'.join(value.forex_info.pair)
+            cross_prices = json.dumps(value.forex_info.cross_prices)
 
         params = (
             value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
