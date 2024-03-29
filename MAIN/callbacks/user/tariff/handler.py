@@ -7,7 +7,7 @@ from models import Invoice
 from db_new import db_new
 
 from MAIN.common.messages import msg_user_tariff
-from MAIN.callbacks import send_user_tariffs
+from MAIN.callbacks import send_user_tariffs, send_user_main
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
 from .keyboards import (
@@ -23,6 +23,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    if type == 'go_main':
+        send_user_main(bot, call.message, user_id)
 
     if 'go_tariff' in type:
         del_mes = 'del' in type
