@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from initialize import pay_guard
-from db_new import db_new
+from db import db
 from MAIN.states import AdminPostsState
 from common.utils import set_state_data
 from models import Post
@@ -41,7 +41,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, AdminPostsState.post_delete, chat_id)
 
     if type == 'list':
-        posts = db_new.get_all_posts()
+        posts = db.get_all_posts()
 
         if len(posts) == 0:
             bot.edit_message_text(
@@ -103,7 +103,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             post_data: Post = data.get('post')
 
-        db_new.add_post(post_data)
+        db.add_post(post_data)
         bot.delete_state(user_id, chat_id)
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
@@ -121,7 +121,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             text = 'Пост успешно удалён!'
 
             if 'send' in type:
-                post = db_new.get_post(post_id)
+                post = db.get_post(post_id)
 
                 if post is None:
                     return
@@ -129,9 +129,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 if post.direct == 'Платным':
                     users = pay_guard.get_paid_users()
                 elif post.direct == 'Бесплатным':
-                    users = db_new.get_not_subscribed_users()
+                    users = db.get_not_subscribed_users()
                 else:
-                    users = db_new.get_all_users()
+                    users = db.get_all_users()
 
                 users_id = list(map(lambda user: user.tg_id, users))
 
@@ -150,7 +150,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
                 text = 'Пост успешно отправлен!'
 
-            db_new.delete_post(post_id)
+            db.delete_post(post_id)
 
             bot.delete_state(user_id, chat_id)
             bot.edit_message_text(text, chat_id, mes_id)

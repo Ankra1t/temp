@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db_new import db_new
+from db import db
 
 from initialize import pay_guard
 
@@ -29,7 +29,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_admin_params(bot, call.message, user_id)
 
     if type == 'calculator':
-        sup = db_new.get_support_name()
+        sup = db.get_support_name()
         sup_link = f'@{sup}' if (sup != '') else ''
 
         bot.edit_message_text(
@@ -39,7 +39,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     elif type == 'update_texts':
-        texts = db_new.get_texts()
+        texts = db.get_texts()
         if len(texts) != 0:
             for i in range(len(texts)):
                 text = texts[i]
@@ -95,7 +95,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 name = data.get('name', '')
                 text = data.get('text', '')
 
-            db_new.update_text(name, text)
+            db.update_text(name, text)
 
             bot.send_message(chat_id, 'Успешно')
             send_admin_params(bot, call.message, user_id, True)

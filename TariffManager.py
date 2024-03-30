@@ -2,7 +2,7 @@ from telebot import types, TeleBot
 from datetime import datetime
 
 from keyboard_inlines import Admin_kb_inlines
-from db_new import db_new
+from db import db
 from models import Price, Discount
 from common.dt import get_datetime_now, get_str_by_datetime
 
@@ -15,11 +15,11 @@ class TariffManager(object):
         self.kb_inl = kb_inl_instance
 
     def deactivate_tariff(self, tariff_id):
-        db_new.deactive_price(tariff_id)
+        db.deactive_price(tariff_id)
         
     def on_off_tariff(self, tariff_id: int):
         """Переключить тариф с одного положения на другое"""
-        switch = db_new.check_switch_tariff(tariff_id)
+        switch = db.check_switch_tariff(tariff_id)
         switch_put = 0 if switch else 1
 
         if switch_put == 1:
@@ -27,24 +27,24 @@ class TariffManager(object):
             self.set_findate_tariff(tariff_id, None)
 
 
-        db_new.switch_tariff(tariff_id, switch_put)
+        db.switch_tariff(tariff_id, switch_put)
 
         return switch_put
 
     def set_findate_tariff(self, tariff_id: int, findate: datetime | None):
-        db_new.set_findate_tariff(tariff_id, findate)
+        db.set_findate_tariff(tariff_id, findate)
 
     def set_discount_tariff(self, id: int, discount: Discount):
-        db_new.set_price_discount(
+        db.set_price_discount(
             id, discount.percent, discount.findate)
 
     def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None, product_id=None):
         list = None
 
         if product_id:
-            list = db_new.get_prices_by_product(product_id, 1, None)
+            list = db.get_prices_by_product(product_id, 1, None)
         else:
-            list = db_new.get_prices(1, None)
+            list = db.get_prices(1, None)
 
         if len(list) == 0:
             self.bot.send_message(
@@ -92,9 +92,9 @@ class TariffManager(object):
         tariff_list = None
 
         if product_id:
-            tariff_list = db_new.get_prices_by_product(product_id, 1, switch_active=1)
+            tariff_list = db.get_prices_by_product(product_id, 1, switch_active=1)
         else:
-            tariff_list = db_new.get_prices(1, switch_active=1)
+            tariff_list = db.get_prices(1, switch_active=1)
 
         if not tariff_list:
             return False
@@ -116,7 +116,7 @@ class TariffManager(object):
 
 
     def admin_discount_list(self, message: types.Message, type_discount='active'):
-        list = db_new.get_prices(1)
+        list = db.get_prices(1)
         count = 0
         if len(list) == 0:
             self.bot.send_message(
@@ -168,7 +168,7 @@ class TariffManager(object):
         return False
 
     def change_fields_tariff_show(self, tariff_id, change_text):
-        tariff = db_new.get_price_by_id(tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return ''
 

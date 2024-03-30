@@ -6,7 +6,7 @@ from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
 
 from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
-from db_new import db_new
+from db import db
 
 from initialize import bot, pay_guard
 from models import Calculation, Post, UserInfo
@@ -53,8 +53,8 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
             open_price, stop_loss
         )
 
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
-        u_base = db_new.get_calc_user_settings(user_db_id)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        u_base = db.get_calc_user_settings(user_db_id)
 
         if u_base is None or (u_base.deposit is None or u_base.risk is None):
             calc_text = 'Для получения расчетов по рекомендации введите все базовые значения в настройках калькулятора'
@@ -113,7 +113,7 @@ class BlockTGBotSender(object):
             # Внедряем анализ качества пользователей - оптимизация рассылки
             # Учесть массовую рассылку отложенных постов
 
-            # users = db_new.get_all_users()
+            # users = db.get_all_users()
 
             users = pay_guard.get_valid_users_for_signals()
 

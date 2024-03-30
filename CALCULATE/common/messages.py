@@ -4,7 +4,7 @@ from datetime import datetime
 from common.dt import get_str_by_datetime
 
 from common.utils import get_lang, get_print_float
-from db_new import LANGUAGES_TYPE, db_new
+from db import LANGUAGES_TYPE, db
 from models import Calculation
 
 
@@ -129,9 +129,9 @@ def msg_main_freeze(user_id: int, freeze_dt: datetime):
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return ''
 
@@ -228,8 +228,8 @@ def msg_settings_change_market(user_id: int):
 def msg_summury_profit_settings(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     tp_ratio = u_base.tp_ratio if (u_base is not None) else []
     split_values = u_base.split_values if (u_base is not None) else None
 
@@ -297,11 +297,11 @@ def msg_support(user_id: int):
 def msg_stats(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    all_stats = db_new.get_calculations_by_user(user_db_id)
-    saved_stats = db_new.get_calculations_by_user(user_db_id, True)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    all_stats = db.get_calculations_by_user(user_db_id)
+    saved_stats = db.get_calculations_by_user(user_db_id, True)
 
-    user_settings = db_new.get_calc_user_settings(user_db_id)
+    user_settings = db.get_calc_user_settings(user_db_id)
 
     currency = 'USD'
     if user_settings is not None:
@@ -513,8 +513,8 @@ def msg_currency_error(user_id):
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return ''
 

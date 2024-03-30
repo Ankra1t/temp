@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from db_new import db_new
+from db import db
 from models import User, UserInfo, Subscribe, Transactions
 
 
@@ -26,7 +26,7 @@ class GuardPaymentAccess():
         finish_date = get_datetime_now() + timedelta(days=current_trial_days)
 
         if not custom_tariff_id:
-            tariff = db_new.get_first_tariff_by_product('signals')
+            tariff = db.get_first_tariff_by_product('signals')
             tariff_id = tariff.id if (tariff is not None) else None
         else:
             tariff_id = custom_tariff_id
@@ -36,7 +36,7 @@ class GuardPaymentAccess():
             finish_date, 1, None, 'trial', prices_id=tariff_id
         )
 
-        db_new.add_subsbscribe(subscribe)
+        db.add_subsbscribe(subscribe)
 
         # TODO
         finish_date_show_user = get_str_by_datetime(finish_date)
@@ -47,10 +47,10 @@ class GuardPaymentAccess():
     def set_option_trial_days(self, days):
         print(f'days ')
         print(days)
-        db_new.set_option('count_trial_days_new_user', str(int(days)))
+        db.set_option('count_trial_days_new_user', str(int(days)))
 
     def get_option_trial_days(self) -> int:
-        days = db_new.get_option('count_trial_days_new_user')
+        days = db.get_option('count_trial_days_new_user')
         return days or 1
 
     def set_custom_paid_subscribe(self, user_id, price_id=1, count_days=1):
@@ -61,7 +61,7 @@ class GuardPaymentAccess():
         subscribe = Subscribe(
             user_id, finish_date, 1, None, 'paid', price_id, None
         )
-        db_new.add_subsbscribe(subscribe)
+        db.add_subsbscribe(subscribe)
 
         # TODO
         finish_date_show_user = get_str_by_datetime(finish_date)
@@ -71,7 +71,7 @@ class GuardPaymentAccess():
 
     def check_trial_active_by_user(self, user_id):
         """Проверить есть ли у пользователя тестовая подписка"""
-        trial_subscribe = db_new.get_user_trial_subscribe(user_id)
+        trial_subscribe = db.get_user_trial_subscribe(user_id)
 
         if trial_subscribe is None:
             return False
@@ -85,7 +85,7 @@ class GuardPaymentAccess():
 
     def set_trial_subscribe_unactive_by_user(self, tg_user_id):
         """Отключить все пробные подписки у пользователя"""
-        db_new.set_trial_subscribe_unactive_by_user(tg_user_id)
+        db.set_trial_subscribe_unactive_by_user(tg_user_id)
 
     # Платные подписки
     def set_paid_subscribe(self, transaction: Transactions):
@@ -99,44 +99,44 @@ class GuardPaymentAccess():
             transaction.user_id, finish_date, 1, None, 'paid',
             transaction.price_id, transaction.id
         )
-        db_new.add_subsbscribe(subscribe)
+        db.add_subsbscribe(subscribe)
 
         return finish_date
 
     def get_subscribe_days_prices_id(self, price_id):
-        tariff = db_new.get_price_by_id(price_id)
+        tariff = db.get_price_by_id(price_id)
 
         return tariff.duration_days if tariff is not None else 0
 
     # Получение СПИСКИ пользователей для рассылки
     def get_users_note_fin_trial(self):
         """Получаем пользователей у которых закончилась Тестовая подписка - для рассылки уведомлений"""
-        return db_new.get_users_finished_subscribe('trial')
+        return db.get_users_finished_subscribe('trial')
 
     def get_users_note_fin_paid(self):
         """Получаем платных пользователей у которых закончилась Платная подписка - для рассылки уведомлений"""
-        return db_new.get_users_finished_subscribe('paid')
+        return db.get_users_finished_subscribe('paid')
 
     def get_paid_users(self):
         """Получаем пользователей с активными подписками для платной рассылки рекомендаций"""
-        return db_new.get_subsribed_users()
+        return db.get_subsribed_users()
 
     def get_paid_more1_users(self):
         """Получаем пользователей с больше чем одной подпиской"""
-        return db_new.get_subsribed_users(2)
+        return db.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
     def valid_use_calc(self, user_id: int):
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
 
-        freeze_dt = db_new.get_user_calc_freeze(user_db_id)
+        freeze_dt = db.get_user_calc_freeze(user_db_id)
 
-        uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
+        uses_count = db.get_calculator_uses_count(user_db_id) or 0
         is_sub = self.paid_user_product(user_id, 'calc')
         valid_use = uses_count > 0 or is_sub
 
         if freeze_dt is not None and (freeze_dt < get_datetime_now() or not valid_use):
-            db_new.set_user_calc_freeze(user_db_id, None)
+            db.set_user_calc_freeze(user_db_id, None)
             freeze_dt = None
 
         # Проверка на заморозку
@@ -152,7 +152,7 @@ class GuardPaymentAccess():
     def paid_user_product(self, user_id, product=None):
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
         # Проверяем текущие активные платные подписки
-        subscribes = db_new.get_active_subscribes_by_user_id(user_id)
+        subscribes = db.get_active_subscribes_by_user_id(user_id)
 
         if not subscribes:
             return False
@@ -164,12 +164,12 @@ class GuardPaymentAccess():
             fin_date_subscribe_obj = sub_item.finish_dt
 
             if fin_date_subscribe_obj > now:
-                price_item = db_new.get_price_by_id(sub_item.prices_id or 0)
+                price_item = db.get_price_by_id(sub_item.prices_id or 0)
 
                 if price_item is not None and price_item.type_product == product:
                     return True
             else:
-                db_new.set_deactivate_subscribe(sub_item.id or 0)
+                db.set_deactivate_subscribe(sub_item.id or 0)
 
         return False
 
@@ -177,11 +177,11 @@ class GuardPaymentAccess():
         """Получить пользователей для рассылки рекомендаций"""
 
         # Деактивируем подписки с просроченной датой действия
-        db_new.set_unactive_subscribes('paid')
-        db_new.set_unactive_subscribes('trial')
+        db.set_unactive_subscribes('paid')
+        db.set_unactive_subscribes('trial')
 
         # Получить пользователей с платной подпиской рекомендации или рекомендации+калькулятор
-        users = db_new.get_active_subscribes_all_users()
+        users = db.get_active_subscribes_all_users()
         # print(f'кол-во len(users) {len(users)}')
 
         if not users:
@@ -191,18 +191,18 @@ class GuardPaymentAccess():
 
     # # # Остальные методы
     def set_subscribe_unactive_many_users(self):
-        db_new.set_unactive_subscribes('trial')
+        db.set_unactive_subscribes('trial')
 
     def set_paid_subscribe_unactive_many_users(self):
-        db_new.set_unactive_subscribes('paid')
+        db.set_unactive_subscribes('paid')
 
     def set_subscribe_unactive(self, subscribe_id: int):
         """Убираем активность у подписки по subscribe_id """
-        db_new.set_subscribe_unactive(subscribe_id)
+        db.set_subscribe_unactive(subscribe_id)
 
     def set_subscribe_unactive_by_user_id(self, user_id, tariff_id=None):
         """Убираем активность у подписки для одного пользователя по user_id"""
-        db_new.set_subscribe_unactive_by_user_id(user_id, tariff_id)
+        db.set_subscribe_unactive_by_user_id(user_id, tariff_id)
 
     def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
         if user.subscribe is None:
@@ -219,7 +219,7 @@ class GuardPaymentAccess():
         else:
             finish_date = current_date_obj - timedelta(days=int(days))
 
-        db_new.set_subscribe_findate(subscribe_id or 0, finish_date)
+        db.set_subscribe_findate(subscribe_id or 0, finish_date)
         return finish_date
 
     def cancel_subscribes_for_time_type(self, time_type, count):
@@ -233,7 +233,7 @@ class GuardPaymentAccess():
         if time_type == 'days':
             time_start -= timedelta(days=count)
 
-        db_new.set_unactive_subscribe_for_time(time_start, time_end)
+        db.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
             'time_start': get_str_by_datetime(time_start),
@@ -241,7 +241,7 @@ class GuardPaymentAccess():
         }
 
     def cancel_subscribes_for_time_period(self, time_start: datetime, time_end: datetime):
-        db_new.set_unactive_subscribe_for_time(time_start, time_end)
+        db.set_unactive_subscribe_for_time(time_start, time_end)
 
         return {
             'time_start': get_str_by_datetime(time_start),

@@ -3,7 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from typing import TypeVar, Any
 
-from db_new import db_new
+from db import db
 
 
 T = TypeVar('T', int, float)
@@ -35,8 +35,8 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
 
 
 def get_lang(tg_id: int):
-    user_db_id = db_new.get_user_id_by_tg_id(tg_id)
-    return db_new.get_user_lang(user_db_id) or 'ru'
+    user_db_id = db.get_user_id_by_tg_id(tg_id)
+    return db.get_user_lang(user_db_id) or 'ru'
 
 
 def get_print_float(value: float, round_count: int | None = None):
@@ -88,7 +88,7 @@ def get_calculation(
 
     rate = 1
     if ticker is not None:
-        fut = db_new.get_future(ticker)
+        fut = db.get_future(ticker)
         rate = fut.price_step if (fut is not None) else 1
 
     # Кол-во покупки

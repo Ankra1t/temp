@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 from initialize import kb_inl_admin, pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
@@ -29,9 +29,9 @@ def send_admin_main(
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
 
-    count_all = db_new.get_users_count()
-    count_admins = len(db_new.get_all_workes())
-    count_fut_posts = len(db_new.get_all_posts())
+    count_all = db.get_users_count()
+    count_admins = len(db.get_all_workes())
+    count_fut_posts = len(db.get_all_posts())
 
     count_old = len(pay_guard.get_paid_more1_users())
     count_with_sub = base_statis.count_payments_dry()
@@ -66,7 +66,7 @@ def send_admin_users(
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
 
-    count_all = db_new.get_users_count()
+    count_all = db.get_users_count()
 
     count_old = len(pay_guard.get_paid_more1_users())
     count_with_sub = base_statis.count_payments_dry()
@@ -128,7 +128,7 @@ def send_admin_fut_posts(
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
 
-    posts_count = len(db_new.get_all_posts())
+    posts_count = len(db.get_all_posts())
 
     text = admin_fut_posts_msg(posts_count)
     keyboard = kb_posts()
@@ -221,11 +221,11 @@ def send_admin_client(
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
 
-    client = db_new.get_user_by_id(client_db_id)
+    client = db.get_user_by_id(client_db_id)
     if client is None:
         return
 
-    user_subsribe = db_new.get_current_subscribe_user(client.id)
+    user_subsribe = db.get_current_subscribe_user(client.id)
 
     fin_date = 'нет'
     type_subscribe_show = ''
@@ -235,7 +235,7 @@ def send_admin_client(
         type_subscribe_show = f' тип {user_subsribe.type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''
-    count_ref = len(db_new.get_user_referals(client_db_id))
+    count_ref = len(db.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
     text = '\n'.join((
@@ -297,7 +297,7 @@ def send_admin_workers_admin(
     bot.clear_step_handler(message)
 
     res = '<b>Админы</b>\n'
-    admins = db_new.get_admins()
+    admins = db.get_admins()
 
     if len(admins) != 0:
         for i in range(0, len(admins)):
@@ -329,7 +329,7 @@ def send_admin_workers_redactors(
     bot.clear_step_handler(message)
 
     res = '<b>Редакторы</b>\n'
-    redactors = db_new.get_redactors()
+    redactors = db.get_redactors()
 
     if len(redactors) != 0:
         for i in range(0, len(redactors)):
@@ -360,7 +360,7 @@ def send_admin_workers_support(
     bot.delete_state(user_id, chat_id)
     bot.clear_step_handler(message)
 
-    sup = db_new.get_support_name()
+    sup = db.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
 
     text = f'Тех. поддержка: {sup_link}'

@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from keyboard_reply import kb_main_redactor, kb_main_support
-from db_new import db_new
+from db import db
 
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 
@@ -32,7 +32,7 @@ def send_start_by_user(
         send_admin_main(bot, message, user_id, True)
 
     elif user_role == 2:
-        count_fut_posts = len(db_new.get_all_posts())
+        count_fut_posts = len(db.get_all_posts())
         bot.send_message(
             chat_id, redactor_main_msg(count_fut_posts),
             reply_markup=kb_main_redactor()

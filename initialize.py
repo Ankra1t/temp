@@ -6,7 +6,7 @@ from telebot.storage import StateMemoryStorage
 
 from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 
-from db_new import db_new
+from db import db
 from keyboard_inlines import Admin_kb_inlines
 from GuardPaymentAccess import GuardPaymentAccess
 from Payments import Payments
@@ -30,14 +30,14 @@ bot = TeleBot(
 
 pay_guard = GuardPaymentAccess()
 pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
-base_statis = BaseStatistics(db_new, bot)
-serv_tasks = ServiceTasks(db_new, bot)
+base_statis = BaseStatistics(db, bot)
+serv_tasks = ServiceTasks(db, bot)
 
 pays_banker = PaymentsBanker(
     api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)
 pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
 
-calcService = CalculationService(bot, db_new)
+calcService = CalculationService(bot, db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)
 
 

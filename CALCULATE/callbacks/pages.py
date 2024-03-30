@@ -2,7 +2,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 from common.dt import get_datetime_now
 
-from db_new import db_new
+from db import db
 from initialize import pay_guard
 
 from CALCULATE.common.messages import (
@@ -16,7 +16,7 @@ from .stats.keyboards import kb_stats
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -25,8 +25,8 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
 
     is_valid_use = pay_guard.valid_use_calc(user_id)
 
-    uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
-    freeze_dt = db_new.get_user_calc_freeze(user_db_id)
+    uses_count = db.get_calculator_uses_count(user_db_id) or 0
+    freeze_dt = db.get_user_calc_freeze(user_db_id)
 
     if is_valid_use:
         if is_new_calc:

@@ -1,7 +1,7 @@
 from telebot import types, TeleBot
 from datetime import datetime, timedelta
 
-from db_new import Database
+from db import Database
 from models import Task, TaskMessage
 
 

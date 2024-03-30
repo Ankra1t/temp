@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db_new import db_new
+from db import db
 
 from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
@@ -13,10 +13,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     type = callback_data.get('type', '')
 
     user_id = call.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     if type == 'calc':
-        u_base = db_new.get_calc_user_settings(user_db_id)
+        u_base = db.get_calc_user_settings(user_db_id)
         market = u_base.market if (u_base is not None) else 'crypto'
         choose_first_calculate_step(bot, user_id, call.message, market, True)
 

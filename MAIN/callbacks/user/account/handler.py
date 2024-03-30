@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db_new import db_new
+from db import db
 
 from .keyboards import kb_user_referral, kb_user_referral_list
 from .filter import user_account_factory, UserAccountCallbackFilter
@@ -25,7 +25,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'purchases':
         # if type == 'purchases' or type == 'buy_month':
-        purchases_list = db_new.get_purchases_by_user(user_id)
+        purchases_list = db.get_purchases_by_user(user_id)
         bot.edit_message_text(
             '<b>--- Мои покупки</b>', chat_id, mes_id
         )
@@ -107,7 +107,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_user_account(bot, call.message, user_id)
 
     if type == 'referral':
-        referals = db_new.get_user_referals(user_id)
+        referals = db.get_user_referals(user_id)
         count_ref = len(referals)
         intext = msg_referral(count_ref, bot.get_me().username, user_id)
 
@@ -117,7 +117,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'referral_list':
-        referals = db_new.get_user_referals(user_id)
+        referals = db.get_user_referals(user_id)
         res = ''
         if len(referals) != 0:
             for i in range(0, len(referals)):

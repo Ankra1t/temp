@@ -2,7 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 from initialize import text_editor
 from AuthRoles import get_site_code
 
@@ -74,7 +74,7 @@ def send_user_terms(bot: TeleBot, message: Message, page: int, user_id: int, is_
 def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
 
-    referals = db_new.get_user_referals(user_id)
+    referals = db.get_user_referals(user_id)
 
     count_ref = len(referals)
     # TODO - добавить потраченные деньги и баланс пользователя

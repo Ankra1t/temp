@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 from initialize import pay_guard
 from models import User
 
@@ -33,9 +33,9 @@ def handle_client_search(message: Message, bot: TeleBot):
         client_db_id = int(float(client_name_id))
     else:
         client_name_id = client_name_id.replace('@', '')
-        client_db_id = db_new.get_user_id_by_tg_name(client_name_id)
+        client_db_id = db.get_user_id_by_tg_name(client_name_id)
 
-    client = db_new.get_user_by_id(client_db_id)
+    client = db.get_user_by_id(client_db_id)
 
     if client is None:
         bot.send_message(
@@ -77,7 +77,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         subscribe_user_id = data.get('user_id')
 
     # Получить tg_user_id
-    user = db_new.get_user_by_id(subscribe_user_id)
+    user = db.get_user_by_id(subscribe_user_id)
     if user is None:
         print('ERROR[handle_days_subscribe]: не найден пользователь')
         return

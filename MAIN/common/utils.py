@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
 from common.dt import get_str_by_datetime
 
-from db_new import db_new
+from db import db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from models import Post, User, UserInfo
@@ -65,7 +65,7 @@ def get_short_user_info(user: UserInfo):
 
     ban = '| (BAN)' if user.ban == 1 else ''
 
-    user_subsribe = db_new.get_current_subscribe_user(user.id)
+    user_subsribe = db.get_current_subscribe_user(user.id)
 
     if user_subsribe is None:
         sub_show = 'нет подписок'

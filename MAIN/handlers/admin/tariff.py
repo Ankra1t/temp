@@ -7,7 +7,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from MAIN.states import AdminTariffState
 
-from db_new import db_new
+from db import db
 from initialize import kb_inl_admin, tariff_manager
 from config_logger import logger
 from models import Discount, Price
@@ -31,11 +31,11 @@ def handle_name(message: Message, bot: TeleBot):
     if current_state == 'AdminTariffState:edit_field_name':
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
-            # tariff = db_new.get_price_by_id(data.get('tariff_id'))
+            # tariff = db.get_price_by_id(data.get('tariff_id'))
 
-        db_new.update_price_field('name', name, tariff_id)
+        db.update_price_field('name', name, tariff_id)
 
-        tariff = db_new.get_price_by_id(tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return
 
@@ -75,8 +75,8 @@ def handle_duration(message: Message, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        db_new.update_price_field('duration_days', days, tariff_id)
-        tariff = db_new.get_price_by_id(tariff_id)
+        db.update_price_field('duration_days', days, tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return
 
@@ -115,8 +115,8 @@ def handle_price(message: Message, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        db_new.update_price_field('price', price, tariff_id)
-        tariff = db_new.get_price_by_id(tariff_id)
+        db.update_price_field('price', price, tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return
 
@@ -154,8 +154,8 @@ def handle_image(message: Message, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        db_new.update_price_field('img', message.photo[-1].file_id, tariff_id)
-        tariff = db_new.get_price_by_id(tariff_id)
+        db.update_price_field('img', message.photo[-1].file_id, tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return
 
@@ -199,8 +199,8 @@ def handle_description(message: Message, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
 
-        db_new.update_price_field('description', description, tariff_id)
-        tariff = db_new.get_price_by_id(tariff_id)
+        db.update_price_field('description', description, tariff_id)
+        tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
             return
 
@@ -225,7 +225,7 @@ def handle_description(message: Message, bot: TeleBot):
         tariff = Price(name, duration, price, 'USDT', None,
                        image, description, type_product=type_product)
 
-        db_new.add_price(tariff)
+        db.add_price(tariff)
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(chat_id, tariff.img, desc_template)

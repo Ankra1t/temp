@@ -8,7 +8,7 @@ import json
 
 from typing import Callable
 import requests
-from db_new import db_new
+from db import db
 from common.dt import get_datetime_now
 from models import InvoiceBBanker, Transactions, UpdateBBanker, Price
 
@@ -114,7 +114,7 @@ class PaymentsBanker(object):
     def get_params_payservice(self, subscribe_name):
 
         sub = {}
-        subscribe_info = db_new.get_price_by_name(subscribe_name)
+        subscribe_info = db.get_price_by_name(subscribe_name)
 
         if subscribe_info is None:
             return
@@ -128,7 +128,7 @@ class PaymentsBanker(object):
         return sub
 
     def get_params_payservice_by_id(self, tariff_id):
-        return db_new.get_price_by_id(tariff_id)
+        return db.get_price_by_id(tariff_id)
 
     def check_discount_price(self, tariff: Price):
         if tariff.discount is not None:
@@ -303,7 +303,7 @@ class PaymentsBanker(object):
     def get_wait_transaction_by_invoice_id(self, invoice_id, asset):
         # Ищем подписки только со статусом ожидания
         status = 'wait_payments'
-        transaction_info = db_new.get_wait_transaction(
+        transaction_info = db.get_wait_transaction(
             invoice_id, status)
 
         print(f'transaction_info ')
@@ -318,11 +318,11 @@ class PaymentsBanker(object):
         return None
 
     def transactions_complete(self, transaction_id):
-        db_new.set_transactions_complete(transaction_id)
+        db.set_transactions_complete(transaction_id)
 
     def set_transactions_for_wait(self, user_id, iv: InvoiceBBanker, price_id):
         status = 'wait_payments'
-        db_new.add_transaction(Transactions(
+        db.add_transaction(Transactions(
             user_id,
             code=str(iv.invoice_id),
             link=iv.pay_url,
@@ -337,7 +337,7 @@ class PaymentsBanker(object):
 
         # Ищем подписки только со статусом ожидания
         status = 'wait_payments'
-        transaction = db_new.get_wait_transaction(
+        transaction = db.get_wait_transaction(
             str(invoice.invoice_id), status # type: ignore
         )
 

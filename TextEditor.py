@@ -1,7 +1,7 @@
 from telebot import types, TeleBot
 from config_logger import logger
 
-from db_new import db_new
+from db import db
 
 
 class TextEditor(object):
@@ -14,7 +14,7 @@ class TextEditor(object):
     def get_text(self, label: str):
         logger.info(f'-----> Запрошен приветственный текст из БД  ')
 
-        text = db_new.get_text_by_name(label)
+        text = db.get_text_by_name(label)
         if text is not None:
             return text.message
         else:
@@ -23,6 +23,6 @@ class TextEditor(object):
 
     def save_content(self, name: str, content: str):
         if content:
-            db_new.update_text(name, content)
+            db.update_text(name, content)
         else:
             print('Пустой текст затрет полностью старый текст!')

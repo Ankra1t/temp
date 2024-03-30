@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db_new import db_new
+from db import db
 
 from common.utils import is_digit, set_state_data
 from MAIN.states import AdminWorkersState
@@ -42,7 +42,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'workers_list':
         bot.delete_state(user_id, chat_id)
-        mas = db_new.get_all_workes()
+        mas = db.get_all_workes()
         res = ''
 
         for i in range(0, len(mas)):
@@ -82,18 +82,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(text, chat_id, mes_id, reply_markup=markup)
 
     if type == 'add_yes':
-        if db_new.get_worker_role(id) is not None:
+        if db.get_worker_role(id) is not None:
             bot.edit_message_text(
                 f'Админ с ID: {id} - уже есть!',
                 chat_id, mes_id
             )
         else:
-            db_new.add_worker(id, role)
+            db.add_worker(id, role)
             bot.edit_message_text('Успешно!', chat_id, mes_id)
 
     if type == 'delete_yes':
-        if db_new.get_worker_role(id) is not None:
-            db_new.del_worker(id)
+        if db.get_worker_role(id) is not None:
+            db.del_worker(id)
             bot.edit_message_text('Успешно!', chat_id, mes_id)
         else:
             bot.edit_message_text(

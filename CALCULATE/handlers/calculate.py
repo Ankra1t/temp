@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from initialize import currencyService
-from db_new import db_new
+from db import db
 from models import Calculation, ForexInfo
 
 from common.utils import digit_accept, set_state_data, text_accept
@@ -25,7 +25,7 @@ def handle_future_ticker(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_ticker_error(user_id))
         return
 
-    if db_new.get_future(ticker) is None:
+    if db.get_future(ticker) is None:
         bot.send_message(
             chat_id,
             msg_ticker_not_found(user_id, ticker),
@@ -54,8 +54,8 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_pair_error(user_id))
         return
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    user_settings = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    user_settings = db.get_calc_user_settings(user_db_id)
     user_currency = getattr(user_settings, 'currency') or 'USD'
 
     pairs = [pair]
@@ -85,7 +85,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
 def handle_currency(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -104,14 +104,14 @@ def handle_currency(message: Message, bot: TeleBot):
             reply_markup=kb_main_cancel(user_id))
         return
 
-    db_new.set_user_currency(user_db_id, value.upper())
+    db.set_user_currency(user_db_id, value.upper())
 
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
 def handle_deposit(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -122,14 +122,14 @@ def handle_deposit(message: Message, bot: TeleBot):
                          reply_markup=kb_main_cancel(user_id))
         return
 
-    db_new.set_user_base(user_db_id, 'base_deposit', value)
+    db.set_user_base(user_db_id, 'base_deposit', value)
 
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
 def handle_risk_percent(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -155,15 +155,15 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     )
     #     return
 
-    db_new.set_user_base(user_db_id, 'base_risk', value)
-    db_new.set_user_risk_is_percent(user_db_id, is_percent)
+    db.set_user_base(user_db_id, 'base_risk', value)
+    db.set_user_risk_is_percent(user_db_id, is_percent)
 
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
 def handle_trading_style(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -181,7 +181,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
 
-    db_new.set_user_trading_style(user_db_id, value.lower())
+    db.set_user_trading_style(user_db_id, value.lower())
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -216,7 +216,7 @@ def handle_open_price(message: Message, bot: TeleBot):
 
 def handle_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -235,7 +235,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
         return
 
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return
 
@@ -260,9 +260,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     mes = msg_calculate_result(user_id, calc_info)
 
-    new_id = db_new.add_calculation(calc_info)
+    new_id = db.add_calculation(calc_info)
 
-    db_new.minus_calculator_uses_count(user_db_id)
+    db.minus_calculator_uses_count(user_db_id)
     bot.send_message(
         chat_id, mes,
         reply_markup=kb_set_calc_stats(user_id, new_id)
@@ -273,7 +273,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -287,7 +287,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         open_price = float(data.get('open_price', 0))
         forex = data.get('forex')
 
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return
 
@@ -313,8 +313,8 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
 
     mes = msg_calculate_forex_result(user_id, calc_info)
 
-    new_id = db_new.add_calculation(calc_info)
-    db_new.minus_calculator_uses_count(user_db_id)
+    new_id = db.add_calculation(calc_info)
+    db.minus_calculator_uses_count(user_db_id)
 
     bot.send_message(
         chat_id, mes,

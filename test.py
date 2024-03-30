@@ -1,23 +1,23 @@
 import ast
 from datetime import datetime, timedelta, timezone
-from db_new import db_new
+from db import db
 from initialize import bot
 
 # azatFa  id 156045434
 # ankrait id 6919899538
 
-# db_new.delete_calculator_user(156045434)
-# db_new.add_worker(156045434, 1)
-# db_new.del_worker(156045434)
+# db.delete_calculator_user(156045434)
+# db.add_worker(156045434, 1)
+# db.del_worker(156045434)
 
-# print(db_new.get_access_token())
+# print(db.get_access_token())
 
 
-# db_new.add_user(-1, 'asd', 0)
-# db_new.del_user(-1)
+# db.add_user(-1, 'asd', 0)
+# db.del_user(-1)
 
-# db_new.curs.execute("SELECT * FROM tgbotusers")
-# print(db_new.curs.fetchall())
+# db.curs.execute("SELECT * FROM tgbotusers")
+# print(db.curs.fetchall())
 
 # forexes = [{"pair": "AUD/CAD", "price": "0", "help_pair": "USD/CAD"},
 #            {"pair": "AUD/CHF", "price": "0", "help_pair": "USD/CHF"},

@@ -2,7 +2,7 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 from initialize import pay_guard
 from common.utils import set_state_data
 from .main.keyboards import kb_main_cancel
@@ -22,8 +22,8 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         ticker = data.get('ticker')
         forex = data.get('forex')
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
 
     if u_base is None:
         return

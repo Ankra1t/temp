@@ -5,7 +5,7 @@ from datetime import timedelta
 from config_logger import logger
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from db_new import Database as DatabaseNew
+from db import Database as DatabaseNew
 from models import UserInfo, Purchase
 
 

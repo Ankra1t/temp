@@ -6,7 +6,7 @@ from hmac import HMAC
 from hashlib import sha256
 import json
 
-from db_new import db_new
+from db import db
 from typing import Callable
 import requests
 from common.dt import get_datetime_now
@@ -87,10 +87,10 @@ class Payments(object):
         return Invoice(**response_json['result'])
 
     def get_params_payservice(self, subscribe_name):
-        return db_new.get_price_by_name(subscribe_name)
+        return db.get_price_by_name(subscribe_name)
 
     def get_params_payservice_by_id(self, tariff_id):
-        return db_new.get_price_by_id(tariff_id)
+        return db.get_price_by_id(tariff_id)
 
     def check_discount_price(self, tariff: Price):
         if tariff.discount is not None:
@@ -111,14 +111,14 @@ class Payments(object):
             price_id=price_id,
             status='wait_payments'
         )
-        db_new.add_transaction(transactions)
+        db.add_transaction(transactions)
 
     def get_wait_transaction_for_complete(self, update: Update):
         invoice = update.payload
 
         # Ищем подписки только со статусом ожидания
         status = 'wait_payments'
-        transaction = db_new.get_wait_transaction(
+        transaction = db.get_wait_transaction(
             str(invoice.invoice_id), status)
 
         # if transaction_info is not None:
@@ -134,7 +134,7 @@ class Payments(object):
 
 
     def transactions_complete(self, transaction_id):
-        db_new.set_transactions_complete(transaction_id)
+        db.set_transactions_complete(transaction_id)
 
     def get_updates(self, request: Request) -> Response:
         """

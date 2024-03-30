@@ -4,7 +4,7 @@ from telebot import TeleBot
 from CALCULATE.common.messages import msg_freeze_calc
 from CALCULATE.states import StatsState
 
-from db_new import Database
+from db import Database
 from common.dt import get_datetime_now
 
 

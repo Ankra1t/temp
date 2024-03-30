@@ -2,7 +2,7 @@ from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
@@ -29,7 +29,7 @@ def _start(message: Message, bot: TeleBot, data: dict):
 
 
 def _faq(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('FAQ')
+    text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     bot.send_message(message.chat.id, msg)
@@ -37,7 +37,7 @@ def _faq(message: Message, bot: TeleBot):
 
 
 def _about_us(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('О нас')
+    text = db.get_text_by_name('О нас')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     bot.send_message(message.chat.id, msg)
@@ -47,7 +47,7 @@ def _about_us(message: Message, bot: TeleBot):
 def _support(message: Message, bot: TeleBot):
     user_id = message.from_user.id
 
-    sup = db_new.get_support_name()
+    sup = db.get_support_name()
     msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
 
     bot.send_message(message.chat.id, msg,

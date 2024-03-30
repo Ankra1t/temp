@@ -14,7 +14,7 @@ from MAIN.callbacks import (
 from MAIN.common.utils import get_post_from_message
 from common.dt import get_datetime_now
 
-from db_new import db_new
+from db import db
 from common.utils import digit_accept, set_state_data, text_accept
 from keyboard_reply import kb_live_cancel
 from models import Post, PostDetails
@@ -280,7 +280,7 @@ def handle_action_post(action: Literal['send', 'delete']):
                 reply_markup=kb_posts_back())
             return
 
-        post = db_new.get_post(post_id)
+        post = db.get_post(post_id)
 
         if post is None:
             bot.send_message(chat_id, f'Пост с ID: {post_id} - не существует!')
@@ -322,7 +322,7 @@ def handle_edit_text(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         name = data.get('name', '')
 
-    db_new.update_text(name, text)
+    db.update_text(name, text)
     bot.delete_state(user_id, chat_id)
     send_admin_params(bot, message, user_id)
 

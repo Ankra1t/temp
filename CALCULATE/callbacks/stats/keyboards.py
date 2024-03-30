@@ -3,7 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
-from db_new import db_new
+from db import db
 
 from .filter import stats_factory
 
@@ -76,7 +76,7 @@ def kb_deal_result(user_id: int, stat_id: int):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    calc_info = db_new.get_calculation(stat_id)
+    calc_info = db.get_calculation(stat_id)
     tp: list[int] = getattr(calc_info, 'tp_ratio', [])
 
     buttons = []
