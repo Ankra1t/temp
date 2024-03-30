@@ -19,21 +19,22 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     chat_id = message.chat.id
     mes_id = message.id
 
+    bot.delete_state(user_id, chat_id)
+
     if not new_user and message.text is not None and len(message.text.split()) == 2:
         _, code = message.text.split()
         if code == 'site':
             send_site_code(bot, message, user_id, True)
             return
 
-    text = text_editor.get_text('welcome_user')
     if not new_user:
         text = text_editor.get_text(
             'user_restart_bot'
         ) or 'Доброго времени. Выберите действие'
+    else:
+        text = text_editor.get_text('welcome_user')
 
     keyboard = kb_user_main()
-
-    bot.delete_state(user_id, chat_id)
 
     if is_first:
         bot.send_message(
@@ -73,6 +74,9 @@ def send_user_terms(bot: TeleBot, message: Message, page: int, user_id: int, is_
 
 def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
 
     referals = db.get_user_referals(user_id)
 
@@ -81,18 +85,26 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     money = 0
     balance = 0
 
-    bot.delete_state(user_id, chat_id)
+    text = f'*Ваш баланс:* {balance}р.\n*Всего потратили:* {money}р.\n*У вас рефералов:* {count_ref}'
+    keyboard = kb_user_account()
 
-    bot.send_message(
-        user_id,
-        f'*Ваш баланс:* {balance}р.\n*Всего потратили:* {money}р.\n*У вас рефералов:* {count_ref}',
-        parse_mode='Markdown', reply_markup=kb_user_account()
-    )
+    if is_first:
+        bot.send_message(
+            user_id, text,
+            parse_mode='Markdown', reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            parse_mode='Markdown', reply_markup=keyboard
+        )
 
 
 def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
 
     text = 'Какой продукт вас интересует?'
     keyboard = kb_choose_products()
@@ -112,6 +124,8 @@ def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=Fal
 def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
 
     new_code = prev_code or get_site_code(user_id)
 

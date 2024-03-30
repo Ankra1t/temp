@@ -27,7 +27,6 @@ def send_admin_main(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     count_all = db.get_users_count()
     count_admins = len(db.get_all_workes())
@@ -64,7 +63,6 @@ def send_admin_users(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     count_all = db.get_users_count()
 
@@ -96,7 +94,6 @@ def send_admin_payment(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     count_payments = base_statis.count_payments()
     summ_all_users = base_statis.summ_by_transactions()
@@ -126,7 +123,6 @@ def send_admin_fut_posts(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     posts_count = len(db.get_all_posts())
 
@@ -155,7 +151,6 @@ def send_admin_params(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     text = menu_msg('Параметры')
     keyboard = kb_params()
@@ -219,7 +214,6 @@ def send_admin_client(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     client = db.get_user_by_id(client_db_id)
     if client is None:
@@ -270,7 +264,6 @@ def send_admin_workers(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     text = menu_msg('Работники')
     keyboard = kb_admin_workers()
@@ -294,7 +287,6 @@ def send_admin_workers_admin(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     res = '<b>Админы</b>\n'
     admins = db.get_admins()
@@ -326,7 +318,6 @@ def send_admin_workers_redactors(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     res = '<b>Редакторы</b>\n'
     redactors = db.get_redactors()
@@ -358,7 +349,6 @@ def send_admin_workers_support(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     sup = db.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
