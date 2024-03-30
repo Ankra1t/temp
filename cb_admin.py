@@ -100,15 +100,6 @@ def admin_default_callbacks(call: types.CallbackQuery):
         bot.register_next_step_handler(
             call.message, get_user_for_cancel_subscribe)
 
-    # ## Добавить новый тариф Тарифы - Добавить тариф
-    # if type == 'add_tariff':
-    #     logger.info(f'-----> Выбрано меню ***{type}*** ')
-    #
-    #     bot.edit_message_text(
-    #         'Введите название нового тарифа (заголовок)', chat_id, mes_id,
-    #         reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-    #
-    #     bot.set_state(user_id, AdminTariffState.name, chat_id)
 
     if type == 'add_tariff':
         logger.info(f'-----> Выбрано меню ***{type}*** ')
@@ -121,7 +112,8 @@ def admin_default_callbacks(call: types.CallbackQuery):
 
     # ## Выбрать продукт для показа тарифов по нему
     if type == 'tariffs_list':
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+        bot.edit_message_text(
+            chat_id=call.message.chat.id, message_id=call.message.id,
                               text=f'Выберите продукт для показа тарифов', reply_markup=kb_inl_admin.kb_select_tariff_products())
 
     # ## Показать список всех тарифов
