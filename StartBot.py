@@ -379,9 +379,9 @@ def callback_inline(call: types.CallbackQuery):
     bot.answer_callback_query(call.id)
 
 
-# Проверка рассылок каждые 15 сек - в отдельном потоке
-def check_unfinit_tasks(param):
-    sleep_time_check = 15
+# Проверка рассылок каждые 30 сек - в отдельном потоке
+def check_unfinit_tasks():
+    sleep_time_check = 30
     while True:
         # check_finish_paid_subscribe()
         # check_finish_trial_subscribe()
@@ -389,13 +389,7 @@ def check_unfinit_tasks(param):
         time.sleep(sleep_time_check)
 
 
-thread_name = 'check_unfinit_tasks'
-time.sleep(3)  # Чтобы поток успел запуститься
-if 'check_unfinit_tasks' not in threading.enumerate():
-    logger.info(
-        f'-----> Запустили поток {thread_name} если он еще не запущен '
-    )
-    thread_id = threading.Thread(
-        target=check_unfinit_tasks, name=thread_name, args=(thread_name,)
-    ).start()
+thread_id = threading.Thread(
+    target=check_unfinit_tasks, name='check_unfinit_tasks'
+).start()
 
