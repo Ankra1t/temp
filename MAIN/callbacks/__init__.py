@@ -12,6 +12,11 @@ from .user.pages import (
     send_user_account, send_site_code, send_user_tariffs
 )
 
+from .admin.main.handler import registration as _reg_admin_main
+from .admin.main.keyboards import (
+    kb_admin_main
+)
+
 from .admin.workers.handler import registration as _reg_admin_workers
 from .admin.workers.keyboards import (
     kb_admin_workers_confirm, kb_admin_workers_actions, kb_admin_workers_back,
@@ -57,6 +62,7 @@ from CALCULATE.callbacks import callbacks_registration as _reg_calculator
 
 
 def callbacks_registration(bot: _TB):
+    _reg_admin_main(bot)
     _reg_admin_workers(bot)
     _reg_admin_params(bot)
     _reg_admin_posts(bot)

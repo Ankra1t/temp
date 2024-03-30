@@ -18,45 +18,8 @@ from MAIN.callbacks import (
 )
 from MAIN.states import AdminTariffState, AdminUsersState
 
-from cb_filters import (admin_default_factory, adm_action, admin_main_factory)
+from cb_filters import (admin_default_factory, adm_action)
 from config_logger import logger
-
-
-@bot.callback_query_handler(func=None, admin_main=admin_main_factory.filter())
-def admin_main_callbacks(call: types.CallbackQuery):
-    callback_data: dict = admin_main_factory.parse(call.data)
-    type = callback_data['type']
-    logger.info(f'Кастомное callback_query меню ***{type}***')
-
-    user_id = call.from_user.id
-    chat_id = call.message.chat.id
-    mes_id = call.message.id
-
-    if type == 'users':
-        send_admin_users(bot, call.message, user_id)
-
-    if type == 'workers':
-        send_admin_workers(bot, call.message, user_id)
-
-    if type == 'fut_posts':
-        send_admin_fut_posts(bot, call.message, user_id)
-
-    if type == 'tariffs':
-        bot.edit_message_text('Действия с тарифами', chat_id, mes_id,
-                              reply_markup=kb_inl_admin.kb_tariffs())
-
-    if type == 'params':
-        send_admin_params(bot, call.message, user_id)
-
-    if type == 'payment':
-        send_admin_payment(bot, call.message, user_id)
-
-    if type == 'site_code':
-        send_site_code(bot, call.message, user_id)
-
-    bot.clear_step_handler(call.message)
-    bot.delete_state(user_id, chat_id)
-    bot.answer_callback_query(call.id)
 
 
 @bot.callback_query_handler(func=None, admin_default=admin_default_factory.filter())

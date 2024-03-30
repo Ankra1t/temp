@@ -29,7 +29,6 @@ from common.utils import set_state_data
 from keyboard_reply import *
 from cb_filters import (
     AdminDefaultCallbackFilter, AdminActionsCallbackFilter,
-    AdminMainCallbackFilter
 )
 
 from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
@@ -301,8 +300,6 @@ def check_finish_paid_subscribe():
 import cb_admin
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
-
-bot.add_custom_filter(AdminMainCallbackFilter())
 
 bot.add_custom_filter(AdminDefaultCallbackFilter())
 bot.add_custom_filter(AdminActionsCallbackFilter())

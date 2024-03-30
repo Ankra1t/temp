@@ -1,56 +1,15 @@
 from telebot import types
 from cb_filters import (
-    admin_default_factory, adm_action, admin_main_factory
+    admin_default_factory, adm_action
 )
 
 
 class Admin_kb_inlines(object):
 
     def __init__(self) -> None:
-        self.go_main_btn = types.InlineKeyboardButton(
-            '🔙 Главная', callback_data=admin_default_factory.new(type='go_main'))
-        self.go_users_btn = types.InlineKeyboardButton(
-            '🔙 Пользователи', callback_data=admin_main_factory.new(type='users'))
-        self.go_fut_posts_btn = types.InlineKeyboardButton(
-            '🔙 Отложенные посты', callback_data=admin_main_factory.new(type='fut_posts'))
-        self.go_params_btn = types.InlineKeyboardButton(
-            '🔙 Параметры', callback_data=admin_main_factory.new(type='params'))
-        self.go_statistics_btn = types.InlineKeyboardButton(
-            '🔙 Оплата', callback_data=admin_main_factory.new(type='payment'))
-
-    # Главная
-    def main(self):
-        def getCbData(type: str):
-            return admin_main_factory.new(type=type)
-
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-
-        btn1 = types.InlineKeyboardButton("Пользователи",
-                                          callback_data=getCbData('users'))
-        btn2 = types.InlineKeyboardButton("Работники",
-                                          callback_data=getCbData('workers'))
-        btn3 = types.InlineKeyboardButton("Отложенные посты",
-                                          callback_data=getCbData('fut_posts'))
-        btn4 = types.InlineKeyboardButton("Оплата",
-                                          callback_data=getCbData('payment'))
-        btn5 = types.InlineKeyboardButton("Параметры",
-                                          callback_data=getCbData('params'))
-        btn6 = types.InlineKeyboardButton("Тарифы",
-                                          callback_data=getCbData('tariffs'))
-        btn_site_code = types.InlineKeyboardButton("Войти на сайт",
-                                                   callback_data=getCbData('site_code'))
-        # btn3 = types.InlineKeyboardButton("Постинг")
-        # btn5 = types.InlineKeyboardButton("Другое")
-        # btn6 = types.InlineKeyboardButton("Главная")
-        # btn7 = types.InlineKeyboardButton("Live пост ⚡️")
-        keyboard.add(btn1, btn2)
-        keyboard.add(btn3, btn4)
-        keyboard.add(btn5, btn6)
-        keyboard.add(btn_site_code)
-        return keyboard
+        pass
 
     # Отмена подписки
-
     def users_cancel_subscribe(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         subscribe_cancel_time = types.InlineKeyboardButton(
@@ -59,7 +18,7 @@ class Admin_kb_inlines(object):
             'Для пользователя', callback_data=admin_default_factory.new(type='subscribe_cancel_user'))
 
         keyboard.add(subscribe_cancel_time, subscribe_cancel_user)
-        keyboard.add(self.go_users_btn, self.go_main_btn)
+        # keyboard.add(self.go_users_btn) # !!! Кнопка назад
         return keyboard
 
     def users_cancel_subscribe_time(self):
@@ -73,7 +32,7 @@ class Admin_kb_inlines(object):
 
         keyboard.add(cancel_subscribe_hour, cancel_subscribe_day)
         keyboard.add(cancel_subscribe_period)
-        keyboard.add(self.go_users_btn, self.go_main_btn)
+        # keyboard.add(self.go_users_btn) # !!! Кнопка назад
         return keyboard
 
     def users_cancel_subscribe_user(self, user_id):
@@ -84,7 +43,7 @@ class Admin_kb_inlines(object):
             'Выбрать другую', callback_data=adm_action.new(action='admin_change_subscribe_for_user', id=user_id))
 
         keyboard.add(user_cancel_subscribe, admin_change_subscribe_for_user)
-        keyboard.add(self.go_users_btn, self.go_main_btn)
+        # keyboard.add(self.go_users_btn) # !!! Кнопка назад
 
         return keyboard
 
@@ -103,7 +62,7 @@ class Admin_kb_inlines(object):
 
         keyboard.add(tariffs_list, add_tariff)
         keyboard.add(discount_list_active, discount_list_inactive)
-        keyboard.add(self.go_main_btn)
+        # keyboard.add(self.go_main_btn) # !!! Кнопка назад
         return keyboard
 
     def kb_select_tariff_products(self):
@@ -128,7 +87,7 @@ class Admin_kb_inlines(object):
         keyboard.add(tariffs_list_by_product_signals,
                      tariffs_list_by_product_calc)
         keyboard.add(tariffs_list_by_product_calc_signals)
-        keyboard.add(self.go_main_btn)
+        # keyboard.add(self.go_main_btn) # !!! Кнопка назад
         return keyboard
 
     def kb_choice_product(self):
@@ -150,7 +109,7 @@ class Admin_kb_inlines(object):
 
         keyboard.add(add_tariff_product_signals, add_tariff_product_calc)
         keyboard.add(add_tariff_product_calc_signals)
-        keyboard.add(tariffs_list, self.go_main_btn)
+        keyboard.add(tariffs_list)
         return keyboard
 
     def kb_tariffs_back_cancel(self):
@@ -158,7 +117,7 @@ class Admin_kb_inlines(object):
         tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
 
-        keyboard.add(tariffs_list, self.go_main_btn)
+        keyboard.add(tariffs_list)
         return keyboard
 
     def kb_tariff_list(self):
@@ -176,7 +135,7 @@ class Admin_kb_inlines(object):
 
         keyboard.add(tariffs_list, add_tariff)
         keyboard.add(discount_list_active, discount_list_inactive)
-        keyboard.add(self.go_main_btn)
+        # keyboard.add(self.go_main_btn) # !!! Кнопка назад
         return keyboard
 
     def kb_tariff_options(self, tariff_id, on_off_label='Отключить ⭕️'):
@@ -220,14 +179,13 @@ class Admin_kb_inlines(object):
                                                          callback_data=adm_action.new(
                                                              action='change_tariff_image',
                                                              id=tariff_id))
-        go_main = self.go_main_btn
         tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
 
         keyboard.add(change_tariff_name, change_tariff_description)
         keyboard.add(change_tariff_price, change_tariff_duration)
         keyboard.add(change_tariff_image)
-        keyboard.add(go_main, tariffs_list)
+        keyboard.add(tariffs_list)
         return keyboard
 
     def kb_tariff_options_choose(self, user_tariff):
@@ -271,14 +229,13 @@ class Admin_kb_inlines(object):
             id=''
         ))
 
-        go_main = self.go_main_btn
         tariffs_list = types.InlineKeyboardButton(text='🔙 Список тарифов',
                                                   callback_data=admin_default_factory.new(type='tariffs_list'))
 
         keyboard.add(tariff_findate_period_day, tariff_findate_period_day3)
         keyboard.add(tariff_findate_period_week, tariff_findate_period_month)
         keyboard.add(tariff_findate)
-        keyboard.add(go_main, tariffs_list)
+        keyboard.add(tariffs_list)
         return keyboard
 
     def kb_add_sub_subscribe(self):
@@ -289,6 +246,6 @@ class Admin_kb_inlines(object):
                                                  callback_data=admin_default_factory.new(type='deduct_days_subscribe'))
 
         keyboard.add(add_days, deduct_days)
-        keyboard.add(self.go_users_btn)
+        # keyboard.add(self.go_users_btn) # !!! Кнопка назад
         return keyboard
 

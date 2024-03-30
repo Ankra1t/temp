@@ -10,6 +10,7 @@ from messages.statistics import admin_main_statistics
 from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
 from models import Post
 
+from .main.keyboards import kb_admin_main
 from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
 from .statistics.keyboards import kb_statistics
@@ -35,7 +36,7 @@ def send_admin_main(
     count_old = len(pay_guard.get_paid_more1_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    keyboard = kb_inl_admin.main()
+    keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_old,
         count_admins, count_fut_posts
@@ -355,6 +356,29 @@ def send_admin_workers_support(
 
     text = f'Тех. поддержка: {sup_link}'
     keyboard = kb_admin_workers_support()
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_tariffs(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False,
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    text = 'Действия с тарифами'
+    keyboard = kb_inl_admin.kb_tariffs()
 
     if is_first:
         bot.send_message(chat_id, text, reply_markup=keyboard)
