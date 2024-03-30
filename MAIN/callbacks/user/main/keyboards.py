@@ -2,7 +2,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from MAIN.common.utils import get_calculator_btn_link
 from common.keyboard import back_txt
-from common.vars import SITE_URL
+from config_global import SITE_URL
 from .filter import user_main_factory
 
 

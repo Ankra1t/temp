@@ -16,7 +16,6 @@ from initialize import bot, pays, pays_banker, pay_guard
 from db_new import db_new
 
 from config_logger import logger
-from config_global import _ENV
 
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
@@ -400,16 +399,3 @@ if 'check_unfinit_tasks' not in threading.enumerate():
         target=check_unfinit_tasks, name=thread_name, args=(thread_name,)
     ).start()
 
-if _ENV == 'main':
-    bot.infinity_polling()
-
-try:
-    if os.getenv("MODE_BOT") and os.getenv("MODE_BOT") == 'dev':
-        if _ENV != 'calc':
-            bot.infinity_polling()
-
-
-except Exception as e:
-    print(f'Переменная окружения НЕ ЗАДАНА MODE_BOT == dev[{e}]')
-    pass
-    # logger.error(f'Ошибка  [{e}]')

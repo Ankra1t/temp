@@ -1,3 +1,4 @@
+from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -8,6 +9,10 @@ from CALCULATE.commands import _start as _calc
 from CALCULATE.common.keyboard import kb_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code
+
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import textwrap
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -45,7 +50,8 @@ def _support(message: Message, bot: TeleBot):
     sup = db_new.get_support_name()
     msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
 
-    bot.send_message(message.chat.id, msg, reply_markup=kb_support(user_id, sup))
+    bot.send_message(message.chat.id, msg,
+                     reply_markup=kb_support(user_id, sup))
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
@@ -59,25 +65,35 @@ def _site(message: Message, bot: TeleBot):
 
 def _test(message: Message, bot: TeleBot):
     # CHAT_KEY = -1002104767484
-    # def text_to_image(
-    #     text: str,
-    #     font_filepath: str,
-    #     font_size: int,
-    # ) -> ImageType:
-    #     font = ImageFont.truetype(font_filepath, size=font_size)
+    def text_to_image(
+        text: str,
+    ):
+        # Создаем изображение с текстом
+        image = Image.new('RGB', (500, 300), color='white')
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.truetype('arial.ttf', 30)
+        text = "Hello, World! SADAS asdasd asdasdas asdasd asd"
 
-    #     img = Image.new("RGBA", font.getmask(text).size)
+        max_width = 180
 
-    #     draw = ImageDraw.Draw(img)
-    #     draw_point = (0, 0)
+        # Переносим текст, если он не влезает в заданную ширину
+        max_width = image.width - 20  # учитываем отступы
 
-    #     draw.multiline_text(draw_point, text, font=font, fill=color)
+        # Переносим текст, если он не влезает в заданную ширину
+        wrapped_text = textwrap.fill(text, width=max_width // font.size)
+        print(max_width // font.size)
+        # Рисуем текст на изображении
+        draw.text((10, 10), wrapped_text, fill='black', font=font)
 
-    #     text_window = img.getbbox()
-    #     img = img.crop(text_window)
+        # Создаем буфер памяти для изображения
+        image_buffer = BytesIO()
+        image.save(image_buffer, format='PNG')
+        image_buffer.seek(0)
 
-    #     return img
-    pass
+        return image_buffer
+
+    img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
+    bot.send_photo(message.chat.id, img)
 
 
 def commands_registration(bot: TeleBot):

@@ -3,8 +3,8 @@ import json
 import requests
 
 from db_new import db_new
-from config_global import DB_PG_NAME
-from common.vars import API_URL, HEADERS
+from config_global import DB_PG_NAME, API_URL
+from common.vars import HEADERS
 
 
 def registration(user_id: int, username: str = '', referral_id: int = 0):
@@ -15,13 +15,6 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         'tg_api_auth_token': access_token,
         'username_tg': username
     }
-
-    if DB_PG_NAME == 'dev_postgre_lar_db':
-        # Регаем в локальной базе пользователя
-        print(
-            f'Регистрируем фейково пользователя user_id [{user_id}]  username [{username}] ')
-        db_new.fake_add_user_db(user_id, username)
-        return True
 
     try:
         response = requests.post(

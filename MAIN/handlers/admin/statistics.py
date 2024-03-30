@@ -23,7 +23,7 @@ def handle_start_date(message: Message, bot: TeleBot):
     start_date = text_accept(message)
 
     try:
-        start_date_obj = datetime.strptime(start_date, '%d.%m.%y')
+        start_date_obj = datetime.strptime(start_date or '', '%d.%m.%y')
     except Exception as e:
         start_date_obj = None
         logger.error(f'Ошибка handle_start_date [{e}]')
@@ -77,7 +77,7 @@ def handle_fin_date(message: Message, bot: TeleBot):
 
     fin_date = text_accept(message)
     try:
-        fin_date_obj = datetime.strptime(fin_date, '%d.%m.%y')
+        fin_date_obj = datetime.strptime(fin_date or '', '%d.%m.%y')
     except Exception as e:
         fin_date_obj = None
         logger.error(f'Ошибка handle_fin_date [{e}]')

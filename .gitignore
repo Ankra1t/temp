@@ -7,6 +7,7 @@ ngrok.exe
 /4p_bots-env
 .env
 config_global.py
+_index.py
 
 pyrightconfig.json
 4p_bot.db
