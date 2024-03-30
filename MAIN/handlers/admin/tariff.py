@@ -34,7 +34,10 @@ def handle_name(message: Message, bot: TeleBot):
             # tariff = db_new.get_price_by_id(data.get('tariff_id'))
 
         db_new.update_price_field('name', name, tariff_id)
+
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(chat_id, tariff.img, desc_template,
@@ -74,6 +77,8 @@ def handle_duration(message: Message, bot: TeleBot):
 
         db_new.update_price_field('duration_days', days, tariff_id)
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(chat_id, tariff.img, desc_template,
@@ -112,6 +117,8 @@ def handle_price(message: Message, bot: TeleBot):
 
         db_new.update_price_field('price', price, tariff_id)
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(chat_id, tariff.img, desc_template,
@@ -149,6 +156,8 @@ def handle_image(message: Message, bot: TeleBot):
 
         db_new.update_price_field('img', message.photo[-1].file_id, tariff_id)
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(
@@ -192,6 +201,8 @@ def handle_description(message: Message, bot: TeleBot):
 
         db_new.update_price_field('description', description, tariff_id)
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
 
         desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
         bot.send_photo(
@@ -318,7 +329,7 @@ def handle_price_findate(message: Message, bot: TeleBot):
     price_findate = text_accept(message)
 
     try:
-        price_findate_obj = datetime.strptime(price_findate, '%d.%m.%y')
+        price_findate_obj = datetime.strptime(price_findate or '', '%d.%m.%y')
     except Exception as e:
         price_findate_obj = None
         logger.error(f'Ошибка handle_price_findate [{e}]')

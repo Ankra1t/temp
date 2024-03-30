@@ -291,7 +291,7 @@ class PaymentsBanker(object):
 
         return hmac.compare_digest(self_sign_2, bitbanker_signature)
 
-    def pay_handler(self, func: Callable = None):
+    def pay_handler(self, func: Callable | None = None):
         def decorator(handler):
             self._handlers.append(handler)
             return handler
@@ -338,7 +338,8 @@ class PaymentsBanker(object):
         # Ищем подписки только со статусом ожидания
         status = 'wait_payments'
         transaction = db_new.get_wait_transaction(
-            str(invoice.invoice_id), status)
+            str(invoice.invoice_id), status # type: ignore
+        )
 
         # print(f'transaction_info ')
         # print(transaction_info)

@@ -169,6 +169,9 @@ class TariffManager(object):
 
     def change_fields_tariff_show(self, tariff_id, change_text):
         tariff = db_new.get_price_by_id(tariff_id)
+        if tariff is None:
+            return ''
+
         return self.get_template_change_tariff_show(tariff, change_text)
 
     def get_template_tariff_show_admin(self, tariff: Price):
@@ -190,7 +193,11 @@ class TariffManager(object):
 
     def get_template_discount_show(self, tariff: Price):
         """Получить описание согласно шаблону и данным тарифа """
-        findate = get_str_by_datetime(tariff.discount.findate)
+        dt = tariff.discount.findate if (tariff.discount is not None) else get_datetime_now()
+        findate = get_str_by_datetime(dt)
+
+        percent = tariff.discount.percent if (tariff.discount is not None) else 0
+
         template = """
 id {} <b>{}</b> (стоимость {} {})
 <b>скидка {}%</b> до {}
@@ -198,7 +205,7 @@ id {} <b>{}</b> (стоимость {} {})
                    tariff.name,
                    str(tariff.price),
                    tariff.currency,
-                   tariff.discount.percent,
+                   percent,
                    findate
                    )
         return template

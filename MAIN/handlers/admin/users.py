@@ -78,6 +78,9 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
 
     # Получить tg_user_id
     user = db_new.get_user_by_id(subscribe_user_id)
+    if user is None:
+        print('ERROR[handle_days_subscribe]: не найден пользователь')
+        return
 
     if current_state == 'AdminUsersState:subscribe_days':
         # !!! деактивировать старые платные и пробные подписки
@@ -102,7 +105,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         try:
             pay_guard.set_trial_subscribe_unactive_by_user(user.tg_id)
             datetime_show = pay_guard.set_trial(user.tg_id, days)
-            
+
             data_fin = datetime_show['admin']
             bot.send_message(
                 chat_id,

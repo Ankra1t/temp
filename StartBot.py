@@ -79,7 +79,7 @@ def invoice_paid_prev(update: Update) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db_new.get_price_by_id(transaction.price_id, None)
+            tariff = db_new.get_price_by_id(transaction.price_id, None) # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -97,17 +97,17 @@ def invoice_paid_prev(update: Update) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name),
+                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
             user = db_new.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,
-                user_nike='@' + user.username if user.username else user.tg_id,
+                user_id=user.id, # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name,
+                tariff_name=tariff.name, # type: ignore
                 finish_date=finish_date
             ))
 
@@ -144,7 +144,7 @@ def invoice_paid(update: UpdateBBanker) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db_new.get_price_by_id(transaction.price_id, None)
+            tariff = db_new.get_price_by_id(transaction.price_id, None) # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -162,17 +162,17 @@ def invoice_paid(update: UpdateBBanker) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name),
+                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
             user = db_new.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,
-                user_nike='@' + user.username if user.username else user.tg_id,
+                user_id=user.id, # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name,
+                tariff_name=tariff.name, # type: ignore
                 finish_date=finish_date
             ))
 
