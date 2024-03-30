@@ -35,7 +35,7 @@ from cb_filters import (
 from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
 from messages.workers import redactor_main_msg, admin_posting_msg
 
-from BlockTGBotSender import BlockTGBotSender
+from Classes.BlockTGBotSender import BlockTGBotSender
 from AuthMiddleWare import AuthMiddleWare
 
 from models import Post, Update, UpdateBBanker

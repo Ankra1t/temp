@@ -3,7 +3,7 @@ import json
 import requests
 
 from db import db
-from config_global import DB_PG_NAME, API_URL
+from config_global import API_URL
 from common.vars import HEADERS
 
 

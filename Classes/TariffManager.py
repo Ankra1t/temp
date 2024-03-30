@@ -16,7 +16,7 @@ class TariffManager(object):
 
     def deactivate_tariff(self, tariff_id):
         db.deactive_price(tariff_id)
-        
+
     def on_off_tariff(self, tariff_id: int):
         """Переключить тариф с одного положения на другое"""
         switch = db.check_switch_tariff(tariff_id)

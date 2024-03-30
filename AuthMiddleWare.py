@@ -1,22 +1,17 @@
-from datetime import datetime, timedelta
 from telebot import types
-from telebot.handler_backends import BaseMiddleware
-from telebot.handler_backends import CancelUpdate
+from telebot.handler_backends import BaseMiddleware, CancelUpdate
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
-from messages.users import welcome_trial_subscribe_msg
 
 
-from initialize import pay_guard, serv_tasks
+from initialize import pay_guard
 from db import db, LANGUAGES
-from GuardPaymentAccess import GuardPaymentAccess
 from AuthRoles import check_registrate, registration
 
 
 
 class AuthMiddleWare(BaseMiddleware):
     """Класс защитник авторизации"""
-
     def __init__(self, bot, limit=2) -> None:
         self.last_time = {}
         self.limit = limit

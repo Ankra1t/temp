@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
-from BlockTGBotSender import BlockTGBotSender
+from Classes.BlockTGBotSender import BlockTGBotSender
 
 from CALCULATE.common.messages import msg_digit_error
 from MAIN.states import AdminPostsState

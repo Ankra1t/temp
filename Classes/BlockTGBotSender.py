@@ -5,7 +5,7 @@ from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
 
-from config_logger import logger, log_send_fails, log_send_no_send, log_send_ok
+from config_logger import log_send_fails, log_send_ok
 from db import db
 
 from initialize import bot, pay_guard
