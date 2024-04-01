@@ -3,7 +3,7 @@ from telebot.storage import StateMemoryStorage
 from telebot.custom_filters import StateFilter
 
 from AuthMiddleWare import AuthMiddleWare
-from config_global import TOKEN_CALC_BOT, _ENV
+from config_global import TOKEN_CALC_BOT
 
 from CALCULATE.commands import commands_registration
 from CALCULATE.handlers import handlers_registration
@@ -26,7 +26,3 @@ handlers_registration(bot_calc)
 
 
 bot_calc.add_custom_filter(StateFilter(bot_calc))
-
-
-if _ENV == 'calc':
-    bot_calc.infinity_polling()

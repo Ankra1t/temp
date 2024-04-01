@@ -40,30 +40,32 @@ class Database:
     # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
         return Price(
-            data.get('name'),
-            data.get('duration_days'),
-            data.get('price'),
-            data.get('currency'),
-            data.get('id'),
-            data.get('img'),
-            data.get('description'),
-            data.get('discount_percent'),
-            data.get('discount_findate'),
-            data.get('type_product'),
-            data.get('switch_active'),
-            data.get('price_findate'),
+            id=data.get('id'),
+            name=data.get('name'),
+            duration=data.get('duration_days'),
+            price=data.get('price'),
+            currency=data.get('currency'),
+            image=data.get('img'),
+            description=data.get('description'),
+            discount_percent=data.get('discount_percent'),
+            discount_findate=data.get('discount_findate'),
+            type_product=data.get('type_product'),
+            switch_active=data.get('switch_active'),
+            price_findate=data.get('price_findate'),
         )
 
-    def get_prices(self, active: int = 1, switch_active: int | None=None) -> list[Price]:
+    def get_prices(self, active: int = 1, switch_active: int | None = None) -> list[Price]:
         """Получение тарифа"""
-        self.switch_off_finish_tariffs()
+        self.check_tariffs_datetime()
 
         if switch_active is None:
-            query = """SELECT * FROM prices WHERE active = %s"""
+            query = 'SELECT * FROM prices WHERE active = %s'
             params = (active,)
         else:
-            query = """SELECT * FROM prices WHERE active = %s AND switch_active = %s"""
+            query = 'SELECT * FROM prices WHERE active = %s AND switch_active = %s'
             params = (active, switch_active)
+
+        query += ' ORDER BY id ASC'
 
         try:
             self.curs.execute(query, params)
@@ -75,16 +77,16 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_id, active: int, switch_active: int | None = None) -> list[Price]:
+    def get_prices_by_product(self, product_type: str, active: int, switch_active: int | None = None) -> list[Price]:
         """Получение тарифа по типу продукта"""
-        self.switch_off_finish_tariffs()
+        self.check_tariffs_datetime()
 
         if switch_active is None:
             query = """SELECT * FROM prices WHERE active = %s AND type_product = %s"""
-            params = (active, product_id)
+            params = (active, product_type)
         else:
             query = """SELECT * FROM prices WHERE active = %s AND type_product = %s AND switch_active = %s"""
-            params = (active, product_id, switch_active)
+            params = (active, product_type, switch_active)
 
         try:
             self.curs.execute(query, params)
@@ -96,13 +98,14 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int, switch_active=1):
-        if not switch_active:
+    def get_price_by_id(self, id: int, switch_active: int | None = None):
+        if switch_active is None:
             query = "SELECT * FROM prices WHERE id = %s"
             params = (id,)
         else:
             query = "SELECT * FROM prices WHERE id = %s AND switch_active = %s"
             params = (id, switch_active,)
+
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
@@ -114,48 +117,72 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_price_by_name(self, name: str, switch_active=1):
-        """Получение цены по имени"""
-        query = "SELECT * FROM prices WHERE name = %s AND switch_active = %s"
-        params = (name, switch_active, )
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return None
-
-            return self._data_to_price(data)
-        except Exception as e:
-            print(f'ERROR[get_prices_by_name]: {e}')
-            self.connection.rollback()
-            return None
-
-    def update_price(self, name: str, price: float):
-        """Обновить цену"""
-        query = "UPDATE prices set price = %s WHERE name = %s"
-        params = (price, name)
+    def update_price_name(self, id: int, value: str):
+        query = "UPDATE prices SET name = %s WHERE id = %s"
+        params = (value, id)
 
         try:
             self.curs.execute(query, params)
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price]: {e}')
+            print(f'ERROR[update_price_name]: {e}')
             self.connection.rollback()
             return False
 
-    def update_price_field(self, field, value, price_id: int):
+    def update_price_price(self, id: int, value: float):
         """Обновить цену"""
-        query = f"UPDATE prices set {field} = %s WHERE id = %s"
-        params = (value, price_id, )
+        query = "UPDATE prices SET price = %s WHERE id = %s"
+        params = (value, id)
 
         try:
             self.curs.execute(query, params)
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price]: {e}')
+            print(f'ERROR[update_price_price]: {e}')
+            self.connection.rollback()
+            return False
+
+    def update_price_duration(self, id: int, value: int):
+        """Обновить цену"""
+        query = "UPDATE prices SET duration_days = %s WHERE id = %s"
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price_duration]: {e}')
+            self.connection.rollback()
+            return False
+
+    def update_price_image(self, id: int, value: str):
+        """Обновить цену"""
+        query = "UPDATE prices SET img = %s WHERE id = %s"
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price_image]: {e}')
+            self.connection.rollback()
+            return False
+
+    def update_price_description(self, id: int, value: str):
+        """Обновить цену"""
+        query = "UPDATE prices SET description = %s WHERE id = %s"
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price_description]: {e}')
             self.connection.rollback()
             return False
 
@@ -189,7 +216,7 @@ class Database:
             return False
 
     def set_price_discount(self, id: int, percent: float, fin_date: datetime):
-        """Установка скидки тарифу"""
+        """Установка скидки тарифа"""
         query = "UPDATE prices set discount_percent = %s, discount_findate = %s WHERE id = %s"
         params = (percent, fin_date, id,)
 
@@ -199,6 +226,20 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[set_price_discount]: {e}')
+            self.connection.rollback()
+            return False
+
+    def delete_price_discount(self, id: int):
+        """Удаление скидки тарифа"""
+        query = "UPDATE prices set discount_percent = %s, discount_findate = %s WHERE id = %s"
+        params = (None, None, id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[delete_price_discount]: {e}')
             self.connection.rollback()
             return False
 
@@ -233,18 +274,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def check_switch_tariff(self, tariff_id: int):
-        query = "SELECT switch_active FROM prices WHERE id = %s"
-        params = (tariff_id, )
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return data[0] if (data is not None) else 0
-        except Exception as e:
-            print(f'ERROR[check_switch_tariff]: {e}')
-            self.connection.rollback()
-            return None
-
     def set_findate_tariff(self, tariff_id: int, fin_date: datetime | None):
         """Установить дату окончания тарифа"""
         query = "UPDATE prices set price_findate = %s WHERE id = %s"
@@ -259,18 +288,22 @@ class Database:
             self.connection.rollback()
             return False
 
-    def switch_off_finish_tariffs(self):
+    def check_tariffs_datetime(self):
         """Установить дату окончания тарифа"""
-        query = "UPDATE prices set switch_active = %s WHERE price_findate < %s"
-        switch = 0
-        params = (switch, get_datetime_now())
+        now = get_datetime_now()
+        query_finish = "UPDATE prices set switch_active = %s, price_findate = %s WHERE price_findate < %s"
+        params_finish = (0, None, now)
+
+        query_discount = 'UPDATE prices set discount_percent = %s, discount_findate = %s WHERE discount_findate < %s'
+        params_discount = (None, None, now)
 
         try:
-            self.curs.execute(query, params)
+            self.curs.execute(query_finish, params_finish)
+            self.curs.execute(query_discount, params_discount)
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[switch_off_finish_tariffs]: {e}')
+            print(f'ERROR[check_tariffs_datetime]: {e}')
             self.connection.rollback()
             return False
 
@@ -1004,23 +1037,6 @@ class Database:
             return None
 
     # # # # # # # #  Users Сервисные запросы
-    def fake_add_user_db(self, tg_id, tg_username=None):
-        datetime_now = get_datetime_now()
-        query = ("INSERT INTO users(name, email, id_telegram, username_tg, date_register, password, created_at, updated_at) "
-                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)")
-        r = random.randint(1, 1000)
-        params = (f'fake_name_{r}', f'{r}@gmail{r}.com', tg_id, tg_username,
-                  datetime_now, f'{r}pass', datetime_now, datetime_now)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[fake_add_user_db]: {e}')
-            self.connection.rollback()
-            return False
-
     def set_task(self, task: Task):
         """Запланировать задание"""
         datetime_now = get_datetime_now()
@@ -1028,7 +1044,8 @@ class Database:
                  "type_task, user_id, date_action, type_message, text, media_id, "
                  "active, created_at, updated_at) "
                  "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
-        params = (task.type_task, task.user_id, task.date_action, task.message.type_message, task.message.text, task.message.media_id,
+        params = (task.type_task, task.user_id, task.date_action,
+                  task.message.type_message, task.message.text, task.message.media_id,  # type: ignore
                   task.active, datetime_now, datetime_now, )
 
         try:
@@ -1442,15 +1459,11 @@ class Database:
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
 
-        pair_price = getattr(value.forex_info, 'price')
-
-        pair = getattr(value.forex_info, 'pair')
-        if pair is not None:
-            pair = '/'.join(pair)
-
-        cross_prices = getattr(value.forex_info, 'cross_prices')
-        if cross_prices is not None:
-            cross_prices = json.dumps(cross_prices)
+        pair_price = pair = cross_prices = None
+        if value.forex_info is not None:
+            pair_price = value.forex_info.price
+            pair = '/'.join(value.forex_info.pair)
+            cross_prices = json.dumps(value.forex_info.cross_prices)
 
         params = (
             value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
@@ -1943,4 +1956,4 @@ class Database:
             return False
 
 
-db_new = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)
+db = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

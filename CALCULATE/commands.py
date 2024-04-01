@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from CALCULATE.callbacks.settings.keyboards import kb_settings_confirm
 
-from db_new import db_new
+from db import db
 
 from CALCULATE.common.messages import msg_support, msg_welcome
 from CALCULATE.common.keyboard import kb_support
@@ -27,7 +27,7 @@ def _start(message: Message, bot: TeleBot, data: dict):
 
 
 def _faq(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('FAQ')
+    text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else 'Ошибка'
 
     bot.send_message(message.chat.id, msg)
@@ -35,7 +35,7 @@ def _faq(message: Message, bot: TeleBot):
 
 
 def _about_us(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('О нас')
+    text = db.get_text_by_name('О нас')
     msg = text.message if (text is not None) else 'Ошибка'
 
     bot.send_message(message.chat.id, msg)
@@ -43,7 +43,7 @@ def _about_us(message: Message, bot: TeleBot):
 
 
 def _support(message: Message, bot: TeleBot):
-    sup = db_new.get_support_name()
+    sup = db.get_support_name()
     bot.send_message(
         message.chat.id, msg_support(message.from_user.id),
         reply_markup=kb_support(message.from_user.id, sup)

@@ -2,7 +2,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 from common.dt import get_datetime_now
 
-from db_new import db_new
+from db import db
 from initialize import pay_guard
 
 from CALCULATE.common.messages import (
@@ -16,8 +16,6 @@ from .stats.keyboards import kb_stats
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -25,8 +23,9 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
 
     is_valid_use = pay_guard.valid_use_calc(user_id)
 
-    uses_count = db_new.get_calculator_uses_count(user_db_id) or 0
-    freeze_dt = db_new.get_user_calc_freeze(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    uses_count = db.get_calculator_uses_count(user_db_id) or 0
+    freeze_dt = db.get_user_calc_freeze(user_db_id)
 
     if is_valid_use:
         if is_new_calc:
@@ -56,10 +55,10 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
+    bot.delete_state(user_id, chat_id)
+
     msg = msg_settings(user_id)
     markup = kb_settings(user_id)
-
-    bot.delete_state(user_id, chat_id)
 
     if is_first:
         bot.send_message(
@@ -77,11 +76,11 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
     chat_id = message.chat.id
     mes_id = message.id
 
+    bot.delete_state(user_id, chat_id)
+
     text = msg_manual[page - 1]
     photo = open(f'img\\info_calc\\{page}.jpg', 'rb')
     keyboard = kb_manual(user_id, page, len(msg_manual))
-
-    bot.delete_state(user_id, chat_id)
 
     if is_first:
         bot.send_photo(
@@ -99,6 +98,8 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
 def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
 
     text = msg_summury_profit_settings(user_id)
     kb = kb_summury_profit(user_id)
@@ -118,6 +119,8 @@ def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, i
 def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
 
     text = msg_stats(user_id)
     kb = kb_stats(user_id)

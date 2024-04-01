@@ -1,4 +1,5 @@
-from common.dt import get_datetime_now
+from common.dt import get_datetime_now, get_str_by_datetime
+from common.utils import get_print_float
 from models import Price
 
 
@@ -44,3 +45,21 @@ def msg_user_tariff(user_id: int, tariff: Price):
 
 {discount}
 """
+
+
+def msg_admin_tariff(tariff: Price):
+    discount = ''
+    if tariff.discount is not None:
+        now = get_datetime_now()
+        if tariff.discount.findate > now:
+            fin_date = get_str_by_datetime(tariff.discount.findate)
+            discount = f'Скидка <b>{get_print_float(tariff.discount.percent, 2)}%</b> до {fin_date}'
+
+    return f"""
+{tariff.name}
+<b>{get_print_float(tariff.price)} {tariff.currency}</b>
+{tariff.description}
+
+Продукт: <b>{tariff.type_product}</b>
+Действует <b>{tariff.duration_days}</b> дней
+""" + (f'\n{discount}' if discount != '' else '')

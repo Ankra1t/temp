@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
 from initialize import calcService
-from db_new import db_new
+from db import db
 from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
 from CALCULATE.states import StatsState
@@ -20,7 +20,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     stat_id = int(callback_data.get('stat_id', '0'))
 
     user_id = call.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
@@ -46,7 +46,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             is_cancel = False
 
-            calc_info = db_new.get_calculation(stat_id)
+            calc_info = db.get_calculation(stat_id)
             if calc_info is None:
                 return
 

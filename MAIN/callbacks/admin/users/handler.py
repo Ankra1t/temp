@@ -7,7 +7,7 @@ from MAIN.states import AdminUsersState
 from common.utils import set_state_data
 
 from initialize import kb_inl_admin, pay_guard, tariff_manager
-from db_new import SORT_BY_TYPE, db_new
+from db import SORT_BY_TYPE, db
 from messages.users import gift_subscribe_msg
 
 
@@ -56,10 +56,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if filter == '':
             # Значения для постраничного вывода
             limit = 6
-            users_count = db_new.get_users_count()
+            users_count = db.get_users_count()
             pages_count = math.ceil(users_count / limit)
 
-            users = db_new.get_paginated_users(
+            users = db.get_paginated_users(
                 limit, page, sort_by
             )
 
@@ -83,10 +83,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         if filter == 'ban':
             limit = 10
-            users_count = len(db_new.get_banned_users())
+            users_count = len(db.get_banned_users())
             pages_count = math.ceil(users_count / limit)
 
-            users = db_new.get_banned_users(limit, page, sort_by)
+            users = db.get_banned_users(limit, page, sort_by)
             text = '⛔️  <b>Забаненные</b>\n'
 
             if len(users) == 0:
@@ -108,7 +108,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
 
         if filter == 'paid':
-            users = db_new.get_subsribed_users()
+            users = db.get_subsribed_users()
 
             text = '💵 <b>Платные</b>\n'
             if len(users) == 0:
@@ -123,7 +123,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
 
         if filter == 'new':
-            users = db_new.get_paginated_users(10, 1, 'new')
+            users = db.get_paginated_users(10, 1, 'new')
 
             text = '<b>Новые пользователи</b>\n'
 
@@ -164,7 +164,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             subscribe_user_id = data.get('user_id')
 
         # Получить tg_user_id
-        user = db_new.get_user_by_id(subscribe_user_id)
+        user = db.get_user_by_id(subscribe_user_id)
 
         if user is None:
             print(f'Error[choose_periods_for_tariffs]: user_id={subscribe_user_id}')
@@ -201,7 +201,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'client_ban':
-        user = db_new.get_user_by_id(client_db_id)
+        user = db.get_user_by_id(client_db_id)
         if user is None:
             return
         is_banned = user.ban == 1
@@ -218,14 +218,14 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'confirm_yes' in type:
-        user = db_new.get_user_by_id(client_db_id)
+        user = db.get_user_by_id(client_db_id)
         if user is None:
             return
 
         if 'cancel_sub' in type:
             pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         if 'ban' in type:
-            db_new.set_user_ban(user.id, abs(user.ban - 1))
+            db.set_user_ban(user.id, abs(user.ban - 1))
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
 

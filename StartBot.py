@@ -13,10 +13,9 @@ from MAIN.start import send_start_by_user
 from common.dt import get_datetime_now, get_str_by_datetime
 from initialize import bot, pays, pays_banker, pay_guard
 
-from db_new import db_new
+from db import db
 
 from config_logger import logger
-from config_global import _ENV
 
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
@@ -30,13 +29,12 @@ from common.utils import set_state_data
 from keyboard_reply import *
 from cb_filters import (
     AdminDefaultCallbackFilter, AdminActionsCallbackFilter,
-    AdminMainCallbackFilter
 )
 
 from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
 from messages.workers import redactor_main_msg, admin_posting_msg
 
-from BlockTGBotSender import BlockTGBotSender
+from Classes.BlockTGBotSender import BlockTGBotSender
 from AuthMiddleWare import AuthMiddleWare
 
 from models import Post, Update, UpdateBBanker
@@ -80,7 +78,7 @@ def invoice_paid_prev(update: Update) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db_new.get_price_by_id(transaction.price_id, None)
+            tariff = db.get_price_by_id(transaction.price_id, None) # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -98,17 +96,17 @@ def invoice_paid_prev(update: Update) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name),
+                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
-            user = db_new.get_user_by_tg_id(transaction.user_id)
+            user = db.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,
-                user_nike='@' + user.username if user.username else user.tg_id,
+                user_id=user.id, # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name,
+                tariff_name=tariff.name, # type: ignore
                 finish_date=finish_date
             ))
 
@@ -145,7 +143,7 @@ def invoice_paid(update: UpdateBBanker) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db_new.get_price_by_id(transaction.price_id, None)
+            tariff = db.get_price_by_id(transaction.price_id, None) # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -163,17 +161,17 @@ def invoice_paid(update: UpdateBBanker) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name),
+                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
-            user = db_new.get_user_by_tg_id(transaction.user_id)
+            user = db.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,
-                user_nike='@' + user.username if user.username else user.tg_id,
+                user_id=user.id, # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name,
+                tariff_name=tariff.name, # type: ignore
                 finish_date=finish_date
             ))
 
@@ -225,12 +223,12 @@ def check_future_post_for_sent():
     date_now = get_datetime_now()
     lose_time_back = date_now - timedelta(hours=lose_hours)
 
-    mas_posts = db_new.get_all_posts()
+    mas_posts = db.get_all_posts()
 
     for post in mas_posts:
         if (post.date_time is not None) and (post.date_time < date_now) and (post.date_time > lose_time_back):
             send_future_pos_by_intime(post)
-            db_new.delete_post(post.id or 0)
+            db.delete_post(post.id or 0)
 
             # TODO - Написать админу, что отложенный пост отправлен
             time.sleep(10)
@@ -298,12 +296,13 @@ def check_finish_paid_subscribe():
         pay_guard.set_paid_subscribe_unactive_many_users()
 
 
+def check_tariff():
+    db.check_tariffs_datetime()
+
 # Импортировать свой обработчик колбэков
 import cb_admin
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
-
-bot.add_custom_filter(AdminMainCallbackFilter())
 
 bot.add_custom_filter(AdminDefaultCallbackFilter())
 bot.add_custom_filter(AdminActionsCallbackFilter())
@@ -331,7 +330,7 @@ def callback_inline(call: types.CallbackQuery):
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
     if call.data == 'adm_posting':
-        count_posts = len(db_new.get_all_posts())
+        count_posts = len(db.get_all_posts())
         bot.send_message(
             chat_id,
             text=admin_posting_msg(count_posts),
@@ -343,7 +342,7 @@ def callback_inline(call: types.CallbackQuery):
         )
 
     if call.data == 'redactor_main':
-        count_fut_posts = len(db_new.get_all_posts())
+        count_fut_posts = len(db.get_all_posts())
         bot.send_message(
             chat_id,
             text=redactor_main_msg(count_fut_posts),
@@ -380,36 +379,18 @@ def callback_inline(call: types.CallbackQuery):
     bot.answer_callback_query(call.id)
 
 
-# Проверка рассылок каждые 15 сек - в отдельном потоке
-def check_unfinit_tasks(param):
-    sleep_time_check = 15
+# Проверка рассылок каждые 30 сек - в отдельном потоке
+def check_unfinit_tasks():
+    sleep_time_check = 30
     while True:
         # check_finish_paid_subscribe()
         # check_finish_trial_subscribe()
         # check_future_post_for_sent()
+        check_tariff()
         time.sleep(sleep_time_check)
 
 
-thread_name = 'check_unfinit_tasks'
-time.sleep(3)  # Чтобы поток успел запуститься
-if 'check_unfinit_tasks' not in threading.enumerate():
-    logger.info(
-        f'-----> Запустили поток {thread_name} если он еще не запущен '
-    )
-    thread_id = threading.Thread(
-        target=check_unfinit_tasks, name=thread_name, args=(thread_name,)
-    ).start()
+thread_id = threading.Thread(
+    target=check_unfinit_tasks, name='check_unfinit_tasks'
+).start()
 
-if _ENV == 'main':
-    bot.infinity_polling()
-
-try:
-    if os.getenv("MODE_BOT") and os.getenv("MODE_BOT") == 'dev':
-        if _ENV != 'calc':
-            bot.infinity_polling()
-
-
-except Exception as e:
-    print(f'Переменная окружения НЕ ЗАДАНА MODE_BOT == dev[{e}]')
-    pass
-    # logger.error(f'Ошибка  [{e}]')

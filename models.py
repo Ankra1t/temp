@@ -84,13 +84,13 @@ class Price:
         duration: int,
         price: int,
         currency: str,
+        switch_active: int,
+        type_product: str,
+        description: str,
         id: int | None = None,
         image: str | None = None,
-        description: str | None = None,
         discount_percent: float | None = None,
         discount_findate: datetime | None = None,
-        type_product: str | None = None,
-        switch_active: int | None = None,
         price_findate: datetime | None = None,
     ):
         self.id = id

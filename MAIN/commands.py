@@ -1,13 +1,18 @@
+from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
 from CALCULATE.common.keyboard import kb_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code
+
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import textwrap
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -24,7 +29,7 @@ def _start(message: Message, bot: TeleBot, data: dict):
 
 
 def _faq(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('FAQ')
+    text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     bot.send_message(message.chat.id, msg)
@@ -32,7 +37,7 @@ def _faq(message: Message, bot: TeleBot):
 
 
 def _about_us(message: Message, bot: TeleBot):
-    text = db_new.get_text_by_name('О нас')
+    text = db.get_text_by_name('О нас')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     bot.send_message(message.chat.id, msg)
@@ -42,10 +47,11 @@ def _about_us(message: Message, bot: TeleBot):
 def _support(message: Message, bot: TeleBot):
     user_id = message.from_user.id
 
-    sup = db_new.get_support_name()
+    sup = db.get_support_name()
     msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
 
-    bot.send_message(message.chat.id, msg, reply_markup=kb_support(user_id, sup))
+    bot.send_message(message.chat.id, msg,
+                     reply_markup=kb_support(user_id, sup))
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
@@ -58,9 +64,36 @@ def _site(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
-    CHAT_KEY = -1002104767484
-    chat = bot.get_chat(CHAT_KEY)
-    print(chat.has_hidden_members)
+    # CHAT_KEY = -1002104767484
+    def text_to_image(
+        text: str,
+    ):
+        # Создаем изображение с текстом
+        image = Image.new('RGB', (500, 300), color='white')
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.truetype('arial.ttf', 30)
+        text = "Hello, World! SADAS asdasd asdasdas asdasd asd"
+
+        max_width = 180
+
+        # Переносим текст, если он не влезает в заданную ширину
+        max_width = image.width - 20  # учитываем отступы
+
+        # Переносим текст, если он не влезает в заданную ширину
+        wrapped_text = textwrap.fill(text, width=max_width // font.size)
+        print(max_width // font.size)
+        # Рисуем текст на изображении
+        draw.text((10, 10), wrapped_text, fill='black', font=font)
+
+        # Создаем буфер памяти для изображения
+        image_buffer = BytesIO()
+        image.save(image_buffer, format='PNG')
+        image_buffer.seek(0)
+
+        return image_buffer
+
+    img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
+    bot.send_photo(message.chat.id, img)
 
 
 def commands_registration(bot: TeleBot):
@@ -81,6 +114,3 @@ def commands_registration(bot: TeleBot):
     reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
-
-    bot.register_channel_post_handler(_test, pass_bot=True)
-    bot.register_chat_member_handler(_test, pass_bot=True)

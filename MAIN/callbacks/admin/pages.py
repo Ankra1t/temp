@@ -1,8 +1,10 @@
+from typing import Literal
 from telebot import TeleBot
-from telebot.types import Message
+from telebot.types import Message, InputMediaPhoto
 
-from db_new import db_new
-from initialize import kb_inl_admin, pay_guard, base_statis
+from MAIN.common.messages import msg_admin_tariff
+from db import db
+from initialize import pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
@@ -10,6 +12,8 @@ from messages.statistics import admin_main_statistics
 from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
 from models import Post
 
+from .main.keyboards import kb_admin_main
+from .tariffs.keyboards import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
 from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
 from .statistics.keyboards import kb_statistics
@@ -27,16 +31,15 @@ def send_admin_main(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
-    count_all = db_new.get_users_count()
-    count_admins = len(db_new.get_all_workes())
-    count_fut_posts = len(db_new.get_all_posts())
+    count_all = db.get_users_count()
+    count_admins = len(db.get_all_workes())
+    count_fut_posts = len(db.get_all_posts())
 
     count_old = len(pay_guard.get_paid_more1_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    keyboard = kb_inl_admin.main()
+    keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_old,
         count_admins, count_fut_posts
@@ -64,9 +67,8 @@ def send_admin_users(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
-    count_all = db_new.get_users_count()
+    count_all = db.get_users_count()
 
     count_old = len(pay_guard.get_paid_more1_users())
     count_with_sub = base_statis.count_payments_dry()
@@ -96,7 +98,6 @@ def send_admin_payment(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     count_payments = base_statis.count_payments()
     summ_all_users = base_statis.summ_by_transactions()
@@ -126,9 +127,8 @@ def send_admin_fut_posts(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
-    posts_count = len(db_new.get_all_posts())
+    posts_count = len(db.get_all_posts())
 
     text = admin_fut_posts_msg(posts_count)
     keyboard = kb_posts()
@@ -155,7 +155,6 @@ def send_admin_params(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     text = menu_msg('Параметры')
     keyboard = kb_params()
@@ -219,13 +218,12 @@ def send_admin_client(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
-    client = db_new.get_user_by_id(client_db_id)
+    client = db.get_user_by_id(client_db_id)
     if client is None:
         return
 
-    user_subsribe = db_new.get_current_subscribe_user(client.id)
+    user_subsribe = db.get_current_subscribe_user(client.id)
 
     fin_date = 'нет'
     type_subscribe_show = ''
@@ -235,7 +233,7 @@ def send_admin_client(
         type_subscribe_show = f' тип {user_subsribe.type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''
-    count_ref = len(db_new.get_user_referals(client_db_id))
+    count_ref = len(db.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
     text = '\n'.join((
@@ -270,7 +268,6 @@ def send_admin_workers(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     text = menu_msg('Работники')
     keyboard = kb_admin_workers()
@@ -294,10 +291,9 @@ def send_admin_workers_admin(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     res = '<b>Админы</b>\n'
-    admins = db_new.get_admins()
+    admins = db.get_admins()
 
     if len(admins) != 0:
         for i in range(0, len(admins)):
@@ -326,10 +322,9 @@ def send_admin_workers_redactors(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
     res = '<b>Редакторы</b>\n'
-    redactors = db_new.get_redactors()
+    redactors = db.get_redactors()
 
     if len(redactors) != 0:
         for i in range(0, len(redactors)):
@@ -358,9 +353,8 @@ def send_admin_workers_support(
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
-    bot.clear_step_handler(message)
 
-    sup = db_new.get_support_name()
+    sup = db.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
 
     text = f'Тех. поддержка: {sup_link}'
@@ -373,3 +367,89 @@ def send_admin_workers_support(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
+
+
+def send_admin_tariffs(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False,
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    text = menu_msg('Тарифы')
+    keyboard = kb_admin_tariffs()
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=keyboard)
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
+def send_admin_tariffs_list_item(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    page: int,
+    type: Literal['default', 'delete', 'edit'] = 'default',
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    tariffs = db.get_prices()
+    count = len(tariffs)
+
+    if count == 0:
+        bot.edit_message_text(
+            'Тарифов нет', chat_id, mes_id,
+            reply_markup=kb_admin_tariffs_back()
+        )
+    else:
+        tariff = tariffs[page]
+
+        text = msg_admin_tariff(tariff)
+        image = tariff.img
+
+        if type == 'delete':
+            text += '\n\n⚠️<b>Удалить данный тарифы?</b>⚠️'
+            keyboard = kb_admin_tariffs_delete(tariff.id or -1, page)
+        elif type == 'edit':
+            text += '\n\n<b>Что изменить?</b>'
+            keyboard = kb_admin_tariffs_edit(tariff.id or -1, page)
+        else:
+            keyboard = kb_admin_tariffs_list(
+                count, page, tariff.id or -1, tariff.switch_active == 1,
+                tariff.discount is not None
+            )
+
+        def send():
+            if image is None:
+                bot.send_message(chat_id, text, reply_markup=keyboard)
+            else:
+                bot.send_photo(
+                    chat_id, image, text,
+                    reply_markup=keyboard
+                )
+
+        if is_first:
+            send()
+        elif message.content_type == 'photo' and image is not None:
+            bot.edit_message_media(
+                InputMediaPhoto(image, text, 'HTML'), chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        elif message.content_type == 'text' and image is None:
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        else:
+            bot.delete_message(chat_id, mes_id)
+            send()

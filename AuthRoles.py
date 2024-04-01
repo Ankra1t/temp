@@ -2,26 +2,19 @@ from typing import Literal
 import json
 import requests
 
-from db_new import db_new
-from config_global import DB_PG_NAME
-from common.vars import API_URL, HEADERS
+from db import db
+from config_global import API_URL
+from common.vars import HEADERS
 
 
 def registration(user_id: int, username: str = '', referral_id: int = 0):
-    access_token = db_new.get_access_token() or ''
+    access_token = db.get_access_token() or ''
 
     data: dict[str, str | int] = {
         'id_telegram': user_id,
         'tg_api_auth_token': access_token,
         'username_tg': username
     }
-
-    if DB_PG_NAME == 'dev_postgre_lar_db':
-        # Регаем в локальной базе пользователя
-        print(
-            f'Регистрируем фейково пользователя user_id [{user_id}]  username [{username}] ')
-        db_new.fake_add_user_db(user_id, username)
-        return True
 
     try:
         response = requests.post(
@@ -38,8 +31,8 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
 
 
 def get_site_code(user_id: int) -> str | Literal[False]:
-    access_token = db_new.get_access_token() or ''
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    access_token = db.get_access_token() or ''
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     data: dict[str, str | int] = {
         'user_id': user_db_id,
@@ -59,7 +52,7 @@ def get_site_code(user_id: int) -> str | Literal[False]:
 
 
 def change_password(id: int, password: str):
-    access_token = db_new.get_access_token() or ''
+    access_token = db.get_access_token() or ''
 
     try:
         data = {
@@ -83,8 +76,8 @@ def change_password(id: int, password: str):
 
 def check_registrate(tg_id: int):
     """Возвращает роль"""
-    user_db_id = db_new.get_user_id_by_tg_id(tg_id)
-    worker_role = db_new.get_worker_role(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(tg_id)
+    worker_role = db.get_worker_role(user_db_id)
 
     if worker_role is not None:
         user_role = worker_role
@@ -97,12 +90,12 @@ def check_registrate(tg_id: int):
 
 # Сообщение рефералу
 # if refer != 0:
-#     count_ref = len(db_new.get_user_referals(refer))
+#     count_ref = len(db.get_user_referals(refer))
 #     self.bot.send_message(refer, text=f'<b>Поздравляем!</b>🎊\nУ Вас появился новый реферал 😎 '
 #                           f'\n\n Ник: {self.nickname}\n\nУ вас рефералов: {count_ref} шт.')
 
 # Сообщение админам
-# admins = db_new.get_all_global_admins()
+# admins = db.get_all_global_admins()
 # for i in range(0, len(admins)):
 #     self.bot.send_message(admins[i][0],
 #                             f'Подключился новый пользователь\n ID: {self.mess.from_user.id} '

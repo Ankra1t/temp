@@ -1,10 +1,9 @@
-from locale import currency
 from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
-from initialize import pay_guard, currencyService
+from db import db
+from initialize import pay_guard
 from common.utils import set_state_data
 from .main.keyboards import kb_main_cancel
 from .pages import send_main
@@ -23,8 +22,8 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         ticker = data.get('ticker')
         forex = data.get('forex')
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
 
     if u_base is None:
         return
@@ -33,10 +32,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     keyboard = kb_main_cancel(user_id)
 
     if calc_type == 'forex' and forex is None:
-        prices = currencyService.getPairsPrice(
-            ['USD/RUB', 'USD/EUR', 'USD/JPY']
-        ) or None
-        text += msg_enter_pair(user_id, prices)
+        text += msg_enter_pair(user_id)
         state = ForexCalcState.pair
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)

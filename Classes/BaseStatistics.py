@@ -5,7 +5,7 @@ from datetime import timedelta
 from config_logger import logger
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from db_new import Database as DatabaseNew
+from db import Database as DatabaseNew
 from models import UserInfo, Purchase
 
 
@@ -47,13 +47,16 @@ class BaseStatistics(object):
             trans_item = trans_list[i]
             tg_id = trans_item.user_id
 
+            if trans_item.price_id is None:
+                continue
+
             # Формируем покупку
             price = self.db.get_price_by_id(trans_item.price_id, None)
             purchase = Purchase(
                 user_id=tg_id,
-                price_name=price.name,
+                price_name=price.name if (price is not None) else None,
                 real_sum=trans_item.sum,
-                currency=price.currency,
+                currency=price.currency if (price is not None) else None,
                 payment_date=trans_item.payment_date,
             )
             purchase_text = self.temp_client_purchase(purchase)
@@ -69,7 +72,7 @@ class BaseStatistics(object):
         for i, el in enumerate(tg_clients):
             user = self.db.get_user_by_tg_id(el)
             if user is not None:
-                msg = self.temp_client(user, tg_clients.get(el))
+                msg = self.temp_client(user, str(tg_clients.get(el)))
                 self.bot.send_message(chat_id, msg, reply_markup=None)
             else:
                 logger.error(
@@ -99,7 +102,7 @@ class BaseStatistics(object):
         else:
             summ = self.db.get_paid_transactions_summ_period(
                 start_date, fin_date)
-        print(f'период {period} summ [{summ}]')
+        print(f'период {period or "ВСЕ"} summ [{summ}]')
         return summ if summ else 0
 
     def count_by_product(self, product=None):
@@ -141,7 +144,7 @@ class BaseStatistics(object):
 
     def temp_client_purchase(self, purchase: Purchase):
         """Вывести одного пользователя"""
-        payment_date_str = get_str_by_datetime(purchase.payment_date)
+        payment_date_str = purchase.payment_date
         template = """
 ----------
 Куплено: "{}"

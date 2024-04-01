@@ -1,4 +1,4 @@
-from db_new import LANGUAGES_TYPE
+from db import LANGUAGES_TYPE
 
 
 def back_txt(lang: LANGUAGES_TYPE = 'ru'):

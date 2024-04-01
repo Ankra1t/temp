@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from initialize import pays, pays_banker
 from config_logger import logger
 from models import Invoice
-from db_new import db_new
+from db import db
 
 from MAIN.common.messages import msg_user_tariff
 from MAIN.callbacks import send_user_tariffs, send_user_main
@@ -146,7 +146,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
 
     if type == 'get_tariff':
-        tariff = db_new.get_first_tariff_by_product(target_id)
+        tariff = db.get_first_tariff_by_product(target_id)
 
         if tariff is None:
             bot.edit_message_text(

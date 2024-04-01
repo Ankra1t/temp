@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from initialize import currencyService
-from db_new import db_new, BASE_VALUE_TYPE
+from db import db, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 
 from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, send_settings
@@ -20,7 +20,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
     def r_func(message: Message, bot: TeleBot):
         user_id = message.from_user.id
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
 
         chat_id = message.chat.id
 
@@ -43,9 +43,9 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         #     )
         #     return
 
-        db_new.set_user_base(user_db_id, type, value)
+        db.set_user_base(user_db_id, type, value)
         if type == 'base_risk':
-            db_new.set_user_risk_is_percent(user_db_id, is_percent)
+            db.set_user_risk_is_percent(user_db_id, is_percent)
 
         with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
@@ -70,7 +70,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
 def handle_new_currency(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -89,7 +89,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
             reply_markup=kb_base_cancel(user_id))
         return
 
-    db_new.set_user_currency(user_db_id, value.upper())
+    db.set_user_currency(user_db_id, value.upper())
 
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
@@ -104,7 +104,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
 
 def handle_splitting(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -143,7 +143,7 @@ def handle_splitting(message: Message, bot: TeleBot):
 
 def handle_day_risk(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -173,14 +173,14 @@ def handle_day_risk(message: Message, bot: TeleBot):
 
     value = float(value)
 
-    db_new.set_user_day_risk(user_db_id, value, is_percent)
+    db.set_user_day_risk(user_db_id, value, is_percent)
     bot.send_message(chat_id, msg_success_edit(user_id))
     send_settings(bot, message, user_id, True)
 
 
 def handle_round_count(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -205,14 +205,14 @@ def handle_round_count(message: Message, bot: TeleBot):
         )
         return
 
-    db_new.set_user_round_count(user_db_id, value)
+    db.set_user_round_count(user_db_id, value)
     bot.send_message(chat_id, msg_success_edit(user_id))
     send_settings(bot, message, user_id, True)
 
 
 def handle_trading_style(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -229,7 +229,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
 
-    db_new.set_user_trading_style(user_db_id, value.lower())
+    db.set_user_trading_style(user_db_id, value.lower())
     bot.delete_state(user_id, chat_id)
 
     if action == 'welcome':

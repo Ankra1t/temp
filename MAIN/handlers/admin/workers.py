@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from db_new import db_new
+from db import db
 
 from MAIN.states import AdminWorkersState
 from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back, send_admin_workers_support
@@ -24,7 +24,7 @@ def handle_add_id(message: Message, bot: TeleBot):
         )
         return
 
-    user = db_new.get_user_by_id(id)
+    user = db.get_user_by_id(id)
 
     if user is None:
         bot.send_message(
@@ -76,7 +76,7 @@ def handle_support_id(message: Message, bot: TeleBot):
         )
         return
 
-    db_new.update_support(support_id)
+    db.update_support(support_id)
 
     bot.delete_state(user_id, chat_id)
     send_admin_workers_support(bot, message, user_id, True)

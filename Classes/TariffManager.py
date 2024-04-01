@@ -2,8 +2,8 @@ from telebot import types, TeleBot
 from datetime import datetime
 
 from keyboard_inlines import Admin_kb_inlines
-from db_new import db_new
-from models import Price, Discount
+from db import db
+from models import Price
 from common.dt import get_datetime_now, get_str_by_datetime
 
 
@@ -14,37 +14,13 @@ class TariffManager(object):
         self.bot = bot_instance
         self.kb_inl = kb_inl_instance
 
-    def deactivate_tariff(self, tariff_id):
-        db_new.deactive_price(tariff_id)
-        
-    def on_off_tariff(self, tariff_id: int):
-        """Переключить тариф с одного положения на другое"""
-        switch = db_new.check_switch_tariff(tariff_id)
-        switch_put = 0 if switch else 1
-
-        if switch_put == 1:
-            # Если тариф включается, то обновляем дату окончания тарифа - значение null
-            self.set_findate_tariff(tariff_id, None)
-
-
-        db_new.switch_tariff(tariff_id, switch_put)
-
-        return switch_put
-
-    def set_findate_tariff(self, tariff_id: int, findate: datetime | None):
-        db_new.set_findate_tariff(tariff_id, findate)
-
-    def set_discount_tariff(self, id: int, discount: Discount):
-        db_new.set_price_discount(
-            id, discount.percent, discount.findate)
-
     def admin_tariff_list_show(self, message: types.Message, mode='main', user_id=None, product_id=None):
         list = None
 
         if product_id:
-            list = db_new.get_prices_by_product(product_id, 1, None)
+            list = db.get_prices_by_product(product_id, 1, None)
         else:
-            list = db_new.get_prices(1, None)
+            list = db.get_prices(1, None)
 
         if len(list) == 0:
             self.bot.send_message(
@@ -57,11 +33,9 @@ class TariffManager(object):
 
             tariff = list[i]
 
-
             desc_template = self.get_template_tariff_show_admin(tariff)
-            on_off_label = 'Отключить ⭕️' if tariff.switch_active == 1 else 'Включить ☑️'
             if mode == 'main':
-                kb = self.kb_inl.kb_tariff_options(tariff.id, on_off_label=on_off_label)
+                kb = None
             else:  # 'change_for_client'
                 kb = self.kb_inl.kb_tariff_options_choose(
                     f'{user_id}_{tariff.id}')
@@ -92,9 +66,10 @@ class TariffManager(object):
         tariff_list = None
 
         if product_id:
-            tariff_list = db_new.get_prices_by_product(product_id, 1, switch_active=1)
+            tariff_list = db.get_prices_by_product(
+                product_id, 1, switch_active=1)
         else:
-            tariff_list = db_new.get_prices(1, switch_active=1)
+            tariff_list = db.get_prices(1, switch_active=1)
 
         if not tariff_list:
             return False
@@ -103,7 +78,8 @@ class TariffManager(object):
 
             tariff = tariff_list[i]
             if mode == 'choose_subscribe':
-                desc_template = self.get_template_tariff_choose_for_user_show(tariff)
+                desc_template = self.get_template_tariff_choose_for_user_show(
+                    tariff)
                 kb = self.kb_inl.kb_tariff_choose_for_user(tariff.id)
 
                 self.bot.send_message(
@@ -114,9 +90,8 @@ class TariffManager(object):
 
         return True
 
-
     def admin_discount_list(self, message: types.Message, type_discount='active'):
-        list = db_new.get_prices(1)
+        list = db.get_prices(1)
         count = 0
         if len(list) == 0:
             self.bot.send_message(
@@ -167,10 +142,6 @@ class TariffManager(object):
 
         return False
 
-    def change_fields_tariff_show(self, tariff_id, change_text):
-        tariff = db_new.get_price_by_id(tariff_id)
-        return self.get_template_change_tariff_show(tariff, change_text)
-
     def get_template_tariff_show_admin(self, tariff: Price):
         """Получить описание согласно шаблону и данным тарифа """
         template = """
@@ -190,7 +161,13 @@ class TariffManager(object):
 
     def get_template_discount_show(self, tariff: Price):
         """Получить описание согласно шаблону и данным тарифа """
-        findate = get_str_by_datetime(tariff.discount.findate)
+        dt = tariff.discount.findate if (
+            tariff.discount is not None) else get_datetime_now()
+        findate = get_str_by_datetime(dt)
+
+        percent = tariff.discount.percent if (
+            tariff.discount is not None) else 0
+
         template = """
 id {} <b>{}</b> (стоимость {} {})
 <b>скидка {}%</b> до {}
@@ -198,27 +175,8 @@ id {} <b>{}</b> (стоимость {} {})
                    tariff.name,
                    str(tariff.price),
                    tariff.currency,
-                   tariff.discount.percent,
+                   percent,
                    findate
-                   )
-        return template
-
-    def get_template_change_tariff_show(self, tariff: Price, change_text):
-        """Получить описание согласно шаблону и данным тарифа """
-        template = """
-id={} <b>\"{}\"</b>
-{} {}
-{}
-<i>действует {} дн.</i>
-
-<b>{}</b>
-        """.format(tariff.id,
-                   tariff.name,
-                   str(tariff.price),
-                   tariff.currency,
-                   tariff.description,
-                   tariff.duration_days,
-                   change_text
                    )
         return template
 
@@ -233,4 +191,3 @@ id={} <b>\"{}\"</b>
                            tariff.duration_days
                            )
         return template
-

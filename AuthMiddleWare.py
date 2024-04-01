@@ -1,22 +1,17 @@
-from datetime import datetime, timedelta
 from telebot import types
-from telebot.handler_backends import BaseMiddleware
-from telebot.handler_backends import CancelUpdate
+from telebot.handler_backends import BaseMiddleware, CancelUpdate
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
-from messages.users import welcome_trial_subscribe_msg
 
 
-from initialize import pay_guard, serv_tasks
-from db_new import db_new, LANGUAGES
-from GuardPaymentAccess import GuardPaymentAccess
+from initialize import pay_guard
+from db import db, LANGUAGES
 from AuthRoles import check_registrate, registration
 
 
 
 class AuthMiddleWare(BaseMiddleware):
     """Класс защитник авторизации"""
-
     def __init__(self, bot, limit=2) -> None:
         self.last_time = {}
         self.limit = limit
@@ -29,8 +24,8 @@ class AuthMiddleWare(BaseMiddleware):
 
         data['has_registered_now'] = False
 
-        user_db_id = db_new.get_user_id_by_tg_id(user_id)
-        if db_new.check_ban_user(user_db_id):
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        if db.check_ban_user(user_db_id):
             return CancelUpdate()
 
         user_role = check_registrate(user_id)
@@ -46,15 +41,15 @@ class AuthMiddleWare(BaseMiddleware):
 
             # Регистрация, пробный период, добавление таблиц бота
             registration(user_id, username, ref_id)
-            new_user = db_new.get_user_by_tg_id(user_id)
+            new_user = db.get_user_by_tg_id(user_id)
 
             if new_user is not None:
-                db_new.create_tg_user_tables(new_user.id)
+                db.create_tg_user_tables(new_user.id)
 
                 # Проверка языка
                 lang = message.from_user.language_code.lower()
                 lang = lang if (lang in LANGUAGES) else 'ru'
-                db_new.set_user_lang(new_user.id, lang)
+                db.set_user_lang(new_user.id, lang)
 
                 # Уведомление о регистрации
                 notifier.send_user_is_registered(new_user)
@@ -77,9 +72,9 @@ class AuthMiddleWare(BaseMiddleware):
             user_role = 0
 
         # Если нет таблицы связанной с ботом, то создаем
-        is_tg_tables = db_new.check_tg_user_tables(user_db_id)
+        is_tg_tables = db.check_tg_user_tables(user_db_id)
         if not is_tg_tables:
-            db_new.create_tg_user_tables(user_db_id)
+            db.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
 

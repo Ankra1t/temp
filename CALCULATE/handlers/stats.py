@@ -5,7 +5,7 @@ from telebot.types import Message
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService
-from db_new import db_new
+from db import db
 from common.utils import digit_accept, text_accept
 
 from CALCULATE.states import StatsState
@@ -28,7 +28,7 @@ def handle_loss(message: Message, bot: TeleBot):
         )
         return
 
-    calc_info = db_new.get_calculation(stat_id)
+    calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return
 
@@ -43,7 +43,7 @@ def handle_loss(message: Message, bot: TeleBot):
 
 def handle_freeze_dt(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
 
@@ -86,7 +86,7 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
         )
         return
 
-    db_new.set_user_calc_freeze(user_db_id, finish_freeze)
+    db.set_user_calc_freeze(user_db_id, finish_freeze)
     bot.send_message(
         chat_id,
         f'❄️ Калькулятор заморожен до <b>{get_str_by_datetime(finish_freeze)}</b>'

@@ -4,11 +4,10 @@ from datetime import datetime
 from common.dt import get_str_by_datetime
 
 from common.utils import get_lang, get_print_float
-from db_new import LANGUAGES_TYPE, db_new
+from db import LANGUAGES_TYPE, db
 from models import Calculation
 
 
-BULLET = '✦'
 POINT = '•'
 TAB = '   '
 
@@ -130,9 +129,9 @@ def msg_main_freeze(user_id: int, freeze_dt: datetime):
 def msg_settings(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return ''
 
@@ -143,7 +142,7 @@ def msg_settings(user_id: int):
             'risk': 'Базовый риск',
             'day_risk': 'Риск на день',
             'round_count': 'Округление до',
-            'trading_style': 'Стиль',
+            'trading_style': 'Стиль торговли',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
             'market': 'Рынок',
@@ -155,7 +154,7 @@ def msg_settings(user_id: int):
             'risk': 'Default risk',
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
-            'trading_style': 'Style',
+            'trading_style': 'Trading style',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
@@ -229,8 +228,8 @@ def msg_settings_change_market(user_id: int):
 def msg_summury_profit_settings(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     tp_ratio = u_base.tp_ratio if (u_base is not None) else []
     split_values = u_base.split_values if (u_base is not None) else None
 
@@ -298,11 +297,11 @@ def msg_support(user_id: int):
 def msg_stats(user_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    all_stats = db_new.get_calculations_by_user(user_db_id)
-    saved_stats = db_new.get_calculations_by_user(user_db_id, True)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    all_stats = db.get_calculations_by_user(user_db_id)
+    saved_stats = db.get_calculations_by_user(user_db_id, True)
 
-    user_settings = db_new.get_calc_user_settings(user_db_id)
+    user_settings = db.get_calc_user_settings(user_db_id)
 
     currency = 'USD'
     if user_settings is not None:
@@ -514,8 +513,8 @@ def msg_currency_error(user_id):
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db_new.get_user_id_by_tg_id(user_id)
-    u_base = db_new.get_calc_user_settings(user_db_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
         return ''
 
@@ -562,10 +561,10 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
         item = vars_dict[el]
         if item is not None:
             if item == 'ticker':
-                text += f'{BULLET} {point[lang][el]}: <b>{item}</b>\n'
+                text += f'{POINT} {point[lang][el]}: <b>{item}</b>\n'
             else:
                 text += (
-                    f'{BULLET} {point[lang][el]}: '
+                    f'{POINT} {point[lang][el]}: '
                     f'<b>{get_print_float(item, 4)} {currency}</b>\n'
                 )
 
@@ -989,7 +988,7 @@ def msg_enter_currency(user_id: int):
     return f'✍ {texts[lang]}:'
 
 
-def msg_enter_pair(user_id: int, prices: dict[str, float] | None):
+def msg_enter_pair(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -997,16 +996,7 @@ def msg_enter_pair(user_id: int, prices: dict[str, float] | None):
         'en': 'Enter the currency pair'
     }
 
-    rates = ''
-    if prices is not None:
-        rates = '<u>Курс</u>'
-        for pair in prices.keys():
-            rates += f'\n<b>{pair} {round(prices[pair], 4)}</b>'
-
-    return f"""{rates}
-
-✍ {texts[lang]} (XXX XXX):
-"""
+    return f"""✍ {texts[lang]} (XXX XXX):"""
 
 
 def msg_enter_open_price(user_id: int):
