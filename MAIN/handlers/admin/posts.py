@@ -9,14 +9,13 @@ from CALCULATE.common.messages import msg_digit_error
 from MAIN.states import AdminPostsState
 from MAIN.callbacks import (
     kb_posts_back, kb_post_add_confirm, kb_post_confirm,
-    send_admin_post, send_admin_params
+    send_admin_post, send_admin_params, kb_livepost_cancel
 )
 from MAIN.common.utils import get_post_from_message
 from common.dt import get_datetime_by_str, get_datetime_now
 
 from db import db
 from common.utils import digit_accept, set_state_data, text_accept
-from keyboard_reply import kb_live_cancel
 from models import Post, PostDetails
 
 
@@ -32,7 +31,7 @@ def handle_new_post_name(message: Message, bot: TeleBot):
         kind: str = data.get('kind') or ''
 
     if kind == 'live':
-        kb_cancel = kb_live_cancel()
+        kb_cancel = kb_livepost_cancel()
     else:
         kb_cancel = kb_posts_back()
 
@@ -79,7 +78,7 @@ def handle_new_post_ticker(message: Message, bot: TeleBot):
         kind: str = data.get('kind') or ''
 
     if kind == 'live':
-        kb_cancel = kb_live_cancel()
+        kb_cancel = kb_livepost_cancel()
     else:
         kb_cancel = kb_posts_back()
 
@@ -118,7 +117,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         return
 
     if kind == 'live':
-        kb_cancel = kb_live_cancel()
+        kb_cancel = kb_livepost_cancel()
     else:
         kb_cancel = kb_posts_back()
 

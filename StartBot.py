@@ -20,7 +20,7 @@ from config_logger import logger
 from MAIN.states import AdminPostsState
 from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
-from MAIN.callbacks import callbacks_registration
+from MAIN.callbacks import callbacks_registration, kb_livepost_cancel
 
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step
 from MAIN.common.utils import get_post_from_message
@@ -49,8 +49,8 @@ from models import Post, Update, UpdateBBanker
 bot.setup_middleware(AuthMiddleWare(bot))
 
 commands_registration(bot)
-handlers_registration(bot)
 callbacks_registration(bot)
+handlers_registration(bot)
 
 
 # ======================= // ANCHOR Обработка команд
@@ -78,7 +78,8 @@ def invoice_paid_prev(update: Update) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db.get_price_by_id(transaction.price_id, None) # type: ignore
+            tariff = db.get_price_by_id(
+                transaction.price_id, None)  # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -96,17 +97,18 @@ def invoice_paid_prev(update: Update) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
+                text=paid_subscribe_msg(
+                    finish_date, tariff.name),  # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
             user = db.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id, # type: ignore
-                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
+                user_id=user.id,  # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id,  # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name, # type: ignore
+                tariff_name=tariff.name,  # type: ignore
                 finish_date=finish_date
             ))
 
@@ -143,7 +145,8 @@ def invoice_paid(update: UpdateBBanker) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db.get_price_by_id(transaction.price_id, None) # type: ignore
+            tariff = db.get_price_by_id(
+                transaction.price_id, None)  # type: ignore
 
             logger.info(f'-----> Добавили пользователю платную подписку')
 
@@ -161,17 +164,18 @@ def invoice_paid(update: UpdateBBanker) -> None:
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
-                text=paid_subscribe_msg(finish_date, tariff.name), # type: ignore
+                text=paid_subscribe_msg(
+                    finish_date, tariff.name),  # type: ignore
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
             user = db.get_user_by_tg_id(transaction.user_id)
             notifier.send_notification('text', mess_user_paid(
-                user_id=user.id, # type: ignore
-                user_nike='@' + user.username if user.username else user.tg_id, # type: ignore
+                user_id=user.id,  # type: ignore
+                user_nike='@' + user.username if user.username else user.tg_id,  # type: ignore
                 summ_paid=summ_full,
-                tariff_name=tariff.name, # type: ignore
+                tariff_name=tariff.name,  # type: ignore
                 finish_date=finish_date
             ))
 
@@ -181,40 +185,6 @@ def invoice_paid(update: UpdateBBanker) -> None:
 
     # todo-fin: Сообщению пользователю: "Ваш счет в статусе не оплачен"
 
-
-@bot.message_handler(content_types=['photo', 'video', 'text'])
-def livepost_media(message: Message, data):
-    user_role = data.get('user_role', 0)
-
-    if (user_role == 1 or user_role == 2):
-        get_admin_livepost(message)
-
-
-# ============================================ Доп.функции
-# ================== Прием и отправка быстрого поста
-def get_admin_livepost(message: types.Message):
-    logger.info(f'Принимаем текст для быстрой отправки')
-
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    post = get_post_from_message(bot, message)
-
-    if post is None:
-        bot.send_message(
-            chat_id, 'Ошибка, попробуйте снова:',
-            reply_markup=kb_live_cancel()
-        )
-        return
-
-    state_data = {'post': post, 'kind': 'live'}
-    bot.set_state(user_id, AdminPostsState.live, chat_id)
-    set_state_data(bot, user_id, chat_id, state_data)
-
-    bot.send_message(
-        chat_id, 'Выберите действие:',
-        reply_markup=kb_admin_livepost_request()
-    )
 
 
 # ======================== ПЛАНОВЫЕ ФУНКЦИИ ==============
@@ -299,6 +269,7 @@ def check_finish_paid_subscribe():
 def check_tariff():
     db.check_tariffs_datetime()
 
+
 # Импортировать свой обработчик колбэков
 import cb_admin
 
@@ -349,32 +320,7 @@ def callback_inline(call: types.CallbackQuery):
             reply_markup=kb_main_redactor()
         )
 
-    # ========================================================================  ПОСТИНГ
-    # ============================================= Рассылка live поста
-    if call.data == 'live_send_now':
-        bot.edit_message_text('Отправка...', chat_id, mes_id)
 
-        with bot.retrieve_data(user_id, chat_id) as data:
-            post: Post = data.get('post')
-
-        tg_sender = BlockTGBotSender([], post)
-        tg_sender.send()
-
-        bot.edit_message_text('Успешно отправлен!', chat_id, mes_id)
-        bot.delete_state(user_id, chat_id)
-
-    if call.data == 'live_signal':
-        bot.edit_message_text(
-            'Введите название рекомендации:',
-            chat_id, mes_id,
-            reply_markup=kb_live_cancel()
-        )
-        bot.set_state(user_id, AdminPostsState.name, chat_id)
-
-    if call.data == 'live_cancel':
-        bot.delete_state(user_id, chat_id)
-        bot.edit_message_text('Отменено!', chat_id, mes_id)
-        send_start_by_user(bot, call.message, user_id, user_role)
 
     bot.answer_callback_query(call.id)
 
@@ -394,4 +340,3 @@ def check_unfinit_tasks():
 thread_id = threading.Thread(
     target=check_unfinit_tasks, name='check_unfinit_tasks'
 ).start()
-

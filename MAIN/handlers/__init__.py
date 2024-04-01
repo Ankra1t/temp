@@ -9,6 +9,8 @@ from .admin.posts import registration as _reg_admin_posts
 
 from .user.account import registration as _reg_user_account
 
+from .common.livepost import registration as _reg_livepost
+
 from CALCULATE.handlers import handlers_registration as _reg_calculator
 
 
@@ -23,3 +25,5 @@ def handlers_registration(bot: _TB):
     _reg_user_account(bot)
 
     _reg_calculator(bot)
+
+    _reg_livepost(bot)  # !Должен регестрироваться последним

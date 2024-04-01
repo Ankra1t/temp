@@ -27,10 +27,6 @@ def admin_default_callbacks(call: types.CallbackQuery):
     mes_id = call.message.id
     user_id = call.from_user.id
 
-    # ## Главное меню
-    if type == 'go_main':
-        send_admin_main(bot, call.message, user_id)
-
     # ## Добавить _ кол-во дней к подписке
     if type == 'add_days_subscribe':
         with bot.retrieve_data(user_id, chat_id) as data:

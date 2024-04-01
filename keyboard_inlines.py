@@ -23,11 +23,11 @@ class Admin_kb_inlines(object):
 
     def users_cancel_subscribe_time(self):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
-        cancel_subscribe_hour = types.InlineKeyboardButton(text='За час',
+        cancel_subscribe_hour = types.InlineKeyboardButton('За час',
                                                            callback_data=admin_default_factory.new(type='cancel_subscribe_hour'))
-        cancel_subscribe_day = types.InlineKeyboardButton(text='За день',
+        cancel_subscribe_day = types.InlineKeyboardButton('За день',
                                                           callback_data=admin_default_factory.new(type='cancel_subscribe_day'))
-        cancel_subscribe_period = types.InlineKeyboardButton(text='Указать период',
+        cancel_subscribe_period = types.InlineKeyboardButton('Указать период',
                                                              callback_data=admin_default_factory.new(type='cancel_subscribe_period'))
 
         keyboard.add(cancel_subscribe_hour, cancel_subscribe_day)
@@ -49,29 +49,25 @@ class Admin_kb_inlines(object):
 
     def kb_tariff_options_choose(self, user_tariff):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
-        admin_set_tariff_client = types.InlineKeyboardButton(text='Установить',
-                                                             callback_data=adm_action.new(action='admin_set_tariff_client',
-                                                                                          id=user_tariff))
+        admin_set_tariff_client = types.InlineKeyboardButton(
+            'Установить',
+            callback_data=adm_action.new(
+                action='admin_set_tariff_client', id=user_tariff
+            )
+        )
 
         keyboard.add(admin_set_tariff_client)
         return keyboard
 
     def kb_tariff_choose_for_user(self, tariff_id):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
-        admin_set_tariff_client = types.InlineKeyboardButton(text='Выбрать для пользователя',
-                                                             callback_data=adm_action.new(action='admin_set_tariff_client',
-                                                                                          id=tariff_id))
+        admin_set_tariff_client = types.InlineKeyboardButton(
+            'Выбрать для пользователя',
+            callback_data=adm_action.new(
+                action='admin_set_tariff_client',
+                id=tariff_id
+            )
+        )
 
         keyboard.add(admin_set_tariff_client)
-        return keyboard
-
-    def kb_add_sub_subscribe(self):
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        add_days = types.InlineKeyboardButton(text='Добавить',
-                                              callback_data=admin_default_factory.new(type='add_days_subscribe'))
-        deduct_days = types.InlineKeyboardButton(text='Убрать',
-                                                 callback_data=admin_default_factory.new(type='deduct_days_subscribe'))
-
-        keyboard.add(add_days, deduct_days)
-        # keyboard.add(self.go_users_btn) # !!! Кнопка назад
         return keyboard

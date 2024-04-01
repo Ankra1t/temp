@@ -21,26 +21,7 @@ def kb_main_support():
     return keyboard
 
 
-# Подтверждение отправки быстрого поста
-def kb_admin_livepost_request():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    button1 = InlineKeyboardButton(
-        text="Live", callback_data="live_send_now")
-    button2 = InlineKeyboardButton(
-        text="Точнее", callback_data="live_signal")
-    button3 = InlineKeyboardButton(
-        text="Отмена", callback_data="live_cancel")
-    keyboard.add(button1, button2)
-    keyboard.add(button3)
-    return keyboard
 
-
-def kb_live_cancel():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    button3 = InlineKeyboardButton(
-        text="Отмена", callback_data="live_cancel")
-    keyboard.add(button3)
-    return keyboard
 
 
 

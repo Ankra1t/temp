@@ -46,4 +46,5 @@ def registration(bot: TeleBot):
     bot.register_callback_query_handler(
         _handle_callback,
         lambda _: True, pass_bot=True,
-        admin_main=admin_main_factory.filter())
+        admin_main=admin_main_factory.filter()
+    )

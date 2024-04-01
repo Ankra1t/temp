@@ -12,6 +12,10 @@ from .user.pages import (
     send_user_account, send_site_code, send_user_tariffs
 )
 
+from .common.livepost.handler import registration as _reg_livepost
+from .common.livepost.keyboards import kb_livepost_cancel, kb_livepost_type
+
+
 from .admin.main.handler import registration as _reg_admin_main
 from .admin.main.keyboards import (
     kb_admin_main
@@ -83,3 +87,5 @@ def callbacks_registration(bot: _TB):
     _reg_user_tariff(bot)
 
     _reg_calculator(bot)
+
+    _reg_livepost(bot)
