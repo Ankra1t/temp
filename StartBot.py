@@ -387,6 +387,7 @@ def check_unfinit_tasks():
         # check_finish_trial_subscribe()
         # check_future_post_for_sent()
         check_tariff()
+        print('check')
         time.sleep(sleep_time_check)
 
 
