@@ -13,7 +13,6 @@ from ..pages import (
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     data = admin_main_factory.parse(call.data)
-
     type = data.get('type', '')
 
     user_id = call.from_user.id

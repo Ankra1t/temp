@@ -296,6 +296,9 @@ def check_finish_paid_subscribe():
         pay_guard.set_paid_subscribe_unactive_many_users()
 
 
+def check_tariff():
+    db.check_tariffs_datetime()
+
 # Импортировать свой обработчик колбэков
 import cb_admin
 
@@ -383,6 +386,7 @@ def check_unfinit_tasks():
         # check_finish_paid_subscribe()
         # check_finish_trial_subscribe()
         # check_future_post_for_sent()
+        check_tariff()
         time.sleep(sleep_time_check)
 
 

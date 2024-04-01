@@ -12,7 +12,7 @@ from MAIN.callbacks import (
     send_admin_post, send_admin_params
 )
 from MAIN.common.utils import get_post_from_message
-from common.dt import get_datetime_now
+from common.dt import get_datetime_by_str, get_datetime_now
 
 from db import db
 from common.utils import digit_accept, set_state_data, text_accept
@@ -205,31 +205,10 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
     mes_text = text_accept(message) or '-'
 
     if mes_text != '-':
-        value = re.search(datetime_pattern, mes_text)
-        if value is None:
+        value = get_datetime_by_str(mes_text)
+        if value == False:
             bot.send_message(
-                chat_id, 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас',
-                reply_markup=kb_posts_back())
-            return
-
-        day = int(value.group(1))
-        month = int(value.group(2))
-        year = value.group(3)
-        if year is None:
-            year = get_datetime_now().year
-        elif len(year) == 2:
-            year = int(f'20{year}')
-        else:
-            year = int(year)
-
-        hour = int(value.group(4) or '0')
-        minute = int(value.group(5) or '0')
-
-        try:
-            value = datetime(year, month, day, hour, minute)
-        except:
-            bot.send_message(
-                chat_id, 'Неверная дата. Введите повторно ДД ММ (ГГ?) ЧЧ ММ',
+                chat_id, 'Введите дату и время в формате ДД.ММ.ГГ ЧЧ:ММ',
                 reply_markup=kb_posts_back())
             return
     else:

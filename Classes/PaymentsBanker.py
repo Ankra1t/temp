@@ -110,23 +110,6 @@ class PaymentsBanker(object):
 
         return invoice
 
-
-    def get_params_payservice(self, subscribe_name):
-
-        sub = {}
-        subscribe_info = db.get_price_by_name(subscribe_name)
-
-        if subscribe_info is None:
-            return
-
-        sub['sub_name'] = subscribe_name
-        sub['amount'] = subscribe_info.price
-        sub['currency'] = subscribe_info.currency
-        sub['price_id'] = subscribe_info.id
-        print(f'sub параметры услуги')
-        print(sub)
-        return sub
-
     def get_params_payservice_by_id(self, tariff_id):
         return db.get_price_by_id(tariff_id)
 

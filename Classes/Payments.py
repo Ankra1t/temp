@@ -86,9 +86,6 @@ class Payments(object):
 
         return Invoice(**response_json['result'])
 
-    def get_params_payservice(self, subscribe_name):
-        return db.get_price_by_name(subscribe_name)
-
     def get_params_payservice_by_id(self, tariff_id):
         return db.get_price_by_id(tariff_id)
 

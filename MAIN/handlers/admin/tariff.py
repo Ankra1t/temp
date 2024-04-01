@@ -1,380 +1,302 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from telebot import TeleBot
 from telebot.types import Message
 
+from MAIN.callbacks.admin.pages import send_admin_tariffs
 from common.utils import digit_accept, text_accept, set_state_data
-from common.dt import get_datetime_now, get_str_by_datetime
+from common.dt import get_datetime_by_str, get_str_by_datetime
 
+from MAIN.callbacks import (
+    kb_admin_tariffs_list_back, send_admin_tariffs_list_item, kb_admin_tariffs_back
+)
 from MAIN.states import AdminTariffState
 
 from db import db
-from initialize import kb_inl_admin, tariff_manager
-from config_logger import logger
-from models import Discount, Price
+from models import Price
 
 
 def handle_name(message: Message, bot: TeleBot):
-    name = text_accept(message)
-
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = bot.get_state(user_id, chat_id)
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
+    if action == 'create':
+        back_keyboard = kb_admin_tariffs_back()
+    else:
+        back_keyboard = kb_admin_tariffs_list_back(page)
+
+    name = text_accept(message)
     if name is None:
         bot.send_message(
-            chat_id,
-            'Введите название тарифа',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-        return
-
-    if current_state == 'AdminTariffState:edit_field_name':
-        with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
-            # tariff = db.get_price_by_id(data.get('tariff_id'))
-
-        db.update_price_field('name', name, tariff_id)
-
-        tariff = db.get_price_by_id(tariff_id)
-        if tariff is None:
-            return
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template,
-                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+            chat_id, 'Введите название текстом:',
+            reply_markup=back_keyboard
         )
-
-        bot.delete_state(user_id, chat_id)
-
-    if current_state == 'AdminTariffState:name':
-        set_state_data(bot, user_id, chat_id, {'name': name})
-        bot.set_state(user_id, AdminTariffState.duration, chat_id)
-        bot.send_message(
-            chat_id, 'Введите кол-во дней действия тарифа',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-
-def handle_duration(message: Message, bot: TeleBot):
-    days = digit_accept(message, int)
-
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    current_state = bot.get_state(user_id, chat_id)
-
-    if days is None or days == 0:
-        bot.send_message(
-            chat_id, 'Введите количество дней более 0',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
         return
 
-    if current_state == 'AdminTariffState:edit_field_duration':
-        with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
-
-        db.update_price_field('duration_days', days, tariff_id)
-        tariff = db.get_price_by_id(tariff_id)
-        if tariff is None:
-            return
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template,
-                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-        bot.delete_state(user_id, chat_id)
-
-    if current_state == 'AdminTariffState:duration':
-        set_state_data(bot, user_id, chat_id, {'duration': days})
+    if action == 'create':
+        set_state_data(bot, user_id, chat_id, {'name': name})
         bot.set_state(user_id, AdminTariffState.price, chat_id)
         bot.send_message(
-            chat_id, 'Стоимость нового тарифа в USDT',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите цену тарифа:',
+            reply_markup=back_keyboard
+        )
+    else:
+        db.update_price_name(tariff_id, name)
+        bot.delete_state(user_id, chat_id)
+        send_admin_tariffs_list_item(
+            bot, message, user_id, page, 'default', True
+        )
 
 
 def handle_price(message: Message, bot: TeleBot):
-    price = digit_accept(message)
-
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = bot.get_state(user_id, chat_id)
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
-    if price is None or price == 0:
+    if action == 'create':
+        back_keyboard = kb_admin_tariffs_back()
+    else:
+        back_keyboard = kb_admin_tariffs_list_back(page)
+
+    price = digit_accept(message)
+    if price is None:
         bot.send_message(
-            chat_id, 'Введите число более 0',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите цену числом:',
+            reply_markup=back_keyboard
+        )
         return
 
-    if current_state == 'AdminTariffState:edit_field_price':
-        with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
-
-        db.update_price_field('price', price, tariff_id)
-        tariff = db.get_price_by_id(tariff_id)
-        if tariff is None:
-            return
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template,
-                       reply_markup=kb_inl_admin.kb_tariff_options(tariff_id))
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-        bot.delete_state(user_id, chat_id)
-
-    if current_state == 'AdminTariffState:price':
-
+    if action == 'create':
         set_state_data(bot, user_id, chat_id, {'price': price})
+        bot.set_state(user_id, AdminTariffState.duration, chat_id)
+        bot.send_message(
+            chat_id, 'Введите <b>кол-во дней</b> срока действия:',
+            reply_markup=back_keyboard
+        )
+    else:
+        db.update_price_price(tariff_id, price)
+        bot.delete_state(user_id, chat_id)
+        send_admin_tariffs_list_item(
+            bot, message, user_id, page, 'default', True
+        )
+
+
+def handle_duration(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
+
+    if action == 'create':
+        back_keyboard = kb_admin_tariffs_back()
+    else:
+        back_keyboard = kb_admin_tariffs_list_back(page)
+
+    duration = digit_accept(message, int)
+    if duration is None:
+        bot.send_message(
+            chat_id, 'Введите срок действия числом:',
+            reply_markup=back_keyboard
+        )
+        return
+
+    if action == 'create':
+        set_state_data(bot, user_id, chat_id, {'duration': duration})
         bot.set_state(user_id, AdminTariffState.image, chat_id)
         bot.send_message(
-            chat_id, 'Постер (картинку) для нового тарифа',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Отправьте картинку для тарифа:',
+            reply_markup=back_keyboard
+        )
+    else:
+        db.update_price_duration(tariff_id, duration)
+        bot.delete_state(user_id, chat_id)
+        send_admin_tariffs_list_item(
+            bot, message, user_id, page, 'default', True
+        )
 
 
 def handle_image(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = bot.get_state(user_id, chat_id)
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
-    if message.content_type != 'photo' or message.photo is None:
+    if action == 'create':
+        back_keyboard = kb_admin_tariffs_back()
+    else:
+        back_keyboard = kb_admin_tariffs_list_back(page)
+
+    if (message.content_type != 'photo') or (message.photo is None) or (len(message.photo) == 0):
         bot.send_message(
-            chat_id, 'Пожалуйста, отправьте картинку для тарифа',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите срок действия числом:',
+            reply_markup=back_keyboard
+        )
         return
 
-    if current_state == 'AdminTariffState:edit_field_image':
-        with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
+    media_id = message.photo[0].file_id
 
-        db.update_price_field('img', message.photo[-1].file_id, tariff_id)
-        tariff = db.get_price_by_id(tariff_id)
-        if tariff is None:
-            return
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(
-            chat_id, tariff.img, desc_template,
-            reply_markup=kb_inl_admin.kb_tariff_options(tariff_id)
-        )
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
-        )
-
-        bot.delete_state(user_id, chat_id)
-
-    if current_state == 'AdminTariffState:image':
-
-        set_state_data(bot, user_id, chat_id, {
-                       'image': message.photo[-1].file_id})
+    if action == 'create':
+        set_state_data(bot, user_id, chat_id, {'image': media_id})
         bot.set_state(user_id, AdminTariffState.description, chat_id)
         bot.send_message(
-            chat_id, 'Отправьте описание нового тарифа в виде текста',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Отправьте описание для тарифа:',
+            reply_markup=back_keyboard
+        )
+    else:
+        db.update_price_image(tariff_id, media_id)
+        bot.delete_state(user_id, chat_id)
+        send_admin_tariffs_list_item(
+            bot, message, user_id, page, 'default', True
+        )
 
 
 def handle_description(message: Message, bot: TeleBot):
-    description = text_accept(message)
-
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = bot.get_state(user_id, chat_id)
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
+    if action == 'create':
+        back_keyboard = kb_admin_tariffs_back()
+    else:
+        back_keyboard = kb_admin_tariffs_list_back(page)
+
+    description = text_accept(message)
     if description is None:
         bot.send_message(
-            chat_id, 'Неправильно задан текст',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите описание текстом:',
+            reply_markup=back_keyboard
+        )
         return
 
-    if current_state == 'AdminTariffState:edit_field_description':
+    if action == 'create':
         with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
-
-        db.update_price_field('description', description, tariff_id)
-        tariff = db.get_price_by_id(tariff_id)
-        if tariff is None:
-            return
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(
-            chat_id, tariff.img, desc_template,
-            reply_markup=kb_inl_admin.kb_tariff_options(tariff_id)
-        )
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT изменен',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-    if current_state == 'AdminTariffState:description':
-
-        with bot.retrieve_data(user_id, chat_id) as data:
-            name = data.get('name')
-            duration = data.get('duration')
-            price = data.get('price')
+            type_product = data.get('type_product', '')
+            name = data.get('name', '')
+            price = data.get('price', 0)
+            duration = data.get('duration', 0)
             image = data.get('image')
-            type_product = data.get('type_product')
 
-        tariff = Price(name, duration, price, 'USDT', None,
-                       image, description, type_product=type_product)
+        db.add_price(Price(
+            id=0,
+            name=name,
+            description=description,
+            duration=duration,
+            price=price,
+            currency='USDT',
+            type_product=type_product,
+            image=image,
+            switch_active=1
+        ))
 
-        db.add_price(tariff)
-
-        desc_template = tariff_manager.get_template_tariff_show_admin(tariff)
-        bot.send_photo(chat_id, tariff.img, desc_template)
-
-        bot.send_message(
-            chat_id, f'Тариф "{tariff.name}" с price {tariff.price} USDT создан',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-    bot.delete_state(user_id, chat_id)
+        bot.send_message(chat_id, '✅ Тариф создан!')
+        send_admin_tariffs(bot, message, user_id, True)
+    else:
+        db.update_price_description(tariff_id, description)
+        bot.delete_state(user_id, chat_id)
+        send_admin_tariffs_list_item(
+            bot, message, user_id, page, 'default', True
+        )
 
 
 def handle_discount_percent(message: Message, bot: TeleBot):
-    discount_percent = digit_accept(message, int)
-
     chat_id = message.chat.id
     user_id = message.from_user.id
+
+    message.text = (message.text or '').replace('%', '')
+    discount_percent = digit_accept(message, int)
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        page = data.get('page', 0)
 
     if discount_percent is None or discount_percent < 0 or discount_percent > 100:
         bot.send_message(
             chat_id, 'Введите скидку в % от 0 до 100',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            reply_markup=kb_admin_tariffs_list_back(page)
+        )
         return
 
-    set_state_data(bot, user_id, chat_id,
-                   {'discount_percent': discount_percent})
-    bot.set_state(user_id, AdminTariffState.discount_fin_date, chat_id)
+    set_state_data(
+        bot, user_id, chat_id,
+        {'discount_percent': discount_percent}
+    )
+    bot.set_state(user_id, AdminTariffState.discount_datetime, chat_id)
     bot.send_message(
-        chat_id, 'Введите дату окончания скидки в формате DD.MM.YY',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+        chat_id, 'Введите дату окончания скидки в формате ДД.ММ.ГГ ЧЧ:ММ',
+        reply_markup=kb_admin_tariffs_list_back(page)
+    )
 
 
-def handle_discount_fin_date(message: Message, bot: TeleBot):
+def handle_discount_datetime(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        discount_percent = data.get('discount_percent', 0)
+        tariff_id = data.get('tariff_id', -1)
+        page = data.get('page', 0)
 
     discount_findate = text_accept(message)
     if discount_findate is None:
         bot.send_message(
-            chat_id, 'Неправильно введена дата окончания скидки',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите дату и время текстом',
+            reply_markup=kb_admin_tariffs_list_back(page)
+        )
         return
 
-    try:
-        fin_date_obj = datetime.strptime(discount_findate, '%d.%m.%y')
-    except:
+    findate = get_datetime_by_str(discount_findate)
+    if findate == False:
         bot.send_message(
-            chat_id, 'Неправильно введена дата окончания скидки',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
+            chat_id, 'Введите в формате - ДД.ММ.ГГ ЧЧ:ММ',
+            reply_markup=kb_admin_tariffs_list_back(page)
+        )
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        tariff_id = data.get('discount_id')
-        discount_percent = data.get('discount_percent')
+    findate -= timedelta(hours=3)
 
-    fin_date_obj = fin_date_obj - timedelta(hours=3)
+    db.set_price_discount(tariff_id, discount_percent, findate)
 
-    discount = Discount(percent=discount_percent, findate=fin_date_obj)
-    tariff_manager.set_discount_tariff(tariff_id, discount)
-
-    date_admin_show = get_str_by_datetime(fin_date_obj)
-
-    bot.send_message(
-        chat_id, f'Тарифу id {tariff_id} добавлена скидка {discount.percent}% до {date_admin_show}',
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-
-    bot.delete_state(user_id, chat_id)
-
-
-def handle_price_findate_count_days(message: Message, bot: TeleBot):
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    days = digit_accept(message, int)
-
-    if days is None or days == 0:
-        bot.send_message(
-            chat_id, 'Введите количество дней более 0',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-        return
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        tariff_id = data.get('tariff_id')
-
-    findate_set_db = get_datetime_now() + timedelta(days=days)
-    findate_show = get_str_by_datetime(findate_set_db)
-
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
+    tariff = db.get_price_by_id(tariff_id)
+    name = tariff.name if tariff is not None else tariff_id
 
     bot.send_message(
         chat_id,
-        f"Тариф id = {tariff_id} будет действовать до {findate_show} и потом автоматически отключится",
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
+        f'✅ Тарифу "{name}" добавлена скидка {discount_percent}% до {get_str_by_datetime(findate)}',
+        reply_markup=kb_admin_tariffs_list_back(page)
+    )
+    send_admin_tariffs_list_item(
+        bot, message, user_id, page, 'default', True
     )
 
     bot.delete_state(user_id, chat_id)
 
-def handle_price_findate(message: Message, bot: TeleBot):
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    price_findate = text_accept(message)
-
-    try:
-        price_findate_obj = datetime.strptime(price_findate or '', '%d.%m.%y')
-    except Exception as e:
-        price_findate_obj = None
-        logger.error(f'Ошибка handle_price_findate [{e}]')
-
-    if not price_findate or not price_findate_obj:
-        bot.send_message(
-            chat_id, 'Неправильно введена дата окончания тарифа (необходимо в <b>формате DD.MM.YY</b>)',
-            reply_markup=kb_inl_admin.kb_tariffs_back_cancel())
-        return
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        tariff_id = data.get('tariff_id')
-
-    findate_set_db = (price_findate_obj - timedelta(hours=3))
-    findate_show = get_str_by_datetime(findate_set_db)
-
-    # Задаем дату окончания тарифа
-    tariff_manager.set_findate_tariff(tariff_id, findate_set_db)
-
-    bot.send_message(
-        chat_id,
-        f"Тариф id = {tariff_id} будет действовать до {findate_show} и потом автоматически отключится",
-        reply_markup=kb_inl_admin.kb_tariffs_back_cancel()
-    )
-
-    bot.delete_state(user_id, chat_id)
 
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
     reg_mes(handle_name, state=AdminTariffState.name)
-    reg_mes(handle_duration, state=AdminTariffState.duration)
     reg_mes(handle_price, state=AdminTariffState.price)
+    reg_mes(handle_duration, state=AdminTariffState.duration)
     reg_mes(handle_image, state=AdminTariffState.image)
     reg_mes(handle_description, state=AdminTariffState.description)
 
     reg_mes(handle_discount_percent, state=AdminTariffState.discount_percent)
-    reg_mes(handle_discount_fin_date, state=AdminTariffState.discount_fin_date)
-
-    reg_mes(handle_name, state=AdminTariffState.edit_field_name)
-    reg_mes(handle_duration, state=AdminTariffState.edit_field_duration)
-    reg_mes(handle_description, state=AdminTariffState.edit_field_description)
-    reg_mes(handle_price, state=AdminTariffState.edit_field_price)
-    reg_mes(handle_image, state=AdminTariffState.edit_field_image)
-
-    reg_mes(handle_price_findate_count_days, state=AdminTariffState.price_findate_count_days)
-    reg_mes(handle_price_findate, state=AdminTariffState.price_findate)
+    reg_mes(handle_discount_datetime, state=AdminTariffState.discount_datetime)

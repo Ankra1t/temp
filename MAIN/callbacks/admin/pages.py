@@ -1,8 +1,10 @@
+from typing import Literal
 from telebot import TeleBot
-from telebot.types import Message
+from telebot.types import Message, InputMediaPhoto
 
+from MAIN.common.messages import msg_admin_tariff
 from db import db
-from initialize import kb_inl_admin, pay_guard, base_statis
+from initialize import pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
@@ -11,6 +13,7 @@ from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_ms
 from models import Post
 
 from .main.keyboards import kb_admin_main
+from .tariffs.keyboards import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
 from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
 from .statistics.keyboards import kb_statistics
@@ -377,8 +380,8 @@ def send_admin_tariffs(
 
     bot.delete_state(user_id, chat_id)
 
-    text = 'Действия с тарифами'
-    keyboard = kb_inl_admin.kb_tariffs()
+    text = menu_msg('Тарифы')
+    keyboard = kb_admin_tariffs()
 
     if is_first:
         bot.send_message(chat_id, text, reply_markup=keyboard)
@@ -387,3 +390,66 @@ def send_admin_tariffs(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
+
+
+def send_admin_tariffs_list_item(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    page: int,
+    type: Literal['default', 'delete', 'edit'] = 'default',
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    tariffs = db.get_prices()
+    count = len(tariffs)
+
+    if count == 0:
+        bot.edit_message_text(
+            'Тарифов нет', chat_id, mes_id,
+            reply_markup=kb_admin_tariffs_back()
+        )
+    else:
+        tariff = tariffs[page]
+
+        text = msg_admin_tariff(tariff)
+        image = tariff.img
+
+        if type == 'delete':
+            text += '\n\n⚠️<b>Удалить данный тарифы?</b>⚠️'
+            keyboard = kb_admin_tariffs_delete(tariff.id or -1, page)
+        elif type == 'edit':
+            text += '\n\n<b>Что изменить?</b>'
+            keyboard = kb_admin_tariffs_edit(tariff.id or -1, page)
+        else:
+            keyboard = kb_admin_tariffs_list(
+                count, page, tariff.id or -1, tariff.switch_active == 1,
+                tariff.discount is not None
+            )
+
+        def send():
+            if image is None:
+                bot.send_message(chat_id, text, reply_markup=keyboard)
+            else:
+                bot.send_photo(
+                    chat_id, image, text,
+                    reply_markup=keyboard
+                )
+
+        if is_first:
+            send()
+        elif message.content_type == 'photo' and image is not None:
+            bot.edit_message_media(
+                InputMediaPhoto(image, text, 'HTML'), chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        elif message.content_type == 'text' and image is None:
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        else:
+            bot.delete_message(chat_id, mes_id)
+            send()

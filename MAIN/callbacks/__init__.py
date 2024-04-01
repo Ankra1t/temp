@@ -5,7 +5,7 @@ from .admin.pages import (
     send_admin_workers, send_admin_workers_support,
     send_admin_workers_admin, send_admin_workers_support,
     send_admin_main, send_admin_users, send_admin_payment,
-    send_admin_fut_posts, send_admin_params
+    send_admin_fut_posts, send_admin_params, send_admin_tariffs_list_item
 )
 from .user.pages import (
     send_user_education, send_user_main, send_user_terms,
@@ -15,6 +15,13 @@ from .user.pages import (
 from .admin.main.handler import registration as _reg_admin_main
 from .admin.main.keyboards import (
     kb_admin_main
+)
+
+from .admin.tariffs.handler import registration as _reg_admin_tariffs
+from .admin.tariffs.keyboards import (
+    kb_admin_tariffs, kb_admin_tariffs_list, kb_admin_tariffs_back,
+    kb_admin_tariffs_delete, kb_admin_tariffs_list_back, kb_admin_tariffs_edit,
+    kb_admin_tariff_add_type
 )
 
 from .admin.workers.handler import registration as _reg_admin_workers
@@ -63,6 +70,7 @@ from CALCULATE.callbacks import callbacks_registration as _reg_calculator
 
 def callbacks_registration(bot: _TB):
     _reg_admin_main(bot)
+    _reg_admin_tariffs(bot)
     _reg_admin_workers(bot)
     _reg_admin_params(bot)
     _reg_admin_posts(bot)
