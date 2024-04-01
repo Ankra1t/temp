@@ -10,7 +10,7 @@ from common.utils import digit_accept, text_accept
 
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import kb_deal_profit_minus
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus
 
 
 def handle_loss(message: Message, bot: TeleBot):

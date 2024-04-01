@@ -1,6 +1,4 @@
-from typing import Literal
 from telebot import TeleBot
-from math import floor
 from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info

@@ -1,4 +1,3 @@
-from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 

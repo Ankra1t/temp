@@ -5,7 +5,7 @@ from db import db
 
 from MAIN.states import AdminWorkersState
 from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back, send_admin_workers_support
-from common.utils import digit_accept, set_state_data, text_accept
+from common.utils import digit_accept, set_state_data
 
 
 def handle_add_id(message: Message, bot: TeleBot):

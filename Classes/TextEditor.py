@@ -1,4 +1,4 @@
-from telebot import types, TeleBot
+from telebot import TeleBot
 from config_logger import logger
 
 from db import db
@@ -7,9 +7,8 @@ from db import db
 class TextEditor(object):
     """Класс редактор текстов"""
 
-    def __init__(self, bot: TeleBot, kb_inl_instance) -> None:
+    def __init__(self, bot: TeleBot) -> None:
         self.bot = bot
-        self.kb_inl = kb_inl_instance
 
     def get_text(self, label: str):
         logger.info(f'-----> Запрошен приветственный текст из БД  ')

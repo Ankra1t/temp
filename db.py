@@ -1,7 +1,6 @@
 from datetime import datetime
 import json
-from typing import Any, Literal, Optional
-import random
+from typing import Literal, Optional
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
 
@@ -11,7 +10,7 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from models import (
     Calculation, Forex, ForexInfo, Future, Post, PostDetails,
     Text, UserCalcSettings, UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Client, Task, MARKETS_TYPE
+    Transactions, Purchase, Worker, Task, MARKETS_TYPE
 )
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']

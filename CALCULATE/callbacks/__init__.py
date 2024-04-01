@@ -1,3 +1,4 @@
+# type: ignore
 from telebot import TeleBot as _TB
 
 from .pages import send_main, send_settings, send_manual_page, send_summury_profit_settings, send_stats

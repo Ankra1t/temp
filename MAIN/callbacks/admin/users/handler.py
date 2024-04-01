@@ -6,7 +6,7 @@ from MAIN.common.utils import get_short_user_info
 from MAIN.states import AdminUsersState
 from common.utils import set_state_data
 
-from initialize import kb_inl_admin, pay_guard, tariff_manager
+from initialize import pay_guard
 from db import SORT_BY_TYPE, db
 from messages.users import gift_subscribe_msg
 
@@ -39,12 +39,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'go_users':
         send_admin_users(bot, call.message, user_id)
-
-    if type == 'cancel_subscribe':
-        bot.edit_message_text(
-            'Отменить подписку', chat_id, mes_id,
-            reply_markup=kb_inl_admin.users_cancel_subscribe()
-        )
 
     if type == 'lists':
         bot.edit_message_text(
@@ -149,14 +143,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             chat_id, mes_id,
             reply_markup=kb_admin_users_back())
 
-        # Список тарифов с кнопкой выбрать
-        available_tariffs = tariff_manager.admin_tariff_list_custom_show(
-            chat_id)
-        if not available_tariffs:
-            bot.send_message(
-                chat_id,
-                'Тарифов не обнаружено'
-            )
 
     if type == 'choose_periods_for_tariffs':
         with bot.retrieve_data(user_id, chat_id) as data:

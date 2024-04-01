@@ -5,7 +5,7 @@ from common.dt import get_str_by_datetime
 from db import db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from models import Post, User, UserInfo
+from models import Post, UserInfo
 
 
 def get_post_from_message(bot: TeleBot, message: Message):

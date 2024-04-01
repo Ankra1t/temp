@@ -1,6 +1,5 @@
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
-from common.dt import get_datetime_now
 
 from db import db
 from initialize import pay_guard

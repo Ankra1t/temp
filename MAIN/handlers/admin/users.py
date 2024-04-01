@@ -3,12 +3,11 @@ from telebot.types import Message
 
 from db import db
 from initialize import pay_guard
-from models import User
 
 from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel
 from CALCULATE.common.messages import msg_digit_error
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from common.utils import digit_accept, is_digit, text_accept
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
 
 

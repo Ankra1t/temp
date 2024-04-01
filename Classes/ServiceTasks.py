@@ -1,5 +1,5 @@
-from telebot import types, TeleBot
-from datetime import datetime, timedelta
+from telebot import TeleBot
+from datetime import datetime
 
 from db import Database
 from models import Task, TaskMessage

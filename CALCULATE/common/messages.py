@@ -1,4 +1,3 @@
-from locale import currency
 from telebot import TeleBot
 from datetime import datetime
 from common.dt import get_str_by_datetime

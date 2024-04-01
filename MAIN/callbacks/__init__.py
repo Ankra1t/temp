@@ -1,3 +1,4 @@
+# type: ignore
 from telebot import TeleBot as _TB
 
 from .admin.pages import (

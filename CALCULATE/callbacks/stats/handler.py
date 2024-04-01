@@ -6,10 +6,10 @@ from common.utils import set_state_data
 from initialize import calcService
 from db import db
 from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus
 from CALCULATE.states import StatsState
 
-from .keyboards import kb_deal_profit_minus, kb_deal_result, kb_freeze_calc, kb_set_calc_stats
+from .keyboards import kb_deal_profit_minus, kb_deal_result, kb_set_calc_stats
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main
 
