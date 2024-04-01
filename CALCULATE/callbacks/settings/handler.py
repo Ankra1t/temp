@@ -161,9 +161,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
         else:
             market: Any = type_list[1]
-
             db.set_calculator_user_market(user_db_id, market)
-
             send_settings(bot, call.message, user_id)
 
     if 'welcome_confirm' in type:

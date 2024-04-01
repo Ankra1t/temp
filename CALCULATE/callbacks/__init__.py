@@ -8,7 +8,7 @@ from .manual.handler import registration as _reg_manual
 from .manual.keyboards import kb_manual
 
 from .main.handler import registration as _reg_main
-from .main.keyboards import kb_main, kb_main_cancel, cancel_btn
+from .main.keyboards import kb_main, kb_main_cancel, cancel_btn, kb_pair
 
 from .stats.handler import registration as _reg_stats
 from .stats.keyboards import kb_stats, kb_set_calc_stats, kb_freeze_calc, kb_deal_result, kb_deal_profit_minus
