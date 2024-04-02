@@ -17,14 +17,6 @@ def getButton(text: str, type: str, stat_id=0):
 
 def kb_stats(user_id: int):
     lang = get_lang(user_id)
-    texts = {
-        'ru': {
-            '': '',
-        },
-        'en': {
-            '': '',
-        }
-    }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
@@ -54,13 +46,18 @@ def kb_set_calc_stats(user_id: int, stat_id: int):
 
 
 def kb_freeze_calc(user_id: int):
-    lang = get_lang(0)
+    lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_3 = getButton('3 ч', 'time+3')
-    btn_6 = getButton('6 ч', 'time+6')
-    btn_9 = getButton('9 ч', 'time+9')
-    btn_12 = getButton('12 ч', 'time+12')
+    hours = {
+        'ru': 'ч',
+        'en': 'h'
+    }
+
+    btn_3 = getButton(f'3 {hours[lang]}', 'time+3')
+    btn_6 = getButton(f'6 {hours[lang]}', 'time+6')
+    btn_9 = getButton(f'9 {hours[lang]}', 'time+9')
+    btn_12 = getButton(f'12 {hours[lang]}', 'time+12')
     btn_back = getButton(cancel_txt(lang), 'profit+cancel')
 
     keyboard.add(btn_3, btn_6)
@@ -72,6 +69,15 @@ def kb_freeze_calc(user_id: int):
 
 def kb_deal_result(user_id: int, stat_id: int):
     lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'minus': 'Минус',
+        },
+        'en': {
+            'minus': 'Minus',
+        }
+    }
 
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
@@ -86,7 +92,7 @@ def kb_deal_result(user_id: int, stat_id: int):
         if len(buttons) == row_width or (i == len(tp) - 1 and len(buttons) != 0):
             keyboard.add(*buttons)
 
-    btn_low = getButton('🔻 Минус', 'profit+-', stat_id)
+    btn_low = getButton(f'🔻 {texts[lang]["minus"]}', 'profit+-', stat_id)
     btn_back = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
 
     keyboard.add(btn_low, btn_back)

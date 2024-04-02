@@ -2,10 +2,10 @@ from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
 from common.dt import get_str_by_datetime
 
-from db import db
+from db import LANGUAGES_TYPE, db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from models import Post, User, UserInfo
+from models import Post, UserInfo
 
 
 def get_post_from_message(bot: TeleBot, message: Message):
@@ -33,8 +33,13 @@ def get_post_from_message(bot: TeleBot, message: Message):
     )
 
 
-def get_calculator_btn_link():
-    return InlineKeyboardButton("⌨️ В калькулятор", "https://t.me/fpcalcbot")
+def get_calculator_btn_link(lang: LANGUAGES_TYPE):
+    text = {
+        'ru': 'В калькулятор',
+        'en': 'To calculator',
+    }
+
+    return InlineKeyboardButton(f"⌨️ {text[lang]}", "https://t.me/fpcalcbot")
 
 
 def send_in_development(bot: TeleBot, message: Message):

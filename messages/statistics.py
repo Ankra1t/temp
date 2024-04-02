@@ -1,6 +1,3 @@
-from telebot.types import Message
-
-
 def admin_main_statistics(count_subscribes=0, summ_all_users=0 ):
     return f"""<b><u>Общая статистика продаж</u></b>
 

@@ -33,7 +33,7 @@ def kb_calculator():
     btn1 = getButton('💲 Добавить фьючерс', 'calculator_add_future')
     btn2 = getButton('💱 Добавить валютную пару', 'calculator_add_forex')
     back = getButton(back_txt(), 'go_params')
-    btn_link = get_calculator_btn_link()
+    btn_link = get_calculator_btn_link('ru')
 
     keyboard.add(btn1, btn2)
     keyboard.add(btn_link)

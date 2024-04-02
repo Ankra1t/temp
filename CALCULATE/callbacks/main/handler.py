@@ -1,10 +1,13 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from common.utils import set_state_data
+from initialize import currencyService
 from db import db
+from models import ForexInfo
 
 from .filter import main_factory, MainCallbackFilter
-from ..utils import choose_first_calculate_step
+from ..utils import choose_calculate_step, choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats
 
 
@@ -13,6 +16,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     type = callback_data.get('type', '')
 
     user_id = call.from_user.id
+    chat_id = call.message.chat.id
+    mes_id = call.message.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     if type == 'calc':
@@ -29,6 +34,23 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'stats':
         send_stats(bot, call.message, user_id)
 
+    if 'pair' in type:
+        _, pair = type.split('+')
+        pair_arr = pair.split('/')
+
+        price = currencyService.getPrice(pair_arr[0], pair_arr[1])
+        if price != False:
+            forex = ForexInfo(
+                pair=(pair_arr[0], pair_arr[1]),
+                price=price,
+                cross_prices={}
+            )
+
+            set_state_data(bot, user_id, chat_id, {
+                'forex': forex,
+            })
+            choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
     bot.answer_callback_query(call.id)
 
 
@@ -37,4 +59,5 @@ def registration(bot: TeleBot):
     bot.register_callback_query_handler(
         _main_callback_handler,
         lambda _: True, pass_bot=True,
-        main=main_factory.filter())
+        main=main_factory.filter()
+    )

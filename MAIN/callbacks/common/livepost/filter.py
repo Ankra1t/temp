@@ -2,11 +2,12 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery
 
-user_tariff_factory = CallbackData('type', 'tariff_id', 'page', 'tariff_type', prefix='user_tariff')
+
+livepost_factory = CallbackData('type', prefix='livepost')
 
 
-class UserTariffCallbackFilter(AdvancedCustomFilter):
-    key = 'user_tariff'
+class LivepostCallbackFilter(AdvancedCustomFilter):
+    key = 'livepost'
 
     def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)

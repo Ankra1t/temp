@@ -8,7 +8,6 @@ from .filter import user_account_factory, UserAccountCallbackFilter
 
 from MAIN.states import UserAccountState
 from MAIN.callbacks import send_user_account, send_user_main
-from MAIN.common.utils import send_in_development
 from MAIN.common.messages import msg_referral
 
 

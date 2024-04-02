@@ -1,4 +1,5 @@
-from locale import currency
+import math
+from typing import Literal
 from telebot import TeleBot
 from datetime import datetime
 from common.dt import get_str_by_datetime
@@ -41,6 +42,23 @@ def get_risk_annotation(lang: LANGUAGES_TYPE):
 
     return f"""{texts[lang]['1']}
 {texts[lang]['2']}
+"""
+
+
+def get_freeze_annotation(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            'time': 'Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>',
+            'datetime': 'Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>',
+        },
+        'en': {
+            'time': 'Enter <i>time</i> frost in format <u>HH:MM</u>',
+            'datetime': 'Or <i>date to</i> in format <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>',
+        }
+    }
+
+    return f"""✍️ {texts[lang]['time']}.
+✍️ {texts[lang]['datetime']}.
 """
 
 
@@ -119,10 +137,9 @@ def msg_main_freeze(user_id: int, freeze_dt: datetime):
         }
     }
 
-    return f"""
-⚡️ <b><u>{texts[lang]["name"]}</u></b>
+    return f"""⚡️ <b><u>{texts[lang]["name"]}</u></b>
 
-❄️ Калькулятор заморожен до <b>{get_str_by_datetime(freeze_dt)}</b>
+{msg_frozen(user_id, get_str_by_datetime(freeze_dt))}
 """
 
 
@@ -297,6 +314,27 @@ def msg_support(user_id: int):
 def msg_stats(user_id: int):
     lang = get_lang(user_id)
 
+    texts = {
+        'ru': {
+            'name': 'Статистика',
+            'all': 'Всего расчетов',
+            'tp': 'Тейк-профит',
+            'sl': 'Стоп-лосс',
+            'general': 'Общее',
+            'sum': 'Сумма',
+            'pieces': 'шт.'
+        },
+        'en': {
+            'name': 'Statistics',
+            'all': 'Total calculations',
+            'tp': 'Take-profit',
+            'sl': 'Stop-loss',
+            'general': 'General',
+            'sum': 'Summury',
+            'pieces': 'pieces',
+        }
+    }
+
     user_db_id = db.get_user_id_by_tg_id(user_id)
     all_stats = db.get_calculations_by_user(user_db_id)
     saved_stats = db.get_calculations_by_user(user_db_id, True)
@@ -321,36 +359,45 @@ def msg_stats(user_id: int):
 
         profit += stat_profit
 
-    texts = {
-        'ru': {},
-        'en': {}
-    }
+    return f"""📊 <u><b>{texts[lang]['name']}</b></u>
 
-    return f"""📊 <u><b>Статистика</b></u>
+{POINT} {texts[lang]['all']}: <b>{len(all_stats)} {texts[lang]['pieces']}</b>
 
-{POINT} Всего расчетов: <b>{len(all_stats)} шт.</b>
+{POINT} {texts[lang]['tp']}: <b>{tp_count} {texts[lang]['pieces']}</b>
+{POINT} {texts[lang]['sl']}: <b>{sl_count} {texts[lang]['pieces']}</b>
+{POINT} {texts[lang]['general']}: <b>{len(saved_stats)} {texts[lang]['pieces']}</b>
 
-{POINT} Тейк-профит: <b>{tp_count} шт.</b>
-{POINT} Стоп-лосс: <b>{sl_count} шт.</b>
-{POINT} Общее: <b>{len(saved_stats)} шт.</b>
-
-{POINT} Сумма: <b>{get_print_float(profit)} {currency}</b>
+{POINT} {texts[lang]['sum']}: <b>{get_print_float(profit)} {currency}</b>
 """
 
 
 def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=False):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            '1': 'Вы превысили суточный процент риска на',
+            '2': 'Желаете приостановить торговлю на некоторое время?',
+            'end': 'На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли',
+        },
+        'en': {
+            '1': 'You have exceeded the daily percentage of risk by',
+            '2': 'Would you like to suspend trade for a while?',
+            'end': 'At this time, calculations in the calculator cannot be made for the safety of your trade',
+        }
+    }
+
     if is_percent:
         risk_show = f'<b>{get_print_float(risk_value)}%</b> от депозита'
     else:
         risk_show = f'<b>{get_print_float(risk_value)} {currency}</b>'
 
-    return f"""⚠️ Вы превысили суточный процент риска на {risk_show}.
-<b>Желаете приостановить торговлю на некоторое время?</b>
+    return f"""⚠️ {texts[lang]['1']} {risk_show}.
+<b>{texts[lang]['2']}</b>
 
-✍️ Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>.
-✍️ Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>.
+{get_freeze_annotation(lang)}
 
-На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли.
+{texts[lang]['end']}.
 """
 
 
@@ -411,6 +458,17 @@ def msg_success_edit(user_id: int):
     return f'✅ {texts[lang]}!'
 
 
+def msg_frozen(user_id: int, datetime: str):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Калькулятор заморожен до',
+        'en': 'The calculator is frozen until',
+    }
+
+    return f'❄️ {text[lang]} <b>{datetime}'
+
+
 # Ошибки ввода данных
 def msg_ticker_error(user_id: int):
     lang = get_lang(user_id)
@@ -418,6 +476,17 @@ def msg_ticker_error(user_id: int):
     texts = {
         'ru': 'Введите тикер текстом',
         'en': 'Enter the ticker in text'
+    }
+
+    return f'❗️ {texts[lang]}:'
+
+
+def msg_trading_style_error(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите стиль текстом',
+        'en': 'Enter the trading style in text'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -443,6 +512,19 @@ def msg_ticker_not_found(user_id: int, ticker: str):
 """
 
 
+def msg_freeze_error(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Неверный формат',
+        'en': 'Wrong format',
+    }
+
+    return f"""❗️ {text[lang]}
+{get_freeze_annotation(lang)}
+"""
+
+
 def msg_pair_error(user_id: int):
     lang = get_lang(user_id)
 
@@ -465,12 +547,39 @@ def msg_pair_not_found(user_id: int, pair: str):
     return f'❗️ {texts[lang]} {pair}:'
 
 
-def msg_digit_error(user_id: int):
+def msg_digit_error(user_id: int, value_from: int | None = None, value_to: int | None = None):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите число',
-        'en': 'Enter a number'
+        'ru': {
+            'main': 'Введите значение числом',
+            'from': 'от',
+            'to': 'до',
+        },
+        'en': {
+            'main': 'Enter the value as a number',
+            'from': 'from',
+            'to': 'to',
+        },
+    }
+
+    from_txt = ''
+    to_txt = ''
+    if value_from is not None:
+        from_txt = f' {texts[lang]["from"]} {value_from}'
+
+    if value_to is not None:
+        to_txt = f' {texts[lang]["to"]} {value_to}'
+
+    return f'❗️ {texts[lang]}{from_txt}{to_txt}:'
+
+
+def msg_text_error(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите значение текстом',
+        'en': 'Enter the value as a text'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -498,15 +607,44 @@ def msg_sl_op_equal_error(user_id: int):
     return f'⚠️ {texts[lang]}:'
 
 
-def msg_currency_error(user_id):
+def msg_currency_error(user_id: int, type: Literal['', 'not_found'] = ''):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валюту текстом',
-        'en': 'Enter the currency with text'
+        'ru': {
+            'enter': 'Введите валюту текстом',
+            'not_found': 'Валюта не найдена'
+        },
+        'en': {
+            'enter': 'Enter the currency with text',
+            'not_found': 'The currency is not found'
+        }
     }
 
-    return f'❗️ {texts[lang]}:'
+    error_mes = ''
+    if type == 'not_found':
+        error_mes = texts[lang]['not_found']
+
+    return f"""{error_mes}
+❗️ {texts[lang]}:
+"""
+
+
+def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'digit': 'Введите процент в виде числа',
+            'sum': 'Суммарный процент превысил 100',
+        },
+        'en': {
+            'digit': 'Enter the percent as a number',
+            'sum': 'The total percent exceeded 100',
+        }
+    }
+
+    return f'❗️ <i>{texts[lang][error]}</i>'
 
 
 # Калькулятор
@@ -600,7 +738,8 @@ def msg_calculate_crypto_result(
             'sum': 'Покупаем на',
             'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль по сделке'
+            'profit': 'Прибыль по сделке',
+            'coin': 'монет',
         },
         'en': {
             'dep': 'Deposit',
@@ -612,7 +751,8 @@ def msg_calculate_crypto_result(
             'sum': 'Buy on',
             'style': 'Trading style',
             'risk_val': 'The risk of a deal',
-            'profit': 'Profit'
+            'profit': 'Profit',
+            'coin': 'coins',
         }
     }
 
@@ -646,7 +786,7 @@ def msg_calculate_crypto_result(
 
             count = get_print_float(count_bet * rate, 2)
 
-            conclusion += f' (<b>{count} монет</b>) — {get_print_float(percent, round_count)}%'
+            conclusion += f' (<b>{count} {point[lang]["coin"]}</b>) — {get_print_float(percent, round_count)}%'
 
         p_show += f'{get_print_float(abs(calc.open_price - tp_i) * rate * count_bet, round_count)}'
 
@@ -660,7 +800,7 @@ def msg_calculate_crypto_result(
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
 {TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
 
-{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} монет</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["coin"]}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 {TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
 
@@ -696,7 +836,8 @@ def msg_calculate_forex_result(
             'sum': 'Покупаем на',
             'style': 'Стиль торговли',
             'risk_val': 'Риск на сделку',
-            'profit': 'Прибыль по сделке'
+            'profit': 'Прибыль по сделке',
+            'lot': 'лота',
         },
         'en': {
             'pair': 'Currency pair',
@@ -710,7 +851,8 @@ def msg_calculate_forex_result(
             'sum': 'Buy on',
             'style': 'Trading style',
             'risk_val': 'The risk of a deal',
-            'profit': 'Profit'
+            'profit': 'Profit',
+            'lot': 'lots',
         }
     }
 
@@ -760,7 +902,7 @@ def msg_calculate_forex_result(
 
             count = get_print_float(count_bet * rate, 2)
 
-            conclusion += f' (<b>{count} лота</b>) — {get_print_float(percent, round_count)}%'
+            conclusion += f' (<b>{count} {point[lang]["lot"]}</b>) — {get_print_float(percent, round_count)}%'
 
         profit = abs(calc.open_price - tp_i) * rate * count_bet * pow(10, 5)
         if calc.forex_info.pair[0] == calc.currency:
@@ -785,7 +927,7 @@ def msg_calculate_forex_result(
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.forex_info.pair[1]}</b>
 {TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.forex_info.pair[1]}</b>
 
-{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} лота</b>
+{POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["lot"]}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 {TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
 
@@ -797,37 +939,138 @@ def msg_calculate_forex_result(
 """
 
 
+def msg_calculate_saved_result(user_id: int, calc: Calculation):
+    lang = get_lang(user_id)
+
+    point = {
+        'ru': {
+            'deposit': 'Итоговый депозит',
+            'sum': 'Сумма',
+            'sl': 'Стоп-лосс',
+            'tp': 'Тейк-профит'
+        },
+        'en': {
+            'deposit': 'The final deposit',
+            'sum': 'Sum',
+            'sl': 'Stop-loss',
+            'tp': 'Take-profit'
+        },
+    }
+
+    deposit = calc.deposit
+    profit = calc.profit
+
+    if profit is None:
+        return 'Ошибка'
+
+    if profit < 0:
+        rate = f'{round(abs(profit / calc.risk_value), 2)}'
+        rate_val = 'sl'
+    else:
+        rate = f'x{math.ceil(profit / calc.risk_value)}'
+        rate_val = 'tp'
+
+    return f"""{POINT} {point[lang]['deposit']}: <b>{get_print_float(deposit + profit, calc.round_count)} {calc.currency}</b>
+{POINT} {point[lang]['sum']}: <b>{get_print_float(profit, calc.round_count)} {calc.currency}</b>
+{POINT} {point[lang][rate_val]}: <b>{rate}</b>
+"""
+
+
 # Ввод данных
+def msg_enter_save_calc(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Как вы закрыли данную сделку?',
+        'en': 'How did you close this deal?',
+    }
+
+    return texts[lang]
+
+
 def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
+    lang = get_lang(user_id)
+
     current_tp = tp_ratio.copy()
     current_tp.sort()
 
     tp_count = len(current_tp)
 
-    text = '<u>Установка тейк-профита</u>\n'
+    max_count = 5
+    texts = {
+        'ru': {
+            'name': 'Установка тейк-профита',
+            'current': 'Текущий выбор',
+            'max': 'Учитывайте, что максимальный коэффициент тейк-профита',
+            'max_count': f'Можно выбрать до <b>{max_count}</b> значений',
+            '1': 'Выберите <b>первое</b> значение',
+            'action': 'Выберите действие',
+            'next': 'Выберите <b>следующее</b> значение',
+        },
+        'en': {
+            'name': 'Installation of a teke-profit',
+            'current': 'Current choice',
+            'max': 'Keep in mind that the maximum take-profit coefficient',
+            'max_count': f'You can choose before <b>{max_count}</b> meanings',
+            '1': 'Select <b>the first</b> meaning',
+            'action': 'Choose an action',
+            'next': 'Select the <b>following</b> meaning',
+        },
+    }
+
+    text = f'<u>{texts[lang]["name"]}</u>\n'
 
     if tp_count != 0:
-        text += 'Текущий выбор: <b>'
+        text += f'{texts[lang]["current"]}: <b>'
 
         for el in current_tp:
             text += f'x{el} '
 
         text += '</b>\n'
 
-    text += '\nУчитывайте, что максимальный коэффициент тейк-профита - <b>x10</b>\n'
-    text += 'Можно выбрать до <b>5</b> значений\n\n'
+    text += f'\n{texts[lang]["max"]} - <b>x10</b>\n'
+    text += f'{texts[lang]["max_count"]}\n\n'
 
     if tp_count == 0:
-        text += 'Выберите <b>первое</b> значение'
+        text += f'{texts[lang]["1"]}'
     elif tp_count == 5:
-        text += 'Выберите действие'
+        text += f'{texts[lang]["action"]}'
     else:
-        text += 'Выберите <b>следующее</b> значение'
+        text += f'{texts[lang]["next"]}'
 
     return text
 
 
 def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], is_last=False):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'name': 'Установка разделения профита',
+            'current': 'Текущий выбор',
+            'percent_sum': 'Суммарный процент',
+            'last': 'Оставшиеся',
+            'split': 'торговой позиции можно разбить',
+            'info': 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк-профитов\nВыберите на <u>сколько частей</u> разделить остаток',
+            '1': 'Выберите <b>первое</b> значение тейк-профита',
+            'action': 'Выберите действие',
+            'tp': 'Введите <b>процент вывода</b> для тейк-профита',
+            'next': 'Выберите <b>следующее</b> значение тейк-профита',
+        },
+        'en': {
+            'name': 'Installation of the separation of profit',
+            'current': 'Current choice',
+            'percent_sum': 'The total percentage',
+            'last': 'Remaining',
+            'split': 'of trading position can be defeated',
+            'info': 'Splitting calculates each of the <i>n</i> parts for the mining +1 teak profits\nSelect <u> how many parts </u> divide the balance',
+            '1': 'Select <b> the first </b> take-profit value',
+            'action': 'Choose an action',
+            'tp': 'Enter the <b> percentage of the output </b> for the take profite',
+            'next': 'Select <b>the following</b> Take-profite value',
+        },
+    }
+
     tp_count = len(tp_ratio)
     split_count = len(split)
 
@@ -840,10 +1083,10 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
     if abs(percents_sum - 100) < 0.2:
         percents_sum = 100
 
-    text = '<u>Установка разделения профита</u>\n'
+    text = f'<u>{texts[lang]["current"]}</u>\n'
 
     if tp_count != 0 and split_count != 0:
-        text += '\n<u>Текущий выбор</u>: <b>\n'
+        text += f'\n<u>{texts[lang]["name"]}</u>: <b>\n'
 
         for i, el in enumerate(sorted_tp):
             try:
@@ -861,32 +1104,37 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
                 text += ' - '
 
         text += '</b>\n'
-        text += f'<i>Суммарный процент:</i> <b>{get_print_float(percents_sum)}</b>\n'
+        text += f'<i>{texts[lang]["percent_sum"]}:</i> <b>{get_print_float(percents_sum)}</b>\n'
 
     text += '\n'
     if is_last:
-        text += f'Оставшиеся <b>{get_print_float(100-percents_sum, 2)}%</b> торговой позиции можно разбить. '
-        text += 'Разбиение расчитает каждую из <i>n</i> частей для слудующих +1 тейк-профитов\n'
-        text += 'Выберите на <u>сколько частей</u> разделить остаток'
+        text += f'{texts[lang]["last"]} <b>{get_print_float(100-percents_sum, 2)}%</b> {texts[lang]["split"]}. '
+        text += texts[lang]["info"]
     elif tp_count == 0:
-        text += 'Выберите <b>первое</b> значение тейк-профита'
+        text += texts[lang]['1']
     elif tp_count == 5 or percents_sum == 100:
-        text += 'Выберите действие'
+        text += texts[lang]['action']
     elif tp_count != split_count:
-        text += f'Введите <b>процент вывода</b> для тейк-профита <b>x{tp_ratio[-1]}</b>'
+        text += f'{texts[lang]["tp"]} <b>x{tp_ratio[-1]}</b>'
     else:
-        text += 'Выберите <b>следующее</b> значение тейк-профита'
+        text += texts[lang]["next"]
 
     return text
 
 
 def msg_enter_summury_profit_type(user_id: int):
-    return """
-Выберите вид разделения суммы:
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        return """Выберите вид разделения суммы:
 
 <i>*Простой - без деления профита, продажа 100% торговой позиции
-*Разделение - продажа торговой позиции разделяется на несколько тейк-профитов</i>
-"""
+*Разделение - продажа торговой позиции разделяется на несколько тейк-профитов</i>"""
+    else:
+        return """Select the type of division of the amount:
+
+<i>*Simple - without division of profit, sale 100% of the trading position
+*Separation - the sale of a trading position is divided into several take profites </i>"""
 
 
 def msg_enter_future(user_id: int):
@@ -1054,13 +1302,24 @@ def msg_confirm_reset(user_id: int):
     return f'⚠️ {texts[lang]}?'
 
 
+def msg_calculation_saved(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Расчет сохранен',
+        'en': 'The calculation is saved',
+    }
+
+    return f'✅ {texts[lang]}!'
+
+
 # Инструкция к калькулятору
 msg_manual = ["""
 ❗️ *Как работать с калькулятором:*
 
 *1.* Выбираете рынок, которым торгуете
 
-Каждый из них имеет свои формулы расчетов, потому будете *внимательны.*    
+Каждый из них имеет свои формулы расчетов, потому будете *внимательны.*
 """,
               """
 *2.* Вводите сумму депозита

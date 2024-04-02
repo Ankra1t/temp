@@ -1,6 +1,6 @@
 import telebot
 import flask
-from flask import request, Response
+from flask import request
 
 from config_logger import logger
 from config_global import CRYPTOPAY_URL, BITBANKER_URL, base_url, flask_port

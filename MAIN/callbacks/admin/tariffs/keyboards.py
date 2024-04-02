@@ -1,4 +1,3 @@
-from typing import Literal
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from common.keyboard import back_txt

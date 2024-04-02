@@ -5,10 +5,10 @@ from telebot.types import Message
 from db import db
 from initialize import pay_guard
 from common.utils import set_state_data
-from .main.keyboards import kb_main_cancel
 from .pages import send_main
+from .main.keyboards import kb_main_cancel, kb_pair
+from .settings.keyboards import kb_change_currency, kb_trading_style
 
-from CALCULATE.callbacks.settings.keyboards import kb_change_currency, kb_trading_style
 from CALCULATE.common.messages import (
     msg_calculate, msg_enter_currency, msg_enter_deposit, msg_enter_future,
     msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_trading_style
@@ -34,6 +34,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     if calc_type == 'forex' and forex is None:
         text += msg_enter_pair(user_id)
         state = ForexCalcState.pair
+        keyboard = kb_pair(user_id)
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)
         state = FutureCalcState.ticker

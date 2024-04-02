@@ -10,7 +10,7 @@ from common.utils import digit_accept, text_accept
 
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import kb_deal_profit_minus
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_freeze_calc
+from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_calculation_saved, msg_digit_error, msg_freeze_error, msg_frozen
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -23,22 +23,22 @@ def handle_loss(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         bot.send_message(
-            chat_id, 'Ошибка!\n' + msg_enter_profit_minus(user_id),
+            chat_id, msg_digit_error(user_id),
             reply_markup=kb_deal_profit_minus(user_id, stat_id)
         )
         return
 
+    calcService.set_profit(stat_id, -abs(value))
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return
 
-    mes = msg_calculate_result(user_id, calc_info)
-    mes += '\n\n✅ Расчет сохранен!'
+    mes = msg_calculate_saved_result(user_id, calc_info)
+    mes += f'\n\n{msg_calculation_saved(user_id)}'
 
     bot.send_message(chat_id, mes)
     bot.delete_state(user_id, chat_id)
 
-    calcService.set_profit(stat_id, -abs(value))
 
 
 def handle_freeze_dt(message: Message, bot: TeleBot):
@@ -50,16 +50,11 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         mes_id = data.get('mes_id', 0)
 
-    value = text_accept(message)
-    if value is None:
-        bot.send_message(
-            chat_id, '✍️ Введите количество часов или "дату до" текстом',
-        )
-        return
-
-    time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'
+    value = text_accept(message) or ''
 
     try:
+        time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'
+
         if re.match(time_reg, value) is not None:
             hours, minutes = value.split(':')
             finish_freeze = get_datetime_now() + timedelta(hours=int(hours), minutes=int(minutes))
@@ -77,19 +72,14 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
             ) - timedelta(hours=3)
     except:
         bot.send_message(
-            chat_id,
-            (
-                'Неверный формат\n '
-                '✍️ Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>.\n'
-                '✍️ Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>.'
-            ),
+            chat_id, msg_freeze_error(user_id),
         )
         return
 
     db.set_user_calc_freeze(user_db_id, finish_freeze)
     bot.send_message(
         chat_id,
-        f'❄️ Калькулятор заморожен до <b>{get_str_by_datetime(finish_freeze)}</b>'
+        msg_frozen(user_id, get_str_by_datetime(finish_freeze))
     )
 
 

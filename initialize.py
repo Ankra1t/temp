@@ -1,13 +1,12 @@
 from aiocryptopay import Networks
 
-from aiocryptopay import AioCryptoPay, Networks
+from aiocryptopay import Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 
 from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 
 from db import db
-from keyboard_inlines import Admin_kb_inlines
 from Classes.GuardPaymentAccess import GuardPaymentAccess
 from Classes.Payments import Payments
 from Classes.TariffManager import TariffManager
@@ -42,7 +41,5 @@ calcService = CalculationService(bot, db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)
 
 
-kb_inl_admin = Admin_kb_inlines()
-
-text_editor = TextEditor(bot, kb_inl_admin)
-tariff_manager = TariffManager(bot, kb_inl_admin)
+text_editor = TextEditor(bot)
+tariff_manager = TariffManager(bot)

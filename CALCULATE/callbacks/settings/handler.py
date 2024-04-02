@@ -43,7 +43,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_deposit(user_id),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id))
+            reply_markup=kb_base_cancel(user_id)
+        )
         bot.set_state(user_id, SettingsState.deposit, chat_id)
 
     if type == 'set_risk_percent':
@@ -161,9 +162,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
         else:
             market: Any = type_list[1]
-
             db.set_calculator_user_market(user_db_id, market)
-
             send_settings(bot, call.message, user_id)
 
     if 'welcome_confirm' in type:

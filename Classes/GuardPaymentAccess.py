@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from db import db
-from models import User, UserInfo, Subscribe, Transactions
+from models import User, Subscribe, Transactions
 
 
 class GuardPaymentAccess():

@@ -1,3 +1,4 @@
+# type: ignore
 from .admin.tariff import AdminTariffState
 from .admin.workers import AdminWorkersState
 from .admin.params import AdminParamsState

@@ -1,5 +1,5 @@
 from common.dt import get_datetime_now, get_str_by_datetime
-from common.utils import get_print_float
+from common.utils import get_lang, get_print_float
 from models import Price
 
 
@@ -21,11 +21,26 @@ https://t.me/{bot_name}/?start={user_id}
 """
 
 
-def msg_site_login():
-    return f"""<b><u>Вход на сайт</u></b>
+def msg_site_login(user_id: int):
+    lang = get_lang(user_id)
 
-👇 Нажмите на кнопку для перехода на сайт
-<i>Ссылка действует несколько минут</i>
+    texts = {
+        'ru': {
+            'name': 'Вход на сайт',
+            'click': 'Нажмите на кнопку для перехода на сайт',
+            'time': 'Ссылка действует несколько минут',
+        },
+        'en': {
+            'name': 'Site',
+            'click': 'Press the button to go website',
+            'time': 'The link is valid for several minutes',
+        },
+    }
+
+    return f"""<b><u>{texts[lang]['name']}</u></b>
+
+👇 {texts[lang]['click']}
+<i>{texts[lang]['time']}</i>
 """
 
 
