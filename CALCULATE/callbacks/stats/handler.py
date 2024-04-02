@@ -6,7 +6,7 @@ from common.utils import set_state_data
 from initialize import calcService
 from db import db
 from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus
+from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_calculation_saved, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
 from CALCULATE.states import StatsState
 
 from .keyboards import kb_deal_profit_minus, kb_deal_result, kb_set_calc_stats
@@ -17,10 +17,9 @@ from ..pages import send_main
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = stats_factory.parse(call.data)
     type = callback_data.get('type', '')
-    stat_id = int(callback_data.get('stat_id', '0'))
+    stat_id = int(callback_data.get('stat_id', 0))
 
     user_id = call.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
@@ -30,7 +29,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         date = get_datetime_now() + timedelta(hours=int(time))
 
         bot.edit_message_text(
-            f'Калькулятор заморожен до <b>{get_str_by_datetime(date)}</b>',
+            msg_frozen(user_id, get_str_by_datetime(date)),
             chat_id, mes_id
         )
 
@@ -39,8 +38,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         _, profit = type.split('+')
 
         if profit == '':
-            bot.edit_message_text(
-                'Как вы закрыли данную сделку?', chat_id, mes_id,
+            bot.delete_message(chat_id, mes_id)
+            bot.send_message(
+                chat_id, msg_enter_save_calc(user_id),
                 reply_markup=kb_deal_result(user_id, stat_id)
             )
         else:
@@ -73,12 +73,16 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     is_cancel = True
 
-                mes = msg_calculate_result(user_id, calc_info)
-
                 if is_cancel:
+                    mes = msg_calculate_result(user_id, calc_info)
                     keyboard = kb_set_calc_stats(user_id, stat_id)
                 else:
-                    mes += '\n\n✅ Расчет сохранен!'
+                    calc_info = db.get_calculation(stat_id)
+                    if calc_info is None:
+                        return
+
+                    mes = msg_calculate_saved_result(user_id, calc_info)
+                    mes += f'\n\n{msg_calculation_saved(user_id)}'
                     keyboard = None
 
                 bot.edit_message_text(

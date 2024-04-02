@@ -11,7 +11,7 @@ from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
     msg_digit_error, msg_enter_stop_loss, msg_enter_trading_style, msg_pair_error,
-    msg_pair_not_found, msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found
+    msg_pair_not_found, msg_sl_op_equal_error, msg_ticker_error, msg_ticker_not_found, msg_trading_style_error
 )
 
 
@@ -100,7 +100,7 @@ def handle_currency(message: Message, bot: TeleBot):
     check = currencyService.getPrice('USD', value)
     if not check:
         bot.send_message(
-            chat_id, 'Валюта не найдена\n' + msg_currency_error(user_id),
+            chat_id, msg_currency_error(user_id, 'not_found'),
             reply_markup=kb_main_cancel(user_id))
         return
 
@@ -170,10 +170,11 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     value = text_accept(message)
 
+    msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
+
     if value is None:
         bot.send_message(
-            chat_id,
-            'Введите стиль текстом\n' + msg_enter_trading_style(user_id),
+            chat_id, msg_error,
             reply_markup=kb_main_cancel(user_id)
         )
         return
@@ -191,8 +192,10 @@ def handle_open_price(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(chat_id, 'Введите число:',
-                         reply_markup=kb_main_cancel(user_id))
+        bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_main_cancel(user_id)
+        )
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -223,8 +226,10 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
-        bot.send_message(chat_id, msg_digit_error(user_id),
-                         reply_markup=kb_main_cancel(user_id))
+        bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_main_cancel(user_id)
+        )
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -279,8 +284,10 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
-        bot.send_message(chat_id, 'Введите число:',
-                         reply_markup=kb_main_cancel(user_id))
+        bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_main_cancel(user_id)
+        )
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:

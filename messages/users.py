@@ -1,27 +1,35 @@
+from common.utils import get_lang
+
+
 def end_trial_subscribe_msg():
     return f"""
 Ваша пробная подписка закончилась. Теперь вы можете оформить платную подписку и пользоваться рекомендациями целый месяц.
 """
+
 
 def end_paid_subscribe_msg(end_date):
     return f"""
 Ваша платная подписка закончилась {end_date}. Пожалуйста, продлите подписку, чтобы снова получать рекомендации.
 """
 
+
 def gift_subscribe_msg(end_date):
     return f"""
 Поздравляем админ подарил вам платную подписку до {end_date}.
 """
+
 
 def gift_trial_subscribe_msg(end_date):
     return f"""
 Вам выдан бесплатный период до {end_date}.
 """
 
+
 def paid_subscribe_msg(end_date, tariff_name):
     return f"""
 Благодарим за оплату подписки, <b>"{tariff_name}"</b> будет действовать <b>до {end_date}</b>
 """
+
 
 def welcome_msg():
     return f"""
@@ -36,9 +44,31 @@ def welcome_msg():
 На <b>бесплатной</b> основе в этом чате Вы будете получать ежедневно рекомендации и информацию по торговле. 
 """
 
-def welcome_trial_subscribe_msg(days: int=2):
+
+def welcome_trial_subscribe_msg(days: int = 2):
     return f"""
 Поздравляем, за вашу регистрацию в боте вы получаете {str(days)} дн бесплатных рекомендаций! Пользуйтесь, и если понравиться можете
 купить подписку на месяц
 """
 
+
+def msg_start(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Доброго времени. Выберите действие',
+        'en': 'Good time. Choose an action'
+    }
+
+    return text[lang]
+
+
+def msg_choose_tariff_type(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Какой продукт вас интересует?',
+        'en': 'Which product interests you?',
+    }
+
+    return text[lang]

@@ -9,24 +9,28 @@ MESSAGE_TYPE = Literal['text', 'photo', 'video']
 
 
 class Notifier():
-    def __init__(self, bot: TeleBot) -> None:
+    def __init__(self, bot: TeleBot, bot_users: TeleBot) -> None:
         self.bot = bot
-        self.users = (156045434, 396355273, 774944610)
+        self.bot_users = bot_users
+        self.users = (156045434, ) #774944610
 
-    def _send_by_type(self, type: MESSAGE_TYPE, user_id: int, text: str, media_id: str | None = None):
+    def _send_by_type(self, bot: TeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         try:
             if type == 'photo':
-                self.bot.send_photo(user_id, media_id, caption=text)
+                bot.send_photo(user_id, media_id, caption=text)
             elif type == 'video':
-                self.bot.send_video(user_id, media_id, caption=text)
-            elif type == 'text':
-                self.bot.send_message(user_id, text)
+                bot.send_video(user_id, media_id, caption=text)
+            else: # text
+                bot.send_message(user_id, text)
         except Exception as e:
             print(f'Ошибка бота уведомлений: {e}')
 
-    def send_notification(self, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
+    def _send(self, bot: TeleBot, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         for user in self.users:
-            self._send_by_type(type, user, text, media_id)
+            self._send_by_type(bot, user, type, text, media_id)
+
+    def send_notification(self, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
+        self._send(self.bot, type, text, media_id)
 
     def send_user_is_registered(self, new_user: UserInfo):
         message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
@@ -34,4 +38,4 @@ class Notifier():
             message += f'@{new_user.username}\n'
         message += f'Дата и время: {get_str_by_datetime(new_user.registration_dt)}'
 
-        self.send_notification('text', message)
+        self._send(self.bot_users, 'text', message)

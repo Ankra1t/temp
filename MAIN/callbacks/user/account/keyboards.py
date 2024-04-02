@@ -1,5 +1,7 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from common.keyboard import back_txt
+
 from .filter import user_account_factory
 
 
@@ -13,16 +15,13 @@ def getButton(text: str, type: str):
 def kb_user_account():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    # btn1 = getButton("Купить рекомендации на месяц", 'buy_month')
     referral = getButton("🌐 Рефералка", 'referral')
     purchases = getButton("🛍 Мои покупки", 'purchases')
     # password = getButton('Изменить пароль', 'password')
-    back = getButton("Назад", 'main')
+    back = getButton(back_txt(), 'main')
     # btn5 = getButton("Пополнить баланс")
 
-    # keyboard.add(btn1)
-    keyboard.add(referral, purchases)
-    keyboard.add(back)
+    keyboard.add(purchases, back)
     return keyboard
 
 
@@ -30,7 +29,7 @@ def kb_user_referral():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn1 = getButton("📋 Список рефералов", 'referral_list')
-    btn2 = getButton("Назад", 'back')
+    btn2 = getButton(back_txt(), 'back')
 
     keyboard.add(btn1, btn2)
     return keyboard

@@ -42,7 +42,7 @@ def kb_settings(user_id: int):
             'base': 'Base values',
             'lang': 'Language',
             'market': 'Market',
-            'style': 'trading style',
+            'style': 'Trading style',
             'reset': 'Reset',
             'summury_profit': 'Profit division',
         }

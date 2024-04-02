@@ -1,17 +1,16 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from MAIN.callbacks.user.pages import send_tariffs_list_item
 from initialize import pays, pays_banker
 from config_logger import logger
 from models import Invoice
-from db import db
 
-from MAIN.common.messages import msg_user_tariff
 from MAIN.callbacks import send_user_tariffs, send_user_main
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
 from .keyboards import (
-    kb_bill_many, kb_bill_cryptobot, kb_user_tariff_back, kb_tariff_pay
+    kb_bill_many, kb_bill_cryptobot
 )
 
 
@@ -19,6 +18,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = user_tariff_factory.parse(call.data)
     type = callback_data.get('type', '')
     target_id = callback_data.get('tariff_id', '')
+    tariff_type = callback_data.get('tariff_type', '')
+    page = int(callback_data.get('page', 0))
 
     chat_id = call.message.chat.id
     user_id = call.from_user.id
@@ -124,7 +125,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                     chat_id,
                     edit_wait_mess.message_id,
                     reply_markup=kb_bill_many(
-                        show_price, pay_link1, pay_link2 or '')
+                        show_price, pay_link1, pay_link2 or ''
+                    )
                 )
 
             else:
@@ -133,7 +135,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                         tariff.name),
                     chat_id,
                     edit_wait_mess.message_id,
-                    reply_markup=kb_bill_cryptobot(show_price, pay_link1)
+                    reply_markup=kb_bill_cryptobot(
+                        show_price, pay_link1
+                    )
                 )
 
         else:
@@ -142,38 +146,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                     tariff.name),
                 chat_id,
                 edit_wait_mess.message_id,
-                reply_markup=kb_bill_cryptobot(show_price, pay_link1)
+                reply_markup=kb_bill_cryptobot(
+                    show_price, pay_link1
+                )
             )
 
     if type == 'get_tariff':
-        tariff = db.get_first_tariff_by_product(target_id)
-
-        if tariff is None:
-            bot.edit_message_text(
-                'Тариф не найден', chat_id,
-                reply_markup=kb_user_tariff_back(user_id)
-            )
-        else:
-            tariff_id = tariff.id or 0
-            msg_tariff = msg_user_tariff(user_id, tariff)
-
-            try:
-                if tariff.img:
-                    bot.send_photo(
-                        chat_id, tariff.img,
-                        # caption=desc_template + discount_show,
-                        reply_markup=kb_tariff_pay(tariff_id)
-                    )
-                    bot.delete_message(chat_id, mes_id)
-                else:
-                    bot.send_message(
-                        chat_id, msg_tariff,
-                        reply_markup=kb_tariff_pay(tariff_id)
-                    )
-            except:
-                print(
-                    f'Проблема с отправкой тарифа [id={tariff_id}] пользователю'
-                )
+        send_tariffs_list_item(
+            bot, call.message, user_id, tariff_type, page
+        )
 
     bot.answer_callback_query(call.id)
 

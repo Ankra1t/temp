@@ -9,8 +9,8 @@ from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, 
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style,
-    msg_success_base_set, msg_success_edit
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style, msg_splitting_error,
+    msg_success_base_set, msg_success_edit, msg_text_error
 )
 
 
@@ -31,8 +31,10 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         value = digit_accept(message)
         if value is None:
-            bot.send_message(chat_id, msg_digit_error(user_id),
-                             reply_markup=kb_base_cancel(user_id))
+            bot.send_message(
+                chat_id, msg_digit_error(user_id),
+                reply_markup=kb_base_cancel(user_id)
+            )
             return
 
         # if type == 'base_risk' and (value <= 0 or value >= 100):
@@ -85,7 +87,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
     check = currencyService.getPrice('USD', value)
     if not check:
         bot.send_message(
-            chat_id, 'Валюта не найдена\n' + msg_currency_error(user_id),
+            chat_id, msg_currency_error(user_id, 'not_found'),
             reply_markup=kb_base_cancel(user_id))
         return
 
@@ -121,14 +123,14 @@ def handle_splitting(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id,
-            '<i>Введите процент в виде числа</i>\n' + enter_mes
+            msg_splitting_error(user_id, 'digit') + '\n' + enter_mes
         )
         return
 
     if sum(current_split) + value > 100:
         bot.send_message(
             chat_id,
-            '<i>Суммарный процент превысил 100</i>\n' + enter_mes
+            msg_splitting_error(user_id, 'sum') + '\n' + enter_mes
         )
         return
 
@@ -155,7 +157,7 @@ def handle_day_risk(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id,
-            'Введите значение текстом\n' + enter_mes,
+            msg_text_error(user_id) + '\n' + enter_mes,
             reply_markup=keyboard
         )
         return
@@ -192,7 +194,7 @@ def handle_round_count(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id,
-            'Введите число\n' + enter_mes,
+            msg_digit_error(user_id) + '\n' + enter_mes,
             reply_markup=keyboard
         )
         return
@@ -200,7 +202,7 @@ def handle_round_count(message: Message, bot: TeleBot):
     if value < 0 or value > 5:
         bot.send_message(
             chat_id,
-            'Введите число от 0 до 5\n' + enter_mes,
+            msg_digit_error(user_id, 0, 5) + '\n' + enter_mes,
             reply_markup=keyboard
         )
         return
@@ -221,7 +223,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id,
-            'Введите стиль текстом\n' + msg_enter_trading_style(user_id),
+            msg_text_error(user_id) + '\n' + msg_enter_trading_style(user_id),
             reply_markup=kb_base_cancel(user_id)
         )
         return

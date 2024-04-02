@@ -10,7 +10,8 @@ from .admin.pages import (
 )
 from .user.pages import (
     send_user_education, send_user_main, send_user_terms,
-    send_user_account, send_site_code, send_user_tariffs
+    send_user_account, send_site_code, send_user_tariffs,
+    send_tariffs_list_item
 )
 
 from .common.livepost.handler import registration as _reg_livepost
@@ -66,7 +67,7 @@ from .user.account.keyboards import kb_user_account, kb_user_referral, kb_user_r
 
 from .user.tariff.handler import registration as _reg_user_tariff
 from .user.tariff.keyboards import (
-    kb_tariff_pay, kb_bill_bitbanker, kb_bill_cryptobot,
+    kb_tariff_list, kb_bill_bitbanker, kb_bill_cryptobot,
     kb_bill_many, kb_choose_products, kb_user_tariff_back
 )
 

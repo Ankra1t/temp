@@ -40,15 +40,15 @@ class AuthMiddleWare(BaseMiddleware):
                 ref_id = 0
 
             # Регистрация, пробный период, добавление таблиц бота
-            registration(user_id, username, ref_id)
+            is_registered = registration(user_id, username, ref_id)
             new_user = db.get_user_by_tg_id(user_id)
 
-            if new_user is not None:
+            if new_user is not None and is_registered:
                 db.create_tg_user_tables(new_user.id)
 
                 # Проверка языка
                 lang = message.from_user.language_code.lower()
-                lang = lang if (lang in LANGUAGES) else 'ru'
+                lang = lang if (lang in LANGUAGES) else 'en'
                 db.set_user_lang(new_user.id, lang)
 
                 # Уведомление о регистрации
