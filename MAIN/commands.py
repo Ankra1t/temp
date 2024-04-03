@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.common.messages import msg_support
 from db import db
 
 from CALCULATE.callbacks import send_manual_page
@@ -47,10 +48,12 @@ def _support(message: Message, bot: TeleBot):
     user_id = message.from_user.id
 
     sup = db.get_support_name()
-    msg = 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже👇'
+    msg = msg_support(user_id)
 
-    bot.send_message(message.chat.id, msg,
-                     reply_markup=kb_support(user_id, sup))
+    bot.send_message(
+        message.chat.id, msg,
+        reply_markup=kb_support(user_id, sup)
+    )
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
@@ -110,6 +113,6 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_manual, commands=['manual'])
     reg_mes(_calc, commands=['calc'])
-    reg_mes(_site, commands=['site'])
+    # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])

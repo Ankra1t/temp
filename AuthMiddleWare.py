@@ -29,6 +29,7 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         user_role = check_registrate(user_id)
+
         if user_role is None:
             # Проверяем реферальный id
             ref_id = message.text
@@ -55,26 +56,26 @@ class AuthMiddleWare(BaseMiddleware):
                 notifier.send_user_is_registered(new_user)
 
                 # Назначение тестовой подписки новому пользователю
-                pay_guard.set_trial(user_id)
+                # pay_guard.set_trial(user_id)
                 # Запланировать сообщение о пробной подписке через час
                 # date_1hour =  datetime.now() + timedelta(hours=1)
                 # serv_tasks.plan_message(user_id, date_1hour, welcome_trial_subscribe_msg(pay_guard.get_option_trial_days()))
 
-                notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
-                    user_id=new_user.id,
-                    user_nike=f'@{new_user.username}' if new_user.username else str(new_user.tg_id),
-                    days=pay_guard.get_option_trial_days()
-                ))
+                # notifier.send_notification('text', mess_set_trial_subsctibe_new_user(
+                #     user_id=new_user.id,
+                #     user_nike=f'@{new_user.username}' if new_user.username else str(new_user.tg_id),
+                #     days=pay_guard.get_option_trial_days()
+                # ))
             else:
                 print(f'Ошибка регистрации пользователя tg_id = {user_id} {username}')
 
             data['has_registered_now'] = True
             user_role = 0
-
-        # Если нет таблицы связанной с ботом, то создаем
-        is_tg_tables = db.check_tg_user_tables(user_db_id)
-        if not is_tg_tables:
-            db.create_tg_user_tables(user_db_id)
+        else:
+            # Если нет таблицы связанной с ботом, то создаем
+            is_tg_tables = db.check_tg_user_tables(user_db_id)
+            if not is_tg_tables:
+                db.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
 

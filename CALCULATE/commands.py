@@ -13,16 +13,17 @@ def _start(message: Message, bot: TeleBot, data: dict):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    has_registered_now = data.get('has_registered_now')
-    if has_registered_now:
-        bot.send_message(
-            chat_id, msg_welcome(user_id),
-            reply_markup=kb_settings_confirm(user_id, 'welcome')
-        )
-    else:
-        send_main(message, bot, user_id, True)
+    # has_registered_now = data.get('has_registered_now')
+    # if has_registered_now:
+    #     bot.send_message(
+    #         chat_id, msg_welcome(user_id),
+    #         reply_markup=kb_settings_confirm(user_id, 'welcome')
+    #     )
+    # else:
+    #     send_main(message, bot, user_id, True)
 
-    bot.clear_step_handler(message)
+    send_main(message, bot, user_id, True)
+
     bot.delete_state(user_id, chat_id)
 
 

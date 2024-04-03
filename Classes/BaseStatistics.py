@@ -55,9 +55,9 @@ class BaseStatistics(object):
             purchase = Purchase(
                 user_id=tg_id,
                 price_name=price.name if (price is not None) else None,
-                real_sum=trans_item.sum,
+                sum=trans_item.sum,
                 currency=price.currency if (price is not None) else None,
-                payment_date=trans_item.payment_date,
+                payment_date=trans_item.payment_date, # type: ignore
             )
             purchase_text = self.temp_client_purchase(purchase)
             full_purchases_text = tg_clients[tg_id] if tg_clients.get(
@@ -151,7 +151,7 @@ class BaseStatistics(object):
 Сумма: {} {}
 Дата платежа: {}
         """.format(purchase.price_name,
-                   purchase.real_sum,
+                   purchase.sum,
                    purchase.currency,
                    payment_date_str
                    )

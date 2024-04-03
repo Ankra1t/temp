@@ -1296,7 +1296,7 @@ def msg_confirm_reset(user_id: int):
 
     texts = {
         'ru': 'Вы действительно хотите <b>сбросить</b> все настройки',
-        'en': 'Do you really want to drop </b> all settings?',
+        'en': 'Do you really want to <b>drop</b> all settings',
     }
 
     return f'⚠️ {texts[lang]}?'

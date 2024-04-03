@@ -6,9 +6,9 @@ from db import db
 from initialize import text_editor
 from AuthRoles import get_site_code
 
-from MAIN.common.messages import default_menu, msg_site_login, msg_user_tariff
+from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_tariff
 from messages.education import termins
-from messages.users import msg_choose_tariff_type, msg_start
+from messages.users import msg_choose_tariff_type, msg_no_tariffs, msg_start
 
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
@@ -80,24 +80,25 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     bot.delete_state(user_id, chat_id)
 
     referals = db.get_user_referals(user_id)
-
     count_ref = len(referals)
-    # TODO - добавить потраченные деньги и баланс пользователя
-    money = 0
-    balance = 0
 
-    text = f'*Ваш баланс:* {balance}р.\n*Всего потратили:* {money}р.\n*У вас рефералов:* {count_ref}'
-    keyboard = kb_user_account()
+    purchase = db.get_purchases_by_user(user_id)
+    money = 0
+    for el in purchase:
+        money += el.sum or 0
+
+    text = msg_user_account(user_id, money, count_ref)
+    keyboard = kb_user_account(user_id)
 
     if is_first:
         bot.send_message(
             user_id, text,
-            parse_mode='Markdown', reply_markup=keyboard
+            reply_markup=keyboard
         )
     else:
         bot.edit_message_text(
             text, chat_id, mes_id,
-            parse_mode='Markdown', reply_markup=keyboard
+            reply_markup=keyboard
         )
 
 
@@ -174,7 +175,7 @@ def send_tariffs_list_item(
 
     if count == 0:
         bot.edit_message_text(
-            'Тарифов нет', chat_id, mes_id,
+            msg_no_tariffs(user_id), chat_id, mes_id,
             reply_markup=kb_user_tariff_back(user_id)
         )
     else:
