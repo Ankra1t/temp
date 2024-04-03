@@ -27,7 +27,7 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
     except:
         return False
 
-    return response.status_code == 200
+    return response.status_code >= 200 and response.status_code < 300
 
 
 def get_site_code(user_id: int) -> str | Literal[False]:

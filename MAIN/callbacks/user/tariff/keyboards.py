@@ -16,9 +16,10 @@ def getButton(text: str, type: str, tariff_id: int | str = '', tariff_type='', p
 
 
 def kb_user_tariff_back(user_id: int):
+    lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    keyboard.add(getButton(back_txt(), 'go_tariff'))
+    keyboard.add(getButton(back_txt(lang), 'go_tariff'))
     return keyboard
 
 
@@ -50,10 +51,14 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
         else:
             prev_page = page - 1
 
-        btn_next = getButton(texts[lang]['next'],
-                             'get_tariff', '', tariff_type, next_page)
-        btn_prev = getButton(texts[lang]['prev'],
-                             'get_tariff', '', tariff_type, prev_page)
+        btn_next = getButton(
+            texts[lang]['next'],
+            'get_tariff', '', tariff_type, next_page
+        )
+        btn_prev = getButton(
+            texts[lang]['prev'],
+            'get_tariff', '', tariff_type, prev_page
+        )
         counter = getButton(f'{page + 1}/{count}', 'counter')
         keyboard.add(btn_prev, counter, btn_next)
 
@@ -66,42 +71,57 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
     return keyboard
 
 
-def kb_bill_cryptobot(price: str, pay_link: str):
+pays_translate = {
+    'ru': {
+        'cp': 'Оплатить через CryptoBot',
+        'bb': 'Оплатить через BitBanker'
+    },
+    'en': {
+        'cp': 'Pay via CryptoBot',
+        'bb': 'Pay via BitBanker'
+    }
+}
+
+
+def kb_bill_cryptobot(user_id: int, price: str, pay_link: str):
+    lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     pay_link_btn = InlineKeyboardButton(
-        f"Оплатить {price} через CryptoBot", pay_link
+        pays_translate[lang]['cp'] + f' {price}', pay_link
     )
-    btn_back = getButton(back_txt(), 'go_tariff')
+    btn_back = getButton(back_txt(lang), 'go_tariff')
 
     keyboard.add(pay_link_btn)
     keyboard.add(btn_back)
     return keyboard
 
 
-def kb_bill_bitbanker(price: str, pay_link: str):
+def kb_bill_bitbanker(user_id: int, price: str, pay_link: str):
+    lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     pay_link_btn = InlineKeyboardButton(
-        f"Оплатить {price} через BitBanker", pay_link
+        pays_translate[lang]['bb'] + f' {price}', pay_link
     )
-    btn_back = getButton(back_txt(), 'go_tariff')
+    btn_back = getButton(back_txt(lang), 'go_tariff')
 
     keyboard.add(pay_link_btn)
     keyboard.add(btn_back)
     return keyboard
 
 
-def kb_bill_many(price: str, pay_link_cryptobot: str, pay_link_bitbanker: str):
+def kb_bill_many(user_id: int, price: str, pay_link_cryptobot: str, pay_link_bitbanker: str):
+    lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     pay_link_btn1 = InlineKeyboardButton(
-        f"Оплатить {price} через CryptoBot", pay_link_cryptobot
+        pays_translate[lang]['cp'] + f' {price}', pay_link_cryptobot
     )
     pay_link_btn2 = InlineKeyboardButton(
-        f"Оплатить {price} через BitBanker", pay_link_bitbanker
+        pays_translate[lang]['bb'] + f' {price}', pay_link_bitbanker
     )
-    btn_back = getButton(back_txt(), 'go_tariff')
+    btn_back = getButton(back_txt(lang), 'go_tariff')
 
     keyboard.add(pay_link_btn2)
     keyboard.add(pay_link_btn1)

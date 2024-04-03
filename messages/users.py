@@ -72,3 +72,47 @@ def msg_choose_tariff_type(user_id: int):
     }
 
     return text[lang]
+
+
+def msg_loading_invoice(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Подготавливаем для вас возможные способы оплаты',
+        'en': 'Prepare possible payment methods for you',
+    }
+
+    return f'⏳ {texts[lang]}...'
+
+
+def msg_cryptopay(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'После перехода в CryptoBot нажмите <b>\"ЗАПУСТИТЬ\"</b> и <b>оплатите счет</b>',
+        'en': 'After the transition to Cryptobot, click <b>\"START\"</b> and <b>pay the bill</b>'
+    }
+
+    return f'❗️ {texts[lang]}'
+
+
+def msg_pays(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Выберите удобный способ оплаты (регистрация не требуется)',
+        'en': 'Select a convenient payment method (registration is not required)',
+    }
+
+    return f'❗️ {texts[lang]}'
+
+
+def msg_no_tariffs(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Тарифов нет',
+        'en': 'There are no tariffs',
+    }
+
+    return texts[lang]

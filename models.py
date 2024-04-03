@@ -143,19 +143,19 @@ class Purchase:
         price_id: int | None = None,
         price_name: str | None = None,
         type_product: str | None = None,
-        real_sum: float | None = None,
+        sum: float | None = None,
         tariff_price: float | None = None,
         currency: str | None = None,
         duration: int | None = None,
-        payment_date: str | None = None,
-        create_date: str | None = None,
+        payment_date: datetime | None = None,
+        create_date: datetime | None = None,
 
     ):
         self.user_id = user_id
         self.price_id = price_id
         self.price_name = price_name
         self.type_product = type_product
-        self.real_sum = real_sum
+        self.sum = sum
         self.tariff_price = tariff_price
         self.currency = currency
         self.duration_days = duration

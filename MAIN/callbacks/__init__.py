@@ -63,7 +63,7 @@ from .user.education.handler import registration as _reg_user_education
 from .user.education.keyboards import kb_user_education, kb_user_curs, kb_user_pages
 
 from .user.account.handler import registration as _reg_user_account
-from .user.account.keyboards import kb_user_account, kb_user_referral, kb_user_referral_list
+from .user.account.keyboards import kb_user_account, kb_user_referral, kb_user_referral_list, kb_user_purchases
 
 from .user.tariff.handler import registration as _reg_user_tariff
 from .user.tariff.keyboards import (
