@@ -45,6 +45,7 @@ class Database:
             price=data.get('price'),
             currency=data.get('currency'),
             image=data.get('img'),
+            img_en=data.get('img_en'),
             description=data.get('description'),
             discount_percent=data.get('discount_percent'),
             discount_findate=data.get('discount_findate'),
@@ -168,6 +169,20 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[update_price_image]: {e}')
+            self.connection.rollback()
+            return False
+
+    def update_price_image_en(self, id: int, value: str):
+        """Обновить цену"""
+        query = "UPDATE prices SET img_en = %s WHERE id = %s"
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price_image_en]: {e}')
             self.connection.rollback()
             return False
 

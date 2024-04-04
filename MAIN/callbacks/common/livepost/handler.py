@@ -16,7 +16,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     user_id = call.from_user.id
     chat_id = call.message.chat.id
-    mes_id = call.message.chat.id
+    mes_id = call.message.id
 
     if type == 'cancel':
         bot.edit_message_text('Отменено!', chat_id, mes_id)

@@ -89,6 +89,7 @@ class Price:
         description: str,
         id: int | None = None,
         image: str | None = None,
+        img_en: str | None = None,
         discount_percent: float | None = None,
         discount_findate: datetime | None = None,
         price_findate: datetime | None = None,
@@ -100,6 +101,7 @@ class Price:
         self.duration_days = duration
         self.description = description
         self.img = image
+        self.img_en = img_en
         self.type_product = type_product
         self.switch_active = switch_active
         self.price_findate = price_findate
