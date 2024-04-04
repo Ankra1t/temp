@@ -285,9 +285,7 @@ class PaymentsBanker(object):
     # # # # # # # Транзакции
     def get_wait_transaction_by_invoice_id(self, invoice_id, asset):
         # Ищем подписки только со статусом ожидания
-        status = 'wait_payments'
-        transaction_info = db.get_wait_transaction(
-            invoice_id, status)
+        transaction_info = db.get_wait_transaction(invoice_id)
 
         print(f'transaction_info ')
         print(transaction_info)
@@ -301,7 +299,7 @@ class PaymentsBanker(object):
         return None
 
     def transactions_complete(self, transaction_id):
-        db.set_transactions_complete(transaction_id)
+        db.success_transaction(transaction_id)
 
     def set_transactions_for_wait(self, user_id, iv: InvoiceBBanker, price_id):
         status = 'wait_payments'
@@ -319,9 +317,8 @@ class PaymentsBanker(object):
         invoice = update.payload
 
         # Ищем подписки только со статусом ожидания
-        status = 'wait_payments'
         transaction = db.get_wait_transaction(
-            str(invoice.invoice_id), status # type: ignore
+            str(invoice.invoice_id) # type: ignore
         )
 
         # print(f'transaction_info ')

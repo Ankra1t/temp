@@ -589,12 +589,12 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_wait_transaction(self, code: str, status: str):
+    def get_wait_transaction(self, code: str):
         query = (
             "SELECT * FROM transactions "
             "WHERE code = %s AND status = %s"
         )
-        params = (code, status)
+        params = (code, 'wait_payments')
 
         try:
             self.curs.execute(query, params)
@@ -813,7 +813,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def set_transactions_complete(self, id: int):
+    def success_transaction(self, id: int):
         datetime_now = get_datetime_now()
         query = "UPDATE transactions set status = %s, payment_date = %s, created_at = %s WHERE id = %s"
         params = ('paid', datetime_now, datetime_now, id, )
@@ -823,7 +823,20 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_transactions_complete]: {e}')
+            print(f'ERROR[success_transaction]: {e}')
+            self.connection.rollback()
+            return False
+
+    def cancel_transaction(self, id: int):
+        query = "DELETE FROM transactions WHERE id = %s"
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[cancel_transaction]: {e}')
             self.connection.rollback()
             return False
 

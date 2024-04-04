@@ -1,7 +1,6 @@
 from config_logger import logger
 from flask import Response, Request
 
-import math
 from hmac import HMAC
 from hashlib import sha256
 import json
@@ -9,7 +8,6 @@ import json
 from db import db
 from typing import Callable
 import requests
-from common.dt import get_datetime_now
 from models import Invoice, Price, Transactions, Update
 
 
@@ -90,13 +88,9 @@ class Payments(object):
         return db.get_price_by_id(tariff_id)
 
     def check_discount_price(self, tariff: Price):
-        if tariff.discount is not None:
-            now = get_datetime_now()
-            fin_date_discount = tariff.discount.findate
-            if fin_date_discount > now:
-                # return tariff.price - ((tariff.price*tariff.discount.percent)/100))
-                return math.ceil(tariff.price - ((tariff.price * tariff.discount.percent) / 100))
-        return tariff.price
+        if tariff.discount is None:
+            return tariff.price
+        return round(tariff.price * (1 - tariff.discount.percent / 100))
 
     def set_transactions_for_wait(self, user_id: int, iv: Invoice, price_id: int):
         transactions = Transactions(
@@ -114,9 +108,7 @@ class Payments(object):
         invoice = update.payload
 
         # Ищем подписки только со статусом ожидания
-        status = 'wait_payments'
-        transaction = db.get_wait_transaction(
-            str(invoice.invoice_id), status)
+        transaction = db.get_wait_transaction(str(invoice.invoice_id))
 
         # if transaction_info is not None:
         #     return {
@@ -129,9 +121,8 @@ class Payments(object):
             return transaction
         return None
 
-
     def transactions_complete(self, transaction_id):
-        db.set_transactions_complete(transaction_id)
+        db.success_transaction(transaction_id)
 
     def get_updates(self, request: Request) -> Response:
         """

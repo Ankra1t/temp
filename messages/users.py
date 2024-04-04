@@ -96,6 +96,24 @@ def msg_cryptopay(user_id: int):
     return f'❗️ {texts[lang]}'
 
 
+def msg_yookassa(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            '1': 'Нажмите на кнопку и оплатите тариф',
+            '2': 'После подтверждения оплаты вам придет сообщение'
+        },
+        'en': {
+            '1': 'Click on the button and pay the tariff',
+            '2': 'After confirming the payment, you will receive a message'
+        }
+    }
+
+    return f"""{texts[lang]["1"]} 👇
+{texts[lang]["2"]}"""
+
+
 def msg_pays(user_id: int):
     lang = get_lang(user_id)
 

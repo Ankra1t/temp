@@ -1,10 +1,8 @@
 from telebot import types
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 from NOTIFIER import notifier
-from NOTIFIER.messages import mess_set_trial_subsctibe_new_user
 
 
-from initialize import pay_guard
 from db import db, LANGUAGES
 from AuthRoles import check_registrate, registration
 
