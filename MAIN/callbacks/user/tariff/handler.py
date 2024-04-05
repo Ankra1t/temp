@@ -3,7 +3,8 @@ from telebot.types import CallbackQuery
 
 from Classes.YooKassa import create_payment
 from MAIN.callbacks.user.pages import send_tariffs_list_item
-from initialize import pays
+from MAIN.common.utils import check_discount_price
+from db import db
 from messages.users import msg_loading_invoice, msg_yookassa
 
 from MAIN.callbacks import send_user_tariffs, send_user_main
@@ -42,15 +43,15 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             msg_loading_invoice(user_id)
         )
 
-        tariff = pays.get_params_payservice_by_id(target_id)
+        tariff = db.get_price_by_id(target_id)
 
         if tariff is None:
             return
 
         bot_url = f'https://t.me/{bot.get_me().username}'
-        price = pays.check_discount_price(tariff)
+        price = check_discount_price(tariff)
         payment_url = create_payment(
-            user_id, price, tariff.currency, tariff.name, bot_url
+            user_id, tariff, bot_url
         )
 
         if payment_url == False:

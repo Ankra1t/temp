@@ -23,13 +23,15 @@ class BaseStatistics(object):
         if period:
             start_date, fin_date = self.get_dates_by_period(period)
             trans_list = self.db.get_paid_transactions_period(
-                start_date, fin_date)
+                start_date, fin_date
+            )
         elif product:
             trans_list = self.db.get_paid_transactions_product(product)
         elif start_to_fin:
             start_date, fin_date = start_to_fin.split('|')
             trans_list = self.db.get_paid_transactions_period(
-                start_date, fin_date)
+                start_date, fin_date
+            )
         else:
             trans_list = self.db.get_paid_transactions_all()
 
@@ -40,39 +42,33 @@ class BaseStatistics(object):
             )
             return False
 
-        tg_clients = {}
-        logger.info(
-            f"Обрабатываем транзакции len(trans_list) [{len(trans_list)}]")
+        clients = {}
         for i in range(0, len(trans_list)):
             trans_item = trans_list[i]
-            tg_id = trans_item.user_id
-
-            if trans_item.price_id is None:
-                continue
+            user_id = trans_item.user_id
 
             # Формируем покупку
-            price = self.db.get_price_by_id(trans_item.price_id, None)
             purchase = Purchase(
-                user_id=tg_id,
-                price_name=price.name if (price is not None) else None,
+                user_id=user_id,
+                price_name=trans_item.name,
                 sum=trans_item.sum,
-                currency=price.currency if (price is not None) else None,
+                currency=trans_item.currency,
                 payment_date=trans_item.payment_date, # type: ignore
             )
             purchase_text = self.temp_client_purchase(purchase)
-            full_purchases_text = tg_clients[tg_id] if tg_clients.get(
-                tg_id) else ''
-            tg_clients[tg_id] = "{}{}".format(
+            full_purchases_text = clients[user_id] if clients.get(
+                user_id) else ''
+            clients[user_id] = "{}{}".format(
                 full_purchases_text, purchase_text)
 
         logger.info(
-            f"Выводим список клиентов кол-во tg_clients [{len(tg_clients)}]")
+            f"Выводим список клиентов кол-во tg_clients [{len(clients)}]")
 
         # Выводим список клиентов
-        for i, el in enumerate(tg_clients):
-            user = self.db.get_user_by_tg_id(el)
+        for i, el in enumerate(clients):
+            user = self.db.get_user_by_id(el)
             if user is not None:
-                msg = self.temp_client(user, str(tg_clients.get(el)))
+                msg = self.temp_client(user, str(clients.get(el)))
                 self.bot.send_message(chat_id, msg, reply_markup=None)
             else:
                 logger.error(
@@ -123,13 +119,11 @@ class BaseStatistics(object):
 
     def count_payments_dry(self):
         """Кол-во плативших пользователей по транзакциям"""
-        trans_list = self.db.get_paid_transactions_all_dry_users()
-        return len(trans_list) if trans_list else 0
+        return self.db.get_paid_users_count()
+
 
     # # # # # # Специализированные показателей
-
     # # # # # # Шаблоны вывода
-
     def temp_client(self, user: UserInfo, purchases: str):
         """Вывести одного пользователя"""
         template = """

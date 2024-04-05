@@ -8,7 +8,7 @@ import json
 from db import db
 from typing import Callable
 import requests
-from models import Invoice, Price, Transactions, Update
+from models import Invoice, Update
 
 
 class Payments(object):
@@ -84,25 +84,22 @@ class Payments(object):
 
         return Invoice(**response_json['result'])
 
-    def get_params_payservice_by_id(self, tariff_id):
-        return db.get_price_by_id(tariff_id)
-
-    def check_discount_price(self, tariff: Price):
-        if tariff.discount is None:
-            return tariff.price
-        return round(tariff.price * (1 - tariff.discount.percent / 100))
-
     def set_transactions_for_wait(self, user_id: int, iv: Invoice, price_id: int):
-        transactions = Transactions(
+        tariff = db.get_price_by_id(price_id)
+        if tariff is None:
+            return
+
+        db.add_transaction(
             user_id,
-            code=str(iv.invoice_id),
-            link=iv.pay_url,
-            sum=iv.amount,
-            currency=iv.asset,
-            price_id=price_id,
-            status='wait_payments'
+            str(iv.invoice_id),
+            iv.pay_url,
+            iv.amount,
+            'wait_payments',
+            iv.asset,
+            tariff.name,
+            tariff.duration_days,
+            tariff.type_product
         )
-        db.add_transaction(transactions)
 
     def get_wait_transaction_for_complete(self, update: Update):
         invoice = update.payload

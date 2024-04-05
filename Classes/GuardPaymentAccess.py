@@ -31,18 +31,23 @@ class GuardPaymentAccess():
         else:
             tariff_id = custom_tariff_id
 
+        user_db_id = db.get_user_id_by_tg_id(tg_user_id)
+
         subscribe = Subscribe(
-            tg_user_id,
-            finish_date, 1, None, 'trial', prices_id=tariff_id
+            id=-1,
+            user_id=user_db_id,
+            finish_dt=finish_date,
+            product_type='trial',
+            active=True,
+            gift_admin=1
         )
 
         db.add_subsbscribe(subscribe)
 
         # TODO
-        finish_date_show_user = get_str_by_datetime(finish_date)
-        finish_date_show_admin = get_str_by_datetime(finish_date)
+        finish_date_str = get_str_by_datetime(finish_date)
 
-        return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
+        return {'user': finish_date_str, 'admin': finish_date_str}
 
     def set_option_trial_days(self, days):
         print(f'days ')
@@ -58,8 +63,20 @@ class GuardPaymentAccess():
         now = get_datetime_now()
         finish_date = now + timedelta(days=count_days)
 
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        tariff = db.get_price_by_id(price_id)
+        if tariff is not None:
+            type = tariff.type_product
+        else:
+            type = 'trial'
+
         subscribe = Subscribe(
-            user_id, finish_date, 1, None, 'paid', price_id, None
+            id=-1,
+            user_id=user_db_id,
+            finish_dt=finish_date,
+            product_type=type,
+            active=True,
+            gift_admin=1
         )
         db.add_subsbscribe(subscribe)
 
@@ -69,9 +86,10 @@ class GuardPaymentAccess():
 
         return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
 
-    def check_trial_active_by_user(self, user_id):
+    def check_trial_active_by_user(self, tg_id: int):
         """Проверить есть ли у пользователя тестовая подписка"""
-        trial_subscribe = db.get_user_trial_subscribe(user_id)
+        user_db_id = db.get_user_id_by_tg_id(tg_id)
+        trial_subscribe = db.get_user_trial_subscribe(user_db_id)
 
         if trial_subscribe is None:
             return False
@@ -85,20 +103,26 @@ class GuardPaymentAccess():
 
     def set_trial_subscribe_unactive_by_user(self, tg_user_id):
         """Отключить все пробные подписки у пользователя"""
-        db.set_trial_subscribe_unactive_by_user(tg_user_id)
+        user_db_id = db.get_user_id_by_tg_id(tg_user_id)
+        db.set_trial_subscribe_unactive_by_user(user_db_id)
 
     # Платные подписки
     def set_paid_subscribe(self, transaction: Transactions):
         """Добавить платную подписку для пользователя по результату оплаты (транзакция paid)"""
-        subscribe_days = self.get_subscribe_days_prices_id(
-            transaction.price_id)
+        subscribe_days = transaction.duration_days
 
         finish_date = get_datetime_now() + timedelta(days=subscribe_days)
 
         subscribe = Subscribe(
-            transaction.user_id, finish_date, 1, None, 'paid',
-            transaction.price_id, transaction.id
+            id=-1,
+            user_id=transaction.user_id,
+            finish_dt=finish_date,
+            product_type=transaction.type_product,
+            transactions_payed_id=transaction.id,
+            active=True,
+            gift_admin=1
         )
+
         db.add_subsbscribe(subscribe)
 
         return finish_date
@@ -149,10 +173,10 @@ class GuardPaymentAccess():
 
         return False
 
-    def paid_user_product(self, user_id, product=None):
+    def paid_user_product(self, tg_id, product=None):
         """Проверяем оплачен ли продукт пользователем - имеется ли подписка"""
-        # Проверяем текущие активные платные подписки
-        subscribes = db.get_active_subscribes_by_user_id(user_id)
+        user_db_id = db.get_user_id_by_tg_id(tg_id)
+        subscribes = db.get_active_subscribes_by_user_id(user_db_id)
 
         if not subscribes:
             return False
@@ -164,12 +188,10 @@ class GuardPaymentAccess():
             fin_date_subscribe_obj = sub_item.finish_dt
 
             if fin_date_subscribe_obj > now:
-                price_item = db.get_price_by_id(sub_item.prices_id or 0)
-
-                if price_item is not None and price_item.type_product == product:
+                if sub_item.product_type == product or sub_item.product_type == 'trial':
                     return True
             else:
-                db.set_deactivate_subscribe(sub_item.id or 0)
+                db.deactivate_subscribe(sub_item.id or 0)
 
         return False
 
@@ -177,8 +199,8 @@ class GuardPaymentAccess():
         """Получить пользователей для рассылки рекомендаций"""
 
         # Деактивируем подписки с просроченной датой действия
-        db.set_unactive_subscribes('paid')
-        db.set_unactive_subscribes('trial')
+        db.check_unactive_subscribes('paid')
+        db.check_unactive_subscribes('trial')
 
         # Получить пользователей с платной подпиской рекомендации или рекомендации+калькулятор
         users = db.get_active_subscribes_all_users()
@@ -191,18 +213,18 @@ class GuardPaymentAccess():
 
     # # # Остальные методы
     def set_subscribe_unactive_many_users(self):
-        db.set_unactive_subscribes('trial')
+        db.check_unactive_subscribes('trial')
 
     def set_paid_subscribe_unactive_many_users(self):
-        db.set_unactive_subscribes('paid')
+        db.check_unactive_subscribes('paid')
 
     def set_subscribe_unactive(self, subscribe_id: int):
         """Убираем активность у подписки по subscribe_id """
         db.set_subscribe_unactive(subscribe_id)
 
-    def set_subscribe_unactive_by_user_id(self, user_id, tariff_id=None):
-        """Убираем активность у подписки для одного пользователя по user_id"""
-        db.set_subscribe_unactive_by_user_id(user_id, tariff_id)
+    def set_subscribe_unactive_by_user_id(self, tg_id: int):
+        user_db_id = db.get_user_id_by_tg_id(tg_id)
+        db.set_subscribe_unactive_by_user_id(user_db_id)
 
     def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
         if user.subscribe is None:

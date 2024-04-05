@@ -10,7 +10,7 @@ from typing import Callable
 import requests
 from db import db
 from common.dt import get_datetime_now
-from models import InvoiceBBanker, Transactions, UpdateBBanker, Price
+from models import InvoiceBBanker, UpdateBBanker, Price
 
 
 class PaymentsBanker(object):
@@ -122,8 +122,8 @@ class PaymentsBanker(object):
                 return math.ceil(tariff.price - ((tariff.price * tariff.discount.percent) / 100))
         return tariff.price
 
-
     # # # # # # # Получение Webhooks
+
     def get_updates(self, request: Request) -> Response:
 
         # Тестируем апдейт
@@ -281,8 +281,8 @@ class PaymentsBanker(object):
 
         return decorator
 
-
     # # # # # # # Транзакции
+
     def get_wait_transaction_by_invoice_id(self, invoice_id, asset):
         # Ищем подписки только со статусом ожидания
         transaction_info = db.get_wait_transaction(invoice_id)
@@ -293,7 +293,6 @@ class PaymentsBanker(object):
             return {
                 'transaction_id': transaction_info.id,
                 'user_id': transaction_info.user_id,
-                'prices_id': transaction_info.price_id,
                 'sum': transaction_info.sum
             }
         return None
@@ -302,23 +301,28 @@ class PaymentsBanker(object):
         db.success_transaction(transaction_id)
 
     def set_transactions_for_wait(self, user_id, iv: InvoiceBBanker, price_id):
-        status = 'wait_payments'
-        db.add_transaction(Transactions(
+        price = db.get_price_by_id(price_id)
+        if price is None:
+            return
+
+        db.add_transaction(
             user_id,
-            code=str(iv.invoice_id),
-            link=iv.pay_url,
-            sum=iv.amount,
-            currency=iv.asset,
-            price_id=price_id,
-            status=status
-        ))
+            str(iv.invoice_id),
+            iv.pay_url,
+            iv.amount or 0,
+            'wait_payments',
+            iv.asset or '',
+            price.name,
+            price.duration_days,
+            price.type_product
+        )
 
     def get_wait_transaction_for_complete(self, update: UpdateBBanker):
         invoice = update.payload
 
         # Ищем подписки только со статусом ожидания
         transaction = db.get_wait_transaction(
-            str(invoice.invoice_id) # type: ignore
+            str(invoice.invoice_id)  # type: ignore
         )
 
         # print(f'transaction_info ')
@@ -334,8 +338,8 @@ class PaymentsBanker(object):
             return transaction
         return None
 
-
     # # # # # # # Служебные
+
     def _create_sign(self, currency, amount, header, description):
         """Создание подписи отдельно"""
         text = '{}{}{}{}'.format(

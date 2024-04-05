@@ -5,7 +5,7 @@ from common.dt import get_str_by_datetime
 from db import LANGUAGES_TYPE, db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from models import Post, UserInfo
+from models import Post, Price, UserInfo
 
 
 def get_post_from_message(bot: TeleBot, message: Message):
@@ -76,7 +76,7 @@ def get_short_user_info(user: UserInfo):
         sub_show = 'нет подписок'
     else:
         fin_date = get_str_by_datetime(user_subsribe.finish_dt)
-        type_subscribe_show = f'({user_subsribe.type})'
+        type_subscribe_show = f'({user_subsribe.product_type})'
         sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
 
     user_show = (
@@ -86,3 +86,9 @@ def get_short_user_info(user: UserInfo):
     )
 
     return user_show
+
+
+def check_discount_price(tariff: Price):
+    if tariff.discount is None:
+        return tariff.price
+    return round(tariff.price * (1 - tariff.discount.percent / 100))

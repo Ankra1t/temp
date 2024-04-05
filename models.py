@@ -38,30 +38,14 @@ class UpdateBBanker(BaseModel):
     payload: InvoiceBBanker | None = None
 
 
-class Subscribe:
-    def __init__(
-        self,
-        tg_user_id: int,
-        finish_dt: datetime,
-        active: int,
-        id: int | None = None,
-        type: str | None = None,
-        prices_id: int | None = None,
-        transactions_payed_id: int | None = None,
-        type_product: str | None = None,
-        gift_admin: int | None = None,
-        user_id: int | None = None
-    ):
-        self.id = id
-        self.tg_user_id = tg_user_id
-        self.finish_dt = finish_dt
-        self.type = type
-        self.active = active
-        self.prices_id = prices_id
-        self.transactions_payed_id = transactions_payed_id
-        self.type_product = type_product
-        self.gift_admin = gift_admin
-        self.user_id = user_id
+class Subscribe(BaseModel):
+    id: int
+    user_id: int
+    finish_dt: datetime
+    product_type: str
+    active: bool
+    transactions_payed_id: Optional[int] = None
+    gift_admin: Optional[int] = None
 
 
 class User:
@@ -113,29 +97,18 @@ class Price:
             self.discount = None
 
 
-class Transactions:
-    def __init__(
-        self,
-        user_id: int,
-        id: int | None = None,
-        code: str | None = None,
-        link: str | None = None,
-        sum: float | None = None,
-        currency: str | None = None,
-        price_id: int | None = None,
-        status: str | None = None,
-        payment_date: str | None = None,
-
-    ):
-        self.id = id
-        self.user_id = user_id
-        self.code = code
-        self.link = link
-        self.sum = sum
-        self.currency = currency
-        self.price_id = price_id
-        self.status = status
-        self.payment_date = payment_date
+class Transactions(BaseModel):
+    id: int
+    user_id: int
+    code: str
+    link: str | None
+    sum: float
+    currency: str
+    status: str
+    payment_date: datetime | None
+    name: str
+    duration_days: int
+    type_product: str
 
 
 class Purchase:

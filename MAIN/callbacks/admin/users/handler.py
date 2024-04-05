@@ -159,7 +159,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         # Считаем кол-во дней для выдачи по периоду
         days = pay_guard.get_days_by_period(sort_by)
 
-        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
+        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         datetime_show = pay_guard.set_custom_paid_subscribe(
             user.tg_id, tariff_id, int(days)
         )

@@ -2,6 +2,7 @@ from flask import Request, Response
 from yookassa import Configuration, Payment
 import uuid
 
+from MAIN.common.utils import check_discount_price
 from NOTIFIER.messages import mess_user_paid
 from db import db
 from initialize import bot, pay_guard
@@ -10,14 +11,18 @@ from NOTIFIER import notifier
 from common.dt import get_str_by_datetime
 from config_global import YOOKASSA_SECRET_KEY, YOOKASSA_SHOP_ID
 from messages.users import paid_subscribe_msg
-from models import Transactions
+from models import Price
 
 
 Configuration.account_id = YOOKASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
 
 
-def create_payment(user_id: int, price: int, currency: str, name: str, redirect_url: str):
+def create_payment(user_id: int, tariff: Price, redirect_url: str):
+    price = check_discount_price(tariff)
+    currency = tariff.currency
+    name = tariff.name
+
     response_data = {
         "amount": {
             "value": str(price),
@@ -43,14 +48,21 @@ def create_payment(user_id: int, price: int, currency: str, name: str, redirect_
     url = str(payment.confirmation.confirmation_url)
     code = str(payment.id)
 
-    db.add_transaction(Transactions(
-        user_id=user_id,
-        link=url,
-        code=code,
-        currency=currency,
-        status='wait_payments',
-        sum=price
-    ))
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    if user_db_id == 0:
+        return False
+
+    db.add_transaction(
+        user_db_id,
+        code,
+        url,
+        price,
+        'wait_payments',
+        currency,
+        name,
+        tariff.duration_days,
+        tariff.type_product
+    )
 
     return url
 
@@ -77,52 +89,41 @@ def payment_updates(request: Request):
 
     transaction = db.get_wait_transaction(code)
     if transaction is None:
+        print(f'!!! Не удалось подтвердить платеж {code}')
         return Response(status=200)
 
-    transaction_id = transaction.id or 0
     if event == 'payment.canceled':
-        db.cancel_transaction(transaction_id)
+        db.cancel_transaction(transaction.id)
         return Response(status=200)
 
-    db.success_transaction(transaction_id)
+    db.success_transaction(transaction.id)
 
     # Добавить платную подписку
-    finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-    finish_date = get_str_by_datetime(finish_date_obj)
-
-    tariff = db.get_price_by_id(
-        transaction.price_id or 0, None
-    )
-
-    if tariff is None:
-        name = '-'
-    else:
-        name = tariff.name
+    finish_date = pay_guard.set_paid_subscribe(transaction)
+    finish_date_show = get_str_by_datetime(finish_date)
 
     # Обнуляем пробную подписку
     pay_guard.set_trial_subscribe_unactive_by_user(
         transaction.user_id
     )
 
-    # Отправляем сообщение пользователю
-    bot.send_message(
-        transaction.user_id,
-        text=paid_subscribe_msg(
-            finish_date, name
-        ),
-    )
-
     # Сообщение в бот уведомлений об оплате
     summ_full = f"{transaction.sum} {transaction.currency}"
-    user = db.get_user_by_tg_id(transaction.user_id)
 
+    user = db.get_user_by_id(transaction.user_id)
     if user is not None:
+        bot.send_message(
+            user.tg_id,
+            text=paid_subscribe_msg(
+                finish_date_show, transaction.name
+            ),
+        )
         notifier.send_notification('text', mess_user_paid(
             user_id=user.id,
             user_nike='@' + user.username if user.username else user.tg_id,
             summ_paid=summ_full,
-            tariff_name=name,
-            finish_date=finish_date
+            tariff_name=transaction.name,
+            finish_date=finish_date_show
         ))
 
     return Response(status=200)

@@ -82,8 +82,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         return
 
     if current_state == 'AdminUsersState:subscribe_days':
-        # !!! деактивировать старые платные и пробные подписки
-        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
+        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         datetime_show = pay_guard.set_custom_paid_subscribe(
             user.tg_id, tariff_id, int(days)
         )
