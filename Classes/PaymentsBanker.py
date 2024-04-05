@@ -113,17 +113,8 @@ class PaymentsBanker(object):
     def get_params_payservice_by_id(self, tariff_id):
         return db.get_price_by_id(tariff_id)
 
-    def check_discount_price(self, tariff: Price):
-        if tariff.discount is not None:
-            now = get_datetime_now()
-            fin_date_discount = tariff.discount.findate
-            if fin_date_discount > now:
-                # return tariff.price - ((tariff.price*tariff.discount.percent)/100))
-                return math.ceil(tariff.price - ((tariff.price * tariff.discount.percent) / 100))
-        return tariff.price
 
     # # # # # # # Получение Webhooks
-
     def get_updates(self, request: Request) -> Response:
 
         # Тестируем апдейт

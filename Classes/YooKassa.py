@@ -2,7 +2,7 @@ from flask import Request, Response
 from yookassa import Configuration, Payment
 import uuid
 
-from MAIN.common.utils import check_discount_price
+from common.utils import check_discount_price
 from NOTIFIER.messages import mess_user_paid
 from db import db
 from initialize import bot, pay_guard

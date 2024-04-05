@@ -5,7 +5,7 @@ from common.dt import get_str_by_datetime
 from db import LANGUAGES_TYPE, db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from models import Post, Price, UserInfo
+from models import Post, UserInfo
 
 
 def get_post_from_message(bot: TeleBot, message: Message):
@@ -86,9 +86,3 @@ def get_short_user_info(user: UserInfo):
     )
 
     return user_show
-
-
-def check_discount_price(tariff: Price):
-    if tariff.discount is None:
-        return tariff.price
-    return round(tariff.price * (1 - tariff.discount.percent / 100))

@@ -380,8 +380,8 @@ class Database:
         datetime_now = get_datetime_now()
         query = (
             'SELECT u.* FROM users as u JOIN subscribes as sub ON sub.user_id = u.id '
-            'WHERE sub.finish_dt < %s AND sub.active = %s'
-            f'sub.transactions_payed_id is {"not" if type == "paid" else ""} NULL'
+            'WHERE sub.finish_dt < %s AND sub.active = %s '
+            f'AND sub.transactions_payed_id is {"not" if type == "paid" else ""} NULL'
         )
         params = (datetime_now, True)
 

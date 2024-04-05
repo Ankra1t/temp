@@ -3,7 +3,7 @@ from telebot.types import CallbackQuery
 
 from Classes.YooKassa import create_payment
 from MAIN.callbacks.user.pages import send_tariffs_list_item
-from MAIN.common.utils import check_discount_price
+from common.utils import check_discount_price
 from db import db
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
 
