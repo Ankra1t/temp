@@ -43,6 +43,7 @@ def create_payment(user_id: int, tariff: Price, redirect_url: str):
             return False
     except Exception as e:
         print(f'yooKassa Error: {e}')
+        print(payment.cancellation_details)
         return False
 
     url = str(payment.confirmation.confirmation_url)
