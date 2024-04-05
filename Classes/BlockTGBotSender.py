@@ -1,3 +1,4 @@
+from typing import Optional
 from telebot import TeleBot
 from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
@@ -15,7 +16,7 @@ def send_message_by_type(
     user_id: int,
     type: str,
     text: str,
-    media_id: str | None
+    media_id: Optional[str] = None
 ):
     if type == 'photo':
         bot.send_photo(

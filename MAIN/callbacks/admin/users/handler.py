@@ -4,6 +4,7 @@ from telebot.types import CallbackQuery
 
 from MAIN.common.utils import get_short_user_info
 from MAIN.states import AdminUsersState
+from common.dt import get_str_by_datetime
 from common.utils import set_state_data
 
 from initialize import pay_guard
@@ -141,8 +142,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             'Выберите тариф на базе которого выдать подписку:',
             chat_id, mes_id,
-            reply_markup=kb_admin_users_back())
-
+            reply_markup=kb_admin_users_back()
+        )
 
     if type == 'choose_periods_for_tariffs':
         with bot.retrieve_data(user_id, chat_id) as data:
@@ -153,18 +154,25 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         user = db.get_user_by_id(subscribe_user_id)
 
         if user is None:
-            print(f'Error[choose_periods_for_tariffs]: user_id={subscribe_user_id}')
+            print(
+                f'Error[choose_periods_for_tariffs]: user_id={subscribe_user_id}'
+            )
             return
 
         # Считаем кол-во дней для выдачи по периоду
         days = pay_guard.get_days_by_period(sort_by)
 
+        tariff = db.get_price_by_id(tariff_id)
+        if tariff is None:
+            print(f'Error[choose_periods_for_tariffs]: tariff_id={tariff_id}')
+            return
+
         pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
-        datetime_show = pay_guard.set_custom_paid_subscribe(
-            user.tg_id, tariff_id, int(days)
+        datetime_show = pay_guard.set_trial(
+            user.tg_id, tariff.type_product, int(days)
         )
 
-        data_fin = datetime_show['admin']
+        data_fin = get_str_by_datetime(datetime_show)
         bot.send_message(
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка до {data_fin}'
@@ -175,8 +183,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
 
         bot.send_message(
-            user.tg_id,
-            gift_subscribe_msg(datetime_show['user'])
+            user.tg_id, gift_subscribe_msg(user.tg_id, data_fin)
         )
 
     if type == 'client_cancel_sub':

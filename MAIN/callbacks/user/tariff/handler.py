@@ -5,12 +5,12 @@ from Classes.YooKassa import create_payment
 from MAIN.callbacks.user.pages import send_tariffs_list_item
 from MAIN.common.utils import check_discount_price
 from db import db
-from messages.users import msg_loading_invoice, msg_yookassa
+from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
 
 from MAIN.callbacks import send_user_tariffs, send_user_main
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
-from .keyboards import kb_bill_yookassa
+from .keyboards import kb_bill_yookassa, kb_user_tariff_back
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -36,8 +36,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             bot.delete_message(chat_id, mes_id)
 
     if type == 'pay_tariff':
-        # Сообщение, что идет создание платежа
         bot.delete_message(chat_id, mes_id)
+
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        user_sub = db.get_current_subscribe_user(user_db_id)
+
+        if user_sub is not None:
+            bot.send_message(
+                chat_id, msg_is_subscribed(user_id),
+                reply_markup=kb_user_tariff_back(user_id)
+            )
+            return
+
         edit_wait_mess = bot.send_message(
             call.message.chat.id,
             msg_loading_invoice(user_id)

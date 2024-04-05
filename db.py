@@ -10,11 +10,11 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from models import (
     Calculation, Forex, ForexInfo, Future, Post, PostDetails,
     Text, UserCalcSettings, UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Task, MARKETS_TYPE
+    Transactions, Purchase, Worker, Task,
+    MARKETS_TYPE
 )
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
-PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'trial'] # TODO - trial to delete
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk', 'base_currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
@@ -330,7 +330,6 @@ class Database:
             product_type=data.get('subscribe_type'),
             active=data.get('active'),
             transactions_payed_id=data.get('transactions_payed_id'),
-            gift_admin=data.get('gift_admin'),
         )
 
     def add_subsbscribe(self, sub: Subscribe):
@@ -338,8 +337,7 @@ class Database:
                  "subscribes (user_id, finish_dt, subscribe_type, active, transactions_payed_id) "
                  "VALUES (%s, %s, %s, %s, %s)")
         params = (
-            sub.user_id, sub.finish_dt, sub.product_type, sub.active,
-            sub.transactions_payed_id
+            sub.user_id, sub.finish_dt, sub.product_type, sub.active, sub.transactions_payed_id
         )
 
         try:
@@ -378,22 +376,19 @@ class Database:
             self.connection.rollback()
             return None
 
-    # TODO - продумать данные функция работы с получнием пользователей с подпиской и без
-    def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
+    def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[UserInfo]:
         datetime_now = get_datetime_now()
         query = (
-            'SELECT u.id, u.created_at, u.username, u.count_sub, u.count_days, '
-            'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
-            'FROM subscribes AS sub, users AS u WHERE sub.finish_dt < %s '
-            'AND sub.subscribe_type = %s AND sub.active = %s AND sub.user_id = u.id'
+            'SELECT u.* FROM users as u JOIN subscribes as sub ON sub.user_id = u.id '
+            'WHERE sub.finish_dt < %s AND sub.active = %s'
+            f'sub.transactions_payed_id is {"not" if type == "paid" else ""} NULL'
         )
-        params = (datetime_now, type, True)
+        params = (datetime_now, True)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            return data
-            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
             print(f'ERROR[get_users_finished_subscribe]: {e}')
             self.connection.rollback()
@@ -949,8 +944,7 @@ class Database:
             f'AND '
             f'(SELECT COUNT (*) FROM subscribes as sub '
             f'WHERE sub.user_id = u.id '
-            f'AND sub.transactions_payed_id IS NOT NULL '
-            f'AND sub.subscribe_type = %s) >= {min_sub_count} '
+            f'AND sub.transactions_payed_id IS NOT NULL) >= {min_sub_count} '
             'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.user_id = u.id AND sub.active = %s) > 0 '
         )
         params = ('paid', True)

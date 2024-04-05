@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
+PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 
 
 class Invoice(BaseModel):
@@ -42,10 +43,9 @@ class Subscribe(BaseModel):
     id: int
     user_id: int
     finish_dt: datetime
-    product_type: str
+    product_type: PRODUCT_TYPE
     active: bool
     transactions_payed_id: Optional[int] = None
-    gift_admin: Optional[int] = None
 
 
 class User:
@@ -62,6 +62,8 @@ class Discount(BaseModel):
 
 
 class Price:
+    type_product: PRODUCT_TYPE
+
     def __init__(
         self,
         name: str,
@@ -69,14 +71,14 @@ class Price:
         price: int,
         currency: str,
         switch_active: int,
-        type_product: str,
+        type_product: PRODUCT_TYPE,
         description: str,
-        id: int | None = None,
-        image: str | None = None,
-        img_en: str | None = None,
-        discount_percent: float | None = None,
-        discount_findate: datetime | None = None,
-        price_findate: datetime | None = None,
+        id: Optional[int] = None,
+        image: Optional[str] = None,
+        img_en: Optional[str] = None,
+        discount_percent: Optional[float] = None,
+        discount_findate: Optional[datetime] = None,
+        price_findate: Optional[datetime] = None,
     ):
         self.id = id
         self.name = name
@@ -86,9 +88,9 @@ class Price:
         self.description = description
         self.img = image
         self.img_en = img_en
-        self.type_product = type_product
         self.switch_active = switch_active
         self.price_findate = price_findate
+        self.type_product = type_product
 
         if discount_percent is not None and discount_findate is not None:
             self.discount = Discount(
@@ -108,7 +110,7 @@ class Transactions(BaseModel):
     payment_date: datetime | None
     name: str
     duration_days: int
-    type_product: str
+    type_product: PRODUCT_TYPE
 
 
 class Purchase:

@@ -103,7 +103,7 @@ def payment_updates(request: Request):
     finish_date_show = get_str_by_datetime(finish_date)
 
     # Обнуляем пробную подписку
-    pay_guard.set_trial_subscribe_unactive_by_user(
+    pay_guard.deactivate_user_trial_subscribe(
         transaction.user_id
     )
 

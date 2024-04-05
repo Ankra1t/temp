@@ -1,109 +1,52 @@
-from typing import Literal
+from typing import Literal, Optional
 from datetime import datetime, timedelta
 
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from db import db
-from models import User, Subscribe, Transactions
+from models import User, Subscribe, Transactions, PRODUCT_TYPE
 
 
 class GuardPaymentAccess():
     """
     Класс защитник платного доступа, рассылки и бана
     """
-
     def __init__(self) -> None:
-        self.mess = ''
+        pass
 
     # Пробные подписки
-    def set_trial(self, tg_user_id, custom_days=None, custom_tariff_id=None):
+    def set_trial(self, user_db_id: int, product: PRODUCT_TYPE, custom_days: Optional[int] = None):
         """Дать новому пользователю тестовый период """
-        if not custom_days:
-            current_trial_days = int(self.get_option_trial_days())
-        else:
-            current_trial_days = int(custom_days)
+        trial_days = custom_days or self.get_option_trial_days()
 
-        finish_date = get_datetime_now() + timedelta(days=current_trial_days)
-
-        if not custom_tariff_id:
-            tariff = db.get_first_tariff_by_product('signals')
-            tariff_id = tariff.id if (tariff is not None) else None
-        else:
-            tariff_id = custom_tariff_id
-
-        user_db_id = db.get_user_id_by_tg_id(tg_user_id)
+        finish_date = get_datetime_now() + timedelta(days=trial_days)
 
         subscribe = Subscribe(
             id=-1,
             user_id=user_db_id,
             finish_dt=finish_date,
-            product_type='trial',
+            product_type=product,
             active=True,
-            gift_admin=1
         )
 
         db.add_subsbscribe(subscribe)
 
-        # TODO
-        finish_date_str = get_str_by_datetime(finish_date)
+        return finish_date
 
-        return {'user': finish_date_str, 'admin': finish_date_str}
-
-    def set_option_trial_days(self, days):
-        print(f'days ')
-        print(days)
-        db.set_option('count_trial_days_new_user', str(int(days)))
+    def set_option_trial_days(self, days: int):
+        db.set_option('count_trial_days_new_user', str(days))
 
     def get_option_trial_days(self) -> int:
-        days = db.get_option('count_trial_days_new_user')
-        return days or 1
+        default = 1
+        try:
+            days = int(db.get_option('count_trial_days_new_user') or default)
+        except:
+            days = default
 
-    def set_custom_paid_subscribe(self, user_id, price_id=1, count_days=1):
-        """Дать пользователю платную подписку без оплаты"""
-        now = get_datetime_now()
-        finish_date = now + timedelta(days=count_days)
+        return days
 
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        tariff = db.get_price_by_id(price_id)
-        if tariff is not None:
-            type = tariff.type_product
-        else:
-            type = 'trial'
-
-        subscribe = Subscribe(
-            id=-1,
-            user_id=user_db_id,
-            finish_dt=finish_date,
-            product_type=type,
-            active=True,
-            gift_admin=1
-        )
-        db.add_subsbscribe(subscribe)
-
-        # TODO
-        finish_date_show_user = get_str_by_datetime(finish_date)
-        finish_date_show_admin = get_str_by_datetime(finish_date)
-
-        return {'user': finish_date_show_user, 'admin': finish_date_show_admin}
-
-    def check_trial_active_by_user(self, tg_id: int):
-        """Проверить есть ли у пользователя тестовая подписка"""
-        user_db_id = db.get_user_id_by_tg_id(tg_id)
-        trial_subscribe = db.get_user_trial_subscribe(user_db_id)
-
-        if trial_subscribe is None:
-            return False
-
-        trial_id = trial_subscribe.id
-        active = trial_subscribe.active
-
-        if trial_id and (active == 1):
-            return trial_id
-        return False
-
-    def set_trial_subscribe_unactive_by_user(self, tg_user_id):
+    def deactivate_user_trial_subscribe(self, user_db_id: int):
         """Отключить все пробные подписки у пользователя"""
-        user_db_id = db.get_user_id_by_tg_id(tg_user_id)
         db.set_trial_subscribe_unactive_by_user(user_db_id)
 
     # Платные подписки
@@ -120,17 +63,11 @@ class GuardPaymentAccess():
             product_type=transaction.type_product,
             transactions_payed_id=transaction.id,
             active=True,
-            gift_admin=1
         )
 
         db.add_subsbscribe(subscribe)
 
         return finish_date
-
-    def get_subscribe_days_prices_id(self, price_id):
-        tariff = db.get_price_by_id(price_id)
-
-        return tariff.duration_days if tariff is not None else 0
 
     # Получение СПИСКИ пользователей для рассылки
     def get_users_note_fin_trial(self):
