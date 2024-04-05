@@ -39,9 +39,9 @@ def kb_admin_tariffs_list(count: int, page: int, id: int, is_active: bool, is_di
         counter = getButton(f'{page + 1}/{count}', '')
         btn_prev = getButton('⬅️', 'list', prev)
         btn_next = getButton('➡️', 'list', next)
-        btn_back = getButton(back_txt(), 'go_tariffs_del')
         keyboard.add(btn_prev, counter, btn_next)
 
+    btn_back = getButton(back_txt(), 'go_tariffs_del')
     btn_edit = getButton('✏️ Редактировать', 'edit', page, id)
     btn_delete = getButton('🗑 Удалить', 'delete', page, id)
 

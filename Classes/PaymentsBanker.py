@@ -2,15 +2,13 @@ from telebot import TeleBot
 from config_logger import logger
 from flask import Response, Request
 
-import math
 import hmac
 import json
 
 from typing import Callable
 import requests
 from db import db
-from common.dt import get_datetime_now
-from models import InvoiceBBanker, UpdateBBanker, Price
+from models import InvoiceBBanker, UpdateBBanker
 
 
 class PaymentsBanker(object):

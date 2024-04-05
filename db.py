@@ -944,10 +944,10 @@ class Database:
             f'AND '
             f'(SELECT COUNT (*) FROM subscribes as sub '
             f'WHERE sub.user_id = u.id '
-            f'AND sub.transactions_payed_id IS NOT NULL) >= {min_sub_count} '
+            f'AND sub.transactions_payed_id IS NOT NULL) >= %s '
             'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.user_id = u.id AND sub.active = %s) > 0 '
         )
-        params = ('paid', True)
+        params = (min_sub_count, True)
 
         try:
             self.curs.execute(query, params)
