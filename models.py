@@ -257,3 +257,5 @@ class Calculation(BaseModel):
     split_values: list[float] | None
 
     forex_info: ForexInfo | None = None
+    token: Optional[str] = None
+    tool: Optional[str] = None

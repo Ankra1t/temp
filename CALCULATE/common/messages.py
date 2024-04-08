@@ -319,7 +319,7 @@ def msg_stats(user_id: int):
             'all': 'Всего расчетов',
             'tp': 'Тейк-профит',
             'sl': 'Стоп-лосс',
-            'general': 'Общее',
+            'saved': 'Сохраненных',
             'sum': 'Сумма',
             'pieces': 'шт.'
         },
@@ -328,7 +328,7 @@ def msg_stats(user_id: int):
             'all': 'Total calculations',
             'tp': 'Take-profit',
             'sl': 'Stop-loss',
-            'general': 'General',
+            'saved': 'Saved',
             'sum': 'Summury',
             'pieces': 'pieces',
         }
@@ -352,9 +352,9 @@ def msg_stats(user_id: int):
         stat_profit = stat.profit or 0
 
         if stat_profit > 0:
-            tp_count += 1
+            tp_count += round(stat_profit / stat.risk_value)
         if stat_profit < 0:
-            sl_count += 1
+            sl_count += round(abs(stat_profit) / stat.risk_value, 1)
 
         profit += stat_profit
 
@@ -362,9 +362,9 @@ def msg_stats(user_id: int):
 
 {POINT} {texts[lang]['all']}: <b>{len(all_stats)} {texts[lang]['pieces']}</b>
 
-{POINT} {texts[lang]['tp']}: <b>{tp_count} {texts[lang]['pieces']}</b>
-{POINT} {texts[lang]['sl']}: <b>{sl_count} {texts[lang]['pieces']}</b>
-{POINT} {texts[lang]['general']}: <b>{len(saved_stats)} {texts[lang]['pieces']}</b>
+{POINT} {texts[lang]['saved']}: <b>{len(saved_stats)} {texts[lang]['pieces']}</b>
+{POINT} {texts[lang]['tp']}: <b>{tp_count}</b>
+{POINT} {texts[lang]['sl']}: <b>{sl_count}</b>
 
 {POINT} {texts[lang]['sum']}: <b>{get_print_float(profit)} {currency}</b>
 """
@@ -647,7 +647,7 @@ def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
 
 
 # Калькулятор
-def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
+def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, pair='', token=''):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -682,17 +682,26 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             'dep': 'Депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена входа',
+            'pair': 'Валютная пара',
+            'token': 'Монета',
         },
         'en': {
             'ticker': 'Ticker',
             'dep': 'Deposit',
             'risk': 'Deal risk',
             'open': 'Entry price',
+            'pair': 'Currency pair',
+            'token': 'Token',
         }
     }
 
     text = f'💵 <b><u>{market_translates[lang][type] or "Forex"}</u></b>\n'
     text += '\n'
+
+    if pair != '':
+        text += f'{POINT} {point[lang]["pair"]}: <b>{pair}</b>\n'
+    elif token != '':
+        text += f'{POINT} {point[lang]["token"]}: <b>{token}</b>\n'
 
     for el in type_list:
         item = vars_dict[el]
@@ -739,6 +748,7 @@ def msg_calculate_crypto_result(
             'risk_val': 'Риск на сделку',
             'profit': 'Прибыль по сделке',
             'coin': 'монет',
+            'token': 'Монета',
         },
         'en': {
             'dep': 'Deposit',
@@ -752,6 +762,7 @@ def msg_calculate_crypto_result(
             'risk_val': 'The risk of a deal',
             'profit': 'Profit',
             'coin': 'coins',
+            'token': 'Token',
         }
     }
 
@@ -800,7 +811,8 @@ def msg_calculate_crypto_result(
     return f"""{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
 {TAB}{point[lang]["risk_val"]}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 
-{POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
+{POINT} {point[lang]["token"]}: <b>{calc.token or '-'}</b>
+{TAB}{point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b>
 {TAB}{point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
 
 {POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["coin"]}</b>
@@ -868,8 +880,6 @@ def msg_calculate_forex_result(
 
     # Округление
     round_count = calc.round_count or 5
-    # Окургление pips
-    round_pips = 2 if 'JPY' in pair else 4
 
     # Сумма покупки
     value_bet = (
@@ -967,7 +977,7 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation):
     profit = calc.profit or 0.
 
     if profit < 0:
-        rate = f'{round(abs(profit / calc.risk_value), 2)}'
+        rate = f'{round(abs(profit / calc.risk_value), 1)}'
         rate_val = 'sl'
     else:
         rate = f'x{round(profit / calc.risk_value)}'
@@ -1146,6 +1156,28 @@ def msg_enter_future(user_id: int):
     texts = {
         'ru': 'Введите тикер фьючерса (буквенный, пример: siz2)',
         'en': 'Enter the futures ticker (example: siz2)'
+    }
+
+    return f'✍ {texts[lang]}:'
+
+
+def msg_enter_token(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите монету торговли',
+        'en': 'Enter trading token'
+    }
+
+    return f'✍ {texts[lang]}:'
+
+
+def msg_enter_tool(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите Ваш инструмент',
+        'en': 'Enter Your tool'
     }
 
     return f'✍ {texts[lang]}:'

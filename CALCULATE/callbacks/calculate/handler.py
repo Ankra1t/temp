@@ -38,6 +38,19 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             })
             choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
+    if 'token' in type:
+        _, token = type.split('+')
+        set_state_data(bot, user_id, chat_id, {'token': token})
+        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
+    if 'tool' in type:
+        _, tool = type.split('++')
+        if tool == '**off**':
+            tool = False
+
+        set_state_data(bot, user_id, chat_id, {'tool': tool})
+        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
     bot.answer_callback_query(call.id)
 
 
