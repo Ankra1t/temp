@@ -1,13 +1,10 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from common.utils import set_state_data
-from initialize import currencyService
 from db import db
-from models import ForexInfo
 
 from .filter import main_factory, MainCallbackFilter
-from ..utils import choose_calculate_step, choose_first_calculate_step
+from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats
 
 
