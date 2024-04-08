@@ -230,6 +230,7 @@ class UserCalcSettings(BaseModel):
     trading_style: str | None
     round_count: int | None
     day_risk: tuple[float, bool] | None
+    is_updating_deposit: bool
 
 
 class ForexInfo(BaseModel):

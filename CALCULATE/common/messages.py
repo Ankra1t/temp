@@ -870,7 +870,6 @@ def msg_calculate_forex_result(
         }
     }
 
-
     trading_style = ''
     if calc.trading_style is not None:
         trading_style = f'{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>\n'
@@ -1324,6 +1323,21 @@ def msg_choose_lang(user_id: int):
     }
 
     return f'🌐 {texts[lang]}'
+
+
+def msg_update_deposit(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Хотите изменять свой депозит при сохранении расчета?'
+        },
+        'en': {
+            'main': 'Do you want to change your deposit after saving the calculation?'
+        },
+    }
+
+    return texts[lang]['main']
 
 
 def msg_confirm_reset(user_id: int):

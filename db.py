@@ -1161,6 +1161,7 @@ class Database:
             trading_style=data.get('trading_style'),
             round_count=data.get('round_count'),
             day_risk=day_risk,
+            is_updating_deposit=data.get('is_updating_deposit'),
         )
 
     def get_calc_user_settings(self, user_id: int):
@@ -1432,6 +1433,19 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[reset_user_settings]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_updating_deposit(self, user_id: int, value: bool):
+        query = 'UPDATE calculations SET is_updating_deposit = %s WHERE user_id = %s'
+        params = value, user_id,
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_updating_deposit]: {e}')
             self.connection.rollback()
             return False
 

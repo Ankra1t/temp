@@ -36,6 +36,7 @@ def kb_settings(user_id: int):
             'market': 'Рынок',
             'style': 'Стиль торговли',
             'reset': 'Сброс',
+            'deposit_update': 'Обновление депозита',
             'summury_profit': 'Деление профита',
         },
         'en': {
@@ -44,6 +45,7 @@ def kb_settings(user_id: int):
             'market': 'Market',
             'style': 'Trading style',
             'reset': 'Reset',
+            'deposit_update': 'Updating deposit',
             'summury_profit': 'Profit division',
         }
     }
@@ -54,6 +56,8 @@ def kb_settings(user_id: int):
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
+    btn_deposit_update = getButton(
+        '📐 ' + texts[lang]["deposit_update"], 'deposit_update')
 
     btn_summury_profit = getButton(
         '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
@@ -64,8 +68,8 @@ def kb_settings(user_id: int):
 
     keyboard.add(btn_base, btn_market)
     keyboard.add(btn_style, btn_summury_profit)
-    keyboard.add(btn_lang, btn_reset)
-    keyboard.add(btn_back)
+    keyboard.add(btn_lang, btn_deposit_update)
+    keyboard.add(btn_reset, btn_back)
     return keyboard
 
 
@@ -490,6 +494,27 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
 
-
     keyboard.add(btn_off, btn_cancel)
+    return keyboard
+
+
+def kb_update_deposit(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'on': 'Включить',
+            'off': 'Выключить',
+        },
+        'en': {
+            'on': 'On',
+            'off': 'Off',
+        },
+    }
+
+    btn_on = getButton(f'✅ {texts[lang]["on"]}', 'deposit_update_on')
+    btn_off = getButton(f'⭕️ {texts[lang]["on"]}', 'deposit_update_on')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_off, btn_on)
     return keyboard
