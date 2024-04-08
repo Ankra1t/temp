@@ -22,7 +22,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         calc_type = data.get('calc_type')
         ticker = data.get('ticker')
         forex = data.get('forex')
-        trading_style = data.get('trading_style')
+        trading_style = data.get('trading_style') or '**off**'
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)

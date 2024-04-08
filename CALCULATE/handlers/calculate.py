@@ -222,7 +222,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
-    mes_id = message.id
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
@@ -234,6 +233,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         open_price = data.get('open_price')
+        trading_style = data.get('trading_style')
         ticker = data.get('ticker')
 
     if open_price == stop_loss:
@@ -260,7 +260,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         market=u_base.market,
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
-        trading_style=u_base.trading_style or ''
+        trading_style=trading_style or None
     )
 
     mes = msg_calculate_result(user_id, calc_info)
@@ -293,6 +293,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         open_price = float(data.get('open_price', 0))
         forex = data.get('forex')
+        trading_style = data.get('trading_style')
 
     u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
@@ -314,7 +315,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         market=u_base.market,
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
-        trading_style=u_base.trading_style or '',
+        trading_style=trading_style or None,
         forex_info=forex
     )
 

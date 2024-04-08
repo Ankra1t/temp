@@ -1402,7 +1402,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_user_trading_style(self, user_id: int, value: str):
+    def set_user_trading_style(self, user_id: int, value: str | None):
         query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s'
         params = (value, user_id)
 

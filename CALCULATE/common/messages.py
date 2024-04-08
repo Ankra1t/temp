@@ -755,6 +755,10 @@ def msg_calculate_crypto_result(
         }
     }
 
+    trading_style = ''
+    if calc.trading_style is not None:
+        trading_style = f'{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>\n'
+
     # Округление
     round_count = calc.round_count or 5
 
@@ -801,8 +805,7 @@ def msg_calculate_crypto_result(
 
 {POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["coin"]}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
-{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
-
+{trading_style}
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
 
@@ -854,6 +857,11 @@ def msg_calculate_forex_result(
             'lot': 'lots',
         }
     }
+
+
+    trading_style = ''
+    if calc.trading_style is not None:
+        trading_style = f'{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>\n'
 
     # Валюта торговли
     trading_currency = calc.forex_info.pair[1]
@@ -928,8 +936,7 @@ def msg_calculate_forex_result(
 
 {POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["lot"]}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
-{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>
-
+{trading_style}
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
 

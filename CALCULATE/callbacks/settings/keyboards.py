@@ -120,7 +120,7 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    currency_list = ['USD', 'USDT', 'EUR', 'RUB', 'CNY', 'JPY']
+    currency_list = ['USD', 'GBP', 'EUR', 'RUB', 'CNY', 'JPY']
     buttons: list[InlineKeyboardButton] = []
     for i, el in enumerate(currency_list):
         btn = getButton(el, f'set_currency_{type}+{el}')
@@ -454,19 +454,23 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
         'high/low': 'торговля на high/low',
     }
 
-    buttons = []
+    texts = {
+        'ru': {
+            'off_settings': 'Выключить',
+            'off': 'Пропустить',
+        },
+        'en': {
+            'off_settings': 'Off',
+            'off': 'Skip',
+        }
+    }
 
+    buttons = []
     for key in styles.keys():
         buttons.append(getThisButton(key, styles[key]))
-
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []
-
-    if type == 'calc':
-        btn_cancel = getButton(cancel_txt(lang), 'go_main')
-    else:
-        btn_cancel = getButton(cancel_txt(lang), 'go_settings')
 
     is_added = False
     for el in styles.values():
@@ -476,8 +480,16 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
 
     if not is_added:
         buttons.append(getThisButton(prev_style.capitalize(), prev_style))
+    if len(buttons) != 0:
+        keyboard.add(*buttons)
 
-    buttons.append(btn_cancel)
+    if type == 'calc':
+        btn_cancel = getButton(cancel_txt(lang), 'go_main')
+        btn_off = getThisButton(f'⭕️ {texts[lang]["off"]}', '**off**')
+    else:
+        btn_cancel = getButton(cancel_txt(lang), 'go_settings')
+        btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
 
-    keyboard.add(*buttons)
+
+    keyboard.add(btn_off, btn_cancel)
     return keyboard
