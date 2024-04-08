@@ -434,7 +434,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', prev_style=''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'style_{type}',
@@ -443,21 +443,41 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
 
     lang = get_lang(user_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    row_width = 2
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    btn_1 = getThisButton('Пробой', 'пробой уровня')
-    btn_2 = getThisButton('Отбой','отбой от уровня')
-    btn_3 = getThisButton('Ложные', 'ложные пробои')
-    btn_4 = getThisButton('Скользящие', 'скользящие средние')
-    btn_5 = getThisButton('high/low', 'торговля на high/low')
+    styles = {
+        'Пробой': 'пробой уровня',
+        'Отбой': 'отбой от уровня',
+        'Ложные': 'ложные пробои',
+        'Скользящие': 'скользящие средние',
+        'high/low': 'торговля на high/low',
+    }
+
+    buttons = []
+
+    for key in styles.keys():
+        buttons.append(getThisButton(key, styles[key]))
+
+        if len(buttons) == row_width:
+            keyboard.add(*buttons)
+            buttons = []
 
     if type == 'calc':
         btn_cancel = getButton(cancel_txt(lang), 'go_main')
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
 
-    keyboard.add(btn_1, btn_2)
-    keyboard.add(btn_4, btn_3)
-    keyboard.add(btn_5, btn_cancel)
+    is_added = False
+    for el in styles.values():
+        if prev_style.lower() in el:
+            is_added = True
+            break
 
+    if not is_added:
+        buttons.append(getThisButton(prev_style.capitalize(), prev_style))
+
+    buttons.append(btn_cancel)
+
+    keyboard.add(*buttons)
     return keyboard

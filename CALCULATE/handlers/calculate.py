@@ -179,10 +179,10 @@ def handle_trading_style(message: Message, bot: TeleBot):
         )
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        action = data.get('action')
+    value = value.lower()
 
-    db.set_user_trading_style(user_db_id, value.lower())
+    set_state_data(bot, user_id, chat_id, {'trading_style': value})
+    db.set_user_trading_style(user_db_id, value)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 

@@ -6,7 +6,8 @@ from db import db
 from initialize import pay_guard
 from common.utils import set_state_data
 from .pages import send_main
-from .main.keyboards import kb_main_cancel, kb_pair
+from .main.keyboards import kb_main_cancel
+from .calculate.keyboards import kb_pair
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
@@ -21,6 +22,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         calc_type = data.get('calc_type')
         ticker = data.get('ticker')
         forex = data.get('forex')
+        trading_style = data.get('trading_style')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
@@ -48,10 +50,10 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif u_base.risk is None:
         text += msg_enter_risk_percent(user_id)
         state = CalculateState.risk_percent
-    elif u_base.trading_style is None:
+    elif trading_style is None:
         text += msg_enter_trading_style(user_id)
         state = CalculateState.trading_style
-        keyboard = kb_trading_style(user_id, 'calc')
+        keyboard = kb_trading_style(user_id, 'calc', u_base.trading_style or '')
     else:
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price

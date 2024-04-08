@@ -34,23 +34,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'stats':
         send_stats(bot, call.message, user_id)
 
-    if 'pair' in type:
-        _, pair = type.split('+')
-        pair_arr = pair.split('/')
-
-        price = currencyService.getPrice(pair_arr[0], pair_arr[1])
-        if price != False:
-            forex = ForexInfo(
-                pair=(pair_arr[0], pair_arr[1]),
-                price=price,
-                cross_prices={}
-            )
-
-            set_state_data(bot, user_id, chat_id, {
-                'forex': forex,
-            })
-            choose_calculate_step(bot, user_id, chat_id, mes_id, True)
-
     bot.answer_callback_query(call.id)
 
 

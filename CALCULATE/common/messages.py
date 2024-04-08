@@ -1,4 +1,3 @@
-import math
 from typing import Literal
 from telebot import TeleBot
 from datetime import datetime
@@ -958,16 +957,13 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation):
     }
 
     deposit = calc.deposit
-    profit = calc.profit
-
-    if profit is None:
-        return 'Ошибка'
+    profit = calc.profit or 0.
 
     if profit < 0:
         rate = f'{round(abs(profit / calc.risk_value), 2)}'
         rate_val = 'sl'
     else:
-        rate = f'x{math.ceil(profit / calc.risk_value)}'
+        rate = f'x{round(profit / calc.risk_value)}'
         rate_val = 'tp'
 
     return f"""{POINT} {point[lang]['deposit']}: <b>{get_print_float(deposit + profit, calc.round_count)} {calc.currency}</b>
@@ -1201,7 +1197,7 @@ def msg_enter_trading_style(user_id: int):
         },
     }
 
-    return f"""✍ {texts[lang]['choose']}
+    return f"""✍ {texts[lang]['choose']}.
 {texts[lang]['enter']}:
 """
 

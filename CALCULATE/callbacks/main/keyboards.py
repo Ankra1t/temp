@@ -55,21 +55,3 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False):
 
     keyboard.add(*buttons)
     return keyboard
-
-
-def kb_pair(user_id: int):
-    lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=3)
-
-    pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY']
-
-    buttons = []
-    for el in pairs:
-        buttons.append(getButton(el, f'pair+{el}'))
-
-    btn_cancel = getButton(cancel_txt(lang), 'go_main')
-
-    keyboard.add(*buttons)
-    keyboard.add(btn_cancel)
-
-    return keyboard

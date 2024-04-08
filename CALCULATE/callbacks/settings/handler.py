@@ -80,9 +80,15 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_trading_style(user_id)
             )
         else:
-            db.set_user_trading_style(user_db_id, trading_style.lower())
+            new_trading_style = trading_style.lower()
+            db.set_user_trading_style(user_db_id, new_trading_style)
 
             if 'calc' in type:
+                set_state_data(
+                    bot, user_id, chat_id, {
+                        'trading_style': new_trading_style
+                    }
+                )
                 choose_calculate_step(bot, user_id, chat_id, mes_id, True)
             else:
                 if 'welcome' in type:
