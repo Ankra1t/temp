@@ -2,15 +2,18 @@ import re
 from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
-from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService
 from db import db
 from common.utils import digit_accept, text_accept
+from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
-from CALCULATE.callbacks import kb_deal_profit_minus
-from CALCULATE.common.messages import msg_calculate_saved_result, msg_calculation_saved, msg_digit_error, msg_freeze_error, msg_frozen
+from CALCULATE.callbacks import kb_deal_profit_minus, send_main
+from CALCULATE.common.messages import (
+    msg_calculate_result, msg_calculate_saved_result, msg_calculation_saved,
+    msg_digit_error, msg_freeze_error, msg_frozen
+)
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -33,12 +36,16 @@ def handle_loss(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    mes = msg_calculate_saved_result(user_id, calc_info)
-    mes += f'\n\n{msg_calculation_saved(user_id)}'
+    mes_result = msg_calculate_saved_result(user_id, calc_info)
+    mes_result += f'\n\n{msg_calculation_saved(user_id)}'
 
-    bot.send_message(chat_id, mes)
+    mes_calc = msg_calculate_result(user_id, calc_info)
+
+    bot.send_message(chat_id, mes_calc)
+    bot.send_message(chat_id, mes_result)
+    send_main(message, bot, user_id, True, True)
+
     bot.delete_state(user_id, chat_id)
-
 
 
 def handle_freeze_dt(message: Message, bot: TeleBot):

@@ -513,7 +513,7 @@ def kb_update_deposit(user_id: int):
     }
 
     btn_on = getButton(f'✅ {texts[lang]["on"]}', 'deposit_update_on')
-    btn_off = getButton(f'⭕️ {texts[lang]["on"]}', 'deposit_update_on')
+    btn_off = getButton(f'⭕️ {texts[lang]["off"]}', 'deposit_update_off')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_off, btn_on)

@@ -159,10 +159,13 @@ def msg_settings(user_id: int):
             'day_risk': 'Риск на день',
             'round_count': 'Округление до',
             'trading_style': 'Стиль торговли',
+            'updating_deposit': 'Обновление депозита',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
             'market': 'Рынок',
             'round_count': 'Округление',
+            'on': 'Включено',
+            'off': 'Выключено',
         },
         'en': {
             'name': 'Settings',
@@ -171,9 +174,12 @@ def msg_settings(user_id: int):
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
             'trading_style': 'Trading style',
+            'updating_deposit': 'Deposit updating',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
+            'on': 'On',
+            'off': 'Off',
         },
     }
 
@@ -192,12 +198,17 @@ def msg_settings(user_id: int):
     show_day_risk = (f'{get_print_float(u_base.day_risk[0])}' +
                      ('%' if u_base.day_risk[1] else f' {currency}')) if (u_base.day_risk is not None) else "-"
 
+    updating_deposit = texts[lang]['off']
+    if u_base.is_updating_deposit:
+        updating_deposit = texts[lang]['on']
+
     return f"""
 ⚙️ <b><u>{texts[lang]["name"]}</u></b>
 
 {POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
 {POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
+{POINT} {texts[lang]["trading_style"]}: <b>{updating_deposit}</b>
 
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 {POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
@@ -745,6 +756,7 @@ def msg_calculate_crypto_result(
             'count': 'Приобретаем',
             'sum': 'Покупаем на',
             'style': 'Стиль торговли',
+            'tool': 'Инструмент',
             'risk_val': 'Риск на сделку',
             'profit': 'Прибыль по сделке',
             'coin': 'монет',
@@ -759,6 +771,7 @@ def msg_calculate_crypto_result(
             'count': 'Purchase',
             'sum': 'Buy on',
             'style': 'Trading style',
+            'tool': 'Tool',
             'risk_val': 'The risk of a deal',
             'profit': 'Profit',
             'coin': 'coins',
@@ -766,9 +779,11 @@ def msg_calculate_crypto_result(
         }
     }
 
-    trading_style = ''
+    trading_style_and_tool = ''
     if calc.trading_style is not None:
-        trading_style = f'{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>\n'
+        trading_style_and_tool += f'{TAB}{point[lang]["style"]}: <b>{calc.trading_style.capitalize()}</b>\n'
+    if calc.tool is not None:
+        trading_style_and_tool = f'{TAB}{point[lang]["tool"]}: <b>{calc.tool.capitalize()}</b>\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -817,7 +832,8 @@ def msg_calculate_crypto_result(
 
 {POINT} {point[lang]["count"]}: <b>{get_print_float(count_bet)} {point[lang]["coin"]}</b>
 {TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
-{trading_style}
+{trading_style_and_tool}
+
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
 
@@ -959,12 +975,14 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation):
 
     point = {
         'ru': {
+            'name': 'Результат',
             'deposit': 'Итоговый депозит',
             'sum': 'Сумма',
             'sl': 'Стоп-лосс',
             'tp': 'Тейк-профит'
         },
         'en': {
+            'name': 'Result',
             'deposit': 'The final deposit',
             'sum': 'Sum',
             'sl': 'Stop-loss',
@@ -982,7 +1000,9 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation):
         rate = f'x{round(profit / calc.risk_value)}'
         rate_val = 'tp'
 
-    return f"""{POINT} {point[lang]['deposit']}: <b>{get_print_float(deposit + profit, calc.round_count)} {calc.currency}</b>
+    return f"""<b><u>{point[lang]['name']}</u></b>
+
+{POINT} {point[lang]['deposit']}: <b>{get_print_float(deposit + profit, calc.round_count)} {calc.currency}</b>
 {POINT} {point[lang]['sum']}: <b>{get_print_float(profit, calc.round_count)} {calc.currency}</b>
 {POINT} {point[lang][rate_val]}: <b>{rate}</b>
 """

@@ -20,7 +20,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'calc':
         u_base = db.get_calc_user_settings(user_db_id)
         market = u_base.market if (u_base is not None) else 'crypto'
-        choose_first_calculate_step(bot, user_id, call.message, market, True)
+
+        bot.delete_message(chat_id, mes_id)
+        choose_first_calculate_step(bot, user_id, call.message, market)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
