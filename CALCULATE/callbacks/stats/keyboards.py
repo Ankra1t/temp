@@ -15,6 +15,21 @@ def getButton(text: str, type: str, stat_id=0):
     )
 
 
+def get_deal_button(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'save': 'Сохранить расчет',
+        },
+        'en': {
+            'save': 'Save calculation',
+        }
+    }
+
+    return getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
+
+
 def kb_stats(user_id: int):
     lang = get_lang(user_id)
 
@@ -27,21 +42,9 @@ def kb_stats(user_id: int):
 
 
 def kb_set_calc_stats(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-    texts = {
-        'ru': {
-            'save': 'Сохранить расчет',
-        },
-        'en': {
-            'save': 'Save calculation',
-        }
-    }
-
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_deal = getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
-
-    keyboard.add(btn_deal)
+    keyboard.add(get_deal_button(user_id, stat_id))
     return keyboard
 
 

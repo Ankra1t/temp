@@ -6,6 +6,7 @@ from CALCULATE.states import StatsState
 
 from db import Database
 from common.dt import get_datetime_now
+from models import CalculatorStats
 
 
 class CalculationService():
@@ -75,7 +76,7 @@ class CalculationService():
 
             diff = abs(today_profit) - day_risk_value
             if day_risk[1]:
-                diff = (deposit or 0) / diff
+                diff = diff / (deposit or 1)
 
             tg_id = user_info.tg_id
             self.bot.send_message(
@@ -83,3 +84,31 @@ class CalculationService():
                 # reply_markup=kb_freeze_calc(tg_id)
             )
             self.bot.set_state(tg_id, StatsState.freeze)
+
+    def get_stats(self, tg_id: int):
+        user_db_id = self.db.get_user_id_by_tg_id(tg_id)
+
+        all_stats = self.db.get_calculations_by_user(user_db_id)
+        saved_stats = self.db.get_calculations_by_user(user_db_id, True)
+
+        tp_count = 0
+        sl_count = 0
+
+        profit = 0
+        for stat in saved_stats:
+            stat_profit = stat.profit or 0
+
+            if stat_profit > 0:
+                tp_count += round(stat_profit / stat.risk_value)
+            if stat_profit < 0:
+                sl_count += round(abs(stat_profit) / stat.risk_value, 1)
+
+            profit += stat_profit
+
+        return CalculatorStats(
+            profit=profit,
+            tp_count=int(tp_count),
+            sl_count=round(sl_count, 1),
+            all_stats_count=len(all_stats),
+            saved_stats_count=len(saved_stats)
+        )

@@ -153,6 +153,13 @@ class Client(BaseModel):
     user: UserInfo | None = None
 
 
+class CalculatorStats(BaseModel):
+    profit: float
+    tp_count: int
+    sl_count: float
+    all_stats_count: int
+    saved_stats_count: int
+
 # class Client(BaseModel):
 #     user: UserInfo | None = None
 #     subscribes: Optional[list[Subscribe], Subscribe, None] = None
@@ -258,5 +265,4 @@ class Calculation(BaseModel):
     split_values: list[float] | None
 
     forex_info: ForexInfo | None = None
-    token: Optional[str] = None
     tool: Optional[str] = None
