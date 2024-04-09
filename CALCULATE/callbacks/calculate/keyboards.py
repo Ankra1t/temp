@@ -23,10 +23,11 @@ def kb_pair(user_id: int):
     for el in pairs:
         buttons.append(getButton(el, f'pair+{el}'))
 
+    btn_settings = getButton('⚙️', 'go_settings')
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
 
     keyboard.add(*buttons)
-    keyboard.add(btn_cancel)
+    keyboard.add(btn_settings, btn_cancel)
 
     return keyboard
 
@@ -41,10 +42,11 @@ def kb_change_token(user_id: int):
     for el in tokens:
         buttons.append(getButton(el, f'token+{el}'))
 
+    btn_settings = getButton('⚙️', 'go_settings')
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
 
     keyboard.add(*buttons)
-    keyboard.add(btn_cancel)
+    keyboard.add(btn_settings, btn_cancel)
 
     return keyboard
 
@@ -52,7 +54,7 @@ def kb_change_token(user_id: int):
 def kb_tool(user_id: int, prev_tools: list[str]):
     lang = get_lang(user_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
 
     texts = {
         'ru': {
@@ -72,9 +74,10 @@ def kb_tool(user_id: int, prev_tools: list[str]):
         if len(buttons) == 2:
             break
 
+    btn_settings = getButton('⚙️', 'go_settings')
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
     btn_off = getButton(f'⭕️ {texts[lang]["off"]}', 'tool++**off**')
 
     keyboard.add(*buttons)
-    keyboard.add(btn_off, btn_cancel)
+    keyboard.add(btn_off, btn_settings, btn_cancel)
     return keyboard

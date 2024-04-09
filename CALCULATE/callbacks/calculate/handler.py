@@ -7,7 +7,7 @@ from models import ForexInfo
 
 from .filter import calculate_factory, CalculateCallbackFilter
 from ..utils import choose_calculate_step
-from ..pages import send_main
+from ..pages import send_main, send_settings
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -20,6 +20,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
+
+    if type == 'go_settings':
+        send_settings(bot, call.message, user_id)
 
     if 'pair' in type:
         _, pair = type.split('+')

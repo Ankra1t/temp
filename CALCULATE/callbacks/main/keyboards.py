@@ -20,8 +20,11 @@ def cancel_btn(user_id: int):
 
 
 def kb_main_cancel(user_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(cancel_btn(user_id))
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_settings = getButton('⚙️', 'settings')
+
+    keyboard.add(btn_settings, cancel_btn(user_id))
     return keyboard
 
 

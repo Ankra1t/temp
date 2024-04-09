@@ -135,11 +135,13 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
             buttons = []
 
     if type == 'calc':
+        btn_settings = getButton('⚙️', 'go_settings')
         btn_back = getButton(cancel_txt(lang), 'go_main')
+        keyboard.add(btn_settings, btn_back)
     else:
         btn_back = getButton(cancel_txt(lang), 'go_settings')
+        keyboard.add(btn_back)
 
-    keyboard.add(btn_back)
     return keyboard
 
 
@@ -447,7 +449,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
 
     lang = get_lang(user_id)
 
-    row_width = 2
+    row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     styles = {
@@ -488,13 +490,15 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
         keyboard.add(*buttons)
 
     if type == 'calc':
+        btn_settings = getButton('⚙️', 'go_settings')
         btn_cancel = getButton(cancel_txt(lang), 'go_main')
         btn_off = getThisButton(f'⭕️ {texts[lang]["off"]}', '**off**')
+        keyboard.add(btn_off, btn_settings, btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
+        keyboard.add(btn_off, btn_cancel)
 
-    keyboard.add(btn_off, btn_cancel)
     return keyboard
 
 
