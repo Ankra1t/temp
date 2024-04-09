@@ -2,7 +2,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
 from db import db
-from initialize import pay_guard
+from initialize import pay_guard, calcService
 
 from CALCULATE.common.messages import (
     msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
@@ -121,7 +121,8 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     bot.delete_state(user_id, chat_id)
 
-    text = msg_stats(user_id)
+    stats = calcService.get_stats(user_id)
+    text = msg_stats(user_id, stats)
     kb = kb_stats(user_id)
 
     if is_first:

@@ -3,13 +3,14 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
-from initialize import calcService
+from initialize import calcService, pay_guard
 from db import db
 from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_calculation_saved, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
+from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 
-from .keyboards import kb_deal_profit_minus, kb_deal_result, kb_set_calc_stats
+from .keyboards import kb_deal_profit_minus, kb_deal_result
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main
 
@@ -73,30 +74,30 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     is_cancel = True
 
+                is_valid = pay_guard.valid_use_calc(user_id)
                 mes_calc = msg_calculate_result(user_id, calc_info)
 
                 if is_cancel:
-                    kb_calc = kb_set_calc_stats(user_id, stat_id)
-
                     bot.edit_message_text(
-                        mes_calc, chat_id, mes_id, reply_markup=kb_calc
+                        mes_calc, chat_id, mes_id,
+                        reply_markup=kb_main(user_id, is_valid, True, stat_id)
                     )
                 else:
                     calc_info = db.get_calculation(stat_id)
                     if calc_info is None:
                         return
 
-                    mes_result = msg_calculate_saved_result(user_id, calc_info)
-                    mes_result += f'\n\n{msg_calculation_saved(user_id)}'
+                    stats = calcService.get_stats(user_id)
+
+                    mes_result = '\n' + \
+                        msg_calculate_saved_result(user_id, calc_info, stats)
+                    mes_result += f'\n{msg_calculation_saved(user_id)}'
 
                     bot.edit_message_text(
-                        mes_calc, chat_id, mes_id
-                    )
-                    bot.send_message(
-                        chat_id, mes_result
+                        mes_calc + mes_result, chat_id, mes_id,
+                        reply_markup=kb_main(user_id, is_valid, True)
                     )
 
-                send_main(call.message, bot, user_id, True, True)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

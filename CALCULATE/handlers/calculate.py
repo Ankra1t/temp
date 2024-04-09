@@ -1,36 +1,20 @@
+import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.calculate.keyboards import kb_change_token
-from initialize import currencyService
+from initialize import currencyService, pay_guard
 from db import db
 from models import Calculation, ForexInfo
 
 from common.utils import digit_accept, set_state_data, text_accept
-from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, send_main, kb_set_calc_stats
+from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, send_main, kb_tool, kb_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
-    msg_calculate, msg_calculate_forex_result, msg_calculate_result, msg_currency_error,
-    msg_digit_error, msg_enter_stop_loss, msg_enter_trading_style, msg_pair_error,
-    msg_pair_not_found, msg_sl_op_equal_error, msg_text_error, msg_ticker_error, msg_ticker_not_found, msg_trading_style_error
+    msg_calculate_result, msg_currency_error,
+    msg_digit_error, msg_enter_trading_style, msg_pair_error,
+    msg_pair_not_found, msg_sl_op_equal_error, msg_text_error, msg_ticker_error,
+    msg_ticker_not_found, msg_trading_style_error
 )
-
-
-def handle_token(message: Message, bot: TeleBot):
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    token = text_accept(message)
-    if token is None:
-        bot.send_message(
-            chat_id, msg_text_error(user_id),
-            reply_markup=kb_change_token(user_id)
-        )
-        return
-
-    set_state_data(bot, user_id, chat_id, {'token': token})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
 def handle_tool(message: Message, bot: TeleBot):
@@ -42,9 +26,11 @@ def handle_tool(message: Message, bot: TeleBot):
     if tool is None:
         bot.send_message(
             chat_id, msg_text_error(user_id),
-            reply_markup=kb_change_token(user_id)
+            reply_markup=kb_tool(user_id, [])
         )
         return
+
+    tool = re.sub(r' +', '/', tool.strip().upper())
 
     set_state_data(bot, user_id, chat_id, {'tool': tool})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
@@ -224,6 +210,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
 def handle_open_price(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
+    mes_id = message.id
 
     value = digit_accept(message)
     if value is None:
@@ -233,25 +220,8 @@ def handle_open_price(message: Message, bot: TeleBot):
         )
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        calc_type = data.get('calc_type')
-        token = data.get('token', '')
-        pair = data.get('pair', '')
-        data['open_price'] = value
-
-    if calc_type is not None and calc_type == 'forex':
-        state = ForexCalcState.stop_loss
-    else:
-        state = CalculateState.stop_loss
-
-    text = msg_calculate(bot, user_id, chat_id, pair, token) + \
-        msg_enter_stop_loss(user_id)
-
-    bot.set_state(user_id, state, chat_id)
-    bot.send_message(
-        chat_id, text,
-        reply_markup=kb_main_cancel(user_id)
-    )
+    set_state_data(bot, user_id, chat_id, {'open_price': value})
+    choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
 def handle_stop_loss(message: Message, bot: TeleBot):
@@ -271,7 +241,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         open_price = data.get('open_price')
         trading_style = data.get('trading_style')
-        token = data.get('token')
         tool = data.get('tool')
         ticker = data.get('ticker')
 
@@ -300,21 +269,21 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
         trading_style=trading_style or None,
-        token=token,
         tool=tool or None,
     )
+
+    db.minus_calculator_uses_count(user_db_id)
 
     mes = msg_calculate_result(user_id, calc_info)
 
     new_id = db.add_calculation(calc_info)
+    is_valid = pay_guard.valid_use_calc(user_id)
 
-    db.minus_calculator_uses_count(user_db_id)
     bot.send_message(
         chat_id, mes,
-        reply_markup=kb_set_calc_stats(user_id, new_id)
+        reply_markup=kb_main(user_id, is_valid, True, new_id),
     )
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True, True)
 
 
 def handle_forex_stop_loss(message: Message, bot: TeleBot):
@@ -333,7 +302,6 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         open_price = float(data.get('open_price', 0))
-        tool = data.get('tool')
         forex = data.get('forex')
         trading_style = data.get('trading_style')
 
@@ -359,20 +327,20 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
         split_values=u_base.split_values,
         trading_style=trading_style or None,
         forex_info=forex,
-        tool=tool or None,
     )
 
-    mes = msg_calculate_forex_result(user_id, calc_info)
+    db.minus_calculator_uses_count(user_db_id)
+
+    mes = msg_calculate_result(user_id, calc_info)
 
     new_id = db.add_calculation(calc_info)
-    db.minus_calculator_uses_count(user_db_id)
+    is_valid = pay_guard.valid_use_calc(user_id)
 
     bot.send_message(
         chat_id, mes,
-        reply_markup=kb_set_calc_stats(user_id, new_id)
+        reply_markup=kb_main(user_id, is_valid, True, new_id),
     )
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True, True)
 
 
 # ? Выравнивание результатов
@@ -402,7 +370,6 @@ def registration(bot: TeleBot):
     reg_mes(handle_risk_percent, state=CalculateState.risk_percent)
     reg_mes(handle_currency, state=CalculateState.currency)
 
-    reg_mes(handle_token, state=CalculateState.token)
     reg_mes(handle_tool, state=CalculateState.tool)
     reg_mes(handle_trading_style, state=CalculateState.trading_style)
 

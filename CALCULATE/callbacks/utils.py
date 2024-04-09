@@ -7,24 +7,24 @@ from initialize import pay_guard
 from common.utils import set_state_data
 from .pages import send_main
 from .main.keyboards import kb_main_cancel
-from .calculate.keyboards import kb_change_token, kb_pair, kb_tool
+from .calculate.keyboards import kb_pair, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
     msg_calculate, msg_enter_currency, msg_enter_deposit, msg_enter_future,
-    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_token, msg_enter_tool, msg_enter_trading_style
+    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 )
 from CALCULATE.states import CalculateState, FutureCalcState, ForexCalcState
 
 
 def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int, is_edit=False):
     with bot.retrieve_data(user_id, chat_id) as data:
+        open_price = data.get('open_price')
         calc_type = data.get('calc_type')
         ticker = data.get('ticker')
         forex = data.get('forex')
         trading_style = data.get('trading_style')
         tool = data.get('tool')
-        token = data.get('token')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
@@ -33,11 +33,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     if u_base is None:
         return
 
-    pair = ''
-    if forex is not None:
-        pair = forex.pair
-
-    text = msg_calculate(bot, user_id, chat_id, pair or '', token or '')
+    text = msg_calculate(bot, user_id, chat_id)
     keyboard = kb_main_cancel(user_id)
 
     if calc_type == 'forex' and forex is None:
@@ -47,18 +43,14 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif calc_type == 'future' and ticker is None:
         text += msg_enter_future(user_id)
         state = FutureCalcState.ticker
-    elif calc_type == 'crypto' and token is None:
-        text += msg_enter_token(user_id)
-        state = CalculateState.token
-        keyboard = kb_change_token(user_id)
+    elif calc_type == 'crypto' and tool is None:
+        text += msg_enter_tool(user_id)
+        state = CalculateState.tool
+        keyboard = kb_tool(user_id, last_tools)
     elif trading_style is None:
         text += msg_enter_trading_style(user_id)
         state = CalculateState.trading_style
         keyboard = kb_trading_style(user_id, 'calc', u_base.trading_style or '')
-    elif tool is None:
-        text += msg_enter_tool(user_id)
-        state = CalculateState.tool
-        keyboard = kb_tool(user_id, last_tools)
     elif u_base.currency is None:
         text += msg_enter_currency(user_id)
         state = CalculateState.currency
@@ -69,9 +61,15 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
     elif u_base.risk is None:
         text += msg_enter_risk_percent(user_id)
         state = CalculateState.risk_percent
-    else:
+    elif open_price is None:
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price
+    else:
+        text += msg_enter_stop_loss(user_id)
+        if calc_type == 'forex':
+            state = ForexCalcState.stop_loss
+        else:
+            state = CalculateState.stop_loss
 
     bot.set_state(user_id, state, chat_id)
     if is_edit:

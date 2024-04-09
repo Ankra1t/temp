@@ -3,7 +3,7 @@ from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery
 
 
-main_factory = CallbackData('type', prefix='main')
+main_factory = CallbackData('type', 'stat_id', 'is_new_calc', prefix='main')
 
 
 class MainCallbackFilter(AdvancedCustomFilter):

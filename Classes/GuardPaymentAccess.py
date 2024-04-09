@@ -87,13 +87,13 @@ class GuardPaymentAccess():
         return db.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, user_id: int):
-        user_db_id = db.get_user_id_by_tg_id(user_id)
+    def valid_use_calc(self, tg_id: int):
+        user_db_id = db.get_user_id_by_tg_id(tg_id)
 
         freeze_dt = db.get_user_calc_freeze(user_db_id)
 
         uses_count = db.get_calculator_uses_count(user_db_id) or 0
-        is_sub = self.paid_user_product(user_id, 'calc')
+        is_sub = self.paid_user_product(tg_id, 'calc')
         valid_use = uses_count > 0 or is_sub
 
         if freeze_dt is not None and (freeze_dt < get_datetime_now() or not valid_use):

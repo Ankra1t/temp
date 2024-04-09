@@ -1,15 +1,20 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from CALCULATE.callbacks.stats.keyboards import get_deal_button
 from common.keyboard import cancel_txt
 from common.utils import get_lang
 
 from .filter import main_factory
 
 
-def getButton(text: str, type: str):
+def getButton(text: str, type: str, is_new_calc=False, stat_id=-1):
     return InlineKeyboardButton(
         text, None,
-        main_factory.new(type=type)
+        main_factory.new(
+            type=type,
+            stat_id=str(stat_id),
+            is_new_calc=str(is_new_calc)
+        )
     )
 
 
@@ -28,7 +33,7 @@ def kb_main_cancel(user_id: int):
     return keyboard
 
 
-def kb_main(user_id: int, is_access=True, is_new_calc=False):
+def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -45,16 +50,27 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_calc = getButton('⌨️ ' + texts[lang]['calc'], 'calc')
-    btn_settings = getButton('⚙️ ' + texts[lang]['settings'], 'settings')
+    calc_type = 'default'
+    if is_new_calc:
+        calc_type = 'calc'
+    if stat_id == -1:
+        calc_type = 'saved'
+
+    btn_calc = getButton('⌨️ ' + texts[lang]
+                         ['calc'], 'calc', is_new_calc, stat_id)
+    btn_settings = getButton(
+        '⚙️ ' + texts[lang]['settings'], 'settings', is_new_calc, stat_id)
     btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
     buttons = []
     if is_access:
         buttons.append(btn_calc)
     if not is_new_calc:
-        buttons.append(btn_settings)
-    buttons.append(btn_stats)
+        buttons.append(btn_stats)
+    buttons.append(btn_settings)
+
+    if stat_id != -1:
+        keyboard.add(get_deal_button(user_id, stat_id))
 
     keyboard.add(*buttons)
     return keyboard

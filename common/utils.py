@@ -45,7 +45,11 @@ def get_print_float(value: float, round_count: int | None = None):
         return int(value)
 
     if round_count is not None:
-        return round(value, min(round_count, 5))
+        result = round(value, min(round_count, 5))
+        if result == int(result):
+            return int(result)
+
+        return result
 
     if round(value, 2) == value:
         return round(value, 2)
