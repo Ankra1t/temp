@@ -95,6 +95,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             elif 'image' in type:
                 state = AdminTariffState.image
                 text = 'Отправьте новую картинку тарифа:'
+            elif 'img_en' in type:
+                state = AdminTariffState.image_en
+                text = 'Отправьте картинку на английском для тарифа:'
             elif 'findate' in type:
                 state = ''
 

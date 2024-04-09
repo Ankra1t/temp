@@ -142,7 +142,7 @@ def handle_image(message: Message, bot: TeleBot):
 
     if (message.content_type != 'photo') or (message.photo is None) or (len(message.photo) == 0):
         bot.send_message(
-            chat_id, 'Введите срок действия числом:',
+            chat_id, 'Отправьте картинку:',
             reply_markup=back_keyboard
         )
         return
@@ -157,7 +157,11 @@ def handle_image(message: Message, bot: TeleBot):
             reply_markup=back_keyboard
         )
     else:
-        db.update_price_image(tariff_id, media_id)
+        if bot.get_state(user_id, chat_id) == str(AdminTariffState.image_en):
+            db.update_price_image_en(tariff_id, media_id)
+        else:
+            db.update_price_image(tariff_id, media_id)
+
         bot.delete_state(user_id, chat_id)
         send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
@@ -296,6 +300,7 @@ def registration(bot: TeleBot):
     reg_mes(handle_price, state=AdminTariffState.price)
     reg_mes(handle_duration, state=AdminTariffState.duration)
     reg_mes(handle_image, state=AdminTariffState.image)
+    reg_mes(handle_image, state=AdminTariffState.image_en)
     reg_mes(handle_description, state=AdminTariffState.description)
 
     reg_mes(handle_discount_percent, state=AdminTariffState.discount_percent)

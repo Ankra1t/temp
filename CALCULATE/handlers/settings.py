@@ -88,7 +88,8 @@ def handle_new_currency(message: Message, bot: TeleBot):
     if not check:
         bot.send_message(
             chat_id, msg_currency_error(user_id, 'not_found'),
-            reply_markup=kb_base_cancel(user_id))
+            reply_markup=kb_base_cancel(user_id)
+        )
         return
 
     db.set_user_currency(user_db_id, value.upper())

@@ -76,7 +76,7 @@ def get_short_user_info(user: UserInfo):
         sub_show = 'нет подписок'
     else:
         fin_date = get_str_by_datetime(user_subsribe.finish_dt)
-        type_subscribe_show = f'({user_subsribe.type})'
+        type_subscribe_show = f'({user_subsribe.product_type})'
         sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
 
     user_show = (

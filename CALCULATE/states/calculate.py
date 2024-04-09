@@ -11,6 +11,9 @@ class CalculateState(StatesGroup):
     open_price = State()
     stop_loss = State()
 
+    token = State()
+    tool = State()
+
 
 class FutureCalcState(StatesGroup):
     ticker = State()

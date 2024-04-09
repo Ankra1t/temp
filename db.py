@@ -10,11 +10,11 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from models import (
     Calculation, Forex, ForexInfo, Future, Post, PostDetails,
     Text, UserCalcSettings, UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Task, MARKETS_TYPE
+    Transactions, Purchase, Worker, Task,
+    MARKETS_TYPE
 )
 
 SUBSCRIBE_TYPE = Literal['trial', 'paid']
-PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 BASE_VALUE_TYPE = Literal['base_deposit', 'base_risk', 'base_currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
@@ -45,6 +45,7 @@ class Database:
             price=data.get('price'),
             currency=data.get('currency'),
             image=data.get('img'),
+            img_en=data.get('img_en'),
             description=data.get('description'),
             discount_percent=data.get('discount_percent'),
             discount_findate=data.get('discount_findate'),
@@ -168,6 +169,20 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[update_price_image]: {e}')
+            self.connection.rollback()
+            return False
+
+    def update_price_image_en(self, id: int, value: str):
+        """Обновить цену"""
+        query = "UPDATE prices SET img_en = %s WHERE id = %s"
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[update_price_image_en]: {e}')
             self.connection.rollback()
             return False
 
@@ -309,24 +324,21 @@ class Database:
     # # # # # # # # Subscribes # # # # # # # #
     def _data_to_subsbscribe(self, data: DictRow):
         return Subscribe(
-            data.get('tg_user_id'),
-            data.get('finish_dt'),
-            data.get('active'),
-            data.get('id'),
-            data.get('subscribe_type'),
-            data.get('prices_id'),
-            data.get('transactions_payed_id'),
-            data.get('gift_admin'),
-            data.get('user_id'),
+            id=data.get('id'),
+            user_id=data.get('user_id'),
+            finish_dt=data.get('finish_dt'),
+            product_type=data.get('subscribe_type'),
+            active=data.get('active'),
+            transactions_payed_id=data.get('transactions_payed_id'),
         )
 
     def add_subsbscribe(self, sub: Subscribe):
         query = ("INSERT INTO "
-                 "subscribes (tg_user_id, finish_dt, "
-                 "subscribe_type, active, prices_id, transactions_payed_id) "
-                 "VALUES (%s, %s, %s, %s, %s, %s)")
-        params = (sub.tg_user_id, sub.finish_dt, sub.type, sub.active,
-                  sub.prices_id, sub.transactions_payed_id)
+                 "subscribes (user_id, finish_dt, subscribe_type, active, transactions_payed_id) "
+                 "VALUES (%s, %s, %s, %s, %s)")
+        params = (
+            sub.user_id, sub.finish_dt, sub.product_type, sub.active, sub.transactions_payed_id
+        )
 
         try:
             self.curs.execute(query, params)
@@ -338,8 +350,8 @@ class Database:
             return False
 
     def get_current_subscribe_user(self, user_id: int):
-        query = 'SELECT * FROM subscribes WHERE tg_user_id = %s AND active = 1'
-        params = (user_id,)
+        query = 'SELECT * FROM subscribes WHERE user_id = %s AND active = %s'
+        params = (user_id, True)
 
         try:
             self.curs.execute(query, params)
@@ -351,7 +363,7 @@ class Database:
             return None
 
     def get_user_trial_subscribe(self, user_id: int):
-        query = "SELECT * FROM subscribes WHERE tg_user_id = %s AND subscribe_type = %s"
+        query = "SELECT * FROM subscribes WHERE user_id = %s AND subscribe_type = %s"
         params = (user_id, 'trial')
 
         try:
@@ -364,34 +376,27 @@ class Database:
             self.connection.rollback()
             return None
 
-    # TODO - продумать данные функция работы с получнием пользователей с подпиской и без
-    def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[DictRow]:
+    def get_users_finished_subscribe(self, type: SUBSCRIBE_TYPE) -> list[UserInfo]:
         datetime_now = get_datetime_now()
         query = (
-            'SELECT u.id, u.created_at, u.username, u.count_sub, u.count_days, '
-            'u.refer, u.pay_money, u.balance, u.count_les, u.id, u.ban, sub.finish_dt '
-            'FROM subscribes AS sub, users AS u WHERE sub.finish_dt < %s '
-            'AND sub.subscribe_type = %s AND sub.active = %s AND sub.tg_user_id = u.id'
+            'SELECT u.* FROM users as u JOIN subscribes as sub ON sub.user_id = u.id '
+            'WHERE sub.finish_dt < %s AND sub.active = %s '
+            f'AND sub.transactions_payed_id is {"not" if type == "paid" else ""} NULL'
         )
-        params = (datetime_now, type, 1)
+        params = (datetime_now, True)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            return data
-            # return list(map(lambda el: self._data_to_subsbscribe(el), data))
+            return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
             print(f'ERROR[get_users_finished_subscribe]: {e}')
             self.connection.rollback()
             return []
 
-    def set_subscribe_unactive_by_user_id(self, user_id: int, tariff_id: int | None = None):
-        if tariff_id:
-            query = "UPDATE subscribes set active = %s WHERE tg_user_id = %s AND prices_id = %s "
-            params = (0, user_id, tariff_id, )
-        else:
-            query = "UPDATE subscribes set active = %s WHERE tg_user_id = %s"
-            params = (0, user_id,)
+    def set_subscribe_unactive_by_user_id(self, user_id: int):
+        query = "UPDATE subscribes set active = %s WHERE user_id = %s"
+        params = (False, user_id,)
 
         try:
             self.curs.execute(query, params)
@@ -404,7 +409,7 @@ class Database:
 
     def set_subscribe_unactive(self, subscribe_id: int):
         query = "UPDATE subscribes set active = %s WHERE id = %s"
-        params = (0, subscribe_id)
+        params = (False, subscribe_id)
 
         try:
             self.curs.execute(query, params)
@@ -415,9 +420,9 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_trial_subscribe_unactive_by_user(self, tg_user_id):
-        query = "UPDATE subscribes set active = %s WHERE tg_user_id = %s AND subscribe_type = %s"
-        params = (0, tg_user_id, 'trial')
+    def set_trial_subscribe_unactive_by_user(self, user_id: int):
+        query = "UPDATE subscribes set active = %s WHERE user_id = %s AND subscribe_type = %s"
+        params = (False, user_id, 'trial')
 
         try:
             self.curs.execute(query, params)
@@ -441,12 +446,12 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_deactivate_subscribe(self, subscribe_id: int):
+    def deactivate_subscribe(self, subscribe_id: int):
         query = (
             'UPDATE subscribes set active = %s '
             'WHERE id = %s'
         )
-        params = (0, subscribe_id,)
+        params = (False, subscribe_id,)
 
         try:
             self.curs.execute(query, params)
@@ -457,13 +462,13 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_unactive_subscribes(self, type: SUBSCRIBE_TYPE):
+    def check_unactive_subscribes(self, type: SUBSCRIBE_TYPE):
         datetime_now = get_datetime_now()
         query = (
             'UPDATE subscribes set active = %s '
             'WHERE finish_dt < %s AND subscribe_type = %s'
         )
-        params = (0, datetime_now, type, )
+        params = (False, datetime_now, type, )
 
         try:
             self.curs.execute(query, params)
@@ -479,7 +484,7 @@ class Database:
             "UPDATE subscribes set active = %s "
             "WHERE (updated_at BETWEEN %s AND %s ) AND active = %s"
         )
-        params = (0, time_start, time_end, 1,)
+        params = (False, time_start, time_end, True,)
 
         try:
             self.curs.execute(query, params)
@@ -490,8 +495,8 @@ class Database:
             return False
 
     def get_active_subscribes_by_user_id(self, user_id: int):
-        query = 'SELECT * FROM subscribes WHERE tg_user_id = %s AND active = 1'
-        params = (user_id,)
+        query = 'SELECT * FROM subscribes WHERE user_id = %s AND active = %s'
+        params = (user_id, True)
 
         try:
             self.curs.execute(query, params)
@@ -511,7 +516,7 @@ class Database:
             'FROM subscribes sub, users u, prices p, tgbotusers ub '
             'WHERE '
             '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
-            'AND sub.active = %s AND sub.tg_user_id = u.id_telegram '
+            'AND sub.active = %s AND sub.user_id = u.id '
             'AND sub.prices_id = p.id '
             'AND ub.user_id = u.id '
             'AND (p.type_product = %s OR p.type_product = %s) '
@@ -544,26 +549,38 @@ class Database:
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(
-            data.get('user_id'),
-            data.get('id'),
-            data.get('code'),
-            data.get('link'),
-            data.get('sum'),
-            data.get('currency'),
-            data.get('price_id'),
-            data.get('status'),
-            data.get('payment_date'),
+            id=data.get('id'),
+            user_id=data.get('user_id'),
+            code=data.get('code'),
+            link=data.get('link'),
+            sum=data.get('sum'),
+            currency=data.get('currency'),
+            status=data.get('status'),
+            payment_date=data.get('payment_date'),
+            name=data.get('name'),
+            duration_days=data.get('duration_days'),
+            type_product=data.get('type_product'),
         )
 
-    def add_transaction(self, trans: Transactions):
-        datetime_now = datetime.utcnow()
+    def add_transaction(
+        self,
+        user_id: int,
+        code: str,
+        link: Optional[str],
+        sum: float,
+        status: str,
+        currency: str,
+        name: str,
+        duration_days: int,
+        type_product: str
+    ):
         query = (
             "INSERT INTO transactions"
-            "(user_id, code, link, sum, currency, price_id, status, created_at, updated_at) "
+            "(user_id, code, link, sum, currency, status, name, duration_days, type_product) "
             "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
         )
-        params = (trans.user_id, trans.code, trans.link, trans.sum,
-                  trans.currency, trans.price_id, trans.status, datetime_now, datetime_now)
+        params = (user_id, code, link, sum, currency,
+                  status, name, duration_days, type_product)
 
         try:
             self.curs.execute(query, params)
@@ -574,12 +591,12 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_wait_transaction(self, code: str, status: str):
+    def get_wait_transaction(self, code: str):
         query = (
             "SELECT * FROM transactions "
             "WHERE code = %s AND status = %s"
         )
-        params = (code, status)
+        params = (code, 'wait_payments')
 
         try:
             self.curs.execute(query, params)
@@ -626,24 +643,22 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_paid_transactions_all_dry_users(self) -> list[Transactions]:
+    def get_paid_users_count(self) -> int:  # TODO
         """Получить все оплаченные транзакции"""
-        query = ("SELECT DISTINCT user_id, id, code, link, sum, currency, price_id, status, payment_date FROM transactions "
-                 "WHERE status = %s "
-                 )
-        status = 'paid'
-        params = (status,)
+        query = "SELECT user_id FROM transactions WHERE status = %s GROUP BY user_id"
+        params = ('paid',)
 
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
 
-            return list(map(lambda el: self._data_to_transaction(el), data))
+            return len(data)
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_all]: {e}')
+            print(f'ERROR[get_paid_users_count]: {e}')
             self.connection.rollback()
-            return []
+            return 0
 
+    # TODO
     def get_paid_transactions_period(self, start_date, fin_date) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ("SELECT * FROM transactions "
@@ -666,9 +681,8 @@ class Database:
     def get_paid_transactions_product(self, product) -> list[Transactions]:
         """Получить все оплаченные транзакции по продукту"""
         query = ("SELECT * "
-                 "FROM transactions t, prices p  "
-                 "WHERE t.price_id = p.id AND p.type_product = %s "
-                 "AND status = %s "
+                 "FROM transactions "
+                 "WHERE type_product = %s AND status = %s "
                  )
         status = 'paid'
         params = (product, status,)
@@ -721,8 +735,8 @@ class Database:
     def get_paid_transactions_summ_product(self, product) -> int:
         """Суммы по транзакциям по продукту"""
         query = ("SELECT sum(sum) "
-                 "FROM transactions t, prices p "
-                 "WHERE t.price_id = p.id AND p.type_product = %s "
+                 "FROM transactions "
+                 "WHERE type_product = %s "
                  "AND status = %s "
                  )
         status = 'paid'
@@ -739,14 +753,10 @@ class Database:
 
     def get_purchases_by_user(self, user_id: int) -> list[Purchase]:
         """Получение покупок пользователя"""
-        query = ("SELECT t.user_id, p.id AS price_id, p.name AS price_name, p.type_product AS product, "
-                 "t.sum AS real_sum, p.price AS tariff_price, "
-                 "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
-                 "t.created_at AS create_date "
-                 "FROM transactions t, prices p "
+        query = ("SELECT * "
+                 "FROM transactions "
                  "WHERE "
-                 "t.user_id = %s AND t.status = %s "
-                 "AND t.price_id = p.id"
+                 "user_id = %s AND status = %s "
                  )
         status = 'paid'
         params = (user_id, status,)
@@ -761,6 +771,7 @@ class Database:
             self.connection.rollback()
             return []
 
+    # TODO - only transactions
     def _data_to_purchase(self, data: DictRow):
         return Purchase(
             data.get('user_id'),
@@ -798,7 +809,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def set_transactions_complete(self, id: int):
+    def success_transaction(self, id: int):
         datetime_now = get_datetime_now()
         query = "UPDATE transactions set status = %s, payment_date = %s, created_at = %s WHERE id = %s"
         params = ('paid', datetime_now, datetime_now, id, )
@@ -808,7 +819,20 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_transactions_complete]: {e}')
+            print(f'ERROR[success_transaction]: {e}')
+            self.connection.rollback()
+            return False
+
+    def cancel_transaction(self, id: int):
+        query = "DELETE FROM transactions WHERE id = %s"
+        params = (id,)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[cancel_transaction]: {e}')
             self.connection.rollback()
             return False
 
@@ -882,12 +906,6 @@ class Database:
         query += "LIMIT %s OFFSET %s "
         params = (limit, (page - 1) * limit)
 
-        # if sort_by == 'by_paid':
-        #     query += 'LEFT JOIN (SELECT tg_user_id, active, max(finish_dt) as finish_dt FROM subscribes '
-        #     query += 'WHERE active = 1 GROUP BY tg_user_id, active) sub on u.id_telegram = sub.tg_user_id '
-        #     query += 'ORDER BY sub.active ASC, sub.finish_dt DESC '
-        # else:
-
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
@@ -925,12 +943,11 @@ class Database:
             'WHERE u.ban = 0 '
             f'AND '
             f'(SELECT COUNT (*) FROM subscribes as sub '
-            f'WHERE sub.tg_user_id = u.id_telegram '
-            f'AND sub.transactions_payed_id IS NOT NULL '
-            f'AND sub.subscribe_type = %s) >= {min_sub_count} '
-            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) > 0 '
+            f'WHERE sub.user_id = u.id '
+            f'AND sub.transactions_payed_id IS NOT NULL) >= %s '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.user_id = u.id AND sub.active = %s) > 0 '
         )
-        params = ('paid',)
+        params = (min_sub_count, True)
 
         try:
             self.curs.execute(query, params)
@@ -944,11 +961,12 @@ class Database:
     def get_not_subscribed_users(self) -> list[UserInfo]:
         query = self.USER_INFO_QUERY + (
             'WHERE u.ban = 0 '
-            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.tg_user_id = u.id_telegram AND sub.active = 1) = 0 '
+            'AND (SELECT COUNT (*) FROM subscribes as sub WHERE sub.user_id = u.id AND sub.active = %s) = 0 '
         )
+        params = True,
 
         try:
-            self.curs.execute(query)
+            self.curs.execute(query, params)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:
@@ -1143,6 +1161,7 @@ class Database:
             trading_style=data.get('trading_style'),
             round_count=data.get('round_count'),
             day_risk=day_risk,
+            is_updating_deposit=data.get('is_updating_deposit'),
         )
 
     def get_calc_user_settings(self, user_id: int):
@@ -1384,7 +1403,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_user_trading_style(self, user_id: int, value: str):
+    def set_user_trading_style(self, user_id: int, value: str | None):
         query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s'
         params = (value, user_id)
 
@@ -1414,6 +1433,19 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[reset_user_settings]: {e}')
+            self.connection.rollback()
+            return False
+
+    def set_user_updating_deposit(self, user_id: int, value: bool):
+        query = 'UPDATE calculations SET is_updating_deposit = %s WHERE user_id = %s'
+        params = value, user_id,
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f'ERROR[set_user_updating_deposit]: {e}')
             self.connection.rollback()
             return False
 
@@ -1448,14 +1480,16 @@ class Database:
             market=data.get('market'),
             tp_ratio=data.get('tp_ratio'),
             split_values=data.get('split_values'),
-            forex_info=forex
+            forex_info=forex,
+            token=data.get('token'),
+            tool=data.get('tool'),
         )
 
     def add_calculation(self, value: Calculation):
         query = (
             'INSERT INTO calculations (user_id, deposit, risk_value, open_price, stop_loss, round_count, '
-            'currency, trading_style, market, tp_ratio, split_values, pair, pair_price, cross_prices) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            'currency, trading_style, market, tp_ratio, split_values, pair, pair_price, cross_prices, token, tool) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
 
         pair_price = pair = cross_prices = None
@@ -1467,7 +1501,7 @@ class Database:
         params = (
             value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
             value.round_count, value.currency, value.trading_style, value.market,
-            value.tp_ratio, value.split_values, pair, pair_price, cross_prices
+            value.tp_ratio, value.split_values, pair, pair_price, cross_prices, value.token, value.tool
         )
 
         try:
@@ -1549,6 +1583,19 @@ class Database:
             print(f'ERROR[get_calculation]: {e}')
             self.connection.rollback()
             return None
+
+    def get_last_tools(self, user_id: int) -> list[str]:
+        query = 'SELECT tool FROM calculations WHERE user_id = %s GROUP BY tool'
+        params = user_id,
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: str(el.get('tool') or ''), data))
+        except Exception as e:
+            print(f'ERROR[get_last_tools]: {e}')
+            self.connection.rollback()
+            return []
 
     # Workers
     def _data_to_worker(self, data: DictRow):

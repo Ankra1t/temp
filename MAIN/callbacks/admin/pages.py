@@ -223,21 +223,21 @@ def send_admin_client(
     if client is None:
         return
 
-    user_subsribe = db.get_current_subscribe_user(client.id)
+    user_subsribe = db.get_current_subscribe_user(client_db_id)
 
     fin_date = 'нет'
     type_subscribe_show = ''
 
     if user_subsribe is not None:
         fin_date = get_str_by_datetime(user_subsribe.finish_dt)
-        type_subscribe_show = f' тип {user_subsribe.type}'
+        type_subscribe_show = f' тип {user_subsribe.product_type}'
 
     nikname = f'@{client.username}' if client.username != '' else ''
     count_ref = len(db.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
     text = '\n'.join((
-        f'Пользователь <b>{nikname} | {client.id} {"(BAN)" if is_banned else ""}</b>',
+        f'Пользователь <b>{nikname} | {client_db_id} {"(BAN)" if is_banned else ""}</b>',
         f'Подписка: {fin_date}{type_subscribe_show}',
         # f'Баланс: <b>{balance}</b>',
         f'Рефералов: <b>{count_ref}</b>',

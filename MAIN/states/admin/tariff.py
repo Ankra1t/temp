@@ -6,6 +6,7 @@ class AdminTariffState(StatesGroup):
     price = State()
     duration = State()
     image = State()
+    image_en = State()
     description = State()
 
     discount_percent = State()

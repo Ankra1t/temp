@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from common.dt import get_str_by_datetime
 from db import db
 from initialize import pay_guard
 
@@ -52,6 +53,7 @@ def handle_client_search(message: Message, bot: TeleBot):
 
     bot.delete_state(user_id, chat_id)
 
+
 def handle_days_subscribe(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -82,13 +84,16 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         return
 
     if current_state == 'AdminUsersState:subscribe_days':
-        # !!! деактивировать старые платные и пробные подписки
-        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id, tariff_id)
-        datetime_show = pay_guard.set_custom_paid_subscribe(
-            user.tg_id, tariff_id, int(days)
+        tariff = db.get_price_by_id(tariff_id)
+        if tariff is None:
+            return
+
+        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
+        datetime_show = pay_guard.set_trial(
+            user.tg_id, tariff.type_product, int(days)
         )
 
-        data_fin = datetime_show['admin']
+        data_fin = get_str_by_datetime(datetime_show)
         bot.send_message(
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
@@ -97,15 +102,15 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
 
         bot.send_message(
             user.tg_id,
-            gift_subscribe_msg(datetime_show['user'])
+            gift_subscribe_msg(user.tg_id, data_fin)
         )
 
     if current_state == 'AdminUsersState:trial_subscribe_days_get_days':
         try:
-            pay_guard.set_trial_subscribe_unactive_by_user(user.tg_id)
-            datetime_show = pay_guard.set_trial(user.tg_id, days)
+            pay_guard.deactivate_user_trial_subscribe(user.id)
+            finish_dt = pay_guard.set_trial(user.id, 'calc', days)  # TODO
 
-            data_fin = datetime_show['admin']
+            data_fin = get_str_by_datetime(finish_dt)
             bot.send_message(
                 chat_id,
                 f'Клиенту с id[{subscribe_user_id}] установлена пробная подписка на {days} дней, до {data_fin}'
@@ -113,8 +118,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
             send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
             bot.send_message(
-                user.tg_id,
-                gift_trial_subscribe_msg(datetime_show['user'])
+                user.tg_id, gift_trial_subscribe_msg(user.tg_id, data_fin)
             )
         except Exception as e:
             print(f'Что то пошло не так {e}')
@@ -131,5 +135,5 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_days_subscribe, state=AdminUsersState.subscribe_days)
 
-    reg_mes(handle_days_subscribe, state=AdminUsersState.trial_subscribe_days_get_days)
-
+    reg_mes(handle_days_subscribe,
+            state=AdminUsersState.trial_subscribe_days_get_days)

@@ -2,6 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
+from common.utils import get_lang
 from db import db
 from initialize import text_editor
 from AuthRoles import get_site_code
@@ -182,7 +183,13 @@ def send_tariffs_list_item(
         tariff = tariffs[page]
         tariff_id = tariff.id or 0
 
-        image = tariff.img
+        lang = get_lang(user_id)
+
+        if lang == 'en':
+            image = tariff.img_en or tariff.img
+        else:
+            image = tariff.img
+
         text = msg_user_tariff(user_id, tariff)
         keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page)
 

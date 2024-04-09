@@ -91,6 +91,7 @@ def kb_deal_result(user_id: int, stat_id: int):
         buttons.append(btn)
         if len(buttons) == row_width or (i == len(tp) - 1 and len(buttons) != 0):
             keyboard.add(*buttons)
+            buttons = []
 
     btn_low = getButton(f'🔻 {texts[lang]["minus"]}', 'profit+-', stat_id)
     btn_back = getButton(cancel_txt(lang), 'profit+cancel', stat_id)

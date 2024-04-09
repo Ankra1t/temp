@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
+PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 
 
 class Invoice(BaseModel):
@@ -38,30 +39,13 @@ class UpdateBBanker(BaseModel):
     payload: InvoiceBBanker | None = None
 
 
-class Subscribe:
-    def __init__(
-        self,
-        tg_user_id: int,
-        finish_dt: datetime,
-        active: int,
-        id: int | None = None,
-        type: str | None = None,
-        prices_id: int | None = None,
-        transactions_payed_id: int | None = None,
-        type_product: str | None = None,
-        gift_admin: int | None = None,
-        user_id: int | None = None
-    ):
-        self.id = id
-        self.tg_user_id = tg_user_id
-        self.finish_dt = finish_dt
-        self.type = type
-        self.active = active
-        self.prices_id = prices_id
-        self.transactions_payed_id = transactions_payed_id
-        self.type_product = type_product
-        self.gift_admin = gift_admin
-        self.user_id = user_id
+class Subscribe(BaseModel):
+    id: int
+    user_id: int
+    finish_dt: datetime
+    product_type: PRODUCT_TYPE
+    active: bool
+    transactions_payed_id: Optional[int] = None
 
 
 class User:
@@ -78,6 +62,8 @@ class Discount(BaseModel):
 
 
 class Price:
+    type_product: PRODUCT_TYPE
+
     def __init__(
         self,
         name: str,
@@ -85,13 +71,14 @@ class Price:
         price: int,
         currency: str,
         switch_active: int,
-        type_product: str,
+        type_product: PRODUCT_TYPE,
         description: str,
-        id: int | None = None,
-        image: str | None = None,
-        discount_percent: float | None = None,
-        discount_findate: datetime | None = None,
-        price_findate: datetime | None = None,
+        id: Optional[int] = None,
+        image: Optional[str] = None,
+        img_en: Optional[str] = None,
+        discount_percent: Optional[float] = None,
+        discount_findate: Optional[datetime] = None,
+        price_findate: Optional[datetime] = None,
     ):
         self.id = id
         self.name = name
@@ -100,9 +87,10 @@ class Price:
         self.duration_days = duration
         self.description = description
         self.img = image
-        self.type_product = type_product
+        self.img_en = img_en
         self.switch_active = switch_active
         self.price_findate = price_findate
+        self.type_product = type_product
 
         if discount_percent is not None and discount_findate is not None:
             self.discount = Discount(
@@ -111,29 +99,18 @@ class Price:
             self.discount = None
 
 
-class Transactions:
-    def __init__(
-        self,
-        user_id: int,
-        id: int | None = None,
-        code: str | None = None,
-        link: str | None = None,
-        sum: float | None = None,
-        currency: str | None = None,
-        price_id: int | None = None,
-        status: str | None = None,
-        payment_date: str | None = None,
-
-    ):
-        self.id = id
-        self.user_id = user_id
-        self.code = code
-        self.link = link
-        self.sum = sum
-        self.currency = currency
-        self.price_id = price_id
-        self.status = status
-        self.payment_date = payment_date
+class Transactions(BaseModel):
+    id: int
+    user_id: int
+    code: str
+    link: str | None
+    sum: float
+    currency: str
+    status: str
+    payment_date: datetime | None
+    name: str
+    duration_days: int
+    type_product: PRODUCT_TYPE
 
 
 class Purchase:
@@ -253,6 +230,7 @@ class UserCalcSettings(BaseModel):
     trading_style: str | None
     round_count: int | None
     day_risk: tuple[float, bool] | None
+    is_updating_deposit: bool
 
 
 class ForexInfo(BaseModel):
@@ -273,10 +251,12 @@ class Calculation(BaseModel):
     open_price: float
     stop_loss: float
     currency: str
-    trading_style: str
+    trading_style: str | None
     market: MARKETS_TYPE
     tp_ratio: list[int]
     round_count: int | None = None
     split_values: list[float] | None
 
     forex_info: ForexInfo | None = None
+    token: Optional[str] = None
+    tool: Optional[str] = None

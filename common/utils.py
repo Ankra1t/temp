@@ -4,6 +4,7 @@ from telebot.types import Message
 from typing import TypeVar, Any
 
 from db import db
+from models import Price
 
 
 T = TypeVar('T', int, float)
@@ -114,3 +115,9 @@ def get_calculation(
         profit.append(risk_value * el * rate)
 
     return count_bet, value_bet, credit, take_profit, profit
+
+
+def check_discount_price(tariff: Price):
+    if tariff.discount is None:
+        return tariff.price
+    return round(tariff.price * (1 - tariff.discount.percent / 100))

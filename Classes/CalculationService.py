@@ -18,9 +18,6 @@ class CalculationService():
         self.db.set_calculation_profit(stat_id, value)
         self.db.set_calculation_in_stat(stat_id, True)
 
-        if value >= 0:
-            return
-
         # Находим данный расчет по статистике
         calc_info = self.db.get_calculation(stat_id)
         if calc_info is None:
@@ -29,6 +26,15 @@ class CalculationService():
         # Проверка настроек пользователя
         # Если не выставлен риск на день, то ничего не делаем
         user_settings = self.db.get_calc_user_settings(calc_info.user_id)
+
+        if user_settings and user_settings.is_updating_deposit:
+            self.db.set_user_base(
+                calc_info.user_id, 'base_deposit',
+                (user_settings.deposit or 0.) + (calc_info.profit or 0.)
+            )
+
+        if value >= 0:
+            return
 
         day_risk = None
         deposit = None
@@ -47,7 +53,8 @@ class CalculationService():
 
         # Ищем все сохраненные подсчеты пользователя
         user_calculations = self.db.get_calculations_by_user(
-            calc_info.user_id, True)
+            calc_info.user_id, True
+        )
 
         today = get_datetime_now().date()
         today_profit = 0

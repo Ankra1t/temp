@@ -73,21 +73,30 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     is_cancel = True
 
+                mes_calc = msg_calculate_result(user_id, calc_info)
+
                 if is_cancel:
-                    mes = msg_calculate_result(user_id, calc_info)
-                    keyboard = kb_set_calc_stats(user_id, stat_id)
+                    kb_calc = kb_set_calc_stats(user_id, stat_id)
+
+                    bot.edit_message_text(
+                        mes_calc, chat_id, mes_id, reply_markup=kb_calc
+                    )
                 else:
                     calc_info = db.get_calculation(stat_id)
                     if calc_info is None:
                         return
 
-                    mes = msg_calculate_saved_result(user_id, calc_info)
-                    mes += f'\n\n{msg_calculation_saved(user_id)}'
-                    keyboard = None
+                    mes_result = msg_calculate_saved_result(user_id, calc_info)
+                    mes_result += f'\n\n{msg_calculation_saved(user_id)}'
 
-                bot.edit_message_text(
-                    mes, chat_id, mes_id, reply_markup=keyboard
-                )
+                    bot.edit_message_text(
+                        mes_calc, chat_id, mes_id
+                    )
+                    bot.send_message(
+                        chat_id, mes_result
+                    )
+
+                send_main(call.message, bot, user_id, True, True)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

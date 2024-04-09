@@ -36,6 +36,7 @@ def kb_settings(user_id: int):
             'market': 'Рынок',
             'style': 'Стиль торговли',
             'reset': 'Сброс',
+            'deposit_update': 'Обновление депозита',
             'summury_profit': 'Деление профита',
         },
         'en': {
@@ -44,6 +45,7 @@ def kb_settings(user_id: int):
             'market': 'Market',
             'style': 'Trading style',
             'reset': 'Reset',
+            'deposit_update': 'Updating deposit',
             'summury_profit': 'Profit division',
         }
     }
@@ -54,6 +56,8 @@ def kb_settings(user_id: int):
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
+    btn_deposit_update = getButton(
+        '📐 ' + texts[lang]["deposit_update"], 'deposit_update')
 
     btn_summury_profit = getButton(
         '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
@@ -64,8 +68,8 @@ def kb_settings(user_id: int):
 
     keyboard.add(btn_base, btn_market)
     keyboard.add(btn_style, btn_summury_profit)
-    keyboard.add(btn_lang, btn_reset)
-    keyboard.add(btn_back)
+    keyboard.add(btn_lang, btn_deposit_update)
+    keyboard.add(btn_reset, btn_back)
     return keyboard
 
 
@@ -120,7 +124,7 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    currency_list = ['USD', 'USDT', 'EUR', 'RUB', 'CNY', 'JPY']
+    currency_list = ['USD', 'GBP', 'EUR', 'RUB', 'CNY', 'JPY']
     buttons: list[InlineKeyboardButton] = []
     for i, el in enumerate(currency_list):
         btn = getButton(el, f'set_currency_{type}+{el}')
@@ -131,11 +135,13 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
             buttons = []
 
     if type == 'calc':
+        btn_settings = getButton('⚙️', 'go_settings')
         btn_back = getButton(cancel_txt(lang), 'go_main')
+        keyboard.add(btn_settings, btn_back)
     else:
         btn_back = getButton(cancel_txt(lang), 'go_settings')
+        keyboard.add(btn_back)
 
-    keyboard.add(btn_back)
     return keyboard
 
 
@@ -434,7 +440,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', prev_style=''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'style_{type}',
@@ -443,21 +449,76 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
 
     lang = get_lang(user_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    row_width = 3
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    btn_1 = getThisButton('Пробой', 'пробой уровня')
-    btn_2 = getThisButton('Отбой','отбой от уровня')
-    btn_3 = getThisButton('Ложные', 'ложные пробои')
-    btn_4 = getThisButton('Скользящие', 'скользящие средние')
-    btn_5 = getThisButton('high/low', 'торговля на high/low')
+    styles = {
+        'Пробой': 'пробой уровня',
+        'Отбой': 'отбой от уровня',
+        'Ложные': 'ложные пробои',
+        'Скользящие': 'скользящие средние',
+        'high/low': 'торговля на high/low',
+    }
+
+    texts = {
+        'ru': {
+            'off_settings': 'Выключить',
+            'off': 'Пропустить',
+        },
+        'en': {
+            'off_settings': 'Off',
+            'off': 'Skip',
+        }
+    }
+
+    buttons = []
+    for key in styles.keys():
+        buttons.append(getThisButton(key, styles[key]))
+        if len(buttons) == row_width:
+            keyboard.add(*buttons)
+            buttons = []
+
+    is_added = False
+    for el in styles.values():
+        if prev_style.lower() in el:
+            is_added = True
+            break
+
+    if not is_added:
+        buttons.append(getThisButton(prev_style.capitalize(), prev_style))
+    if len(buttons) != 0:
+        keyboard.add(*buttons)
 
     if type == 'calc':
+        btn_settings = getButton('⚙️', 'go_settings')
         btn_cancel = getButton(cancel_txt(lang), 'go_main')
+        btn_off = getThisButton(f'⭕️ {texts[lang]["off"]}', '**off**')
+        keyboard.add(btn_off, btn_settings, btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
+        btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
+        keyboard.add(btn_off, btn_cancel)
 
-    keyboard.add(btn_1, btn_2)
-    keyboard.add(btn_4, btn_3)
-    keyboard.add(btn_5, btn_cancel)
+    return keyboard
 
+
+def kb_update_deposit(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'on': 'Включить',
+            'off': 'Выключить',
+        },
+        'en': {
+            'on': 'On',
+            'off': 'Off',
+        },
+    }
+
+    btn_on = getButton(f'✅ {texts[lang]["on"]}', 'deposit_update_on')
+    btn_off = getButton(f'⭕️ {texts[lang]["off"]}', 'deposit_update_off')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_off, btn_on)
     return keyboard

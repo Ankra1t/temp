@@ -1,17 +1,16 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from Classes.YooKassa import create_payment
 from MAIN.callbacks.user.pages import send_tariffs_list_item
-from initialize import pays, pays_banker
-from config_logger import logger
-from messages.users import msg_cryptopay, msg_loading_invoice, msg_pays
+from common.utils import check_discount_price
+from db import db
+from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
 
 from MAIN.callbacks import send_user_tariffs, send_user_main
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
-from .keyboards import (
-    kb_bill_many, kb_bill_cryptobot
-)
+from .keyboards import kb_bill_yookassa, kb_user_tariff_back
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -37,101 +36,47 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             bot.delete_message(chat_id, mes_id)
 
     if type == 'pay_tariff':
-        tariff = pays.get_params_payservice_by_id(target_id)
+        bot.delete_message(chat_id, mes_id)
 
-        # Сообщение, что идет создание платежа
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        user_sub = db.get_current_subscribe_user(user_db_id)
+
+        if user_sub is not None:
+            bot.send_message(
+                chat_id, msg_is_subscribed(user_id),
+                reply_markup=kb_user_tariff_back(user_id)
+            )
+            return
+
         edit_wait_mess = bot.send_message(
             call.message.chat.id,
             msg_loading_invoice(user_id)
         )
-        bot.delete_message(chat_id, mes_id)
+
+        tariff = db.get_price_by_id(target_id)
 
         if tariff is None:
             return
 
-        # ------------ Оплата через CryptoBot Payments
-        try:
-            for_client = "Оплатить " + tariff.name
-            final_price = pays.check_discount_price(tariff)
-            invoice_to_send = pays.create_invoice(
-                tariff.currency, final_price, for_client
-            )
-        except Exception as e:
-            logger.error(f'Ошибка в Pays.create_invoice [{e}]')
+        bot_url = f'https://t.me/{bot.get_me().username}'
+        price = check_discount_price(tariff)
+        payment_url = create_payment(
+            user_id, tariff, bot_url
+        )
 
-        logger.info(
-            f'Получен чек от Cryptobot invoice_to_send [{invoice_to_send}]')
-
-        # Формируем транзакцию от CryptoBot Payments для ожидания оплаты
-        try:
-            pays.set_transactions_for_wait(
-                user_id, invoice_to_send, tariff.id or 0
-            )
-            logger.info(
-                f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж'
-            )
-        except Exception as e:
-            logger.error(
-                f'Ошибка CryptoBot set_transactions_for_wait[{e}]'
-            )
-
-        # Отправить пользователю счет для оплаты со ссылкой
-        show_price = f'{invoice_to_send.amount} {invoice_to_send.asset}'
-        pay_link_cp = invoice_to_send.pay_url
-
-        # ------------ Формируем оплату через BitBanker
-        pay_link_bb = ''
-
-        # Пока делаем целые
-        final_price = int(pays_banker.check_discount_price(tariff))
-        if final_price >= 50:
-            invoice_to_send_bb = None
-            try:
-                for_client = "Оплатить " + tariff.name
-
-                invoice_to_send_bb = pays_banker.create_invoice(
-                    # asset, amount, description, payer, data_payments
-                    tariff.currency, final_price, for_client, f'Пользователь id {user_id}')
-            except Exception as e:
-                logger.error(f'Ошибка в pays_banker.create_invoice [{e}]')
-
-            if invoice_to_send_bb is not None:
-                logger.info(
-                    f'Получен чек от BitBanker invoice_to_send [{invoice_to_send_bb}]')
-
-                # Формируем транзакцию от BitBanker для ожидания оплаты
-                try:
-                    pays_banker.set_transactions_for_wait(
-                        user_id, invoice_to_send_bb, tariff.id
-                    )
-                    logger.info(
-                        f'-----> Транзакция для оплаты через Криптобота удачно сохранена ждем платеж ')
-
-                except Exception as e:
-                    logger.error(
-                        f'Ошибка pays_banker.set_transactions_for_wait[{e}]')
-
-                # Отправить пользователю счет для оплаты со ссылкой
-                show_price = f'{invoice_to_send_bb.amount} {invoice_to_send_bb.asset}'
-                pay_link_bb = invoice_to_send_bb.pay_url
-
-        if pay_link_bb != '':
+        if payment_url == False:
             bot.edit_message_text(
-                msg_pays(user_id),
-                chat_id,
-                edit_wait_mess.message_id,
-                reply_markup=kb_bill_many(
-                    user_id, show_price, pay_link_cp, pay_link_bb or ''
-                )
+                'Ошибка', chat_id, mes_id
             )
-        else:
-            bot.edit_message_text(
-                msg_cryptopay(user_id),
-                chat_id, edit_wait_mess.message_id,
-                reply_markup=kb_bill_cryptobot(
-                    user_id, show_price, pay_link_cp
-                )
+            return
+
+        bot.edit_message_text(
+            msg_yookassa(user_id),
+            chat_id, edit_wait_mess.message_id,
+            reply_markup=kb_bill_yookassa(
+                user_id, f'{price} {tariff.currency}', payment_url
             )
+        )
 
     if type == 'get_tariff':
         send_tariffs_list_item(

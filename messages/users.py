@@ -1,28 +1,48 @@
 from common.utils import get_lang
 
 
-def end_trial_subscribe_msg():
-    return f"""
-Ваша пробная подписка закончилась. Теперь вы можете оформить платную подписку и пользоваться рекомендациями целый месяц.
-"""
+def end_trial_subscribe_msg(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Ваша пробная подписка закончилась. Вы можете оформить платную подписку.',
+        'en': 'Your trial subscription has ended. You can sign up for a paid subscription.',
+    }
+
+    return f'❗️ {text[lang]}'
 
 
-def end_paid_subscribe_msg(end_date):
-    return f"""
-Ваша платная подписка закончилась {end_date}. Пожалуйста, продлите подписку, чтобы снова получать рекомендации.
-"""
+def end_paid_subscribe_msg(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Ваша платная подписка закончилась. Пожалуйста, продлите подписку, чтобы снова пользоваться сервисом.',
+        'en': 'Your paid subscription has ended. Please renew your subscription to receive recommendations again.',
+    }
+
+    return f'❗️ {text[lang]}'
 
 
-def gift_subscribe_msg(end_date):
-    return f"""
-Поздравляем админ подарил вам платную подписку до {end_date}.
-"""
+def gift_subscribe_msg(user_id: int, end_date: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Поздравляем, админ подарил вам платную подписку до',
+        'en': 'Congratulations, admin gave you a paid subscription to',
+    }
+
+    return f"""{texts[lang]} <b>{end_date}</b>"""
 
 
-def gift_trial_subscribe_msg(end_date):
-    return f"""
-Вам выдан бесплатный период до {end_date}.
-"""
+def gift_trial_subscribe_msg(user_id: int, end_date: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Вам выдан бесплатный период до',
+        'en': 'You have been issued a free period before',
+    }
+
+    return f"""{texts[lang]} <b>{end_date}</b>"""
 
 
 def paid_subscribe_msg(end_date, tariff_name):
@@ -85,6 +105,17 @@ def msg_loading_invoice(user_id: int):
     return f'⏳ {texts[lang]}...'
 
 
+def msg_is_subscribed(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'У вас уже есть подписка. Мы сообщим вам о ее завершении для следующей покупки.',
+        'en': 'You already have a subscription. We will inform you about its completion for the next purchase.'
+    }
+
+    return f'✅ {text[lang]}'
+
+
 def msg_cryptopay(user_id: int):
     lang = get_lang(user_id)
 
@@ -94,6 +125,24 @@ def msg_cryptopay(user_id: int):
     }
 
     return f'❗️ {texts[lang]}'
+
+
+def msg_yookassa(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            '1': 'Нажмите на кнопку и оплатите тариф',
+            '2': 'После подтверждения оплаты вам придет сообщение'
+        },
+        'en': {
+            '1': 'Click on the button and pay the tariff',
+            '2': 'After confirming the payment, you will receive a message'
+        }
+    }
+
+    return f"""{texts[lang]["1"]} 👇
+{texts[lang]["2"]}"""
 
 
 def msg_pays(user_id: int):

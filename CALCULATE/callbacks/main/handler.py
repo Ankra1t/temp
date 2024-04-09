@@ -1,13 +1,10 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from common.utils import set_state_data
-from initialize import currencyService
 from db import db
-from models import ForexInfo
 
 from .filter import main_factory, MainCallbackFilter
-from ..utils import choose_calculate_step, choose_first_calculate_step
+from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats
 
 
@@ -23,7 +20,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'calc':
         u_base = db.get_calc_user_settings(user_db_id)
         market = u_base.market if (u_base is not None) else 'crypto'
-        choose_first_calculate_step(bot, user_id, call.message, market, True)
+
+        bot.delete_message(chat_id, mes_id)
+        choose_first_calculate_step(bot, user_id, call.message, market)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
@@ -33,23 +32,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'stats':
         send_stats(bot, call.message, user_id)
-
-    if 'pair' in type:
-        _, pair = type.split('+')
-        pair_arr = pair.split('/')
-
-        price = currencyService.getPrice(pair_arr[0], pair_arr[1])
-        if price != False:
-            forex = ForexInfo(
-                pair=(pair_arr[0], pair_arr[1]),
-                price=price,
-                cross_prices={}
-            )
-
-            set_state_data(bot, user_id, chat_id, {
-                'forex': forex,
-            })
-            choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
     bot.answer_callback_query(call.id)
 

@@ -23,7 +23,7 @@ from keyboard_reply import *
 from messages.users import paid_subscribe_msg, end_trial_subscribe_msg, end_paid_subscribe_msg
 from messages.workers import redactor_main_msg, admin_posting_msg
 
-from Classes.BlockTGBotSender import BlockTGBotSender
+from Classes.BlockTGBotSender import BlockTGBotSender, send_message_by_type
 from AuthMiddleWare import AuthMiddleWare
 
 from models import Post, Update, UpdateBBanker
@@ -44,6 +44,8 @@ bot.add_custom_filter(custom_filters.StateFilter(bot))
 
 # ======================= // ANCHOR Обработка команд
 # Обработать успешный платеж через CryptoBot
+
+
 @pays.pay_handler()
 def invoice_paid_prev(update: Update) -> None:
     # Найти по invoice_id транзакцию
@@ -67,39 +69,32 @@ def invoice_paid_prev(update: Update) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db.get_price_by_id(
-                transaction.price_id, None)  # type: ignore
-
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-
-            pay_guard.set_trial_subscribe_unactive_by_user(
-                transaction.user_id)
-            # trial_id = pay_guard.check_trial_active_by_user(
-            #     transaction['user_id'])
-            # if trial_id:
-            #     logger.info(
-            #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
-            #     pay_guard.set_subscribe_unactive(trial_id)
+            pay_guard.deactivate_user_trial_subscribe(
+                transaction.user_id
+            )
 
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
                 text=paid_subscribe_msg(
-                    finish_date, tariff.name),  # type: ignore
+                    finish_date, transaction.name
+                ),
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
             user = db.get_user_by_tg_id(transaction.user_id)
-            notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,  # type: ignore
-                user_nike='@' + user.username if user.username else user.tg_id,  # type: ignore
-                summ_paid=summ_full,
-                tariff_name=tariff.name,  # type: ignore
-                finish_date=finish_date
-            ))
+            if user is not None:
+                notifier.send_notification('text', mess_user_paid(
+                    user_id=transaction.user_id,
+                    user_nike='@' + user.username if user.username else user.tg_id,
+                    summ_paid=summ_full,
+                    tariff_name=transaction.name,
+                    finish_date=finish_date
+                ))
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
@@ -134,46 +129,39 @@ def invoice_paid(update: UpdateBBanker) -> None:
             finish_date_obj = pay_guard.set_paid_subscribe(transaction)
             finish_date = get_str_by_datetime(finish_date_obj)
 
-            tariff = db.get_price_by_id(
-                transaction.price_id, None)  # type: ignore
-
             logger.info(f'-----> Добавили пользователю платную подписку')
 
             # Обнуляем пробную подписку
-            pay_guard.set_trial_subscribe_unactive_by_user(
-                transaction.user_id)
-            # trial_id = pay_guard.check_trial_active_by_user(
-            #     transaction['user_id'])
-            # if trial_id:
-            #     logger.info(
-            #         f'-----> Обнулили пробную подписку trial_id [{trial_id}]')
-            #     pay_guard.set_subscribe_unactive(trial_id)
-            # pay_guard.set_subscribe_unactive(transaction['user_id'])
+            pay_guard.deactivate_user_trial_subscribe(
+                transaction.user_id
+            )
 
             # Отправляем сообщение пользователю
             bot.send_message(
                 transaction.user_id,
                 text=paid_subscribe_msg(
-                    finish_date, tariff.name),  # type: ignore
+                    finish_date, transaction.name
+                ),
             )
 
             # Сообщение в бот уведомлений об оплате
             summ_full = f"{transaction.sum} {transaction.currency}"
+
             user = db.get_user_by_tg_id(transaction.user_id)
-            notifier.send_notification('text', mess_user_paid(
-                user_id=user.id,  # type: ignore
-                user_nike='@' + user.username if user.username else user.tg_id,  # type: ignore
-                summ_paid=summ_full,
-                tariff_name=tariff.name,  # type: ignore
-                finish_date=finish_date
-            ))
+            if user is not None:
+                notifier.send_notification('text', mess_user_paid(
+                    user_id=user.id,
+                    user_nike='@' + user.username if user.username else user.tg_id,
+                    summ_paid=summ_full,
+                    tariff_name=transaction.name,
+                    finish_date=finish_date
+                ))
 
         else:
             logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
                          f'и статусу status "wait_payments"  ')
 
     # todo-fin: Сообщению пользователю: "Ваш счет в статусе не оплачен"
-
 
 
 # ======================== ПЛАНОВЫЕ ФУНКЦИИ ==============
@@ -208,51 +196,39 @@ def send_future_pos_by_intime(post: Post):
     pass
 
 
+# TODO - через класс рассылок
 def check_finish_trial_subscribe():
-    users = list(map(lambda user: user[9],
-                 pay_guard.get_users_note_fin_trial()))
-    if users:
-        text = end_trial_subscribe_msg()
+    users = pay_guard.get_users_note_fin_trial()
+    if len(users) == 0:
+        return
 
-        post = Post(
-            content=text,
-            mes_type='text',
-        )
-
+    for user in users:
         try:
-            tgsender = BlockTGBotSender(users, post)
-            tgsender.send()
-        except Exception as e:
-            logger.error(
-                f'Ошибка -check_finish_trial_subscribe- в балансировщике при рассылке [{e}]')
-        pass
+            send_message_by_type(
+                bot, user.tg_id, 'text', end_trial_subscribe_msg(user.tg_id)
+            )
+        except:
+            print('error sending message')
 
-        pay_guard.set_subscribe_unactive_many_users()
+    pay_guard.set_subscribe_unactive_many_users()
 
 
+# TODO - через класс рассылок
 def check_finish_paid_subscribe():
-    users = list(map(lambda user: user[9],
-                 pay_guard.get_users_note_fin_paid()))
-    if users:
-        fin_date = get_str_by_datetime(get_datetime_now())
+    users = pay_guard.get_users_note_fin_paid()
+    if len(users) == 0:
+        return
 
-        text = end_paid_subscribe_msg(fin_date)
-
-        post = Post(
-            content=text,
-            mes_type='text',
-        )
-
+    for user in users:
         try:
-            tgsender = BlockTGBotSender(users, post)
-            tgsender.send()
-        except Exception as e:
-            logger.error(
-                f'Ошибка -check_finish_paid_subscribe- в балансировщике при рассылке [{e}]')
-        pass
+            send_message_by_type(
+                bot, user.tg_id, 'text', end_paid_subscribe_msg(user.tg_id)
+            )
+        except:
+            print('error sending message')
 
-        # После рассылки убрать активность ПЛАТНЫХ рассылок у данных пользователей
-        pay_guard.set_paid_subscribe_unactive_many_users()
+    # После рассылки убрать активность ПЛАТНЫХ рассылок у данных пользователей
+    pay_guard.set_paid_subscribe_unactive_many_users()
 
 
 def check_tariff():
@@ -288,8 +264,6 @@ def callback_inline(call: types.CallbackQuery):
             reply_markup=kb_main_redactor()
         )
 
-
-
     bot.answer_callback_query(call.id)
 
 
@@ -297,9 +271,8 @@ def callback_inline(call: types.CallbackQuery):
 def check_unfinit_tasks():
     sleep_time_check = 30
     while True:
-        # check_finish_paid_subscribe()
-        # check_finish_trial_subscribe()
-        # check_future_post_for_sent()
+        check_finish_paid_subscribe()
+        check_finish_trial_subscribe()
         check_tariff()
         time.sleep(sleep_time_check)
 
