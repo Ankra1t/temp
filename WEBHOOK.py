@@ -1,4 +1,3 @@
-import _index
 from Classes.YooKassa import payment_updates
 import telebot
 import flask
