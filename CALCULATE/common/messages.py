@@ -208,7 +208,7 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
 {POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
-{POINT} {texts[lang]["trading_style"]}: <b>{updating_deposit}</b>
+{POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
 
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 {POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
