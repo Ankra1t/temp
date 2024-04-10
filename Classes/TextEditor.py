@@ -20,11 +20,13 @@ class TextEditor(object):
             result = text.message
             if lang == 'en':
                 try:
-                    result = str(self.translator.translate(
-                        text.message, 'en', 'ru').text
+                    result = str(
+                        self.translator.translate(
+                            text.message, 'en', 'ru'
+                        ).text
                     )
                 except Exception as e:
-                    print(e)
+                    print(e.with_traceback)
                     result = text.message
 
             return result or text.message
