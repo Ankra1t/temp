@@ -11,7 +11,7 @@ from CALCULATE.common.messages import (
     msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style,
-    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_update_deposit,
+    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
@@ -19,9 +19,9 @@ from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
     kb_choose_lang, kb_base_cancel, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
-    kb_summury_profit_type, kb_take_profit, kb_update_deposit
+    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel
 )
-from ..pages import send_main, send_settings, send_summury_profit_settings
+from ..pages import send_main, send_settings, send_summury_profit_settings, send_user_deposit
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -43,7 +43,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_deposit(user_id),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_deposit_cancel(user_id)
         )
         bot.set_state(user_id, SettingsState.deposit, chat_id)
 
@@ -211,13 +211,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         elif '_off' in type:
             db.set_user_updating_deposit(user_db_id, False)
 
-        if '_on' in type or '_off' in type:
-            send_settings(bot, call.message, user_id)
-        else:
-            bot.edit_message_text(
-                msg_update_deposit(user_id), chat_id, mes_id,
-                reply_markup=kb_update_deposit(user_id)
-            )
+        send_user_deposit(bot, call.message, user_id)
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением

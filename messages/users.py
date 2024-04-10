@@ -75,12 +75,20 @@ def welcome_trial_subscribe_msg(days: int = 2):
 def msg_start(user_id: int):
     lang = get_lang(user_id)
 
-    text = {
-        'ru': 'Доброго времени. Выберите действие',
-        'en': 'Good time. Choose an action'
+    texts = {
+        'ru': {
+            'name': 'Меню',
+            'action': 'Выберите действие'
+        },
+        'en': {
+            'name': 'Menu',
+            'action': 'Choose an action'
+        },
     }
 
-    return text[lang]
+    return f"""⚡️ <b><u>{texts[lang]['main']}</u></b>
+{texts[lang]['action']}
+"""
 
 
 def msg_choose_tariff_type(user_id: int):

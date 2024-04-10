@@ -1,7 +1,7 @@
-import re
+from telebot.types import Message, InlineKeyboardMarkup, InputMedia
 from telebot import TeleBot
-from telebot.types import Message
-from typing import TypeVar, Any
+from typing import Literal, TypeVar, Any
+import re
 
 from db import db
 from models import Price
@@ -33,6 +33,49 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
                 data[key] = value[key]
     except Exception as e:
         print(f'Ошибка в записи данных state [{e}]')
+
+
+def edit_message(
+    bot: TeleBot,
+    message: Message,
+    type: Literal['photo', 'text', 'video', 'animation'],
+    text: str,
+    markup: InlineKeyboardMarkup | None = None,
+    media: Any = None
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    if message.content_type == 'text' and type == 'text':
+        bot.edit_message_text(
+            text, chat_id, mes_id, reply_markup=markup
+        )
+    elif message.content_type != 'text' and type != 'text':
+        bot.edit_message_media(
+            InputMedia(type, media, text, 'HTML'),
+            chat_id, mes_id,
+            reply_markup=markup
+        )
+    else:
+        bot.delete_message(chat_id, mes_id)
+        if type == 'text':
+            bot.send_message(chat_id, text, reply_markup=markup)
+        elif type == 'video':
+            bot.send_video(
+                chat_id, media,
+                caption=text,
+                reply_markup=markup
+            )
+        elif type == 'animation':
+            bot.send_animation(
+                chat_id, media, caption=text,
+                reply_markup=markup
+            )
+        elif type == 'photo':
+            bot.send_photo(
+                chat_id, media, text,
+                reply_markup=markup
+            )
 
 
 def get_lang(tg_id: int):

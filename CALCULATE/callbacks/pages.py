@@ -1,16 +1,17 @@
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
+from common.utils import edit_message
 from db import db
 from initialize import pay_guard, calcService
 
 from CALCULATE.common.messages import (
-    msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
     msg_stats, msg_summury_profit_settings, msg_uses_count
 )
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_settings, kb_summury_profit
+from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
 from .stats.keyboards import kb_stats
 
 
@@ -44,9 +45,8 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
+        edit_message(
+            bot, message, 'text', text, keyboard
         )
 
 
@@ -71,6 +71,33 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
         )
 
 
+def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
+    is_update = False
+    if u_base is not None:
+        is_update = u_base.is_updating_deposit
+
+    text = msg_deposit(user_id)
+    keyboard = kb_change_deposit(user_id, is_update)
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=keyboard
+        )
+
+
 def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
@@ -78,7 +105,7 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
     bot.delete_state(user_id, chat_id)
 
     text = msg_manual[page - 1]
-    photo = open(f'img\\info_calc\\{page}.jpg', 'rb')
+    photo = open(f'src\\img\\info_calc\\{page}.jpg', 'rb')
     keyboard = kb_manual(user_id, page, len(msg_manual))
 
     if is_first:

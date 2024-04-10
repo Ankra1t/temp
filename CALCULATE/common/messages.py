@@ -218,6 +218,44 @@ def msg_settings(user_id: int):
 """
 
 
+def msg_deposit(user_id: int):
+    lang = get_lang(user_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
+
+    is_update = False
+    deposit = 0.
+    currency = 'USD'
+    if u_base is not None:
+        deposit = u_base.deposit or deposit
+        currency = u_base.currency or currency
+        is_update = u_base.is_updating_deposit
+
+    texts = {
+        'ru': {
+            'main': 'Настройка депозита',
+            'dep': 'Текущий депозит',
+            'update': 'Обнолвение после сохранения расчет',
+            'on': 'включено',
+            'off': 'выключено',
+        },
+        'en': {
+            'main': 'Setup deposit',
+            'dep': 'Current deposit',
+            'update': 'Update after saving calculation',
+            'on': 'on',
+            'off': 'off',
+        },
+    }
+
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
+{POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
+"""
+
+
 def msg_settings_change_base(user_id: int):
     lang = get_lang(user_id)
 
@@ -563,7 +601,7 @@ def msg_digit_error(user_id: int, value_from: int | None = None, value_to: int |
     if value_to is not None:
         to_txt = f' {texts[lang]["to"]} {value_to}'
 
-    return f'❗️ {texts[lang]}{from_txt}{to_txt}:'
+    return f'❗️ {texts[lang]["main"]}{from_txt}{to_txt}:'
 
 
 def msg_text_error(user_id: int):
@@ -737,7 +775,7 @@ def msg_calculate_crypto_result(
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
             'split': 'Разделение',
-            'buy': 'Покумаем',
+            'buy': 'Покупаем',
             'style': 'Стиль торговли',
             'tool': 'Инструмент',
             'profit': 'Прибыль',
@@ -839,7 +877,7 @@ def msg_calculate_forex_result(
             'tp': 'Тейк профит',
             'conclusion': 'Тейк-профит',
             'split': 'Разделение',
-            'buy': 'Покумаем',
+            'buy': 'Покупаем',
             'style': 'Стиль торговли',
             'profit': 'Прибыль по сделке',
             'lot': 'лота',

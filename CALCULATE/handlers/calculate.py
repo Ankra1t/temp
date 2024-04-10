@@ -7,7 +7,7 @@ from db import db
 from models import Calculation, ForexInfo
 
 from common.utils import digit_accept, set_state_data, text_accept
-from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, send_main, kb_tool, kb_main
+from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
     msg_calculate_result, msg_currency_error,

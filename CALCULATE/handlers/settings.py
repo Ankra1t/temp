@@ -5,7 +5,7 @@ from initialize import currencyService
 from db import db, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 
-from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, send_settings
+from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, send_settings, send_user_deposit
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit,
@@ -33,7 +33,6 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         if value is None:
             bot.send_message(
                 chat_id, msg_digit_error(user_id),
-                reply_markup=kb_base_cancel(user_id)
             )
             return
 
@@ -65,7 +64,10 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         else:
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
-            send_settings(bot, message, user_id, True)
+            if type == 'base_deposit':
+                send_user_deposit(bot, message, user_id, True)
+            else:
+                send_settings(bot, message, user_id, True)
 
     return r_func
 

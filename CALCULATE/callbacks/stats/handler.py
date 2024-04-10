@@ -98,7 +98,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                         reply_markup=kb_main(user_id, is_valid, True)
                     )
 
-
     if type == 'go_main':
         send_main(call.message, bot, user_id)
 

@@ -1437,7 +1437,7 @@ class Database:
             return False
 
     def set_user_updating_deposit(self, user_id: int, value: bool):
-        query = 'UPDATE calculations SET is_updating_deposit = %s WHERE user_id = %s'
+        query = 'UPDATE tgcalc_user_settings SET is_updating_deposit = %s WHERE user_id = %s'
         params = value, user_id,
 
         try:

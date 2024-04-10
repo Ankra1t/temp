@@ -2,7 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from common.utils import get_lang
+from common.utils import edit_message, get_lang
 from db import db
 from initialize import text_editor
 from AuthRoles import get_site_code
@@ -29,23 +29,30 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
             send_site_code(bot, message, user_id, True)
             return
 
+    keyboard = kb_user_main(user_id)
+
     if not new_user:
         text = text_editor.get_text(
             user_id, 'user_restart_bot'
         ) or msg_start(user_id)
+
+        if is_first:
+            bot.send_message(
+                chat_id, text,
+                reply_markup=keyboard
+            )
+        else:
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=keyboard
+            )
+
     else:
         text = text_editor.get_text(user_id, 'welcome_user')
-
-    keyboard = kb_user_main(user_id)
-
-    if is_first:
-        bot.send_message(
-            chat_id, text,
-            reply_markup=keyboard
-        )
-    else:
-        bot.edit_message_text(
-            text, chat_id, mes_id,
+        lang = get_lang(user_id)
+        start_gif = open(f'src\\gif\\start_{lang}.gif', 'rb')
+        bot.send_animation(
+            chat_id, start_gif, caption=text,
             reply_markup=keyboard
         )
 
@@ -97,9 +104,8 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
+        edit_message(
+            bot, message, 'text', text, keyboard
         )
 
 
@@ -118,9 +124,8 @@ def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=Fal
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
+        edit_message(
+            bot, message, 'text', text, keyboard
         )
 
 

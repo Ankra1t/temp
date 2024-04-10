@@ -36,7 +36,7 @@ def kb_settings(user_id: int):
             'market': 'Рынок',
             'style': 'Стиль торговли',
             'reset': 'Сброс',
-            'deposit_update': 'Обновление депозита',
+            'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
         },
         'en': {
@@ -45,7 +45,7 @@ def kb_settings(user_id: int):
             'market': 'Market',
             'style': 'Trading style',
             'reset': 'Reset',
-            'deposit_update': 'Updating deposit',
+            'deposit': 'Deposit',
             'summury_profit': 'Profit division',
         }
     }
@@ -57,7 +57,7 @@ def kb_settings(user_id: int):
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
     btn_deposit_update = getButton(
-        '📐 ' + texts[lang]["deposit_update"], 'deposit_update')
+        '📐 ' + texts[lang]["deposit"], 'deposit_update')
 
     btn_summury_profit = getButton(
         '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
@@ -77,14 +77,12 @@ def kb_change_base(user_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'dep': 'Депозит',
             'risk': 'Процент риска',
             'day_risk': 'Риск на день',
             'currency': 'Валюта',
             'round_count': 'Округление',
         },
         'en': {
-            'dep': 'Deposit',
             'risk': 'Risk percent',
             'day_risk': 'Daily risk',
             'currency': 'Currency',
@@ -94,7 +92,6 @@ def kb_change_base(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_dep = getButton(texts[lang]['dep'], 'set_deposit')
     btn_risk = getButton(texts[lang]['risk'], 'set_risk_percent')
     btn_currency = getButton(texts[lang]['currency'], 'set_currency')
     btn_day_risk = getButton(texts[lang]['day_risk'], 'set_day_risk')
@@ -102,9 +99,52 @@ def kb_change_base(user_id: int):
 
     btn_back = getButton(back_txt(lang), 'go_settings')
 
-    keyboard.add(btn_dep, btn_risk)
-    keyboard.add(btn_currency, btn_day_risk)
-    keyboard.add(btn_round_count, btn_back)
+    keyboard.add(btn_risk, btn_currency)
+    keyboard.add(btn_day_risk, btn_round_count)
+    keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_deposit_cancel(user_id: int):
+    lang = get_lang(user_id)
+
+    btn_cancal = getButton(cancel_txt(lang), 'deposit_update')
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(btn_cancal)
+    return keyboard
+
+
+def kb_change_deposit(user_id: int, is_updating_deposit: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'change': 'Изменить',
+            'update_on': 'Вкл. обновление',
+            'update_off': 'Выкл. обновление',
+        },
+        'en': {
+            'change': 'Change',
+            'update_on': 'Update on',
+            'update_off': 'Update off',
+        },
+    }
+
+    btn_change = getButton(texts[lang]['change'], 'set_deposit')
+    btn_on = getButton(f'✅ {texts[lang]["update_on"]}', 'deposit_update_on')
+    btn_off = getButton(
+        f'⭕️ {texts[lang]["update_off"]}', 'deposit_update_off'
+    )
+    btn_back = getButton(back_txt(lang), 'go_settings')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    if is_updating_deposit:
+        keyboard.add(btn_change, btn_off)
+    else:
+        keyboard.add(btn_change, btn_on)
+
+    keyboard.add(btn_back)
     return keyboard
 
 
@@ -499,26 +539,4 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
         btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
         keyboard.add(btn_off, btn_cancel)
 
-    return keyboard
-
-
-def kb_update_deposit(user_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'on': 'Включить',
-            'off': 'Выключить',
-        },
-        'en': {
-            'on': 'On',
-            'off': 'Off',
-        },
-    }
-
-    btn_on = getButton(f'✅ {texts[lang]["on"]}', 'deposit_update_on')
-    btn_off = getButton(f'⭕️ {texts[lang]["off"]}', 'deposit_update_off')
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_off, btn_on)
     return keyboard

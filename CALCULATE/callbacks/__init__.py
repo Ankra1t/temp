@@ -1,7 +1,7 @@
 # type: ignore
 from telebot import TeleBot as _TB
 
-from .pages import send_main, send_settings, send_manual_page, send_summury_profit_settings, send_stats
+from .pages import send_main, send_settings, send_manual_page, send_summury_profit_settings, send_stats, send_user_deposit
 from .utils import choose_calculate_step, choose_first_calculate_step
 
 from .manual.handler import registration as _reg_manual
@@ -22,7 +22,7 @@ from .settings.keyboards import (
     kb_change_base, kb_choose_lang, kb_change_currency,
     kb_change_market, kb_splitting_last, kb_take_profit,
     kb_summury_profit, kb_summury_profit_type, kb_splitting,
-    kb_trading_style, kb_update_deposit
+    kb_trading_style, kb_change_deposit, kb_deposit_cancel
 )
 
 
