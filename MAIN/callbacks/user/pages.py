@@ -51,7 +51,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     else:
         text = text_editor.get_text(user_id, 'welcome_user')
         lang = get_lang(user_id)
-        start_gif = open(f'src\\gif\\start_{lang}.gif', 'rb')
+        start_gif = open(f'src/gif/start_{lang}.gif', 'rb')
         bot.send_animation(
             chat_id, start_gif, caption=text,
             reply_markup=keyboard

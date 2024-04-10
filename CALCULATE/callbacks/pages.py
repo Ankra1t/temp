@@ -105,7 +105,7 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
     bot.delete_state(user_id, chat_id)
 
     text = msg_manual[page - 1]
-    photo = open(f'src\\img\\info_calc\\{page}.jpg', 'rb')
+    photo = open(f'src/img/info_calc/{page}.jpg', 'rb')
     keyboard = kb_manual(user_id, page, len(msg_manual))
 
     if is_first:
