@@ -1,11 +1,13 @@
+import os
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.common.messages import msg_support
 from db import db
+from Classes.HTML2Image import hti
 
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
+from CALCULATE.common.messages import msg_support
 from CALCULATE.common.keyboard import kb_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code
@@ -96,7 +98,13 @@ def _test(message: Message, bot: TeleBot):
 
     # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
     # bot.send_photo(message.chat.id, img)
-    pass
+    file_name = 'p'
+    hti.create_calculation_image(file_name, 'Добрый день')
+    with open(f'_calc_images/{file_name}.png', 'rb') as photo:
+        bot.send_photo(
+            message.chat.id, photo
+        )
+    os.remove(f'_calc_images/{file_name}.png')
 
 
 def commands_registration(bot: TeleBot):

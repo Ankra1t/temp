@@ -1,10 +1,12 @@
-.idea
+/.idea
+/.vscode
 /.handler-saves
 
 __pycache__
 ngrok.exe
 
 /4p_bots-env
+/_calc_images
 .env
 config_global.py
 _index.py
