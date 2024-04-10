@@ -251,7 +251,7 @@ def msg_deposit(user_id: int):
 
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
-{POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
+{POINT} {texts[lang]['dep']}: <b>{get_print_float(deposit)} {currency}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
 """
 

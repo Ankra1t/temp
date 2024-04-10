@@ -86,7 +86,7 @@ def msg_start(user_id: int):
         },
     }
 
-    return f"""⚡️ <b><u>{texts[lang]['main']}</u></b>
+    return f"""⚡️ <b><u>{texts[lang]['name']}</u></b>
 {texts[lang]['action']}
 """
 
