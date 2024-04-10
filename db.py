@@ -1868,7 +1868,8 @@ class Database:
             name=data.get('name'),
             message=data.get('message') or '',
             message_type=data.get('message_type') or 'text',
-            media_id=data.get('media_id') or ''
+            media_id=data.get('media_id') or '',
+            media_id_en=data.get('media_id_en')
         )
 
     def get_texts(self) -> list[Text]:

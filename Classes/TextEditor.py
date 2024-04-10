@@ -20,7 +20,8 @@ class TextEditor(object):
             result = text.message
             if lang == 'en':
                 try:
-                    result = self.translator.translate(text.message, 'en', 'ru').text
+                    result = str(self.translator.translate(
+                        text.message, 'en', 'ru').text)
                 except:
                     result = text.message
 
@@ -28,6 +29,18 @@ class TextEditor(object):
         else:
             print('Передан несуществующий в БД label')
             return ''
+
+    def get_media_id(self, user_id: int, label: str):
+        lang = get_lang(user_id)
+        text = db.get_text_by_name(label)
+
+        if text is None:
+            return ''
+
+        if lang == 'ru':
+            return text.media_id or ''
+        else:
+            return text.media_id_en or text.media_id or ''
 
     def save_content(self, name: str, content: str):
         if content:

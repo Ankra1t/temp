@@ -195,6 +195,7 @@ class Text(BaseModel):
     message: str
     message_type: str
     media_id: str
+    media_id_en: str | None
 
 
 class Future(BaseModel):

@@ -50,12 +50,18 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     else:
         text = text_editor.get_text(user_id, 'welcome_user')
-        lang = get_lang(user_id)
-        start_gif = open(f'src/gif/start_{lang}.gif', 'rb')
-        bot.send_animation(
-            chat_id, start_gif, caption=text,
-            reply_markup=keyboard
-        )
+        media = text_editor.get_media_id(user_id, 'welcome_user')
+
+        if media != '':
+            bot.send_animation(
+                chat_id, media, caption=text,
+                reply_markup=keyboard
+            )
+        else:
+            bot.send_message(
+                chat_id, text,
+                reply_markup=keyboard
+            )
 
 
 def send_user_education(bot: TeleBot, message: Message, user_id: int):
