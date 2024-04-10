@@ -26,7 +26,6 @@ class TextEditor(object):
                         ).text
                     )
                 except Exception as e:
-                    print(e.with_traceback)
                     result = text.message
 
             return result or text.message
