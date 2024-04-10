@@ -54,7 +54,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
         if media != '':
             bot.send_animation(
-                chat_id, media, caption=text,
+                chat_id, media,
                 reply_markup=keyboard
             )
         else:
