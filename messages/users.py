@@ -87,8 +87,8 @@ def msg_start(user_id: int):
     }
 
     return f"""⚡️ <b><u>{texts[lang]['name']}</u></b>
-{texts[lang]['action']}
 """
+# {texts[lang]['action']}
 
 
 def msg_choose_tariff_type(user_id: int):
