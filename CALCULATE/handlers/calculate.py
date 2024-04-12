@@ -343,7 +343,7 @@ def handle_forex_stop_loss(message: Message, bot: TeleBot):
             chat_id, photo,
             reply_markup=kb_main(user_id, is_valid, True, new_id),
         )
-    os.remove(file_path)
+    # os.remove(file_path)
     bot.delete_state(user_id, chat_id)
 
 
