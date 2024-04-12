@@ -1,12 +1,13 @@
 from datetime import timedelta
+import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 from common.utils import set_state_data
 
-from initialize import calcService, pay_guard
+from initialize import calcService, pay_guard, hti
 from db import db
 from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_calculation_saved, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
+from CALCULATE.common.messages import msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 
@@ -75,28 +76,35 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     is_cancel = True
 
                 is_valid = pay_guard.valid_use_calc(user_id)
-                mes_calc = msg_calculate_result(user_id, calc_info)
 
                 if is_cancel:
-                    bot.edit_message_text(
-                        mes_calc, chat_id, mes_id,
-                        reply_markup=kb_main(user_id, is_valid, True, stat_id)
+                    file_path = hti.create_calculation_image(
+                        user_id, calc_info
                     )
+                    with open(file_path, 'rb') as photo:
+                        bot.delete_message(chat_id, mes_id)
+                        bot.send_photo(
+                            chat_id, photo,
+                            reply_markup=kb_main(user_id, is_valid, True, stat_id),
+                        )
+                    os.remove(file_path)
+                    bot.delete_state(user_id, chat_id)
                 else:
                     calc_info = db.get_calculation(stat_id)
                     if calc_info is None:
                         return
 
-                    stats = calcService.get_stats(user_id)
-
-                    mes_result = '\n' + \
-                        msg_calculate_saved_result(user_id, calc_info, stats)
-                    mes_result += f'\n{msg_calculation_saved(user_id)}'
-
-                    bot.edit_message_text(
-                        mes_calc + mes_result, chat_id, mes_id,
-                        reply_markup=kb_main(user_id, is_valid, True)
+                    file_path = hti.create_calculation_image(
+                        user_id, calc_info, True
                     )
+                    with open(file_path, 'rb') as photo:
+                        bot.delete_message(chat_id, mes_id)
+                        bot.send_photo(
+                            chat_id, photo,
+                            reply_markup=kb_main(user_id, is_valid, True),
+                        )
+                    os.remove(file_path)
+                    bot.delete_state(user_id, chat_id)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

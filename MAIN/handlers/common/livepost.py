@@ -10,7 +10,6 @@ from MAIN.states import AdminPostsState
 
 def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
     user_role = data.get('user_role', 0)
-    print(message.animation.file_id)
     if user_role != 1 and user_role != 2:
         return
 

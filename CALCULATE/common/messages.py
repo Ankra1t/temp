@@ -759,10 +759,10 @@ def msg_calculate_result(
     if calc.forex_info is not None:
         return msg_calculate_forex_result(user_id, calc)
     else:
-        return msg_calculate_crypto_result(user_id, calc)
+        return html_calculate_crypto_result(user_id, calc)
 
 
-def msg_calculate_crypto_result(
+def html_calculate_crypto_result(
     user_id: int,
     calc: Calculation,
 ):
@@ -770,7 +770,8 @@ def msg_calculate_crypto_result(
 
     point = {
         'ru': {
-            'dep_risk': 'Депозит и Риск',
+            'dep': 'Депозит',
+            'risk': 'Риск',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
@@ -783,7 +784,8 @@ def msg_calculate_crypto_result(
             'token': 'Монета',
         },
         'en': {
-            'dep_risk': 'Deposit and Risk',
+            'dep': 'Deposit',
+            'risk': 'Risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
@@ -807,8 +809,8 @@ def msg_calculate_crypto_result(
     # Кол-во покупки
     count_bet = (
         calc.risk_value /
-        max(abs(calc.open_price - calc.stop_loss), 0.01)
-    )  # * rate
+        max(abs(calc.open_price - calc.stop_loss), 0.0001)
+    )
 
     # Сумма покупки
     value_bet = count_bet * calc.open_price
@@ -816,7 +818,6 @@ def msg_calculate_crypto_result(
     p_show = ''
     conclusion = ''
     for i in range(len(calc.tp_ratio)):
-        rate = 1
         tp_ratio_i = calc.tp_ratio[i]
         tp_i = get_print_float(
             max(calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i, 0),
@@ -825,6 +826,7 @@ def msg_calculate_crypto_result(
 
         conclusion += f'  <b>x{tp_ratio_i}</b>: <u>{tp_i} {calc.currency}</u>'
 
+        rate = 1
         if calc.split_values is not None and len(calc.split_values) != 0:
             percent = calc.split_values[i]
             rate = percent / 100
@@ -852,7 +854,7 @@ def msg_calculate_crypto_result(
 {POINT} {point[lang]['conclusion']}:
 {conclusion}
 
-{POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>): 
+{POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>):
 {TAB}<b>{p_show}</b>
 """
 
@@ -874,21 +876,17 @@ def msg_calculate_forex_result(
             'dep_risk': 'Депозит и Риск',
             'open': 'Цена',
             'sl': 'Стоп',
-            'tp': 'Тейк профит',
             'conclusion': 'Тейк-профит',
-            'split': 'Разделение',
             'buy': 'Покупаем',
             'style': 'Стиль торговли',
-            'profit': 'Прибыль по сделке',
+            'profit': 'Прибыль',
             'lot': 'лота',
         },
         'en': {
-            'dep': 'Deposit and Risk',
+            'dep_risk': 'Deposit and Risk',
             'open': 'Price',
             'sl': 'Stop',
-            'tp': 'Take profit',
             'conclusion': 'Take-profit',
-            'split': 'Split',
             'buy': 'Buying',
             'style': 'Trading style',
             'profit': 'Profit',
@@ -909,7 +907,7 @@ def msg_calculate_forex_result(
     # Сумма покупки
     value_bet = (
         calc.risk_value /
-        (max(abs(calc.open_price - calc.stop_loss), 0.000001))
+        (max(abs(calc.open_price - calc.stop_loss), 0.00001))
     )
     # Кол-во покупки
     count_bet = value_bet / LOT
@@ -945,11 +943,7 @@ def msg_calculate_forex_result(
             count = get_print_float(count_bet * rate, 2)
 
             conclusion += f' (<b>{count} {point[lang]["lot"]}</b>) — {get_print_float(percent, round_count)}%'
-            if i != len(calc.tp_ratio) - 1:
-                conclusion += '\n'
-        else:
-            if i % 2 == 1:
-                conclusion += '\n'
+
 
         profit = abs(calc.open_price - tp_i) * rate * count_bet * pow(10, 5)
         if calc.forex_info.pair[0] == calc.currency:
@@ -960,9 +954,6 @@ def msg_calculate_forex_result(
             )
 
         p_show += f'{get_print_float(profit, round_count)}'
-
-        if i != len(calc.tp_ratio) - 1:
-            p_show += ' / '
 
     return f"""
 #<b><u>{pair}</u></b>
@@ -984,16 +975,12 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: Calculato
 
     point = {
         'ru': {
-            'name': 'Результат',
             'deposit': 'Итоговый депозит',
             'sum': 'Профит от сделки',
-            'sl': 'Стоп-лосс',
-            'tp': 'Тейк-профит',
             'takes': 'Тейки',
             'stops': 'Стопы',
         },
         'en': {
-            'name': 'Result',
             'deposit': 'The final deposit',
             'sum': 'Deal profit',
             'sl': 'Stop-loss',
@@ -1008,13 +995,6 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: Calculato
 
     deposit = (u_base.deposit if u_base is not None else 0) or 0
     profit = calc.profit or 0.
-
-    if profit < 0:
-        rate = f'{round(abs(profit / calc.risk_value), 1)}'
-        rate_val = 'sl'
-    else:
-        rate = f'x{round(profit / calc.risk_value)}'
-        rate_val = 'tp'
 
     return f"""{POINT} {point[lang]['sum']}: <b>{get_print_float(profit, calc.round_count)} {calc.currency}</b>
 {TAB}{point[lang]['deposit']}: <b>{get_print_float(deposit, calc.round_count)} {calc.currency}</b>

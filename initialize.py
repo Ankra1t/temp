@@ -7,11 +7,12 @@ from telebot.storage import StateMemoryStorage
 from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
 
 from db import db
+
+from Classes.HTML2Image import HTIService
 from Classes.GuardPaymentAccess import GuardPaymentAccess
 from Classes.Payments import Payments
 from Classes.TariffManager import TariffManager
 from Classes.TextEditor import TextEditor
-
 from Classes.PaymentsBanker import PaymentsBanker
 from Classes.BaseStatistics import BaseStatistics
 from Classes.ServiceTasks import ServiceTasks
@@ -40,6 +41,6 @@ pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
 calcService = CalculationService(bot, db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)
 
-
+hti = HTIService()
 text_editor = TextEditor(bot)
 tariff_manager = TariffManager(bot)
