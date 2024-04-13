@@ -364,11 +364,11 @@ def get_html_from_calc_results(
             </div>
             <div class="point">
                 <p class="name">{point[lang]['takes']}</p>
-                <p class="value">{tp_count}</p>
+                <p class="value">{get_print_float(tp_count, 0)}</p>
             </div>
             <div class="point">
                 <p class="name">{point[lang]['stops']}</p>
-                <p class="value">{sl_count}</p>
+                <p class="value">{get_print_float(sl_count, 1)}</p>
             </div>
         </div>
     """
