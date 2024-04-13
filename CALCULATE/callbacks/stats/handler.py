@@ -2,6 +2,7 @@ from datetime import timedelta
 import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from common.calculation import get_tool_of_calc
 from common.utils import set_state_data
 
 from initialize import calcService, pay_guard, hti
@@ -77,34 +78,27 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 is_valid = pay_guard.valid_use_calc(user_id)
 
-                if is_cancel:
-                    file_path = hti.create_calculation_image(
-                        user_id, calc_info
-                    )
-                    with open(file_path, 'rb') as photo:
-                        bot.delete_message(chat_id, mes_id)
-                        bot.send_photo(
-                            chat_id, photo,
-                            reply_markup=kb_main(user_id, is_valid, True, stat_id),
-                        )
-                    os.remove(file_path)
-                    bot.delete_state(user_id, chat_id)
-                else:
-                    calc_info = db.get_calculation(stat_id)
-                    if calc_info is None:
-                        return
+                calc_info = db.get_calculation(stat_id)
+                if calc_info is None:
+                    return
 
-                    file_path = hti.create_calculation_image(
-                        user_id, calc_info, True
+                saved_stat_id = stat_id if is_cancel else -1
+
+                file_path = hti.create_calculation_image(
+                    user_id, calc_info, not is_cancel
+                )
+                mes = get_tool_of_calc(calc_info)
+
+                with open(file_path, 'rb') as photo:
+                    bot.delete_message(chat_id, mes_id)
+                    bot.send_photo(
+                        chat_id, photo, caption=mes,
+                        reply_markup=kb_main(
+                            user_id, is_valid, True, saved_stat_id
+                        ),
                     )
-                    with open(file_path, 'rb') as photo:
-                        bot.delete_message(chat_id, mes_id)
-                        bot.send_photo(
-                            chat_id, photo,
-                            reply_markup=kb_main(user_id, is_valid, True),
-                        )
-                    os.remove(file_path)
-                    bot.delete_state(user_id, chat_id)
+                os.remove(file_path)
+                bot.delete_state(user_id, chat_id)
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

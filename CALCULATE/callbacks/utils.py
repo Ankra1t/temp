@@ -66,10 +66,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         state = CalculateState.open_price
     else:
         text += msg_enter_stop_loss(user_id)
-        if calc_type == 'forex':
-            state = ForexCalcState.stop_loss
-        else:
-            state = CalculateState.stop_loss
+        state = CalculateState.stop_loss
 
     bot.set_state(user_id, state, chat_id)
     if is_edit:

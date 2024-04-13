@@ -348,7 +348,6 @@ def get_html_from_calc_results(
         if stat_profit < 0:
             sl_count += round(abs(stat_profit) / stat.risk_value, 1)
 
-
     deposit = (u_base.deposit if u_base is not None else 0) or 0
     profit = calc.profit or 0.
 
@@ -372,3 +371,14 @@ def get_html_from_calc_results(
             </div>
         </div>
     """
+
+
+def get_tool_of_calc(calc: Calculation):
+    result = 'NO'
+
+    if calc.market == 'crypto':
+        return calc.tool or 'BTC/USDT'
+    elif calc.market == 'forex' and calc.forex_info is not None:
+        return ''.join(calc.forex_info.pair)
+
+    return '#' + result.replace('/', '')
