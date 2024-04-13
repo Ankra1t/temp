@@ -6,7 +6,17 @@ from models import Calculation
 
 class HTIService:
     def __init__(self) -> None:
-        self.path = ''
+        self.path = '_calc_images'
+        self.hti = Html2Image(
+            custom_flags=[
+                '--headless',
+                '--no-sandbox',
+                '--enable-features=ConversionMeasurement,AttributionReportingCrossAppWeb',
+                '--enable-chrome-browser-cloud-management',
+                '--ignore-certificate-errors"',
+                '--disable-gpu'
+            ]
+        )
 
     def create_calculation_image(self, user_id: int, calc: Calculation, saved=False):
         width = 550
@@ -20,20 +30,8 @@ class HTIService:
 
         html_value = get_html_from_calc(user_id, calc, saved)
 
-        file_name = f'p.png'
-        print(1)
-        hti = Html2Image(
-            size=(width, height),
-            custom_flags=[
-                '--headless',
-                '--no-sandbox',
-                '--enable-features=ConversionMeasurement,AttributionReportingCrossAppWeb',
-                '--enable-chrome-browser-cloud-management',
-                '--ignore-certificate-errors"',
-                '--disable-gpu'
-            ]
-        )
-        a = hti.screenshot(
+        file_name = f'{user_id}.png'
+        a = self.hti.screenshot(
             save_as=file_name,
             html_str=f"""
 				<link rel="stylesheet" href="style.css" />
@@ -48,12 +46,13 @@ class HTIService:
 				}}
 			""",
         )
-        print(a)
 
-        return f'{file_name}'
+        return f'{self.path}/{file_name}'
 
 
 css_template = """
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap');
+
 body,
 .container {
 	font-family: 'Montserrat';
