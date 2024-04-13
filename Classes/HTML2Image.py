@@ -8,6 +8,7 @@ class HTIService:
     def __init__(self) -> None:
         self.path = '_calc_images'
         self.hti = Html2Image(
+            output_path=self.path,
             custom_flags=[
                 '--headless',
                 '--no-sandbox',
