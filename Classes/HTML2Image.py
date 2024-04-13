@@ -34,6 +34,7 @@ class HTIService:
         file_name = f'{user_id}.png'
         a = self.hti.screenshot(
             save_as=file_name,
+            size=(width, height),
             html_str=f"""
 				<link rel="stylesheet" href="style.css" />
 				<div class="container">
