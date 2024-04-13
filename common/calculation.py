@@ -377,8 +377,8 @@ def get_tool_of_calc(calc: Calculation):
     result = 'NO'
 
     if calc.market == 'crypto':
-        return calc.tool or 'BTC/USDT'
+        result = calc.tool or 'BTC/USDT'
     elif calc.market == 'forex' and calc.forex_info is not None:
-        return ''.join(calc.forex_info.pair)
+        result = ''.join(calc.forex_info.pair)
 
-    return '#' + result.replace('/', '')
+    return '#' + result.replace('/', '').lower()
