@@ -11,7 +11,7 @@ from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_ticker_not_found, msg_trading_style_error,
+    msg_calculate_result, msg_currency_error, msg_ticker_not_found, msg_trading_style_error,
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
     msg_pair_not_found, msg_sl_op_equal_error, msg_text_error, msg_ticker_error
 )
@@ -280,15 +280,25 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     new_id = db.add_calculation(calc_info)
     is_valid = pay_guard.valid_use_calc(user_id)
 
-    file_path = hti.create_calculation_image(user_id, calc_info)
-    mes = get_msg_of_calc(user_id, calc_info)
+    mes = msg_calculate_result(user_id, calc_info)
 
-    with open(file_path, 'rb') as photo:
-        bot.send_photo(
-            chat_id, photo, caption=mes,
-            reply_markup=kb_main(user_id, is_valid, True, new_id),
-        )
-    os.remove(file_path)
+    new_id = db.add_calculation(calc_info)
+    is_valid = pay_guard.valid_use_calc(user_id)
+
+    bot.send_message(
+        chat_id, mes,
+        reply_markup=kb_main(user_id, is_valid, True, new_id),
+    )
+
+    # file_path = hti.create_calculation_image(user_id, calc_info)
+    # mes = get_msg_of_calc(user_id, calc_info)
+
+    # with open(file_path, 'rb') as photo:
+    #     bot.send_photo(
+    #         chat_id, photo, caption=mes,
+    #         reply_markup=kb_main(user_id, is_valid, True, new_id),
+    #     )
+    # os.remove(file_path)
 
     db.minus_calculator_uses_count(user_db_id)
     bot.delete_state(user_id, chat_id)

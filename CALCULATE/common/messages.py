@@ -770,8 +770,7 @@ def html_calculate_crypto_result(
 
     point = {
         'ru': {
-            'dep': 'Депозит',
-            'risk': 'Риск',
+            'dep_risk': 'Депозит и Риск',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
@@ -784,8 +783,7 @@ def html_calculate_crypto_result(
             'token': 'Монета',
         },
         'en': {
-            'dep': 'Deposit',
-            'risk': 'Risk',
+            'dep_risk': 'Deposit and Risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
@@ -845,7 +843,7 @@ def html_calculate_crypto_result(
         if i != len(calc.tp_ratio) - 1:
             p_show += ' / '
 
-    return f"""#<b><u>{(calc.tool or 'USDT')}</u></b>
+    return f"""#<b><u>{(calc.tool or 'btcusdt').replace('/', '').lower()}</u></b>
 {POINT} {point[lang]["dep_risk"]} <b>({calc.currency})</b>: <b>{get_print_float(calc.deposit)} | {get_print_float(calc.risk_value)}</b>
 {trading_style}
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.currency}</b> | {point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.currency}</b>
@@ -943,7 +941,11 @@ def msg_calculate_forex_result(
             count = get_print_float(count_bet * rate, 2)
 
             conclusion += f' (<b>{count} {point[lang]["lot"]}</b>) — {get_print_float(percent, round_count)}%'
-
+            if i != len(calc.tp_ratio) - 1:
+                conclusion += '\n'
+        else:
+            if i % 2 == 1:
+                conclusion += '\n'
 
         profit = abs(calc.open_price - tp_i) * rate * count_bet * pow(10, 5)
         if calc.forex_info.pair[0] == calc.currency:
@@ -954,9 +956,11 @@ def msg_calculate_forex_result(
             )
 
         p_show += f'{get_print_float(profit, round_count)}'
+        if i != len(calc.tp_ratio) - 1:
+            p_show += ' / '
 
     return f"""
-#<b><u>{pair}</u></b>
+#<b><u>{pair.replace('/', '').lower()}</u></b>
 {POINT} {point[lang]["dep_risk"]} <b>({calc.currency})</b>: <b>{get_print_float(calc.deposit)} | {get_print_float(calc.risk_value)}</b>
 {trading_style}
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, round_count)} {calc.forex_info.pair[1]}</b> | {point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, round_count)} {calc.forex_info.pair[1]}</b>
