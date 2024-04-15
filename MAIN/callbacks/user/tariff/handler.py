@@ -72,7 +72,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             msg_yookassa(user_id),
-            chat_id, edit_wait_mess.message_id,
+            chat_id, edit_wait_mess.id,
             reply_markup=kb_bill_yookassa(
                 user_id, f'{price} {tariff.currency}', payment_url
             )
