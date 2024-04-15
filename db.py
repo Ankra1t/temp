@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from locale import currency
 from typing import Literal, Optional
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
@@ -884,14 +885,25 @@ class Database:
             self.connection.rollback()
             return False
 
+    def create_tg_user_settings(self, id: int, market: MARKETS_TYPE):
+        query = 'INSERT INTO tgcalc_user_settings (user_id, market, base_currency) VALUES (%s, %s, %s)'
+
+        currency = None
+        if market == 'crypto':
+            currency = 'USDT'
+
+        params = id, market, currency
+
+        self.curs.execute(query, params)
+        self.connection.commit()
+
     def create_tg_user_tables(self, id: int):
         query = 'INSERT INTO tgbotusers (user_id) VALUES (%s)'
-        query2 = 'INSERT INTO tgcalc_user_settings (user_id) VALUES (%s)'
         params = id,
 
         try:
             self.curs.execute(query, params)
-            self.curs.execute(query2, params)
+            self.create_tg_user_settings(id, 'crypto')
             self.connection.commit()
             return True
         except Exception as e:
@@ -1164,17 +1176,36 @@ class Database:
             is_updating_deposit=data.get('is_updating_deposit'),
         )
 
-    def get_calc_user_settings(self, user_id: int):
-        query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s'
-        params = user_id,
+    def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
+        query = 'SELECT market FROM tgbotusers WHERE user_id = %s'
+        params = (user_id,)
+
+        default = 'crypto'
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return default
+
+            return data.get('market')
+        except Exception as e:
+            print(f'ERROR[get_user_current_market]: {e}')
+            self.connection.rollback()
+            return default
+
+    def get_calc_user_settings(self, user_id: int) ->  UserCalcSettings | None:
+        market = self.get_user_current_market(user_id)
+
+        query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s AND market = %s'
+        params = user_id, market
 
         try:
             self.curs.execute(query, params)
 
             data = self.curs.fetchone()
             if data is None:
-                raise Exception(
-                    f'Таблица пользователя [ID={user_id}] не найдена')
+                self.create_tg_user_settings(user_id, market)
+                return self.get_calc_user_settings(user_id)
 
             return self._data_to_user_calc(data)
         except Exception as e:
@@ -1184,9 +1215,11 @@ class Database:
 
     def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
         """Установить значения для автозаполения пользователя"""
+        market = self.get_user_current_market(user_id)
         value = round(value, 2)
-        query = f'UPDATE tgcalc_user_settings SET {type} = %s WHERE user_id = %s'
-        params = (value, user_id)
+
+        query = f'UPDATE tgcalc_user_settings SET {type} = %s WHERE user_id = %s AND market = %s'
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1199,8 +1232,10 @@ class Database:
 
     def set_user_currency(self, user_id: int, value: str):
         """Установить значения для автозаполения пользователя"""
-        query = 'UPDATE tgcalc_user_settings SET base_currency = %s WHERE user_id = %s'
-        params = (value, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET base_currency = %s WHERE user_id = %s AND market = %s'
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1212,8 +1247,10 @@ class Database:
             return False
 
     def set_user_risk_is_percent(self, user_id: int, value: bool):
-        query = 'UPDATE tgcalc_user_settings SET risk_is_percent = %s WHERE user_id = %s'
-        params = (value, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET risk_is_percent = %s WHERE user_id = %s AND market = %s'
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1253,35 +1290,9 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_calculator_users_id(self) -> list[int]:
-        """Получить всех пользователей Калькулятора Бота"""
-        query = 'SELECT user_id FROM tgcalc_user_settings'
-
-        try:
-            self.curs.execute(query)
-            data = self.curs.fetchall()
-            return [] if (data is None) else list(map(lambda el: el['user_id'], data))
-        except Exception as e:
-            print(f'ERROR[get_calculator_users_id]: {e}')
-            self.connection.rollback()
-            return []
-
-    def delete_calculator_user(self, user_id: int):
-        """Удалить пользователя из калькулятора"""
-        query = "DELETE FROM tgcalc_user_settings WHERE user_id = %s"
-        params = (user_id,)
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[delete_calculator_user]: {e}')
-            self.connection.rollback()
-            return False
-
     def get_calculator_uses_count(self, user_id: int) -> int | None:
         """Получить количество использований калькулятора пользователем"""
-        query = 'SELECT uses_count FROM tgcalc_user_settings WHERE user_id = %s'
+        query = 'SELECT uses_count FROM tgbotusers WHERE user_id = %s'
         params = (user_id,)
 
         try:
@@ -1295,7 +1306,7 @@ class Database:
 
     def minus_calculator_uses_count(self, user_id: int):
         """Минус 1 к значению использований у пользователя"""
-        query = "UPDATE tgcalc_user_settings SET uses_count = %s WHERE user_id = %s"
+        query = "UPDATE tgbotusers SET uses_count = %s WHERE user_id = %s"
         uses_count = self.get_calculator_uses_count(user_id) or 1
         params = (uses_count - 1, user_id)
 
@@ -1309,8 +1320,10 @@ class Database:
             return False
 
     def get_user_calc_freeze(self, user_id: int) -> datetime | None:
-        query = 'SELECT freeze_dt FROM tgcalc_user_settings WHERE user_id = %s'
-        params = (user_id,)
+        market = self.get_user_current_market(user_id)
+
+        query = 'SELECT freeze_dt FROM tgcalc_user_settings WHERE user_id = %s AND market = %s'
+        params = (user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1322,8 +1335,10 @@ class Database:
             return None
 
     def set_user_calc_freeze(self, user_id: int, value: datetime | None):
-        query = "UPDATE tgcalc_user_settings SET freeze_dt = %s WHERE user_id = %s"
-        params = (value, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = "UPDATE tgcalc_user_settings SET freeze_dt = %s WHERE user_id = %s AND market = %s"
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1336,8 +1351,10 @@ class Database:
 
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
         """Установить коэфициенты тейк-профит на показ"""
-        query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s"
-        params = (tp, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = "UPDATE tgcalc_user_settings SET take_profit_ratio = %s WHERE user_id = %s AND market = %s"
+        params = (tp, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1350,7 +1367,7 @@ class Database:
 
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
-        query = "UPDATE tgcalc_user_settings SET market = %s WHERE user_id = %s"
+        query = "UPDATE tgbotusers SET market = %s WHERE user_id = %s"
         params = (market, user_id)
 
         try:
@@ -1363,8 +1380,10 @@ class Database:
             return False
 
     def set_user_split_values(self, user_id: int, values: list[float] | None):
-        query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s'
-        params = (values, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET split_values = %s WHERE user_id = %s AND market = %s'
+        params = (values, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1376,10 +1395,11 @@ class Database:
             return False
 
     def set_user_day_risk(self, user_id: int, value: float, is_percent=False):
+        market = self.get_user_current_market(user_id)
         result = f'{value}{"%" if is_percent else ""}'
 
-        query = 'UPDATE tgcalc_user_settings SET day_risk = %s WHERE user_id = %s'
-        params = (result, user_id)
+        query = 'UPDATE tgcalc_user_settings SET day_risk = %s WHERE user_id = %s AND market = %s'
+        params = (result, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1391,8 +1411,10 @@ class Database:
             return False
 
     def set_user_round_count(self, user_id: int, value: int):
-        query = 'UPDATE tgcalc_user_settings SET round_count = %s WHERE user_id = %s'
-        params = (value, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET round_count = %s WHERE user_id = %s AND market = %s'
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1404,8 +1426,10 @@ class Database:
             return False
 
     def set_user_trading_style(self, user_id: int, value: str | None):
-        query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s'
-        params = (value, user_id)
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET trading_style = %s WHERE user_id = %s AND market = %s'
+        params = (value, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1417,15 +1441,21 @@ class Database:
             return False
 
     def reset_user_settings(self, user_id: int):
+        market = self.get_user_current_market(user_id)
+
+        currency = None
+        if market == 'crypto':
+            currency = 'USDT'
+
         query = (
-            'UPDATE tgcalc_user_settings SET market = %s, trading_style = %s, '
-            'day_risk = %s, round_count = %s, '
+            'UPDATE tgcalc_user_settings SET trading_style = %s, '
+            'day_risk = %s, round_count = %s, is_updating_deposit = %s, '
             'base_currency = %s, base_deposit = %s, base_risk = %s, '
             'take_profit_ratio = %s, split_values = %s '
-            'WHERE user_id = %s'
+            'WHERE user_id = %s AND market = %s'
         )
-        params = ('crypto', None, None, None, None, None, None,
-                  [3, 4, 5], None, user_id)
+        params = (None, None, None, False, currency, None, None,
+                  [3, 4, 5], None, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1437,8 +1467,10 @@ class Database:
             return False
 
     def set_user_updating_deposit(self, user_id: int, value: bool):
-        query = 'UPDATE tgcalc_user_settings SET is_updating_deposit = %s WHERE user_id = %s'
-        params = value, user_id,
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET is_updating_deposit = %s WHERE user_id = %s AND market = %s'
+        params = value, user_id, market
 
         try:
             self.curs.execute(query, params)

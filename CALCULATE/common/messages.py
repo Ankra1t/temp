@@ -397,7 +397,7 @@ def msg_stats(user_id: int, stats: CalculatorStats):
 {POINT} {texts[lang]['tp']}: <b>{stats.tp_count}</b>
 {POINT} {texts[lang]['sl']}: <b>{stats.sl_count}</b>
 
-{POINT} {texts[lang]['sum']}: <b>{stats.profit} {currency}</b>
+{POINT} {texts[lang]['sum']}: <b>{get_print_float(stats.profit, 3)} {currency}</b>
 """
 
 
