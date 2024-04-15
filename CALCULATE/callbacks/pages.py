@@ -78,13 +78,15 @@ def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    market = db.get_user_current_market(user_db_id)
     u_base = db.get_calc_user_settings(user_db_id)
+
     is_update = False
     if u_base is not None:
         is_update = u_base.is_updating_deposit
 
     text = msg_deposit(user_id)
-    keyboard = kb_change_deposit(user_id, is_update)
+    keyboard = kb_change_deposit(user_id, is_update, market)
 
     if is_first:
         bot.send_message(

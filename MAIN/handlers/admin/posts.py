@@ -125,7 +125,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         if post.details.open_price is None:
             text = 'Введите цену входа числом:'
         else:
-            text = 'Введите стоп лосс числом:'
+            text = 'Введите стоп-лосс числом:'
 
         bot.send_message(
             chat_id, text,
@@ -149,7 +149,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
     if post.details.open_price == -1:
         post.details.open_price = value
         state = AdminPostsState.signal_values
-        text = 'Введите стоп лосс:'
+        text = 'Введите стоп-лосс:'
     else:
         post.details.stop_loss = value
         state = AdminPostsState.datetime

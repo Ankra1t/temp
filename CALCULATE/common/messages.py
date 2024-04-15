@@ -225,10 +225,10 @@ def msg_deposit(user_id: int):
     u_base = db.get_calc_user_settings(user_db_id)
 
     is_update = False
-    deposit = 0.
+    deposit = '-'
     currency = 'USD'
     if u_base is not None:
-        deposit = u_base.deposit or deposit
+        deposit = get_print_float(u_base.deposit or 0.) or deposit
         currency = u_base.currency or currency
         is_update = u_base.is_updating_deposit
 
@@ -251,7 +251,7 @@ def msg_deposit(user_id: int):
 
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
-{POINT} {texts[lang]['dep']}: <b>{get_print_float(deposit)} {currency}</b>
+{POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
 """
 
@@ -630,8 +630,8 @@ def msg_sl_op_equal_error(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Цена стоп лосса и входа равны',
-        'en': 'The price of the stop loss and entry are equal'
+        'ru': 'Цена стоп-лосса и входа равны',
+        'en': 'The price of the stop-loss and entry are equal'
     }
 
     return f'⚠️ {texts[lang]}:'
@@ -1304,9 +1304,9 @@ def msg_enter_stop_loss(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        text = 'Введите цену стоп лосса:'
+        text = 'Введите цену стоп-лосса:'
     else:
-        text = 'Enter the stop loss price'
+        text = 'Enter the stop-loss price'
 
     return f'✍ {text}'
 

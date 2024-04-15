@@ -56,7 +56,7 @@ def get_print_signal_info(open_price: float, stop_loss: float):
 
     return '\n'.join((
         f'Цена входа: <b>{get_print_float(open_price, round_count)}</b>',
-        f'Стоп лосс: <b>{get_print_float(stop_loss, round_count)}</b>'
+        f'Стоп-лосс: <b>{get_print_float(stop_loss, round_count)}</b>'
     ))
 
 

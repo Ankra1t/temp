@@ -4,6 +4,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 from CALCULATE.common.messages import market_translates
+from models import MARKETS_TYPE
 
 from .filter import settings_factory
 
@@ -79,13 +80,11 @@ def kb_change_base(user_id: int):
         'ru': {
             'risk': 'Процент риска',
             'day_risk': 'Риск на день',
-            'currency': 'Валюта',
             'round_count': 'Округление',
         },
         'en': {
             'risk': 'Risk percent',
             'day_risk': 'Daily risk',
-            'currency': 'Currency',
             'round_count': 'Rounding',
         }
     }
@@ -93,15 +92,12 @@ def kb_change_base(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_risk = getButton(texts[lang]['risk'], 'set_risk_percent')
-    btn_currency = getButton(texts[lang]['currency'], 'set_currency')
     btn_day_risk = getButton(texts[lang]['day_risk'], 'set_day_risk')
     btn_round_count = getButton(texts[lang]['round_count'], 'set_round_count')
 
     btn_back = getButton(back_txt(lang), 'go_settings')
 
-    keyboard.add(btn_risk, btn_currency)
-    keyboard.add(btn_day_risk, btn_round_count)
-    keyboard.add(btn_back)
+    keyboard.add(btn_risk, btn_day_risk, btn_round_count, btn_back)
     return keyboard
 
 
@@ -115,23 +111,26 @@ def kb_deposit_cancel(user_id: int):
     return keyboard
 
 
-def kb_change_deposit(user_id: int, is_updating_deposit: bool):
+def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_TYPE):
     lang = get_lang(user_id)
 
     texts = {
         'ru': {
-            'change': 'Изменить',
+            'change': 'Изменить депозит',
+            'currency': 'Изменить валюту',
             'update_on': 'Вкл. обновление',
             'update_off': 'Выкл. обновление',
         },
         'en': {
-            'change': 'Change',
+            'change': 'Change deposit',
+            'currency': 'Change currency',
             'update_on': 'Update on',
             'update_off': 'Update off',
         },
     }
 
     btn_change = getButton(texts[lang]['change'], 'set_deposit')
+    btn_currency = getButton(texts[lang]['currency'], 'set_currency')
     btn_on = getButton(f'✅ {texts[lang]["update_on"]}', 'deposit_update_on')
     btn_off = getButton(
         f'⭕️ {texts[lang]["update_off"]}', 'deposit_update_off'
@@ -144,7 +143,11 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool):
     else:
         keyboard.add(btn_change, btn_on)
 
-    keyboard.add(btn_back)
+    if market == 'crypto':
+        keyboard.add(btn_back)
+    else:
+        keyboard.add(btn_currency, btn_back)
+
     return keyboard
 
 

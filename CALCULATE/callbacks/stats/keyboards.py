@@ -75,10 +75,10 @@ def kb_deal_result(user_id: int, stat_id: int):
 
     texts = {
         'ru': {
-            'minus': 'Минус',
+            'minus': 'Стоп-лосс',
         },
         'en': {
-            'minus': 'Minus',
+            'minus': 'Stop-loss',
         }
     }
 

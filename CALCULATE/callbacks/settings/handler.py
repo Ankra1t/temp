@@ -131,7 +131,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     bot.edit_message_text(
                         msg_success_edit(user_id), chat_id, mes_id
                     )
-                    send_settings(bot, call.message, user_id, True)
+                    send_user_deposit(bot, call.message, user_id, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False

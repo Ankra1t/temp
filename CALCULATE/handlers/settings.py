@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.settings.keyboards import kb_deposit_cancel
 from initialize import currencyService
 from db import db, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
@@ -82,7 +83,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         bot.send_message(
             chat_id, msg_currency_error(user_id),
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_deposit_cancel(user_id)
         )
         return
 
@@ -90,7 +91,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
     if not check:
         bot.send_message(
             chat_id, msg_currency_error(user_id, 'not_found'),
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_deposit_cancel(user_id)
         )
         return
 
@@ -104,7 +105,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
         bot.send_message(chat_id, msg_enter_deposit(user_id))
     else:
         bot.send_message(chat_id, msg_success_edit(user_id))
-        send_settings(bot, message, user_id, True)
+        send_user_deposit(bot, message, user_id, True)
 
 
 def handle_splitting(message: Message, bot: TeleBot):
