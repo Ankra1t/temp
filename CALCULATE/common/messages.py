@@ -905,7 +905,7 @@ def msg_calculate_forex_result(
     # Сумма покупки
     value_bet = (
         calc.risk_value /
-        (max(abs(calc.open_price - calc.stop_loss), 0.00001))
+        (max(abs(calc.open_price - calc.stop_loss), 0.000001))
     )
     # Кол-во покупки
     count_bet = value_bet / LOT
