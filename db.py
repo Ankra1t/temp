@@ -509,7 +509,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_active_subscribes_all_users(self, ban: int = 0):
+    def get_active_subscribes_all_users(self, ban: bool):
         """Получить активные подписки для всех пользователей"""
         query = (
             'SELECT u.id AS id, u.id_telegram AS id_telegram, u.username_tg AS username_tg,  '

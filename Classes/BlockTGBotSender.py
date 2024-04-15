@@ -106,18 +106,8 @@ class BlockTGBotSender(object):
 
     def batch_send(self, calc_test=False):
         current_batch = 0
-        log_send_ok.info(f'Начало рассылки------------------>>>')
-
         if calc_test:
-            # Внедряем анализ качества пользователей - оптимизация рассылки
-            # Учесть массовую рассылку отложенных постов
-
-            # users = db.get_all_users()
-
-            users = pay_guard.get_valid_users_for_signals()
-
-            if not users:
-                return False
+            users = db.get_all_users()
 
             users_info = users
             users = list(map(lambda x: x.tg_id, users))
