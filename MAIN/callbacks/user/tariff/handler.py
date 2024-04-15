@@ -66,7 +66,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         if payment_url == False:
             bot.edit_message_text(
-                'Ошибка', chat_id, mes_id
+                'Ошибка', chat_id, edit_wait_mess.id
             )
             return
 

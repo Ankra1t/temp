@@ -31,8 +31,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     keyboard = kb_user_main(user_id)
 
-    # if not new_user:
-    if False:
+    if not new_user:
         text = text_editor.get_text(
             user_id, 'user_restart_bot'
         ) or msg_start(user_id)
