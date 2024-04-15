@@ -36,6 +36,7 @@ class HTIService:
             save_as=file_name,
             size=(width, height),
             html_str=f"""
+            	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
 				<link rel="stylesheet" href="style.css" />
 				<div class="container">
 					<div class="main">{html_value}</div>
@@ -52,8 +53,6 @@ class HTIService:
 
 
 css_template = """
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap');
-
 body,
 .container {
 	font-family: 'Montserrat';
