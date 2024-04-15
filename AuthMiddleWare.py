@@ -18,7 +18,7 @@ class AuthMiddleWare(BaseMiddleware):
 
     def pre_process(self, message: types.Message, data):
         user_id = message.from_user.id
-        username = message.from_user.username
+        username = message.from_user.username or ''
 
         data['has_registered_now'] = False
 

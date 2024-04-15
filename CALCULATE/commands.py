@@ -4,8 +4,8 @@ from telebot.types import Message
 from db import db
 
 from CALCULATE.common.messages import msg_support
-from CALCULATE.common.keyboard import kb_support
 from CALCULATE.callbacks import send_manual_page, send_main
+from MAIN.callbacks import kb_support
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -43,11 +43,16 @@ def _about_us(message: Message, bot: TeleBot):
 
 
 def _support(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+
     sup = db.get_support_name()
+    msg = msg_support(user_id)
+
     bot.send_message(
-        message.chat.id, msg_support(message.from_user.id),
-        reply_markup=kb_support(message.from_user.id, sup)
+        message.chat.id, msg,
+        reply_markup=kb_support(user_id, sup)
     )
+    bot.delete_state(message.from_user.id, message.chat.id)
 
 
 def _manual(message: Message, bot: TeleBot):

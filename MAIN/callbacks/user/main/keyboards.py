@@ -20,25 +20,28 @@ def kb_user_main(user_id: int):
             'buy': 'Купить',
             'calc': 'Калькулятор',
             'account': 'Личный кабинет',
+            'support': 'Тех. поддержка',
             'site': 'Войти на сайт',
         },
         'en': {
             'buy': 'Buy',
             'calc': 'Calculator',
             'account': 'Profile',
+            'support': 'Support',
             'site': 'Go to website',
         }
     }
 
     # btn1 = getButton("Рекомендации", 'signals')
     btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
+    btn_support = getButton(f"{texts[lang]['support']}", 'support')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
     btn_account = getButton(f"👨 {texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
     keyboard.add(btn_buy, btn_calc)
-    keyboard.add(btn_account)
+    keyboard.add(btn_support, btn_account)
     return keyboard
 
 
@@ -78,4 +81,27 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
     buttons.append(btn_back)
 
     keyboard.add(*buttons)
+    return keyboard
+
+def kb_support(user_id: int, link: str):
+    link = link.replace('@', '')
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'operator': 'Перейти к оператору',
+        },
+        'en': {
+            'operator': 'Go to the operator',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_link = InlineKeyboardButton(
+        texts[lang]['operator'], f'https://t.me/{link}'
+    )
+    btn_back = getButton(back_txt(lang), 'main')
+
+    keyboard.add(btn_link, btn_back)
     return keyboard

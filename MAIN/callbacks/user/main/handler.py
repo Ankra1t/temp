@@ -1,8 +1,10 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from db import db
 from AuthRoles import check_registrate
 from CALCULATE.callbacks import send_main
+from CALCULATE.common.messages import msg_support
 from MAIN.callbacks import (
     send_user_education, send_user_account, send_site_code,
     send_admin_main, send_user_main, send_user_tariffs
@@ -10,7 +12,7 @@ from MAIN.callbacks import (
 from MAIN.common.utils import send_in_development
 
 from .filter import user_main_factory, UserMainCallbackFilter
-
+from .keyboards import kb_support
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = user_main_factory.parse(call.data)
@@ -42,6 +44,16 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'buy':
         send_user_tariffs(bot, call.message, user_id)
+
+    if type == 'support':
+        sup = db.get_support_name()
+        msg = msg_support(user_id)
+
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb_support(user_id, sup)
+        )
+        bot.delete_state(user_id, mes_id)
 
     if 'site' in type:
         is_reset = 'reset' in type

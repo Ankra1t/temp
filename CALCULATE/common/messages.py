@@ -352,7 +352,7 @@ def msg_support(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Чтобы связаться с оператором тех.поддержки, нажмите на кнопку ниже',
+        'ru': 'Чтобы связаться с оператором тех. поддержки, нажмите на кнопку ниже',
         'en': 'To contact the technical support operator, click on the button below'
     }
 

@@ -6,9 +6,8 @@ from db import db
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
 from CALCULATE.common.messages import msg_support
-from CALCULATE.common.keyboard import kb_support
 from MAIN.start import send_start_by_user
-from MAIN.callbacks import send_site_code
+from MAIN.callbacks import send_site_code, kb_support
 
 # from PIL import Image, ImageDraw, ImageFont
 # from io import BytesIO

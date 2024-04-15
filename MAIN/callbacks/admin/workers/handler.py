@@ -52,7 +52,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             elif mas[i].role == 2:
                 show_role = 'Редактор'
             elif mas[i].role == 3:
-                show_role = 'Тех.поддержка'
+                show_role = 'Тех. поддержка'
 
             name = f'| @{mas[i].username}' if mas[i].username else ''
 

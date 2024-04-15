@@ -32,7 +32,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         sup_link = f'@{sup}' if (sup != '') else ''
 
         bot.edit_message_text(
-            f'<b>Калькулятор расчета рисков</b>\nТех.поддержка: {sup_link}',
+            f'<b>Калькулятор расчета рисков</b>\nТех. поддержка: {sup_link}',
             chat_id, mes_id,
             reply_markup=kb_calculator()
         )
