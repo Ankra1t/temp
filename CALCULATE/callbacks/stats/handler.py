@@ -2,7 +2,7 @@ from datetime import timedelta
 import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from common.calculation import get_tool_of_calc
+from common.calculation import get_msg_of_calc
 from common.utils import set_state_data
 
 from initialize import calcService, pay_guard, hti
@@ -87,7 +87,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 file_path = hti.create_calculation_image(
                     user_id, calc_info, not is_cancel
                 )
-                mes = get_tool_of_calc(calc_info)
+                mes = get_msg_of_calc(user_id, calc_info)
 
                 with open(file_path, 'rb') as photo:
                     bot.delete_message(chat_id, mes_id)

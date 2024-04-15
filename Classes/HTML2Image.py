@@ -20,12 +20,12 @@ class HTIService:
         )
 
     def create_calculation_image(self, user_id: int, calc: Calculation, saved=False):
-        width = 550
+        width = 500
         height = 340
 
         if not saved:
             if calc.split_values is not None and len(calc.split_values) > 2:
-                height += 35 * len(calc.split_values)
+                height += 30 * len(calc.split_values)
             elif len(calc.tp_ratio) > 1:
                 height += 20 * len(calc.tp_ratio)
 
@@ -44,7 +44,6 @@ class HTIService:
             css_str=css_template + f"""
 				.main {{
 					width: {width}px;
-					height: {height}px;
 				}}
 			""",
         )
@@ -59,106 +58,137 @@ body,
 .container {
 	font-family: 'Montserrat';
 	font-weight: 500;
-	line-height: 1.5;
-
-	font-size: 19px;
+	line-height: 1.2;
+	font-size: 18px;
 }
 
 .main {
 	border-radius: 20px;
-	padding: 20px;
+	padding: 15px;
 	margin: 0 auto;
-	width: 500px;
-	height: 700px;
-	background: #fcfcfc;
+	width: 480px;
+	background: #fff;
 	color: #111111;
+
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .title {
 	font-weight: 800;
 }
 
+.header_name {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.buy,
+.sell {
+	border-radius: 10px;
+	padding: 8px 12px;
+	background: #f7f7f7;
+	font-size: 0.8em;
+	font-weight: 600;
+}
+
+.buy {
+	color: #06bd32;
+}
+.sell {
+	color: #f36a77;
+}
+
+.row {
+	display: flex;
+	gap: 10px;
+}
+
 .block {
-	padding: 8px 0;
-}
-
-.inline_block {
-	display: flex;
-	align-items: center;
-	gap: 0 10px;
-}
-
-.point {
-	position: relative;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0 5px;
-}
-
-.point .name {
-	position: relative;
-	padding-left: 12px;
-}
-
-.point:first-child .name::before {
-	content: "";
-	position: absolute;
-	left: 0px;
-	top: 50%;
-	transform: translateY(-50%);
-
-	width: 4px;
-	height: 4px;
-	border-radius: 50%;
-	background: #111111;
-}
-
-.point p {
-	white-space: nowrap;
-}
-
-.name::after {
-	content: ':';
+	width: 100%;
+	padding: 10px;
+	background: #f7f7f7;
+	border-radius: 20px;
 }
 
 .value {
-	font-weight: 700;
+	font-weight: 600;
+	white-space: nowrap;
+	text-align: center;
 }
 
-.value.flex {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
+.name {
+	font-size: 0.9em;
+	text-align: center;
 }
 
 .tp {
-	gap: 0 10px;
+	font-size: 0.9em;
+	line-height: 1.4;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 14px;
 }
 
 .profit {
-	gap: 0;
+	display: flex;
+	flex-wrap: wrap;
 }
 
-.profit .value {
-	padding: 0 7px;
+.tp, .profit {
+	margin-top: 7px;
+}
+
+.tp_default {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	white-space: nowrap;
+}
+
+.tp_item {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+
+	white-space: nowrap;
+}
+
+.tp_val {
+	flex: 0 1 100px;
+	display: flex;
+	justify-content: space-between;
+}
+
+.tp_count {
+	flex: 0 1 70%;
+	display: flex;
+	justify-content: space-between;
 }
 
 .profit .value {
 	position: relative;
+	padding: 0 7px;
 }
 
-.profit .value::before {
+.profit .value:not(:last-child)::after {
 	content: "";
 	position: absolute;
-	height: 16px;
-	width: 1px;
-	background: #111;
-	right: 1px;
 	top: 50%;
+	right: 0;
 	transform: translateY(-50%);
+	width: 1px;
+	height: 50%;
+	background: black;
 }
-
 
 /********* Обнуление *********/
 * {

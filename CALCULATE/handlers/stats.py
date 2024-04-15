@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.calculation import get_tool_of_calc
+from common.calculation import get_msg_of_calc
 from initialize import calcService, pay_guard, hti
 from db import db
 from common.utils import digit_accept, text_accept
@@ -42,7 +42,7 @@ def handle_loss(message: Message, bot: TeleBot):
     file_path = hti.create_calculation_image(
         user_id, calc_info, True
     )
-    mes = get_tool_of_calc(calc_info)
+    mes = get_msg_of_calc(user_id, calc_info)
 
     with open(file_path, 'rb') as photo:
         bot.send_photo(

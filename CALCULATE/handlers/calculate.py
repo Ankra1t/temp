@@ -2,7 +2,7 @@ import os
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.calculation import get_tool_of_calc
+from common.calculation import get_msg_of_calc
 from initialize import currencyService, pay_guard, hti
 from db import db
 from models import Calculation, ForexInfo
@@ -281,7 +281,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     is_valid = pay_guard.valid_use_calc(user_id)
 
     file_path = hti.create_calculation_image(user_id, calc_info)
-    mes = get_tool_of_calc(calc_info)
+    mes = get_msg_of_calc(user_id, calc_info)
 
     with open(file_path, 'rb') as photo:
         bot.send_photo(
