@@ -483,7 +483,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', prev_style=''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'style_{type}',
@@ -521,14 +521,6 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = '', pr
             keyboard.add(*buttons)
             buttons = []
 
-    is_added = False
-    for el in styles.values():
-        if prev_style.lower() in el:
-            is_added = True
-            break
-
-    if not is_added:
-        buttons.append(getThisButton(prev_style.capitalize(), prev_style))
     if len(buttons) != 0:
         keyboard.add(*buttons)
 

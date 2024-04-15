@@ -188,7 +188,6 @@ def handle_risk_percent(message: Message, bot: TeleBot):
 
 def handle_trading_style(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -207,7 +206,6 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = value.lower()
 
     set_state_data(bot, user_id, chat_id, {'trading_style': value})
-    db.set_user_trading_style(user_db_id, value)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 

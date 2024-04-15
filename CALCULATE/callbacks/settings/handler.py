@@ -84,8 +84,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             if value == '**off**':
                 value = None
 
-            db.set_user_trading_style(user_db_id, value)
-
             if 'calc' in type:
                 value = value or False
 
@@ -96,6 +94,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
                 choose_calculate_step(bot, user_id, chat_id, mes_id, True)
             else:
+                db.set_user_trading_style(user_db_id, value)
+
                 if 'welcome' in type:
                     bot.edit_message_text(
                         msg_success_base_set(user_id), chat_id, mes_id
