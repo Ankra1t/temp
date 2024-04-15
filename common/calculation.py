@@ -56,7 +56,7 @@ def get_html_from_crypto_calc(
     # Кол-во покупки
     count_bet = (
         calc.risk_value /
-        max(abs(calc.open_price - calc.stop_loss), 0.0001)
+        max(abs(calc.open_price - calc.stop_loss), 0.00001)
     )
 
     # Сумма покупки
@@ -223,7 +223,7 @@ def get_html_from_forex_calc(
     # Сумма покупки
     value_bet = (
         calc.risk_value /
-        (max(abs(calc.open_price - calc.stop_loss), 0.0001))
+        (max(abs(calc.open_price - calc.stop_loss), 0.00001))
     )
     # Кол-во покупки
     count_bet = value_bet / LOT
