@@ -30,13 +30,17 @@ def handle_tool(message: Message, bot: TeleBot):
         )
         return
 
-    tool = tool.lower().replace('/', '')
-    if tool.endswith('usdt'):
-        tool = tool.replace('usdt', '')
+    tool = tool.upper().replace('/', '')
+    if tool.endswith('USDT'):
+        tool = tool.replace('USDT', '').strip()
 
-    tool = tool.strip().upper() + '/USDT'
+    tool += '/USDT'
 
-    set_state_data(bot, user_id, chat_id, {'tool': tool})
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['tool'] = tool
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -58,7 +62,11 @@ def handle_future_ticker(message: Message, bot: TeleBot):
         )
         return
 
-    set_state_data(bot, user_id, chat_id, {'ticker': ticker})
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['ticker'] = ticker
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -102,9 +110,11 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         cross_prices=prices
     )
 
-    set_state_data(bot, user_id, chat_id, {
-        'forex': forex,
-    })
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['forex'] = forex
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -131,6 +141,10 @@ def handle_currency(message: Message, bot: TeleBot):
 
     db.set_user_currency(user_db_id, value.upper())
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -149,6 +163,10 @@ def handle_deposit(message: Message, bot: TeleBot):
 
     db.set_user_base(user_db_id, 'base_deposit', value)
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -183,6 +201,10 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     db.set_user_base(user_db_id, 'base_risk', value)
     db.set_user_risk_is_percent(user_db_id, is_percent)
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -205,7 +227,11 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     value = value.lower()
 
-    set_state_data(bot, user_id, chat_id, {'trading_style': value})
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['trading_style'] = value
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -222,7 +248,11 @@ def handle_open_price(message: Message, bot: TeleBot):
         )
         return
 
-    set_state_data(bot, user_id, chat_id, {'open_price': value})
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['open_price'] = value
+        last_mes_id = data.get('last_mes_id', 0)
+
+    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -241,6 +271,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
+        last_mes_id = data.get('last_mes_id', 0)
         open_price = data.get('open_price', 0)
         forex = data.get('forex')
         trading_style = data.get('trading_style')
@@ -283,6 +314,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     new_id = db.add_calculation(calc_info)
     is_valid = pay_guard.valid_use_calc(user_id)
 
+    bot.delete_message(chat_id, last_mes_id)
     bot.send_message(
         chat_id, mes,
         reply_markup=kb_main(user_id, is_valid, True, new_id),

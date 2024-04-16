@@ -69,16 +69,21 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         state = CalculateState.stop_loss
 
     bot.set_state(user_id, state, chat_id)
+
+    new_mes_id = mes_id
     if is_edit:
         bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard,
         )
     else:
-        bot.send_message(
+        new_mes = bot.send_message(
             user_id, text,
             reply_markup=keyboard
         )
+        new_mes_id = new_mes.id
+
+    set_state_data(bot, user_id, chat_id, {'last_mes_id': new_mes_id})
 
 
 def choose_first_calculate_step(
@@ -108,5 +113,6 @@ def choose_first_calculate_step(
     else:
         bot.set_state(user_id, CalculateState.deposit, chat_id)
 
-    set_state_data(bot, user_id, chat_id, {'calc_type': type, 'trading_style': style})
+    set_state_data(bot, user_id, chat_id, {
+                   'calc_type': type, 'trading_style': style})
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)
