@@ -2,13 +2,14 @@ from datetime import timedelta
 import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
 from common.calculation import get_msg_of_calc
 from common.utils import set_state_data
+from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService, pay_guard, hti
 from db import db
-from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 
@@ -85,13 +86,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 saved_stat_id = stat_id if is_cancel else -1
 
                 stats = calcService.get_stats(user_id)
-
-                mes_calc = msg_calculate_result(user_id, calc_info)
-                mes_result = '\n' + \
-                    msg_calculate_saved_result(user_id, calc_info, stats)
+                mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
                 bot.edit_message_text(
-                    mes_calc + mes_result, chat_id, mes_id,
+                    mes_calc, chat_id, mes_id,
                     reply_markup=kb_main(
                         user_id, is_valid, True, saved_stat_id)
                 )

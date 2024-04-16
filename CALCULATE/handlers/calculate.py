@@ -252,7 +252,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        del_mes_id = data.get('del_mes_id', 0)
         open_price = data.get('open_price', 0)
         forex = data.get('forex')
         trading_style = data.get('trading_style')

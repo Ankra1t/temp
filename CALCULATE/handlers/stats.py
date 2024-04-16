@@ -13,7 +13,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import kb_deal_profit_minus, kb_main
 from CALCULATE.common.messages import (
-    msg_calculate_result, msg_calculate_saved_result, msg_digit_error, msg_freeze_error, msg_frozen
+    msg_calculate_result, msg_digit_error, msg_freeze_error, msg_frozen
 )
 
 
@@ -39,16 +39,14 @@ def handle_loss(message: Message, bot: TeleBot):
 
     is_valid = pay_guard.valid_use_calc(user_id)
 
-    mes_calc = msg_calculate_result(user_id, calc_info)
-
     stats = calcService.get_stats(user_id)
+    mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
-    mes_result = '\n' + msg_calculate_saved_result(user_id, calc_info, stats)
 
     is_valid = pay_guard.valid_use_calc(user_id)
 
     bot.send_message(
-        chat_id, mes_calc + mes_result,
+        chat_id, mes_calc,
         reply_markup=kb_main(user_id, is_valid, True)
     )
 
