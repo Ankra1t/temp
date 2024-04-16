@@ -30,12 +30,12 @@ market_translates = {
 def get_risk_annotation(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
-            '1': '<i>Cо знаком %</i> - для ввода процента риска от депозита',
-            '2': '<i>Без знаков</i> - для ввода точной суммы риска',
+            '1': '<i>Cо знаком %</i> - для ввода процента от депозита',
+            '2': '<i>Без знаков</i> - для ввода точной суммы',
         },
         'en': {
-            '1': '<i>With a sign of %</i> - for entering a percentage of risk from a deposit',
-            '2': '<i>Without signs</i> - for entering a cloth amount of risk',
+            '1': '<i>With a sign of %</i> - for entering a percentage from a deposit',
+            '2': '<i>Without signs</i> - for entering a cloth amount',
         }
     }
 
@@ -1219,12 +1219,22 @@ def msg_enter_day_risk(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите <u>риск на день</u>',
-        'en': 'Enter <u>daily risk</u>',
+        'ru': {
+            'main': 'Введите <u>риск на день</u>',
+            'desc1': '"<b>Риск на день</b>" - процент или сумма капитала, превышая которую, система будет напоминать об этом.',
+            'desc2': 'Трейдинг строится на систематической торговле, и риски на день/неделю/месяц нужно контролировать',
+        },
+        'en': {
+            'main': 'Enter <u>daily risk</u>',
+            'desc1': '"<b>Daily risk</b>" - the percentage or amount of capital exceeding which the system will remind you about it.',
+            'desc2': 'Trading is based on systematic trading, and the risks for the day/week/month need to be controlled',
+        },
     }
 
-    return f"""✍ {texts[lang]}
+    return f""" {texts[lang]['desc1']}
+{texts[lang]['desc2']}
 
+✍ {texts[lang]['main']}
 {get_risk_annotation(lang)}
 """
 
