@@ -77,6 +77,15 @@ def edit_message(
                 reply_markup=markup
             )
 
+def delete_message(
+    bot: TeleBot,
+    chat_id: int,
+    mes_id: int,
+):
+    try:
+        return bot.delete_message(chat_id, mes_id)
+    except:
+        return False
 
 def get_lang(tg_id: int):
     user_db_id = db.get_user_id_by_tg_id(tg_id)

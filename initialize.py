@@ -25,7 +25,7 @@ bot = TeleBot(
     TOKEN_MAIN_BOT, 'HTML',
     state_storage=state_storage,
     skip_pending=True,
-    use_class_middlewares=True
+    use_class_middlewares=True,
 )
 
 

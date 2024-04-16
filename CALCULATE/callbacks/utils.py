@@ -83,7 +83,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         )
         new_mes_id = new_mes.id
 
-    set_state_data(bot, user_id, chat_id, {'last_mes_id': new_mes_id})
+    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
 def choose_first_calculate_step(

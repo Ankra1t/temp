@@ -7,7 +7,7 @@ from initialize import currencyService, pay_guard, hti
 from db import db
 from models import Calculation, ForexInfo
 
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from common.utils import delete_message, digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
 from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
 from CALCULATE.common.messages import (
@@ -24,10 +24,11 @@ def handle_tool(message: Message, bot: TeleBot):
 
     tool = text_accept(message)
     if tool is None or is_digit(tool):
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_text_error(user_id),
             reply_markup=kb_tool(user_id, [])
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     tool = tool.upper().replace('/', '')
@@ -35,12 +36,7 @@ def handle_tool(message: Message, bot: TeleBot):
         tool = tool.replace('USDT', '').strip()
 
     tool += '/USDT'
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        data['tool'] = tool
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
+    set_state_data(bot, user_id, chat_id, {'tool': tool})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -51,22 +47,20 @@ def handle_future_ticker(message: Message, bot: TeleBot):
 
     ticker = text_accept(message)
     if ticker is None:
-        bot.send_message(chat_id, msg_ticker_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_ticker_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     if db.get_future(ticker) is None:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id,
             msg_ticker_not_found(user_id, ticker),
             reply_markup=kb_main_cancel(user_id)
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        data['ticker'] = ticker
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
+    set_state_data(bot, user_id, chat_id, {'ticker': ticker})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -77,14 +71,16 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     pair = text_accept(message)
     if pair is None or is_digit(pair):
-        bot.send_message(chat_id, msg_pair_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     pair = pair.upper().replace(' ', '/')
 
     pair_arr = pair.split('/')
     if len(pair_arr) != 2 or pair_arr[0] == pair_arr[1]:
-        bot.send_message(chat_id, msg_pair_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -99,9 +95,11 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     prices = currencyService.getPairsPrice(pairs)
 
     if prices == False:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
-            reply_markup=kb_main_cancel(user_id))
+            reply_markup=kb_main_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     forex = ForexInfo(
@@ -110,11 +108,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         cross_prices=prices
     )
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        data['forex'] = forex
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
+    set_state_data(bot, user_id, chat_id, {'forex': forex})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -127,24 +121,23 @@ def handle_currency(message: Message, bot: TeleBot):
 
     value = text_accept(message)
     if value is None or len(value) > 10:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_currency_error(user_id),
-            reply_markup=kb_main_cancel(user_id))
+            reply_markup=kb_main_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     check = currencyService.getPrice('USD', value)
     if not check:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_currency_error(user_id, 'not_found'),
-            reply_markup=kb_main_cancel(user_id))
+            reply_markup=kb_main_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     db.set_user_currency(user_db_id, value.upper())
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -157,16 +150,14 @@ def handle_deposit(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(chat_id, msg_digit_error(user_id),
-                         reply_markup=kb_main_cancel(user_id))
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_main_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     db.set_user_base(user_db_id, 'base_deposit', value)
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -200,11 +191,6 @@ def handle_risk_percent(message: Message, bot: TeleBot):
 
     db.set_user_base(user_db_id, 'base_risk', value)
     db.set_user_risk_is_percent(user_db_id, is_percent)
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -216,22 +202,19 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     value = text_accept(message)
 
-    msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
 
     if value is None or is_digit(value):
-        bot.send_message(
+        msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
+        new_mes = bot.send_message(
             chat_id, msg_error,
             reply_markup=kb_main_cancel(user_id)
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     value = value.lower()
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        data['trading_style'] = value
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
+    set_state_data(bot, user_id, chat_id, {'trading_style': value})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -242,17 +225,14 @@ def handle_open_price(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
             reply_markup=kb_main_cancel(user_id)
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
-        data['open_price'] = value
-        last_mes_id = data.get('last_mes_id', 0)
-
-    bot.delete_message(chat_id, last_mes_id)
+    set_state_data(bot, user_id, chat_id, {'open_price': value})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -264,21 +244,23 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
             reply_markup=kb_main_cancel(user_id)
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        last_mes_id = data.get('last_mes_id', 0)
+        del_mes_id = data.get('del_mes_id', 0)
         open_price = data.get('open_price', 0)
         forex = data.get('forex')
         trading_style = data.get('trading_style')
         tool = data.get('tool')
 
     if open_price == stop_loss:
-        bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     u_base = db.get_calc_user_settings(user_db_id)
@@ -311,15 +293,13 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     mes = msg_calculate_result(user_id, calc_info)
 
-    new_id = db.add_calculation(calc_info)
-    is_valid = pay_guard.valid_use_calc(user_id)
-
-    bot.delete_message(chat_id, last_mes_id)
     bot.send_message(
         chat_id, mes,
         reply_markup=kb_main(user_id, is_valid, True, new_id),
     )
 
+    db.minus_calculator_uses_count(user_db_id)
+    bot.delete_state(user_id, chat_id)
     # file_path = hti.create_calculation_image(user_id, calc_info)
     # mes = get_msg_of_calc(user_id, calc_info)
 
@@ -329,9 +309,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     #         reply_markup=kb_main(user_id, is_valid, True, new_id),
     #     )
     # os.remove(file_path)
-
-    db.minus_calculator_uses_count(user_db_id)
-    bot.delete_state(user_id, chat_id)
 
 
 # ? Выравнивание результатов
