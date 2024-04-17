@@ -79,6 +79,8 @@ class Price:
         discount_percent: Optional[float] = None,
         discount_findate: Optional[datetime] = None,
         price_findate: Optional[datetime] = None,
+        price_crypto: Optional[float] = None,
+        currency_crypto: Optional[str] = None,
     ):
         self.id = id
         self.name = name
@@ -91,6 +93,9 @@ class Price:
         self.switch_active = switch_active
         self.price_findate = price_findate
         self.type_product = type_product
+
+        self.price_crypto = price_crypto or 0.
+        self.currency_crypto = currency_crypto or 'USDT'
 
         if discount_percent is not None and discount_findate is not None:
             self.discount = Discount(

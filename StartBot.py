@@ -101,69 +101,6 @@ def invoice_paid_prev(update: Update) -> None:
                          f'и статусу status "wait_payments"  ')
 
 
-# Обработать успешный платеж через CryptoBot
-@pays_banker.pay_handler()
-def invoice_paid(update: UpdateBBanker) -> None:
-    if update.payload is None:
-        return
-
-    # return True;
-    # Найти по invoice_id транзакцию
-    if update.payload.status == 'paid':
-
-        transaction = pays_banker.get_wait_transaction_for_complete(update)
-
-        if transaction:
-            logger.info('-----> Нашли нужную транзакцию '
-                        'далее transactions_complete [{}]'.format(transaction.id))
-
-            bot.send_message(
-                transaction.user_id,
-                'Ваш платеж подтвержден и находиться в обработке'
-            )
-
-            # Завершаем транзакцию
-            pays_banker.transactions_complete(transaction.id)
-
-            # Добавить платную подписку
-            finish_date_obj = pay_guard.set_paid_subscribe(transaction)
-            finish_date = get_str_by_datetime(finish_date_obj)
-
-            logger.info(f'-----> Добавили пользователю платную подписку')
-
-            # Обнуляем пробную подписку
-            pay_guard.deactivate_user_trial_subscribe(
-                transaction.user_id
-            )
-
-            # Отправляем сообщение пользователю
-            bot.send_message(
-                transaction.user_id,
-                text=paid_subscribe_msg(
-                    finish_date, transaction.name
-                ),
-            )
-
-            # Сообщение в бот уведомлений об оплате
-            summ_full = f"{transaction.sum} {transaction.currency}"
-
-            user = db.get_user_by_tg_id(transaction.user_id)
-            if user is not None:
-                notifier.send_notification('text', mess_user_paid(
-                    user_id=user.id,
-                    user_nike='@' + user.username if user.username else user.tg_id,
-                    summ_paid=summ_full,
-                    tariff_name=transaction.name,
-                    finish_date=finish_date
-                ))
-
-        else:
-            logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
-                         f'и статусу status "wait_payments"  ')
-
-    # todo-fin: Сообщению пользователю: "Ваш счет в статусе не оплачен"
-
-
 # ======================== ПЛАНОВЫЕ ФУНКЦИИ ==============
 def check_future_post_for_sent():
     lose_hours = 4

@@ -1,56 +1,54 @@
+import asyncio
+from hashlib import sha256
+from hmac import HMAC
 from flask import Request, Response
-from yookassa import Configuration, Payment
-import uuid
+from aiocryptopay import AioCryptoPay
+from aiocryptopay.const import PaidButtons, InvoiceStatus
 
-from common.utils import check_discount_price
 from NOTIFIER.messages import mess_user_paid
-from db import db
+from common.dt import get_str_by_datetime
 from initialize import bot, pay_guard
 from NOTIFIER import notifier
 
-from common.dt import get_str_by_datetime
+from config_global import CRYPTOPAY_TOKEN, CRYPTOPAY_NETWORK
+from common.utils import check_discount_price
 from messages.users import paid_subscribe_msg
 from models import Price
-from config_global import YOOKASSA_SECRET_KEY, YOOKASSA_SHOP_ID
+from db import db
 
 
-Configuration.account_id = YOOKASSA_SHOP_ID
-Configuration.secret_key = YOOKASSA_SECRET_KEY
+Payment = AioCryptoPay(token=CRYPTOPAY_TOKEN, network=CRYPTOPAY_NETWORK)
 
 
-def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
-    price = check_discount_price(tariff)
-    currency = tariff.currency
+def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
+    if tariff.price_crypto == 0:
+        return False
+
+    price = check_discount_price(tariff, 'crypto')
+    currency = tariff.currency_crypto
     name = tariff.name
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     if user_db_id == 0:
         return False
 
-    response_data = {
-        "amount": {
-            "value": str(price),
-            "currency": currency
-        },
-        "capture": True,
-        "description": name
-    }
-
-    response_data["confirmation"] = {
-        "type": "redirect",
-        "return_url": redirect_url
-    }
-
     try:
-        payment = Payment.create(response_data, uuid.uuid4())
-        if payment.confirmation is None:
+        payment = asyncio.run(Payment.create_invoice(
+            asset=currency,
+            amount=price,
+            description=name,
+            paid_btn_name=PaidButtons.OPEN_BOT,
+            paid_btn_url=redirect_url,
+            expires_in=1200
+        ))
+        if payment.status != InvoiceStatus.ACTIVE:
             return False
     except Exception as e:
-        print(f'yooKassa Error: {e}')
+        print(f'CryptoPay Error: {e}')
         return False
 
-    url = str(payment.confirmation.confirmation_url)
-    code = str(payment.id)
+    url = str(payment.pay_url)
+    code = str(payment.invoice_id)
 
     db.add_transaction(
         user_db_id,
@@ -67,23 +65,28 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     return url
 
 
-def yooKassa_payment_updates(request: Request):
+def cryptoPay_payment_updates(request: Request):
     body: dict | None = request.get_json(True, True)
     if body is None:
         return Response(status=400)
 
-    event = body.get('event')
-    payment: dict | None = body.get('object')
+    body_text = request.get_data(True, True)
+    crypto_pay_signature = request.headers.get(
+        "Crypto-Pay-Api-Signature", "No value"
+    )
 
-    success_events = ['payment.succeeded', 'payment.canceled']
-    if (
-        body.get('type') != 'notification'
-        or (event not in success_events)
-        or (type(payment) != dict)
-    ):
+    token = sha256(string=CRYPTOPAY_TOKEN.encode("UTF-8")).digest()
+    signature = HMAC(
+        key=token, msg=body_text.encode("UTF-8"), digestmod=sha256
+    ).hexdigest()
+    if signature != crypto_pay_signature:
         return Response(status=400)
 
-    code = payment.get('id')
+    payment: dict | None = body.get('payload')
+    if payment is None:
+        return Response(status=400)
+
+    code = str(payment.get('invoice_id'))
     if code is None:
         return Response(status=400)
 
@@ -92,7 +95,7 @@ def yooKassa_payment_updates(request: Request):
         print(f'!!! Не удалось подтвердить платеж {code}')
         return Response(status=200)
 
-    if event == 'payment.canceled':
+    if payment.get('status', '') == 'expired':
         db.cancel_transaction(transaction.id)
         return Response(status=200)
 

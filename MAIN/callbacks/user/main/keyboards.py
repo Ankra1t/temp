@@ -40,7 +40,7 @@ def kb_user_main(user_id: int):
     btn_account = getButton(f"👨 {texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
-    keyboard.add(btn_calc)
+    keyboard.add(btn_buy, btn_calc)
     keyboard.add(btn_support, btn_account)
     return keyboard
 

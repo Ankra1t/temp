@@ -56,7 +56,7 @@ def edit_message(
             reply_markup=markup
         )
     else:
-        bot.delete_message(chat_id, mes_id)
+        delete_message(bot, chat_id, mes_id)
         if type == 'text':
             bot.send_message(chat_id, text, reply_markup=markup)
         elif type == 'video':
@@ -190,7 +190,12 @@ def get_calculation(
     return count_bet, value_bet, credit, take_profit, profit
 
 
-def check_discount_price(tariff: Price):
+def check_discount_price(tariff: Price, type: Literal['crypto', 'default']='default'):
+    if type == 'default':
+        price = tariff.price
+    else:
+        price = tariff.price_crypto
+
     if tariff.discount is None:
-        return tariff.price
-    return round(tariff.price * (1 - tariff.discount.percent / 100))
+        return price
+    return round(price * (1 - tariff.discount.percent / 100))

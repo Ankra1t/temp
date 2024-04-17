@@ -122,11 +122,11 @@ class BlockTGBotSender(object):
             if current_batch < self.c_tg:
                 username = '@' + user_i.username if user_i.username else 'Скрыт'
                 try:
-                    i += 1
                     self.send_by_type(user)
                     current_batch += self.c_by_user
                     log_send_ok.info(
                         f'Отправлено tg_id{user} db_id{user_i.id} username->{username} ')
+                    i += 1
                 except Exception as e:
                     err_mess = f'Ошибка пользователя tg_id{user} db_id{user_i.id} username->{username} : {e}'
                     print(err_mess)

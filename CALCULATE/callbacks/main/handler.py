@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from common.utils import delete_message
 from db import db
 
 from ..stats.keyboards import kb_set_calc_stats
@@ -31,7 +32,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id, reply_markup=None
             )
         else:
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
 
     if type == 'calc':
         u_base = db.get_calc_user_settings(user_db_id)

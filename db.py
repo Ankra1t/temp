@@ -53,6 +53,8 @@ class Database:
             type_product=data.get('type_product'),
             switch_active=data.get('switch_active'),
             price_findate=data.get('price_findate'),
+            price_crypto=data.get('price_crypto'),
+            currency_crypto=data.get('currency_crypto'),
         )
 
     def get_prices(self, active: int = 1, switch_active: int | None = None) -> list[Price]:
@@ -1712,7 +1714,7 @@ class Database:
 
     def get_support_name(self) -> str:
         """Получение тех. поддержки"""
-        return 'calcsupport'
+        return 'calcsup'
         query = self.WORKER_QUERY + 'WHERE w.role = 3'
 
         try:

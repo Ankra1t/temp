@@ -1,16 +1,17 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from Classes.YooKassa import create_payment
-from MAIN.callbacks.user.pages import send_tariffs_list_item
-from common.utils import check_discount_price
+from Classes.CryptoBot import cryptoPay_create_payment
+from Classes.YooKassa import yooKassa_create_payment
+from common.utils import check_discount_price, delete_message
 from db import db
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
+from initialize import pays_banker
 
-from MAIN.callbacks import send_user_tariffs, send_user_main
+from MAIN.callbacks import send_user_tariffs, send_user_main, send_tariffs_list_item
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
-from .keyboards import kb_bill_yookassa, kb_user_tariff_back
+from .keyboards import kb_bill, kb_user_tariff_back
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -33,10 +34,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_user_tariffs(bot, call.message, user_id, del_mes)
 
         if del_mes:
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
 
     if type == 'pay_tariff':
-        bot.delete_message(chat_id, mes_id)
+        delete_message(bot, chat_id, mes_id)
 
         user_db_id = db.get_user_id_by_tg_id(user_id)
         user_sub = db.get_current_subscribe_user(user_db_id)
@@ -59,22 +60,30 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             return
 
         bot_url = f'https://t.me/{bot.get_me().username}'
-        price = check_discount_price(tariff)
-        payment_url = create_payment(
+        yookassa_payment_url = yooKassa_create_payment(
             user_id, tariff, bot_url
         )
 
-        if payment_url == False:
+        cryptopay_payment_url = cryptoPay_create_payment(
+            user_id, tariff, bot_url
+        )
+
+        if yookassa_payment_url == False and cryptopay_payment_url == False:
             bot.edit_message_text(
                 'Ошибка', chat_id, edit_wait_mess.id
             )
             return
 
+        yookass_price = check_discount_price(tariff)
+        cryptopay_price = check_discount_price(tariff, 'crypto')
+
         bot.edit_message_text(
             msg_yookassa(user_id),
             chat_id, edit_wait_mess.id,
-            reply_markup=kb_bill_yookassa(
-                user_id, f'{price} {tariff.currency}', payment_url
+            reply_markup=kb_bill(
+                user_id, 
+                f'{yookass_price} {tariff.currency}', yookassa_payment_url or '',
+                f'{cryptopay_price} {tariff.currency_crypto}', cryptopay_payment_url or ''
             )
         )
 

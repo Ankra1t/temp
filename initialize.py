@@ -1,10 +1,8 @@
 from aiocryptopay import Networks
-
-from aiocryptopay import Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 
-from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, cryptopay_token, bitbanker_token, bitbanker_secret
+from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, CRYPTOPAY_TOKEN, bitbanker_token, bitbanker_secret
 
 from db import db
 
@@ -30,13 +28,13 @@ bot = TeleBot(
 
 
 pay_guard = GuardPaymentAccess()
-pays = Payments(token=cryptopay_token, network=Networks.MAIN_NET)
+pays = Payments(token=CRYPTOPAY_TOKEN, network=Networks.MAIN_NET)
 base_statis = BaseStatistics(db, bot)
 serv_tasks = ServiceTasks(db, bot)
 
 pays_banker = PaymentsBanker(
-    api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot)
-pays_banker.set_field_invoice('firm_name_header', 'THE CLAN')
+    api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot, pay_guard=pay_guard
+)
 
 calcService = CalculationService(bot, db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)

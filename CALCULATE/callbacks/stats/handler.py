@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from common.calculation import get_msg_of_calc
-from common.utils import set_state_data
+from common.utils import delete_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService, pay_guard, hti
@@ -42,7 +42,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         _, profit = type.split('+')
 
         if profit == '':
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             bot.send_message(
                 chat_id, msg_enter_save_calc(user_id),
                 reply_markup=kb_deal_result(user_id, stat_id)
