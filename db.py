@@ -1712,7 +1712,7 @@ class Database:
 
     def get_support_name(self) -> str:
         """Получение тех. поддержки"""
-        return 'calcsupport'
+        return 'calcsup'
         query = self.WORKER_QUERY + 'WHERE w.role = 3'
 
         try:
