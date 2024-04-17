@@ -1351,9 +1351,20 @@ def msg_enter_profit_minus(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        text = 'Введите убыток по этой сделке:'
+        text = 'Введите <b>убыток</b> по этой сделке:'
     else:
-        text = 'Enter a loss of this transaction:'
+        text = 'Enter <b>loss</b> of this deal:'
+
+    return f'✍ {text}'
+
+
+def msg_enter_profit_sum(user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        text = 'Введите <b>профит</b> по этой сделке:'
+    else:
+        text = 'Enter <b>profit</b> of this deal:'
 
     return f'✍ {text}'
 

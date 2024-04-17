@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from CALCULATE.callbacks.stats.keyboards import get_deal_button
+from CALCULATE.callbacks.stats.keyboards import get_save_deal_button
 from common.keyboard import cancel_txt
 from common.utils import get_lang
 
@@ -72,7 +72,7 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1):
     buttons.append(btn_settings)
 
     if stat_id != -1:
-        keyboard.add(get_deal_button(user_id, stat_id))
+        keyboard.add(get_save_deal_button(user_id, stat_id))
 
     keyboard.add(*buttons)
     return keyboard

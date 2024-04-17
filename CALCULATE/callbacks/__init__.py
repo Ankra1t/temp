@@ -14,7 +14,10 @@ from .calculate.handler import registration as _reg_calculate
 from .calculate.keyboards import kb_pair, kb_tool, kb_open_price
 
 from .stats.handler import registration as _reg_stats
-from .stats.keyboards import kb_stats, kb_set_calc_stats, kb_freeze_calc, kb_deal_result, kb_deal_profit_minus
+from .stats.keyboards import (
+    kb_stats, kb_set_calc_stats, kb_freeze_calc,
+    kb_deal_result, kb_deal_profit_minus, kb_deal_profit_cancel
+)
 
 from .settings.handler import registration as _reg_settings
 from .settings.keyboards import (

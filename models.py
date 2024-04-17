@@ -152,6 +152,7 @@ class UserInfo(BaseModel):
     refer: int
     ban: int
     registration_dt: datetime
+    uses_count: Optional[int]
 
 
 class Client(BaseModel):

@@ -847,11 +847,12 @@ class Database:
             username=data.get('username_tg') or '',
             refer=data.get('refer_id') or -1,
             ban=data.get('ban') or 0,
-            registration_dt=data.get('created_at') or datetime(2012, 12, 12)
+            registration_dt=data.get('created_at') or datetime(2012, 12, 12),
+            uses_count=data.get('uses_count')
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at  '
+        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at, tu.uses_count  '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 

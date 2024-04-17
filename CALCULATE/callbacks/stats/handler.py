@@ -9,11 +9,11 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService, pay_guard, hti
 from db import db
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 
-from .keyboards import kb_deal_profit_minus, kb_deal_result
+from .keyboards import kb_deal_profit_cancel, kb_deal_profit_minus, kb_deal_result
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main
 
@@ -66,14 +66,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if profit == 'loss':
                     calcService.set_profit(stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
-                    pr = (
-                        abs(calc_info.open_price -
-                            max(calc_info.open_price +
-                                (calc_info.open_price - calc_info.stop_loss) * int(profit), 0)
-                            ) * calc_info.risk_value /
-                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.01)
+                    diff = max(calc_info.open_price + (calc_info.open_price - calc_info.stop_loss), 0)
+                    profit_result = (
+                        abs(
+                            calc_info.open_price - diff * int(profit)
+                        ) * calc_info.risk_value /
+                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.00001)
                     )
-                    calcService.set_profit(stat_id, pr)
+                    calcService.set_profit(stat_id, profit_result)
                 else:
                     is_cancel = True
 
@@ -107,6 +107,15 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 #     )
                 # os.remove(file_path)
                 bot.delete_state(user_id, chat_id)
+
+    if type == 'sum':
+        bot.set_state(user_id, StatsState.sum, chat_id)
+        set_state_data(bot, user_id, chat_id, {'stat_id': stat_id})
+        bot.edit_message_text(
+            msg_enter_profit_sum(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+        )
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
