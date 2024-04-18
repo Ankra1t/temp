@@ -83,15 +83,15 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if calc_info is None:
                     return
 
-                saved_stat_id = stat_id if is_cancel else None
+                saved_stat_id = stat_id if is_cancel else -1
 
                 stats = calcService.get_stats(user_id)
-                mes_calc = msg_calculate_result(user_id, calc_info, stats)
+                mes_calc = msg_calculate_result(user_id, calc_info, None if is_cancel else stats)
 
                 bot.edit_message_text(
                     mes_calc, chat_id, mes_id,
                     reply_markup=kb_main(
-                        user_id, is_valid, True, saved_stat_id or -1)
+                        user_id, is_valid, True, saved_stat_id)
                 )
                 # file_path = hti.create_calculation_image(
                 #     user_id, calc_info, not is_cancel
