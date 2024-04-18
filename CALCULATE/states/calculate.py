@@ -14,10 +14,6 @@ class CalculateState(StatesGroup):
     tool = State()
 
 
-class FutureCalcState(StatesGroup):
-    ticker = State()
-
-
 class ForexCalcState(StatesGroup):
     pair = State()
     val_dep = State()

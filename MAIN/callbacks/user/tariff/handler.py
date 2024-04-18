@@ -6,7 +6,6 @@ from Classes.YooKassa import yooKassa_create_payment
 from common.utils import check_discount_price, delete_message
 from db import db
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
-from initialize import pays_banker
 
 from MAIN.callbacks import send_user_tariffs, send_user_main, send_tariffs_list_item
 

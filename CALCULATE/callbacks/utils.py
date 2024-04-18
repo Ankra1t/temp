@@ -5,25 +5,24 @@ from telebot.types import Message
 from db import db
 from initialize import pay_guard
 from common.utils import set_state_data
-from models import ForexInfo
+from models import MARKETS_TYPE, ForexInfo
 from .pages import send_main
 from .main.keyboards import kb_main_cancel
 from .calculate.keyboards import kb_open_price, kb_pair, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
-    msg_calculate, msg_enter_currency, msg_enter_deposit, msg_enter_future,
+    msg_calculate, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 )
-from CALCULATE.states import CalculateState, FutureCalcState, ForexCalcState
+from CALCULATE.states import CalculateState, ForexCalcState
 
 
 def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int, is_edit=False):
     with bot.retrieve_data(user_id, chat_id) as data:
         forex: ForexInfo | None = data.get('forex')
         open_price = data.get('open_price')
-        calc_type = data.get('calc_type')
-        ticker = data.get('ticker')
+        calc_type: MARKETS_TYPE = data.get('calc_type')
         trading_style = data.get('trading_style')
         tool = data.get('tool')
 
@@ -41,9 +40,6 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         text += msg_enter_pair(user_id)
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
-    elif calc_type == 'future' and ticker is None:
-        text += msg_enter_future(user_id)
-        state = FutureCalcState.ticker
     elif calc_type == 'crypto' and tool is None:
         text += msg_enter_tool(user_id)
         state = CalculateState.tool
@@ -112,11 +108,12 @@ def choose_first_calculate_step(
 
     if type == 'forex':
         bot.set_state(user_id, ForexCalcState.pair, chat_id)
-    elif type == 'future':
-        bot.set_state(user_id, FutureCalcState.ticker, chat_id)
     else:
         bot.set_state(user_id, CalculateState.deposit, chat_id)
 
-    set_state_data(bot, user_id, chat_id, {
-                   'calc_type': type, 'trading_style': style})
+    set_state_data(
+        bot, user_id, chat_id, {
+            'calc_type': type,
+            'trading_style': style
+        })
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

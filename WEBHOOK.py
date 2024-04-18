@@ -5,8 +5,8 @@ import flask
 from flask import request
 
 from config_logger import logger
-from config_global import CRYPTOPAY_URL, BITBANKER_URL, YOOKASSA_URL, base_url, flask_port
-from StartBot import bot, pays, pays_banker
+from config_global import CRYPTOPAY_URL, YOOKASSA_URL, base_url, flask_port
+from StartBot import bot
 from CALCULATE.initialize import bot_calc
 
 app = flask.Flask(__name__)

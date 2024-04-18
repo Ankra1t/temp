@@ -9,11 +9,12 @@ from models import Calculation, ForexInfo
 
 from common.utils import delete_message, digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
-from CALCULATE.states import CalculateState, ForexCalcState, FutureCalcState
+from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (
-    msg_calculate_result, msg_currency_error, msg_ticker_not_found, msg_trading_style_error,
+    msg_calculate_result, msg_currency_error,
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
-    msg_pair_not_found, msg_sl_op_equal_error, msg_text_error, msg_ticker_error
+    msg_pair_not_found, msg_sl_op_equal_error, msg_text_error,
+    msg_trading_style_error,
 )
 
 
@@ -37,30 +38,6 @@ def handle_tool(message: Message, bot: TeleBot):
 
     tool += '/USDT'
     set_state_data(bot, user_id, chat_id, {'tool': tool})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
-
-
-def handle_future_ticker(message: Message, bot: TeleBot):
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    ticker = text_accept(message)
-    if ticker is None:
-        new_mes = bot.send_message(chat_id, msg_ticker_error(user_id))
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
-        return
-
-    if db.get_future(ticker) is None:
-        new_mes = bot.send_message(
-            chat_id,
-            msg_ticker_not_found(user_id, ticker),
-            reply_markup=kb_main_cancel(user_id)
-        )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
-        return
-
-    set_state_data(bot, user_id, chat_id, {'ticker': ticker})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 
 
@@ -344,4 +321,3 @@ def registration(bot: TeleBot):
     reg_mes(handle_stop_loss, state=CalculateState.stop_loss)
 
     reg_mes(handle_forex_pair, state=ForexCalcState.pair)
-    reg_mes(handle_future_ticker, state=FutureCalcState.ticker)

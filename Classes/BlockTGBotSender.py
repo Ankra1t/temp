@@ -7,7 +7,7 @@ from MAIN.common.utils import get_print_signal_info
 from config_logger import log_send_fails, log_send_ok
 from db import db
 
-from initialize import bot, pay_guard
+from initialize import bot
 from models import Calculation, Post, UserInfo
 
 

@@ -140,56 +140,6 @@ def get_normal_text(message: Message):
     return message.html_text or message.html_caption or ''
 
 
-def get_calculation(
-    deposit: float,
-    risk_value: float,
-    open_price: float,
-    stop_loss: float,
-    split_values: list[float] | None,
-    ticker: str | None = None,
-    tp_ratio: list[int] = [3, 4, 5],
-):
-    """
-    Returns:
-        count_bet, value_bet, credit, take_profit, profit
-    """
-
-    if open_price == stop_loss:
-        stop_loss = open_price - 0.01
-
-    # Разница цены входа и стоп-лосса
-    diff_op_sl = abs(open_price - stop_loss)
-
-    rate = 1
-    if ticker is not None:
-        fut = db.get_future(ticker)
-        rate = fut.price_step if (fut is not None) else 1
-
-    # Кол-во покупки
-    count_bet = risk_value / diff_op_sl * rate
-
-    # Сумма покупки
-    value_bet = count_bet * open_price
-
-    # Подсчет кридитного плеча
-    credit = 1
-    if value_bet > deposit:
-        credit = int(value_bet // deposit + 1)
-
-    take_profit: list[float] = []
-    profit: list[float] = []
-    for i, el in enumerate(tp_ratio):
-        take_profit.append(open_price + (open_price - stop_loss) * el)
-
-        rate = 1
-        if split_values is not None:
-            rate = split_values[i] / 100
-
-        profit.append(risk_value * el * rate)
-
-    return count_bet, value_bet, credit, take_profit, profit
-
-
 def check_discount_price(tariff: Price, type: Literal['crypto', 'default']='default'):
     if type == 'default':
         price = tariff.price

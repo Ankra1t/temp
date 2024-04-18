@@ -8,7 +8,7 @@ from NOTIFIER.messages import mess_user_paid
 
 from AuthRoles import check_registrate
 from common.dt import get_datetime_now, get_str_by_datetime
-from initialize import bot, pays, pays_banker, pay_guard
+from initialize import bot, pays, pay_guard
 
 from db import db
 
@@ -26,7 +26,7 @@ from messages.workers import redactor_main_msg, admin_posting_msg
 from Classes.BlockTGBotSender import BlockTGBotSender, send_message_by_type
 from AuthMiddleWare import AuthMiddleWare
 
-from models import Post, Update, UpdateBBanker
+from models import Post, Update
 
 
 # TODO - отформатировать этот файл
