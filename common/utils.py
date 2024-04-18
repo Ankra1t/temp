@@ -31,7 +31,7 @@ def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, An
             for key in value:
                 data[key] = value[key]
     except Exception as e:
-        print(f'Ошибка в записи данных state [{e}]')
+        print(f'Ошибка в записи данных state [{key} {value}] [{e}]')
 
 
 def edit_message(
