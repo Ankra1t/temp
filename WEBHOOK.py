@@ -5,23 +5,12 @@ import flask
 from flask import request
 
 from config_logger import logger
-from config_global import CRYPTOPAY_URL, YOOKASSA_URL, base_url, flask_port
+from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
 from StartBot import bot
 from CALCULATE.initialize import bot_calc
 
+
 app = flask.Flask(__name__)
-
-# Тестовый запрос
-
-
-@app.route(base_url, methods=['POST', 'GET'])
-def home():
-    print(f'request.headers ')
-    print(request.headers)
-    print(f'request ')
-    print(request)
-    logger.info(f'Кто-то проверил работу сервера _bots')
-    return "Hello!! server linux bot is WORK![" + base_url + '/AAA' + ']'
 
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
@@ -50,19 +39,11 @@ def BBB():
         flask.abort(403)
 
 
-# ======================= // ANCHOR WebHook Connect
+# Payments WebHooks
 @app.route(base_url + CRYPTOPAY_URL, methods=['POST', 'GET'])
 def cryptobot_updates():
     print(f'{CRYPTOPAY_URL} request')
     return cryptoPay_payment_updates(request)
-
-
-# ======================= // ANCHOR WebHook Connect BITBANKER
-# @app.route(base_url + BITBANKER_URL, methods=['POST', 'GET'])
-# def bitbanker_updates():
-#     print(f'BitBanker sent on {BITBANKER_URL} request ')
-#     print(request)
-#     return pays_banker.get_updates(request)
 
 
 @app.route(base_url + YOOKASSA_URL, methods=['POST', 'GET'])
@@ -71,4 +52,9 @@ def yookassa_updates():
     return yooKassa_payment_updates(request)
 
 
-app.run(host='127.0.0.1', port=flask_port)
+if PROD:
+    from waitress import serve
+    serve(app, host="127.0.0.1", port=flask_port)
+else:
+    import _index  # type: ignore
+    app.run(host='127.0.0.1', port=flask_port)
