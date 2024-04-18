@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from locale import currency
 from typing import Literal, Optional
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
@@ -9,7 +8,7 @@ from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
 
 from models import (
-    Calculation, Forex, ForexInfo, Future, Post, PostDetails,
+    Calculation, Forex, ForexInfo, Post, PostDetails,
     Text, UserCalcSettings, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Task,
     MARKETS_TYPE
@@ -1950,48 +1949,6 @@ class Database:
             return True
         except Exception as e:
             print(f'ERROR[update_text]: {e}')
-            self.connection.rollback()
-            return False
-
-    # Future
-    def _data_to_future(self, data: DictRow):
-        return Future(
-            id=data.get('id'),
-            name=data.get('name'),
-            step=data.get('step'),
-            price_step=data.get('price_step')
-        )
-
-    def get_future(self, name: str):
-        name = name.upper()
-        query = 'SELECT * FROM tgbot_futures WHERE name = %s'
-        params = (name,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_future(data) if (data is not None) else None
-        except Exception as e:
-            print(f'ERROR[get_future]: {e}')
-            self.connection.rollback()
-            return None
-
-    def update_future(self, name: str, step: float, price_step: float):
-        check_future = self.get_future(name)
-
-        try:
-            if check_future is None:
-                query = 'INSERT INTO tgbot_futures(step, price_step, name) VALUES(%s, %s, %s)'
-            else:
-                query = 'UPDATE tgbot_futures SET step = %s, price_step = %s WHERE name = %s'
-
-            params = (step, price_step, name)
-
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(f'ERROR[update_future]: {e}')
             self.connection.rollback()
             return False
 

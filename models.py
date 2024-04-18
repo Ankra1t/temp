@@ -3,7 +3,7 @@ from typing import Literal, Union, Optional
 from datetime import datetime
 
 
-MARKETS_TYPE = Literal['crypto', 'future', 'paper', 'forex']
+MARKETS_TYPE = Literal['crypto', 'paper', 'forex']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 
 
@@ -202,13 +202,6 @@ class Text(BaseModel):
     message_type: str
     media_id: str
     media_id_en: str | None
-
-
-class Future(BaseModel):
-    id: int
-    name: str
-    step: float
-    price_step: float
 
 
 class Forex(BaseModel):

@@ -5,24 +5,23 @@ from datetime import datetime
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
-from models import Calculation, CalculatorStats, ForexInfo
+from models import MARKETS_TYPE, Calculation, CalculatorStats, ForexInfo
 
 
 POINT = '•'
 TAB = '   '
 
-market_translates = {
+
+market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
     'ru': {
         'crypto': 'Криптовалюта',
         'paper': 'Акции',
-        'future': 'Фьючерсы',
         'forex': 'Форекс'
     },
     'en': {
         'crypto': 'Cryptocurrency',
         'paper': 'Stocks',
-        'future': 'Futures',
-        'forex': 'Forex'
+        'forex': 'Forex',
     }
 }
 
@@ -500,17 +499,6 @@ def msg_frozen(user_id: int, datetime: str):
 
 
 # Ошибки ввода данных
-def msg_ticker_error(user_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': 'Введите тикер текстом',
-        'en': 'Enter the ticker in text'
-    }
-
-    return f'❗️ {texts[lang]}:'
-
-
 def msg_trading_style_error(user_id: int):
     lang = get_lang(user_id)
 
@@ -520,26 +508,6 @@ def msg_trading_style_error(user_id: int):
     }
 
     return f'❗️ {texts[lang]}:'
-
-
-def msg_ticker_not_found(user_id: int, ticker: str):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            '1': 'В нашей базе нет фьючерса с кодом',
-            '2': 'Введите тикер фьючерса (буквенный, пример: siz2)'
-        },
-        'en': {
-            '1': 'There is no futures with a code in our database',
-            '2': 'Enter the futures ticker (example: siz2)'
-        }
-    }
-
-    return f"""
-❗️ {texts[lang]["1"]} {ticker}
-{texts[lang]["2"]}:
-"""
 
 
 def msg_freeze_error(user_id: int):
@@ -1192,17 +1160,6 @@ def msg_enter_summury_profit_type(user_id: int):
 
 <i>*Simple - without division of profit, sale 100% of the trading position
 *Separation - the sale of a trading position is divided into several take profites </i>"""
-
-
-def msg_enter_future(user_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': 'Введите тикер фьючерса (буквенный, пример: siz2)',
-        'en': 'Enter the futures ticker (example: siz2)'
-    }
-
-    return f'✍ {texts[lang]}:'
 
 
 def msg_enter_tool(user_id: int):

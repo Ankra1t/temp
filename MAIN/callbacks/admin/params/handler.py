@@ -116,13 +116,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'name': name})
 
     elif 'calculator' in type:
-        if 'add_future' in type:
-            bot.edit_message_text(
-                'Введите тикер фьючерса:', chat_id, mes_id,
-                reply_markup=kb_params_back()
-            )
-            bot.set_state(user_id, AdminParamsState.future_name, chat_id)
-        if 'add_forex' in type:
+        if 'add_forex' in type: # !deprecated
             bot.edit_message_text(
                 'Введите валютную пару:', chat_id, mes_id,
                 reply_markup=kb_params_back()

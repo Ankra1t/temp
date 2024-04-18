@@ -1,4 +1,4 @@
 # type: ignore
-from .calculate import CalculateState, ForexCalcState, FutureCalcState
+from .calculate import CalculateState, ForexCalcState
 from .settings import SettingsState
 from .stats import StatsState
