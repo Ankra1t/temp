@@ -15,7 +15,7 @@ def getButton(text: str, type: str, stat_id=0):
     )
 
 
-def get_deal_button(user_id: int, stat_id: int):
+def get_save_deal_button(user_id: int, stat_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -44,7 +44,7 @@ def kb_stats(user_id: int):
 def kb_set_calc_stats(user_id: int, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    keyboard.add(get_deal_button(user_id, stat_id))
+    keyboard.add(get_save_deal_button(user_id, stat_id))
     return keyboard
 
 
@@ -76,9 +76,11 @@ def kb_deal_result(user_id: int, stat_id: int):
     texts = {
         'ru': {
             'minus': 'Стоп-лосс',
+            'sum': 'Иная сумма',
         },
         'en': {
             'minus': 'Stop-loss',
+            'sum': 'Other profit',
         }
     }
 
@@ -96,10 +98,11 @@ def kb_deal_result(user_id: int, stat_id: int):
             keyboard.add(*buttons)
             buttons = []
 
-    btn_low = getButton(f'🔻 {texts[lang]["minus"]}', 'profit+-', stat_id)
+    btn_low = getButton(f'{texts[lang]["minus"]}', 'profit+-', stat_id)
+    btn_sum = getButton(f'{texts[lang]["sum"]}', 'sum', stat_id)
     btn_back = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
 
-    keyboard.add(btn_low, btn_back)
+    keyboard.add(btn_sum, btn_low, btn_back)
 
     return keyboard
 
@@ -121,4 +124,13 @@ def kb_deal_profit_minus(user_id: int, stat_id: int):
     btn_loss = getButton(texts[lang]['loss'], 'profit+loss', stat_id)
 
     keyboard.add(btn_loss, btn_cancel)
+    return keyboard
+
+
+def kb_deal_profit_cancel(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+    btn_cancel = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_cancel)
     return keyboard

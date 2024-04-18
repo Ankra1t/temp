@@ -59,6 +59,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'tool': tool})
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
+    if 'open_price' in type:
+        _, open_price = type.split('+')
+
+        set_state_data(bot, user_id, chat_id, {'open_price': float(open_price)})
+        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
     bot.answer_callback_query(call.id)
 
 

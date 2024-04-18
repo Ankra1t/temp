@@ -69,10 +69,10 @@ def get_html_from_crypto_calc(
         conclusion = ''
         for i in range(len(calc.tp_ratio)):
             tp_ratio_i = calc.tp_ratio[i]
-            tp_i = get_print_float(
-                max(calc.open_price + (calc.open_price -
-                    calc.stop_loss) * tp_ratio_i, 0),
-                round_count
+            tp_i = max(
+                calc.open_price +
+                (calc.open_price - calc.stop_loss) * tp_ratio_i,
+                0
             )
 
             tp_class = 'tp_default'
@@ -90,7 +90,7 @@ def get_html_from_crypto_calc(
 
             conclusion += f'<div class="{tp_class}">'
             conclusion += f'<div class="tp_val"><b>x{tp_ratio_i}</b> {percent_show}</div>'
-            conclusion += f'<div class="tp_count"><u>{tp_i} {calc.currency}</u> {coins_show}</div>'
+            conclusion += f'<div class="tp_count"><u>{get_print_float(tp_i, round_count)} {calc.currency}</u> {coins_show}</div>'
             conclusion += f'</div>'
 
             p_show += f'<p class="value">{get_print_float(abs(calc.open_price - tp_i) * rate * count_bet, round_count)}</p>'
@@ -248,11 +248,8 @@ def get_html_from_forex_calc(
         for i in range(len(calc.tp_ratio)):
             rate = 1
             tp_ratio_i = calc.tp_ratio[i]
-            tp_i = get_print_float(
-                max(calc.open_price + (calc.open_price -
-                    calc.stop_loss) * tp_ratio_i, 0),
-                round_count
-            )
+            tp_i = max(calc.open_price + (calc.open_price -
+                                          calc.stop_loss) * tp_ratio_i, 0)
 
             percent_show = ''
             coins_show = ''
@@ -268,7 +265,7 @@ def get_html_from_forex_calc(
 
             conclusion += f'<div class="{tp_class}">'
             conclusion += f'<div class="tp_val"><b>x{tp_ratio_i}</b> {percent_show}</div>'
-            conclusion += f'<div class="tp_count"><u>{tp_i} {trading_currency}</u> {coins_show}</div>'
+            conclusion += f'<div class="tp_count"><u>{get_print_float(tp_i, round_count)} {trading_currency}</u> {coins_show}</div>'
             conclusion += f'</div>'
 
             profit = abs(calc.open_price - tp_i) * \

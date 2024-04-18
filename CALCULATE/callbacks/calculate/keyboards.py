@@ -52,3 +52,17 @@ def kb_tool(user_id: int, prev_tools: list[str]):
     keyboard.add(*buttons)
     keyboard.add(btn_settings, btn_cancel)
     return keyboard
+
+
+def kb_open_price(user_id: int, open_price: float):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    btn_value = getButton(str(open_price), f'open_price+{open_price}')
+    btn_settings = getButton('⚙️', 'go_settings')
+    btn_cancel = getButton(cancel_txt(lang), 'go_main')
+
+    keyboard.add(btn_value)
+    keyboard.add(btn_settings, btn_cancel)
+    return keyboard

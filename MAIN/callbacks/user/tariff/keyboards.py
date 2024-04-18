@@ -129,21 +129,31 @@ def kb_bill_many(user_id: int, price: str, pay_link_cryptobot: str, pay_link_bit
     return keyboard
 
 
-def kb_bill_yookassa(user_id: int, str_price: str, url: str):
+def kb_bill(user_id: int, yookassa_price: str, url_yookassa: str, cryptobot_price: str, url_cryptobot: str):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     text = {
-        'ru': f'Оплатить {str_price} через юКассу',
-        'en': f'Pay {str_price} via yooKassa',
+        'ru': {
+            'yoo': f'Оплатить {yookassa_price} через юКассу',
+            'cp': f'Оплатить {cryptobot_price} через CryptoBot'
+        } ,
+        'en': {
+            'yoo': f'Pay {yookassa_price} via yooKassa',
+            'cp': f'Pay {cryptobot_price} via CryptoBot'
+        },
     }
 
-    pay_link_btn = InlineKeyboardButton(
-        text[lang], url
+    yookassa_link_btn = InlineKeyboardButton(
+        text[lang]['yoo'], url_yookassa
+    )
+    cryptobot_link_btn = InlineKeyboardButton(
+        text[lang]['cp'], url_cryptobot
     )
     btn_back = getButton(back_txt(lang), 'go_tariff')
 
-    keyboard.add(pay_link_btn)
+    keyboard.add(yookassa_link_btn)
+    keyboard.add(cryptobot_link_btn)
     keyboard.add(btn_back)
     return keyboard
 

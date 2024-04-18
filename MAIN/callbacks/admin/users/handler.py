@@ -63,11 +63,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             if len(users) == 0:
                 text += '\nНет пользователей'
             else:
+                text += '<b>ID | Тг данные | Остаток расчетов</b>\n'
                 for user in users:
                     text += '\n' + get_short_user_info(user) + '\n'
 
                 sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
-                text += f'\n| Сортировка по <b>{sort_by_text}</b> |'
+                text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'
 
             bot.edit_message_text(
                 text, chat_id, mes_id,

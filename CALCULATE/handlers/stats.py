@@ -13,7 +13,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import kb_deal_profit_minus, kb_main
 from CALCULATE.common.messages import (
-    msg_calculate_result, msg_calculate_saved_result, msg_digit_error, msg_freeze_error, msg_frozen
+    msg_calculate_result, msg_digit_error, msg_freeze_error, msg_frozen
 )
 
 
@@ -39,16 +39,14 @@ def handle_loss(message: Message, bot: TeleBot):
 
     is_valid = pay_guard.valid_use_calc(user_id)
 
-    mes_calc = msg_calculate_result(user_id, calc_info)
-
     stats = calcService.get_stats(user_id)
+    mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
-    mes_result = '\n' + msg_calculate_saved_result(user_id, calc_info, stats)
 
     is_valid = pay_guard.valid_use_calc(user_id)
 
     bot.send_message(
-        chat_id, mes_calc + mes_result,
+        chat_id, mes_calc,
         reply_markup=kb_main(user_id, is_valid, True)
     )
 
@@ -63,6 +61,37 @@ def handle_loss(message: Message, bot: TeleBot):
     #         reply_markup=kb_main(user_id, is_valid, True),
     #     )
     # os.remove(file_path)
+    bot.delete_state(user_id, chat_id)
+
+
+def handle_sum(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id', 0)
+
+    value = digit_accept(message)
+    if value is None or value < 0:
+        bot.send_message(
+            chat_id, msg_digit_error(user_id, 0),
+            reply_markup=kb_deal_profit_minus(user_id, stat_id)
+        )
+        return
+
+    calcService.set_profit(stat_id, value)
+    calc_info = db.get_calculation(stat_id)
+    if calc_info is None:
+        return
+
+    is_valid = pay_guard.valid_use_calc(user_id)
+    stats = calcService.get_stats(user_id)
+    mes_calc = msg_calculate_result(user_id, calc_info, stats)
+
+    bot.send_message(
+        chat_id, mes_calc,
+        reply_markup=kb_main(user_id, is_valid, True)
+    )
     bot.delete_state(user_id, chat_id)
 
 
@@ -112,5 +141,6 @@ def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
+    reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)

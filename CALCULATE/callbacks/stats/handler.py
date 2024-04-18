@@ -2,17 +2,18 @@ from datetime import timedelta
 import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
 from common.calculation import get_msg_of_calc
-from common.utils import set_state_data
+from common.utils import delete_message, set_state_data
+from common.dt import get_datetime_now, get_str_by_datetime
 
 from initialize import calcService, pay_guard, hti
 from db import db
-from common.dt import get_datetime_now, get_str_by_datetime
-from CALCULATE.common.messages import msg_calculate_result, msg_calculate_saved_result, msg_enter_profit_minus, msg_enter_save_calc, msg_frozen
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 
-from .keyboards import kb_deal_profit_minus, kb_deal_result
+from .keyboards import kb_deal_profit_cancel, kb_deal_profit_minus, kb_deal_result
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main
 
@@ -41,7 +42,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         _, profit = type.split('+')
 
         if profit == '':
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             bot.send_message(
                 chat_id, msg_enter_save_calc(user_id),
                 reply_markup=kb_deal_result(user_id, stat_id)
@@ -65,14 +66,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if profit == 'loss':
                     calcService.set_profit(stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
-                    pr = (
-                        abs(calc_info.open_price -
-                            max(calc_info.open_price +
-                                (calc_info.open_price - calc_info.stop_loss) * int(profit), 0)
-                            ) * calc_info.risk_value /
-                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.01)
+                    diff = max(calc_info.open_price + (calc_info.open_price - calc_info.stop_loss), 0)
+                    profit_result = (
+                        abs(
+                            calc_info.open_price - diff * int(profit)
+                        ) * calc_info.risk_value /
+                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.00001)
                     )
-                    calcService.set_profit(stat_id, pr)
+                    calcService.set_profit(stat_id, profit_result)
                 else:
                     is_cancel = True
 
@@ -85,13 +86,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 saved_stat_id = stat_id if is_cancel else -1
 
                 stats = calcService.get_stats(user_id)
-
-                mes_calc = msg_calculate_result(user_id, calc_info)
-                mes_result = '\n' + \
-                    msg_calculate_saved_result(user_id, calc_info, stats)
+                mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
                 bot.edit_message_text(
-                    mes_calc + mes_result, chat_id, mes_id,
+                    mes_calc, chat_id, mes_id,
                     reply_markup=kb_main(
                         user_id, is_valid, True, saved_stat_id)
                 )
@@ -109,6 +107,15 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 #     )
                 # os.remove(file_path)
                 bot.delete_state(user_id, chat_id)
+
+    if type == 'sum':
+        bot.set_state(user_id, StatsState.sum, chat_id)
+        set_state_data(bot, user_id, chat_id, {'stat_id': stat_id})
+        bot.edit_message_text(
+            msg_enter_profit_sum(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+        )
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

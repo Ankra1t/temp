@@ -69,6 +69,7 @@ def get_short_user_info(user: UserInfo):
         nik = ''
 
     ban = '| (BAN)' if user.ban == 1 else ''
+    uses_count = f' | <i>{user.uses_count}</i>' if user.uses_count is not None else ''
 
     user_subsribe = db.get_current_subscribe_user(user.id)
 
@@ -80,7 +81,7 @@ def get_short_user_info(user: UserInfo):
         sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
 
     user_show = (
-        f'{user.id} {nik}<b>{ban}</b>'
+        f'{user.id} {nik}<b>{ban}</b>{uses_count}'
         f'\nПодписка до: {sub_show}'
         f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
     )

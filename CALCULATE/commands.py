@@ -22,7 +22,6 @@ def _start(message: Message, bot: TeleBot, data: dict):
     #     send_main(message, bot, user_id, True)
 
     send_main(message, bot, user_id, True)
-
     bot.delete_state(user_id, chat_id)
 
 

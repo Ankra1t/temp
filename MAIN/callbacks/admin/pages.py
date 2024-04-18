@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
 from MAIN.common.messages import msg_admin_tariff
+from common.utils import delete_message
 from db import db
 from initialize import pay_guard, base_statis
 
@@ -451,5 +452,5 @@ def send_admin_tariffs_list_item(
                 reply_markup=keyboard
             )
         else:
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             send()

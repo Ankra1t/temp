@@ -15,7 +15,6 @@ digit_pattern = r'^[+-]?((\d+[\.,]?\d*)|([\.,]\d+))$'
 def is_digit(val: str) -> bool:
     return re.search(digit_pattern, val) is not None
 
-
 def digit_accept(message: Message, type: type[T] = float):
     if message.content_type == 'text' and message.text is not None and is_digit(message.text):
         return type(float(message.text.replace(',', '.')))
@@ -57,7 +56,7 @@ def edit_message(
             reply_markup=markup
         )
     else:
-        bot.delete_message(chat_id, mes_id)
+        delete_message(bot, chat_id, mes_id)
         if type == 'text':
             bot.send_message(chat_id, text, reply_markup=markup)
         elif type == 'video':
@@ -78,35 +77,62 @@ def edit_message(
             )
 
 
+def delete_message(
+    bot: TeleBot,
+    chat_id: int,
+    mes_id: int,
+):
+    try:
+        return bot.delete_message(chat_id, mes_id)
+    except:
+        return False
+
+
 def get_lang(tg_id: int):
     user_db_id = db.get_user_id_by_tg_id(tg_id)
     return db.get_user_lang(user_db_id) or 'ru'
 
 
 def get_print_float(value: float, round_count: int | None = None):
+    def del_nulls(val: str):
+        if ('.' in val and val.endswith('0')) or val.endswith('.'):
+            return del_nulls(val[:-1])
+
+        return val
+
     if int(value) == value:
-        return int(value)
+        return str(int(value))
 
     if round_count is not None:
-        result = round(value, min(round_count, 5))
+        result = round(value, round_count)
         if result == int(result):
-            return int(result)
+            return str(int(result))
 
-        return result
+        return del_nulls(f'{result:.{round_count}f}')
 
     if round(value, 2) == value:
-        return round(value, 2)
+        return del_nulls(str(round(value, 2)))
 
     if round(value, 3) == value:
-        return round(value, 3)
+        return del_nulls(str(round(value, 3)))
 
-    return round(value, 4)
+    return del_nulls(str(round(value, 4)))
 
 
 def get_decimal_count(value: float):
     num_str = str(value)
-    decimal_index = num_str.index('.')
-    num_digits = len(num_str) - decimal_index - 1
+
+    try:
+        dot_index = num_str.index('.')
+
+        if 'e' in num_str:
+            e_index = num_str.index('e')
+            decimal_count = e_index - dot_index - 1
+            return abs(int(num_str[e_index + 1:])) + decimal_count
+    except:
+        return 0
+
+    num_digits = len(num_str) - dot_index - 1
     return num_digits
 
 
@@ -164,7 +190,12 @@ def get_calculation(
     return count_bet, value_bet, credit, take_profit, profit
 
 
-def check_discount_price(tariff: Price):
+def check_discount_price(tariff: Price, type: Literal['crypto', 'default']='default'):
+    if type == 'default':
+        price = tariff.price
+    else:
+        price = tariff.price_crypto
+
     if tariff.discount is None:
-        return tariff.price
-    return round(tariff.price * (1 - tariff.discount.percent / 100))
+        return price
+    return round(price * (1 - tariff.discount.percent / 100))

@@ -3,7 +3,7 @@ from telebot.types import CallbackQuery
 
 from MAIN.states import AdminTariffState
 from CALCULATE.common.messages import msg_success_edit
-from common.utils import set_state_data
+from common.utils import delete_message, set_state_data
 from db import db
 
 from .filter import admin_tariffs_factory, AdminTariffsCallbackFilter
@@ -27,7 +27,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'go_tariffs' in type:
         is_del = 'del' in type
         if is_del:
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
 
         send_admin_tariffs(bot, call.message, user_id, is_del)
 
@@ -57,7 +57,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'delete' in type:
         if 'yes' in type:
             if db.deactive_price(tariff_id):
-                bot.delete_message(chat_id, mes_id)
+                delete_message(bot, chat_id, mes_id)
                 bot.send_message(chat_id, msg_success_edit(user_id))
                 send_admin_tariffs(bot, call.message, user_id, True)
         elif 'no' in type:
@@ -106,7 +106,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 'page': page,
                 'tariff_id': tariff_id
             })
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             bot.send_message(
                 chat_id, text,
                 reply_markup=kb_admin_tariffs_list_back(page)
@@ -120,7 +120,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 'tariff_id': tariff_id,
                 'page': page
             })
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             bot.send_message(
                 chat_id, 'Введите размер скидки в процентах:',
                 reply_markup=kb_admin_tariffs_list_back(page)

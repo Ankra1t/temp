@@ -53,6 +53,8 @@ class Database:
             type_product=data.get('type_product'),
             switch_active=data.get('switch_active'),
             price_findate=data.get('price_findate'),
+            price_crypto=data.get('price_crypto'),
+            currency_crypto=data.get('currency_crypto'),
         )
 
     def get_prices(self, active: int = 1, switch_active: int | None = None) -> list[Price]:
@@ -845,11 +847,12 @@ class Database:
             username=data.get('username_tg') or '',
             refer=data.get('refer_id') or -1,
             ban=data.get('ban') or 0,
-            registration_dt=data.get('created_at') or datetime(2012, 12, 12)
+            registration_dt=data.get('created_at') or datetime(2012, 12, 12),
+            uses_count=data.get('uses_count')
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at  '
+        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at, tu.uses_count  '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 

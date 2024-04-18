@@ -2,7 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from common.utils import edit_message, get_lang
+from common.utils import delete_message, edit_message, get_lang
 from db import db
 from initialize import text_editor
 from AuthRoles import get_site_code
@@ -226,5 +226,5 @@ def send_tariffs_list_item(
                 reply_markup=keyboard
             )
         else:
-            bot.delete_message(chat_id, mes_id)
+            delete_message(bot, chat_id, mes_id)
             send()
