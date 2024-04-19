@@ -3,8 +3,8 @@ from telebot import TeleBot
 
 from common.utils import edit_message
 from db import db
-from initialize import pay_guard, calcService
 
+from Classes import pay_guard, calcService
 from CALCULATE.common.messages import (
     msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
     msg_stats, msg_summury_profit_settings, msg_uses_count

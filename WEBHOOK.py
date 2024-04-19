@@ -4,14 +4,16 @@ import telebot
 import flask
 from flask import request
 
-from config_logger import logger
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
-from StartBot import bot
+
 from CALCULATE.initialize import bot_calc
+from initialize import bot
+from thread_tasks import run_thread
 
 
 app = flask.Flask(__name__)
 
+run_thread(bot)
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
 def AAA():
@@ -43,18 +45,17 @@ def BBB():
 @app.route(base_url + CRYPTOPAY_URL, methods=['POST', 'GET'])
 def cryptobot_updates():
     print(f'{CRYPTOPAY_URL} request')
-    return cryptoPay_payment_updates(request)
+    return cryptoPay_payment_updates(bot, request)
 
 
 @app.route(base_url + YOOKASSA_URL, methods=['POST', 'GET'])
 def yookassa_updates():
     print(f'{YOOKASSA_URL} request')
-    return yooKassa_payment_updates(request)
+    return yooKassa_payment_updates(bot, request)
 
-app.run(host='127.0.0.1', port=flask_port)
-# if PROD:
-#     from waitress import serve
-#     serve(app, host="127.0.0.1", port=flask_port)
-# else:
-#     import _index  # type: ignore
-#     app.run(host='127.0.0.1', port=flask_port)
+if PROD:
+    from waitress import serve
+    serve(app, host="127.0.0.1", port=flask_port)
+else:
+    import _index  # type: ignore
+    app.run(host='127.0.0.1', port=flask_port)

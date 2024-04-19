@@ -4,7 +4,7 @@ from telebot.types import Message, InputMediaPhoto
 
 from common.utils import delete_message, edit_message, get_lang
 from db import db
-from initialize import text_editor
+from Classes import text_editor
 from AuthRoles import get_site_code
 
 from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_tariff

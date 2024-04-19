@@ -36,7 +36,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             post: Post = data.get('post')
 
-        tg_sender = BlockTGBotSender([], post)
+        tg_sender = BlockTGBotSender(bot, [], post)
         tg_sender.send()
 
         bot.edit_message_text('Успешно отправлен!', chat_id, mes_id)

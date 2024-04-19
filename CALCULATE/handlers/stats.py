@@ -1,11 +1,9 @@
-import os
 import re
 from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.calculation import get_msg_of_calc
-from initialize import calcService, pay_guard, hti
+from Classes import calcService, pay_guard
 from db import db
 from common.utils import digit_accept, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
@@ -32,7 +30,7 @@ def handle_loss(message: Message, bot: TeleBot):
         )
         return
 
-    calcService.set_profit(stat_id, -abs(value))
+    calcService.set_profit(bot, stat_id, -abs(value))
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return
@@ -79,7 +77,7 @@ def handle_sum(message: Message, bot: TeleBot):
         )
         return
 
-    calcService.set_profit(stat_id, value)
+    calcService.set_profit(bot, stat_id, value)
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return

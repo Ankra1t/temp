@@ -8,7 +8,7 @@ from common.utils import text_accept, set_state_data
 from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from initialize import base_statis
+from Classes import base_statis
 
 from MAIN.states import AdminStatisticsState
 from MAIN.callbacks import kb_statistics_back
@@ -60,7 +60,7 @@ def handle_start_date(message: Message, bot: TeleBot):
             f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
             reply_markup=None
         )
-        base_statis.show_paid_users(
+        base_statis.show_paid_users(bot, 
             message, start_to_fin=f'{start_date_filter}|{fin_date_filter}')
         bot.send_message(
             chat_id,
@@ -104,7 +104,7 @@ def handle_fin_date(message: Message, bot: TeleBot):
         f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
         reply_markup=None
     )
-    base_statis.show_paid_users(
+    base_statis.show_paid_users(bot, 
         message, start_to_fin=f'{start_date_filter}|{fin_date_filter}')
     bot.send_message(
         chat_id,

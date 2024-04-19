@@ -3,7 +3,7 @@ from telebot.types import CallbackQuery
 
 from db import db
 from common.utils import set_state_data
-from initialize import currencyService
+from Classes import currencyService
 from models import ForexInfo
 
 from .filter import calculate_factory, CalculateCallbackFilter

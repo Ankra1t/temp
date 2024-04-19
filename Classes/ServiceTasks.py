@@ -1,4 +1,3 @@
-from telebot import TeleBot
 from datetime import datetime
 
 from db import Database
@@ -9,13 +8,8 @@ from models import Task, TaskMessage
 class ServiceTasks(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, db: Database, bot_instance: TeleBot) -> None:
+    def __init__(self, db: Database) -> None:
         self.db = db
-        self.bot = bot_instance
-
-        self.dt_format = "%Y-%m-%d %I:%M"
-        self.dt_format_admin_show = "%d/%m/%Y %I:%M"
-        self.dt_format_user_show = "%d/%m/%Y"
 
     # # # # # # Создание заданий
     def plan_task(self, task: Task):

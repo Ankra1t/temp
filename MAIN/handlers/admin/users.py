@@ -3,7 +3,7 @@ from telebot.types import Message
 
 from common.dt import get_str_by_datetime
 from db import db
-from initialize import pay_guard
+from Classes import pay_guard
 
 from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel

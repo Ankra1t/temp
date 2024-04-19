@@ -1,13 +1,11 @@
-import os
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.calculation import get_msg_of_calc
-from initialize import currencyService, pay_guard, hti
+from Classes import currencyService, pay_guard
 from db import db
 from models import MARKETS_TYPE, Calculation, ForexInfo
 
-from common.utils import delete_message, digit_accept, is_digit, set_state_data, text_accept
+from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
 from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (

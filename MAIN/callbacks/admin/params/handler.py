@@ -3,7 +3,7 @@ from telebot.types import CallbackQuery
 
 from db import db
 
-from initialize import pay_guard
+from Classes import pay_guard
 
 from common.utils import set_state_data
 from MAIN.states import AdminParamsState

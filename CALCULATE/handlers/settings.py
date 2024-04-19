@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.settings.keyboards import kb_deposit_cancel
-from initialize import currencyService
+from Classes import currencyService
 from db import db, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 

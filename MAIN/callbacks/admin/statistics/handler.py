@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from initialize import base_statis
+from Classes import base_statis
 
 from MAIN.states import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
@@ -79,7 +79,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             f'Список клиентов с платежами, по выбранному продукту:', chat_id, mes_id,
             reply_markup=None
         )
-        base_statis.show_paid_users(call.message, product=clients_by_products)
+        base_statis.show_paid_users(bot, call.message, product=clients_by_products)
         bot.send_message(
             chat_id,
             "Вернуться:",
@@ -92,7 +92,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 reply_markup=None
             )
 
-        base_statis.show_paid_users(call.message)
+        base_statis.show_paid_users(bot, call.message)
 
         bot.send_message(
             chat_id,
@@ -107,7 +107,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             f'Список клиентов с платежами, за выбранный период:', chat_id, mes_id,
             reply_markup=None
         )
-        base_statis.show_paid_users(call.message, clients_for_period)
+        base_statis.show_paid_users(bot, call.message, clients_for_period)
         bot.send_message(
             chat_id,
             "Вернуться:",

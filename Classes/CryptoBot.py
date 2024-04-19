@@ -1,3 +1,4 @@
+from telebot import TeleBot
 import asyncio
 from hashlib import sha256
 from hmac import HMAC
@@ -7,7 +8,7 @@ from aiocryptopay.const import PaidButtons, InvoiceStatus
 
 from NOTIFIER.messages import mess_user_paid
 from common.dt import get_str_by_datetime
-from initialize import bot, pay_guard
+from Classes import pay_guard
 from NOTIFIER import notifier
 
 from config_global import CRYPTOPAY_TOKEN, CRYPTOPAY_NETWORK
@@ -65,7 +66,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     return url
 
 
-def cryptoPay_payment_updates(request: Request):
+def cryptoPay_payment_updates(bot: TeleBot, request: Request):
     body: dict | None = request.get_json(True, True)
     if body is None:
         return Response(status=400)

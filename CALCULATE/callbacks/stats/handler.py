@@ -1,13 +1,11 @@
 from datetime import timedelta
-import os
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from common.calculation import get_msg_of_calc
 from common.utils import delete_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from initialize import calcService, pay_guard, hti
+from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen
 from CALCULATE.callbacks import kb_main
@@ -64,7 +62,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             else:
                 if profit == 'loss':
-                    calcService.set_profit(stat_id, -calc_info.risk_value)
+                    calcService.set_profit(bot, stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
                     diff = max(calc_info.open_price + (calc_info.open_price - calc_info.stop_loss), 0)
                     profit_result = (
@@ -73,7 +71,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                         ) * calc_info.risk_value /
                         max(abs(calc_info.open_price - calc_info.stop_loss), 0.00001)
                     )
-                    calcService.set_profit(stat_id, profit_result)
+                    calcService.set_profit(bot, stat_id, profit_result)
                 else:
                     is_cancel = True
 

@@ -1,3 +1,4 @@
+from telebot import TeleBot
 from flask import Request, Response
 from yookassa import Configuration, Payment
 import uuid
@@ -5,7 +6,7 @@ import uuid
 from common.utils import check_discount_price
 from NOTIFIER.messages import mess_user_paid
 from db import db
-from initialize import bot, pay_guard
+from Classes import pay_guard
 from NOTIFIER import notifier
 
 from common.dt import get_str_by_datetime
@@ -67,7 +68,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     return url
 
 
-def yooKassa_payment_updates(request: Request):
+def yooKassa_payment_updates(bot: TeleBot, request: Request):
     body: dict | None = request.get_json(True, True)
     if body is None:
         return Response(status=400)

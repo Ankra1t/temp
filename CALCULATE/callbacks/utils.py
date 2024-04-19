@@ -1,10 +1,11 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from Classes import pay_guard
 from db import db
-from initialize import pay_guard
 from common.utils import set_state_data
 from models import MARKETS_TYPE, ForexInfo
+
 from .pages import send_main
 from .main.keyboards import kb_main_cancel
 from .calculate.keyboards import kb_open_price, kb_pair, kb_tool

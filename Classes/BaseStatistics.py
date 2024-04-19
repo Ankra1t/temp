@@ -12,12 +12,11 @@ from models import UserInfo, Purchase
 class BaseStatistics(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, db: DatabaseNew, bot_instance: TeleBot) -> None:
+    def __init__(self, db: DatabaseNew) -> None:
         self.db = db
-        self.bot = bot_instance
 
     # # # # # # Вывод пользователей
-    def show_paid_users(self, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
+    def show_paid_users(self, bot: TeleBot, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
         chat_id = message.chat.id
 
         if period:
@@ -36,7 +35,7 @@ class BaseStatistics(object):
             trans_list = self.db.get_paid_transactions_all()
 
         if not trans_list:
-            self.bot.send_message(
+            bot.send_message(
                 message.chat.id,
                 'Оплат не обнаружено'
             )
@@ -69,7 +68,7 @@ class BaseStatistics(object):
             user = self.db.get_user_by_id(el)
             if user is not None:
                 msg = self.temp_client(user, str(clients.get(el)))
-                self.bot.send_message(chat_id, msg, reply_markup=None)
+                bot.send_message(chat_id, msg, reply_markup=None)
             else:
                 logger.error(
                     f"Пользователь tg_id {el} не найден - оплаты по нему не выводим")

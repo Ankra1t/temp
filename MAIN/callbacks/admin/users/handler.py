@@ -7,7 +7,7 @@ from MAIN.states import AdminUsersState
 from common.dt import get_str_by_datetime
 from common.utils import set_state_data
 
-from initialize import pay_guard
+from Classes import pay_guard
 from db import SORT_BY_TYPE, db
 from messages.users import gift_subscribe_msg
 

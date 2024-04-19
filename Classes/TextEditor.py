@@ -1,5 +1,4 @@
 from googletrans import Translator
-from telebot import TeleBot
 
 from common.utils import get_lang
 from db import db
@@ -8,8 +7,7 @@ from db import db
 class TextEditor(object):
     """Класс редактор текстов"""
 
-    def __init__(self, bot: TeleBot) -> None:
-        self.bot = bot
+    def __init__(self) -> None:
         self.translator = Translator(raise_exception=True)
 
     def get_text(self, user_id: int, label: str):

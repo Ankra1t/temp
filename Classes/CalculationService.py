@@ -10,11 +10,10 @@ from models import CalculatorStats
 
 
 class CalculationService():
-    def __init__(self, bot: TeleBot, db: Database) -> None:
-        self.bot = bot
+    def __init__(self, db: Database) -> None:
         self.db = db
 
-    def set_profit(self, stat_id: int, value: float):
+    def set_profit(self, bot: TeleBot, stat_id: int, value: float):
         # Выставляем значение профита в статистику
         self.db.set_calculation_profit(stat_id, value)
         self.db.set_calculation_in_stat(stat_id, True)
@@ -79,11 +78,11 @@ class CalculationService():
                 diff = diff / (deposit or 1)
 
             tg_id = user_info.tg_id
-            self.bot.send_message(
+            bot.send_message(
                 tg_id, msg_freeze_calc(tg_id, diff, currency, day_risk[1]),
                 # reply_markup=kb_freeze_calc(tg_id)
             )
-            self.bot.set_state(tg_id, StatsState.freeze)
+            bot.set_state(tg_id, StatsState.freeze)
 
     def get_stats(self, tg_id: int):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)

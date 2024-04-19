@@ -1,5 +1,5 @@
-from typing import Optional
 from telebot import TeleBot
+from typing import Optional
 from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
@@ -7,7 +7,6 @@ from MAIN.common.utils import get_print_signal_info
 from config_logger import log_send_fails, log_send_ok
 from db import db
 
-from initialize import bot
 from models import Calculation, Post, UserInfo
 
 
@@ -89,7 +88,7 @@ class BlockTGBotSender(object):
     """Класс для рассылки сообщений через бота Telebot согласно ограничений API TG"""
 
     def __init__(
-            self, users: list[int], post: Post
+            self, bot: TeleBot, users: list[int], post: Post
     ):
         # Ограничение телеграм на кол-во сообщений разным пользователям в сек (с запасом)
         self.c_tg = 26
@@ -100,6 +99,7 @@ class BlockTGBotSender(object):
 
         self.users = users
         self.post = post
+        self.bot = bot
 
     def send(self):
         self.batch_send(True)
@@ -140,7 +140,7 @@ class BlockTGBotSender(object):
         content, calc_mes = get_post_content(self.post, id)
 
         send_message_by_type(
-            bot,
+            self.bot,
             id,
             self.post.mes_type,
             content,
@@ -148,4 +148,4 @@ class BlockTGBotSender(object):
         )
 
         if calc_mes is not None:
-            bot.send_message(id, calc_mes)
+            self.bot.send_message(id, calc_mes)

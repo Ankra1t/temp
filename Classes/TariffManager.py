@@ -7,14 +7,14 @@ from common.dt import get_datetime_now, get_str_by_datetime
 class TariffManager(object):
     """Класс для работы с тарифами"""
 
-    def __init__(self, bot_instance: TeleBot) -> None:
-        self.bot = bot_instance
+    def __init__(self) -> None:
+        pass
 
-    def admin_discount_list(self, message: types.Message, type_discount='active'):
+    def admin_discount_list(self, bot: TeleBot, message: types.Message, type_discount='active'):
         list = db.get_prices(1)
         count = 0
         if len(list) == 0:
-            self.bot.send_message(
+            bot.send_message(
                 message.chat.id,
                 f'Тарифов не обнаружено'
             )
@@ -26,7 +26,7 @@ class TariffManager(object):
             if type_discount == 'active' and self.is_active_discount(tariff):
                 count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
-                self.bot.send_message(
+                bot.send_message(
                     message.chat.id,
                     desc_template,
                 )
@@ -35,13 +35,13 @@ class TariffManager(object):
             if type_discount == 'inactive' and self.is_inactive_discount(tariff):
                 count = count + 1
                 desc_template = self.get_template_discount_show(tariff)
-                self.bot.send_message(
+                bot.send_message(
                     message.chat.id,
                     desc_template,
                 )
         if not count:
             empty_message = 'Активных' if type_discount == 'active' else 'Прошедших'
-            self.bot.send_message(
+            bot.send_message(
                 message.chat.id,
                 f'{empty_message} скидок в тарифах не обнаружено',
             )

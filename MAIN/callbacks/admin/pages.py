@@ -5,7 +5,7 @@ from telebot.types import Message, InputMediaPhoto
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message
 from db import db
-from initialize import pay_guard, base_statis
+from Classes import pay_guard, base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime

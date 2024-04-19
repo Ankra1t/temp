@@ -139,7 +139,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         kind = 'signal'
         new_message = bot.send_message(chat_id, 'Отправка...')
 
-        tg_sender = BlockTGBotSender([], post)
+        tg_sender = BlockTGBotSender(bot, [], post)
         tg_sender.send()
 
         bot.delete_state(user_id, chat_id)
@@ -228,7 +228,7 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         )
 
     if mes_text == '-':
-        tg_sender = BlockTGBotSender([], post)
+        tg_sender = BlockTGBotSender(bot, [], post)
         tg_sender.send()
 
         bot.delete_state(user_id, chat_id)

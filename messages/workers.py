@@ -10,14 +10,6 @@ def admin_main_msg(count_all: int, count_with_sub: int, count_sub_more_1: int, c
 """
 
 
-def redactor_main_msg(count_fut: int):
-    return f"Количество отложенных постов: {count_fut}"
-
-
-def support_main_msg(count: int):
-    return f"Количество заявок на поддержку: {count}"
-
-
 def admin_users_msg(count_all: int, count_with_sub: int, count_sub_more_1: int):
     return f"""👨 <b><u>Пользователи</u></b>
 
@@ -39,6 +31,3 @@ def admin_fut_posts_msg(posts_count: int):
 Количество: <b>{posts_count}</b>
 """
 
-
-def admin_posting_msg(count: int):
-    return f"""Отложенных постов: {count}"""

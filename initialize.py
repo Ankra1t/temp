@@ -1,44 +1,26 @@
-from aiocryptopay import Networks
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
+from telebot.custom_filters import StateFilter
 
-from config_global import CURRENCYAPI_KEY, TOKEN_MAIN_BOT, CRYPTOPAY_TOKEN, bitbanker_token, bitbanker_secret
+from AuthMiddleWare import AuthMiddleWare
+from config_global import TOKEN_MAIN_BOT
 
-from db import db
-
-from Classes.HTML2Image import HTIService
-from Classes.GuardPaymentAccess import GuardPaymentAccess
-from Classes.Payments import Payments
-from Classes.TariffManager import TariffManager
-from Classes.TextEditor import TextEditor
-from Classes.PaymentsBanker import PaymentsBanker
-from Classes.BaseStatistics import BaseStatistics
-from Classes.ServiceTasks import ServiceTasks
-from Classes.CalculationService import CalculationService
-from Classes.CurrencyService import CurrencyService
+from MAIN.commands import commands_registration
+from MAIN.handlers import handlers_registration
+from MAIN.callbacks import callbacks_registration
 
 
-state_storage = StateMemoryStorage()
 bot = TeleBot(
     TOKEN_MAIN_BOT, 'HTML',
-    state_storage=state_storage,
+    state_storage=StateMemoryStorage(),
     skip_pending=True,
     use_class_middlewares=True,
 )
 
+bot.setup_middleware(AuthMiddleWare(bot))
 
-pay_guard = GuardPaymentAccess()
-pays = Payments(token=CRYPTOPAY_TOKEN, network=Networks.MAIN_NET)
-base_statis = BaseStatistics(db, bot)
-serv_tasks = ServiceTasks(db, bot)
+commands_registration(bot)
+callbacks_registration(bot)
+handlers_registration(bot)
 
-pays_banker = PaymentsBanker(
-    api_key=bitbanker_token, api_secret=bitbanker_secret, bot_instance=bot, pay_guard=pay_guard
-)
-
-calcService = CalculationService(bot, db)
-currencyService = CurrencyService(CURRENCYAPI_KEY)
-
-hti = HTIService()
-text_editor = TextEditor(bot)
-tariff_manager = TariffManager(bot)
+bot.add_custom_filter(StateFilter(bot))
