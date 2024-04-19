@@ -7,7 +7,7 @@ from flask import request
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
 
 from CALCULATE.initialize import bot_calc
-from initialize import bot
+from MAIN.initialize import bot
 from thread_tasks import run_thread
 
 
