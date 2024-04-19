@@ -196,7 +196,7 @@ def kb_change_market(user_id: int):
 
     buttons: list[InlineKeyboardButton] = []
 
-    markets_list = ('crypto', 'forex')  # 'paper', 'future',
+    markets_list: tuple[MARKETS_TYPE, ...] = ('crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
     for i, el in enumerate(markets_list):
         btn = getButton(market_translates[lang][el], f'market_{el}')
         buttons.append(btn)

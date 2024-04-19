@@ -1,4 +1,3 @@
-from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -28,7 +27,6 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
-    last_tools = db.get_last_tools(user_db_id)
 
     if u_base is None:
         return
@@ -40,9 +38,11 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
         text += msg_enter_pair(user_id)
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
-    elif calc_type == 'crypto' and tool is None:
+    elif calc_type != 'forex' and tool is None:
         text += msg_enter_tool(user_id)
         state = CalculateState.tool
+
+        last_tools = db.get_last_tools(user_db_id, calc_type)
         keyboard = kb_tool(user_id, last_tools)
     elif trading_style is None:
         text += msg_enter_trading_style(user_id)
@@ -88,7 +88,7 @@ def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int,
 
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,
-    type: Literal['crypto', 'future', 'paper', 'forex'],
+    type: MARKETS_TYPE,
     is_edit=False
 ):
     chat_id = message.chat.id
@@ -109,7 +109,7 @@ def choose_first_calculate_step(
     if type == 'forex':
         bot.set_state(user_id, ForexCalcState.pair, chat_id)
     else:
-        bot.set_state(user_id, CalculateState.deposit, chat_id)
+        bot.set_state(user_id, CalculateState.tool, chat_id)
 
     set_state_data(
         bot, user_id, chat_id, {

@@ -16,12 +16,16 @@ market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
     'ru': {
         'crypto': 'Криптовалюта',
         'paper': 'Акции',
-        'forex': 'Форекс'
+        'forex': 'Форекс',
+        'RF': 'РФ',
+        'USA': 'США',
     },
     'en': {
         'crypto': 'Cryptocurrency',
         'paper': 'Stocks',
         'forex': 'Forex',
+        'RF': 'RF',
+        'USA': 'USA',
     }
 }
 
@@ -723,18 +727,18 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 def msg_calculate_result(
     user_id: int,
     calc: Calculation,
-    stats:CalculatorStats | None=None
+    stats: CalculatorStats | None = None
 ):
-    if calc.forex_info is not None:
+    if calc.market == 'forex' and calc.forex_info is not None:
         return msg_calculate_forex_result(user_id, calc, stats)
     else:
-        return msg_calculate_crypto_result(user_id, calc, stats)
+        return msg_calculate_crypto_rf_usa_result(user_id, calc, stats)
 
 
-def msg_calculate_crypto_result(
+def msg_calculate_crypto_rf_usa_result(
     user_id: int,
     calc: Calculation,
-    stats:CalculatorStats | None=None
+    stats: CalculatorStats | None = None
 ):
     lang = get_lang(user_id)
 
@@ -780,10 +784,7 @@ def msg_calculate_crypto_result(
     )
 
     # Кол-во покупки
-    count_bet = (
-        calc.risk_value /
-        max(abs(calc.open_price - calc.stop_loss), 0.0000000001)
-    )
+    count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
 
     # Сумма покупки
     value_bet = count_bet * calc.open_price
@@ -794,13 +795,15 @@ def msg_calculate_crypto_result(
         p_show = ''
         conclusion = ''
         for i in range(len(calc.tp_ratio)):
-            tp_ratio_i = calc.tp_ratio[i]
-            tp_i = max(
-                calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i,
+            tp_ratio = calc.tp_ratio[i]
+
+            take_profit = max(
+                calc.open_price + tp_ratio *
+                (calc.open_price - calc.stop_loss),
                 0
             )
 
-            conclusion += f'  <b>x{tp_ratio_i}</b>: <u>{get_print_float(tp_i, price_round_count)} {calc.currency}</u>'
+            conclusion += f'  <b>x{tp_ratio}</b>: <u>{get_print_float(take_profit, price_round_count)} {calc.currency}</u>'
 
             rate = 1
             if calc.split_values is not None and len(calc.split_values) != 0:
@@ -816,7 +819,7 @@ def msg_calculate_crypto_result(
                 if i != len(calc.tp_ratio) - 1 and i % 2 == 1:
                     conclusion += '\n'
 
-            p_show += f'{get_print_float(abs(calc.open_price - tp_i) * rate * count_bet, round_count)}'
+            p_show += f'{get_print_float(abs(calc.open_price - take_profit) * rate * count_bet, round_count)}'
 
             if i != len(calc.tp_ratio) - 1:
                 p_show += ' / '
@@ -841,7 +844,7 @@ def msg_calculate_crypto_result(
 def msg_calculate_forex_result(
     user_id: int,
     calc: Calculation,
-    stats:CalculatorStats | None=None
+    stats: CalculatorStats | None = None
 ):
     if calc.forex_info is None:
         return 'Ошибка'
@@ -918,7 +921,8 @@ def msg_calculate_forex_result(
             rate = 1
             tp_ratio_i = calc.tp_ratio[i]
             tp_i = max(
-                calc.open_price + (calc.open_price - calc.stop_loss) * tp_ratio_i,
+                calc.open_price + (calc.open_price -
+                                   calc.stop_loss) * tp_ratio_i,
                 0
             )
 
@@ -937,7 +941,8 @@ def msg_calculate_forex_result(
                 if i % 2 == 1:
                     conclusion += '\n'
 
-            profit = abs(calc.open_price - tp_i) * rate * count_bet * pow(10, 5)
+            profit = abs(calc.open_price - tp_i) * \
+                rate * count_bet * pow(10, 5)
             if calc.forex_info.pair[0] == calc.currency:
                 profit /= calc.stop_loss
             elif calc.forex_info.pair[1] != calc.currency:
@@ -954,7 +959,6 @@ def msg_calculate_forex_result(
 
 {POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>):
 {TAB}<b>{p_show}</b>"""
-
 
     return f"""
 #<b><u>{pair.replace('/', '').upper()}</u></b> - <b>{market_translates[lang][calc.market]}</b>

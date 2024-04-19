@@ -50,12 +50,6 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    calc_type = 'default'
-    if is_new_calc:
-        calc_type = 'calc'
-    if stat_id == -1:
-        calc_type = 'saved'
-
     btn_calc = getButton(
         '⌨️ ' + texts[lang]
         ['calc'], 'calc', is_new_calc, stat_id

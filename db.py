@@ -1617,9 +1617,10 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_last_tools(self, user_id: int) -> list[str]:
-        query = 'SELECT tool FROM calculations WHERE user_id = %s AND tool is not NULL GROUP BY tool'
-        params = user_id,
+    def get_last_tools(self, user_id: int, market: MARKETS_TYPE = 'crypto') -> list[str]:
+        query = 'SELECT tool FROM calculations WHERE user_id = %s AND market = %s AND tool is not NULL '
+        query += 'GROUP BY tool ORDER BY MAX(created_at) DESC'
+        params = user_id, market
 
         try:
             self.curs.execute(query, params)

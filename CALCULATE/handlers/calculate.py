@@ -5,7 +5,7 @@ from telebot.types import Message
 from common.calculation import get_msg_of_calc
 from initialize import currencyService, pay_guard, hti
 from db import db
-from models import Calculation, ForexInfo
+from models import MARKETS_TYPE, Calculation, ForexInfo
 
 from common.utils import delete_message, digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
@@ -32,11 +32,16 @@ def handle_tool(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    tool = tool.upper().replace('/', '')
-    if tool.endswith('USDT'):
-        tool = tool.replace('USDT', '').strip()
+    with bot.retrieve_data(user_id, chat_id) as data:
+        calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
 
-    tool += '/USDT'
+    tool = tool.upper().replace('/', '').replace(' ', '')
+    if calc_type == 'crypto':
+        if tool.endswith('USDT'):
+            tool = tool.replace('USDT', '')
+
+        tool += '/USDT'
+
     set_state_data(bot, user_id, chat_id, {'tool': tool})
     choose_calculate_step(bot, user_id, chat_id, mes_id)
 

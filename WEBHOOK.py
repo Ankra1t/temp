@@ -51,10 +51,10 @@ def yookassa_updates():
     print(f'{YOOKASSA_URL} request')
     return yooKassa_payment_updates(request)
 
-
-if PROD:
-    from waitress import serve
-    serve(app, host="127.0.0.1", port=flask_port)
-else:
-    import _index  # type: ignore
-    app.run(host='127.0.0.1', port=flask_port)
+app.run(host='127.0.0.1', port=flask_port)
+# if PROD:
+#     from waitress import serve
+#     serve(app, host="127.0.0.1", port=flask_port)
+# else:
+#     import _index  # type: ignore
+#     app.run(host='127.0.0.1', port=flask_port)
