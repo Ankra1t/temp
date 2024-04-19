@@ -6,7 +6,6 @@ from flask import request
 
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
 
-from CALCULATE.initialize import bot_calc
 from MAIN.initialize import bot
 from thread_tasks import run_thread
 
@@ -22,19 +21,6 @@ def AAA():
             request.stream.read().decode('utf-8')
         )
         bot.process_new_updates([update])  # type: ignore
-
-        return ''
-    else:
-        flask.abort(403)
-
-
-@app.route(base_url + '/BBB', methods=['POST', 'GET'])
-def BBB():
-    if request.headers.get('content-type') == 'application/json':
-        update = telebot.types.Update.de_json(
-            request.stream.read().decode('utf-8')
-        )
-        bot_calc.process_new_updates([update])  # type: ignore
 
         return ''
     else:
