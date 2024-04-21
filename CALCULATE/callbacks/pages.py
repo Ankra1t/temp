@@ -4,10 +4,10 @@ from telebot import TeleBot
 from common.utils import edit_message
 from db import db
 
-from Classes import pay_guard, calcService
+from Classes import pay_guard
 from CALCULATE.common.messages import (
     msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
-    msg_stats, msg_summury_profit_settings, msg_uses_count
+    msg_stats_page, msg_summury_profit_settings, msg_uses_count
 )
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
@@ -150,8 +150,10 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     bot.delete_state(user_id, chat_id)
 
-    stats = calcService.get_stats(user_id)
-    text = msg_stats(user_id, stats)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    calcs = db.get_calculations_by_user(user_db_id)
+
+    text = msg_stats_page(user_id, len(calcs))
     kb = kb_stats(user_id)
 
     if is_first:

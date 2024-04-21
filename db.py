@@ -1195,7 +1195,7 @@ class Database:
             self.connection.rollback()
             return default
 
-    def get_calc_user_settings(self, user_id: int) ->  UserCalcSettings | None:
+    def get_calc_user_settings(self, user_id: int) -> UserCalcSettings | None:
         market = self.get_user_current_market(user_id)
 
         query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s AND market = %s'
@@ -1588,12 +1588,22 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_calculations_by_user(self, user_id: int, saved=False) -> list[Calculation]:
+    def get_calculations_by_user(
+        self,
+        user_id: int,
+        saved: bool | None = None,
+        market: MARKETS_TYPE | None = None
+    ) -> list[Calculation]:
         query = 'SELECT * FROM calculations WHERE user_id = %s'
-        params = user_id,
-        if saved:
+        params = (user_id,)
+
+        if saved is not None:
             query += ' AND in_stat = %s'
-            params = user_id, True
+            params = (*params, True)
+
+        if market is not None:
+            query += ' AND market = %s'
+            params = (*params, market)
 
         try:
             self.curs.execute(query, params)

@@ -7,19 +7,23 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from Classes import calcService, pay_guard
 from db import db
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen
+from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen, msg_market_stats
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
+from models import MARKETS_TYPE
 
-from .keyboards import kb_deal_profit_cancel, kb_deal_profit_minus, kb_deal_result
+from .keyboards import kb_deal_profit_cancel, kb_deal_profit_minus, kb_deal_result, kb_stats
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_main
+from ..pages import send_main, send_stats
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = stats_factory.parse(call.data)
     type = callback_data.get('type', '')
     stat_id = int(callback_data.get('stat_id', 0))
+    stats_market: MARKETS_TYPE = callback_data.get(
+        'stats_market', 'crypto'
+    )  # type: ignore
 
     user_id = call.from_user.id
 
@@ -64,7 +68,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if profit == 'loss':
                     calcService.set_profit(bot, stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
-                    diff = max(calc_info.open_price + (calc_info.open_price - calc_info.stop_loss), 0)
+                    diff = max(calc_info.open_price +
+                               (calc_info.open_price - calc_info.stop_loss), 0)
                     profit_result = (
                         abs(
                             calc_info.open_price - diff * int(profit)
@@ -83,8 +88,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 saved_stat_id = stat_id if is_cancel else -1
 
-                stats = calcService.get_stats(user_id)
-                mes_calc = msg_calculate_result(user_id, calc_info, None if is_cancel else stats)
+                stats = calcService.get_stats(user_id, calc_info.market)
+                mes_calc = msg_calculate_result(
+                    user_id, calc_info, None if is_cancel else stats
+                )
 
                 bot.edit_message_text(
                     mes_calc, chat_id, mes_id,
@@ -117,6 +124,19 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
+
+    if type == 'go_stats':
+        send_stats(bot, call.message, user_id)
+
+    if type == 'stats_market':
+        print(stats_market)
+        stats = calcService.get_stats(user_id, stats_market)
+        text = msg_market_stats(user_id, stats_market, stats)
+
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb_stats(user_id, 'market')
+        )
 
     bot.answer_callback_query(call.id)
 

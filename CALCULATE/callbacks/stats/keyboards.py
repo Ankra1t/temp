@@ -1,17 +1,24 @@
+from typing import Literal
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from CALCULATE.common.messages import market_translates
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
 from db import db
+from models import MARKETS_TYPE
 
 from .filter import stats_factory
 
 
-def getButton(text: str, type: str, stat_id=0):
+def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'crypto'):
     return InlineKeyboardButton(
         text, None,
-        stats_factory.new(type=type, stat_id=stat_id)
+        stats_factory.new(
+            type=type,
+            stat_id=stat_id,
+            stats_market=stats_market,
+        )
     )
 
 
@@ -30,14 +37,28 @@ def get_save_deal_button(user_id: int, stat_id: int):
     return getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
 
 
-def kb_stats(user_id: int):
+def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main'):
     lang = get_lang(user_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    row_width = 2
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    btn_deal = getButton(back_txt(lang), 'go_main')
+    buttons = []
+    markets_list: tuple[MARKETS_TYPE, ...] = ('crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
+    for i, el in enumerate(markets_list):
+        btn = getButton(market_translates[lang][el], f'stats_market', -1, el)
+        buttons.append(btn)
 
-    keyboard.add(btn_deal)
+        if len(buttons) == row_width or (i + 1 == len(markets_list) and len(buttons) != 0):
+            keyboard.add(*buttons)
+            buttons = []
+
+    if type == 'main':
+        btn_back = getButton(back_txt(lang), 'go_main')
+    else:
+        btn_back = getButton(back_txt(lang), 'go_stats')
+
+    keyboard.add(btn_back)
     return keyboard
 
 

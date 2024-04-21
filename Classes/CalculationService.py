@@ -6,7 +6,7 @@ from CALCULATE.states import StatsState
 
 from db import Database
 from common.dt import get_datetime_now
-from models import CalculatorStats
+from models import MARKETS_TYPE, CalculatorStats
 
 
 class CalculationService():
@@ -84,11 +84,17 @@ class CalculationService():
             )
             bot.set_state(tg_id, StatsState.freeze)
 
-    def get_stats(self, tg_id: int):
+    def get_stats(self, tg_id: int, market: MARKETS_TYPE):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)
 
-        all_stats = self.db.get_calculations_by_user(user_db_id)
-        saved_stats = self.db.get_calculations_by_user(user_db_id, True)
+        all_stats = self.db.get_calculations_by_user(
+            user_db_id,
+            market=market
+        )
+        saved_stats = self.db.get_calculations_by_user(
+            user_db_id, True,
+            market=market
+        )
 
         tp_count = 0
         sl_count = 0

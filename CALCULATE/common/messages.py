@@ -362,7 +362,27 @@ def msg_support(user_id: int):
     return f'{texts[lang]}👇'
 
 
-def msg_stats(user_id: int, stats: CalculatorStats):
+def msg_stats_page(user_id: int, count: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Статистика',
+            'count': 'Всего расчетов',
+        },
+        'en': {
+            'main': 'Stats',
+            'count': 'Calculations count',
+        },
+    }
+
+    return f"""📊 <b><u>{texts[lang]['main']}</u></b>
+
+{texts[lang]['count']}: <b>{count}</b>
+"""
+
+
+def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats):
     lang = get_lang(user_id)
 
     texts = {
@@ -392,7 +412,7 @@ def msg_stats(user_id: int, stats: CalculatorStats):
     if user_settings is not None:
         currency = user_settings.currency or currency
 
-    return f"""📊 <u><b>{texts[lang]['name']}</b></u>
+    return f"""📊 <u><b>{texts[lang]['name']}</b></u> - {market_translates[lang][market]}
 
 {POINT} {texts[lang]['all']}: <b>{stats.all_stats_count} {texts[lang]['pieces']}</b>
 
