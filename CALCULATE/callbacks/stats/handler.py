@@ -68,14 +68,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if profit == 'loss':
                     calcService.set_profit(bot, stat_id, -calc_info.risk_value)
                 elif profit != 'cancel':
-                    diff = max(calc_info.open_price +
-                               (calc_info.open_price - calc_info.stop_loss), 0)
-                    profit_result = (
-                        abs(
-                            calc_info.open_price - diff * int(profit)
-                        ) * calc_info.risk_value /
-                        max(abs(calc_info.open_price - calc_info.stop_loss), 0.00001)
-                    )
+                    profit_result = calc_info.risk_value * int(profit)
                     calcService.set_profit(bot, stat_id, profit_result)
                 else:
                     is_cancel = True
@@ -129,7 +122,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_stats(bot, call.message, user_id)
 
     if type == 'stats_market':
-        print(stats_market)
         stats = calcService.get_stats(user_id, stats_market)
         text = msg_market_stats(user_id, stats_market, stats)
 
