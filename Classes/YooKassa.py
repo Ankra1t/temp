@@ -12,8 +12,9 @@ from NOTIFIER import notifier
 from common.dt import get_str_by_datetime
 from messages.users import paid_subscribe_msg
 from models import Price
-from config_global import YOOKASSA_SECRET_KEY, YOOKASSA_SHOP_ID
 
+from config_global import YOOKASSA_SECRET_KEY, YOOKASSA_SHOP_ID
+from config_logger import logger
 
 Configuration.account_id = YOOKASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
@@ -47,7 +48,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         if payment.confirmation is None:
             return False
     except Exception as e:
-        print(f'yooKassa Error: {e}')
+        logger.error(f'yooKassa Error: {e}')
         return False
 
     url = str(payment.confirmation.confirmation_url)
@@ -90,7 +91,7 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
 
     transaction = db.get_wait_transaction(code)
     if transaction is None:
-        print(f'!!! Не удалось подтвердить платеж {code}')
+        logger.error(f'Не удалось подтвердить платеж {code}')
         return Response(status=200)
 
     if event == 'payment.canceled':

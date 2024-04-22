@@ -4,7 +4,7 @@ from time import sleep
 from CALCULATE.common.messages import msg_calculate_result
 from MAIN.common.utils import get_print_signal_info
 
-from config_logger import log_send_fails, log_send_ok
+from config_logger import logger, log_send_fails, log_send_ok
 from db import db
 
 from models import Calculation, Post, UserInfo
@@ -129,7 +129,7 @@ class BlockTGBotSender(object):
                     i += 1
                 except Exception as e:
                     err_mess = f'Ошибка пользователя tg_id{user} db_id{user_i.id} username->{username} : {e}'
-                    print(err_mess)
+                    logger.error(err_mess)
                     log_send_fails.error(err_mess)
                 sleep(self.p_by_user)
             else:

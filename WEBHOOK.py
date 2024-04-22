@@ -7,16 +7,12 @@ from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
-from config_logger import handler_fileout
 
 from MAIN.initialize import bot
 from thread_tasks import run_thread
 
 
 app = flask.Flask(__name__)
-
-app.logger.setLevel(logging.DEBUG)
-app.logger.addHandler(handler_fileout)
 
 run_thread(bot)
 

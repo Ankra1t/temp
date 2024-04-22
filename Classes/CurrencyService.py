@@ -1,6 +1,8 @@
 from typing import Literal
 import currencyapicom
 
+from config_logger import logger
+
 # * Response Model
 # meta: {
 #     last_updated_at: str
@@ -27,7 +29,7 @@ class CurrencyService():
             value = response.get('data').get(quoted).get('value')
             return value
         except Exception as e:
-            print(f'ERROR[get currency value]: {e}')
+            logger.error(f'[get currency value]: {e}')
             return False
 
     def getPairsPrice(self, pairs: list[str]) -> dict[str, float] | Literal[False]:
@@ -67,5 +69,5 @@ class CurrencyService():
 
             return result
         except Exception as e:
-            print(f'ERROR[get currencies values]: {e}')
+            logger.error(f'[get currencies values]: {e}')
             return False

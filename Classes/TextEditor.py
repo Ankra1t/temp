@@ -1,5 +1,7 @@
 from googletrans import Translator
 
+from config_logger import logger
+
 from common.utils import get_lang
 from db import db
 
@@ -24,12 +26,12 @@ class TextEditor(object):
                         ).text
                     )
                 except Exception as e:
-                    print(e.with_traceback(None))
+                    logger.error(e)
                     result = text.message
 
             return result or text.message
         else:
-            print('Передан несуществующий в БД label')
+            logger.warning('Передан несуществующий в БД label')
             return ''
 
     def get_media_id(self, user_id: int, label: str):
@@ -48,4 +50,4 @@ class TextEditor(object):
         if content:
             db.update_text(name, content)
         else:
-            print('Пустой текст затрет полностью старый текст!')
+            logger.warning('Пустой текст затрет полностью старый текст!')

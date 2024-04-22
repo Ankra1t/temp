@@ -82,7 +82,6 @@ def _test(message: Message, bot: TeleBot):
 
     #     # Переносим текст, если он не влезает в заданную ширину
     #     wrapped_text = textwrap.fill(text, width=max_width // font.size)
-    #     print(max_width // font.size)
     #     # Рисуем текст на изображении
     #     draw.text((10, 10), wrapped_text, fill='black', font=font)
 

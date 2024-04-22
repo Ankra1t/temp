@@ -145,8 +145,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
                     # tgsender.send()
                 except Exception as e:
-                    print(
-                        f'Ошибка рассылки постов в балансировщике при рассылке [{e}]')
+                    pass
+                    #     (f'Ошибка рассылки постов в балансировщике при рассылке [{e}]')
 
                 text = 'Пост успешно отправлен!'
 

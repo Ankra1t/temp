@@ -27,7 +27,6 @@ class Payments(object):
         """
 
         # result = requests.get("https://requestb.in")
-        # print(f'result https://requestb.in')
         # asset = "USDT"
         # amount = "0.1"
         # description = "Оплата подписки"
@@ -54,10 +53,6 @@ class Payments(object):
             self.url, headers={"Crypto-Pay-API-Token": self.token}, params=params)
         logger.info(f'-----> Запрос чека прошел удачно response [{response}]')
 
-        # print(f'Запрос к {self.url} response | response.text')
-        # print(response)
-        # print(response.text)
-
         return self._response_invoice(response)
 
     def _response_invoice(self, response):
@@ -70,17 +65,12 @@ class Payments(object):
 
         # Обработать json ответ
         response_json = response.json()
-        # print(f'response_json Обработанный json Ответ')
-        # print(response_json)
 
         if not response_json.get("ok"):
             name = response["error"]["name"]
             code = response["error"]["code"]
             raise Exception(
                 f'Проблемный ответ криптобота name [{name}] code [{code}]')
-
-        # print(f'response_json.get[result] ')
-        # print(response_json['result'])
 
         return Invoice(**response_json['result'])
 

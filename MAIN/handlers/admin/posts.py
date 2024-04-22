@@ -13,6 +13,7 @@ from MAIN.callbacks import (
 from MAIN.common.utils import get_post_from_message
 from common.dt import get_datetime_by_str, get_datetime_now
 
+from config_logger import logger
 from db import db
 from common.utils import digit_accept, set_state_data, text_accept
 from models import Post, PostDetails
@@ -82,8 +83,7 @@ def handle_new_post_ticker(message: Message, bot: TeleBot):
         kb_cancel = kb_posts_back()
 
     ticker = text_accept(message)
-    print(ticker)
-    print(re.search(ticker_pattern, post.content))
+
     # if ticker is None or re.search(ticker_pattern, post.content) is None:
     if ticker is None:
         bot.send_message(
@@ -112,7 +112,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         post: Post = state_data.get('post')
 
     if post.details is None:
-        print('ERROR["handle_new_post_signal"]: no details in post!')
+        logger.error('[handle_new_post_signal]: no details in post!')
         return
 
     if kind == 'live':

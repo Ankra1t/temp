@@ -12,6 +12,8 @@ from Classes import pay_guard
 from NOTIFIER import notifier
 
 from config_global import CRYPTOPAY_TOKEN, CRYPTOPAY_NETWORK
+from config_logger import logger
+
 from common.utils import check_discount_price
 from messages.users import paid_subscribe_msg
 from models import Price
@@ -45,7 +47,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
         if payment.status != InvoiceStatus.ACTIVE:
             return False
     except Exception as e:
-        print(f'CryptoPay Error: {e}')
+        logger.error(f'CryptoPay Error: {e}')
         return False
 
     url = str(payment.pay_url)
@@ -93,7 +95,7 @@ def cryptoPay_payment_updates(bot: TeleBot, request: Request):
 
     transaction = db.get_wait_transaction(code)
     if transaction is None:
-        print(f'!!! Не удалось подтвердить платеж {code}')
+        logger.error(f'Не удалось подтвердить платеж {code}')
         return Response(status=200)
 
     if payment.get('status', '') == 'expired':

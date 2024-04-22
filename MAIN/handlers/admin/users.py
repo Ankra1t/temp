@@ -5,6 +5,8 @@ from common.dt import get_str_by_datetime
 from db import db
 from Classes import pay_guard
 
+from config_logger import logger
+
 from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel
 from CALCULATE.common.messages import msg_digit_error
@@ -80,7 +82,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
     # Получить tg_user_id
     user = db.get_user_by_id(subscribe_user_id)
     if user is None:
-        print('ERROR[handle_days_subscribe]: не найден пользователь')
+        logger.error('[handle_days_subscribe]: не найден пользователь')
         return
 
     if current_state == 'AdminUsersState:subscribe_days':
@@ -121,7 +123,7 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
                 user.tg_id, gift_trial_subscribe_msg(user.tg_id, data_fin)
             )
         except Exception as e:
-            print(f'Что то пошло не так {e}')
+            logger.error(f'Что то пошло не так {e}')
             pass
 
     bot.delete_state(user_id, chat_id)

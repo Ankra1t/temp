@@ -97,7 +97,6 @@ class BaseStatistics(object):
         else:
             summ = self.db.get_paid_transactions_summ_period(
                 start_date, fin_date)
-        print(f'период {period or "ВСЕ"} summ [{summ}]')
         return summ if summ else 0
 
     def count_by_product(self, product=None):

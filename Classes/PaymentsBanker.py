@@ -8,10 +8,11 @@ from Classes.GuardPaymentAccess import GuardPaymentAccess
 from NOTIFIER import notifier
 from NOTIFIER.messages import mess_user_paid
 
+from config_logger import logger
+
 from common.dt import get_str_by_datetime
 from common.utils import check_discount_price
 from db import db
-from config_logger import logger
 from messages.users import paid_subscribe_msg
 from models import InvoiceBBanker, Price, UpdateBBanker
 
@@ -74,7 +75,7 @@ class PaymentsBanker(object):
             return False
 
         body = response.json()
-        print(body)
+        logger.info(body)
 
     def _response_invoice(self, response):
         if response.status_code != 200:
@@ -89,8 +90,8 @@ class PaymentsBanker(object):
         # Обработать json ответ
         response_json = response.json()
 
-        print(f'response_json Обработанный json Ответ')
-        print(response_json)
+        logger.info(f'response_json Обработанный json Ответ')
+        logger.info(response_json)
 
         if not response_json.get("result"):
             raise Exception(f'Проблемный ответ BitBanker нет поля \"result\"')

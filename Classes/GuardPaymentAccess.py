@@ -141,7 +141,6 @@ class GuardPaymentAccess():
 
         # Получить пользователей с платной подпиской рекомендации или рекомендации+калькулятор
         users = db.get_active_subscribes_all_users(False)
-        # print(f'кол-во len(users) {len(users)}')
 
         if not users:
             return None

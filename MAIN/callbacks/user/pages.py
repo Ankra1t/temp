@@ -7,6 +7,8 @@ from db import db
 from Classes import text_editor
 from AuthRoles import get_site_code
 
+from config_logger import logger
+
 from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_tariff
 from messages.education import termins
 from messages.users import msg_choose_tariff_type, msg_no_tariffs, msg_start
@@ -160,7 +162,7 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
                 reply_markup=keyboard
             )
     except:
-        print('[send_site_code]: сообщение не изменено!')
+        logger.error('[send_site_code]: сообщение не изменено!')
 
     if is_reset:
         code = new_code or ''

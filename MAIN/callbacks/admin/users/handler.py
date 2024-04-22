@@ -7,6 +7,8 @@ from MAIN.states import AdminUsersState
 from common.dt import get_str_by_datetime
 from common.utils import set_state_data
 
+from config_logger import logger
+
 from Classes import pay_guard
 from db import SORT_BY_TYPE, db
 from messages.users import gift_subscribe_msg
@@ -155,8 +157,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         user = db.get_user_by_id(subscribe_user_id)
 
         if user is None:
-            print(
-                f'Error[choose_periods_for_tariffs]: user_id={subscribe_user_id}'
+            logger.error(
+                f'[choose_periods_for_tariffs]: user_id={subscribe_user_id}'
             )
             return
 
@@ -165,7 +167,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
-            print(f'Error[choose_periods_for_tariffs]: tariff_id={tariff_id}')
+            logger.error(f'[choose_periods_for_tariffs]: tariff_id={tariff_id}')
             return
 
         pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
@@ -248,7 +250,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'client_set_trial_custom':
         bot.set_state(
             user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
-        print(f'Назначить пробную подписку пользователю handler')
+        logger.error(f'Назначить пробную подписку пользователю handler')
         set_state_data(bot, user_id, chat_id, {
             'user_id': client_db_id,
         })
