@@ -1,11 +1,13 @@
 from datetime import datetime
 import json
+import traceback
 from typing import Literal, Optional
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
 
 from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
+from config_logger import logger
 
 from models import (
     Calculation, Forex, ForexInfo, Post, PostDetails,
@@ -33,8 +35,12 @@ class Database:
                 database=database,
             )
             self.curs = self.connection.cursor(cursor_factory=DictCursor)
-        except Exception as error:
-            print(f"Ошибка при работе с PostgreSQL: {error}")
+        except Exception as e:
+            logger.error(f"Ошибка при работе с PostgreSQL: {e}")
+
+    def _log_error(self, e: Exception):
+        stack = traceback.extract_stack()
+        logger.error(f'[db.{stack[-2].name}]: {e}')
 
     # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
@@ -75,7 +81,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            print(f'ERROR[get_prices]: {e}')
+            logger.error(f'[db.get_prices]: {e}')
             self.connection.rollback()
             return []
 
@@ -96,7 +102,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            print(f'ERROR[get_prices_by_product]: {e}')
+            logger.error(f'[db.get_prices_by_product]: {e}')
             self.connection.rollback()
             return []
 
@@ -115,7 +121,7 @@ class Database:
                 return None
             return self._data_to_price(data)
         except Exception as e:
-            print(f'ERROR[get_price_by_id]: {e}')
+            logger.error(f'[db.get_price_by_id]: {e}')
             self.connection.rollback()
             return None
 
@@ -128,7 +134,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_name]: {e}')
+            logger.error(f'[db.update_price_name]: {e}')
             self.connection.rollback()
             return False
 
@@ -142,7 +148,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_price]: {e}')
+            logger.error(f'[db.update_price_price]: {e}')
             self.connection.rollback()
             return False
 
@@ -156,7 +162,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_duration]: {e}')
+            logger.error(f'[db.update_price_duration]: {e}')
             self.connection.rollback()
             return False
 
@@ -170,7 +176,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_image]: {e}')
+            logger.error(f'[db.update_price_image]: {e}')
             self.connection.rollback()
             return False
 
@@ -184,7 +190,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_image_en]: {e}')
+            logger.error(f'[db.update_price_image_en]: {e}')
             self.connection.rollback()
             return False
 
@@ -198,7 +204,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_price_description]: {e}')
+            logger.error(f'[db.update_price_description]: {e}')
             self.connection.rollback()
             return False
 
@@ -214,7 +220,7 @@ class Database:
             self.curs.execute(query, params)
             self.connection.commit()
         except Exception as e:
-            print(f'ERROR[add_price]: {e}')
+            logger.error(f'[db.add_price]: {e}')
             self.connection.rollback()
 
     def deactive_price(self, id: int):
@@ -227,7 +233,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[deactive_price]: {e}')
+            logger.error(f'[db.deactive_price]: {e}')
             self.connection.rollback()
             return False
 
@@ -241,7 +247,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_price_discount]: {e}')
+            logger.error(f'[db.set_price_discount]: {e}')
             self.connection.rollback()
             return False
 
@@ -255,7 +261,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[delete_price_discount]: {e}')
+            logger.error(f'[db.delete_price_discount]: {e}')
             self.connection.rollback()
             return False
 
@@ -272,7 +278,7 @@ class Database:
 
             return self._data_to_price(data)
         except Exception as e:
-            print(f'ERROR[get_first_price_by_product]: {e}')
+            logger.error(f'[db.get_first_price_by_product]: {e}')
             self.connection.rollback()
             return None
 
@@ -286,7 +292,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[switch_tariff]: {e}')
+            logger.error(f'[db.switch_tariff]: {e}')
             self.connection.rollback()
             return False
 
@@ -300,7 +306,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_findate_tariff]: {e}')
+            logger.error(f'[db.set_findate_tariff]: {e}')
             self.connection.rollback()
             return False
 
@@ -319,7 +325,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[check_tariffs_datetime]: {e}')
+            logger.error(f'[db.check_tariffs_datetime]: {e}')
             self.connection.rollback()
             return False
 
@@ -347,7 +353,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[add_subsbscribe]: {e}')
+            logger.error(f'[db.add_subsbscribe]: {e}')
             self.connection.rollback()
             return False
 
@@ -360,7 +366,7 @@ class Database:
             data = self.curs.fetchone()
             return None if data is None else self._data_to_subsbscribe(data)
         except Exception as e:
-            print(f'ERROR[get_current_subscribe_user]: {e}')
+            logger.error(f'[db.get_current_subscribe_user]: {e}')
             self.connection.rollback()
             return None
 
@@ -374,7 +380,7 @@ class Database:
 
             return data if (data is None) else self._data_to_subsbscribe(data)
         except Exception as e:
-            print(f'ERROR[get_user_trial_subscribe]: {e}')
+            logger.error(f'[db.get_user_trial_subscribe]: {e}')
             self.connection.rollback()
             return None
 
@@ -392,7 +398,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_users_finished_subscribe]: {e}')
+            logger.error(f'[db.get_users_finished_subscribe]: {e}')
             self.connection.rollback()
             return []
 
@@ -405,7 +411,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_subscribe_unactive_by_user_id]: {e}')
+            logger.error(f'[db.set_subscribe_unactive_by_user_id]: {e}')
             self.connection.rollback()
             return False
 
@@ -418,7 +424,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_subscribe_unactive]: {e}')
+            logger.error(f'[db.set_subscribe_unactive]: {e}')
             self.connection.rollback()
             return False
 
@@ -431,7 +437,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_trial_subscribe_unactive_by_user]: {e}')
+            logger.error(f'[db.set_trial_subscribe_unactive_by_user]: {e}')
             self.connection.rollback()
             return False
 
@@ -444,7 +450,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_subscribe_findate]: {e}')
+            logger.error(f'[db.set_subscribe_findate]: {e}')
             self.connection.rollback()
             return False
 
@@ -460,7 +466,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_deactivate_subscribe]: {e}')
+            logger.error(f'[db.set_deactivate_subscribe]: {e}')
             self.connection.rollback()
             return False
 
@@ -477,7 +483,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_unactive_subscribes]: {e}')
+            logger.error(f'[db.set_unactive_subscribes]: {e}')
             self.connection.rollback()
             return False
 
@@ -493,7 +499,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_unactive_trial_subscribes]: {e}')
+            logger.error(f'[db.set_unactive_trial_subscribes]: {e}')
             return False
 
     def get_active_subscribes_by_user_id(self, user_id: int):
@@ -506,7 +512,7 @@ class Database:
             return list(map(lambda el: self._data_to_subsbscribe(el), data))
 
         except Exception as e:
-            print(f'ERROR[get_active_subscribes_by_user_id]: {e}')
+            logger.error(f'[db.get_active_subscribes_by_user_id]: {e}')
             self.connection.rollback()
             return None
 
@@ -524,7 +530,6 @@ class Database:
             'AND (p.type_product = %s OR p.type_product = %s) '
             'AND u.ban = %s '
         )
-        print(query)
         params = ('paid', 'trial', 1, 'signals', 'calc_signals', ban, )
 
         try:
@@ -532,7 +537,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_active_subscribes_all_users]: {e}')
+            logger.error(f'[db.get_active_subscribes_all_users]: {e}')
             self.connection.rollback()
             return []
 
@@ -589,7 +594,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[add_transaction]: {e}')
+            logger.error(f'[db.add_transaction]: {e}')
             self.connection.rollback()
             return False
 
@@ -605,7 +610,7 @@ class Database:
             data = self.curs.fetchone()
             return None if data is None else self._data_to_transaction(data)
         except Exception as e:
-            print(f'ERROR[get_wait_transaction]: {e}')
+            logger.error(f'[db.get_wait_transaction]: {e}')
             self.connection.rollback()
             return None
 
@@ -623,7 +628,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            logger.error(f'[db.get_paid_transactions_by_user]: {e}')
             self.connection.rollback()
             return []
 
@@ -641,7 +646,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_all]: {e}')
+            logger.error(f'[db.get_paid_transactions_all]: {e}')
             self.connection.rollback()
             return []
 
@@ -656,7 +661,7 @@ class Database:
 
             return len(data)
         except Exception as e:
-            print(f'ERROR[get_paid_users_count]: {e}')
+            logger.error(f'[db.get_paid_users_count]: {e}')
             self.connection.rollback()
             return 0
 
@@ -676,7 +681,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_all]: {e}')
+            logger.error(f'[db.get_paid_transactions_all]: {e}')
             self.connection.rollback()
             return []
 
@@ -695,7 +700,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_product]: {e}')
+            logger.error(f'[db.get_paid_transactions_product]: {e}')
             self.connection.rollback()
             return []
 
@@ -712,7 +717,7 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_summ]: {e}')
+            logger.error(f'[db.get_paid_transactions_summ]: {e}')
             self.connection.rollback()
             return 0
 
@@ -730,7 +735,7 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_summ_period]: {e}')
+            logger.error(f'[db.get_paid_transactions_summ_period]: {e}')
             self.connection.rollback()
             return 0
 
@@ -749,7 +754,7 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_summ_product]: {e}')
+            logger.error(f'[db.get_paid_transactions_summ_product]: {e}')
             self.connection.rollback()
             return 0
 
@@ -769,7 +774,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            logger.error(f'[db.get_paid_transactions_by_user]: {e}')
             self.connection.rollback()
             return []
 
@@ -807,7 +812,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
-            print(f'ERROR[get_paid_transactions_by_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -821,7 +826,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[success_transaction]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -834,7 +839,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[cancel_transaction]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -863,7 +868,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda u: self._data_to_user(u), data))
         except Exception as e:
-            print(f'ERROR[get_all_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -883,7 +888,7 @@ class Database:
             else:
                 return True
         except Exception as e:
-            print(f'ERROR [check_tg_user_tables]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -909,7 +914,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR [create_tg_user_tables]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -925,7 +930,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_paginated_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -948,7 +953,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda u: self._data_to_user(u), data))
         except Exception as e:
-            print(f'ERROR[get_banned_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -968,7 +973,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_subsribed_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -984,7 +989,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_not_subscribed_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -993,7 +998,7 @@ class Database:
             self.curs.execute("SELECT * FROM users")
             return len(self.curs.fetchall())
         except Exception as e:
-            print(f'ERROR[get_users_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -1007,7 +1012,7 @@ class Database:
             data = self.curs.fetchone()
             return int(data.get('id')) if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_user_id_by_tg_name]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -1021,7 +1026,7 @@ class Database:
             data = self.curs.fetchone()
             return int(data.get('id')) if (data is not None) else 0
         except Exception as e:
-            print(f'ERROR[get_user_id_by_tg_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -1035,7 +1040,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            print(f'ERROR[get_user_referals]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1049,7 +1054,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_user(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_user_by_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1063,7 +1068,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_user(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_user_by_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1084,7 +1089,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_task]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
         pass
@@ -1100,7 +1105,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[add_lesson_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1117,7 +1122,7 @@ class Database:
             else:
                 return data['lesson_count']
         except Exception as e:
-            print(f'ERROR[get_lesson_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 1
 
@@ -1132,7 +1137,7 @@ class Database:
             data = self.curs.fetchone()
             return data == 1
         except Exception as e:
-            print(f'ERROR[check_ban_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1145,7 +1150,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_ban]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1191,7 +1196,7 @@ class Database:
 
             return data.get('market')
         except Exception as e:
-            print(f'ERROR[get_user_current_market]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return default
 
@@ -1211,7 +1216,7 @@ class Database:
 
             return self._data_to_user_calc(data)
         except Exception as e:
-            print(f'ERROR[get_calc_user_settings]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1228,7 +1233,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_base]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1244,7 +1249,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_currency]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1259,7 +1264,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_risk_is_percent]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1272,7 +1277,7 @@ class Database:
             data = self.curs.fetchone()
             return None if (data is None) else data.get('lang')
         except Exception as e:
-            print(f'ERROR[get_user_lang]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1288,7 +1293,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_lang]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1302,7 +1307,7 @@ class Database:
             data = self.curs.fetchone()
             return None if (data is None) else data.get('uses_count')
         except Exception as e:
-            print(f'ERROR[get_calculator_uses_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1317,7 +1322,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[minus_calculator_uses_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1332,7 +1337,7 @@ class Database:
             data = self.curs.fetchone()
             return None if (data is None) else data.get('freeze_dt')
         except Exception as e:
-            print(f'ERROR[get_user_calc_freeze]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1347,7 +1352,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_calc_freeze]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1363,7 +1368,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_calculator_tp_ratio]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1377,7 +1382,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_calculator_user_market]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1392,7 +1397,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_split_values]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1408,7 +1413,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_day_risk]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1423,7 +1428,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_round_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1438,7 +1443,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_trading_style]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1464,7 +1469,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[reset_user_settings]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1479,7 +1484,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_user_updating_deposit]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1546,7 +1551,7 @@ class Database:
             self.connection.commit()
             return int(data.get('id'))
         except Exception as e:
-            print(f'ERROR[add_calculations]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1559,7 +1564,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_calculations_profit]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1572,7 +1577,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_calculation_in_stat]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1584,7 +1589,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_calculations(el), data))
         except Exception as e:
-            print(f'ERROR[get_all_calculation]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1610,7 +1615,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_calculations(el), data))
         except Exception as e:
-            print(f'ERROR[get_calculations_by_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1623,7 +1628,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_calculations(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_calculation]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1637,7 +1642,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: str(el.get('tool') or ''), data))
         except Exception as e:
-            print(f'ERROR[get_last_tools]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1666,7 +1671,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[add_worker]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1680,7 +1685,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[del_worker]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1693,7 +1698,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_all_workes]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1706,7 +1711,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_admins]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1719,7 +1724,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_redactors]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1733,7 +1738,7 @@ class Database:
             data = self.curs.fetchone()
             return data.get('username_tg', '') if (data is not None) else ''
         except Exception as e:
-            print(f'ERROR[get_support_name]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return ''
 
@@ -1747,7 +1752,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_support]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1761,7 +1766,7 @@ class Database:
             data = self.curs.fetchone()
             return data.get('role') if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_worker_role]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1775,7 +1780,7 @@ class Database:
             res = self.curs.fetchone()
             return res['value'] if res is not None else None
         except Exception as e:
-            print(f'ERROR[get_access_token]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1790,7 +1795,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[set_option]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1803,7 +1808,7 @@ class Database:
             res = self.curs.fetchone()
             return res['value'] if res is not None else None
         except Exception as e:
-            print(f'ERROR[get_option]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1864,7 +1869,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[add_post]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1876,7 +1881,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[delete_post]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1889,7 +1894,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_post(el), data))
         except Exception as e:
-            print(f'ERROR[get_all_posts]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1903,7 +1908,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_post(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_post]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1926,7 +1931,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_text(el), data)) if (data is not None) else []
         except Exception as e:
-            print(f'ERROR[get_texts]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -1939,7 +1944,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_text(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_text_by_name]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -1959,7 +1964,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_text]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -1981,7 +1986,7 @@ class Database:
             data = self.curs.fetchone()
             return self._data_to_forex(data) if (data is not None) else None
         except Exception as e:
-            print(f'ERROR[get_forex]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -2001,7 +2006,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            print(f'ERROR[update_forex]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 

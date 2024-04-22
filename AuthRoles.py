@@ -3,6 +3,7 @@ import json
 import requests
 
 from db import db
+from config_logger import logger
 from config_global import API_URL
 from common.vars import HEADERS
 
@@ -22,9 +23,12 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
             json.dumps(data).encode(), headers=HEADERS
         )
 
-        print(response.status_code)
-        print(response.json())
-    except:
+        logger.info(
+            f'/auth/tg_register [id={user_id}, username={username}] {response.status_code} {response.json()}'
+        )
+    except Exception as e:
+        logger.error(f'/auth/tg_register {e}')
+
         return False
 
     return response.status_code >= 200 and response.status_code < 300
@@ -65,10 +69,13 @@ def change_password(id: int, password: str):
             json.dumps(data).encode(), headers=HEADERS
         )
 
-        print(response.status_code)
-        print(response.json())
+        logger.info(
+            f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
+        )
     except Exception as e:
-        print(e)
+        logger.error(
+            f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
+        )
         return False
 
     return response.status_code == 200

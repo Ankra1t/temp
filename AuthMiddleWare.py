@@ -2,15 +2,15 @@ from telebot import types, TeleBot
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 from NOTIFIER import notifier
 
-
+from config_logger import logger
 from common.utils import delete_message
 from db import db, LANGUAGES
 from AuthRoles import check_registrate, registration
 
 
-
 class AuthMiddleWare(BaseMiddleware):
     """Класс защитник авторизации"""
+
     def __init__(self, bot: TeleBot, limit=2) -> None:
         self.last_time = {}
         self.limit = limit
@@ -19,7 +19,6 @@ class AuthMiddleWare(BaseMiddleware):
 
     def post_process(self, message: types.Message, data, exception):
         pass
-
 
     def pre_process(self, message: types.Message, data):
         user_id = message.from_user.id
@@ -64,7 +63,9 @@ class AuthMiddleWare(BaseMiddleware):
                 # Уведомление о регистрации
                 notifier.send_user_is_registered(new_user)
             else:
-                print(f'Ошибка регистрации пользователя tg_id = {user_id} {username}')
+                logger.error(
+                    f'Ошибка регистрации пользователя tg_id = {user_id} {username}'
+                )
 
             data['has_registered_now'] = True
             user_role = 0

@@ -55,8 +55,8 @@ def _check_finish_trial_subscribe(bot: TeleBot):
             send_message_by_type(
                 bot, user.tg_id, 'text', end_trial_subscribe_msg(user.tg_id)
             )
-        except:
-            print('error sending message')
+        except Exception as e:
+            logger.error(f'[end_trail_sub error sending message]: {e}')
 
     pay_guard.set_subscribe_unactive_many_users()
 
@@ -72,8 +72,8 @@ def _check_finish_paid_subscribe(bot: TeleBot):
             send_message_by_type(
                 bot, user.tg_id, 'text', end_paid_subscribe_msg(user.tg_id)
             )
-        except:
-            print('error sending message')
+        except Exception as e:
+            logger.error(f'[end_paid_sub error sending message]: {e}')
 
     # После рассылки убрать активность ПЛАТНЫХ рассылок у данных пользователей
     pay_guard.set_paid_subscribe_unactive_many_users()
