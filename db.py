@@ -1195,8 +1195,8 @@ class Database:
             self.connection.rollback()
             return default
 
-    def get_calc_user_settings(self, user_id: int) -> UserCalcSettings | None:
-        market = self.get_user_current_market(user_id)
+    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None) -> UserCalcSettings | None:
+        market = market or self.get_user_current_market(user_id)
 
         query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s AND market = %s'
         params = user_id, market

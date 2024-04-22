@@ -396,7 +396,7 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
             'pieces': 'шт.'
         },
         'en': {
-            'name': 'Statistics',
+            'name': 'Stats',
             'all': 'Total calculations',
             'tp': 'Take-profit',
             'sl': 'Stop-loss',
@@ -407,12 +407,13 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
     }
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    user_settings = db.get_calc_user_settings(user_db_id)
+    user_settings = db.get_calc_user_settings(user_db_id, market)
+
     currency = 'USD'
     if user_settings is not None:
         currency = user_settings.currency or currency
 
-    return f"""📊 <u><b>{texts[lang]['name']}</b></u> - {market_translates[lang][market]}
+    return f"""📊 <b>{texts[lang]['name']}</b> - <u><b>{market_translates[lang][market]}</b></u>
 
 {POINT} {texts[lang]['all']}: <b>{stats.all_stats_count} {texts[lang]['pieces']}</b>
 

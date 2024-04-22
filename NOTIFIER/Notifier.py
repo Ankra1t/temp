@@ -20,7 +20,7 @@ class Notifier():
                 bot.send_photo(user_id, media_id, caption=text)
             elif type == 'video':
                 bot.send_video(user_id, media_id, caption=text)
-            else: # text
+            else:  # text
                 bot.send_message(user_id, text)
         except Exception as e:
             print(f'Ошибка бота уведомлений: {e}')
@@ -34,8 +34,14 @@ class Notifier():
 
     def send_user_is_registered(self, new_user: UserInfo):
         message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
+
         if new_user.username != '':
-            message += f'@{new_user.username}\n'
+            message += f'@{new_user.username}'
+        else:
+            message += f'tg ID: <b>{new_user.tg_id}</b>'
+
+        message += '\n'
+
         message += f'Дата и время: {get_str_by_datetime(new_user.registration_dt)}'
 
         self._send(self.bot_users, 'text', message)
