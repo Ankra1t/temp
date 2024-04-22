@@ -15,7 +15,7 @@ from thread_tasks import run_thread
 
 app = flask.Flask(__name__)
 
-app.logger.setLevel(logging.INFO)
+app.logger.setLevel(logging.DEBUG)
 app.logger.addHandler(handler_fileout)
 
 run_thread(bot)
