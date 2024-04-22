@@ -5,7 +5,7 @@ import flask
 from flask import request
 
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
-from config_logger import handler_fileout
+from config_logger import handler_fileout, logger
 
 from MAIN.initialize import bot
 from thread_tasks import run_thread
@@ -18,6 +18,7 @@ run_thread(bot)
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
 def AAA():
+    logger.info('AAA')
     if request.headers.get('content-type') == 'application/json':
         update = telebot.types.Update.de_json(
             request.stream.read().decode('utf-8')
