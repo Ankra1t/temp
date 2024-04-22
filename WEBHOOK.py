@@ -1,24 +1,27 @@
-from Classes.CryptoBot import cryptoPay_payment_updates
-from Classes.YooKassa import yooKassa_payment_updates
+import logging
 import telebot
 import flask
 from flask import request
 
+from Classes.CryptoBot import cryptoPay_payment_updates
+from Classes.YooKassa import yooKassa_payment_updates
+
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
-from config_logger import handler_fileout, logger
+from config_logger import handler_fileout
 
 from MAIN.initialize import bot
 from thread_tasks import run_thread
 
 
 app = flask.Flask(__name__)
+
+app.logger.setLevel(logging.INFO)
 app.logger.addHandler(handler_fileout)
 
 run_thread(bot)
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
 def AAA():
-    logger.info('AAA')
     if request.headers.get('content-type') == 'application/json':
         update = telebot.types.Update.de_json(
             request.stream.read().decode('utf-8')
