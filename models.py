@@ -160,11 +160,14 @@ class Client(BaseModel):
 
 
 class CalculatorStats(BaseModel):
+    currency: str
     profit: float
     tp_count: int
     sl_count: float
     all_stats_count: int
     saved_stats_count: int
+    max_profit: float
+    min_loss: float
 
 # class Client(BaseModel):
 #     user: UserInfo | None = None

@@ -1,4 +1,3 @@
-import logging
 import telebot
 import flask
 from flask import request
@@ -7,14 +6,16 @@ from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
+from config_logger import logger
 
 from MAIN.initialize import bot
 from thread_tasks import run_thread
 
 
 app = flask.Flask(__name__)
-
+logger.info('INITIALIZE')
 run_thread(bot)
+
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
 def AAA():
@@ -39,9 +40,10 @@ def cryptobot_updates():
 def yookassa_updates():
     return yooKassa_payment_updates(bot, request)
 
-# if PROD:
-#     from waitress import serve
-#     serve(app, host="127.0.0.1", port=flask_port, setup_console_handler=True)
-# else:
-#     import _index  # type: ignore
-app.run(host='127.0.0.1', port=flask_port)
+
+if PROD:
+    from waitress import serve
+    serve(app, host="127.0.0.1", port=flask_port, setup_console_handler=True)
+else:
+    import _index  # type: ignore
+    app.run(host='127.0.0.1', port=flask_port)

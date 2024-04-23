@@ -393,7 +393,9 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
             'sl': 'Стоп-лосс',
             'saved': 'Сохраненных',
             'sum': 'Сумма',
-            'pieces': 'шт.'
+            'pieces': 'шт.',
+            'max_profit': 'Крупный профит',
+            'min_loss': 'Крупный убыток',
         },
         'en': {
             'name': 'Stats',
@@ -403,15 +405,10 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
             'saved': 'Saved',
             'sum': 'Summury',
             'pieces': 'pieces',
+            'max_profit': 'Large profit',
+            'min_loss': 'Large loss',
         }
     }
-
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    user_settings = db.get_calc_user_settings(user_db_id, market)
-
-    currency = 'USD'
-    if user_settings is not None:
-        currency = user_settings.currency or currency
 
     return f"""📊 <b>{texts[lang]['name']}</b> - <u><b>{market_translates[lang][market]}</b></u>
 
@@ -421,7 +418,10 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
 {POINT} {texts[lang]['tp']}: <b>{stats.tp_count}</b>
 {POINT} {texts[lang]['sl']}: <b>{stats.sl_count}</b>
 
-{POINT} {texts[lang]['sum']}: <b>{get_print_float(stats.profit, 3)} {currency}</b>
+{POINT} {texts[lang]['max_profit']}: <b>{get_print_float(stats.max_profit, 3)} {stats.currency}</b>
+{POINT} {texts[lang]['min_loss']}: <b>{get_print_float(stats.min_loss, 3)} {stats.currency}</b>
+
+{POINT} {texts[lang]['sum']}: <b>{get_print_float(stats.profit, 3)} {stats.currency}</b>
 """
 
 

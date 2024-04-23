@@ -13,13 +13,19 @@ T = TypeVar('T', int, float)
 
 digit_pattern = r'^[+-]?((\d+[\.,]?\d*)|([\.,]\d+))$'
 
-
 def is_digit(val: str) -> bool:
     return re.search(digit_pattern, val) is not None
 
+
 def digit_accept(message: Message, type: type[T] = float):
-    if message.content_type == 'text' and message.text is not None and is_digit(message.text):
-        return type(float(message.text.replace(',', '.')))
+    value = message.text
+
+    if message.content_type == 'text' and value is not None and is_digit(value):
+        value = value.replace(',', '.')
+        if '.' not in value and value.startswith('0'):
+            value = '0.' + value[1:]
+
+        return type(value)
 
 
 def text_accept(message: Message):

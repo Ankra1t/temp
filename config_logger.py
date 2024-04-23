@@ -1,7 +1,12 @@
 import os
 import logging
-from logging import Formatter
+from logging import Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
+import sys
+
+from config_global import PROD
+
+format = '[%(asctime)s - %(levelname)s]: %(message)s'
 
 logger = logging.getLogger('logger')
 logger.setLevel(logging.INFO)
@@ -13,10 +18,15 @@ handler_fileout = TimedRotatingFileHandler(
     encoding='utf-8'
 )
 handler_fileout.setFormatter(
-    Formatter(fmt='[%(asctime)s: %(levelname)s]: %(message)s')
+    Formatter(fmt=format)
 )
-
 logger.addHandler(handler_fileout)
+
+if not PROD:
+    handler_stdout = StreamHandler(stream=sys.stdout)
+    handler_stdout.setFormatter(Formatter(fmt=format))
+    logger.addHandler(handler_stdout)
+
 
 # # # # # ЛОГИРОВАНИЕ ОТПРАВКИ
 # Отправленные с ошибкой

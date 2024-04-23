@@ -37,16 +37,21 @@ def get_save_deal_button(user_id: int, stat_id: int):
     return getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
 
 
-def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main'):
+def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market: MARKETS_TYPE | None = None):
     lang = get_lang(user_id)
 
     row_width = 2
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     buttons = []
-    markets_list: tuple[MARKETS_TYPE, ...] = ('crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
+    markets_list: tuple[MARKETS_TYPE, ...] = (
+        'crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
     for i, el in enumerate(markets_list):
-        btn = getButton(market_translates[lang][el], f'stats_market', -1, el)
+        btn = getButton(
+            market_translates[lang][el],
+            'stats_market' if el != prev_market else '',
+            -1, el
+        )
         buttons.append(btn)
 
         if len(buttons) == row_width or (i + 1 == len(markets_list) and len(buttons) != 0):

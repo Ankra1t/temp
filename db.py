@@ -1646,6 +1646,40 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_calculations_currencies(
+        self,
+        user_id: int,
+        saved: bool | None = None,
+        market: MARKETS_TYPE | None = None
+    ) -> dict[str, int]:
+        params = user_id,
+
+        query = 'SELECT currency, COUNT(*) FROM calculations WHERE user_id = %s '
+
+        if saved is not None:
+            query += 'AND in_stat = %s '
+            params = (*params, saved)
+
+        if market is not None:
+            query += 'AND market = %s '
+            params = (*params, market)
+
+        query += 'GROUP BY currency ORDER BY count DESC '
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+
+            result = {}
+            for el in data:
+                result[el.get('currency', '')] = el.get('max', 0)
+
+            return result
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return {}
+
     # Workers
     def _data_to_worker(self, data: DictRow):
         return Worker(

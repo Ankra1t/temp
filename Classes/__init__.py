@@ -18,8 +18,8 @@ pay_guard = GuardPaymentAccess()
 base_statis = BaseStatistics(db)
 serv_tasks = ServiceTasks(db)
 
-calcService = CalculationService(db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)
+calcService = CalculationService(db, currencyService)
 
 hti = HTIService()
 text_editor = TextEditor()
