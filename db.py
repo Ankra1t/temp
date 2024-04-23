@@ -1,9 +1,10 @@
-from datetime import datetime
+from psycopg2.extras import DictCursor, DictRow
+import psycopg2
 import json
 import traceback
 from typing import Literal, Optional
-import psycopg2
-from psycopg2.extras import DictCursor, DictRow
+from datetime import datetime
+from time import sleep
 
 from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
@@ -26,6 +27,11 @@ LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
 
 class Database:
     def __init__(self, user: str, password: str, host: str, port: int, database: str):
+        self._config = (user, password, host, port, database)
+        self._connect()
+
+    def _connect(self):
+        user, password, host, port, database = self._config
         try:
             self.connection = psycopg2.connect(
                 user=user,
@@ -36,11 +42,17 @@ class Database:
             )
             self.curs = self.connection.cursor(cursor_factory=DictCursor)
         except Exception as e:
-            logger.error(f"Ошибка при работе с PostgreSQL: {e}")
+            self._log_error(e)
 
     def _log_error(self, e: Exception):
         stack = traceback.extract_stack()
         logger.error(f'[db.{stack[-2].name}]: {e}')
+
+        retries = 0
+        while not (self.connection and self.connection.closed == 0) and retries < 5:
+            self._connect()
+            retries += 1
+            sleep(1)
 
     # # # # # # # #  Prices
     def _data_to_price(self, data: DictRow):
@@ -81,7 +93,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            logger.error(f'[db.get_prices]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -102,7 +114,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_price(el), data))
         except Exception as e:
-            logger.error(f'[db.get_prices_by_product]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -121,7 +133,7 @@ class Database:
                 return None
             return self._data_to_price(data)
         except Exception as e:
-            logger.error(f'[db.get_price_by_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -134,7 +146,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_name]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -148,7 +160,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_price]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -162,7 +174,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_duration]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -176,7 +188,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_image]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -190,7 +202,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_image_en]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -204,7 +216,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.update_price_description]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -220,7 +232,7 @@ class Database:
             self.curs.execute(query, params)
             self.connection.commit()
         except Exception as e:
-            logger.error(f'[db.add_price]: {e}')
+            self._log_error(e)
             self.connection.rollback()
 
     def deactive_price(self, id: int):
@@ -233,7 +245,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.deactive_price]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -247,7 +259,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_price_discount]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -261,7 +273,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.delete_price_discount]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -278,7 +290,7 @@ class Database:
 
             return self._data_to_price(data)
         except Exception as e:
-            logger.error(f'[db.get_first_price_by_product]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -292,7 +304,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.switch_tariff]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -306,7 +318,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_findate_tariff]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -325,7 +337,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.check_tariffs_datetime]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -353,7 +365,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.add_subsbscribe]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -366,7 +378,7 @@ class Database:
             data = self.curs.fetchone()
             return None if data is None else self._data_to_subsbscribe(data)
         except Exception as e:
-            logger.error(f'[db.get_current_subscribe_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -380,7 +392,7 @@ class Database:
 
             return data if (data is None) else self._data_to_subsbscribe(data)
         except Exception as e:
-            logger.error(f'[db.get_user_trial_subscribe]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -398,7 +410,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            logger.error(f'[db.get_users_finished_subscribe]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -411,7 +423,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_subscribe_unactive_by_user_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -424,7 +436,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_subscribe_unactive]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -437,7 +449,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_trial_subscribe_unactive_by_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -450,7 +462,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_subscribe_findate]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -466,7 +478,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_deactivate_subscribe]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -483,7 +495,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_unactive_subscribes]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -499,7 +511,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.set_unactive_trial_subscribes]: {e}')
+            self._log_error(e)
             return False
 
     def get_active_subscribes_by_user_id(self, user_id: int):
@@ -512,7 +524,7 @@ class Database:
             return list(map(lambda el: self._data_to_subsbscribe(el), data))
 
         except Exception as e:
-            logger.error(f'[db.get_active_subscribes_by_user_id]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -520,7 +532,7 @@ class Database:
         """Получить активные подписки для всех пользователей"""
         query = (
             'SELECT u.id AS id, u.id_telegram AS id_telegram, u.username_tg AS username_tg,  '
-            'ub.refer_id AS refer_id, u.ban AS ban, u.created_at AS created_at '
+            'u.refer_id AS refer_id, u.ban AS ban, u.created_at AS created_at '
             'FROM subscribes sub, users u, prices p, tgbotusers ub '
             'WHERE '
             '(sub.subscribe_type = %s OR sub.subscribe_type = %s) '
@@ -537,7 +549,7 @@ class Database:
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_user(el), data))
         except Exception as e:
-            logger.error(f'[db.get_active_subscribes_all_users]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -594,7 +606,7 @@ class Database:
             self.connection.commit()
             return True
         except Exception as e:
-            logger.error(f'[db.add_transaction]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return False
 
@@ -610,7 +622,7 @@ class Database:
             data = self.curs.fetchone()
             return None if data is None else self._data_to_transaction(data)
         except Exception as e:
-            logger.error(f'[db.get_wait_transaction]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return None
 
@@ -628,7 +640,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_by_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -646,7 +658,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_all]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -661,7 +673,7 @@ class Database:
 
             return len(data)
         except Exception as e:
-            logger.error(f'[db.get_paid_users_count]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -681,7 +693,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_all]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -700,7 +712,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_transaction(el), data))
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_product]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -717,7 +729,7 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_summ]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -735,7 +747,7 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_summ_period]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
@@ -754,19 +766,14 @@ class Database:
             data = self.curs.fetchone()
             return data[0] if (data is not None) else 0
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_summ_product]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return 0
 
     def get_purchases_by_user(self, user_id: int) -> list[Purchase]:
         """Получение покупок пользователя"""
-        query = ("SELECT * "
-                 "FROM transactions "
-                 "WHERE "
-                 "user_id = %s AND status = %s "
-                 )
-        status = 'paid'
-        params = (user_id, status,)
+        query = "SELECT * FROM transactions WHERE user_id = %s AND status = %s "
+        params = (user_id, 'paid',)
 
         try:
             self.curs.execute(query, params)
@@ -774,7 +781,7 @@ class Database:
 
             return list(map(lambda el: self._data_to_purchase(el), data))
         except Exception as e:
-            logger.error(f'[db.get_paid_transactions_by_user]: {e}')
+            self._log_error(e)
             self.connection.rollback()
             return []
 
@@ -856,7 +863,7 @@ class Database:
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, u.id_telegram, u.username_tg, tu.refer_id, u.ban, u.created_at, tu.uses_count  '
+        'SELECT u.id, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count  '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 
@@ -905,6 +912,9 @@ class Database:
         self.connection.commit()
 
     def create_tg_user_tables(self, id: int):
+        if id == 0:
+            return False
+
         query = 'INSERT INTO tgbotusers (user_id) VALUES (%s)'
         params = id,
 
@@ -1032,7 +1042,7 @@ class Database:
 
     def get_user_referals(self, id: int) -> list[UserInfo]:
         """Получить рефералов юзера"""
-        query = self.USER_INFO_QUERY + 'WHERE tu.refer_id = %s'
+        query = self.USER_INFO_QUERY + 'WHERE u.refer_id = %s'
         params = (id,)
 
         try:

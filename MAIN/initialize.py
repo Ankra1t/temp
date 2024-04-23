@@ -2,9 +2,10 @@ from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 from telebot.custom_filters import StateFilter
 
-from AuthMiddleWare import AuthMiddleWare
 from config_global import TOKEN_MAIN_BOT
 
+from Middlewares.AuthMiddleWare import AuthMiddleWare
+from Middlewares.ExceptionHandler import ExHandler
 from MAIN.commands import commands_registration
 from MAIN.handlers import handlers_registration
 from MAIN.callbacks import callbacks_registration
@@ -15,6 +16,7 @@ bot = TeleBot(
     state_storage=StateMemoryStorage(),
     skip_pending=True,
     use_class_middlewares=True,
+    exception_handler=ExHandler()
 )
 
 bot.setup_middleware(AuthMiddleWare(bot))

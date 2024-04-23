@@ -46,7 +46,7 @@ class AuthMiddleWare(BaseMiddleware):
             if len(ref_id) == 2 and ref_id[0] == '/start' and ref_id[1].isdigit():
                 ref_id = int(ref_id[1])
             else:
-                ref_id = 0
+                ref_id = None
 
             # Регистрация, пробный период, добавление таблиц бота
             is_registered = registration(user_id, username, ref_id)

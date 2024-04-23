@@ -95,15 +95,15 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
 
     bot.delete_state(user_id, chat_id)
 
-    referals = db.get_user_referals(user_id)
-    count_ref = len(referals)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    referals = len(db.get_user_referals(user_db_id))
 
-    purchase = db.get_purchases_by_user(user_id)
+    purchase = db.get_purchases_by_user(user_db_id)
     money = 0
     for el in purchase:
         money += el.sum or 0
 
-    text = msg_user_account(user_id, money, count_ref)
+    text = msg_user_account(user_id, money, referals)
     keyboard = kb_user_account(user_id)
 
     if is_first:

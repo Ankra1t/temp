@@ -8,13 +8,14 @@ from config_global import API_URL
 from common.vars import HEADERS
 
 
-def registration(user_id: int, username: str = '', referral_id: int = 0):
+def registration(user_id: int, username: str = '', referral_id: int | None = None):
     access_token = db.get_access_token() or ''
 
-    data: dict[str, str | int] = {
+    data: dict[str, str | int | None] = {
         'id_telegram': user_id,
         'tg_api_auth_token': access_token,
-        'username_tg': username
+        'username_tg': username,
+        'refer_id': referral_id
     }
 
     try:
@@ -28,7 +29,6 @@ def registration(user_id: int, username: str = '', referral_id: int = 0):
         )
     except Exception as e:
         logger.error(f'/auth/tg_register {e}')
-
         return False
 
     return response.status_code >= 200 and response.status_code < 300

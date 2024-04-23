@@ -24,7 +24,7 @@ class Notifier():
             else:  # text
                 bot.send_message(user_id, text)
         except Exception as e:
-            logger.error(f'Ошибка бота уведомлений: {e}')
+            logger.error(f'Ошибка бота уведомлений [id = {user_id}]: {e}')
 
     def _send(self, bot: TeleBot, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         for user in self.users:

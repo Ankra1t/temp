@@ -8,7 +8,7 @@ from .filter import user_account_factory, UserAccountCallbackFilter
 
 from MAIN.states import UserAccountState
 from MAIN.callbacks import send_user_account, send_user_main
-from MAIN.common.messages import msg_referral, msg_user_purchases
+from MAIN.common.messages import msg_referral, msg_referral_list, msg_user_purchases
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -35,25 +35,25 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_user_account(bot, call.message, user_id)
 
     if type == 'referral':
-        referals = db.get_user_referals(user_id)
-        count_ref = len(referals)
-        intext = msg_referral(count_ref, bot.get_me().username, user_id)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        referals_count = len(db.get_user_referals(user_db_id))
 
-        bot.send_message(
-            chat_id, text=intext,
-            reply_markup=kb_user_referral(user_id)
+        text = msg_referral(user_id, referals_count, bot.get_me().username)
+
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb_user_referral(user_id, referals_count)
         )
 
     if type == 'referral_list':
-        referals = db.get_user_referals(user_id)
-        res = ''
-        if len(referals) != 0:
-            for i in range(0, len(referals)):
-                res += f'\nНик: {referals[i].username}\nВсего потратил: {referals[i].username}'
-        else:
-            res = "К сожалению, у вас нет рефералов 😔\n<b>Отправьте</b> свой реферальную ссылку друзьями, чтобы это исправить 😉"
-        bot.send_message(
-            chat_id, res, reply_markup=kb_user_referral_list(user_id)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        referrals = db.get_user_referals(user_db_id)
+
+        text = msg_referral_list(user_id, referrals)
+
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb_user_referral_list(user_id)
         )
 
     if type == 'password':

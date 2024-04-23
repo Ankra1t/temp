@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 from telebot.custom_filters import StateFilter
 
-from AuthMiddleWare import AuthMiddleWare
+from Middlewares.AuthMiddleWare import AuthMiddleWare
 from config_global import TOKEN_CALC_BOT
 
 from CALCULATE.commands import commands_registration

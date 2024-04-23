@@ -35,28 +35,33 @@ def kb_user_account(user_id: int):
     back = getButton(back_txt(lang), 'main')
     # btn5 = getButton("Пополнить баланс")
 
-    keyboard.add(purchases, back)
+    keyboard.add(purchases, referral)
+    keyboard.add(back)
     return keyboard
 
 
-def kb_user_referral(user_id: int):
+def kb_user_referral(user_id: int, referals_count=0):
     lang = get_lang(user_id)
 
     texts = {
-        'en': {
+        'ru': {
             'refs': 'Список рефералов'
         },
-        'ru': {
+        'en': {
             'refs': 'List of referrals'
         },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton(f"📋 {texts[lang]['refs']}", 'referral_list')
-    btn2 = getButton(back_txt(lang), 'back')
+    btn_list = getButton(f"📋 {texts[lang]['refs']}", 'referral_list')
+    btn_back = getButton(back_txt(lang), 'back')
 
-    keyboard.add(btn1, btn2)
+    if referals_count == 0:
+        keyboard.add(btn_back)
+    else:
+        keyboard.add(btn_list, btn_back)
+
     return keyboard
 
 

@@ -19,7 +19,8 @@ def handle_new_password(message: Message, bot: TeleBot):
 
     if len(new_pass) < 8:
         bot.send_message(
-            chat_id, 'Пароль должен состоять из 8 и более символов:')
+            chat_id, 'Пароль должен состоять из 8 и более символов:'
+        )
         return
 
     response = change_password(user_id, new_pass)

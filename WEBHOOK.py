@@ -12,8 +12,8 @@ from MAIN.initialize import bot
 from thread_tasks import run_thread
 
 
-app = flask.Flask(__name__)
 logger.info('INITIALIZE')
+app = flask.Flask(__name__)
 run_thread(bot)
 
 
@@ -43,7 +43,7 @@ def yookassa_updates():
 
 if PROD:
     from waitress import serve
-    serve(app, host="127.0.0.1", port=flask_port, setup_console_handler=True)
+    serve(app, host="127.0.0.1", port=flask_port)
 else:
     import _index  # type: ignore
     app.run(host='127.0.0.1', port=flask_port)
