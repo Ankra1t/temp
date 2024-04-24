@@ -928,12 +928,22 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_paginated_users(self, limit=6, page=1, sort_by: SORT_BY_TYPE = 'new') -> list[UserInfo]:
+    def get_paginated_users(
+        self, limit=6, page=1,
+        sort_by: SORT_BY_TYPE = 'new',
+        market_filter: MARKETS_TYPE | None = None
+    ) -> list[UserInfo]:
         """Получить постраничный список пользователей"""
         query = self.USER_INFO_QUERY
+        params = tuple()
+
+        if market_filter is not None:
+            query += f'WHERE tu.market = %s '
+            params = (*params, market_filter)
+
         query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
         query += "LIMIT %s OFFSET %s "
-        params = (limit, (page - 1) * limit)
+        params = (*params, limit, (page - 1) * limit)
 
         try:
             self.curs.execute(query, params)
@@ -1011,6 +1021,21 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return 0
+
+    def get_users_each_market_count(self) -> dict[str, int]:
+        try:
+            self.curs.execute("SELECT tu.market, count(tu.market) FROM users as u, tgbotusers as tu WHERE u.id = tu.user_id GROUP BY tu.market")
+            data = self.curs.fetchall()
+
+            result = {}
+            for el in data:
+                result[el.get('market', '')] = el.get('count', 0)
+
+            return result
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return {}
 
     def get_user_id_by_tg_name(self, username: str):
         """Получение пользователя по имени"""

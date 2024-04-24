@@ -2,6 +2,7 @@ import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from MAIN.common.messages import msg_admin_users_markets
 from MAIN.common.utils import get_short_user_info
 from MAIN.states import AdminUsersState
 from common.dt import get_str_by_datetime
@@ -16,7 +17,7 @@ from messages.users import gift_subscribe_msg
 
 from .keyboards import (
     kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel,
-    kb_admin_users_confirm, kb_admin_client_list
+    kb_admin_users_confirm, kb_admin_client_list, kb_admin_users_markets
 )
 from .filter import admin_users_factory, AdminUsersCallbackFilter
 from ..pages import send_admin_client, send_admin_main, send_admin_users
@@ -259,6 +260,51 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             chat_id, mes_id,
             reply_markup=kb_admin_users_back()
         )
+
+    if type == 'markets':
+        users_markets_count = db.get_users_each_market_count()
+
+        if filter == '':
+            bot.edit_message_text(
+                msg_admin_users_markets(users_markets_count), chat_id, mes_id,
+                reply_markup=kb_admin_users_markets()
+            )
+        else:
+            limit = 6
+            users_count = users_markets_count.get(filter, 0)
+            pages_count = math.ceil(users_count / limit)
+
+            users = db.get_paginated_users(
+                limit, page, sort_by, filter # type: ignore
+            )
+
+            if filter == 'crypto':
+                market_text = 'крипте'
+            elif filter == 'forex':
+                market_text = 'форекс'
+            elif filter == 'RF':
+                market_text = 'рынке РФ'
+            else:
+                market_text = 'рынке США'
+
+            text = f'<b>Клиенты в {market_text}</b>\n'
+
+            if len(users) == 0:
+                text += '\nНет пользователей'
+            else:
+                text += '<b>ID | Тг данные | Остаток расчетов</b>\n'
+                for user in users:
+                    text += '\n' + get_short_user_info(user) + '\n'
+
+                sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
+                text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'
+
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_admin_client_list(
+                    pages_count, page, sort_by, filter, 'markets'
+                )
+            )
 
     bot.answer_callback_query(call.id)
 

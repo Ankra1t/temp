@@ -21,10 +21,12 @@ def kb_admin_users():
     lists = getButton('📋 Списки', 'lists')
     search = getButton('🔎 Поиск клиента', 'client_search')
     clients = getButton('👨‍💻 Все клиенты', 'client_list', 'new', 1)
+    markets = getButton('По рынкам', 'markets')
     main = getButton(back_txt(), 'go_main')
 
     keyboard.add(clients, lists)
-    keyboard.add(search, main)
+    keyboard.add(search, markets)
+    keyboard.add(main)
     return keyboard
 
 
@@ -44,10 +46,10 @@ def kb_admin_choose_list():
     return keyboard
 
 
-def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
+def kb_admin_client_list(pages: int, page: int, sort_by='', filter='', type='client_list'):
     def getThisButton(text: str, new_page: int, new_sort_by: str | None = None):
         new_sort_by = new_sort_by or sort_by
-        return getButton(text, 'client_list', new_sort_by, new_page, 0, filter)
+        return getButton(text, type, new_sort_by, new_page, 0, filter)
 
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
@@ -67,20 +69,19 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter=''):
         else:
             keyboard.add(btn_back, counter, btn_next)
 
-    if sort_by == 'new':
-        filter_text = 'Сортировать по старым'
-        new_filter = 'old'
-    else:
-        filter_text = 'Сортировать по новым'
-        new_filter = 'new'
+        if sort_by == 'new':
+            filter_text = 'Сортировать по старым'
+            new_filter = 'old'
+        else:
+            filter_text = 'Сортировать по новым'
+            new_filter = 'new'
+        btn_filter = getThisButton(filter_text, 1, new_filter)
+        keyboard.add(btn_filter)
 
-    btn_filter = getThisButton(filter_text, 1, new_filter)
     search = getButton('🔎 Поиск', 'client_search', sort_by, page)
     back = getButton(back_txt(), 'go_users')
 
-    keyboard.add(btn_filter)
     keyboard.add(search, back)
-
     return keyboard
 
 
@@ -174,4 +175,17 @@ def kb_admin_users_back():
     back = getButton(back_txt(), 'go_users')
     keyboard.add(back)
 
+    return keyboard
+
+
+def kb_admin_users_markets():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    btn_crypto = getButton('Крипта', 'markets', 'new', 1, 0, 'crypto')
+    btn_forex = getButton('Форекс', 'markets', 'new', 1, 0, 'forex')
+    btn_RF = getButton('РФ', 'markets', 'new', 1, 0, 'RF')
+    btn_USA = getButton('США', 'markets', 'new', 1, 0, 'USA')
+    btn_back = getButton(back_txt(), 'go_users')
+
+    keyboard.add(btn_crypto, btn_forex, btn_RF, btn_USA, btn_back)
     return keyboard

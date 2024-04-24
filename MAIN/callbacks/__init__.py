@@ -40,7 +40,7 @@ from .admin.users.handler import registration as _reg_admin_users
 from .admin.users.keyboards import (
     kb_admin_users, kb_admin_users_back, kb_admin_client_list,
     kb_admin_client_info, kb_admin_users_confirm, kb_admin_users_cancel, kb_admin_choose_periods,
-    kb_admin_choose_list
+    kb_admin_choose_list, kb_admin_users_markets
 )
 
 from .admin.params.handler import registration as _reg_admin_params

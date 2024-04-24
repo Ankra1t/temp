@@ -131,6 +131,16 @@ def msg_admin_tariff(tariff: Price):
 """ + (f'\n{discount}' if discount != '' else '')
 
 
+def msg_admin_users_markets(counts: dict[str, int]):
+    return f"""<b><u>Клиенты по рынкам</u></b>
+
+{POINT} Крипта: <b>{counts.get('crypto', 0)}</b>
+{POINT} Форекс: <b>{counts.get('forex', 0)}</b>
+{POINT} РФ: <b>{counts.get('RF', 0)}</b>
+{POINT} США: <b>{counts.get('USA', 0)}</b>
+"""
+
+
 def msg_user_account(user_id: int, spent: float, refs: int):
     lang = get_lang(user_id)
 
