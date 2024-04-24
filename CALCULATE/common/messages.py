@@ -520,7 +520,7 @@ def msg_frozen(user_id: int, datetime: str):
         'en': 'The calculator is frozen until',
     }
 
-    return f'❄️ {text[lang]} <b>{datetime}'
+    return f'❄️ {text[lang]} <b>{datetime}</b>'
 
 
 # Ошибки ввода данных
@@ -649,7 +649,7 @@ def msg_currency_error(user_id: int, type: Literal['', 'not_found'] = ''):
         error_mes = texts[lang]['not_found']
 
     return f"""{error_mes}
-❗️ {texts[lang]}:
+❗️ {texts[lang]['enter']}:
 """
 
 

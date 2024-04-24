@@ -330,7 +330,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             db.set_user_split_values(user_db_id, sorted_split)
 
         # Выводим сообщения
-        bot.edit_message_text('Изменено!', chat_id, mes_id)
+        bot.edit_message_text(msg_success_edit(user_id), chat_id, mes_id)
         send_summury_profit_settings(bot, call.message, user_id, True)
 
     if type == 'splitting_last':
