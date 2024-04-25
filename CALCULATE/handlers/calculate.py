@@ -16,6 +16,24 @@ from CALCULATE.common.messages import (
 )
 
 
+def send_calculation(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    calc: Calculation
+):
+    chat_id = message.chat.id
+
+    is_valid = pay_guard.valid_use_calc(user_id)
+
+    mes = msg_calculate_result(user_id, calc)
+
+    bot.send_message(
+        chat_id, mes,
+        reply_markup=kb_main(user_id, is_valid, True, calc.id),
+    )
+
+
 def handle_tool(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -31,6 +49,7 @@ def handle_tool(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
         calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
 
     tool = tool.upper().replace('/', '').replace(' ', '')
@@ -40,8 +59,17 @@ def handle_tool(message: Message, bot: TeleBot):
 
         tool += '/USDT'
 
-    set_state_data(bot, user_id, chat_id, {'tool': tool})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='tool')
+    if stat_id is None:
+        set_state_data(bot, user_id, chat_id, {'tool': tool})
+        choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='tool')
+    else:
+        db.change_calculation_tool(stat_id, tool)
+
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        send_calculation(bot, message, user_id, calc_info)
 
 
 def handle_forex_pair(message: Message, bot: TeleBot):
@@ -88,8 +116,23 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         cross_prices=prices
     )
 
-    set_state_data(bot, user_id, chat_id, {'forex': forex})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='forex')
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
+
+    if stat_id is None:
+        set_state_data(bot, user_id, chat_id, {'forex': forex})
+        choose_calculate_step(
+            bot, user_id, chat_id,
+            mes_id, last_value='forex'
+        )
+    else:
+        db.change_calculation_forex(stat_id, forex)
+
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        send_calculation(bot, message, user_id, calc_info)
 
 
 def handle_currency(message: Message, bot: TeleBot):
@@ -192,7 +235,8 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = value.lower()
 
     set_state_data(bot, user_id, chat_id, {'trading_style': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='trading_style')
+    choose_calculate_step(bot, user_id, chat_id, mes_id,
+                          last_value='trading_style')
 
 
 def handle_open_price(message: Message, bot: TeleBot):
@@ -209,8 +253,28 @@ def handle_open_price(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    set_state_data(bot, user_id, chat_id, {'open_price': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='open_price')
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
+
+    if stat_id is None:
+        set_state_data(bot, user_id, chat_id, {'open_price': value})
+        choose_calculate_step(
+            bot, user_id, chat_id,
+            mes_id, last_value='open_price'
+        )
+    else:
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        if calc_info.stop_loss == value:
+            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            return
+
+        db.change_calculation_open_price(stat_id, value)
+        calc_info.open_price = value
+        send_calculation(bot, message, user_id, calc_info)
 
 
 def handle_stop_loss(message: Message, bot: TeleBot):
@@ -229,6 +293,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         return
 
     with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
         open_price = data.get('open_price', 0)
         forex = data.get('forex')
         trading_style = data.get('trading_style')
@@ -236,6 +301,21 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         deposit: float = data.get('deposit', 1.)
         risk: tuple[float, bool] = data.get('risk', [1., False])
         currency = data.get('currency', 'USD')
+
+    if stat_id is not None:
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        if calc_info.open_price == stop_loss:
+            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            return
+
+        db.change_calculation_stop_loss(stat_id, stop_loss)
+        calc_info.stop_loss = stop_loss
+        send_calculation(bot, message, user_id, calc_info)
+        return
 
     if open_price == stop_loss:
         new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
@@ -267,16 +347,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     )
 
     new_id = db.add_calculation(calc_info)
-    is_valid = pay_guard.valid_use_calc(user_id)
+    calc_info.id = new_id
 
-    mes = msg_calculate_result(user_id, calc_info)
-
-    bot.send_message(
-        chat_id, mes,
-        reply_markup=kb_main(user_id, is_valid, True, new_id),
-    )
-
-    db.minus_calculator_uses_count(user_db_id)
+    send_calculation(bot, message, user_id, calc_info)
 
     db.set_user_base(user_db_id, 'base_risk', risk[0])
     db.set_user_risk_is_percent(user_db_id, risk[1])

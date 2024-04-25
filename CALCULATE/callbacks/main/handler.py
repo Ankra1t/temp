@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from common.utils import delete_message
 from db import db
 
-from ..stats.keyboards import kb_set_calc_stats
+from ..stats.keyboards import kb_calc_result
 from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats
@@ -25,7 +25,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if stat_id != -1:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_set_calc_stats(user_id, stat_id)
+                reply_markup=kb_calc_result(user_id, stat_id)
             )
         elif is_new_calc == 'True':
             bot.edit_message_reply_markup(

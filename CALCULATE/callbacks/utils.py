@@ -12,7 +12,8 @@ from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
     msg_calculate, msg_enter_currency, msg_enter_deposit,
-    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
+    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent,
+    msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 

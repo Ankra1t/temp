@@ -2,17 +2,25 @@ from datetime import timedelta
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.utils import delete_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from Classes import calcService, pay_guard
 from db import db
-from CALCULATE.common.messages import msg_calculate_result, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_frozen, msg_market_stats
+from CALCULATE.common.messages import (
+    msg_calculate_change, msg_calculate_delete, msg_calculate_result,
+    msg_calculation_deleted, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
+    msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_frozen, msg_market_stats, msg_enter_profit_sum,
+)
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 from models import MARKETS_TYPE
 
-from .keyboards import kb_deal_profit_cancel, kb_deal_profit_minus, kb_deal_result, kb_stats
+from .keyboards import (
+    kb_calculate_change, kb_calculate_delete, kb_deal_profit_cancel,
+    kb_deal_profit_minus, kb_deal_result, kb_stats
+)
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_main, send_stats
 
@@ -89,7 +97,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     mes_calc, chat_id, mes_id,
                     reply_markup=kb_main(
-                        user_id, is_valid, True, saved_stat_id)
+                        user_id, is_valid, True, saved_stat_id
+                    )
                 )
                 # file_path = hti.create_calculation_image(
                 #     user_id, calc_info, not is_cancel
@@ -129,6 +138,101 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text, chat_id, mes_id,
             reply_markup=kb_stats(user_id, 'market')
         )
+
+    if 'delete_calc' in type:
+        if '_yes' in type:
+            if db.delete_calculation(stat_id):
+                bot.edit_message_text(
+                    msg_calculation_deleted(user_id), chat_id, mes_id
+                )
+                send_main(call.message, bot, user_id, True)
+        elif '_no' in type:
+            text = call.message.text or 'err\n'
+            text = '\n'.join(text.split('\n')[:-1])
+
+            is_valid = pay_guard.valid_use_calc(user_id)
+
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_main(user_id, is_valid, True, stat_id)
+            )
+        else:
+            bot.delete_message(chat_id, mes_id)
+            bot.send_message(
+                chat_id,
+                msg_calculate_delete(user_id, call.message.text or ''),
+                reply_markup=kb_calculate_delete(user_id, stat_id)
+            )
+
+    if 'change_calc' in type:
+        type_arr = type.split('+')
+        kind = ''
+        if len(type_arr) == 2:
+            kind = type_arr[1]
+
+        if kind == '':
+            bot.edit_message_text(
+                msg_calculate_change(user_id, call.message.text or ''),
+                chat_id, mes_id,
+                reply_markup=kb_calculate_change(user_id, stat_id)
+            )
+        elif kind == 'back':
+            text = call.message.text or 'err\n'
+            text = '\n'.join(text.split('\n')[:-1])
+
+            is_valid = pay_guard.valid_use_calc(user_id)
+
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb_main(user_id, is_valid, True, stat_id)
+            )
+        elif kind == 'open_price':
+            bot.edit_message_text(
+                msg_enter_open_price(user_id), chat_id, mes_id,
+                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            )
+            bot.set_state(user_id, CalculateState.open_price, chat_id)
+            set_state_data(
+                bot, user_id, chat_id, {
+                    'stat_id': stat_id,
+                    'del_mes_id': call.message.id
+                }
+            )
+        elif kind == 'stop_loss':
+            bot.edit_message_text(
+                msg_enter_stop_loss(user_id), chat_id, mes_id,
+                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            )
+            bot.set_state(user_id, CalculateState.stop_loss, chat_id)
+            set_state_data(
+                bot, user_id, chat_id, {
+                    'stat_id': stat_id,
+                    'del_mes_id': call.message.id
+                }
+            )
+        elif kind == 'tool':
+            stat = db.get_calculation(stat_id)
+            if stat is None:
+                return
+
+            if stat.forex_info is not None:
+                state = ForexCalcState.pair
+                msg = msg_enter_pair(user_id)
+            else:
+                state = CalculateState.tool
+                msg = msg_enter_tool(user_id)
+
+            bot.edit_message_text(
+                msg, chat_id, mes_id,
+                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            )
+            bot.set_state(user_id, state, chat_id)
+            set_state_data(
+                bot, user_id, chat_id, {
+                    'stat_id': stat_id,
+                    'del_mes_id': call.message.id
+                }
+            )
 
     bot.answer_callback_query(call.id)
 

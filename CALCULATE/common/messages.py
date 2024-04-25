@@ -1020,6 +1020,32 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: Calculato
 """
 
 
+def msg_calculate_delete(user_id: int, prev_message: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Хотите удалить расчёт',
+        'en': 'Do you want to delete the calculation',
+    }
+
+    return f"""{prev_message.strip()}
+
+{TAB}<b>{texts[lang]}</b>?"""
+
+
+def msg_calculate_change(user_id: int, prev_message: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Что хотите изменить',
+        'en': 'What do you want to change',
+    }
+
+    return f"""{prev_message.strip()}
+
+{TAB}<b>{texts[lang]}?</b>"""
+
+
 # Ввод данных
 def msg_enter_save_calc(user_id: int):
     lang = get_lang(user_id)
@@ -1391,6 +1417,17 @@ def msg_calculation_saved(user_id: int):
     }
 
     return f'✅ {texts[lang]}!'
+
+
+def msg_calculation_deleted(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Расчёт удалён',
+        'en': 'Calcultaion deleted'
+    }
+
+    return f'⭕️ {texts[lang]}!'
 
 
 # Инструкция к калькулятору

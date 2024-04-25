@@ -94,6 +94,7 @@ def _test(message: Message, bot: TeleBot):
 
     # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
     # bot.send_photo(message.chat.id, img)
+    
     pass
 
 

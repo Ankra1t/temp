@@ -22,21 +22,6 @@ def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'cry
     )
 
 
-def get_save_deal_button(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'save': 'Сохранить расчет',
-        },
-        'en': {
-            'save': 'Save calculation',
-        }
-    }
-
-    return getButton('✅ ' + texts[lang]['save'], 'profit+', stat_id)
-
-
 def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market: MARKETS_TYPE | None = None):
     lang = get_lang(user_id)
 
@@ -45,7 +30,8 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
 
     buttons = []
     markets_list: tuple[MARKETS_TYPE, ...] = (
-        'crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
+        'crypto', 'forex', 'RF', 'USA'
+    )  # 'paper', 'future',
     for i, el in enumerate(markets_list):
         btn = getButton(
             market_translates[lang][el],
@@ -67,10 +53,30 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
     return keyboard
 
 
-def kb_set_calc_stats(user_id: int, stat_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=2)
+def kb_calc_result(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
 
-    keyboard.add(get_save_deal_button(user_id, stat_id))
+    texts = {
+        'ru': {
+            'save': 'Сохранить',
+            'del': 'Удалить',
+            'change': 'Изменить',
+        },
+        'en': {
+            'save': 'Save',
+            'del': 'Delete',
+            'change': 'Change',
+        }
+    }
+
+    btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
+    btn_delete = getButton(f'❌ {texts[lang]["del"]}', 'delete_calc', stat_id)
+    btn_change = getButton(
+        f'✏️ {texts[lang]["change"]}', 'change_calc', stat_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_delete, btn_change, btn_save)
+
     return keyboard
 
 
@@ -159,4 +165,53 @@ def kb_deal_profit_cancel(user_id: int, stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_cancel)
+    return keyboard
+
+
+def kb_calculate_delete(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'yes': 'Да',
+            'no': 'Нет',
+        },
+        'en': {
+            'yes': 'Yes',
+            'no': 'No',
+        },
+    }
+
+    btn_yes = getButton(f'✅ {texts[lang]["yes"]}', 'delete_calc_yes', stat_id)
+    btn_no = getButton(f'❌ {texts[lang]["no"]}', 'delete_calc_no', stat_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_no, btn_yes)
+    return keyboard
+
+
+def kb_calculate_change(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'open_price': 'Цену входа',
+            'stop_loss': 'Стоп-лосс',
+            'tool': 'Инструмент',
+        },
+        'en': {
+            'open_price': 'Open price',
+            'stop_loss': 'Stop-loss',
+            'tool': 'Tool',
+        },
+    }
+
+    btn_op = getButton(texts[lang]["open_price"], 'change_calc+open_price', stat_id)
+    btn_sl = getButton(texts[lang]["stop_loss"], 'change_calc+stop_loss', stat_id)
+    btn_tool = getButton(texts[lang]["tool"], 'change_calc+tool', stat_id)
+    btn_back = getButton(back_txt(lang), 'change_calc+back', stat_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_op, btn_sl)
+    keyboard.add(btn_tool, btn_back)
     return keyboard

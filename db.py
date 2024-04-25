@@ -1024,7 +1024,8 @@ class Database:
 
     def get_users_each_market_count(self) -> dict[str, int]:
         try:
-            self.curs.execute("SELECT tu.market, count(tu.market) FROM users as u, tgbotusers as tu WHERE u.id = tu.user_id GROUP BY tu.market")
+            self.curs.execute(
+                "SELECT tu.market, count(tu.market) FROM users as u, tgbotusers as tu WHERE u.id = tu.user_id GROUP BY tu.market")
             data = self.curs.fetchall()
 
             result = {}
@@ -1588,6 +1589,71 @@ class Database:
 
             self.connection.commit()
             return int(data.get('id'))
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def change_calculation_open_price(self, id: int, value: float):
+        query = 'UPDATE calculations SET open_price = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def change_calculation_stop_loss(self, id: int, value: float):
+        query = 'UPDATE calculations SET stop_loss = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def change_calculation_tool(self, id: int, value: str):
+        query = 'UPDATE calculations SET tool = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def change_calculation_forex(self, id: int, value: ForexInfo):
+        query = 'UPDATE calculations SET pair = %s, pair_price = %s, cross_prices = %s WHERE id = %s'
+        params = ('/'.join(value.pair), value.price, json.dumps(value.cross_prices), id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def delete_calculation(self, id: int):
+        query = 'DELETE FROM calculations WHERE id = %s'
+        params = id,
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
