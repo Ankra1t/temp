@@ -41,7 +41,7 @@ def handle_tool(message: Message, bot: TeleBot):
         tool += '/USDT'
 
     set_state_data(bot, user_id, chat_id, {'tool': tool})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='tool')
 
 
 def handle_forex_pair(message: Message, bot: TeleBot):
@@ -89,12 +89,11 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     )
 
     set_state_data(bot, user_id, chat_id, {'forex': forex})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='forex')
 
 
 def handle_currency(message: Message, bot: TeleBot):
     user_id = message.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -117,8 +116,8 @@ def handle_currency(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    db.set_user_currency(user_db_id, value.upper())
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    set_state_data(bot, user_id, chat_id, {'currency': value.upper()})
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='currency')
 
 
 def handle_deposit(message: Message, bot: TeleBot):
@@ -137,8 +136,8 @@ def handle_deposit(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    db.set_user_base(user_db_id, 'base_deposit', value)
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    set_state_data(bot, user_id, chat_id, {'deposit': value})
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='deposit')
 
 
 def handle_risk_percent(message: Message, bot: TeleBot):
@@ -169,9 +168,8 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     )
     #     return
 
-    db.set_user_base(user_db_id, 'base_risk', value)
-    db.set_user_risk_is_percent(user_db_id, is_percent)
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    set_state_data(bot, user_id, chat_id, {'risk': [value, is_percent]})
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='risk')
 
 
 def handle_trading_style(message: Message, bot: TeleBot):
@@ -181,7 +179,6 @@ def handle_trading_style(message: Message, bot: TeleBot):
     mes_id = message.id
 
     value = text_accept(message)
-
 
     if value is None or is_digit(value):
         msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
@@ -195,7 +192,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = value.lower()
 
     set_state_data(bot, user_id, chat_id, {'trading_style': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='trading_style')
 
 
 def handle_open_price(message: Message, bot: TeleBot):
@@ -213,7 +210,7 @@ def handle_open_price(message: Message, bot: TeleBot):
         return
 
     set_state_data(bot, user_id, chat_id, {'open_price': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id)
+    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='open_price')
 
 
 def handle_stop_loss(message: Message, bot: TeleBot):
@@ -236,6 +233,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         forex = data.get('forex')
         trading_style = data.get('trading_style')
         tool = data.get('tool')
+        deposit: float = data.get('deposit', 1.)
+        risk: tuple[float, bool] = data.get('risk', [1., False])
+        currency = data.get('currency', 'USD')
 
     if open_price == stop_loss:
         new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
@@ -246,9 +246,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if u_base is None:
         return
 
-    deposit = u_base.deposit or 1.
-    risk_value = u_base.risk[0] if (u_base.risk is not None) else 1.
-    if u_base.risk is not None and u_base.risk[1]:
+    risk_value = risk[0]
+    if risk[1]:
         risk_value *= deposit * 0.01
 
     calc_info = Calculation(
@@ -258,7 +257,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         open_price=open_price,
         stop_loss=stop_loss,
         round_count=u_base.round_count,
-        currency=u_base.currency or 'USD',
+        currency=currency,
         market=u_base.market,
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
@@ -278,6 +277,12 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     )
 
     db.minus_calculator_uses_count(user_db_id)
+
+    db.set_user_base(user_db_id, 'base_risk', risk[0])
+    db.set_user_risk_is_percent(user_db_id, risk[1])
+    db.set_user_base(user_db_id, 'base_deposit', deposit)
+    db.set_user_currency(user_db_id, currency)
+
     bot.delete_state(user_id, chat_id)
     # file_path = hti.create_calculation_image(user_id, calc_info)
     # mes = get_msg_of_calc(user_id, calc_info)

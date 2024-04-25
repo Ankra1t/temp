@@ -22,6 +22,15 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'go_main':
         send_main(call.message, bot, user_id)
 
+    if type == 'calc_back':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            last_values = data.get('last_values')
+            if last_values is not None and len(last_values) > 0:
+                value = data['last_values'].pop()
+                data[value] = None
+
+        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
     if type == 'go_settings':
         send_settings(bot, call.message, user_id)
 
@@ -51,19 +60,31 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             set_state_data(bot, user_id, chat_id, {
                 'forex': forex,
             })
-            choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+            choose_calculate_step(
+                bot, user_id, chat_id,
+                mes_id, True, last_value='forex'
+            )
 
     if 'tool' in type:
         _, tool = type.split('++')
 
         set_state_data(bot, user_id, chat_id, {'tool': tool})
-        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+        choose_calculate_step(
+            bot, user_id, chat_id,
+            mes_id, True, last_value='tool'
+        )
 
     if 'open_price' in type:
         _, open_price = type.split('+')
 
-        set_state_data(bot, user_id, chat_id, {'open_price': float(open_price)})
-        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'open_price': float(open_price)}
+        )
+        choose_calculate_step(
+            bot, user_id, chat_id, mes_id,
+            True, last_value='open_price'
+        )
 
     bot.answer_callback_query(call.id)
 

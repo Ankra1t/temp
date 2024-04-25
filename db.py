@@ -1276,6 +1276,9 @@ class Database:
         """Установить значения для автозаполения пользователя"""
         market = self.get_user_current_market(user_id)
 
+        if market == 'crypto' and value != 'USDT':
+            return False
+
         query = 'UPDATE tgcalc_user_settings SET base_currency = %s WHERE user_id = %s AND market = %s'
         params = (value, user_id, market)
 

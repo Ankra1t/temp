@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from common.keyboard import cancel_txt
+from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
 from .filter import calculate_factory
@@ -62,7 +62,19 @@ def kb_open_price(user_id: int, open_price: float):
     btn_value = getButton(str(open_price), f'open_price+{open_price}')
     btn_settings = getButton('⚙️', 'go_settings')
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
+    btn_back = getButton(back_txt(lang), 'calc_back')
 
     keyboard.add(btn_value)
-    keyboard.add(btn_settings, btn_cancel)
+    keyboard.add(btn_back, btn_settings, btn_cancel)
+    return keyboard
+
+
+def kb_calc_cancel(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(back_txt(lang), 'calc_back'),
+        getButton(cancel_txt(lang), 'go_main')
+    )
     return keyboard

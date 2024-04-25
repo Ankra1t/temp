@@ -7,6 +7,7 @@ from CALCULATE.common.messages import market_translates
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
+from ..calculate.filter import calculate_factory
 
 
 def getButton(
@@ -196,7 +197,8 @@ def kb_change_market(user_id: int):
 
     buttons: list[InlineKeyboardButton] = []
 
-    markets_list: tuple[MARKETS_TYPE, ...] = ('crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
+    markets_list: tuple[MARKETS_TYPE, ...] = (
+        'crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
     for i, el in enumerate(markets_list):
         btn = getButton(market_translates[lang][el], f'market_{el}')
         buttons.append(btn)
@@ -521,17 +523,22 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
             keyboard.add(*buttons)
             buttons = []
 
+    off_text = f'⭕️ {texts[lang]["off"]}' if type == 'calc' else f'⭕️ {texts[lang]["off_settings"]}'
+    btn_off = getThisButton(off_text, '**off**')
+
+    buttons.append(btn_off)
     if len(buttons) != 0:
         keyboard.add(*buttons)
 
     if type == 'calc':
+        btn_back = InlineKeyboardButton(
+            back_txt(lang), None, calculate_factory.new('calc_back')
+        )
         btn_settings = getButton('⚙️', 'go_settings')
         btn_cancel = getButton(cancel_txt(lang), 'go_main')
-        btn_off = getThisButton(f'⭕️ {texts[lang]["off"]}', '**off**')
-        keyboard.add(btn_off, btn_settings, btn_cancel)
+        keyboard.add(btn_back, btn_settings, btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
-        btn_off = getThisButton(f'⭕️ {texts[lang]["off_settings"]}', '**off**')
-        keyboard.add(btn_off, btn_cancel)
+        keyboard.add(btn_cancel)
 
     return keyboard

@@ -674,25 +674,19 @@ def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    u_base = db.get_calc_user_settings(user_db_id)
-    if u_base is None:
-        return ''
-
-    deposit = u_base.deposit
-    risk = u_base.risk
-    currency = u_base.currency or 'USD'
-
-    risk_value = risk[0] if (risk is not None) else None
-    if (risk is not None) and risk[1] and (deposit is not None):
-        risk_value = risk[0] * deposit * 0.01
-
     with bot.retrieve_data(user_id, chat_id) as data:
         type = data.get('calc_type')
         ticker = data.get('ticker')
         open_price = data.get('open_price')
         forex: ForexInfo | None = data.get('forex')
         tool: str = data.get('tool', '')
+        deposit: float | None = data.get('deposit')
+        risk: tuple[float, bool] | None = data.get('risk')
+        currency: str | None = data.get('currency')
+
+    risk_value = risk[0] if (risk is not None) else None
+    if (risk is not None) and risk[1] and (deposit is not None):
+        risk_value = risk[0] * deposit * 0.01
 
     type_list = ['ticker', 'dep', 'risk', 'open']
     vars_dict = {

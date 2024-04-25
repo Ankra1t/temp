@@ -92,7 +92,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         'trading_style': value
                     }
                 )
-                choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+                choose_calculate_step(bot, user_id, chat_id, mes_id, True, last_value='trading_style')
             else:
                 db.set_user_trading_style(user_db_id, value)
 
@@ -117,17 +117,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.currency, chat_id)
         else:
             _, currency = type.split('+')
-            db.set_user_currency(user_db_id, currency.upper())
 
             if 'welcome' in type:
+                db.set_user_currency(user_db_id, currency.upper())
                 bot.set_state(user_id, SettingsState.deposit, chat_id)
                 bot.edit_message_text(
                     msg_enter_deposit(user_id), chat_id, mes_id
                 )
             else:
                 if 'calc' in type:
-                    choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+                    set_state_data(bot, user_id, chat_id, {'currency': currency.upper()})
+                    choose_calculate_step(bot, user_id, chat_id, mes_id, True, last_value='currency')
                 else:
+                    db.set_user_currency(user_db_id, currency.upper())
                     bot.edit_message_text(
                         msg_success_edit(user_id), chat_id, mes_id
                     )

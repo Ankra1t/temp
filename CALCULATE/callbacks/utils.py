@@ -7,8 +7,7 @@ from common.utils import set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
-from .main.keyboards import kb_main_cancel
-from .calculate.keyboards import kb_open_price, kb_pair, kb_tool
+from .calculate.keyboards import kb_calc_cancel, kb_open_price, kb_pair, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
@@ -18,47 +17,65 @@ from CALCULATE.common.messages import (
 from CALCULATE.states import CalculateState, ForexCalcState
 
 
-def choose_calculate_step(bot: TeleBot, user_id: int, chat_id: int, mes_id: int, is_edit=False):
+def choose_calculate_step(
+    bot: TeleBot,
+    user_id: int,
+    chat_id: int,
+    mes_id: int,
+    is_edit=False,
+    last_value: str | None = None
+):
     with bot.retrieve_data(user_id, chat_id) as data:
+        if last_value is not None:
+            if data.get('last_values') is None:
+                data['last_values'] = [last_value]
+            else:
+                data['last_values'].append(last_value)
+
+        calc_type: MARKETS_TYPE = data.get('calc_type')
         forex: ForexInfo | None = data.get('forex')
         open_price = data.get('open_price')
-        calc_type: MARKETS_TYPE = data.get('calc_type')
         trading_style = data.get('trading_style')
         tool = data.get('tool')
+        deposit = data.get('deposit')
+        currency = data.get('currency')
+        risk = data.get('risk')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    u_base = db.get_calc_user_settings(user_db_id)
-
-    if u_base is None:
-        return
 
     text = msg_calculate(bot, user_id, chat_id)
-    keyboard = kb_main_cancel(user_id)
+    keyboard = kb_calc_cancel(user_id)
 
     if calc_type == 'forex' and forex is None:
         text += msg_enter_pair(user_id)
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
+
     elif calc_type != 'forex' and tool is None:
         text += msg_enter_tool(user_id)
         state = CalculateState.tool
 
         last_tools = db.get_last_tools(user_db_id, calc_type)
         keyboard = kb_tool(user_id, last_tools)
+
     elif trading_style is None:
         text += msg_enter_trading_style(user_id)
         state = CalculateState.trading_style
         keyboard = kb_trading_style(user_id, 'calc')
-    elif u_base.currency is None:
+
+    elif currency is None:
         text += msg_enter_currency(user_id)
         state = CalculateState.currency
         keyboard = kb_change_currency(user_id, 'calc')
-    elif u_base.deposit is None:
+
+    elif deposit is None:
         text += msg_enter_deposit(user_id)
         state = CalculateState.deposit
-    elif u_base.risk is None:
+
+    elif risk is None:
         text += msg_enter_risk_percent(user_id)
         state = CalculateState.risk_percent
+
     elif open_price is None:
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price
@@ -99,8 +116,14 @@ def choose_first_calculate_step(
     u_base = db.get_calc_user_settings(user_db_id)
 
     style = None
+    deposit = None
+    riks = None
+    currency = None
     if u_base is not None:
         style = u_base.trading_style
+        deposit = u_base.deposit
+        currency = u_base.currency
+        risk = u_base.risk
 
     # Проверяем подписку
     if not pay_guard.valid_use_calc(user_id):
@@ -115,6 +138,10 @@ def choose_first_calculate_step(
     set_state_data(
         bot, user_id, chat_id, {
             'calc_type': type,
-            'trading_style': style
-        })
+            'trading_style': style,
+            'deposit': deposit,
+            'currency': currency,
+            'risk': risk,
+        }
+    )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)
