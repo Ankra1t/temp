@@ -759,32 +759,43 @@ def msg_calculate_crypto_rf_usa_result(
 
     point = {
         'ru': {
-            'dep_risk': 'Депозит и Риск',
+            'dep': 'Депозит',
+            'risk': 'Риск',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
             'split': 'Разделение',
             'buy': 'Покупаем',
+            'sum': 'Сумма',
             'style': 'Стиль торговли',
             'tool': 'Инструмент',
             'profit': 'Прибыль',
             'coin': 'монет',
             'token': 'Монета',
+            'paper': 'акций',
         },
         'en': {
-            'dep_risk': 'Deposit and Risk',
+            'dep': 'Deposit',
+            'risk': 'Risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
             'split': 'Split',
             'buy': 'Buying',
+            'sum': 'Sum',
             'style': 'Trading style',
             'tool': 'Tool',
             'profit': 'Profit',
             'coin': 'coins',
             'token': 'Token',
+            'paper': 'papers',
         }
     }
+    
+    if calc.market == 'crypto':
+        tool_name = point[lang]["coin"]
+    else:
+        tool_name = point[lang]["paper"]
 
     trading_style = ''
     if calc.trading_style is not None:
@@ -804,9 +815,17 @@ def msg_calculate_crypto_rf_usa_result(
     # Сумма покупки
     value_bet = count_bet * calc.open_price
 
+    if calc.open_price > calc.stop_loss:
+        long_short = '✅ Long'
+    else:
+        long_short = '🔻 Short'
+
     if stats is not None:
         profit_result = msg_calculate_saved_result(user_id, calc, stats)
+        saved_mes = '#saved ' + ('🔴' if (calc.profit or 0) <= 0 else '🟢')
     else:
+        saved_mes = ''
+
         p_show = ''
         conclusion = ''
         for i in range(len(calc.tp_ratio)):
@@ -827,7 +846,7 @@ def msg_calculate_crypto_rf_usa_result(
 
                 count = count_bet * rate
 
-                conclusion += f' (<b>{get_print_float(count, 2)} {point[lang]["coin"]}</b>) — {get_print_float(percent, round_count)}%'
+                conclusion += f' (<b>{get_print_float(count, 2)} {tool_name}</b>) — {get_print_float(percent, round_count)}%'
                 if i != len(calc.tp_ratio) - 1:
                     conclusion += '\n'
             else:
@@ -845,12 +864,15 @@ def msg_calculate_crypto_rf_usa_result(
 {POINT} {point[lang]["profit"]} (<b>{calc.currency}</b>):
 {TAB}<b>{p_show}</b>"""
 
-    return f"""#<b><u>{(calc.tool or 'BTCUSDT').replace('/', '').upper()}</u></b> - <b>{market_translates[lang][calc.market]}</b>
+    return f"""#<b><u>{(calc.tool or 'BTCUSDT').replace('/', '').upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>
+{long_short}
 
-{POINT} {point[lang]["dep_risk"]} <b>({calc.currency})</b>: <b>{get_print_float(calc.deposit)} | {get_print_float(calc.risk_value)}</b>
+{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
+{TAB}{point[lang]['risk']}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 {trading_style}
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, price_round_count)} {calc.currency}</b> | {point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, price_round_count)} {calc.currency}</b>
-{TAB}{point[lang]["buy"]}: <b>{get_print_float(count_bet)} {point[lang]["coin"]} ({get_print_float(value_bet)} {calc.currency})</b>
+{TAB}{point[lang]["buy"]}: <b>{get_print_float(count_bet)} {tool_name}</b>
+{TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 
 {profit_result}
 """
@@ -871,21 +893,25 @@ def msg_calculate_forex_result(
 
     point = {
         'ru': {
-            'dep_risk': 'Депозит и Риск',
+            'dep': 'Депозит',
+            'risk': 'Риск',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
             'buy': 'Покупаем',
+            'sum': 'Сумма',
             'style': 'Стиль торговли',
             'profit': 'Прибыль',
             'lot': 'лота',
         },
         'en': {
-            'dep_risk': 'Deposit and Risk',
+            'dep': 'Deposit',
+            'risk': 'Risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
             'buy': 'Buying',
+            'sum': 'Sum',
             'style': 'Trading style',
             'profit': 'Profit',
             'lot': 'lots',
@@ -927,9 +953,17 @@ def msg_calculate_forex_result(
         value_bet = count_bet * LOT * \
             calc.forex_info.cross_prices.get(yyyBASE, 1)
 
+    if calc.open_price > calc.stop_loss:
+        long_short = '✅ Long'
+    else:
+        long_short = '🔻 Short'
+
     if stats is not None:
         profit_result = msg_calculate_saved_result(user_id, calc, stats)
+        saved_mes = '#saved ' + ('🔴' if (calc.profit or 0) <= 0 else '🟢')
     else:
+        saved_mes = ''
+
         p_show = ''
         conclusion = ''
         for i in range(len(calc.tp_ratio)):
@@ -976,12 +1010,15 @@ def msg_calculate_forex_result(
 {TAB}<b>{p_show}</b>"""
 
     return f"""
-#<b><u>{pair.replace('/', '').upper()}</u></b> - <b>{market_translates[lang][calc.market]}</b>
+#<b><u>{pair.replace('/', '').upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>
+{long_short}
 
-{POINT} {point[lang]["dep_risk"]} <b>({calc.currency})</b>: <b>{get_print_float(calc.deposit)} | {get_print_float(calc.risk_value)}</b>
+{POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
+{TAB}{point[lang]['risk']}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
 {trading_style}
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, price_round_count)} {calc.forex_info.pair[1]}</b> | {point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, price_round_count)} {calc.forex_info.pair[1]}</b>
-⚠️{point[lang]["buy"]}: <b>{get_print_float(count_bet, 4)} {point[lang]["lot"]} ({get_print_float(value_bet)} {calc.currency})</b>
+{TAB}{point[lang]["buy"]}: <b>{get_print_float(count_bet, 4)} {point[lang]["lot"]}</b>
+{TAB}{point[lang]["sum"]}: <b>{get_print_float(value_bet)} {calc.currency}</b>
 
 {profit_result}
 """

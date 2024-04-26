@@ -141,21 +141,15 @@ def kb_deal_result(user_id: int, stat_id: int):
 
 def kb_deal_profit_minus(user_id: int, stat_id: int):
     lang = get_lang(user_id)
-    texts = {
-        'ru': {
-            'loss': 'Ровно',
-        },
-        'en': {
-            'loss': 'Ровно',
-        }
-    }
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
 
-    btn_cancel = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
-    btn_loss = getButton(texts[lang]['loss'], 'profit+loss', stat_id)
+    btn_cancel = getButton(back_txt(lang), 'profit+cancel', stat_id)
+    btn_x1 = getButton('x1', 'profit+loss1', stat_id)
+    btn_x1_5 = getButton('x1.5', 'profit+loss1.5', stat_id)
+    btn_x2 = getButton('x2', 'profit+loss2', stat_id)
 
-    keyboard.add(btn_loss, btn_cancel)
+    keyboard.add(btn_x1, btn_x1_5, btn_x2, btn_cancel)
     return keyboard
 
 

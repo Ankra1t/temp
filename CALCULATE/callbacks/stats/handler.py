@@ -73,8 +73,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     reply_markup=kb_deal_profit_minus(user_id, stat_id)
                 )
             else:
-                if profit == 'loss':
-                    calcService.set_profit(bot, stat_id, -calc_info.risk_value)
+                if 'loss' in profit:
+                    rate = float(profit.replace('loss', ''))
+                    calcService.set_profit(bot, stat_id, -calc_info.risk_value * rate)
                 elif profit != 'cancel':
                     profit_result = calc_info.risk_value * int(profit)
                     calcService.set_profit(bot, stat_id, profit_result)
