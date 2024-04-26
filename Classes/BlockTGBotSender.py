@@ -125,13 +125,14 @@ class BlockTGBotSender(object):
                     self.send_by_type(user)
                     current_batch += self.c_by_user
                     log_send_ok.info(
-                        f'Отправлено tg_id{user} db_id{user_i.id} username->{username} ')
-                    i += 1
+                        f'Отправлено tg_id{user} db_id{user_i.id} username->{username} '
+                    )
                 except Exception as e:
                     err_mess = f'Ошибка пользователя tg_id{user} db_id{user_i.id} username->{username} : {e}'
                     logger.error(err_mess)
                     log_send_fails.error(err_mess)
                 sleep(self.p_by_user)
+                i += 1
             else:
                 sleep(1)
                 current_batch = 0
