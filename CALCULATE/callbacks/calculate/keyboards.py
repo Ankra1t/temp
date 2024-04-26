@@ -54,17 +54,33 @@ def kb_tool(user_id: int, prev_tools: list[str]):
     return keyboard
 
 
-def kb_open_price(user_id: int, open_price: float):
+def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None):
     lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'risk': 'риска'
+        },
+        'en': {
+            'risk': 'of risk'
+        }
+    }
 
     keyboard = InlineKeyboardMarkup(row_width=3)
 
-    btn_value = getButton(str(open_price), f'open_price+{open_price}')
+    if open_price is not None:
+        btn_value = getButton(str(open_price), f'open_price+{open_price}')
+        keyboard.add(btn_value)
+
+    if is_risk_update:
+        btn_risk_50 = getButton(f'1/2 {texts[lang]["risk"]}', 'risk0.5')
+        btn_risk_33 = getButton(f'1/3 {texts[lang]["risk"]}', 'risk0.33')
+        keyboard.add(btn_risk_50, btn_risk_33)
+
     btn_settings = getButton('⚙️', 'go_settings')
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
     btn_back = getButton(back_txt(lang), 'calc_back')
 
-    keyboard.add(btn_value)
     keyboard.add(btn_back, btn_settings, btn_cancel)
     return keyboard
 

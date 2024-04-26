@@ -7,7 +7,7 @@ from common.utils import set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
-from .calculate.keyboards import kb_calc_cancel, kb_open_price, kb_pair, kb_tool
+from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
@@ -41,6 +41,7 @@ def choose_calculate_step(
         deposit = data.get('deposit')
         currency = data.get('currency')
         risk = data.get('risk')
+        risk_updated: bool = data.get('risk_updated', False)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
@@ -81,11 +82,15 @@ def choose_calculate_step(
         text += msg_enter_open_price(user_id)
         state = CalculateState.open_price
 
+        op_value = None
         if calc_type == 'forex' and forex is not None:
-            keyboard = kb_open_price(user_id, round(forex.price, 5))
+            op_value = round(forex.price, 5)
+
+        keyboard = kb_price(user_id, not risk_updated, op_value)
     else:
         text += msg_enter_stop_loss(user_id)
         state = CalculateState.stop_loss
+        keyboard = kb_price(user_id, not risk_updated)
 
     bot.set_state(user_id, state, chat_id)
 
