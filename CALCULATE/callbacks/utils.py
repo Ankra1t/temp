@@ -41,7 +41,7 @@ def choose_calculate_step(
         deposit = data.get('deposit')
         currency = data.get('currency')
         risk = data.get('risk')
-        risk_updated: bool = data.get('risk_updated', False)
+        updated_risk = data.get('updated_risk')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
@@ -86,11 +86,10 @@ def choose_calculate_step(
         if calc_type == 'forex' and forex is not None:
             op_value = round(forex.price, 5)
 
-        keyboard = kb_price(user_id, not risk_updated, op_value)
+        keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
         text += msg_enter_stop_loss(user_id)
         state = CalculateState.stop_loss
-        keyboard = kb_price(user_id, not risk_updated)
 
     bot.set_state(user_id, state, chat_id)
 

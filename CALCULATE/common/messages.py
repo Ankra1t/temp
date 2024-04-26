@@ -675,6 +675,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
     with bot.retrieve_data(user_id, chat_id) as data:
+        updated_risk = data.get('updated_risk', 1.)
         type = data.get('calc_type')
         ticker = data.get('ticker')
         open_price = data.get('open_price')
@@ -686,7 +687,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 
     risk_value = risk[0] if (risk is not None) else None
     if (risk is not None) and risk[1] and (deposit is not None):
-        risk_value = risk[0] * deposit * 0.01
+        risk_value = risk[0] * deposit * 0.01 * updated_risk
 
     type_list = ['ticker', 'dep', 'risk', 'open']
     vars_dict = {

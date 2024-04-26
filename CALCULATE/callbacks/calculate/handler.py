@@ -89,10 +89,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'risk' in type:
         value = float(type.replace('risk', ''))
         with bot.retrieve_data(user_id, chat_id) as data:
-            current_risk = data.get('risk', [1., False])
-            print(current_risk)
-            data['risk'] = [current_risk[0] * value, current_risk[1]]
-            data['risk_updated'] = True
+            data['updated_risk'] = value
 
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 

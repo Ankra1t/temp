@@ -300,6 +300,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         tool = data.get('tool')
         deposit: float = data.get('deposit', 1.)
         risk: tuple[float, bool] = data.get('risk', [1., False])
+        updated_risk = data.get('updated_risk', 1.)
         currency = data.get('currency', 'USD')
 
     if stat_id is not None:
@@ -333,7 +334,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     calc_info = Calculation(
         user_id=user_db_id,
         deposit=deposit,
-        risk_value=risk_value,
+        risk_value=risk_value * updated_risk,
         open_price=open_price,
         stop_loss=stop_loss,
         round_count=u_base.round_count,
