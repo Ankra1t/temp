@@ -69,9 +69,9 @@ def kb_settings(user_id: int):
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    keyboard.add(btn_base, btn_market)
-    keyboard.add(btn_style, btn_summury_profit)
-    keyboard.add(btn_lang, btn_deposit_update)
+    keyboard.add(btn_market, btn_deposit_update)
+    keyboard.add(btn_base, btn_summury_profit)
+    keyboard.add(btn_style, btn_lang)
     keyboard.add(btn_reset, btn_back)
     return keyboard
 

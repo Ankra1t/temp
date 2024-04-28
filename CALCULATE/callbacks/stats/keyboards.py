@@ -58,12 +58,12 @@ def kb_calc_result(user_id: int, stat_id: int):
 
     texts = {
         'ru': {
-            'save': 'Сохранить',
+            'save': 'Сохранить в статистику',
             'del': 'Удалить',
             'change': 'Изменить',
         },
         'en': {
-            'save': 'Save',
+            'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
         }
