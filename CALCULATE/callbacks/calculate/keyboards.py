@@ -13,6 +13,10 @@ def getButton(text: str, type: str):
     )
 
 
+def get_settings_from_calc_button():
+    return getButton('⚙️', 'settings_from_calc')
+
+
 def kb_pair(user_id: int):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=3)
@@ -23,7 +27,7 @@ def kb_pair(user_id: int):
     for el in pairs:
         buttons.append(getButton(el, f'pair+{el}'))
 
-    btn_settings = getButton('⚙️', 'go_settings')
+    btn_settings = get_settings_from_calc_button()
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
 
     keyboard.add(*buttons)
@@ -46,7 +50,7 @@ def kb_tool(user_id: int, prev_tools: list[str]):
         if len(buttons) == 2:
             break
 
-    btn_settings = getButton('⚙️', 'go_settings')
+    btn_settings = get_settings_from_calc_button()
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
 
     keyboard.add(*buttons)
@@ -77,7 +81,7 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
         btn_risk_33 = getButton(f'1/3 {texts[lang]["risk"]}', 'risk0.33')
         keyboard.add(btn_risk_50, btn_risk_33)
 
-    btn_settings = getButton('⚙️', 'go_settings')
+    btn_settings = get_settings_from_calc_button()
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
     btn_back = getButton(back_txt(lang), 'calc_back')
 
@@ -88,9 +92,10 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
 def kb_calc_cancel(user_id: int):
     lang = get_lang(user_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(
         getButton(back_txt(lang), 'calc_back'),
+        get_settings_from_calc_button(),
         getButton(cancel_txt(lang), 'go_main')
     )
     return keyboard

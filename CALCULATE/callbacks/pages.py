@@ -26,6 +26,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
     user_db_id = db.get_user_id_by_tg_id(user_id)
     uses_count = db.get_calculator_uses_count(user_db_id) or 0
     freeze_dt = db.get_user_calc_freeze(user_db_id)
+    unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
 
     if is_valid_use:
         if is_new_calc:
@@ -37,7 +38,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
     else:
         text = msg_no_uses(user_id)
 
-    keyboard = kb_main(user_id, is_valid_use, is_new_calc)
+    keyboard = kb_main(user_id, is_valid_use, is_new_calc, -1, unfinished_calc is not None)
 
     if is_first:
         bot.send_message(

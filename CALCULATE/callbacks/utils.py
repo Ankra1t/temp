@@ -24,7 +24,7 @@ def choose_calculate_step(
     chat_id: int,
     mes_id: int,
     is_edit=False,
-    last_value: str | None = None
+    last_value: str | None = None,
 ):
     with bot.retrieve_data(user_id, chat_id) as data:
         if last_value is not None:
@@ -112,7 +112,8 @@ def choose_calculate_step(
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,
     type: MARKETS_TYPE,
-    is_edit=False
+    is_edit=False,
+    is_continue=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -120,15 +121,31 @@ def choose_first_calculate_step(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
 
-    style = None
-    deposit = None
-    riks = None
-    currency = None
+    unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
+    db.delete_unfinished_calc_by_user(user_db_id)
+
+    style = deposit = risk = currency = None
     if u_base is not None:
         style = u_base.trading_style
         deposit = u_base.deposit
         currency = u_base.currency
         risk = u_base.risk
+
+    prev_values = {}
+    if unfinished_calc is not None and is_continue:
+        prev_values['open_price'] = unfinished_calc.open_price
+        prev_values['tool'] = unfinished_calc.tool
+        prev_values['forex'] = unfinished_calc.forex
+
+        style = unfinished_calc.trading_style or style
+
+        if (
+            unfinished_calc.risk_value is not None and
+            (risk is None or
+             (unfinished_calc.risk_value == risk[0] and unfinished_calc.is_risk_percent == risk[1]))
+        ):
+            prev_values['updated_risk'] = unfinished_calc.update_risk_rate
+            risk = risk or [unfinished_calc.risk_value, unfinished_calc.is_risk_percent]
 
     # Проверяем подписку
     if not pay_guard.valid_use_calc(user_id):
@@ -147,6 +164,6 @@ def choose_first_calculate_step(
             'deposit': deposit,
             'currency': currency,
             'risk': risk,
-        }
+        } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

@@ -21,7 +21,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    if type == 'calc' or type == 'settings':
+    if 'calc' in type  or type == 'settings':
         if stat_id != -1:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
@@ -34,11 +34,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             delete_message(bot, chat_id, mes_id)
 
-    if type == 'calc':
+    if 'calc' in type:
         u_base = db.get_calc_user_settings(user_db_id)
         market = u_base.market if (u_base is not None) else 'crypto'
 
-        choose_first_calculate_step(bot, user_id, call.message, market)
+        choose_first_calculate_step(bot, user_id, call.message, market, False, '_continue' in type)
 
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)

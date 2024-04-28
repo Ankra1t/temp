@@ -6,7 +6,11 @@ from db import db
 from models import MARKETS_TYPE, Calculation, ForexInfo
 
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
-from CALCULATE.callbacks import kb_main_cancel, choose_calculate_step, kb_tool, kb_main
+from CALCULATE.callbacks import (
+    choose_calculate_step, kb_tool,
+    kb_main, kb_pair, kb_change_currency,
+    kb_calc_cancel, kb_trading_style
+)
 from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (
     msg_calculate_result, msg_currency_error,
@@ -70,6 +74,7 @@ def handle_tool(message: Message, bot: TeleBot):
             return
 
         send_calculation(bot, message, user_id, calc_info)
+        bot.delete_state(user_id, chat_id)
 
 
 def handle_forex_pair(message: Message, bot: TeleBot):
@@ -105,7 +110,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     if prices == False:
         new_mes = bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_pair(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -133,6 +138,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
             return
 
         send_calculation(bot, message, user_id, calc_info)
+        bot.delete_state(user_id, chat_id)
 
 
 def handle_currency(message: Message, bot: TeleBot):
@@ -145,7 +151,7 @@ def handle_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         new_mes = bot.send_message(
             chat_id, msg_currency_error(user_id),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_change_currency(user_id, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -154,7 +160,7 @@ def handle_currency(message: Message, bot: TeleBot):
     if not check:
         new_mes = bot.send_message(
             chat_id, msg_currency_error(user_id, 'not_found'),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_change_currency(user_id, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -174,7 +180,7 @@ def handle_deposit(message: Message, bot: TeleBot):
     if value is None:
         new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -199,7 +205,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_calc_cancel(user_id)
         )
         return
 
@@ -207,7 +213,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     bot.send_message(
     #         chat_id,
     #         msg_percent_error(user_id),
-    #         reply_markup=kb_main_cancel(user_id)
+    #         reply_markup=kb_calc_cancel(user_id)
     #     )
     #     return
 
@@ -227,7 +233,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
         msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
         new_mes = bot.send_message(
             chat_id, msg_error,
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_trading_style(user_id, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -248,7 +254,7 @@ def handle_open_price(message: Message, bot: TeleBot):
     if value is None:
         new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -274,7 +280,9 @@ def handle_open_price(message: Message, bot: TeleBot):
 
         db.change_calculation_open_price(stat_id, value)
         calc_info.open_price = value
+
         send_calculation(bot, message, user_id, calc_info)
+        bot.delete_state(user_id, chat_id)
 
 
 def handle_stop_loss(message: Message, bot: TeleBot):
@@ -287,7 +295,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if stop_loss is None:
         new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_main_cancel(user_id)
+            reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -315,7 +323,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
         db.change_calculation_stop_loss(stat_id, stop_loss)
         calc_info.stop_loss = stop_loss
+
         send_calculation(bot, message, user_id, calc_info)
+        bot.delete_state(user_id, chat_id)
         return
 
     if open_price == stop_loss:
@@ -352,6 +362,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     send_calculation(bot, message, user_id, calc_info)
 
+    db.minus_calculator_uses_count(user_db_id)
+    db.delete_unfinished_calc_by_user(user_db_id)
+
     db.set_user_base(user_db_id, 'base_risk', risk[0])
     db.set_user_risk_is_percent(user_db_id, risk[1])
     db.set_user_base(user_db_id, 'base_deposit', deposit)
@@ -367,25 +380,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     #         reply_markup=kb_main(user_id, is_valid, True, new_id),
     #     )
     # os.remove(file_path)
-
-
-# ? Выравнивание результатов
-def user_cal_def(op, sl, tp):
-    res = 1
-    op_str = str(op)
-    op_str = len(op_str) - op_str.index('.') - 1
-    sl = str(sl)
-    sl = len(sl) - sl.index('.') - 1
-    tp = str(tp)
-    tp = len(tp) - tp.index('.') - 1
-    mx = op_str
-    if sl > mx:
-        mx = sl
-    if tp > mx:
-        mx = tp
-    for _ in range(0, mx):
-        res *= 10
-    return res
 
 
 def registration(bot: TeleBot):

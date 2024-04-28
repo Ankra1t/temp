@@ -269,3 +269,16 @@ class Calculation(BaseModel):
 
     forex_info: ForexInfo | None = None
     tool: Optional[str] = None
+
+
+class UnfinishedCalculation(BaseModel):
+    id: int
+    user_id: int
+    open_price: Optional[float] = None
+    tool: Optional[str] = None
+    forex: Optional[ForexInfo] = None
+    trading_style: Optional[str] = None
+    risk_value: Optional[float] = None
+    is_risk_percent: Optional[bool] = None
+    update_risk_rate: Optional[float] = None
+

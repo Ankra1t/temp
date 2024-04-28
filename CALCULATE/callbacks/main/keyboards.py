@@ -24,25 +24,18 @@ def cancel_btn(user_id: int):
     return getButton(cancel_txt(lang), 'go_main')
 
 
-def kb_main_cancel(user_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_settings = getButton('⚙️', 'settings')
-
-    keyboard.add(btn_settings, cancel_btn(user_id))
-    return keyboard
-
-
-def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1):
+def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1, is_unfinished=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
             'calc': 'Новый расчёт',
+            'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
             'stats': 'Статистика',
         },
         'en': {
             'calc': 'New calculation',
+            'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
             'stats': 'Stats',
         }
@@ -50,19 +43,26 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_calc = getButton(
-        '⌨️ ' + texts[lang]
-        ['calc'], 'calc', is_new_calc, stat_id
-    )
     btn_settings = getButton(
         '⚙️ ' + texts[lang]['settings'], 'settings', is_new_calc, stat_id)
-    btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
     buttons = []
     if is_access:
+        if is_unfinished:
+            btn_continue_calc = getButton(
+                '➡️ ' + texts[lang]
+                ['calc_continue'], 'calc_continue', is_new_calc, stat_id
+            )
+            buttons.append(btn_continue_calc)
+        btn_calc = getButton(
+            '⌨️ ' + texts[lang]
+            ['calc'], 'calc', is_new_calc, stat_id
+        )
         buttons.append(btn_calc)
     if not is_new_calc:
+        btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
         buttons.append(btn_stats)
+
     buttons.append(btn_settings)
 
     if stat_id != -1:

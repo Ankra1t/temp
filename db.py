@@ -12,7 +12,7 @@ from config_logger import logger
 
 from models import (
     Calculation, Forex, ForexInfo, Post, PostDetails,
-    Text, UserCalcSettings, UserInfo, Price, Subscribe,
+    Text, UnfinishedCalculation, UserCalcSettings, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Task,
     MARKETS_TYPE
 )
@@ -1635,7 +1635,8 @@ class Database:
 
     def change_calculation_forex(self, id: int, value: ForexInfo):
         query = 'UPDATE calculations SET pair = %s, pair_price = %s, cross_prices = %s WHERE id = %s'
-        params = ('/'.join(value.pair), value.price, json.dumps(value.cross_prices), id)
+        params = ('/'.join(value.pair), value.price,
+                  json.dumps(value.cross_prices), id)
 
         try:
             self.curs.execute(query, params)
@@ -2147,6 +2148,87 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return False
+
+    # Unfinished calculation
+    def _data_to_unfinished_calc(self, data: DictRow):
+        pair = data.get('pair')
+        pair_price = data.get('pair_price')
+        cross_prices = data.get('cross_prices')
+
+        forex = None
+        if (pair is not None) and (pair_price is not None) and (cross_prices is not None):
+            pairs = str(pair).split('/')
+            forex = ForexInfo(
+                pair=(pairs[0], pairs[1]),
+                price=pair_price,
+                cross_prices=json.loads(cross_prices)
+            )
+
+        return UnfinishedCalculation(
+            id=data.get('id'),
+            user_id=data.get('user_id'),
+            open_price=data.get('open_price'),
+            forex=forex,
+            tool=data.get('tool'),
+            is_risk_percent=data.get('is_risk_percent'),
+            risk_value=data.get('risk_value'),
+            update_risk_rate=data.get('update_risk_rate'),
+            trading_style=data.get('trading_style')
+        )
+
+    def add_unfinished_calc(self, value: UnfinishedCalculation):
+        query = 'INSERT INTO unfinished_calculations '
+        query += '(user_id, open_price, tool, pair, pair_price, cross_prices, trading_style, risk_value, update_risk_rate, is_risk_percent) '
+        query += 'VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+
+        pair_price = pair = cross_prices = None
+        if value.forex is not None:
+            pair_price = value.forex.price
+            pair = '/'.join(value.forex.pair)
+            cross_prices = json.dumps(value.forex.cross_prices)
+
+        params = (
+            value.user_id, value.open_price, value.tool, pair, pair_price, cross_prices, value.trading_style,
+            value.risk_value, value.update_risk_rate, value.is_risk_percent
+        )
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def delete_unfinished_calc_by_user(self, user_id: int):
+        query = 'DELETE FROM unfinished_calculations WHERE user_id = %s'
+        params = user_id,
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def get_unfinished_calc_by_user(self, user_id: int):
+        query = 'SELECT * FROM unfinished_calculations WHERE user_id = %s'
+        params = user_id,
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return None
+
+            return self._data_to_unfinished_calc(data)
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return None
 
 
 db = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

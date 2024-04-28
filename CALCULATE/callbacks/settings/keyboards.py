@@ -7,6 +7,7 @@ from CALCULATE.common.messages import market_translates
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
+from ..calculate.keyboards import get_settings_from_calc_button
 from ..calculate.filter import calculate_factory
 
 
@@ -179,7 +180,7 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
             buttons = []
 
     if type == 'calc':
-        btn_settings = getButton('⚙️', 'go_settings')
+        btn_settings = get_settings_from_calc_button()
         btn_back = getButton(cancel_txt(lang), 'go_main')
         keyboard.add(btn_settings, btn_back)
     else:
@@ -534,7 +535,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
         btn_back = InlineKeyboardButton(
             back_txt(lang), None, calculate_factory.new('calc_back')
         )
-        btn_settings = getButton('⚙️', 'go_settings')
+        btn_settings = get_settings_from_calc_button()
         btn_cancel = getButton(cancel_txt(lang), 'go_main')
         keyboard.add(btn_back, btn_settings, btn_cancel)
     else:

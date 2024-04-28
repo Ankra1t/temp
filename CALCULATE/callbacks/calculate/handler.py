@@ -1,10 +1,11 @@
+import json
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from db import db
 from common.utils import set_state_data
 from Classes import currencyService
-from models import ForexInfo
+from models import ForexInfo, UnfinishedCalculation
 
 from .filter import calculate_factory, CalculateCallbackFilter
 from ..utils import choose_calculate_step
@@ -32,6 +33,40 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
 
     if type == 'go_settings':
+        send_settings(bot, call.message, user_id)
+
+    if type == 'settings_from_calc' and bot.get_state(user_id, chat_id) is not None:
+        with bot.retrieve_data(user_id, chat_id) as data:
+            open_price = data.get('open_price')
+            tool: str | None = data.get('tool')
+            forex: ForexInfo | None = data.get('forex')
+            trading_style: str | None = data.get('trading_style')
+            risk: tuple[float, bool] | None = data.get('risk')
+            updated_risk: float = data.get('updated_risk', 1.)
+
+        if tool is not None or forex is not None:
+            user_db_id = db.get_user_id_by_tg_id(user_id)
+
+            risk_value = is_risk_percent = update_risk_rate = None
+            if updated_risk and risk is not None:
+                update_risk_rate = updated_risk
+                risk_value = risk[0]
+                is_risk_percent = risk[1]
+
+            unfinished_calc = UnfinishedCalculation(
+                id=-1,
+                user_id=user_db_id,
+                tool=tool,
+                forex=forex,
+                open_price=open_price,
+                trading_style=trading_style,
+                risk_value=risk_value,
+                is_risk_percent=is_risk_percent,
+                update_risk_rate=update_risk_rate,
+            )
+
+            db.add_unfinished_calc(unfinished_calc)
+
         send_settings(bot, call.message, user_id)
 
     if 'pair' in type:
