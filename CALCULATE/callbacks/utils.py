@@ -136,8 +136,11 @@ def choose_first_calculate_step(
         prev_values['open_price'] = unfinished_calc.open_price
         prev_values['tool'] = unfinished_calc.tool
         prev_values['forex'] = unfinished_calc.forex
+        prev_values['last_values'] = unfinished_calc.last_values
 
         style = unfinished_calc.trading_style or style
+        deposit = unfinished_calc.deposit or deposit
+        currency = unfinished_calc.currency or currency
 
         if (
             unfinished_calc.risk_value is not None and
@@ -160,6 +163,7 @@ def choose_first_calculate_step(
     set_state_data(
         bot, user_id, chat_id, {
             'calc_type': type,
+
             'trading_style': style,
             'deposit': deposit,
             'currency': currency,

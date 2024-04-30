@@ -2173,13 +2173,17 @@ class Database:
             is_risk_percent=data.get('is_risk_percent'),
             risk_value=data.get('risk_value'),
             update_risk_rate=data.get('update_risk_rate'),
-            trading_style=data.get('trading_style')
+            trading_style=data.get('trading_style'),
+            deposit=data.get('deposit'),
+            currency=data.get('currency'),
+            last_values=data.get('last_values') or []
         )
 
     def add_unfinished_calc(self, value: UnfinishedCalculation):
         query = 'INSERT INTO unfinished_calculations '
-        query += '(user_id, open_price, tool, pair, pair_price, cross_prices, trading_style, risk_value, update_risk_rate, is_risk_percent) '
-        query += 'VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        query += '(user_id, open_price, tool, pair, pair_price, cross_prices, trading_style, '
+        query += 'risk_value, update_risk_rate, is_risk_percent, deposit, currency, last_values) '
+        query += 'VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
         pair_price = pair = cross_prices = None
         if value.forex is not None:
@@ -2189,7 +2193,8 @@ class Database:
 
         params = (
             value.user_id, value.open_price, value.tool, pair, pair_price, cross_prices, value.trading_style,
-            value.risk_value, value.update_risk_rate, value.is_risk_percent
+            value.risk_value, value.update_risk_rate, value.is_risk_percent, value.deposit, value.currency,
+            value.last_values
         )
 
         try:

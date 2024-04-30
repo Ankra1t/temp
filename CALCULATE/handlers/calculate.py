@@ -302,14 +302,16 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
-        open_price = data.get('open_price', 0)
-        forex = data.get('forex')
-        trading_style = data.get('trading_style')
-        tool = data.get('tool')
-        deposit: float = data.get('deposit', 1.)
-        risk: tuple[float, bool] = data.get('risk', [1., False])
-        updated_risk = data.get('updated_risk', 1.)
+
+        deposit: float = data.get('deposit') or 1.0
+        risk: tuple[float, bool] = data.get('risk') or (1., False)
         currency = data.get('currency', 'USD')
+        trading_style = data.get('trading_style')
+
+        open_price = data.get('open_price') or 0
+        forex = data.get('forex')
+        tool = data.get('tool')
+        updated_risk = data.get('updated_risk') or 1.
 
     if stat_id is not None:
         calc_info = db.get_calculation(stat_id)

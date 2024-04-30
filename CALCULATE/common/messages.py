@@ -675,12 +675,12 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     lang = get_lang(user_id)
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        updated_risk = data.get('updated_risk', 1.)
+        updated_risk = data.get('updated_risk') or 1.
         type = data.get('calc_type')
         ticker = data.get('ticker')
         open_price = data.get('open_price')
         forex: ForexInfo | None = data.get('forex')
-        tool: str = data.get('tool', '')
+        tool: str = data.get('tool') or ''
         deposit: float | None = data.get('deposit')
         risk: tuple[float, bool] | None = data.get('risk')
         currency: str | None = data.get('currency')

@@ -1,4 +1,3 @@
-import json
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
@@ -37,19 +36,22 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'settings_from_calc' and bot.get_state(user_id, chat_id) is not None:
         with bot.retrieve_data(user_id, chat_id) as data:
-            open_price = data.get('open_price')
+            open_price: float | None = data.get('open_price')
             tool: str | None = data.get('tool')
             forex: ForexInfo | None = data.get('forex')
             trading_style: str | None = data.get('trading_style')
             risk: tuple[float, bool] | None = data.get('risk')
-            updated_risk: float = data.get('updated_risk', 1.)
+            updated_risk: float | None = data.get('updated_risk')
+            deposit: float | None = data.get('deposit')
+            currency: str | None = data.get('currency')
+            last_values: list[str] = data.get('last_values') or []
 
         if tool is not None or forex is not None:
             user_db_id = db.get_user_id_by_tg_id(user_id)
+            update_risk_rate = updated_risk
 
-            risk_value = is_risk_percent = update_risk_rate = None
-            if updated_risk and risk is not None:
-                update_risk_rate = updated_risk
+            risk_value = is_risk_percent = None
+            if risk is not None:
                 risk_value = risk[0]
                 is_risk_percent = risk[1]
 
@@ -63,6 +65,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 risk_value=risk_value,
                 is_risk_percent=is_risk_percent,
                 update_risk_rate=update_risk_rate,
+                deposit=deposit,
+                currency=currency,
+                last_values=last_values
             )
 
             db.add_unfinished_calc(unfinished_calc)
@@ -110,11 +115,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'open_price' in type:
-        _, open_price = type.split('+')
+        _, open_price_val = type.split('+')
 
         set_state_data(
             bot, user_id, chat_id, {
-                'open_price': float(open_price)}
+                'open_price': float(open_price_val)}
         )
         choose_calculate_step(
             bot, user_id, chat_id, mes_id,

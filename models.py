@@ -274,6 +274,11 @@ class Calculation(BaseModel):
 class UnfinishedCalculation(BaseModel):
     id: int
     user_id: int
+    last_values: list[str]
+
+    deposit: Optional[float] = None
+    currency: Optional[str] = None
+
     open_price: Optional[float] = None
     tool: Optional[str] = None
     forex: Optional[ForexInfo] = None
