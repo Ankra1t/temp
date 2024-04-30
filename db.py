@@ -11,7 +11,7 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from config_logger import logger
 
 from models import (
-    Calculation, Forex, ForexInfo, Post, PostDetails,
+    TRADING_TYPE, Calculation, Forex, ForexInfo, Post, PostDetails,
     Text, UnfinishedCalculation, UserCalcSettings, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Task,
     MARKETS_TYPE
@@ -1217,6 +1217,7 @@ class Database:
             round_count=data.get('round_count'),
             day_risk=day_risk,
             is_updating_deposit=data.get('is_updating_deposit'),
+            trading_type=data.get('trading_type')
         )
 
     def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
@@ -1516,6 +1517,21 @@ class Database:
         market = self.get_user_current_market(user_id)
 
         query = 'UPDATE tgcalc_user_settings SET is_updating_deposit = %s WHERE user_id = %s AND market = %s'
+        params = value, user_id, market
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def set_user_trading_type(self, user_id: int, value: TRADING_TYPE):
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE tgcalc_user_settings SET trading_type = %s WHERE user_id = %s AND market = %s'
         params = value, user_id, market
 
         try:

@@ -19,7 +19,7 @@ from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_market,
     kb_choose_lang, kb_base_cancel, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
-    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel
+    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
 from ..pages import send_main, send_settings, send_summury_profit_settings, send_user_deposit
 
@@ -28,7 +28,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
 
-    trading_style = callback_data.get('trading_style', '')
+    trading_value = callback_data.get('trading_style', '')
     summury_type = callback_data.get('summury_type', '')
     take_profit_add = callback_data.get('take_profit', '')
     add_count = callback_data.get('add_count', '')
@@ -72,7 +72,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, SettingsState.round_count, chat_id)
 
     if 'style' in type:
-        if trading_style == '':
+        if trading_value == '':
             bot.set_state(user_id, SettingsState.trading_style, chat_id)
             bot.edit_message_text(
                 msg_enter_trading_style(user_id),
@@ -80,7 +80,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_trading_style(user_id)
             )
         else:
-            value = trading_style.lower()
+            value = trading_value.lower()
             if value == '**off**':
                 value = None
 
@@ -347,6 +347,16 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             chat_id, mes_id,
             reply_markup=kb_splitting_last(user_id)
         )
+
+    if 'trading_type' in type:
+        if trading_value == '':
+            bot.edit_message_text(
+                'Выберите тип', chat_id, mes_id,
+                reply_markup=kb_trading_type(user_id)
+            )
+        else:
+            db.set_user_trading_type(user_db_id, trading_value) # type: ignore
+            send_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

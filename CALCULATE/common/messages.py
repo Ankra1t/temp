@@ -162,6 +162,7 @@ def msg_settings(user_id: int):
             'day_risk': 'Риск на день',
             'round_count': 'Округление до',
             'trading_style': 'Стиль торговли',
+            'trading_type': 'Тип торговли',
             'updating_deposit': 'Обновление депозита',
             'currency': 'Базовая валюта',
             'tp_show': 'Деление профита',
@@ -169,6 +170,9 @@ def msg_settings(user_id: int):
             'round_count': 'Округление',
             'on': 'Включено',
             'off': 'Выключено',
+
+            'margin': 'маржинальный',
+            'spot': 'спотовый',
         },
         'en': {
             'name': 'Settings',
@@ -177,23 +181,28 @@ def msg_settings(user_id: int):
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
             'trading_style': 'Trading style',
+            'trading_type': 'Trading type',
             'updating_deposit': 'Deposit updating',
             'currency': 'Default currency',
             'tp_show': 'Profit division',
             'market': 'Market',
             'on': 'On',
             'off': 'Off',
+
+            'margin': 'margin',
+            'spot': 'spot',
         },
     }
 
-    currency = u_base.currency or 'USD'
+    currency = u_base.currency or ''
 
     tp_result = ''
     for el in u_base.tp_ratio:
         tp_result += f'x{el} '
 
-    show_deposit = f"{get_print_float(u_base.deposit)} {currency}" if (
-        u_base.deposit is not None) else "-"
+    show_deposit = '-'
+    if u_base.deposit is not None:
+        show_deposit = get_print_float(u_base.deposit)
 
     show_risk = (str(get_print_float(u_base.risk[0])) +
                  ("%" if u_base.risk[1] else f" {currency}")) if (u_base.risk is not None) else "-"
@@ -208,17 +217,18 @@ def msg_settings(user_id: int):
     return f"""
 ⚙️ <b><u>{texts[lang]["name"]}</u></b>
 
-{POINT} {texts[lang]["dep"]}: <b>{show_deposit}</b>
+{POINT} {texts[lang]["market"]}: <b>{market_translates[lang][u_base.market]}</b>
+
+{POINT} {texts[lang]["dep"]}: <b>{show_deposit} {currency}</b>
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
-{POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
 {POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
 
-{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
-{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
-
+{POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
+{POINT} {texts[lang]["trading_type"]}: <b>{texts[lang][u_base.trading_type]}</b>
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
-{POINT} {texts[lang]["market"]}: <b>{market_translates[lang][u_base.market]}</b>
-"""
+
+{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
+{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>"""
 
 
 def msg_deposit(user_id: int):
@@ -792,7 +802,7 @@ def msg_calculate_crypto_rf_usa_result(
             'paper': 'papers',
         }
     }
-    
+
     if calc.market == 'crypto':
         tool_name = point[lang]["coin"]
     else:

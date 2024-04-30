@@ -26,7 +26,8 @@ from .settings.keyboards import (
     kb_change_base, kb_choose_lang, kb_change_currency,
     kb_change_market, kb_splitting_last, kb_take_profit,
     kb_summury_profit, kb_summury_profit_type, kb_splitting,
-    kb_trading_style, kb_change_deposit, kb_deposit_cancel
+    kb_trading_style, kb_change_deposit, kb_deposit_cancel,
+    kb_trading_type
 )
 
 

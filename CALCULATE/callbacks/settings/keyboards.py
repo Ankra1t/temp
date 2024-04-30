@@ -38,6 +38,7 @@ def kb_settings(user_id: int):
             'lang': 'Язык',
             'market': 'Рынок',
             'style': 'Стиль торговли',
+            'trading_type': 'Тип торговли',
             'reset': 'Сброс',
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
@@ -47,6 +48,7 @@ def kb_settings(user_id: int):
             'lang': 'Language',
             'market': 'Market',
             'style': 'Trading style',
+            'trading_type': 'Trading type',
             'reset': 'Reset',
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
@@ -59,6 +61,7 @@ def kb_settings(user_id: int):
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
+    btn_trading_type = getButton('🔧 ' + texts[lang]["trading_type"], 'trading_type')
     btn_deposit_update = getButton(
         '📐 ' + texts[lang]["deposit"], 'deposit_update')
 
@@ -71,8 +74,9 @@ def kb_settings(user_id: int):
 
     keyboard.add(btn_market, btn_deposit_update)
     keyboard.add(btn_base, btn_summury_profit)
-    keyboard.add(btn_style, btn_lang)
-    keyboard.add(btn_reset, btn_back)
+    keyboard.add(btn_style, btn_trading_type)
+    keyboard.add(btn_lang, btn_reset)
+    keyboard.add(btn_back)
     return keyboard
 
 
@@ -542,4 +546,28 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         keyboard.add(btn_cancel)
 
+    return keyboard
+
+
+def kb_trading_type(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'margin': 'Маржинальный',
+            'spot': 'Спотовый',
+        },
+        'en': {
+            'margin': 'Margin',
+            'spot': 'Spot',
+        },
+    }
+
+    btn_margin = getButton(texts[lang]['margin'], 'trading_type', trading_style='margin')
+    btn_spot = getButton(texts[lang]['spot'], 'trading_type', trading_style='spot')
+    btn_back = getButton(back_txt(lang), 'go_settings')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_margin, btn_spot)
+    keyboard.add(btn_back)
     return keyboard
