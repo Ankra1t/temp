@@ -1252,20 +1252,20 @@ def msg_enter_trading_type(user_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'main': 'Тип торговли',
-            'm': '<b>Маржинальная</b>: расчеты будут производиться, включая кредитные плечи',
-            's': '<b>Спотовая</b>: расчеты производятся, исходя из фиксированного депозита',
+            'main': 'Типы торговли',
+            'm': '<b>Маржинальный</b>: расчеты будут производиться, включая кредитные плечи',
+            's': '<b>Спотовый</b>: расчеты производятся, исходя из фиксированного депозита',
             'enter': 'Выберите тип'
         },
         'en': {
-            'main': 'Trading type',
+            'main': 'Trading types',
             'm': '<b>Margin</b>: calculations will be made, including leverage',
             's': '<b>Spot</b>: calculations are made based on a fixed deposit',
             'enter': 'Choose type'
         },
     }
 
-    return f"""{texts[lang]['main']}
+    return f"""<b><u>{texts[lang]['main']}</u></b>
 {texts[lang]['m']}
 
 {texts[lang]['s']}
