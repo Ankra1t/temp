@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from CALCULATE.callbacks.utils import choose_calculate_step
 
+from config_logger import logger
 from db import db, LANGUAGES
 
 from common.utils import set_state_data
@@ -38,6 +39,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
+
+    logger.info(f'callback "settings_factory" user_tg_id={user_id} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
 
     if type == 'set_deposit':
         bot.edit_message_text(

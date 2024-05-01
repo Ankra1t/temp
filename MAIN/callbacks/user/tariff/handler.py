@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment
 from Classes.YooKassa import yooKassa_create_payment
 from common.utils import check_discount_price, delete_message
@@ -23,6 +24,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    logger.info(f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
 
     if type == 'go_main':
         send_user_main(bot, call.message, user_id)

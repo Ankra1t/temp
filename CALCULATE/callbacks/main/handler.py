@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from config_logger import logger
 from common.utils import delete_message
 from db import db
 
@@ -20,6 +21,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
+
+    logger.info(f'callback "main_factory" user_tg_id={user_id} type={type} is_new_calc={is_new_calc} stat_id={stat_id}')
 
     if 'calc' in type  or type == 'settings':
         if stat_id != -1:

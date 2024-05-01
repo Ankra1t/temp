@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from config_logger import logger
 from db import db
 from common.utils import set_state_data
 from Classes import currencyService
@@ -18,6 +19,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
+
+    logger.info(f'callback "calculate_factory" user_tg_id={user_id} type={type}')
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

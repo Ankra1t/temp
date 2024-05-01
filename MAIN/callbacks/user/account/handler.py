@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from config_logger import logger
 from db import db
 
 from .keyboards import kb_user_purchases, kb_user_referral, kb_user_referral_list
@@ -18,6 +19,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    logger.info(f'callback "user_account_factory" user_tg_id={user_id} type={type}')
 
     if type == 'purchases':
         purchases = db.get_purchases_by_user(user_id)

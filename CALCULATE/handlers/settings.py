@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from config_logger import logger
 from CALCULATE.callbacks.settings.keyboards import kb_deposit_cancel
 from Classes import currencyService
 from db import db, BASE_VALUE_TYPE
@@ -36,6 +37,8 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                 chat_id, msg_digit_error(user_id),
             )
             return
+
+        logger.info(f'callback "handle_new_value" user_tg_id={user_id} value={value}')
 
         # if type == 'base_risk' and (value <= 0 or value >= 100):
         #     bot.send_message(
@@ -87,6 +90,8 @@ def handle_new_currency(message: Message, bot: TeleBot):
         )
         return
 
+    logger.info(f'callback "handle_new_currency" user_tg_id={user_id} value={value}')
+
     check = currencyService.getPrice('USD', value)
     if not check:
         bot.send_message(
@@ -131,6 +136,8 @@ def handle_splitting(message: Message, bot: TeleBot):
         )
         return
 
+    logger.info(f'callback "handle_splitting" user_tg_id={user_id} value={value}')
+
     if sum(current_split) + value > 100:
         bot.send_message(
             chat_id,
@@ -165,6 +172,8 @@ def handle_day_risk(message: Message, bot: TeleBot):
             reply_markup=keyboard
         )
         return
+
+    logger.info(f'callback "handle_day_risk" user_tg_id={user_id} value={value}')
 
     is_percent = value.endswith('%')
     value = value.replace('%', '')
@@ -203,6 +212,8 @@ def handle_round_count(message: Message, bot: TeleBot):
         )
         return
 
+    logger.info(f'callback "handle_round_count" user_tg_id={user_id} value={value}')
+
     if value < 0 or value > 5:
         bot.send_message(
             chat_id,
@@ -231,6 +242,8 @@ def handle_trading_style(message: Message, bot: TeleBot):
             reply_markup=kb_base_cancel(user_id)
         )
         return
+
+    logger.info(f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
 
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')

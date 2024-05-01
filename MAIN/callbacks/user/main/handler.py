@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from config_logger import logger
 from db import db
 from AuthRoles import check_registrate
 from CALCULATE.callbacks import send_main
@@ -21,6 +22,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    logger.info(f'callback "user_main_factory" user_tg_id={user_id} type={type}')
 
     role = check_registrate(user_id) or 0
 

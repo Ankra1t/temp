@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
+from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from common.utils import digit_accept, text_accept
@@ -29,6 +30,8 @@ def handle_loss(message: Message, bot: TeleBot):
             reply_markup=kb_deal_profit_minus(user_id, stat_id)
         )
         return
+
+    logger.info(f'callback "handle_loss" user_tg_id={user_id} value={value}')
 
     calcService.set_profit(bot, stat_id, -abs(value))
     calc_info = db.get_calculation(stat_id)
@@ -77,6 +80,8 @@ def handle_sum(message: Message, bot: TeleBot):
         )
         return
 
+    logger.info(f'callback "handle_sum" user_tg_id={user_id} value={value}')
+
     calcService.set_profit(bot, stat_id, value)
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
@@ -103,6 +108,8 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
         mes_id = data.get('mes_id', 0)
 
     value = text_accept(message) or ''
+
+    logger.info(f'callback "handle_freeze_dt" user_tg_id={user_id} value={value}')
 
     try:
         time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'

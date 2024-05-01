@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from MAIN.callbacks.user.pages import send_user_education
 
+from config_logger import logger
 from db import db
 
 from .keyboards import kb_user_lesson, kb_user_curs
@@ -21,6 +22,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
+
+    logger.info(f'callback "user_education_factory" user_tg_id={user_id} type={type}')
 
     if type == 'back':
         send_user_main(bot, call.message, user_id)

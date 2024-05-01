@@ -7,6 +7,7 @@ from common.calculation import get_count_value_bet
 from common.utils import delete_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
+from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
@@ -38,6 +39,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
+
+    logger.info(f'callback "settings_factory" user_tg_id={user_id} type={type} ({stats_market} {stat_id})')
 
     if 'time' in type:
         _, time = type.split('+')
