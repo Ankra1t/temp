@@ -10,7 +10,7 @@ from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
-    msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style,
+    msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
     msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base,
 )
 
@@ -351,7 +351,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'trading_type' in type:
         if trading_value == '':
             bot.edit_message_text(
-                'Выберите тип', chat_id, mes_id,
+                msg_enter_trading_type(user_id), chat_id, mes_id,
                 reply_markup=kb_trading_type(user_id)
             )
         else:

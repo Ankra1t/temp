@@ -695,6 +695,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
         deposit: float | None = data.get('deposit')
         risk: tuple[float, bool] | None = data.get('risk')
         currency: str | None = data.get('currency')
+        trading_type: str = data.get('trading_type', 'margin')
 
     risk_value = risk[0] if (risk is not None) else None
     if (risk is not None) and risk[1] and (deposit is not None):
@@ -716,6 +717,10 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             'open': 'Цена входа',
             'pair': 'Валютная пара',
             'token': 'Монета',
+
+            'trading_type': 'Тип торговли',
+            'margin': 'маржинальный',
+            'spot': 'спотовый',
         },
         'en': {
             'ticker': 'Ticker',
@@ -724,6 +729,10 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             'open': 'Entry price',
             'pair': 'Currency pair',
             'token': 'Token',
+
+            'trading_type': 'Trading type',
+            'margin': 'margin',
+            'spot': 'spot',
         }
     }
 
@@ -735,16 +744,20 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     elif type == 'crypto' and tool != '':
         text += f'<b><u>{tool}</u></b>\n'
 
+    text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+
     for el in type_list:
         item = vars_dict[el]
         if item is not None:
             if item == 'ticker':
-                text += f'{POINT} {point[lang][el]}: <b>{item}</b>\n'
+                text += f'<b>{point[lang][el]}</b>: {item}\n'
             else:
-                text += (
-                    f'{POINT} {point[lang][el]}: '
-                    f'<b>{item} {currency}</b>\n'
-                )
+                text += ''.join( (
+                    f'<b>{point[lang][el]}</b>: ',
+                    f'{item} ',
+                    (currency or '') if (type != 'forex' or forex is None) else forex.pair[1],
+                    '\n'
+                ))
 
     text += '\n'
 
@@ -1060,7 +1073,7 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: Calculato
     return f"""<b>{point[lang]['sum']}: </b>{get_print_float(profit, calc.round_count)} {calc.currency}
 <b>{point[lang]['deposit']}</b>: {get_print_float(deposit, calc.round_count)} {calc.currency}
 <b>{point[lang]['takes']}</b>: {stats.tp_count}
-<b>{point[lang]['stops']}</b>: {stats.sl_count}"""
+<b>{point[lang]['stops']}</b>: {get_print_float(stats.sl_count)}"""
 
 
 def msg_calculate_delete(user_id: int, prev_message: str):
@@ -1233,6 +1246,31 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
         text += texts[lang]["next"]
 
     return text
+
+
+def msg_enter_trading_type(user_id: int):
+    lang = get_lang(user_id)
+    texts = {
+        'ru': {
+            'main': 'Тип торговли',
+            'm': '<b>Маржинальная</b>: расчеты будут производиться, включая кредитные плечи',
+            's': '<b>Спотовая</b>: расчеты производятся, исходя из фиксированного депозита',
+            'enter': 'Выберите тип'
+        },
+        'en': {
+            'main': 'Trading type',
+            'm': '<b>Margin</b>: calculations will be made, including leverage',
+            's': '<b>Spot</b>: calculations are made based on a fixed deposit',
+            'enter': 'Choose type'
+        },
+    }
+
+    return f"""{texts[lang]['main']}
+{texts[lang]['m']}
+
+{texts[lang]['s']}
+
+👇 {texts[lang]['enter']}:"""
 
 
 def msg_enter_summury_profit_type(user_id: int):

@@ -27,8 +27,21 @@ class AuthMiddleWare(BaseMiddleware):
 
         if self.bot.get_state(user_id, chat_id) is not None:
             with self.bot.retrieve_data(user_id, chat_id) as state_data:
-                del_mes_id = state_data.get('del_mes_id', 0)
-                delete_message(self.bot, chat_id, del_mes_id)
+                del_mes_id = state_data.get('del_mes_id')
+                edit_mes = state_data.get('edit_mes')
+                state_data['del_mes_id'] = None
+                state_data['edit_mes'] = None
+
+                if del_mes_id is not None:
+                    if edit_mes is None:
+                        delete_message(self.bot, chat_id, del_mes_id)
+                    else:
+                        try:
+                            self.bot.edit_message_text(
+                                edit_mes, message.from_user.id, del_mes_id,
+                            )
+                        except Exception as e:
+                            print(e)
 
         data['has_registered_now'] = False
 
