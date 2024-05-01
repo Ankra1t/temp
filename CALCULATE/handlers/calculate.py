@@ -307,6 +307,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         risk: tuple[float, bool] = data.get('risk') or (1., False)
         currency = data.get('currency', 'USD')
         trading_style = data.get('trading_style')
+        trading_type = data.get('trading_type', 'margin')
 
         open_price = data.get('open_price') or 0
         forex = data.get('forex')
@@ -356,7 +357,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         split_values=u_base.split_values,
         trading_style=trading_style or None,
         tool=tool or None,
-        forex_info=forex
+        forex_info=forex,
+        trading_type=trading_type,
     )
 
     new_id = db.add_calculation(calc_info)

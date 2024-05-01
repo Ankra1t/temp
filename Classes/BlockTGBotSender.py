@@ -74,7 +74,8 @@ def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
                 market='crypto',  # !
                 tp_ratio=u_base.tp_ratio,
                 split_values=u_base.split_values,
-                trading_style='-'
+                trading_style='-',
+                trading_type='margin',
             )
 
             calc_text += msg_calculate_result(user_id, calc_info)

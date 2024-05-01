@@ -1576,13 +1576,14 @@ class Database:
             split_values=data.get('split_values'),
             forex_info=forex,
             tool=data.get('tool'),
+            trading_type=data.get('trading_type'),
         )
 
     def add_calculation(self, value: Calculation):
         query = (
             'INSERT INTO calculations (user_id, deposit, risk_value, open_price, stop_loss, round_count, '
-            'currency, trading_style, market, tp_ratio, split_values, pair, pair_price, cross_prices, tool) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            'currency, trading_style, market, tp_ratio, split_values, pair, pair_price, cross_prices, tool, trading_type) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
         )
 
         pair_price = pair = cross_prices = None
@@ -1594,7 +1595,8 @@ class Database:
         params = (
             value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
             value.round_count, value.currency, value.trading_style, value.market,
-            value.tp_ratio, value.split_values, pair, pair_price, cross_prices, value.tool
+            value.tp_ratio, value.split_values, pair, pair_price, cross_prices, value.tool,
+            value.trading_type
         )
 
         try:

@@ -265,6 +265,7 @@ class Calculation(BaseModel):
     stop_loss: float
     currency: str
     trading_style: str | None
+    trading_type: TRADING_TYPE
     market: MARKETS_TYPE
     tp_ratio: list[int]
     round_count: int | None = None

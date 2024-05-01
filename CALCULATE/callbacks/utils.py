@@ -124,12 +124,13 @@ def choose_first_calculate_step(
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)
 
-    style = deposit = risk = currency = None
+    style = deposit = risk = currency = trading_type = None
     if u_base is not None:
         style = u_base.trading_style
         deposit = u_base.deposit
         currency = u_base.currency
         risk = u_base.risk
+        trading_type = u_base.trading_type
 
     prev_values = {}
     if unfinished_calc is not None and is_continue:
@@ -165,6 +166,7 @@ def choose_first_calculate_step(
             'calc_type': type,
 
             'trading_style': style,
+            'trading_type': trading_type,
             'deposit': deposit,
             'currency': currency,
             'risk': risk,

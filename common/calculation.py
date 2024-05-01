@@ -444,3 +444,37 @@ def get_msg_of_calc(user_id: int, calc: Calculation):
 
     return f"""{style}
 #{result.replace('/', '').lower()}"""
+
+
+def get_count_value_bet(calc: Calculation, lot=pow(10, 5)):
+    """Возвращает кол-во и сумму покупки, коэффициент спота"""
+    spot_rate = 1
+
+    if calc.market == 'forex' and calc.forex_info is not None:
+        value_bet = (
+            calc.risk_value / abs(calc.open_price - calc.stop_loss)
+        )
+        count_bet = value_bet / lot
+
+        if calc.currency == calc.forex_info.pair[1]:
+            value_bet *= calc.open_price
+        elif calc.currency == calc.forex_info.pair[0]:
+            count_bet *= calc.stop_loss
+            value_bet = count_bet * lot
+        else:
+            BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
+            yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
+            count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
+            value_bet = count_bet * lot * \
+                calc.forex_info.cross_prices.get(yyyBASE, 1)
+    else:
+        count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
+        value_bet = count_bet * calc.open_price
+
+    if calc.trading_type == 'spot' and value_bet > calc.deposit:
+        spot_rate = calc.deposit / value_bet
+
+        count_bet *= spot_rate
+        value_bet = calc.deposit
+
+    return count_bet, value_bet, spot_rate

@@ -2,6 +2,7 @@ from typing import Literal
 from telebot import TeleBot
 from datetime import datetime
 
+from common.calculation import get_count_value_bet
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
@@ -779,11 +780,15 @@ def msg_calculate_crypto_rf_usa_result(
             'buy': 'Покупаем',
             'sum': 'Сумма',
             'style': 'Стиль торговли',
+            'trading_type': 'Тип торговли',
             'tool': 'Инструмент',
             'profit': 'Прибыль',
             'coin': 'монет',
             'token': 'Монета',
             'paper': 'акций',
+
+            'margin': 'маржинальный',
+            'spot': 'спотовый',
         },
         'en': {
             'dep': 'Deposit',
@@ -795,11 +800,15 @@ def msg_calculate_crypto_rf_usa_result(
             'buy': 'Buying',
             'sum': 'Sum',
             'style': 'Trading style',
+            'trading_type': 'Trading type',
             'tool': 'Tool',
             'profit': 'Profit',
             'coin': 'coins',
             'token': 'Token',
             'paper': 'papers',
+
+            'margin': 'margin',
+            'spot': 'spot',
         }
     }
 
@@ -820,11 +829,8 @@ def msg_calculate_crypto_rf_usa_result(
         round_count
     )
 
-    # Кол-во покупки
-    count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
-
-    # Сумма покупки
-    value_bet = count_bet * calc.open_price
+    # Кол-во и сумма покупки
+    count_bet, value_bet, _ = get_count_value_bet(calc)
 
     if calc.open_price > calc.stop_loss:
         long_short = '✅ Long'
@@ -880,6 +886,7 @@ def msg_calculate_crypto_rf_usa_result(
 
 {POINT} {point[lang]["dep"]}: <b>{get_print_float(calc.deposit)} {calc.currency}</b>
 {TAB}{point[lang]['risk']}: <b>{get_print_float(calc.risk_value)} {calc.currency}</b>
+{TAB}{point[lang]["trading_type"]}: <b>{point[lang][calc.trading_type]}</b>
 {trading_style}
 {POINT} {point[lang]["open"]}: <b>{get_print_float(calc.open_price, price_round_count)} {calc.currency}</b> | {point[lang]["sl"]}: <b>{get_print_float(calc.stop_loss, price_round_count)} {calc.currency}</b>
 {TAB}{point[lang]["buy"]}: <b>{get_print_float(count_bet)} {tool_name}</b>
@@ -898,7 +905,6 @@ def msg_calculate_forex_result(
         return 'Ошибка'
 
     pair = '/'.join(calc.forex_info.pair)
-    LOT = pow(10, 5)
 
     lang = get_lang(user_id)
 
@@ -912,8 +918,12 @@ def msg_calculate_forex_result(
             'buy': 'Покупаем',
             'sum': 'Сумма',
             'style': 'Стиль торговли',
+            'trading_type': 'Тип торговли',
             'profit': 'Прибыль',
             'lot': 'лота',
+
+            'margin': 'маржинальный',
+            'spot': 'спотовый',
         },
         'en': {
             'dep': 'Deposit',
@@ -924,8 +934,12 @@ def msg_calculate_forex_result(
             'buy': 'Buying',
             'sum': 'Sum',
             'style': 'Trading style',
+            'trading_type': 'Trading type',
             'profit': 'Profit',
             'lot': 'lots',
+
+            'margin': 'margin',
+            'spot': 'spot',
         }
     }
 
@@ -944,25 +958,8 @@ def msg_calculate_forex_result(
         round_count
     )
 
-    # Сумма покупки
-    value_bet = (
-        calc.risk_value /
-        (max(abs(calc.open_price - calc.stop_loss), 0.000001))
-    )
-    # Кол-во покупки
-    count_bet = value_bet / LOT
-
-    if calc.currency == calc.forex_info.pair[1]:
-        value_bet *= calc.open_price
-    elif calc.currency == calc.forex_info.pair[0]:
-        count_bet *= calc.stop_loss
-        value_bet = count_bet * LOT
-    else:
-        BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
-        yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
-        count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
-        value_bet = count_bet * LOT * \
-            calc.forex_info.cross_prices.get(yyyBASE, 1)
+    # Кол-во и сумма покупки
+    count_bet, value_bet, _ = get_count_value_bet(calc)
 
     if calc.open_price > calc.stop_loss:
         long_short = '✅ Long'

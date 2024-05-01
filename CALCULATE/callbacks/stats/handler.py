@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
+from common.calculation import get_count_value_bet
 from common.utils import delete_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
@@ -75,9 +76,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             else:
                 if 'loss' in profit:
                     rate = float(profit.replace('loss', ''))
-                    calcService.set_profit(bot, stat_id, -calc_info.risk_value * rate)
+                    _, _, spot_rate = get_count_value_bet(calc_info)
+                    calcService.set_profit(bot, stat_id, -calc_info.risk_value * rate * spot_rate)
                 elif profit != 'cancel':
-                    profit_result = calc_info.risk_value * int(profit)
+                    _, _, spot_rate = get_count_value_bet(calc_info)
+                    profit_result = calc_info.risk_value * int(profit) * spot_rate
                     calcService.set_profit(bot, stat_id, profit_result)
                 else:
                     is_cancel = True
