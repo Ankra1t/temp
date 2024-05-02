@@ -50,6 +50,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
         logger.error(f'CryptoPay Error: {e}')
         return False
 
+    print(payment)
     url = str(payment.pay_url)
     code = str(payment.invoice_id)
 

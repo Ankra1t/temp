@@ -874,10 +874,10 @@ def msg_calculate_crypto_rf_usa_result(
 
                 conclusion += f' (<b>{get_print_float(count, 2)} {tool_name}</b>) — {get_print_float(percent, round_count)}%'
                 if i != len(calc.tp_ratio) - 1:
-                    conclusion += f'\n{TAB}'
+                    conclusion += f'\n'
             else:
                 if i != len(calc.tp_ratio) - 1 and i % 2 == 1:
-                    conclusion += f'\n{TAB}'
+                    conclusion += f'\n'
 
             p_show += f'{get_print_float(abs(calc.open_price - take_profit) * rate * count_bet, round_count)}'
 
