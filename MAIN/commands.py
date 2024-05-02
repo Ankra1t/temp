@@ -107,7 +107,7 @@ def _test(message: Message, bot: TeleBot):
 
 
 def _pay(message: Message, bot: TeleBot):
-    send_user_tariffs(bot, message, message.from_user.id)
+    send_user_tariffs(bot, message, message.from_user.id, True)
 
 
 def commands_registration(bot: TeleBot):
