@@ -51,7 +51,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
         return False
 
     print(payment)
-    url = str(payment.pay_url)
+    url = str(payment.bot_invoice_url)
     code = str(payment.invoice_id)
 
     db.add_transaction(
