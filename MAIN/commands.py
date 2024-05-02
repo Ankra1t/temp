@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from MAIN.callbacks.user.pages import send_user_tariffs
 from db import db
 
 from CALCULATE.callbacks import send_manual_page
@@ -95,15 +96,18 @@ def _test(message: Message, bot: TeleBot):
     # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
     # bot.send_photo(message.chat.id, img)
 
-    a = db.get_user_by_tg_id(156045434)
-    b = db.get_user_by_tg_id(6919899538)
+    all = db.get_all_users()
 
-    try:
-        print(1)
-        bot.send_chat_action(6919899538, 'typing')
-    except Exception as e:
-        if 'blocked' in str(e):
-            print("User has blocked the bot")
+    for u in all:
+        try:
+            bot.send_chat_action(u.tg_id, 'typing')
+        except Exception as e:
+            if 'blocked' in str(e):
+                db.set_user_tg_block(u.tg_id, True)
+
+
+def _pay(message: Message, bot: TeleBot):
+    send_user_tariffs(bot, message, message.from_user.id)
 
 
 def commands_registration(bot: TeleBot):
@@ -124,3 +128,4 @@ def commands_registration(bot: TeleBot):
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
+    reg_mes(_pay, commands=['pay11'])
