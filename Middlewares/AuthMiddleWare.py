@@ -1,9 +1,11 @@
 from telebot import types, TeleBot
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
+from telebot.util import extract_arguments
+
 from NOTIFIER import notifier
 
 from config_logger import logger
-from common.utils import delete_message
+from common.utils import delete_message, is_digit
 from db import db, LANGUAGES
 from AuthRoles import check_registrate, registration
 
@@ -41,7 +43,7 @@ class AuthMiddleWare(BaseMiddleware):
                                 edit_mes, message.from_user.id, del_mes_id,
                             )
                         except Exception as e:
-                            print(e)
+                            pass
 
         data['has_registered_now'] = False
 
@@ -53,13 +55,8 @@ class AuthMiddleWare(BaseMiddleware):
 
         if user_role is None:
             # Проверяем реферальный id
-            ref_id = message.text
-            ref_id = ref_id.split() if (ref_id is not None) else []
-
-            if len(ref_id) == 2 and ref_id[0] == '/start' and ref_id[1].isdigit():
-                ref_id = int(ref_id[1])
-            else:
-                ref_id = None
+            ref_id = extract_arguments(message.text or '')
+            ref_id = int(ref_id) if ref_id is not None and is_digit(ref_id) else None
 
             # Регистрация, пробный период, добавление таблиц бота
             is_registered = registration(user_id, username, ref_id)

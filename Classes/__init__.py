@@ -10,9 +10,7 @@ from .BaseStatistics import BaseStatistics
 from .ServiceTasks import ServiceTasks
 from .CalculationService import CalculationService
 from .CurrencyService import CurrencyService
-
-
-
+from .BlockTGBotSender import send_same_message_to_users # type: ignore
 
 pay_guard = GuardPaymentAccess()
 base_statis = BaseStatistics(db)

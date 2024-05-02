@@ -28,8 +28,5 @@ def send_start_by_user(
     elif user_role == 1:
         send_admin_main(bot, message, user_id, True)
 
-    elif user_role == 2:
-        send_in_development(bot, message)
-
-    elif user_role == 3:
+    elif user_role in (2, 3):
         send_in_development(bot, message)

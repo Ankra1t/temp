@@ -4,6 +4,7 @@ from telebot.custom_filters import StateFilter
 
 from config_global import TOKEN_MAIN_BOT
 
+from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from Middlewares.ExceptionHandler import ExHandler
 from MAIN.commands import commands_registration
@@ -24,5 +25,6 @@ bot.setup_middleware(AuthMiddleWare(bot))
 commands_registration(bot)
 callbacks_registration(bot)
 handlers_registration(bot)
+chat_member_handler_registration(bot)
 
 bot.add_custom_filter(StateFilter(bot))

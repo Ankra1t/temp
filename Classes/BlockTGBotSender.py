@@ -1,13 +1,14 @@
 from telebot import TeleBot
+from telebot.util import antiflood
 from typing import Optional
 from time import sleep
-from CALCULATE.common.messages import msg_calculate_result
-from MAIN.common.utils import get_print_signal_info
+# from CALCULATE.common.messages import msg_calculate_result
+# from MAIN.common.utils import get_print_signal_info
 
 from config_logger import logger, log_send_fails, log_send_ok
 from db import db
 
-from models import Calculation, Post, UserInfo
+from models import Post, UserInfo
 
 
 def send_message_by_type(
@@ -31,58 +32,74 @@ def send_message_by_type(
         bot.send_message(user_id, text)
 
 
-def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
-    signal_text = ''
-    calc_text = None
+# def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
+#     signal_text = ''
+#     calc_text = None
 
-    details = post.details
-    if details:
-        open_price = details.open_price
-        stop_loss = details.stop_loss
-        name = details.name
-        ticker = details.ticker
+#     details = post.details
+#     if details:
+#         open_price = details.open_price
+#         stop_loss = details.stop_loss
+#         name = details.name
+#         ticker = details.ticker
 
-        signal_text = f'<b>{name}</b>\n'
-        calc_text = f'<b>{name}</b>\n'
+#         signal_text = f'<b>{name}</b>\n'
+#         calc_text = f'<b>{name}</b>\n'
 
-        signal_text += f'👉 {ticker}\n'
+#         signal_text += f'👉 {ticker}\n'
 
-        signal_text += get_print_signal_info(
-            open_price, stop_loss
-        )
+#         signal_text += get_print_signal_info(
+#             open_price, stop_loss
+#         )
 
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        u_base = db.get_calc_user_settings(user_db_id)
+#         user_db_id = db.get_user_id_by_tg_id(user_id)
+#         u_base = db.get_calc_user_settings(user_db_id)
 
-        if u_base is None or (u_base.deposit is None or u_base.risk is None):
-            calc_text = 'Для получения расчетов по рекомендации введите все базовые значения в настройках калькулятора'
-        else:
-            if u_base.risk[1]:
-                risk_value = u_base.deposit * u_base.risk[0] * 0.01
-            else:
-                risk_value = u_base.risk[0]
+#         if u_base is None or (u_base.deposit is None or u_base.risk is None):
+#             calc_text = 'Для получения расчетов по рекомендации введите все базовые значения в настройках калькулятора'
+#         else:
+#             if u_base.risk[1]:
+#                 risk_value = u_base.deposit * u_base.risk[0] * 0.01
+#             else:
+#                 risk_value = u_base.risk[0]
 
-            calc_text = '<b><u>Расчет по рекомендации</u></b>\n'
+#             calc_text = '<b><u>Расчет по рекомендации</u></b>\n'
 
-            calc_info = Calculation(
-                user_id=0,
-                deposit=u_base.deposit,
-                risk_value=risk_value,
-                open_price=open_price,
-                stop_loss=stop_loss,
-                currency=ticker,
-                market='crypto',  # !
-                tp_ratio=u_base.tp_ratio,
-                split_values=u_base.split_values,
-                trading_style='-',
-                trading_type='margin',
+#             calc_info = Calculation(
+#                 user_id=0,
+#                 deposit=u_base.deposit,
+#                 risk_value=risk_value,
+#                 open_price=open_price,
+#                 stop_loss=stop_loss,
+#                 currency=ticker,
+#                 market='crypto',  # !
+#                 tp_ratio=u_base.tp_ratio,
+#                 split_values=u_base.split_values,
+#                 trading_style='-',
+#                 trading_type='margin',
+#             )
+
+#             calc_text += msg_calculate_result(user_id, calc_info)
+
+#     signal_text += '\n\n' + post.content
+
+#     return signal_text, calc_text
+
+
+def send_same_message_to_users(bot: TeleBot, users: list[UserInfo], post: Post):
+    for user in users:
+        try:
+            antiflood(
+                send_message_by_type,
+                bot, user.tg_id, post.mes_type, post.content, post.media,
+                number_retries=2
             )
+        except Exception as e:
+            if 'blocked' in str(e):
+                db.set_user_tg_block(user.id, True)
+            log_send_fails.error(f'Ошибка отправки пользователю id={user.id} tg_id={user.tg_id} => {e}')
 
-            calc_text += msg_calculate_result(user_id, calc_info)
-
-    signal_text += '\n\n' + post.content
-
-    return signal_text, calc_text
+    pass
 
 
 class BlockTGBotSender(object):
@@ -123,7 +140,7 @@ class BlockTGBotSender(object):
             if current_batch < self.c_tg:
                 username = '@' + user_i.username if user_i.username else 'Скрыт'
                 try:
-                    self.send_by_type(user)
+                    # self.send_by_type(user)
                     current_batch += self.c_by_user
                     log_send_ok.info(
                         f'Отправлено tg_id{user} db_id{user_i.id} username->{username} '
@@ -138,16 +155,16 @@ class BlockTGBotSender(object):
                 sleep(1)
                 current_batch = 0
 
-    def send_by_type(self, id: int):
-        content, calc_mes = get_post_content(self.post, id)
+    # def send_by_type(self, id: int):
+    #     content, calc_mes = get_post_content(self.post, id)
 
-        send_message_by_type(
-            self.bot,
-            id,
-            self.post.mes_type,
-            content,
-            self.post.media
-        )
+    #     send_message_by_type(
+    #         self.bot,
+    #         id,
+    #         self.post.mes_type,
+    #         content,
+    #         self.post.media
+    #     )
 
-        if calc_mes is not None:
-            self.bot.send_message(id, calc_mes)
+    #     if calc_mes is not None:
+    #         self.bot.send_message(id, calc_mes)

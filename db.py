@@ -3,7 +3,7 @@ import psycopg2
 import json
 import traceback
 from typing import Literal, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 
 from common.dt import get_datetime_now
@@ -929,7 +929,7 @@ class Database:
             return False
 
     def get_paginated_users(
-        self, limit=6, page=1,
+        self, limit: int | None=None, page: int | None = None,
         sort_by: SORT_BY_TYPE = 'new',
         market_filter: MARKETS_TYPE | None = None
     ) -> list[UserInfo]:
@@ -942,8 +942,24 @@ class Database:
             params = (*params, market_filter)
 
         query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
-        query += "LIMIT %s OFFSET %s "
-        params = (*params, limit, (page - 1) * limit)
+
+        if limit is not None:
+            query += "LIMIT %s OFFSET %s "
+            params = (*params, limit, ((page or 1) - 1) * limit)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda el: self._data_to_user(el), data))
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return []
+
+    def get_users_created_in_last(self, last_hours=2) -> list[UserInfo]:
+        """Получить пользователей, созданных в последние 2 часа"""
+        query = self.USER_INFO_QUERY + 'WHERE u.created_at > %s'
+        params = (get_datetime_now() - timedelta(hours=last_hours),)
 
         try:
             self.curs.execute(query, params)
@@ -1188,6 +1204,19 @@ class Database:
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
+            return False
+
+    def set_user_tg_block(self, id: int, block: bool):
+        query = 'UPDATE tgbotusers SET block = %s WHERE user_id = %s'
+        params = block, id
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.curs.connection.rollback()
             return False
 
     # Users - Settings

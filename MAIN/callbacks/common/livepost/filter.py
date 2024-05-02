@@ -3,7 +3,7 @@ from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery
 
 
-livepost_factory = CallbackData('type', prefix='livepost')
+livepost_factory = CallbackData('type', 'value', prefix='livepost')
 
 
 class LivepostCallbackFilter(AdvancedCustomFilter):

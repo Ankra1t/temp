@@ -15,7 +15,10 @@ from .user.pages import (
 )
 
 from .common.livepost.handler import registration as _reg_livepost
-from .common.livepost.keyboards import kb_livepost_cancel, kb_livepost_type
+from .common.livepost.keyboards import (
+    kb_livepost_cancel, kb_livepost_type, kb_livepost_direction, 
+    kb_livepost_market, kb_livepost_time
+)
 
 
 from .admin.main.handler import registration as _reg_admin_main

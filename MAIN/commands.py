@@ -94,8 +94,16 @@ def _test(message: Message, bot: TeleBot):
 
     # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
     # bot.send_photo(message.chat.id, img)
-    
-    pass
+
+    a = db.get_user_by_tg_id(156045434)
+    b = db.get_user_by_tg_id(6919899538)
+
+    try:
+        print(1)
+        bot.send_chat_action(6919899538, 'typing')
+    except Exception as e:
+        if 'blocked' in str(e):
+            print("User has blocked the bot")
 
 
 def commands_registration(bot: TeleBot):
