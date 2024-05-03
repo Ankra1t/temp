@@ -1,3 +1,4 @@
+import traceback
 from telebot import TeleBot
 from flask import Request, Response
 from yookassa import Configuration, Payment
@@ -52,7 +53,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         print(e)
         return False
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         logger.error(f'yooKassa Error: {e}')
         return False
 
