@@ -103,7 +103,7 @@ def _test(message: Message, bot: TeleBot):
             bot.send_chat_action(u.tg_id, 'typing')
         except Exception as e:
             if 'blocked' in str(e):
-                db.set_user_tg_block(u.tg_id, True)
+                db.set_user_tg_block(u.id, True)
 
 
 def _pay(message: Message, bot: TeleBot):
