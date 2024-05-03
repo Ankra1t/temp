@@ -2,7 +2,7 @@ import traceback
 from telebot import TeleBot
 from flask import Request, Response
 from yookassa import Configuration, Payment
-from yookassa.domain.exceptions import ApiError
+from requests.exceptions import HTTPError
 import uuid
 
 from common.utils import check_discount_price
@@ -49,8 +49,8 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         payment = Payment.create(response_data, uuid.uuid4())
         if payment.confirmation is None:
             return False
-    except ApiError as e:
-        print(e)
+    except HTTPError as e:
+        print(e.response)
         return False
     except Exception as e:
         traceback.print_exc()
