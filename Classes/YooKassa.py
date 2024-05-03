@@ -44,6 +44,9 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
             "return_url": redirect_url
         },
         "receipt": {
+            "customer": {
+                "email": 'a@mail.ru'
+            },
             "items": [{
                 "description": name,
                 "amount": amount,
