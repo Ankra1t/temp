@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from flask import Request, Response
 from yookassa import Configuration, Payment
+from yookassa.domain.exceptions import BadRequestError
 import uuid
 
 from common.utils import check_discount_price
@@ -47,7 +48,9 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         payment = Payment.create(response_data, uuid.uuid4())
         if payment.confirmation is None:
             return False
-    except Exception as e:
+    except BadRequestError as e:
+        print(e.HTTP_CODE)
+        print(e)
         logger.error(f'yooKassa Error: {e}')
         return False
 
