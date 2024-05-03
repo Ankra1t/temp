@@ -716,7 +716,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             'risk': 'Риск на сделку',
             'open': 'Цена входа',
             'pair': 'Валютная пара',
-            'token': 'Монета',
 
             'trading_type': 'Тип торговли',
             'margin': 'маржинальный',
@@ -728,7 +727,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             'risk': 'Deal risk',
             'open': 'Entry price',
             'pair': 'Currency pair',
-            'token': 'Token',
 
             'trading_type': 'Trading type',
             'margin': 'margin',
@@ -752,10 +750,11 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
             if item == 'ticker':
                 text += f'<b>{point[lang][el]}</b>: {item}\n'
             else:
-                text += ''.join( (
+                text += ''.join((
                     f'<b>{point[lang][el]}</b>: ',
                     f'{item} ',
-                    (currency or '') if (type != 'forex' or forex is None) else forex.pair[1],
+                    (currency or '') if (
+                        type != 'forex' or forex is None) else forex.pair[1],
                     '\n'
                 ))
 
@@ -784,36 +783,34 @@ def msg_calculate_crypto_rf_usa_result(
 
     point = {
         'ru': {
-            'dep': 'Депозит',
+            'dep': 'Депозит' if stats is None else 'Итоговый депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
-            'buy': 'Купите',
+            'buy': 'Купите' if stats is None else 'Было куплено',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
             'tool': 'Инструмент',
             'profit': 'Прибыль',
             'coin': 'монет',
-            'token': 'Монета',
             'paper': 'акций',
 
             'margin': 'маржинальный',
             'spot': 'спотовый',
         },
         'en': {
-            'dep': 'Deposit',
+            'dep': 'Deposit' if stats is None else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
-            'buy': 'Buy',
+            'buy': 'Buy' if stats is None else 'Bought',
             'style': 'Trading style',
             'trading_type': 'Trading type',
             'tool': 'Tool',
             'profit': 'Profit',
             'coin': 'coins',
-            'token': 'Token',
             'paper': 'papers',
 
             'margin': 'margin',
@@ -898,7 +895,7 @@ def msg_calculate_crypto_rf_usa_result(
 <b>{point[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {calc.currency}
 {profit_result}
 
-<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit)} {calc.currency}
+<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit+ ((calc.profit or 0.) if stats is not None else 0.))} {calc.currency}
 <b>{point[lang]['risk']}</b>: {get_print_float(calc.risk_value)} {calc.currency}
 
 <b>{point[lang]["trading_type"]}</b>: {point[lang][calc.trading_type]}
@@ -920,12 +917,12 @@ def msg_calculate_forex_result(
 
     point = {
         'ru': {
-            'dep': 'Депозит',
+            'dep': 'Депозит' if stats is None else 'Итоговый депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена',
             'sl': 'Стоп',
             'conclusion': 'Тейк-профит',
-            'buy': 'Купить',
+            'buy': 'Купить' if stats is None else 'Было куплено',
             'sum': 'Сумма',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
@@ -936,12 +933,12 @@ def msg_calculate_forex_result(
             'spot': 'спотовый',
         },
         'en': {
-            'dep': 'Deposit',
+            'dep': 'Deposit' if stats is None else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
             'sl': 'Stop',
             'conclusion': 'Take-profit',
-            'buy': 'Buy',
+            'buy': 'Buy' if stats is None else 'Bought',
             'sum': 'Sum',
             'style': 'Trading style',
             'trading_type': 'Trading type',
@@ -1036,7 +1033,7 @@ def msg_calculate_forex_result(
 <b>{point[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {calc.forex_info.pair[1]}
 {profit_result}
 
-<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit)} {calc.currency}
+<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit + ((calc.profit or 0.) if stats is not None else 0.))} {calc.currency}
 <b>{point[lang]['risk']}</b>: {get_print_float(calc.risk_value)} {calc.currency}
 
 <b>{point[lang]["trading_type"]}</b>: {point[lang][calc.trading_type]}
@@ -1049,29 +1046,21 @@ def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: Calculato
 
     point = {
         'ru': {
-            'deposit': 'Итоговый депозит',
             'sum': 'Профит от сделки',
             'takes': 'Тейки',
             'stops': 'Стопы',
         },
         'en': {
-            'deposit': 'The final deposit',
             'sum': 'Deal profit',
-            'sl': 'Stop-loss',
-            'tp': 'Take-profit',
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
         },
     }
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    u_base = db.get_calc_user_settings(user_db_id)
-
-    deposit = (u_base.deposit if u_base is not None else 0) or 0
     profit = calc.profit or 0.
 
     return f"""<b>{point[lang]['sum']}: </b>{get_print_float(profit, calc.round_count)} {calc.currency}
-<b>{point[lang]['deposit']}</b>: {get_print_float(deposit, calc.round_count)} {calc.currency}
+
 <b>{point[lang]['takes']}</b>: {stats.tp_count}
 <b>{point[lang]['stops']}</b>: {get_print_float(stats.sl_count)}"""
 
