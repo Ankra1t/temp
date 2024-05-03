@@ -1,14 +1,15 @@
 from telebot import TeleBot
 from telebot.types import Message
+from telebot.util import antiflood
 
-from MAIN.callbacks.user.pages import send_user_tariffs
+from config_logger import log_send_no_send
 from db import db
 
 from CALCULATE.callbacks import send_manual_page
 from CALCULATE.commands import _start as _calc
 from CALCULATE.common.messages import msg_support
 from MAIN.start import send_start_by_user
-from MAIN.callbacks import send_site_code, kb_support
+from MAIN.callbacks import send_site_code, kb_support, send_user_tariffs
 
 # from PIL import Image, ImageDraw, ImageFont
 # from io import BytesIO
@@ -100,9 +101,11 @@ def _test(message: Message, bot: TeleBot):
 
     for u in all:
         try:
-            bot.send_chat_action(u.tg_id, 'typing')
+            antiflood(bot.send_chat_action, u.tg_id, 'typing', number_retries=3)
+            log_send_no_send.info(f'typing to {u.tg_id}')
         except Exception as e:
             if 'blocked' in str(e):
+                log_send_no_send.info(f'blocked {u.id} {u.tg_id}')
                 db.set_user_tg_block(u.id, True)
 
 
