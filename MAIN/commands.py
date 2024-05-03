@@ -97,20 +97,7 @@ def _test(message: Message, bot: TeleBot):
     # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
     # bot.send_photo(message.chat.id, img)
 
-    all = db.get_all_users()
-
-    for u in all:
-        try:
-            antiflood(bot.send_chat_action, u.tg_id, 'typing', number_retries=3)
-            log_send_no_send.info(f'typing to {u.tg_id}')
-        except Exception as e:
-            if 'blocked' in str(e):
-                log_send_no_send.info(f'blocked {u.id} {u.tg_id}')
-                db.set_user_tg_block(u.id, True)
-
-
-def _pay(message: Message, bot: TeleBot):
-    send_user_tariffs(bot, message, message.from_user.id, True)
+    pass
 
 
 def commands_registration(bot: TeleBot):
@@ -131,4 +118,3 @@ def commands_registration(bot: TeleBot):
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
-    reg_mes(_pay, commands=['pay11'])
