@@ -83,7 +83,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             msg_yookassa(user_id),
             chat_id, edit_wait_mess.id,
             reply_markup=kb_bill(
-                user_id, 
+                user_id,
                 f'{yookass_price} {tariff.currency}', yookassa_payment_url or '',
                 f'{cryptopay_price} {tariff.currency_crypto}', cryptopay_payment_url or ''
             )

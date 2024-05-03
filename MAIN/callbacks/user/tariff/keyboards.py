@@ -137,23 +137,28 @@ def kb_bill(user_id: int, yookassa_price: str, url_yookassa: str, cryptobot_pric
         'ru': {
             'yoo': f'Оплатить {yookassa_price} через юКассу',
             'cp': f'Оплатить {cryptobot_price} через CryptoBot'
-        } ,
+        },
         'en': {
             'yoo': f'Pay {yookassa_price} via yooKassa',
             'cp': f'Pay {cryptobot_price} via CryptoBot'
         },
     }
 
-    yookassa_link_btn = InlineKeyboardButton(
-        text[lang]['yoo'], url_yookassa
-    )
-    cryptobot_link_btn = InlineKeyboardButton(
-        text[lang]['cp'], url_cryptobot
-    )
-    btn_back = getButton(back_txt(lang), 'go_tariff')
+    if url_yookassa != '':
+        keyboard.add(
+            InlineKeyboardButton(
+                text[lang]['yoo'], url_yookassa
+            )
+        )
 
-    keyboard.add(yookassa_link_btn)
-    keyboard.add(cryptobot_link_btn)
+    if url_cryptobot != '':
+        keyboard.add(
+            InlineKeyboardButton(
+                text[lang]['cp'], url_cryptobot
+            )
+        )
+
+    btn_back = getButton(back_txt(lang), 'go_tariff')
     keyboard.add(btn_back)
     return keyboard
 
