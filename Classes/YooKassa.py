@@ -43,14 +43,13 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         "type": "redirect",
         "return_url": redirect_url
     }
-
+    print('start:')
     try:
         payment = Payment.create(response_data, uuid.uuid4())
         if payment.confirmation is None:
             return False
     except BadRequestError as e:
-        print(e.HTTP_CODE)
-        print(e)
+        print(1)
         logger.error(f'yooKassa Error: {e}')
         return False
 

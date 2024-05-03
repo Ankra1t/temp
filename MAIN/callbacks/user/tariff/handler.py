@@ -69,6 +69,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         cryptopay_payment_url = cryptoPay_create_payment(
             user_id, tariff, bot_url
         )
+        print(2)
 
         if yookassa_payment_url == False and cryptopay_payment_url == False:
             bot.edit_message_text(
