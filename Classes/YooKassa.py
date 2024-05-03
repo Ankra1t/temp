@@ -33,7 +33,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
 
     response_data = {
         "amount": {
-            "value": str(price),
+            "value": str(float(price)),
             "currency": currency
         },
         "capture": True,
