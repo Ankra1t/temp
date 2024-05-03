@@ -31,18 +31,26 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     if user_db_id == 0:
         return False
 
-    response_data = {
-        "amount": {
-            "value": str(float(price)),
-            "currency": currency
-        },
-        "capture": True,
-        "description": name
+    amount = {
+        "value": str(price),
+        "currency": currency
     }
-
-    response_data["confirmation"] = {
-        "type": "redirect",
-        "return_url": redirect_url
+    response_data = {
+        "amount": amount,
+        "capture": True,
+        "description": name,
+        "confirmation": {
+            "type": "redirect",
+            "return_url": redirect_url
+        },
+        "receipt": {
+            "items": [{
+                "description": name,
+                "amount": amount,
+                "quantity": str(tariff.duration_days),
+                "measure": 'дней'
+            }]
+        }
     }
 
     try:
