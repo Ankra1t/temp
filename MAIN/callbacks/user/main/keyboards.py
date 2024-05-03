@@ -33,14 +33,14 @@ def kb_user_main(user_id: int):
     }
 
     # btn1 = getButton("Рекомендации", 'signals')
-    btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
+    # btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
     btn_support = getButton(f"{texts[lang]['support']}", 'support')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
     btn_account = getButton(f"👨 {texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
-    keyboard.add(btn_buy, btn_calc)
+    keyboard.add(btn_calc)
     keyboard.add(btn_support, btn_account)
     return keyboard
 

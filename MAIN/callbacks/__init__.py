@@ -10,8 +10,7 @@ from .admin.pages import (
 )
 from .user.pages import (
     send_user_education, send_user_main, send_user_terms,
-    send_user_account, send_site_code, send_user_tariffs,
-    send_tariffs_list_item
+    send_user_account, send_site_code
 )
 
 from .common.livepost.handler import registration as _reg_livepost
@@ -68,11 +67,6 @@ from .user.education.keyboards import kb_user_education, kb_user_curs, kb_user_p
 from .user.account.handler import registration as _reg_user_account
 from .user.account.keyboards import kb_user_account, kb_user_referral, kb_user_referral_list, kb_user_purchases
 
-from .user.tariff.handler import registration as _reg_user_tariff
-from .user.tariff.keyboards import (
-    kb_tariff_list, kb_bill_bitbanker, kb_bill_cryptobot,
-    kb_bill_many, kb_choose_products, kb_user_tariff_back
-)
 
 from CALCULATE.callbacks import callbacks_registration as _reg_calculator
 
@@ -89,7 +83,6 @@ def callbacks_registration(bot: _TB):
     _reg_user_main(bot)
     _reg_user_education(bot)
     _reg_user_account(bot)
-    _reg_user_tariff(bot)
 
     _reg_calculator(bot)
 

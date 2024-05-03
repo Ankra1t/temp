@@ -1,22 +1,21 @@
 from threading import Timer
 from telebot import TeleBot
-from telebot.types import Message, InputMediaPhoto
+from telebot.types import Message
 
-from common.utils import delete_message, edit_message, get_lang
+from common.utils import edit_message
 from db import db
 from Classes import text_editor
 from AuthRoles import get_site_code
 
 from config_logger import logger
 
-from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_tariff
+from MAIN.common.messages import default_menu, msg_site_login, msg_user_account
 from messages.education import termins
-from messages.users import msg_choose_tariff_type, msg_no_tariffs, msg_start
+from messages.users import msg_start
 
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
 from .account.keyboards import kb_user_account
-from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
@@ -117,26 +116,6 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
         )
 
 
-def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    bot.delete_state(user_id, chat_id)
-
-    text = msg_choose_tariff_type(user_id)
-    keyboard = kb_choose_products(user_id)
-
-    if is_first:
-        bot.send_message(
-            chat_id, text,
-            reply_markup=keyboard
-        )
-    else:
-        edit_message(
-            bot, message, 'text', text, keyboard
-        )
-
-
 def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
     chat_id = message.chat.id
     mes_id = message.id
@@ -171,62 +150,3 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
             send_site_code(bot, new_message, user_id, False, False, code)
 
         Timer(3, get_default).start()
-
-
-def send_tariffs_list_item(
-    bot: TeleBot,
-    message: Message,
-    user_id: int,
-    tariff_type: str,
-    page: int,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    tariffs = db.get_prices_by_product(tariff_type, 1, 1)
-    count = len(tariffs)
-
-    if count == 0:
-        bot.edit_message_text(
-            msg_no_tariffs(user_id), chat_id, mes_id,
-            reply_markup=kb_user_tariff_back(user_id)
-        )
-    else:
-        tariff = tariffs[page]
-        tariff_id = tariff.id or 0
-
-        lang = get_lang(user_id)
-
-        if lang == 'en':
-            image = tariff.img_en or tariff.img
-        else:
-            image = tariff.img
-
-        text = msg_user_tariff(user_id, tariff)
-        keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page)
-
-        def send():
-            if image is None:
-                bot.send_message(chat_id, text, reply_markup=keyboard)
-            else:
-                bot.send_photo(
-                    chat_id, image, '',
-                    reply_markup=keyboard
-                )
-
-        if is_first:
-            send()
-        elif message.content_type == 'photo' and image is not None:
-            bot.edit_message_media(
-                InputMediaPhoto(image, '', 'HTML'), chat_id, mes_id,
-                reply_markup=keyboard
-            )
-        elif message.content_type == 'text' and image is None:
-            bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=keyboard
-            )
-        else:
-            delete_message(bot, chat_id, mes_id)
-            send()

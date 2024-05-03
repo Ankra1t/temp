@@ -8,10 +8,9 @@ from common.utils import check_discount_price, delete_message
 from db import db
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
 
-from MAIN.callbacks import send_user_tariffs, send_user_main, send_tariffs_list_item
-
 from .filter import user_tariff_factory, UserTariffCallbackFilter
 from .keyboards import kb_bill, kb_user_tariff_back
+from  ..pages import send_main, send_user_tariffs, send_tariffs_list_item
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -28,15 +27,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     logger.info(f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
 
     if type == 'go_main':
-        send_user_main(bot, call.message, user_id)
+        send_main(call.message, bot, user_id)
 
     if 'go_tariff' in type:
-        del_mes = 'del' in type
-
-        send_user_tariffs(bot, call.message, user_id, del_mes)
-
-        if del_mes:
-            delete_message(bot, chat_id, mes_id)
+        send_tariffs_list_item(
+            bot, call.message, user_id, 'calc', 0
+        )
 
     if type == 'pay_tariff':
         delete_message(bot, chat_id, mes_id)
@@ -89,10 +85,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             )
         )
 
-    if type == 'get_tariff':
-        send_tariffs_list_item(
-            bot, call.message, user_id, tariff_type, page
-        )
 
     bot.answer_callback_query(call.id)
 

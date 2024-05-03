@@ -19,7 +19,7 @@ def kb_user_tariff_back(user_id: int):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    keyboard.add(getButton(back_txt(lang), 'go_tariff'))
+    keyboard.add(getButton(back_txt(lang), 'go_main'))
     return keyboard
 
 
@@ -65,7 +65,7 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
     pay_tariff = getButton(
         f'💵 {texts[lang]["buy"]}', 'pay_tariff', tariff_id, tariff_type, page
     )
-    btn_back = getButton(back_txt(lang), 'go_tariff_del')
+    btn_back = getButton(back_txt(lang), 'go_main')
 
     keyboard.add(pay_tariff, btn_back)
     return keyboard
@@ -81,53 +81,6 @@ pays_translate = {
         'bb': 'Pay via BitBanker'
     }
 }
-
-
-def kb_bill_cryptobot(user_id: int, price: str, pay_link: str):
-    lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    pay_link_btn = InlineKeyboardButton(
-        pays_translate[lang]['cp'] + f' {price}', pay_link
-    )
-    btn_back = getButton(back_txt(lang), 'go_tariff')
-
-    keyboard.add(pay_link_btn)
-    keyboard.add(btn_back)
-    return keyboard
-
-
-def kb_bill_bitbanker(user_id: int, price: str, pay_link: str):
-    lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    pay_link_btn = InlineKeyboardButton(
-        pays_translate[lang]['bb'] + f' {price}', pay_link
-    )
-    btn_back = getButton(back_txt(lang), 'go_tariff')
-
-    keyboard.add(pay_link_btn)
-    keyboard.add(btn_back)
-    return keyboard
-
-
-def kb_bill_many(user_id: int, price: str, pay_link_cryptobot: str, pay_link_bitbanker: str):
-    lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=1)
-
-    pay_link_btn1 = InlineKeyboardButton(
-        pays_translate[lang]['cp'] + f' {price}', pay_link_cryptobot
-    )
-    pay_link_btn2 = InlineKeyboardButton(
-        pays_translate[lang]['bb'] + f' {price}', pay_link_bitbanker
-    )
-    btn_back = getButton(back_txt(lang), 'go_tariff')
-
-    keyboard.add(pay_link_btn2)
-    keyboard.add(pay_link_btn1)
-    keyboard.add(btn_back)
-    return keyboard
-
 
 def kb_bill(user_id: int, yookassa_price: str, url_yookassa: str, cryptobot_price: str, url_cryptobot: str):
     lang = get_lang(user_id)

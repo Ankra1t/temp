@@ -8,7 +8,7 @@ from db import db
 from ..stats.keyboards import kb_calc_result
 from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
-from ..pages import send_settings, send_main, send_stats
+from ..pages import send_settings, send_main, send_stats, send_tariffs_list_item
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -51,6 +51,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'stats':
         send_stats(bot, call.message, user_id)
+
+    if type == 'buy':
+        send_tariffs_list_item(
+            bot, call.message, user_id, 'calc', 0
+        )
 
     bot.answer_callback_query(call.id)
 

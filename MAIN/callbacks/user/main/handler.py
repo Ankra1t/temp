@@ -8,7 +8,7 @@ from CALCULATE.callbacks import send_main
 from CALCULATE.common.messages import msg_support
 from MAIN.callbacks import (
     send_user_education, send_user_account, send_site_code,
-    send_admin_main, send_user_main, send_user_tariffs
+    send_admin_main, send_user_main
 )
 from MAIN.common.utils import send_in_development
 
@@ -44,9 +44,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'signals':
         send_in_development(bot, call.message)
-
-    if type == 'buy':
-        send_user_tariffs(bot, call.message, user_id)
 
     if type == 'support':
         sup = db.get_support_name()

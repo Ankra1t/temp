@@ -31,12 +31,14 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1, is_unfi
             'calc': 'Новый расчёт',
             'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
+            'buy': 'Купить',
             'stats': 'Статистика',
         },
         'en': {
             'calc': 'New calculation',
             'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
+            'buy': 'Buy',
             'stats': 'Stats',
         }
     }
@@ -44,7 +46,8 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1, is_unfi
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_settings = getButton(
-        '⚙️ ' + texts[lang]['settings'], 'settings', is_new_calc, stat_id)
+        '⚙️ ' + texts[lang]['settings'], 'settings', is_new_calc, stat_id
+    )
 
     buttons = []
     if is_access:
@@ -60,8 +63,10 @@ def kb_main(user_id: int, is_access=True, is_new_calc=False, stat_id=-1, is_unfi
         )
         buttons.append(btn_calc)
     if not is_new_calc:
+        btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
         btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
         buttons.append(btn_stats)
+        buttons.append(btn_buy)
 
     buttons.append(btn_settings)
 

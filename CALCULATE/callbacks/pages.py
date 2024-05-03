@@ -1,7 +1,8 @@
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
-from common.utils import edit_message
+from MAIN.common.messages import msg_user_tariff
+from common.utils import delete_message, edit_message, get_lang
 from db import db
 
 from Classes import pay_guard
@@ -9,10 +10,12 @@ from CALCULATE.common.messages import (
     msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings, msg_uses_count
 )
+from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
 from .stats.keyboards import kb_stats
+from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
@@ -167,3 +170,82 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
             text, chat_id, mes_id,
             reply_markup=kb
         )
+
+
+def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    text = msg_choose_tariff_type(user_id)
+    keyboard = kb_choose_products(user_id)
+
+    if is_first:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=keyboard
+        )
+    else:
+        edit_message(
+            bot, message, 'text', text, keyboard
+        )
+
+
+def send_tariffs_list_item(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    tariff_type: str,
+    page: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    tariffs = db.get_prices_by_product(tariff_type, 1, 1)
+    count = len(tariffs)
+
+    if count == 0:
+        bot.edit_message_text(
+            msg_no_tariffs(user_id), chat_id, mes_id,
+            reply_markup=kb_user_tariff_back(user_id)
+        )
+    else:
+        tariff = tariffs[page]
+        tariff_id = tariff.id or 0
+
+        lang = get_lang(user_id)
+
+        if lang == 'en':
+            image = tariff.img_en or tariff.img
+        else:
+            image = tariff.img
+
+        text = msg_user_tariff(user_id, tariff)
+        keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page)
+
+        def send():
+            if image is None:
+                bot.send_message(chat_id, text, reply_markup=keyboard)
+            else:
+                bot.send_photo(
+                    chat_id, image, '',
+                    reply_markup=keyboard
+                )
+
+        if is_first:
+            send()
+        elif message.content_type == 'photo' and image is not None:
+            bot.edit_message_media(
+                InputMediaPhoto(image, '', 'HTML'), chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        elif message.content_type == 'text' and image is None:
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=keyboard
+            )
+        else:
+            delete_message(bot, chat_id, mes_id)
+            send()

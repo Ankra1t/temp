@@ -1,7 +1,11 @@
 # type: ignore
 from telebot import TeleBot as _TB
 
-from .pages import send_main, send_settings, send_manual_page, send_summury_profit_settings, send_stats, send_user_deposit
+from .pages import (
+    send_main, send_settings, send_manual_page,
+    send_summury_profit_settings, send_stats, send_user_deposit,
+    send_tariffs_list_item, send_user_tariffs
+)
 from .utils import choose_calculate_step, choose_first_calculate_step
 
 from .manual.handler import registration as _reg_manual
@@ -30,6 +34,11 @@ from .settings.keyboards import (
     kb_trading_type
 )
 
+from .tariff.handler import registration as _reg_user_tariff
+from .tariff.keyboards import (
+    kb_tariff_list, kb_choose_products, kb_user_tariff_back
+)
+
 
 def callbacks_registration(bot: _TB):
     _reg_manual(bot)
@@ -37,3 +46,5 @@ def callbacks_registration(bot: _TB):
     _reg_calculate(bot)
     _reg_settings(bot)
     _reg_stats(bot)
+
+    _reg_user_tariff(bot)
