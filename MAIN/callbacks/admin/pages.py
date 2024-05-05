@@ -2,8 +2,9 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
+from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
-from common.utils import delete_message
+from common.utils import delete_message, get_print_float
 from db import db
 from Classes import pay_guard, base_statis
 
@@ -37,12 +38,12 @@ def send_admin_main(
     count_admins = len(db.get_all_workes())
     count_fut_posts = len(db.get_all_posts())
 
-    count_old = len(pay_guard.get_paid_more1_users())
+    count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
     keyboard = kb_admin_main()
     text = admin_main_msg(
-        count_all, count_with_sub, count_old,
+        count_all, count_with_sub, count_blocked,
         count_admins, count_fut_posts
     )
 
@@ -71,10 +72,10 @@ def send_admin_users(
 
     count_all = db.get_users_count()
 
-    count_old = len(pay_guard.get_paid_more1_users())
+    count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    text = admin_users_msg(count_all, count_with_sub, count_old)
+    text = admin_users_msg(count_all, count_with_sub, count_blocked)
     keyboard = kb_admin_users()
 
     if is_first:
@@ -233,16 +234,63 @@ def send_admin_client(
         fin_date = get_str_by_datetime(user_subsribe.finish_dt)
         type_subscribe_show = f' тип {user_subsribe.product_type}'
 
+    sub_show = f'Подписка до: <b>{fin_date}</b> {type_subscribe_show}'
+
     nikname = f'@{client.username}' if client.username != '' else ''
     count_ref = len(db.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
+    block_show = ''
+    if client.block:
+        block_show = '🅱️ <b>Заблокировал бота</b>\n'
+
+    ref_show = ''
+    if client.refer_id is not None:
+        ref_user = db.get_user_by_id(client.refer_id)
+        if ref_user is not None:
+            ref_show = f'Пришел от: <b>{f"@{ref_user.username}" if ref_user.username != "" else ref_user.id}</b>\n'
+
+    calcs = db.get_calculations_by_user(client.id)
+    calcs_count = len(calcs)
+
+    calcs_info = f'Кол-во расчетов: <b>{calcs_count}</b>\n'
+    for market in ('crypto', 'forex', 'RF', 'USA'):
+        count = len([el for el in calcs if el.market == market])
+        if count > 0:
+            markets = {
+                'crypto': 'Крипта',
+                'forex': 'Форекс',
+                'RF': 'РФ рынок',
+                'USA': 'США рынок',
+            }
+
+            calcs_info += f'{POINT} {markets[market]}: <b>{count}</b>'
+
+            u_base = db.get_calc_user_settings(client.id, market)
+            deposit = currency = risk = ''
+            if u_base is not None:
+                deposit = u_base.deposit or deposit
+                currency = u_base.currency or currency
+
+                if u_base.risk:
+                    risk = ''.join((
+                        f' Риск: <i>{u_base.risk[0]}',
+                        ('%' if u_base.risk[1] else f'{currency}'),
+                        '</i>'
+                    ))
+
+            if deposit != '' and currency != '':
+                calcs_info += f' (Депозит: <u>{get_print_float(deposit)} {currency}</u>) {risk}'
+
+            calcs_info += '\n'
+
     text = '\n'.join((
         f'Пользователь <b>{nikname} | {client_db_id} {"(BAN)" if is_banned else ""}</b>',
-        f'Подписка: {fin_date}{type_subscribe_show}',
-        # f'Баланс: <b>{balance}</b>',
+        sub_show,
+        block_show,
         f'Рефералов: <b>{count_ref}</b>',
-        '',
+        ref_show,
+        calcs_info,
         '<b>Выберите действие 👇</b>'
     ))
     keyboard = kb_admin_client_info(client_db_id, is_banned, page, sort_by)

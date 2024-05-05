@@ -151,10 +151,11 @@ class UserInfo(BaseModel):
     id: int
     tg_id: int
     username: str
-    refer: int
+    refer_id: Optional[int]
     ban: int
     registration_dt: datetime
     uses_count: Optional[int]
+    block: bool = False
 
 
 class Client(BaseModel):

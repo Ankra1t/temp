@@ -80,9 +80,14 @@ def get_short_user_info(user: UserInfo):
         type_subscribe_show = f'({user_subsribe.product_type})'
         sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
 
+    if user.block:
+        info = '🅱️ <b>Заблокировал бота</b>'
+    else:
+        info = f'Подписка до: {sub_show}'
+
     user_show = (
         f'{user.id} {nik}<b>{ban}</b>{uses_count}'
-        f'\nПодписка до: {sub_show}'
+        f'\n{info}'
         f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
     )
 

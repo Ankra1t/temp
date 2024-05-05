@@ -856,14 +856,15 @@ class Database:
             id=data.get('id'),
             tg_id=data.get('id_telegram'),
             username=data.get('username_tg') or '',
-            refer=data.get('refer_id') or -1,
+            refer_id=data.get('refer_id'),
             ban=data.get('ban') or 0,
             registration_dt=data.get('created_at') or datetime(2012, 12, 12),
-            uses_count=data.get('uses_count')
+            uses_count=data.get('uses_count'),
+            block=data.get('block') or False,
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count  '
+        'SELECT u.id, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count  '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 
@@ -984,6 +985,19 @@ class Database:
             query += "LIMIT %s OFFSET %s "
             params = (limit, (page - 1) * limit)
 
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return list(map(lambda u: self._data_to_user(u), data))
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return []
+
+    def get_blocked_users(self):
+        query = self.USER_INFO_QUERY + 'WHERE tu.block = %s '
+        params = True,
+        
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
