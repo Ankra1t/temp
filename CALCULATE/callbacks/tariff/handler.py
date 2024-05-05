@@ -10,7 +10,7 @@ from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
 from .keyboards import kb_bill, kb_user_tariff_back
-from  ..pages import send_main, send_user_tariffs, send_tariffs_list_item
+from  ..pages import send_main, send_tariffs_list_item
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):

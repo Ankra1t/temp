@@ -80,11 +80,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if 'loss' in profit:
                     rate = float(profit.replace('loss', ''))
                     _, _, spot_rate = get_count_value_bet(calc_info)
-                    calcService.set_profit(bot, stat_id, -calc_info.risk_value * rate * spot_rate)
+                    calcService.set_profit(stat_id, -calc_info.risk_value * rate * spot_rate)
                 elif profit != 'cancel':
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     profit_result = calc_info.risk_value * int(profit) * spot_rate
-                    calcService.set_profit(bot, stat_id, profit_result)
+                    calcService.set_profit(stat_id, profit_result)
                 else:
                     is_cancel = True
 

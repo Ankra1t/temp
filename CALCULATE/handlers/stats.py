@@ -33,7 +33,7 @@ def handle_loss(message: Message, bot: TeleBot):
 
     logger.info(f'callback "handle_loss" user_tg_id={user_id} value={value}')
 
-    calcService.set_profit(bot, stat_id, -abs(value))
+    calcService.set_profit(stat_id, -abs(value))
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return
@@ -82,7 +82,7 @@ def handle_sum(message: Message, bot: TeleBot):
 
     logger.info(f'callback "handle_sum" user_tg_id={user_id} value={value}')
 
-    calcService.set_profit(bot, stat_id, value)
+    calcService.set_profit(stat_id, value)
     calc_info = db.get_calculation(stat_id)
     if calc_info is None:
         return

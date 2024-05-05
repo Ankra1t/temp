@@ -6,7 +6,7 @@ from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_print_float
 from db import db
-from Classes import pay_guard, base_statis
+from Classes import base_statis
 
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
