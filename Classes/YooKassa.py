@@ -49,7 +49,10 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
             },
             "items": [{
                 "description": name,
-                "amount": amount,
+                "amount": {
+                    'value': '500.00',
+                    'currency': 'RUB',
+                },
                 "quantity": str(tariff.duration_days),
                 "measure": "day",
                 "vat_code": 1,
