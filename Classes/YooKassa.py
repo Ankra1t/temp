@@ -51,8 +51,10 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
                 "description": name,
                 "amount": amount,
                 "quantity": str(tariff.duration_days),
-                "measure": 'дней'
-            }]
+                "measure": "day",
+                "vat_code": "1"
+            }],
+            "tax_system_code": "2"
         }
     }
 
