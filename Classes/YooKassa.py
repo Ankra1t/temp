@@ -57,6 +57,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
             "tax_system_code": 2
         }
     }
+    print(response_data)
 
     try:
         payment = Payment.create(response_data, uuid.uuid4())
