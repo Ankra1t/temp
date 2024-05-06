@@ -6,11 +6,11 @@ from telebot.types import Message
 from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
-from common.utils import digit_accept, text_accept
+from common.utils import delete_message, digit_accept, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
-from CALCULATE.callbacks import kb_deal_profit_minus, kb_main
+from CALCULATE.callbacks import kb_deal_profit_minus, kb_main, kb_calc_image, send_main
 from CALCULATE.common.messages import (
     msg_calculate_result, msg_digit_error, msg_freeze_error, msg_frozen
 )
@@ -43,12 +43,11 @@ def handle_loss(message: Message, bot: TeleBot):
     stats = calcService.get_stats(user_id, calc_info.market)
     mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
-
     is_valid = pay_guard.valid_use_calc(user_id)
 
     bot.send_message(
         chat_id, mes_calc,
-        reply_markup=kb_main(user_id, is_valid, True)
+        reply_markup=kb_main(user_id, is_valid, calc_info)
     )
 
     # file_path = hti.create_calculation_image(
@@ -93,7 +92,7 @@ def handle_sum(message: Message, bot: TeleBot):
 
     bot.send_message(
         chat_id, mes_calc,
-        reply_markup=kb_main(user_id, is_valid, True)
+        reply_markup=kb_main(user_id, is_valid, calc_info)
     )
     bot.delete_state(user_id, chat_id)
 
@@ -109,7 +108,8 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
 
     value = text_accept(message) or ''
 
-    logger.info(f'callback "handle_freeze_dt" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_freeze_dt" user_tg_id={user_id} value={value}')
 
     try:
         time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'
@@ -142,6 +142,33 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     )
 
 
+def handle_calc_image(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        calc_text = data.get('calc_text', 'J')
+        calc_del_mes_id = data.get('calc_del_mes_id', 0)
+        stat_id = data.get('stat_id', 0)
+
+    if message.content_type != 'photo':
+        delete_message(bot, chat_id, calc_del_mes_id)
+        new_mes = bot.send_message(
+            chat_id, calc_text,
+            reply_markup=kb_calc_image(user_id, stat_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'calc_del_mes_id': new_mes.id})
+        return
+
+    calc_text = '\n'.join(calc_text.split('\n')[:-1])
+    bot.edit_message_text(
+        calc_text, chat_id, calc_del_mes_id,
+        reply_markup=None
+    )
+    bot.delete_state(user_id, chat_id)
+    send_main(message, bot, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -149,3 +176,4 @@ def registration(bot: TeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
+    reg_mes(handle_calc_image, state=StatsState.add_image)

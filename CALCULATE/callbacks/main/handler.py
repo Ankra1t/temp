@@ -14,7 +14,7 @@ from ..pages import send_settings, send_main, send_stats, send_tariffs_list_item
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = main_factory.parse(call.data)
     type = callback_data.get('type', '')
-    is_new_calc = callback_data.get('is_new_calc', 'False')
+    is_saved = callback_data.get('is_saved', 'False')
     stat_id = int(callback_data.get('stat_id', -1))
 
     user_id = call.from_user.id
@@ -22,17 +22,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    logger.info(f'callback "main_factory" user_tg_id={user_id} type={type} is_new_calc={is_new_calc} stat_id={stat_id}')
+    logger.info(
+        f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
+    )
 
-    if 'calc' in type  or type == 'settings':
+    if 'calc' in type or type == 'settings':
         if stat_id != -1:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(user_id, stat_id)
-            )
-        elif is_new_calc == 'True':
-            bot.edit_message_reply_markup(
-                chat_id, mes_id, reply_markup=None
+                reply_markup=kb_calc_result(
+                    user_id, stat_id, is_saved == 'True'
+                )
             )
         else:
             delete_message(bot, chat_id, mes_id)
@@ -41,7 +41,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         u_base = db.get_calc_user_settings(user_db_id)
         market = u_base.market if (u_base is not None) else 'crypto'
 
-        choose_first_calculate_step(bot, user_id, call.message, market, False, '_continue' in type)
+        choose_first_calculate_step(
+            bot, user_id, call.message, market, False, '_continue' in type
+        )
 
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)

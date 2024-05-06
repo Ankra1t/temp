@@ -12,7 +12,7 @@ from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete, msg_calculate_result,
-    msg_calculation_deleted, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
+    msg_calculation_deleted, msg_enter_calc_image, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.callbacks import kb_main
@@ -20,7 +20,7 @@ from CALCULATE.states import StatsState
 from models import MARKETS_TYPE
 
 from .keyboards import (
-    kb_calculate_change, kb_calculate_delete, kb_deal_profit_cancel,
+    kb_calc_image, kb_calculate_change, kb_calculate_delete, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_stats
 )
 from .filter import stats_factory, StatsCallbackFilter
@@ -40,7 +40,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-    logger.info(f'callback "settings_factory" user_tg_id={user_id} type={type} ({stats_market} {stat_id})')
+    logger.info(
+        f'callback "settings_factory" user_tg_id={user_id} type={type} ({stats_market} {stat_id})'
+    )
 
     if 'time' in type:
         _, time = type.split('+')
@@ -80,10 +82,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if 'loss' in profit:
                     rate = float(profit.replace('loss', ''))
                     _, _, spot_rate = get_count_value_bet(calc_info)
-                    calcService.set_profit(stat_id, -calc_info.risk_value * rate * spot_rate)
+                    calcService.set_profit(
+                        stat_id, -calc_info.risk_value * rate * spot_rate)
                 elif profit != 'cancel':
                     _, _, spot_rate = get_count_value_bet(calc_info)
-                    profit_result = calc_info.risk_value * int(profit) * spot_rate
+                    profit_result = calc_info.risk_value * \
+                        int(profit) * spot_rate
                     calcService.set_profit(stat_id, profit_result)
                 else:
                     is_cancel = True
@@ -94,8 +98,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if calc_info is None:
                     return
 
-                saved_stat_id = stat_id if is_cancel else -1
-
                 stats = calcService.get_stats(user_id, calc_info.market)
                 mes_calc = msg_calculate_result(
                     user_id, calc_info, None if is_cancel else stats
@@ -104,7 +106,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     mes_calc, chat_id, mes_id,
                     reply_markup=kb_main(
-                        user_id, is_valid, True, saved_stat_id
+                        user_id, is_valid, calc_info
                     )
                 )
                 # file_path = hti.create_calculation_image(
@@ -158,16 +160,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = '\n'.join(text.split('\n')[:-1])
 
             is_valid = pay_guard.valid_use_calc(user_id)
+            calc_info = db.get_calculation(stat_id)
 
             bot.edit_message_text(
                 text, chat_id, mes_id,
-                reply_markup=kb_main(user_id, is_valid, True, stat_id)
+                reply_markup=kb_main(user_id, is_valid, calc_info)
             )
         else:
             bot.delete_message(chat_id, mes_id)
             bot.send_message(
                 chat_id,
-                msg_calculate_delete(user_id, call.message.text or ''),
+                msg_calculate_delete(user_id, call.message.html_text or ''),
                 reply_markup=kb_calculate_delete(user_id, stat_id)
             )
 
@@ -191,7 +194,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             bot.edit_message_text(
                 text, chat_id, mes_id,
-                reply_markup=kb_main(user_id, is_valid, True, stat_id)
+                reply_markup=kb_main(user_id, is_valid, calc_info)
             )
         elif kind == 'open_price':
             bot.edit_message_text(
@@ -240,6 +243,23 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     'del_mes_id': call.message.id
                 }
             )
+
+    if type == 'add_img':
+        text = (call.message.html_text or '') + \
+            f'\n\n{msg_enter_calc_image(user_id)}'
+
+        delete_message(bot, chat_id, mes_id)
+        new_mes = bot.send_message(
+            chat_id, text,
+            reply_markup=kb_calc_image(user_id, stat_id)
+        )
+        bot.set_state(user_id, StatsState.add_image, chat_id)
+
+        set_state_data(bot, user_id, chat_id, {
+            'stat_id': stat_id,
+            'calc_text': text,
+            'calc_del_mes_id': new_mes.id
+        })
 
     bot.answer_callback_query(call.id)
 

@@ -35,7 +35,7 @@ def send_calculation(
 
     bot.send_message(
         chat_id, mes,
-        reply_markup=kb_main(user_id, is_valid, True, calc.id),
+        reply_markup=kb_main(user_id, is_valid, calc),
     )
 
 

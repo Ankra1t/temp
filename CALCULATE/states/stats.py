@@ -6,3 +6,5 @@ class StatsState(StatesGroup):
     sum = State()
 
     freeze = State()
+
+    add_image = State()

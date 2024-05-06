@@ -1103,6 +1103,17 @@ def msg_enter_save_calc(user_id: int):
     return texts[lang]
 
 
+def msg_enter_calc_image(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Загрузите свой скриншот сделки и он останется в чате навсегда',
+        'en': 'Upload your screenshot of the deal and it will stay in the chat'
+    }
+
+    return f'👉 {texts[lang]}'
+
+
 def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
     lang = get_lang(user_id)
 

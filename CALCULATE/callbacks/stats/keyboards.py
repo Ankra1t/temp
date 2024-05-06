@@ -53,7 +53,7 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
     return keyboard
 
 
-def kb_calc_result(user_id: int, stat_id: int):
+def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     lang = get_lang(user_id)
 
     texts = {
@@ -61,21 +61,32 @@ def kb_calc_result(user_id: int, stat_id: int):
             'save': 'Сохранить в статистику',
             'del': 'Удалить',
             'change': 'Изменить',
+            'img': 'Прикрепить фото',
         },
         'en': {
             'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
+            'img': 'Attach image',
         }
     }
 
-    btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
-    btn_delete = getButton(f'❌ {texts[lang]["del"]}', 'delete_calc', stat_id)
-    btn_change = getButton(
-        f'✏️ {texts[lang]["change"]}', 'change_calc', stat_id)
-
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_delete, btn_change, btn_save)
+
+    if is_saved:
+        btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
+        keyboard.add(btn_add_img)
+    else:
+        btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
+        btn_delete = getButton(
+            f'❌ {texts[lang]["del"]}',
+            'delete_calc', stat_id
+        )
+        btn_change = getButton(
+            f'✏️ {texts[lang]["change"]}',
+            'change_calc', stat_id
+        )
+        keyboard.add(btn_delete, btn_change, btn_save)
 
     return keyboard
 
@@ -200,12 +211,24 @@ def kb_calculate_change(user_id: int, stat_id: int):
         },
     }
 
-    btn_op = getButton(texts[lang]["open_price"], 'change_calc+open_price', stat_id)
-    btn_sl = getButton(texts[lang]["stop_loss"], 'change_calc+stop_loss', stat_id)
+    btn_op = getButton(texts[lang]["open_price"],
+                       'change_calc+open_price', stat_id)
+    btn_sl = getButton(texts[lang]["stop_loss"],
+                       'change_calc+stop_loss', stat_id)
     btn_tool = getButton(texts[lang]["tool"], 'change_calc+tool', stat_id)
     btn_back = getButton(back_txt(lang), 'change_calc+back', stat_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_op, btn_sl)
     keyboard.add(btn_tool, btn_back)
+    return keyboard
+
+
+def kb_calc_image(user_id: int, stat_id: int):
+    lang = get_lang(user_id)
+
+    btn_back = getButton(back_txt(lang), 'profit+cancel', stat_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_back)
     return keyboard

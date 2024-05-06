@@ -8,7 +8,7 @@ from db import db
 from Classes import pay_guard
 from CALCULATE.common.messages import (
     msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
-    msg_stats_page, msg_summury_profit_settings, msg_uses_count
+    msg_stats_page, msg_summury_profit_settings
 )
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from .manual.keyboards import kb_manual
@@ -18,7 +18,7 @@ from .stats.keyboards import kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
 
-def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_new_calc=False):
+def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -32,16 +32,13 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False, is_n
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
 
     if is_valid_use:
-        if is_new_calc:
-            text = msg_uses_count(user_id, uses_count)
-        else:
-            text = msg_main(user_id, uses_count)
+        text = msg_main(user_id, uses_count)
     elif freeze_dt is not None:
         text = msg_main_freeze(user_id, freeze_dt)
     else:
         text = msg_no_uses(user_id)
 
-    keyboard = kb_main(user_id, is_valid_use, is_new_calc, -1, unfinished_calc is not None)
+    keyboard = kb_main(user_id, is_valid_use, None, unfinished_calc is not None)
 
     if is_first:
         bot.send_message(
