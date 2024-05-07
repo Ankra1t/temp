@@ -28,7 +28,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     name = tariff.name
 
     me = Settings.get_account_settings()
-    print(me)
+    print(me.json())
     return False
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
