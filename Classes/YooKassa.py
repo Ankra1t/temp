@@ -36,7 +36,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         return False
 
     amount = {
-        "value": str(price),
+        "value": f"{price:.2f}",
         "currency": currency
     }
     response_data = {
@@ -53,10 +53,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
             },
             "items": [{
                 "description": name,
-                "amount": {
-                    'value': '500.00',
-                    'currency': 'RUB',
-                },
+                "amount": amount,
                 "quantity": str(tariff.duration_days),
                 "measure": "day",
                 "vat_code": 1,
