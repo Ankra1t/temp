@@ -31,12 +31,14 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
         'ru': {
             'next': 'Вперед',
             'prev': 'Назад',
-            'buy': 'Купить',
+            'buy_yoo': 'юКасса',
+            'buy_cb': 'CryptoBot',
         },
         'en': {
             'next': 'Next',
             'prev': 'Back',
-            'buy': 'Buy',
+            'buy_yoo': 'yooKassa',
+            'buy_cb': 'CryptoBot',
         }
     }
 
@@ -62,12 +64,16 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
         counter = getButton(f'{page + 1}/{count}', 'counter')
         keyboard.add(btn_prev, counter, btn_next)
 
-    pay_tariff = getButton(
-        f'💵 {texts[lang]["buy"]}', 'pay_tariff', tariff_id, tariff_type, page
+    pay_yookassa = getButton(
+        f'💵 {texts[lang]["buy_yoo"]}', 'pay_tariff_yoo', tariff_id, tariff_type, page
+    )
+    pay_cb = getButton(
+        f'💵 {texts[lang]["buy_cb"]}', 'pay_tariff_cb', tariff_id, tariff_type, page
     )
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    keyboard.add(pay_tariff, btn_back)
+    keyboard.add(pay_yookassa, pay_cb)
+    keyboard.add(btn_back)
     return keyboard
 
 
@@ -82,37 +88,22 @@ pays_translate = {
     }
 }
 
-def kb_bill(user_id: int, yookassa_price: str, url_yookassa: str, cryptobot_price: str, url_cryptobot: str):
-    lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=2)
 
-    text = {
-        'ru': {
-            'yoo': f'Оплатить {yookassa_price} через юКассу',
-            'cp': f'Оплатить {cryptobot_price} через CryptoBot'
-        },
-        'en': {
-            'yoo': f'Pay {yookassa_price} via yooKassa',
-            'cp': f'Pay {cryptobot_price} via CryptoBot'
-        },
+def kb_bill(user_id: int, url: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Оплатить',
+        'en': 'Pay'
     }
 
-    if url_yookassa != '':
-        keyboard.add(
-            InlineKeyboardButton(
-                text[lang]['yoo'], url_yookassa
-            )
-        )
-
-    if url_cryptobot != '':
-        keyboard.add(
-            InlineKeyboardButton(
-                text[lang]['cp'], url_cryptobot
-            )
-        )
-
-    btn_back = getButton(back_txt(lang), 'go_tariff')
-    keyboard.add(btn_back)
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton(
+            texts[lang], url
+        ),
+        getButton(back_txt(lang), 'go_tariff')
+    )
     return keyboard
 
 

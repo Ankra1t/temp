@@ -36,7 +36,7 @@ from .settings.keyboards import (
 
 from .tariff.handler import registration as _reg_user_tariff
 from .tariff.keyboards import (
-    kb_tariff_list, kb_choose_products, kb_user_tariff_back
+    kb_tariff_list, kb_choose_products, kb_user_tariff_back, kb_bill
 )
 
 

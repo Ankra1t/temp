@@ -140,7 +140,7 @@ def msg_cryptopay(user_id: int):
     return f'❗️ {texts[lang]}'
 
 
-def msg_yookassa(user_id: int):
+def msg_bill(user_id: int):
     lang = get_lang(user_id)
 
     texts = {

@@ -1288,6 +1288,17 @@ def msg_enter_summury_profit_type(user_id: int):
 *Separation - the sale of a trading position is divided into several take profites </i>"""
 
 
+def msg_enter_email(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите <b>почту</b> для получения чека после оплаты',
+        'en': 'Enter <b>email</b> to receive the receipt after payment',
+    }
+
+    return f'✍ {texts[lang]}:'
+
+
 def msg_enter_tool(user_id: int):
     lang = get_lang(user_id)
 

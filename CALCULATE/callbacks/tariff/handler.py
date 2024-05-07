@@ -1,16 +1,17 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.common.messages import msg_enter_email
+from CALCULATE.states.tariff import TariffState
 from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment
-from Classes.YooKassa import yooKassa_create_payment
-from common.utils import check_discount_price, delete_message
+from common.utils import delete_message, set_state_data
 from db import db
-from messages.users import msg_is_subscribed, msg_loading_invoice, msg_yookassa
+from messages.users import msg_is_subscribed, msg_loading_invoice, msg_bill
 
 from .filter import user_tariff_factory, UserTariffCallbackFilter
 from .keyboards import kb_bill, kb_user_tariff_back
-from  ..pages import send_main, send_tariffs_list_item
+from ..pages import send_main, send_tariffs_list_item
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -24,19 +25,36 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
-    logger.info(f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
+    logger.info(
+        f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
 
-    if 'go_tariff' in type:
+    elif 'go_tariff' in type:
         send_tariffs_list_item(
-            bot, call.message, user_id, 'calc', 0
+            bot, call.message, user_id, 'calc', page
         )
 
-    if type == 'pay_tariff':
+    elif type == 'pay_tariff_yoo':
         delete_message(bot, chat_id, mes_id)
 
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        user_sub = db.get_current_subscribe_user(user_db_id)
+
+        if user_sub is not None:
+            bot.send_message(
+                chat_id, msg_is_subscribed(user_id),
+                reply_markup=kb_user_tariff_back(user_id)
+            )
+            return
+
+        bot.send_message(chat_id, msg_enter_email(user_id))
+        bot.set_state(user_id, TariffState.email, chat_id)
+        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+
+    elif type == 'pay_tariff_cb':
+        delete_message(bot, chat_id, mes_id)
         user_db_id = db.get_user_id_by_tg_id(user_id)
         user_sub = db.get_current_subscribe_user(user_db_id)
 
@@ -53,38 +71,25 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
         tariff = db.get_price_by_id(target_id)
-
         if tariff is None:
             return
 
         bot_url = f'https://t.me/{bot.get_me().username}'
-        yookassa_payment_url = yooKassa_create_payment(
-            user_id, tariff, bot_url
-        )
-
         cryptopay_payment_url = cryptoPay_create_payment(
             user_id, tariff, bot_url
         )
 
-        if yookassa_payment_url == False and cryptopay_payment_url == False:
+        if cryptopay_payment_url == False:
             bot.edit_message_text(
                 'Ошибка', chat_id, edit_wait_mess.id
             )
             return
 
-        yookass_price = check_discount_price(tariff)
-        cryptopay_price = check_discount_price(tariff, 'crypto')
-
         bot.edit_message_text(
-            msg_yookassa(user_id),
+            msg_bill(user_id),
             chat_id, edit_wait_mess.id,
-            reply_markup=kb_bill(
-                user_id,
-                f'{yookass_price} {tariff.currency}', yookassa_payment_url or '',
-                f'{cryptopay_price} {tariff.currency_crypto}', cryptopay_payment_url or ''
-            )
+            reply_markup=kb_bill(user_id, cryptopay_payment_url)
         )
-
 
     bot.answer_callback_query(call.id)
 

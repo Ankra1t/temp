@@ -1,7 +1,7 @@
 import traceback
 from telebot import TeleBot
 from flask import Request, Response
-from yookassa import Configuration, Payment, Webhook
+from yookassa import Configuration, Payment
 from requests.exceptions import HTTPError
 import uuid
 
@@ -22,28 +22,20 @@ Configuration.account_id = YOOKASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
 
 
-def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
+def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str, user_email=''):
     price = check_discount_price(tariff)
     currency = tariff.currency
     name = tariff.name
-    
-    a = Webhook.list()
-    print(a)
-
-    # me = Settings.get_account_settings()
-    # print(me.json())
-    # return False
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     if user_db_id == 0:
         return False
 
-    amount = {
-        "value": f"{price:.2f}",
-        "currency": currency
-    }
     response_data = {
-        "amount": amount,
+        "amount": {
+            "value": f"{price:.2f}",
+            "currency": currency
+        },
         "capture": True,
         "description": name,
         "confirmation": {
@@ -52,7 +44,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         },
         "receipt": {
             "customer": {
-                "email": 'az1kgo@mail.ru'
+                "email": user_email or 'admin@profmarkets.ai'
             },
             "items": [{
                 "description": name,
@@ -105,6 +97,8 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
     if body is None:
         return Response(status=400)
 
+    logger.info(f'YooKassa update: {body}')
+
     event = body.get('event')
     payment: dict | None = body.get('object')
 
@@ -127,6 +121,7 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
 
     if event == 'payment.canceled':
         db.cancel_transaction(transaction.id)
+        logger.info(f'Transaction {transaction.id} canceled')
         return Response(status=200)
 
     db.success_transaction(transaction.id)
@@ -159,4 +154,5 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
             finish_date=finish_date_show
         ))
 
+    logger.info(f'Transaction {transaction.id} confirmed')
     return Response(status=200)
