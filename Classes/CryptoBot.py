@@ -1,5 +1,6 @@
 import threading
 from typing import Literal
+from httpx import request
 from telebot import TeleBot
 import asyncio
 from hashlib import sha256
@@ -22,18 +23,9 @@ from models import Price
 from db import db
 
 
-Payment = AioCryptoPay(token=CRYPTOPAY_TOKEN, network=CRYPTOPAY_NETWORK)
+# Payment = AioCryptoPay(token=CRYPTOPAY_TOKEN, network=CRYPTOPAY_NETWORK)
 
 def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
-    future = asyncio.Future()
-    t = threading.Thread(target=cryptoPay_create_payment_async, args=(user_id, tariff, redirect_url))
-    t.start()
-    t.join()
-    res: str | Literal[False] = future.result()
-    return res
-
-
-def cryptoPay_create_payment_async(user_id: int, tariff: Price, redirect_url: str):
     if tariff.price_crypto == 0:
         return False
 
@@ -45,19 +37,21 @@ def cryptoPay_create_payment_async(user_id: int, tariff: Price, redirect_url: st
     if user_db_id == 0:
         return False
 
-
     loop = asyncio.get_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        payment = loop.run_until_complete(Payment.create_invoice(
-            asset=currency,
-            amount=price,
-            description=name,
-            paid_btn_name=PaidButtons.OPEN_BOT,
-            paid_btn_url=redirect_url,
-            expires_in=1200
-        ))
-        if payment.status != InvoiceStatus.ACTIVE:
+        data = {
+            'asset': currency,
+            'amount': price,
+            'description': name,
+            'paid_btn_name': PaidButtons.OPEN_BOT,
+            'paid_btn_url': redirect_url,
+            'expires_in': 1200
+        }
+        req = request('get', 'https://pay.crypt.bot/api/createInvoice',
+                          params=data, headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN})
+        payment = req.json()
+        if payment.get('status') != InvoiceStatus.ACTIVE:
             return False
     except Exception as e:
         logger.error(f'CryptoPay Error: {e}')
@@ -65,8 +59,8 @@ def cryptoPay_create_payment_async(user_id: int, tariff: Price, redirect_url: st
     finally:
         loop.close()
 
-    url = str(payment.bot_invoice_url)
-    code = str(payment.invoice_id)
+    url = str(payment.get('bot_invoice_url'))
+    code = str(payment.get('invoice_id'))
 
     db.add_transaction(
         user_db_id,
