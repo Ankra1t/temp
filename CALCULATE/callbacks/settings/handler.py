@@ -6,7 +6,7 @@ from CALCULATE.callbacks.utils import choose_calculate_step
 from config_logger import logger
 from db import db, LANGUAGES
 
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
@@ -172,15 +172,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if len(type_list) == 1:
             bot.delete_message(chat_id, mes_id)
-            bot.send_animation(
-                chat_id, 'CgACAgIAAxkBAAIJMmY6P53jRcWlyv-ZJvK5modmyiehAAJaSQACYZzRSZl5EFQccXJFNQQ',
-                reply_markup=kb_change_market(user_id)
-            )
-            # bot.edit_message_text(
-            #     msg_settings_change_market(user_id),
-            #     chat_id, mes_id,
-            #     reply_markup=kb_change_market(user_id)
-            # )
+
+            if get_lang(user_id) == 'ru':
+                bot.send_animation(
+                    chat_id, 'CgACAgIAAxkBAAIJMmY6P53jRcWlyv-ZJvK5modmyiehAAJaSQACYZzRSZl5EFQccXJFNQQ',
+                    caption=msg_settings_change_market(user_id),
+                    reply_markup=kb_change_market(user_id)
+                )
+            else:
+                bot.edit_message_text(
+                    msg_settings_change_market(user_id),
+                    chat_id, mes_id,
+                    reply_markup=kb_change_market(user_id)
+                )
         else:
             market: Any = type_list[1]
             db.set_calculator_user_market(user_db_id, market)
