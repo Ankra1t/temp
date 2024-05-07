@@ -1,3 +1,5 @@
+import threading
+from typing import Literal
 from telebot import TeleBot
 import asyncio
 from hashlib import sha256
@@ -22,8 +24,16 @@ from db import db
 
 Payment = AioCryptoPay(token=CRYPTOPAY_TOKEN, network=CRYPTOPAY_NETWORK)
 
-
 def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
+    future = asyncio.Future()
+    t = threading.Thread(target=cryptoPay_create_payment_async, args=(user_id, tariff, redirect_url))
+    t.start()
+    t.join()
+    res: str | Literal[False] = future.result()
+    return res
+
+
+def cryptoPay_create_payment_async(user_id: int, tariff: Price, redirect_url: str):
     if tariff.price_crypto == 0:
         return False
 
