@@ -13,6 +13,8 @@ def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
     if user_role != 1 and user_role != 2:
         return
 
+    print(message.animation.file_id)
+
     chat_id = message.chat.id
     user_id = message.from_user.id
 
