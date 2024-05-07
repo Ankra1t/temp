@@ -1,3 +1,4 @@
+from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -65,36 +66,8 @@ def _site(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
-    # CHAT_KEY = -1002104767484
-    # def text_to_image(
-    #     text: str,
-    # ):
-    #     # Создаем изображение с текстом
-    #     image = Image.new('RGB', (500, 300), color='white')
-    #     draw = ImageDraw.Draw(image)
-    #     font = ImageFont.truetype('arial.ttf', 30)
-    #     text = "Hello, World! SADAS asdasd asdasdas asdasd asd"
-
-    #     max_width = 180
-
-    #     # Переносим текст, если он не влезает в заданную ширину
-    #     max_width = image.width - 20  # учитываем отступы
-
-    #     # Переносим текст, если он не влезает в заданную ширину
-    #     wrapped_text = textwrap.fill(text, width=max_width // font.size)
-    #     # Рисуем текст на изображении
-    #     draw.text((10, 10), wrapped_text, fill='black', font=font)
-
-    #     # Создаем буфер памяти для изображения
-    #     image_buffer = BytesIO()
-    #     image.save(image_buffer, format='PNG')
-    #     image_buffer.seek(0)
-
-    #     return image_buffer
-
-    # img = text_to_image('ПРИВЕТ, КАК ДЕЛА? Как дела? Хай',)
-    # bot.send_photo(message.chat.id, img)
-
+    sleep(5)
+    bot.send_message(message.chat.id, 'test')
     pass
 
 
