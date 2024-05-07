@@ -66,10 +66,7 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
             reply_markup=markup
         )
     else:
-        bot.edit_message_text(
-            msg, chat_id, mes_id,
-            reply_markup=markup
-        )
+        edit_message(bot, message, 'text', msg, markup)
 
 
 def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=False):
