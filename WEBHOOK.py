@@ -14,7 +14,6 @@ from thread_tasks import run_thread
 
 logger.info('INITIALIZE')
 app = flask.Flask(__name__)
-app.config['']
 run_thread(bot)
 
 
