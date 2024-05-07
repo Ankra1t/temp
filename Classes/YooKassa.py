@@ -1,7 +1,7 @@
 import traceback
 from telebot import TeleBot
 from flask import Request, Response
-from yookassa import Configuration, Payment, Settings
+from yookassa import Configuration, Payment
 from requests.exceptions import HTTPError
 import uuid
 
@@ -53,7 +53,10 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
             },
             "items": [{
                 "description": name,
-                "amount": amount,
+                "amount": {
+                    'value': f"{price / tariff.duration_days:.2f}",
+                    'currency': currency
+                },
                 "quantity": str(tariff.duration_days),
                 "measure": "day",
                 "vat_code": 1,
@@ -142,7 +145,7 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
         bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
-                finish_date_show, transaction.name
+                user.tg_id, finish_date_show, transaction.name
             ),
         )
         notifier.send_notification('text', mess_user_paid(

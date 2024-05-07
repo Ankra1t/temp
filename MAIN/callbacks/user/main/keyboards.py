@@ -28,7 +28,7 @@ def kb_user_main(user_id: int):
             'calc': 'Calculator',
             'account': 'Profile',
             'support': 'Support',
-            'site': 'Go to website',
+            'site': 'Go to the website',
         }
     }
 
@@ -64,7 +64,7 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
             'site': 'Войти на сайт',
         },
         'en': {
-            'site': 'Go to website',
+            'site': 'Go to the website',
         }
     }
 
@@ -92,7 +92,7 @@ def kb_support(user_id: int, link: str):
             'operator': 'Перейти к оператору',
         },
         'en': {
-            'operator': 'Go to the operator',
+            'operator': 'Contact the customer support',
         },
     }
 

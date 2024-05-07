@@ -39,7 +39,7 @@ def get_risk_annotation(lang: LANGUAGES_TYPE):
         },
         'en': {
             '1': '<i>With a sign of %</i> - for entering a percentage from a deposit',
-            '2': '<i>Without signs</i> - for entering a cloth amount',
+            '2': '<i>Without signs</i> - for entering a exact amount',
         }
     }
 
@@ -74,7 +74,7 @@ def msg_uses_count(user_id: int, count: int):
             'uses': 'Бесплатных расчетов',
         },
         'en': {
-            'uses': 'Free calculations',
+            'uses': 'Free calculations left',
         }
     }
 
@@ -95,7 +95,7 @@ def msg_main(user_id: int, uses_count: int):
             'name': 'Menu',
             '1': 'Choose the market',
             '2': 'Get accurate calculations',
-            'uses': 'Free calculations',
+            'uses': 'Free calculations left',
         }
     }
 
@@ -117,7 +117,7 @@ def msg_no_uses(user_id: int):
             '2': 'Перейдите в бота рекомендаций для покупки доступа'
         },
         'en': {
-            '1': 'Test 100 uses are over',
+            '1': '100 test uses are over',
             '2': 'Go to the signal bot for buying access'
         },
     }
@@ -255,7 +255,7 @@ def msg_deposit(user_id: int):
             'off': 'выключено',
         },
         'en': {
-            'main': 'Setup deposit',
+            'main': 'Deposit setup',
             'dep': 'Current deposit',
             'update': 'Update after saving calculation',
             'on': 'on',
@@ -366,8 +366,8 @@ def msg_support(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Чтобы связаться с оператором тех. поддержки, нажмите на кнопку ниже',
-        'en': 'To contact the technical support operator, click on the button below'
+        'ru': 'Чтобы связаться с тех. поддержкой, нажмите на кнопку ниже',
+        'en': 'To contact the customer support, click on the button below'
     }
 
     return f'{texts[lang]}👇'
@@ -383,7 +383,7 @@ def msg_stats_page(user_id: int, count: int):
         },
         'en': {
             'main': 'Stats',
-            'count': 'Calculations count',
+            'count': 'All calculations done',
         },
     }
 
@@ -447,8 +447,8 @@ def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=Fal
         },
         'en': {
             '1': 'You have exceeded the daily percentage of risk by',
-            '2': 'Would you like to suspend trade for a while?',
-            'end': 'At this time, calculations in the calculator cannot be made for the safety of your trade',
+            '2': 'Would you like to suspend trading for a while?',
+            'end': 'At this time, calculations in the calculator cannot be done for the safety of your trade',
         }
     }
 
@@ -500,7 +500,7 @@ def msg_success_base_set(user_id: int):
             '2': 'Поменять их можно в настройках'
         },
         'en': {
-            '1': 'The basic values are saved',
+            '1': 'The basic data have been saved',
             '2': 'You can change them in the settings'
         },
     }
@@ -517,7 +517,7 @@ def msg_success_edit(user_id: int):
 
     texts = {
         'ru': 'Изменения сохранены',
-        'en': 'Changes saved'
+        'en': 'Changes have been saved'
     }
 
     return f'✅ {texts[lang]}!'
@@ -540,7 +540,7 @@ def msg_trading_style_error(user_id: int):
 
     texts = {
         'ru': 'Введите стиль текстом',
-        'en': 'Enter the trading style in text'
+        'en': 'Enter the trading style in words'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -564,7 +564,7 @@ def msg_pair_error(user_id: int):
 
     texts = {
         'ru': 'Введите валютную пару текстом',
-        'en': 'Enter the currency pair by text'
+        'en': 'Enter the currency pair in words'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -591,7 +591,7 @@ def msg_digit_error(user_id: int, value_from: int | None = None, value_to: int |
             'to': 'до',
         },
         'en': {
-            'main': 'Enter the value as a number',
+            'main': 'Enter the value in number',
             'from': 'from',
             'to': 'to',
         },
@@ -613,7 +613,7 @@ def msg_text_error(user_id: int):
 
     texts = {
         'ru': 'Введите значение текстом',
-        'en': 'Enter the value as a text'
+        'en': 'Enter the value in words'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -673,8 +673,8 @@ def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
             'sum': 'Суммарный процент превысил 100',
         },
         'en': {
-            'digit': 'Enter the percent as a number',
-            'sum': 'The total percent exceeded 100',
+            'digit': 'Enter the percent in number',
+            'sum': 'The total percent has exceeded 100',
         }
     }
 
@@ -1097,7 +1097,7 @@ def msg_enter_save_calc(user_id: int):
 
     texts = {
         'ru': 'Как вы закрыли данную сделку?',
-        'en': 'How did you close this deal?',
+        'en': 'How have you closed this deal?',
     }
 
     return texts[lang]
@@ -1134,13 +1134,13 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
             'next': 'Выберите <b>следующее</b> значение',
         },
         'en': {
-            'name': 'Installation of a teke-profit',
+            'name': 'Installation of a take-profit',
             'current': 'Current choice',
-            'max': 'Keep in mind that the maximum take-profit coefficient',
-            'max_count': f'You can choose before <b>{max_count}</b> meanings',
+            'max': 'Keep in mind that the max take-profit coefficient',
+            'max_count': f'You can choose up to <b>{max_count}</b> values',
             '1': 'Select <b>the first</b> meaning',
             'action': 'Choose an action',
-            'next': 'Select the <b>following</b> meaning',
+            'next': 'Select the <b>following</b> value',
         },
     }
 
@@ -1184,7 +1184,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
             'next': 'Выберите <b>следующее</b> значение тейк-профита',
         },
         'en': {
-            'name': 'Installation of the separation of profit',
+            'name': 'Setting the profit division',
             'current': 'Current choice',
             'percent_sum': 'The total percentage',
             'last': 'Remaining',
@@ -1193,7 +1193,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
             '1': 'Select <b> the first </b> take-profit value',
             'action': 'Choose an action',
             'tp': 'Enter the <b> percentage of the output </b> for the take profite',
-            'next': 'Select <b>the following</b> Take-profite value',
+            'next': 'Select <b>the following</b> take-profit value',
         },
     }
 
@@ -1284,7 +1284,7 @@ def msg_enter_summury_profit_type(user_id: int):
     else:
         return """Select the type of division of the amount:
 
-<i>*Simple - without division of profit, sale 100% of the trading position
+<i>*Simple - without profit division, sale 100% of the trading position
 *Separation - the sale of a trading position is divided into several take profites </i>"""
 
 
@@ -1304,7 +1304,7 @@ def msg_enter_deposit(user_id: int):
 
     texts = {
         'ru': 'Введите размер депозита',
-        'en': 'Enter the size of the deposit'
+        'en': 'Enter the deposit size'
     }
 
     return f'✍ {texts[lang]}:'
@@ -1315,7 +1315,7 @@ def msg_enter_risk_percent(user_id: int):
 
     texts = {
         'ru': 'Введите <u>риск</u> на сделку',
-        'en': 'Enter <u>risk</u> to the deal',
+        'en': 'Enter <u>risk</u> of the deal',
     }
 
     return f"""✍ {texts[lang]}
@@ -1335,8 +1335,8 @@ def msg_enter_day_risk(user_id: int):
         },
         'en': {
             'main': 'Enter <u>daily risk</u>',
-            'desc1': '"<b>Daily risk</b>" - the percentage or amount of capital exceeding which the system will remind you about it.',
-            'desc2': 'Trading is based on systematic trading, and the risks for the day/week/month need to be controlled',
+            'desc1': '"<b>Daily risk</b>" - the percentage or amount of capital, when exceeding which the system will remind you about it.',
+            'desc2': 'Trading is based on systematic deals, and the risks for the day/week/month are needed to be controlled',
         },
     }
 
@@ -1377,7 +1377,7 @@ def msg_enter_round_count(user_id: int):
         },
         'en': {
             'main': 'Enter the <u>number of signs</u> after dot',
-            'max': '<i>Maximum</i>: <b>5</b>'
+            'max': '<i>Max</i>: <b>5</b>'
         },
     }
 
@@ -1391,7 +1391,7 @@ def msg_enter_currency(user_id: int):
 
     texts = {
         'ru': 'Введите валюту или выберите из списка',
-        'en': 'Enter the currency or select from the list'
+        'en': 'Enter the currency or select from the list below'
     }
 
     return f'✍ {texts[lang]}:'
@@ -1413,7 +1413,7 @@ def msg_enter_open_price(user_id: int):
 
     texts = {
         'ru': 'Введите цену открытия сделки',
-        'en': 'Enter the price of the opening transaction'
+        'en': 'Enter the price of the deal opening'
     }
 
     return f'✍ {texts[lang]}:'
@@ -1483,7 +1483,7 @@ def msg_confirm_reset(user_id: int):
 
     texts = {
         'ru': 'Вы действительно хотите <b>сбросить</b> все настройки',
-        'en': 'Do you really want to <b>drop</b> all settings',
+        'en': 'Do you really want to  <b>return to default</b> settings',
     }
 
     return f'⚠️ {texts[lang]}?'
@@ -1494,7 +1494,7 @@ def msg_calculation_saved(user_id: int):
 
     texts = {
         'ru': 'Расчет сохранен',
-        'en': 'The calculation is saved',
+        'en': 'The calculation has been saved',
     }
 
     return f'✅ {texts[lang]}!'

@@ -27,7 +27,7 @@ def msg_referral(user_id: int, ref_count: int, bot_name: str):
         'en': {
             '1': f'<b>Now you have:</b> {ref_count} referral(s)',
             '2': '<b>Copy</b> the link below and share it with your friends',
-            '3': 'In the future, you will receive <b>remuneration</b> for the activity of your referrals',
+            '3': 'In the future, you will receive <b>reward</b> for the activity of your referrals',
         },
     }
 
@@ -82,8 +82,8 @@ def msg_site_login(user_id: int):
             'time': 'Ссылка действует несколько минут',
         },
         'en': {
-            'name': 'Site',
-            'click': 'Press the button to go website',
+            'name': 'Website',
+            'click': 'Press the button to go to the website',
             'time': 'The link is valid for several minutes',
         },
     }

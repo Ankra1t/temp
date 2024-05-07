@@ -290,7 +290,7 @@ class PaymentsBanker(object):
                 self.bot.send_message(
                     transaction.user_id,
                     text=paid_subscribe_msg(
-                        finish_date, transaction.name
+                        transaction.user_id, finish_date, transaction.name
                     ),
                 )
 

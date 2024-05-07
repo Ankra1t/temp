@@ -22,7 +22,7 @@ def kb_user_account(user_id: int):
             'purchases': 'Мои покупки',
         },
         'en': {
-            'refs': 'Referral',
+            'refs': 'Referral program',
             'purchases': 'My purchases',
         }
     }

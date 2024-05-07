@@ -123,7 +123,7 @@ def kb_deal_result(user_id: int, stat_id: int):
         },
         'en': {
             'minus': 'Stop-loss',
-            'sum': 'Other profit',
+            'sum': 'Other amount',
         }
     }
 

@@ -299,7 +299,7 @@ def kb_summury_profit_type(user_id: int):
             'splitting': 'Разделение',
         },
         'en': {
-            'default': 'Default',
+            'default': 'Simple',
             'splitting': 'Splitting',
         }
     }

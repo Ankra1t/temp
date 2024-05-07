@@ -6,7 +6,7 @@ def end_trial_subscribe_msg(user_id: int):
 
     text = {
         'ru': 'Ваша пробная подписка закончилась. Вы можете оформить платную подписку.',
-        'en': 'Your trial subscription has ended. You can sign up for a paid subscription.',
+        'en': 'Your trial subscription has expired. You can sign up for a paid subscription.',
     }
 
     return f'❗️ {text[lang]}'
@@ -17,7 +17,7 @@ def end_paid_subscribe_msg(user_id: int):
 
     text = {
         'ru': 'Ваша платная подписка закончилась. Пожалуйста, продлите подписку, чтобы снова пользоваться сервисом.',
-        'en': 'Your paid subscription has ended. Please renew your subscription to receive recommendations again.',
+        'en': 'Your paid subscription has expired. Please renew your subscription to have access to the service again.',
     }
 
     return f'❗️ {text[lang]}'
@@ -45,10 +45,15 @@ def gift_trial_subscribe_msg(user_id: int, end_date: str):
     return f"""{texts[lang]} <b>{end_date}</b>"""
 
 
-def paid_subscribe_msg(end_date, tariff_name):
-    return f"""
-Благодарим за оплату подписки, <b>"{tariff_name}"</b> будет действовать <b>до {end_date}</b>
-"""
+def paid_subscribe_msg(user_id: int, end_date: str, tariff_name: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': f'Благодарим за оплату подписки, <b>"{tariff_name}"</b> будет действовать <b>до {end_date}</b>',
+        'en': f'Thank you for completing your subscription payment, <b>"{tariff_name}"</b> will be valid <b>until {end_date}</b>',
+    }
+
+    return texts[lang]
 
 
 def welcome_msg():
@@ -118,7 +123,7 @@ def msg_is_subscribed(user_id: int):
 
     text = {
         'ru': 'У вас уже есть подписка. Мы сообщим вам о ее завершении для следующей покупки.',
-        'en': 'You already have a subscription. We will inform you about its completion for the next purchase.'
+        'en': 'You already have a subscription. We will inform you about its completion before the next period.'
     }
 
     return f'✅ {text[lang]}'
@@ -144,7 +149,7 @@ def msg_yookassa(user_id: int):
             '2': 'После подтверждения оплаты вам придет сообщение'
         },
         'en': {
-            '1': 'Click on the button and pay the tariff',
+            '1': 'Click on the button and pay the subscription',
             '2': 'After confirming the payment, you will receive a message'
         }
     }
@@ -169,7 +174,7 @@ def msg_no_tariffs(user_id: int):
 
     texts = {
         'ru': 'Тарифов нет',
-        'en': 'There are no tariffs',
+        'en': 'There are no subscribtions available',
     }
 
     return texts[lang]

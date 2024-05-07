@@ -121,7 +121,7 @@ def cryptoPay_payment_updates(bot: TeleBot, request: Request):
         bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
-                finish_date_show, transaction.name
+                user.tg_id, finish_date_show, transaction.name
             ),
         )
         notifier.send_notification('text', mess_user_paid(
