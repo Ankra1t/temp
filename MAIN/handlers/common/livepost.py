@@ -7,13 +7,16 @@ from MAIN.common.utils import get_post_from_message
 from MAIN.states import AdminPostsState
 
 
-
 def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
     user_role = data.get('user_role', 0)
     if user_role != 1 and user_role != 2:
         return
 
-    print(message.animation.file_id)
+    try:
+        if message.animation:
+            print(message.animation.file_id)
+    except:
+        pass
 
     chat_id = message.chat.id
     user_id = message.from_user.id
