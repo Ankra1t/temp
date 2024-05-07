@@ -37,6 +37,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
 
 
     loop = asyncio.get_event_loop()
+    asyncio.set_event_loop(loop)
     try:
         payment = loop.run_until_complete(Payment.create_invoice(
             asset=currency,
