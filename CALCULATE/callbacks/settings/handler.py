@@ -171,9 +171,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         type_list = type.split('_')
 
         if len(type_list) == 1:
-            bot.delete_message(chat_id, mes_id)
 
             if get_lang(user_id) == 'ru':
+                bot.delete_message(chat_id, mes_id)
                 bot.send_animation(
                     chat_id, 'CgACAgIAAxkBAAIJMmY6P53jRcWlyv-ZJvK5modmyiehAAJaSQACYZzRSZl5EFQccXJFNQQ',
                     caption=msg_settings_change_market(user_id),
