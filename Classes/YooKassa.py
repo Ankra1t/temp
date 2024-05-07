@@ -27,9 +27,9 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     currency = tariff.currency
     name = tariff.name
 
-    me = Settings.get_account_settings()
-    print(me.json())
-    return False
+    # me = Settings.get_account_settings()
+    # print(me.json())
+    # return False
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     if user_db_id == 0:
@@ -49,7 +49,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
         },
         "receipt": {
             "customer": {
-                "email": 'a@mail.ru'
+                "email": 'az1kgo@mail.ru'
             },
             "items": [{
                 "description": name,
