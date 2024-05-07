@@ -1,7 +1,7 @@
 import traceback
 from telebot import TeleBot
 from flask import Request, Response
-from yookassa import Configuration, Payment
+from yookassa import Configuration, Payment, Webhook
 from requests.exceptions import HTTPError
 import uuid
 
@@ -26,6 +26,9 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str):
     price = check_discount_price(tariff)
     currency = tariff.currency
     name = tariff.name
+    
+    a = Webhook.list()
+    print(a)
 
     # me = Settings.get_account_settings()
     # print(me.json())
