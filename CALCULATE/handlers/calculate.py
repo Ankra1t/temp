@@ -112,7 +112,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     prices = currencyService.getPairsPrice(pairs)
 
-    if prices == False:
+    if prices == False and len(pairs) == 3:
         new_mes = bot.send_message(
             chat_id, msg_pair_not_found(user_id, pair),
             reply_markup=kb_pair(user_id)
@@ -122,8 +122,8 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     forex = ForexInfo(
         pair=(pair_arr[0], pair_arr[1]),
-        price=prices.get(pair, 1),
-        cross_prices=prices
+        price=(prices or {}).get(pair, 1),
+        cross_prices=prices or {}
     )
 
     with bot.retrieve_data(user_id, chat_id) as data:

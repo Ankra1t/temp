@@ -574,8 +574,8 @@ def msg_pair_not_found(user_id: int, pair: str):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'В базе нет пары',
-        'en': 'There is no pair in the base'
+        'ru': 'Извините. Кросс валютные расчеты сейчас недоступны',
+        'en': 'Sorry. Cross currency calculations are not available now'
     }
 
     return f'❗️ {texts[lang]} {pair}:'

@@ -101,7 +101,7 @@ def choose_calculate_step(
 
     elif deposit is None:
         text += msg_enter_deposit(user_id)
-        edit_to = names[lang]['deposit']
+        edit_to = names[lang]['dep']
         state = CalculateState.deposit
 
     elif risk is None:
