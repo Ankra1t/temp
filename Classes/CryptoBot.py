@@ -49,6 +49,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
         req = request('get', 'https://pay.crypt.bot/api/createInvoice',
                           params=data, headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN})
         payment = req.json()
+        print(payment)
         if payment.get('status') != InvoiceStatus.ACTIVE:
             return False
     except Exception as e:
