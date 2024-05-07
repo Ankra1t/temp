@@ -37,8 +37,6 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     if user_db_id == 0:
         return False
 
-    loop = asyncio.get_event_loop()
-    asyncio.set_event_loop(loop)
     try:
         data = {
             'asset': currency,
@@ -56,8 +54,6 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     except Exception as e:
         logger.error(f'CryptoPay Error: {e}')
         return False
-    finally:
-        loop.close()
 
     url = str(payment.get('bot_invoice_url'))
     code = str(payment.get('invoice_id'))
