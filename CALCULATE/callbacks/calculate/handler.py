@@ -91,22 +91,21 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             pairs.append(f'{user_currency}/{pair_arr[1]}')
             pairs.append(f'{pair_arr[0]}/{user_currency}')
 
-        prices = currencyService.getPairsPrice(pairs)
+        prices = currencyService.getPairsPrice(pairs) or {}
 
-        if prices != False:
-            forex = ForexInfo(
-                pair=(pair_arr[0], pair_arr[1]),
-                price=prices.get(pair, 1),
-                cross_prices=prices
-            )
+        forex = ForexInfo(
+            pair=(pair_arr[0], pair_arr[1]),
+            price=prices.get(pair, 1),
+            cross_prices=prices
+        )
 
-            set_state_data(bot, user_id, chat_id, {
-                'forex': forex,
-            })
-            choose_calculate_step(
-                bot, user_id, chat_id,
-                mes_id, True, last_value='forex'
-            )
+        set_state_data(bot, user_id, chat_id, {
+            'forex': forex,
+        })
+        choose_calculate_step(
+            bot, user_id, chat_id,
+            mes_id, True, last_value='forex'
+        )
 
     if 'tool' in type:
         _, tool = type.split('++')
