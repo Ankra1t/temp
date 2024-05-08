@@ -76,7 +76,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
         btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
         btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
         buttons.append(btn_stats)
-        # buttons.append(btn_buy)
+        buttons.append(btn_buy)
     else:
         kb = kb_calc_result(user_id, stat_id, saved)
         buttons_rows = kb.keyboard

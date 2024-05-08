@@ -28,7 +28,8 @@ class CalculationService():
         # Проверка настроек пользователя
         # Если не выставлен риск на день, то ничего не делаем
         user_settings = self.db.get_calc_user_settings(
-            calc_info.user_id, calc_info.market)
+            calc_info.user_id, calc_info.market
+        )
 
         if user_settings and user_settings.is_updating_deposit:
             self.db.set_user_base(
@@ -38,7 +39,6 @@ class CalculationService():
 
     def get_stats(self, tg_id: int, market: MARKETS_TYPE):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)
-
         user_market_base = self.db.get_calc_user_settings(user_db_id, market)
 
         base_currency = 'USDT' if market == 'crypto' else 'USD'
@@ -64,7 +64,8 @@ class CalculationService():
                 user_db_id, True, market
             )
             pairs = list(
-                map(lambda cur: f'{base_currency}/{cur}', stats_currencies.keys()))
+                map(lambda cur: f'{base_currency}/{cur}', stats_currencies.keys())
+            )
             currencies_price = self.currencyService.getPairsPrice(pairs)
 
         profit = 0
@@ -81,7 +82,8 @@ class CalculationService():
             rate = 1.
             if currencies_price:
                 rate = currencies_price.get(
-                    f'{base_currency}/{stat.currency}', 1.)
+                    f'{base_currency}/{stat.currency}', 1.
+                )
 
             base_profit = stat_profit / rate
 
@@ -119,7 +121,7 @@ class CalculationService():
         else:
             day_risk_value = day_risk[0]
 
-        # Ищем все сохраненные подсчеты пользователя
+        # Ищем все сохраненные расчеты пользователя
         user_calculations = self.db.get_calculations_by_user(
             user_id, True, market
         )
