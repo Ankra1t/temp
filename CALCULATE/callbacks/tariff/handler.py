@@ -25,6 +25,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
+    is_rus = call.from_user.language_code == 'ru'
+
     logger.info(
         f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
 
@@ -33,10 +35,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     elif 'go_tariff' in type:
         send_tariffs_list_item(
-            bot, call.message, user_id, 'calc', page
+            bot, call.message, user_id, 'calc', page, is_rus
         )
 
     elif type == 'pay_tariff_yoo':
+        return
         delete_message(bot, chat_id, mes_id)
 
         user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -54,6 +57,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
 
     elif type == 'pay_tariff_cb':
+        if is_rus:
+            return
+
         delete_message(bot, chat_id, mes_id)
         user_db_id = db.get_user_id_by_tg_id(user_id)
         user_sub = db.get_current_subscribe_user(user_db_id)

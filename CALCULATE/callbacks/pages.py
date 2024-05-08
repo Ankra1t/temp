@@ -24,7 +24,8 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
 
     bot.delete_state(user_id, chat_id)
 
-    is_valid_use = pay_guard.valid_use_calc(user_id)
+    is_rus = bot.get_chat_member(chat_id, user_id).user.language_code == 'ru'
+    is_valid_use = pay_guard.valid_use_calc(user_id, bot)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     uses_count = db.get_calculator_uses_count(user_db_id) or 0
@@ -32,7 +33,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
 
     if is_valid_use:
-        text = msg_main(user_id, uses_count)
+        text = msg_main(user_id, uses_count, is_rus)
     elif freeze_dt is not None:
         text = msg_main_freeze(user_id, freeze_dt)
     else:
@@ -192,7 +193,8 @@ def send_tariffs_list_item(
     user_id: int,
     tariff_type: str,
     page: int,
-    is_first=False
+    is_first=False,
+    is_rus=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -217,7 +219,7 @@ def send_tariffs_list_item(
             image = tariff.img
 
         text = msg_user_tariff(user_id, tariff)
-        keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page)
+        keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page, is_rus)
 
         def send():
             if image is None:

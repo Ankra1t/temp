@@ -255,25 +255,36 @@ class ForexInfo(BaseModel):
 
 class Calculation(BaseModel):
     id: int = 0
+    user_id: int
+
     profit: float | None = None
     in_stat: bool = False
     stat_dt: datetime | None = None
-    user_id: int
 
+    market: MARKETS_TYPE
+    trading_type: TRADING_TYPE
+    trading_style: str | None
+    round_count: int | None = None
+
+    currency: str
     deposit: float
     risk_value: float
     open_price: float
     stop_loss: float
-    currency: str
-    trading_style: str | None
-    trading_type: TRADING_TYPE
-    market: MARKETS_TYPE
     tp_ratio: list[int]
-    round_count: int | None = None
     split_values: list[float] | None
 
     forex_info: ForexInfo | None = None
     tool: Optional[str] = None
+
+
+class CalculationResult(BaseModel):
+    count_bet: float
+    value_bet: float
+
+    tp_count: int
+    tp_values: list[float]
+    profit_values: list[float]
 
 
 class UnfinishedCalculation(BaseModel):

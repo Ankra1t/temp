@@ -92,7 +92,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     is_cancel = True
 
-                is_valid = pay_guard.valid_use_calc(user_id)
+                is_valid = pay_guard.valid_use_calc(user_id, bot)
 
                 calc_info = db.get_calculation(stat_id)
                 if calc_info is None:
@@ -159,7 +159,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = call.message.text or 'err\n'
             text = '\n'.join(text.split('\n')[:-1])
 
-            is_valid = pay_guard.valid_use_calc(user_id)
+            is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = db.get_calculation(stat_id)
 
             bot.edit_message_text(
@@ -190,7 +190,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = call.message.text or 'err\n'
             text = '\n'.join(text.split('\n')[:-1])
 
-            is_valid = pay_guard.valid_use_calc(user_id)
+            is_valid = pay_guard.valid_use_calc(user_id, bot)
 
             bot.edit_message_text(
                 text, chat_id, mes_id,

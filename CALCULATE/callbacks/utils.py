@@ -185,7 +185,7 @@ def choose_first_calculate_step(
             risk = risk or [unfinished_calc.risk_value, unfinished_calc.is_risk_percent]
 
     # Проверяем подписку
-    if not pay_guard.valid_use_calc(user_id):
+    if not pay_guard.valid_use_calc(user_id, bot):
         send_main(message, bot, user_id, True)
         return
 

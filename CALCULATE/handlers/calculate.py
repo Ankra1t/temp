@@ -29,7 +29,7 @@ def send_calculation(
 ):
     chat_id = message.chat.id
 
-    is_valid = pay_guard.valid_use_calc(user_id)
+    is_valid = pay_guard.valid_use_calc(user_id, bot)
 
     mes = msg_calculate_result(user_id, calc)
 

@@ -38,12 +38,12 @@ def handle_loss(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    is_valid = pay_guard.valid_use_calc(user_id)
+    is_valid = pay_guard.valid_use_calc(user_id, bot)
 
     stats = calcService.get_stats(user_id, calc_info.market)
     mes_calc = msg_calculate_result(user_id, calc_info, stats)
 
-    is_valid = pay_guard.valid_use_calc(user_id)
+    is_valid = pay_guard.valid_use_calc(user_id, bot)
 
     bot.send_message(
         chat_id, mes_calc,
@@ -86,7 +86,7 @@ def handle_sum(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    is_valid = pay_guard.valid_use_calc(user_id)
+    is_valid = pay_guard.valid_use_calc(user_id, bot)
     stats = calcService.get_stats(user_id, calc_info.market)
     mes_calc = msg_calculate_result(user_id, calc_info, stats)
 

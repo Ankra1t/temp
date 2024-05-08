@@ -1,12 +1,8 @@
-import threading
-from typing import Literal
 from httpx import request
 from telebot import TeleBot
-import asyncio
 from hashlib import sha256
 from hmac import HMAC
 from flask import Request, Response
-from aiocryptopay import AioCryptoPay
 from aiocryptopay.const import PaidButtons, InvoiceStatus
 
 from NOTIFIER.messages import mess_user_paid
@@ -14,7 +10,7 @@ from common.dt import get_str_by_datetime
 from Classes import pay_guard
 from NOTIFIER import notifier
 
-from config_global import CRYPTOPAY_TOKEN, CRYPTOPAY_NETWORK
+from config_global import CRYPTOPAY_TOKEN
 from config_logger import logger
 
 from common.utils import check_discount_price
@@ -22,8 +18,6 @@ from messages.users import paid_subscribe_msg
 from models import Price
 from db import db
 
-
-# Payment = AioCryptoPay(token=CRYPTOPAY_TOKEN, network=CRYPTOPAY_NETWORK)
 
 def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     if tariff.price_crypto == 0:

@@ -1,3 +1,4 @@
+from telebot import TeleBot
 from typing import Literal, Optional
 from datetime import datetime, timedelta
 
@@ -87,14 +88,19 @@ class GuardPaymentAccess():
         return db.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, tg_id: int):
+    def valid_use_calc(self, tg_id: int, bot:TeleBot):
+        try:
+            is_rus = bot.get_chat_member(tg_id, tg_id).user.language_code == 'ru'
+        except:
+            is_rus=True
+
         user_db_id = db.get_user_id_by_tg_id(tg_id)
 
         freeze_dt = db.get_user_calc_freeze(user_db_id)
 
         uses_count = db.get_calculator_uses_count(user_db_id) or 0
         is_sub = self.paid_user_product(tg_id, 'calc')
-        valid_use = uses_count > 0 or is_sub
+        valid_use = uses_count > 0 or is_sub or is_rus
 
         if freeze_dt is not None and (freeze_dt < get_datetime_now() or not valid_use):
             db.set_user_calc_freeze(user_db_id, None)

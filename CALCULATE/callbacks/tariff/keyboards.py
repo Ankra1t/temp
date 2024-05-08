@@ -23,7 +23,7 @@ def kb_user_tariff_back(user_id: int):
     return keyboard
 
 
-def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, page=0):
+def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, page=0, is_rus=False):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=3)
 
@@ -72,21 +72,11 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
     )
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    keyboard.add(pay_yookassa, pay_cb)
+    print(is_rus)
+    if not is_rus:
+        keyboard.add(pay_cb)
     keyboard.add(btn_back)
     return keyboard
-
-
-pays_translate = {
-    'ru': {
-        'cp': 'Оплатить через CryptoBot',
-        'bb': 'Оплатить через BitBanker'
-    },
-    'en': {
-        'cp': 'Pay via CryptoBot',
-        'bb': 'Pay via BitBanker'
-    }
-}
 
 
 def kb_bill(user_id: int, url: str):

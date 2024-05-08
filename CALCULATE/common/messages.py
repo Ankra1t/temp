@@ -81,7 +81,7 @@ def msg_uses_count(user_id: int, count: int):
     return f'{text[lang]["uses"]}: <b>{count}</b>'
 
 
-def msg_main(user_id: int, uses_count: int):
+def msg_main(user_id: int, uses_count: int, is_rus=False):
     lang = get_lang(user_id)
 
     texts = {
@@ -105,7 +105,7 @@ def msg_main(user_id: int, uses_count: int):
 1. <b>{texts[lang]["1"]}</b>
 2. <b>{texts[lang]["2"]}</b>
 
-{msg_uses_count(user_id, uses_count)}
+{msg_uses_count(user_id, uses_count) if not is_rus else ''}
 """
 
 

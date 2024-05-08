@@ -22,6 +22,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
+    is_rus = call.from_user.language_code == 'ru'
+    print(call.from_user.language_code)
+
     logger.info(
         f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
     )
@@ -56,7 +59,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'buy':
         send_tariffs_list_item(
-            bot, call.message, user_id, 'calc', 0
+            bot, call.message, user_id, 'calc', 0, is_rus=is_rus
         )
 
     bot.answer_callback_query(call.id)
