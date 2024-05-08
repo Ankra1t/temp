@@ -1,7 +1,6 @@
 from googletrans import Translator
 
 from config_logger import logger
-
 from common.utils import get_lang
 from db import db
 

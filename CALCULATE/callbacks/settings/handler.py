@@ -5,6 +5,7 @@ from CALCULATE.callbacks.utils import choose_calculate_step
 
 from config_logger import logger
 from db import db, LANGUAGES
+from Classes import text_editor
 
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
@@ -171,12 +172,16 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         type_list = type.split('_')
 
         if len(type_list) == 1:
+            lang = get_lang(user_id)
+            text = text_editor.get_text(user_id, 'settings_market')
+            media_id = text_editor.get_media_id(user_id, 'settings_market')
 
-            if get_lang(user_id) == 'ru':
-                bot.delete_message(chat_id, mes_id)
+            if lang == 'ru' and media_id != '':
+                delete_message(bot, chat_id, mes_id)
+
                 bot.send_animation(
-                    chat_id, 'CgACAgIAAxkBAAIJMmY6P53jRcWlyv-ZJvK5modmyiehAAJaSQACYZzRSZl5EFQccXJFNQQ',
-                    caption=msg_settings_change_market(user_id),
+                    chat_id, media_id,
+                    caption=text,
                     reply_markup=kb_change_market(user_id)
                 )
             else:
