@@ -285,6 +285,7 @@ class CalculationResult(BaseModel):
     tp_count: int
     tp_values: list[float]
     profit_values: list[float]
+    profit_rate_values: Optional[list[float]] = None
 
 
 class UnfinishedCalculation(BaseModel):
