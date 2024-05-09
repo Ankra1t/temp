@@ -12,19 +12,22 @@ from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
-    msg_calculation_deleted, msg_enter_calc_image, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
-    msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_frozen, msg_market_stats, msg_enter_profit_sum,
+    msg_calculation_deleted, msg_enter_calc_image,
+    msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
+    msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool,
+    msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 from models import MARKETS_TYPE
 
 from .keyboards import (
-    kb_calc_image, kb_calculate_change, kb_calculate_delete, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_stats
+    kb_calc_image, kb_calculate_change,
+    kb_calculate_delete, kb_deal_profit_cancel,
+    kb_deal_profit_minus, kb_deal_result, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_calculation, send_main, send_stats
+from ..pages import send_calculation, send_freeze, send_main, send_stats
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -99,6 +102,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     return
 
                 send_calculation(bot, call.message, user_id, calc_info)
+
+                if not is_cancel:
+                    send_freeze(bot, call.message, user_id, calc_info.market, True)
+
                 # file_path = hti.create_calculation_image(
                 #     user_id, calc_info, not is_cancel
                 # )

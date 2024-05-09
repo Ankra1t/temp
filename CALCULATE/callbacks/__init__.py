@@ -4,7 +4,8 @@ from telebot import TeleBot as _TB
 from .pages import (
     send_main, send_settings, send_manual_page,
     send_summury_profit_settings, send_stats, send_user_deposit,
-    send_tariffs_list_item, send_user_tariffs, send_calculation
+    send_tariffs_list_item, send_user_tariffs, send_calculation,
+    send_freeze
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 

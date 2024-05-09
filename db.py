@@ -997,7 +997,7 @@ class Database:
     def get_blocked_users(self):
         query = self.USER_INFO_QUERY + 'WHERE tu.block = %s '
         params = True,
-        
+
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()

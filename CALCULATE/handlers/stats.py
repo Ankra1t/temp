@@ -12,7 +12,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
     kb_deal_profit_minus, kb_calc_image,
-    send_main, send_calculation
+    send_main, send_calculation, send_freeze
 )
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
@@ -42,6 +42,8 @@ def handle_loss(message: Message, bot: TeleBot):
         return
 
     send_calculation(bot, message, user_id, calc_info, True)
+    send_freeze(bot, message, user_id, calc_info.market, True)
+
 
     # file_path = hti.create_calculation_image(
     #     user_id, calc_info, True
@@ -79,6 +81,7 @@ def handle_sum(message: Message, bot: TeleBot):
         return
 
     send_calculation(bot, message, user_id, calc_info, True)
+    send_freeze(bot, message, user_id, calc_info.market, True)
 
 
 def handle_freeze_dt(message: Message, bot: TeleBot):

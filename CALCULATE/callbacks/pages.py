@@ -5,17 +5,20 @@ from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang
 from db import db
 
-from Classes import pay_guard
+from Classes import pay_guard, calcService
+from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_calculation, msg_deposit, msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
 )
+
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
-from models import Calculation
+from models import MARKETS_TYPE, Calculation
+
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
-from .stats.keyboards import kb_stats
+from .stats.keyboards import kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
 
@@ -40,7 +43,8 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     else:
         text = msg_no_uses(user_id)
 
-    keyboard = kb_main(user_id, is_valid_use, None, unfinished_calc is not None)
+    keyboard = kb_main(user_id, is_valid_use, None,
+                       unfinished_calc is not None)
 
     if is_first:
         bot.send_message(
@@ -220,7 +224,8 @@ def send_tariffs_list_item(
             image = tariff.img
 
         text = msg_user_tariff(user_id, tariff)
-        keyboard = kb_tariff_list(user_id, tariff_id, count, tariff_type, page, is_rus)
+        keyboard = kb_tariff_list(
+            user_id, tariff_id, count, tariff_type, page, is_rus)
 
         def send():
             if image is None:
@@ -269,3 +274,29 @@ def send_calculation(
         bot.send_message(chat_id, text, reply_markup=kb)
     else:
         edit_message(bot, message, 'text', text, kb)
+
+
+def send_freeze(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    market: MARKETS_TYPE,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    day_risk = calcService.check_day_risk(user_id, market)
+    if day_risk:
+        bot.set_state(user_id, StatsState.freeze, chat_id)
+
+        text = msg_freeze_calc(user_id, day_risk)
+        kb = kb_freeze_calc(user_id)
+
+        if is_first:
+            bot.send_message(
+                chat_id, text,
+                reply_markup=kb,
+            )
+        else:
+            edit_message(bot, message, 'text', text, kb)

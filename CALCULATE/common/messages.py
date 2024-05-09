@@ -437,7 +437,7 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
 """
 
 
-def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=False):
+def msg_freeze_calc(user_id: int, risk_value: str):
     lang = get_lang(user_id)
 
     texts = {
@@ -453,12 +453,11 @@ def msg_freeze_calc(user_id: int, risk_value: float, currency='', is_percent=Fal
         }
     }
 
-    if is_percent:
-        risk_show = f'<b>{get_print_float(risk_value)}%</b> от депозита'
-    else:
-        risk_show = f'<b>{get_print_float(risk_value)} {currency}</b>'
+    by_dep = ''
+    if '%' in risk_value:
+        by_dep = ' от депозита'
 
-    return f"""⚠️ {texts[lang]['1']} {risk_show}.
+    return f"""⚠️ {texts[lang]['1']} {risk_value}{by_dep}.
 <b>{texts[lang]['2']}</b>
 
 {get_freeze_annotation(lang)}

@@ -1,6 +1,4 @@
-from telebot import TeleBot
-
-
+from common.utils import get_print_float
 from db import Database
 from common.dt import get_datetime_now
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
@@ -105,17 +103,18 @@ class CalculationService():
             min_loss=min_loss
         )
 
-    def check_day_risk(self, bot: TeleBot, user_id: int, market: MARKETS_TYPE):
-        user_settings = self.db.get_calc_user_settings(user_id, market)
+    def check_day_risk(self, user_id: int, market: MARKETS_TYPE):
+        user_db_id = self.db.get_user_id_by_tg_id(user_id)
+        user_settings = self.db.get_calc_user_settings(user_db_id, market)
         if user_settings is None or user_settings.day_risk is None:
-            return
+            return False
 
         day_risk = user_settings.day_risk
         deposit = user_settings.deposit
-        currency = user_settings.currency or 'USD'
+        currency = user_settings.currency or ('USDT' if market == 'crypto' else 'USD')
 
         if day_risk[1] and deposit is None:
-            return
+            return False
         elif day_risk[1]:
             day_risk_value = (deposit or 0) * day_risk[0] * 0.01
         else:
@@ -123,7 +122,7 @@ class CalculationService():
 
         # Ищем все сохраненные расчеты пользователя
         user_calculations = self.db.get_calculations_by_user(
-            user_id, True, market
+            user_db_id, True, market
         )
 
         today = get_datetime_now().date()
@@ -137,30 +136,27 @@ class CalculationService():
             if calc.stat_dt.date() == today:
                 today_profit += calc.profit or 0
 
-        # Если профит отрицательный и больше риска на день, отправляем предупреждение
-        if today_profit < 0 and abs(today_profit) > day_risk_value:
-            user_info = self.db.get_user_by_id(user_id)
-            if user_info is None:
-                return
+        # Если профит положительный и меньше риска на день, отправляем предупреждение
+        if today_profit > 0 or abs(today_profit) < day_risk_value:
+            return False
 
-            diff = abs(today_profit) - day_risk_value
-            if day_risk[1]:
-                diff = diff / (deposit or 1)
+        unit = currency
+        diff = abs(today_profit) - day_risk_value
+        if day_risk[1]:
+            unit = '%'
+            diff /= (deposit or 1)
+        diff = get_print_float(diff)
 
-            tg_id = user_info.tg_id
-            # bot.send_message(
-            #     tg_id, msg_freeze_calc(tg_id, diff, currency, day_risk[1]),
-            #     # reply_markup=kb_freeze_calc(tg_id)
-            # )
-            # bot.set_state(tg_id, StatsState.freeze)
+        return f'{diff} {unit}'
 
-    def check_deposit(self, bot: TeleBot, user_id: int, market: MARKETS_TYPE):
-        u_settings = self.db.get_calc_user_settings(user_id, market)
-        if u_settings is None or u_settings.day_risk is None:
-            return
+    def check_deposit(self, user_id: int, market: MARKETS_TYPE):
+        user_db_id = self.db.get_user_id_by_tg_id(user_id)
+        u_settings = self.db.get_calc_user_settings(user_db_id, market)
+        if u_settings is None or not u_settings.is_updating_deposit:
+            return False
 
         if u_settings.deposit is None or u_settings.risk is None:
-            return
+            return False
 
         risk_value = u_settings.risk[0]
         if u_settings.risk[1]:
@@ -262,4 +258,3 @@ class CalculationService():
             profit_values=profit_values,
             tp_values=tp_values,
         )
-
