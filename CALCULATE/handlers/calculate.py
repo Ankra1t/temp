@@ -2,41 +2,22 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from config_logger import logger
-from Classes import currencyService, pay_guard
+from Classes import currencyService
 from db import db
 from models import MARKETS_TYPE, Calculation, ForexInfo
 
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import (
     choose_calculate_step, kb_tool,
-    kb_main, kb_pair, kb_change_currency,
+    send_calculation, kb_pair, kb_change_currency,
     kb_calc_cancel, kb_trading_style
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (
-    msg_calculate_result, msg_currency_error,
+    msg_currency_error, msg_trading_style_error,
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
     msg_pair_not_found, msg_sl_op_equal_error, msg_text_error,
-    msg_trading_style_error,
 )
-
-
-def send_calculation(
-    bot: TeleBot,
-    message: Message,
-    user_id: int,
-    calc: Calculation
-):
-    chat_id = message.chat.id
-
-    is_valid = pay_guard.valid_use_calc(user_id, bot)
-
-    mes = msg_calculate_result(user_id, calc)
-
-    bot.send_message(
-        chat_id, mes,
-        reply_markup=kb_main(user_id, is_valid, calc),
-    )
 
 
 def handle_tool(message: Message, bot: TeleBot):
@@ -76,7 +57,7 @@ def handle_tool(message: Message, bot: TeleBot):
         if calc_info is None:
             return
 
-        send_calculation(bot, message, user_id, calc_info)
+        send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
 
 
@@ -142,7 +123,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         if calc_info is None:
             return
 
-        send_calculation(bot, message, user_id, calc_info)
+        send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
 
 
@@ -296,7 +277,7 @@ def handle_open_price(message: Message, bot: TeleBot):
         db.change_calculation_open_price(stat_id, value)
         calc_info.open_price = value
 
-        send_calculation(bot, message, user_id, calc_info)
+        send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
 
 
@@ -344,7 +325,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         db.change_calculation_stop_loss(stat_id, stop_loss)
         calc_info.stop_loss = stop_loss
 
-        send_calculation(bot, message, user_id, calc_info)
+        send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
         return
 
@@ -381,7 +362,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     new_id = db.add_calculation(calc_info)
     calc_info.id = new_id
 
-    send_calculation(bot, message, user_id, calc_info)
+    send_calculation(bot, message, user_id, calc_info, True)
 
     db.minus_calculator_uses_count(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)

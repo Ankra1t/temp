@@ -1,8 +1,5 @@
 from telebot import TeleBot
 
-# from CALCULATE.callbacks.stats.keyboards import kb_freeze_calc
-from CALCULATE.common.messages import msg_freeze_calc
-from CALCULATE.states import StatsState
 
 from db import Database
 from common.dt import get_datetime_now
@@ -57,15 +54,17 @@ class CalculationService():
         tp_count = 0
         sl_count = 0
 
-        if market == 'crypto':
+        if market != 'forex':
             currencies_price = False
         else:
             stats_currencies = self.db.get_calculations_currencies(
                 user_db_id, True, market
             )
             pairs = list(
-                map(lambda cur: f'{base_currency}/{cur}',
-                    stats_currencies.keys())
+                map(
+                    lambda cur: f'{base_currency}/{cur}',
+                    stats_currencies.keys()
+                )
             )
             currencies_price = self.currencyService.getPairsPrice(pairs)
 
@@ -149,11 +148,11 @@ class CalculationService():
                 diff = diff / (deposit or 1)
 
             tg_id = user_info.tg_id
-            bot.send_message(
-                tg_id, msg_freeze_calc(tg_id, diff, currency, day_risk[1]),
-                # reply_markup=kb_freeze_calc(tg_id)
-            )
-            bot.set_state(tg_id, StatsState.freeze)
+            # bot.send_message(
+            #     tg_id, msg_freeze_calc(tg_id, diff, currency, day_risk[1]),
+            #     # reply_markup=kb_freeze_calc(tg_id)
+            # )
+            # bot.set_state(tg_id, StatsState.freeze)
 
     def check_deposit(self, bot: TeleBot, user_id: int, market: MARKETS_TYPE):
         u_settings = self.db.get_calc_user_settings(user_id, market)
@@ -177,10 +176,10 @@ class CalculationService():
     def get_count_value_bet(self, calc: Calculation, lot=pow(10, 5)):
         spot_rate = 1.
 
+        diff_op_sl = calc.open_price - calc.stop_loss
+
         if calc.market == 'forex' and calc.forex_info is not None:
-            value_bet = (
-                calc.risk_value / abs(calc.open_price - calc.stop_loss)
-            )
+            value_bet = calc.risk_value / abs(diff_op_sl)
             count_bet = value_bet / lot
 
             if calc.currency == calc.forex_info.pair[1]:
@@ -189,13 +188,15 @@ class CalculationService():
                 count_bet *= calc.stop_loss
                 value_bet = count_bet * lot
             else:
+                prices = calc.forex_info.cross_prices
+
                 BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
                 yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
-                count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
-                value_bet = count_bet * lot * \
-                    calc.forex_info.cross_prices.get(yyyBASE, 1)
+
+                count_bet *= prices.get(BASExxx, 1)
+                value_bet = count_bet * lot * prices.get(yyyBASE, 1)
         else:
-            count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
+            count_bet = calc.risk_value / abs(diff_op_sl)
             value_bet = count_bet * calc.open_price
 
         if calc.trading_type == 'spot' and value_bet > calc.deposit:
@@ -261,3 +262,4 @@ class CalculationService():
             profit_values=profit_values,
             tp_values=tp_values,
         )
+

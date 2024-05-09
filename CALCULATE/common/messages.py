@@ -6,6 +6,7 @@ from common.calculation import get_count_value_bet
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
+from Classes import calcService
 from models import MARKETS_TYPE, Calculation, CalculatorStats, ForexInfo
 
 
@@ -763,199 +764,81 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     return text
 
 
-def msg_calculate_result(
-    user_id: int,
-    calc: Calculation,
-    stats: CalculatorStats | None = None
-):
-    if calc.market == 'forex' and calc.forex_info is not None:
-        return msg_calculate_forex_result(user_id, calc, stats)
-    else:
-        return msg_calculate_crypto_rf_usa_result(user_id, calc, stats)
-
-
-def msg_calculate_crypto_rf_usa_result(
-    user_id: int,
-    calc: Calculation,
-    stats: CalculatorStats | None = None
-):
+def msg_calculation(user_id: int, calc: Calculation):
     lang = get_lang(user_id)
 
-    point = {
+    is_result = calc.in_stat
+    calc_result = calcService.get_result(calc)
+
+    texts = {
         'ru': {
-            'dep': 'Депозит' if stats is None else 'Итоговый депозит',
+            'dep': 'Депозит' if not is_result else 'Итоговый депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена',
             'sl': 'Стоп',
+
             'conclusion': 'Тейк-профит',
-            'buy': 'Купите' if stats is None else 'Было куплено',
+            'profit': 'Прибыль' if not is_result else 'Прибыль от сделки',
+            'buy': 'Купите' if not is_result else 'Было куплено',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
-            'tool': 'Инструмент',
-            'profit': 'Прибыль',
+
             'coin': 'монет',
             'paper': 'акций',
-
-            'margin': 'маржинальный',
-            'spot': 'спотовый',
-        },
-        'en': {
-            'dep': 'Deposit' if stats is None else 'Final deposit',
-            'risk': 'Deal risk',
-            'open': 'Price',
-            'sl': 'Stop',
-            'conclusion': 'Take-profit',
-            'buy': 'Buy' if stats is None else 'Bought',
-            'style': 'Trading style',
-            'trading_type': 'Trading type',
-            'tool': 'Tool',
-            'profit': 'Profit',
-            'coin': 'coins',
-            'paper': 'papers',
-
-            'margin': 'margin',
-            'spot': 'spot',
-        }
-    }
-
-    if calc.market == 'crypto':
-        tool_name = point[lang]["coin"]
-    else:
-        tool_name = point[lang]["paper"]
-
-    trading_style = ''
-    if calc.trading_style is not None:
-        trading_style = f'<b>{point[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
-
-    # Округление
-    round_count = calc.round_count or 5
-    price_round_count = max(
-        get_decimal_count(calc.open_price),
-        get_decimal_count(calc.stop_loss),
-        round_count
-    )
-
-    # Кол-во и сумма покупки
-    count_bet, value_bet, _ = get_count_value_bet(calc)
-
-    if calc.open_price > calc.stop_loss:
-        long_short = '✅ Long'
-    else:
-        long_short = '🔻 Short'
-
-    if stats is not None:
-        profit_result = msg_calculate_saved_result(user_id, calc, stats)
-        saved_mes = '#saved '
-    else:
-        saved_mes = ''
-
-        p_show = ''
-        conclusion = ''
-        for i in range(len(calc.tp_ratio)):
-            tp_ratio = calc.tp_ratio[i]
-
-            take_profit = max(
-                calc.open_price + tp_ratio *
-                (calc.open_price - calc.stop_loss),
-                0
-            )
-
-            conclusion += f'  <u>{get_print_float(take_profit, price_round_count)} {calc.currency}</u> (x{tp_ratio})'
-
-            rate = 1
-            if calc.split_values is not None and len(calc.split_values) != 0:
-                percent = calc.split_values[i]
-                rate = percent / 100
-
-                count = count_bet * rate
-
-                conclusion += f' (<b>{get_print_float(count, 2)} {tool_name}</b>) — {get_print_float(percent, round_count)}%'
-                if i != len(calc.tp_ratio) - 1:
-                    conclusion += f'\n'
-            else:
-                if i != len(calc.tp_ratio) - 1 and i % 2 == 1:
-                    conclusion += f'\n'
-
-            p_show += f'{get_print_float(abs(calc.open_price - take_profit) * rate * count_bet, round_count)}'
-
-            if i != len(calc.tp_ratio) - 1:
-                p_show += ' / '
-
-        profit_result = f"""<b>{point[lang]['conclusion']}</b>:
-{conclusion}
-
-<b>{point[lang]["profit"]} ({calc.currency})</b>:
-{TAB}{p_show}"""
-
-    return f"""#<b><u>{(calc.tool or 'BTCUSDT').replace('/', '').upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>
-
-<b>{point[lang]["buy"]}</b>: {get_print_float(count_bet)} {tool_name}
-
-<b>{point[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {calc.currency}
-<b>{point[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {calc.currency}
-{profit_result}
-
-<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit+ ((calc.profit or 0.) if stats is not None else 0.))} {calc.currency}
-<b>{point[lang]['risk']}</b>: {get_print_float(calc.risk_value)} {calc.currency}
-
-<b>{point[lang]["trading_type"]}</b>: {point[lang][calc.trading_type]}
-{trading_style}
-"""
-
-
-def msg_calculate_forex_result(
-    user_id: int,
-    calc: Calculation,
-    stats: CalculatorStats | None = None
-):
-    if calc.forex_info is None:
-        return 'Ошибка'
-
-    pair = '/'.join(calc.forex_info.pair)
-
-    lang = get_lang(user_id)
-
-    point = {
-        'ru': {
-            'dep': 'Депозит' if stats is None else 'Итоговый депозит',
-            'risk': 'Риск на сделку',
-            'open': 'Цена',
-            'sl': 'Стоп',
-            'conclusion': 'Тейк-профит',
-            'buy': 'Купить' if stats is None else 'Было куплено',
-            'sum': 'Сумма',
-            'style': 'Стиль торговли',
-            'trading_type': 'Тип торговли',
-            'profit': 'Прибыль',
             'lot': 'лота',
 
             'margin': 'маржинальный',
             'spot': 'спотовый',
+
+            'takes': 'Тейки',
+            'stops': 'Стопы',
         },
         'en': {
-            'dep': 'Deposit' if stats is None else 'Final deposit',
+            'dep': 'Deposit' if not is_result else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
             'sl': 'Stop',
+
             'conclusion': 'Take-profit',
-            'buy': 'Buy' if stats is None else 'Bought',
-            'sum': 'Sum',
+            'profit': 'Profit' if not is_result else 'Deal profit',
+            'buy': 'Buy' if not is_result else 'Bought',
             'style': 'Trading style',
             'trading_type': 'Trading type',
-            'profit': 'Profit',
+
+            'coin': 'coins',
+            'paper': 'papers',
             'lot': 'lots',
 
             'margin': 'margin',
             'spot': 'spot',
+
+            'takes': 'Take-profits',
+            'stops': 'Stop-losses',
         }
     }
 
-    trading_style = ''
-    if calc.trading_style is not None:
-        trading_style = f'<b>{point[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+    if calc.market == 'crypto':
+        tool_name = texts[lang]["coin"]
+    elif calc.market == 'forex':
+        tool_name = texts[lang]["lot"]
+    else:
+        tool_name = texts[lang]["paper"]
+
+    if calc.open_price > calc.stop_loss:
+        long_short = 'long'
+    else:
+        long_short = 'short'
 
     # Валюта торговли
-    trading_currency = calc.forex_info.pair[1]
+    trading_currency = calc.currency
+    tool = calc.tool or ''
+    if calc.forex_info is not None and calc.market == 'forex':
+        trading_currency = calc.forex_info.pair[1]
+        tool = ''.join(calc.forex_info.pair)
+
+    trading_style = ''
+    if calc.trading_style is not None:
+        trading_style = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -968,101 +851,53 @@ def msg_calculate_forex_result(
     # Кол-во и сумма покупки
     count_bet, value_bet, _ = get_count_value_bet(calc)
 
-    if calc.open_price > calc.stop_loss:
-        long_short = '✅ Long'
-    else:
-        long_short = '🔻 Short'
-
-    if stats is not None:
-        profit_result = msg_calculate_saved_result(user_id, calc, stats)
+    if is_result:
         saved_mes = '#saved '
+
+        stats = calcService.get_stats(user_id, calc.market)
+        profit = calc.profit or 0.
+        profit_result = f"""<b>{texts[lang]['profit']}: </b>{get_print_float(profit, round_count)} {calc.currency}
+
+<b>{texts[lang]['takes']}</b>: {stats.tp_count}
+<b>{texts[lang]['stops']}</b>: {get_print_float(stats.sl_count)}"""
     else:
         saved_mes = ''
 
         p_show = ''
         conclusion = ''
-        for i in range(len(calc.tp_ratio)):
-            rate = 1
-            tp_ratio_i = calc.tp_ratio[i]
-            tp_i = max(
-                calc.open_price + (calc.open_price -
-                                   calc.stop_loss) * tp_ratio_i,
-                0
-            )
+        for i in range(calc_result.tp_count):
+            tp_ratio = calc.tp_ratio[i]
+            tp_val = calc_result.tp_values[i]
+            p_val = calc_result.profit_values[i]
 
-            conclusion += f'  <u>{get_print_float(tp_i, price_round_count)} {trading_currency}</u> (x{tp_ratio_i})'
+            conclusion += f'  <u>{get_print_float(tp_val, price_round_count)} {trading_currency}</u> (x{tp_ratio})'
 
-            if calc.split_values is not None and len(calc.split_values) != 0:
-                percent = calc.split_values[i]
-                rate = percent / 100
+            if calc_result.profit_rate_values is not None:
+                rate = calc_result.profit_rate_values[i]
+                conclusion += f' (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) — {get_print_float(rate * 100, round_count)}%'
 
-                count = get_print_float(count_bet * rate, 4)
+            p_show += f'{get_print_float(p_val, round_count)}'
 
-                conclusion += f' (<b>{count} {point[lang]["lot"]}</b>) — {get_print_float(percent, round_count)}%'
-                if i != len(calc.tp_ratio) - 1:
-                    conclusion += '\n'
-            else:
-                if i % 2 == 1:
-                    conclusion += '\n'
-
-            profit = abs(calc.open_price - tp_i) * \
-                rate * count_bet * pow(10, 5)
-            if calc.forex_info.pair[0] == calc.currency:
-                profit /= calc.stop_loss
-            elif calc.forex_info.pair[1] != calc.currency:
-                profit /= calc.forex_info.cross_prices.get(
-                    f'{calc.currency}/{calc.forex_info.pair[1]}', 1
-                )
-
-            p_show += f'{get_print_float(profit, round_count)}'
-            if i != len(calc.tp_ratio) - 1:
-                p_show += ' / '
-
-        profit_result = f"""<b>{point[lang]['conclusion']}</b>:
+        profit_result = f"""<b>{texts[lang]['conclusion']}</b>:
 {conclusion}
 
-<b>{point[lang]["profit"]} ({calc.currency})</b>:
+<b>{texts[lang]["profit"]} ({calc.currency})</b>:
 {TAB}{p_show}"""
 
-    return f"""
-#<b><u>{pair.replace('/', '').upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>
-
-<b>{point[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {point[lang]["lot"]}
-
-<b>{point[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {calc.forex_info.pair[1]}
-<b>{point[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {calc.forex_info.pair[1]}
-{profit_result}
-
-<b>{point[lang]["dep"]}</b>: {get_print_float(calc.deposit + ((calc.profit or 0.) if stats is not None else 0.))} {calc.currency}
-<b>{point[lang]['risk']}</b>: {get_print_float(calc.risk_value)} {calc.currency}
-
-<b>{point[lang]["trading_type"]}</b>: {point[lang][calc.trading_type]}
-{trading_style}
-"""
-
-
-def msg_calculate_saved_result(user_id: int, calc: Calculation, stats: CalculatorStats):
-    lang = get_lang(user_id)
-
-    point = {
-        'ru': {
-            'sum': 'Профит от сделки',
-            'takes': 'Тейки',
-            'stops': 'Стопы',
-        },
-        'en': {
-            'sum': 'Deal profit',
-            'takes': 'Take-profits',
-            'stops': 'Stop-losses',
-        },
-    }
-
-    profit = calc.profit or 0.
-
-    return f"""<b>{point[lang]['sum']}: </b>{get_print_float(profit, calc.round_count)} {calc.currency}
-
-<b>{point[lang]['takes']}</b>: {stats.tp_count}
-<b>{point[lang]['stops']}</b>: {get_print_float(stats.sl_count)}"""
+    return '\n'.join((
+        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
+        '',
+        f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
+        f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        profit_result,
+        '',
+        f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
+        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
+        '',
+        f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}',
+        trading_style
+    ))
 
 
 def msg_calculate_delete(user_id: int, prev_message: str):

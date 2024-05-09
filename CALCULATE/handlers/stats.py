@@ -4,15 +4,18 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from config_logger import logger
-from Classes import calcService, pay_guard
+from Classes import calcService
 from db import db
 from common.utils import delete_message, digit_accept, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
-from CALCULATE.callbacks import kb_deal_profit_minus, kb_main, kb_calc_image, send_main
+from CALCULATE.callbacks import (
+    kb_deal_profit_minus, kb_calc_image,
+    send_main, send_calculation
+)
 from CALCULATE.common.messages import (
-    msg_calculate_result, msg_digit_error, msg_freeze_error, msg_frozen
+    msg_digit_error, msg_freeze_error, msg_frozen
 )
 
 
@@ -38,17 +41,7 @@ def handle_loss(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    is_valid = pay_guard.valid_use_calc(user_id, bot)
-
-    stats = calcService.get_stats(user_id, calc_info.market)
-    mes_calc = msg_calculate_result(user_id, calc_info, stats)
-
-    is_valid = pay_guard.valid_use_calc(user_id, bot)
-
-    bot.send_message(
-        chat_id, mes_calc,
-        reply_markup=kb_main(user_id, is_valid, calc_info)
-    )
+    send_calculation(bot, message, user_id, calc_info, True)
 
     # file_path = hti.create_calculation_image(
     #     user_id, calc_info, True
@@ -61,7 +54,6 @@ def handle_loss(message: Message, bot: TeleBot):
     #         reply_markup=kb_main(user_id, is_valid, True),
     #     )
     # os.remove(file_path)
-    bot.delete_state(user_id, chat_id)
 
 
 def handle_sum(message: Message, bot: TeleBot):
@@ -86,15 +78,7 @@ def handle_sum(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    is_valid = pay_guard.valid_use_calc(user_id, bot)
-    stats = calcService.get_stats(user_id, calc_info.market)
-    mes_calc = msg_calculate_result(user_id, calc_info, stats)
-
-    bot.send_message(
-        chat_id, mes_calc,
-        reply_markup=kb_main(user_id, is_valid, calc_info)
-    )
-    bot.delete_state(user_id, chat_id)
+    send_calculation(bot, message, user_id, calc_info, True)
 
 
 def handle_freeze_dt(message: Message, bot: TeleBot):

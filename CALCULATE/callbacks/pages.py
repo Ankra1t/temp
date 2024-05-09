@@ -7,10 +7,11 @@ from db import db
 
 from Classes import pay_guard
 from CALCULATE.common.messages import (
-    msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_calculation, msg_deposit, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
 )
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
+from models import Calculation
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
@@ -245,3 +246,26 @@ def send_tariffs_list_item(
         else:
             delete_message(bot, chat_id, mes_id)
             send()
+
+
+def send_calculation(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    calc: Calculation,
+    is_first=False,
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    is_access = pay_guard.valid_use_calc(user_id, bot)
+
+    text = msg_calculation(user_id, calc)
+    kb = kb_main(user_id, is_access, calc)
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=kb)
+    else:
+        edit_message(bot, message, 'text', text, kb)

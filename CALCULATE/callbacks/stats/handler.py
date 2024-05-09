@@ -11,7 +11,7 @@ from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
-    msg_calculate_change, msg_calculate_delete, msg_calculate_result,
+    msg_calculate_change, msg_calculate_delete,
     msg_calculation_deleted, msg_enter_calc_image, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
@@ -24,7 +24,7 @@ from .keyboards import (
     kb_deal_profit_minus, kb_deal_result, kb_stats
 )
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_main, send_stats
+from ..pages import send_calculation, send_main, send_stats
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -98,17 +98,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if calc_info is None:
                     return
 
-                stats = calcService.get_stats(user_id, calc_info.market)
-                mes_calc = msg_calculate_result(
-                    user_id, calc_info, None if is_cancel else stats
-                )
-
-                bot.edit_message_text(
-                    mes_calc, chat_id, mes_id,
-                    reply_markup=kb_main(
-                        user_id, is_valid, calc_info
-                    )
-                )
+                send_calculation(bot, call.message, user_id, calc_info)
                 # file_path = hti.create_calculation_image(
                 #     user_id, calc_info, not is_cancel
                 # )
@@ -122,7 +112,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 #         ),
                 #     )
                 # os.remove(file_path)
-                bot.delete_state(user_id, chat_id)
 
     if type == 'sum':
         bot.set_state(user_id, StatsState.sum, chat_id)
