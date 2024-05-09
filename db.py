@@ -1424,8 +1424,8 @@ class Database:
             self.connection.rollback()
             return None
 
-    def set_user_calc_freeze(self, user_id: int, value: datetime | None):
-        market = self.get_user_current_market(user_id)
+    def set_user_calc_freeze(self, user_id: int, value: datetime | None, market: Optional[MARKETS_TYPE] = None):
+        market = market or self.get_user_current_market(user_id)
 
         query = "UPDATE tgcalc_user_settings SET freeze_dt = %s WHERE user_id = %s AND market = %s"
         params = (value, user_id, market)

@@ -72,7 +72,6 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
     )
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    print(is_rus)
     if not is_rus:
         keyboard.add(pay_cb)
     keyboard.add(btn_back)

@@ -51,10 +51,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         _, time = type.split('+')
         date = get_datetime_now() + timedelta(hours=int(time))
 
+        with bot.retrieve_data(user_id, chat_id) as data:
+            market: MARKETS_TYPE | None = data.get('market')
+
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        db.set_user_calc_freeze(user_db_id, date, market)
+
         bot.edit_message_text(
             msg_frozen(user_id, get_str_by_datetime(date)),
             chat_id, mes_id
         )
+        bot.delete_state(user_id, chat_id)
 
     if 'profit' in type:
         bot.delete_state(user_id, chat_id)
@@ -104,7 +111,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 send_calculation(bot, call.message, user_id, calc_info)
 
                 if not is_cancel:
-                    send_freeze(bot, call.message, user_id, calc_info.market, True)
+                    send_freeze(bot, call.message, user_id,
+                                calc_info.market, True)
 
                 # file_path = hti.create_calculation_image(
                 #     user_id, calc_info, not is_cancel

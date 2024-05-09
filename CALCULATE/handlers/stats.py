@@ -91,7 +91,7 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
-        mes_id = data.get('mes_id', 0)
+        market = data.get('market')
 
     value = text_accept(message) or ''
 
@@ -122,11 +122,12 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
         )
         return
 
-    db.set_user_calc_freeze(user_db_id, finish_freeze)
+    db.set_user_calc_freeze(user_db_id, finish_freeze, market)
     bot.send_message(
         chat_id,
         msg_frozen(user_id, get_str_by_datetime(finish_freeze))
     )
+    bot.delete_state(user_id, chat_id)
 
 
 def handle_calc_image(message: Message, bot: TeleBot):

@@ -62,8 +62,7 @@ def get_freeze_annotation(lang: LANGUAGES_TYPE):
     }
 
     return f"""✍️ {texts[lang]['time']}.
-✍️ {texts[lang]['datetime']}.
-"""
+✍️ {texts[lang]['datetime']}."""
 
 
 # Основные страницы

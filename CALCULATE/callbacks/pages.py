@@ -2,7 +2,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
 from MAIN.common.messages import msg_user_tariff
-from common.utils import delete_message, edit_message, get_lang
+from common.utils import delete_message, edit_message, get_lang, set_state_data
 from db import db
 
 from Classes import pay_guard, calcService
@@ -289,6 +289,7 @@ def send_freeze(
     day_risk = calcService.check_day_risk(user_id, market)
     if day_risk:
         bot.set_state(user_id, StatsState.freeze, chat_id)
+        set_state_data(bot, user_id, chat_id, {'market': market})
 
         text = msg_freeze_calc(user_id, day_risk)
         kb = kb_freeze_calc(user_id)

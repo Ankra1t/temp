@@ -23,7 +23,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     is_rus = call.from_user.language_code == 'ru'
-    print(call.from_user.language_code)
 
     logger.info(
         f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
