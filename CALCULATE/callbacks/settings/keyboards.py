@@ -30,7 +30,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int):
+def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -42,6 +42,7 @@ def kb_settings(user_id: int):
             'reset': 'Сброс',
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
+            'calc_output': 'Вывод в ' + ('тексте' if cur_calc_output == 'text' else 'картинке'),
         },
         'en': {
             'base': 'Base values',
@@ -52,6 +53,7 @@ def kb_settings(user_id: int):
             'reset': 'Reset',
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
+            'calc_output': 'Output in ' + ('text' if cur_calc_output == 'text' else 'image'),
         }
     }
 
@@ -71,12 +73,14 @@ def kb_settings(user_id: int):
     )
 
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
+    btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
     btn_back = getButton(back_txt(lang), 'go_main')
 
     keyboard.add(btn_market, btn_deposit_update)
     keyboard.add(btn_base, btn_summury_profit)
     keyboard.add(btn_style, btn_trading_type)
     keyboard.add(btn_lang, btn_reset)
+    keyboard.add(btn_output)
     keyboard.add(btn_back)
     return keyboard
 

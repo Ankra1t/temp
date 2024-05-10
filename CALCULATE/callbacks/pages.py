@@ -1,3 +1,4 @@
+import os
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
@@ -5,7 +6,7 @@ from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, set_state_data
 from db import db
 
-from Classes import pay_guard, calcService
+from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
     msg_calculation, msg_deposit, msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
@@ -63,8 +64,11 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     bot.delete_state(user_id, chat_id)
 
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    calc_output = db.get_user_calc_output(user_db_id)
+
     msg = msg_settings(user_id)
-    markup = kb_settings(user_id)
+    markup = kb_settings(user_id, calc_output)
 
     if is_first:
         bot.send_message(
@@ -267,13 +271,29 @@ def send_calculation(
 
     is_access = pay_guard.valid_use_calc(user_id, bot)
 
-    text = msg_calculation(user_id, calc)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    calc_output = db.get_user_calc_output(user_db_id)
     kb = kb_main(user_id, is_access, calc)
 
-    if is_first:
-        bot.send_message(chat_id, text, reply_markup=kb)
+    if calc_output == 'text':
+        text = msg_calculation(user_id, calc)
+
+        if is_first:
+            bot.send_message(chat_id, text, reply_markup=kb)
+        else:
+            edit_message(bot, message, 'text', text, kb)
     else:
-        edit_message(bot, message, 'text', text, kb)
+        file_path, caption = hti.create_calculation_image(
+            user_id, calc
+        )
+
+        with open(file_path, 'rb') as photo:
+            bot.delete_message(chat_id, mes_id)
+            bot.send_photo(
+                chat_id, photo, caption=caption,
+                reply_markup=kb,
+            )
+        os.remove(file_path)
 
 
 def send_freeze(

@@ -1,6 +1,6 @@
 from common.utils import get_lang, get_print_float
-from models import Calculation
 
+from models import Calculation
 from db import db
 
 
@@ -168,6 +168,66 @@ def get_html_from_crypto_calc(
     #     f'<p class="value">{trading_style}</p>'
     # '</div>'
 
+def get_msg_of_calc(user_id: int, calc: Calculation):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'style': 'Стиль торговли'
+        },
+        'en': {
+            'style': 'Trading style'
+        },
+    }
+
+    result = 'NO'
+
+    if calc.market == 'crypto':
+        result = calc.tool or 'BTC/USDT'
+    elif calc.market == 'forex' and calc.forex_info is not None:
+        result = ''.join(calc.forex_info.pair)
+
+    style = ''
+    if calc.trading_style is not None:
+        style = f'{texts[lang]["style"]}: <b>{calc.trading_style}</b>'
+
+    return f"""{style}
+#{result.replace('/', '').lower()}"""
+
+
+def get_count_value_bet(calc: Calculation, lot=pow(10, 5)):
+    """Возвращает кол-во и сумму покупки, коэффициент спота"""
+    spot_rate = 1
+
+    if calc.market == 'forex' and calc.forex_info is not None:
+        value_bet = (
+            calc.risk_value / abs(calc.open_price - calc.stop_loss)
+        )
+        count_bet = value_bet / lot
+
+        if calc.currency == calc.forex_info.pair[1]:
+            value_bet *= calc.open_price
+        elif calc.currency == calc.forex_info.pair[0]:
+            count_bet *= calc.stop_loss
+            value_bet = count_bet * lot
+        else:
+            BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
+            yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
+            count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
+            value_bet = count_bet * lot * \
+                calc.forex_info.cross_prices.get(yyyBASE, 1)
+    else:
+        count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
+        value_bet = count_bet * calc.open_price
+
+    if calc.trading_type == 'spot' and value_bet > calc.deposit:
+        spot_rate = calc.deposit / value_bet
+
+        count_bet *= spot_rate
+        value_bet = calc.deposit
+
+    return count_bet, value_bet, spot_rate
+
 
 def get_html_from_forex_calc(
     user_id: int,
@@ -263,9 +323,8 @@ def get_html_from_forex_calc(
                 percent_show = f'{get_print_float(percent, round_count)}%'
                 coins_show = f'<b>{count} {point[lang]["lot"]}</b>'
 
-            conclusion += f'<div class="{tp_class}">'
-            conclusion += f'<div class="tp_val"><b>x{tp_ratio_i}</b> {percent_show}</div>'
-            conclusion += f'<div class="tp_count"><u>{get_print_float(tp_i, round_count)} {trading_currency}</u> {coins_show}</div>'
+            conclusion += f'<div>'
+            conclusion += f'{get_print_float(tp_i, round_count)} {trading_currency} (x{tp_ratio_i})'
             conclusion += f'</div>'
 
             profit = abs(calc.open_price - tp_i) * \
@@ -277,7 +336,7 @@ def get_html_from_forex_calc(
                     f'{calc.currency}/{calc.forex_info.pair[1]}', 1
                 )
 
-            p_show += f'<p class="value">{get_print_float(profit, round_count)}</p>'
+            p_show += f'<span calss="value">{get_print_float(profit, round_count)}</span>'
 
         profit_info = f"""
             <div class="block">
@@ -312,35 +371,36 @@ def get_html_from_forex_calc(
 <header class="header">
     <div class="header_name">
         <div class="title">{pair}</div>
-        <div class="{trading_type}">{point[lang][trading_type]}</div>
+        <div class="market">- Форекс</div>
     </div>
-    {saved}
 </header>
-<div class="row">
+<div class="major">
+    <div class="name">Купите:</div>
+    <div class="value">{get_print_float(count_bet)} {point[lang]["lot"]}</div>
+</div>
+
+<div class="content">
     <div class="block">
-        <div class="value">{get_print_float(calc.risk_value)} {calc.currency}</div>
-        <div class="name">{point[lang]['risk']}</div>
-    </div>
-    <div class="block">
+        <div class="name">Цена:</div>
         <div class="value">{get_print_float(calc.open_price, round_count)} {trading_currency}</div>
-        <div class="name">{point[lang]['open']}</div>
     </div>
     <div class="block">
+        <div class="name">Стоп:</div>
         <div class="value">{get_print_float(calc.stop_loss, round_count)} {trading_currency}</div>
-        <div class="name">{point[lang]['sl']}</div>
-    </div>
-</div>
-<div class="row">
-    <div class="block">
-        <div class="value">{get_print_float(count_bet)} {point[lang]["lot"]}</div>
-        <div class="name">{point[lang]['count']}</div>
     </div>
     <div class="block">
-        <div class="value">{get_print_float(value_bet)} {calc.currency}</div>
-        <div class="name">{point[lang]['sum']}</div>
+        <div class="name">Тейк-профит:</div>
+        <div class="value list">
+            {conclusion}
+        </div>
+    </div>
+    <div class="block">
+        <div class="name">Прибыль (USDT):</div>
+        <div class="profit">
+            {p_show}
+        </div>
     </div>
 </div>
-{profit_info}
 """
     # <div class="point">
     #     <p class="name">{point[lang]['dep']}</p>
@@ -371,8 +431,6 @@ def get_html_from_calc_results(
         'en': {
             'deposit': 'Final deposit',
             'sum': 'Deal profit',
-            'sl': 'Stop-loss',
-            'tp': 'Take-profit',
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
         },
@@ -417,64 +475,3 @@ def get_html_from_calc_results(
     </div>
 </div>
 """
-
-
-def get_msg_of_calc(user_id: int, calc: Calculation):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'style': 'Стиль торговли'
-        },
-        'en': {
-            'style': 'Trading style'
-        },
-    }
-
-    result = 'NO'
-
-    if calc.market == 'crypto':
-        result = calc.tool or 'BTC/USDT'
-    elif calc.market == 'forex' and calc.forex_info is not None:
-        result = ''.join(calc.forex_info.pair)
-
-    style = ''
-    if calc.trading_style is not None:
-        style = f'{texts[lang]["style"]}: <b>{calc.trading_style}</b>'
-
-    return f"""{style}
-#{result.replace('/', '').lower()}"""
-
-
-def get_count_value_bet(calc: Calculation, lot=pow(10, 5)):
-    """Возвращает кол-во и сумму покупки, коэффициент спота"""
-    spot_rate = 1
-
-    if calc.market == 'forex' and calc.forex_info is not None:
-        value_bet = (
-            calc.risk_value / abs(calc.open_price - calc.stop_loss)
-        )
-        count_bet = value_bet / lot
-
-        if calc.currency == calc.forex_info.pair[1]:
-            value_bet *= calc.open_price
-        elif calc.currency == calc.forex_info.pair[0]:
-            count_bet *= calc.stop_loss
-            value_bet = count_bet * lot
-        else:
-            BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
-            yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
-            count_bet *= calc.forex_info.cross_prices.get(BASExxx, 1)
-            value_bet = count_bet * lot * \
-                calc.forex_info.cross_prices.get(yyyBASE, 1)
-    else:
-        count_bet = calc.risk_value / abs(calc.open_price - calc.stop_loss)
-        value_bet = count_bet * calc.open_price
-
-    if calc.trading_type == 'spot' and value_bet > calc.deposit:
-        spot_rate = calc.deposit / value_bet
-
-        count_bet *= spot_rate
-        value_bet = calc.deposit
-
-    return count_bet, value_bet, spot_rate

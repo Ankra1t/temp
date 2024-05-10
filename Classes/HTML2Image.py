@@ -1,38 +1,45 @@
 from html2image import Html2Image
 
-from common.calculation import get_html_from_calc
+from .CalculationService import CalculationService
 from models import Calculation
 
 
 class HTIService:
-    def __init__(self) -> None:
+    def __init__(self, calcService: CalculationService) -> None:
         self.path = '_calc_images'
         self.hti = Html2Image(
             output_path=self.path,
             custom_flags=[
                 '--headless',
                 '--no-sandbox',
-                '--enable-features=ConversionMeasurement,AttributionReportingCrossAppWeb',
-                '--enable-chrome-browser-cloud-management',
-                '--ignore-certificate-errors"',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-dev-shm-usage',
+                '--disable-extensions',
+                '--disable-plugins',
+                '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36',
             ]
         )
+        self.calcService = calcService
 
-    def create_calculation_image(self, user_id: int, calc: Calculation, saved=False):
-        width = 500
-        height = 340
+    def create_calculation_image(self, user_id: int, calc: Calculation):
+        """Возвращает ссылку на картинку и подпись"""
+        width = 1280
+        height = 1280
 
-        if not saved:
-            if calc.split_values is not None and len(calc.split_values) > 2:
-                height += 30 * len(calc.split_values)
-            elif len(calc.tp_ratio) > 1:
-                height += 20 * len(calc.tp_ratio)
+        is_saved = calc.in_stat
+        if not is_saved:
+            len_tp = len(calc.tp_ratio)
+            if len_tp > 1:
+                height += 70 * (len_tp - 1)
+            if len_tp > 2:
+                height += 70 * (len_tp // 2 - 1)
+        else:
+            height += 100
 
-        html_value = get_html_from_calc(user_id, calc, saved)
+        html_value, caption = self.calcService.html_calculation(user_id, calc)
 
         file_name = f'{user_id}.png'
-        a = self.hti.screenshot(
+        self.hti.screenshot(
             save_as=file_name,
             size=(width, height),
             html_str=f"""
@@ -49,145 +56,135 @@ class HTIService:
 			""",
         )
 
-        return f'{self.path}/{file_name}'
+        return f'{self.path}/{file_name}', caption
 
 
 css_template = """
 body,
 .container {
 	font-family: 'Montserrat';
+
+	background: white;
+	font-size: 50px;
+	line-height: 1.4;
 	font-weight: 500;
-	line-height: 1.2;
-	font-size: 18px;
 }
 
 .main {
-	border-radius: 20px;
-	padding: 15px;
+	padding: 80px;
 	margin: 0 auto;
-	width: 480px;
-	background: #fff;
-	color: #111111;
+	width: 1280px;
+	background: #fbfbfb;
+	color: #131313;
 
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 60px;
 }
 
 .header {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	font-weight: 700;
+	font-size: 70px;
+	margin-bottom: 30px;
 }
 
-.title {
-	font-weight: 800;
-}
 
 .header_name {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-}
-
-.buy,
-.sell {
-	border-radius: 10px;
-	padding: 8px 12px;
-	background: #f7f7f7;
-	font-size: 0.8em;
-	font-weight: 600;
-}
-
-.buy {
-	color: #06bd32;
-}
-.sell {
-	color: #f36a77;
-}
-
-.row {
-	display: flex;
-	gap: 10px;
-}
-
-.block {
-	width: 100%;
-	padding: 10px;
-	background: #f7f7f7;
-	border-radius: 20px;
-}
-
-.value {
-	font-weight: 600;
 	white-space: nowrap;
-	text-align: center;
+}
+
+.title {
+	color: #0094fe;
+}
+
+.major {
+	display: flex;
+	gap: 20px;
+	justify-content: space-between;
+
+	padding: 40px;
+	border-radius: 20px;
+	background: white;
+	box-shadow: 0 4px 50px 0 rgba(113, 133, 202, 0.2);
 }
 
 .name {
-	font-size: 0.9em;
-	text-align: center;
+	flex: 0 0 460px;
 }
 
-.tp {
-	font-size: 0.9em;
-	line-height: 1.4;
+.value {
+	flex: 1 1 auto;
+	font-weight: 600;
+	color: #0094fe;
+}
+
+.major {
+	background: #0094fe;
+	color: white;
+}
+
+.major .value {
+	color: white;
+}
+
+.content {
+	border-radius: 20px;
+	border: 1px solid rgba(0, 148, 254, 0.3);
+	padding: 0 40px;
+}
+
+.block {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0 14px;
+	justify-content: space-between;
+	padding: 40px 0;
+
+	position: relative;
+}
+
+.block::before {
+	content: "";
+	position: absolute;
+	top: 100%;
+
+	height: 1px;
+	width: 100%;
+	background: rgba(0, 148, 254, 0.3);
+}
+
+.block:last-child::before {
+	display: none;
 }
 
 .profit {
-	display: flex;
+	flex: 1 1 auto;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	align-items: center;
+	gap: 15px 30px;
 	flex-wrap: wrap;
 }
 
-.tp, .profit {
-	margin-top: 7px;
+.profit span {
+	flex: 0 0 49%;
 }
 
-.tp_default {
-	display: flex;
-	align-items: center;
-	gap: 7px;
-	white-space: nowrap;
-}
-
-.tp_item {
-	width: 100%;
-	display: flex;
-	justify-content: space-between;
-
-	white-space: nowrap;
-}
-
-.tp_val {
-	flex: 0 1 100px;
-	display: flex;
-	justify-content: space-between;
-}
-
-.tp_count {
-	flex: 0 1 70%;
-	display: flex;
-	justify-content: space-between;
-}
-
-.profit .value {
+.profit span:nth-child(2n) {
 	position: relative;
-	padding: 0 7px;
 }
 
-.profit .value:not(:last-child)::after {
-	content: "";
+.profit span:nth-child(2n)::before {
+	content: "/ ";
 	position: absolute;
+	left: -30px;
 	top: 50%;
-	right: 0;
 	transform: translateY(-50%);
-	width: 1px;
-	height: 50%;
-	background: black;
 }
+
 
 /********* Обнуление *********/
 * {
@@ -297,4 +294,5 @@ td {
 table {
 	border-collapse: separate;
 	border-spacing: 0;
-}"""
+}
+"""

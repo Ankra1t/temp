@@ -864,7 +864,7 @@ class Database:
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count  '
+        'SELECT u.id, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 
@@ -930,7 +930,7 @@ class Database:
             return False
 
     def get_paginated_users(
-        self, limit: int | None=None, page: int | None = None,
+        self, limit: int | None = None, page: int | None = None,
         sort_by: SORT_BY_TYPE = 'new',
         market_filter: MARKETS_TYPE | None = None
     ) -> list[UserInfo]:
@@ -1137,6 +1137,35 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return None
+
+    def set_user_calc_output(self, id: int, value: Literal['text', 'photo']):
+        query = 'UPDATE tgbotusers SET calc_output = %s WHERE user_id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def get_user_calc_output(self, id: int) -> Literal['text', 'photo']:
+        query = 'SELECT calc_output FROM tgbotusers WHERE user_id = %s'
+        params = id,
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return 'text'
+
+            return data.get('calc_output')
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return 'text'
 
     # # # # # # # #  Users Сервисные запросы
     def set_task(self, task: Task):

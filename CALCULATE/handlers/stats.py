@@ -12,7 +12,8 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
     kb_deal_profit_minus, kb_calc_image,
-    send_main, send_calculation, send_freeze
+    send_main, send_calculation, send_freeze,
+    kb_calc_result,
 )
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
@@ -43,19 +44,6 @@ def handle_loss(message: Message, bot: TeleBot):
 
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
-
-
-    # file_path = hti.create_calculation_image(
-    #     user_id, calc_info, True
-    # )
-    # mes = get_msg_of_calc(user_id, calc_info)
-
-    # with open(file_path, 'rb') as photo:
-    #     bot.send_photo(
-    #         chat_id, photo, caption=mes,
-    #         reply_markup=kb_main(user_id, is_valid, True),
-    #     )
-    # os.remove(file_path)
 
 
 def handle_sum(message: Message, bot: TeleBot):
@@ -136,6 +124,7 @@ def handle_calc_image(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_text = data.get('calc_text', 'J')
+        calc_media = data.get('calc_media')
         calc_del_mes_id = data.get('calc_del_mes_id', 0)
         stat_id = data.get('stat_id', 0)
 
@@ -149,10 +138,20 @@ def handle_calc_image(message: Message, bot: TeleBot):
         return
 
     calc_text = '\n'.join(calc_text.split('\n')[:-1])
-    bot.edit_message_text(
-        calc_text, chat_id, calc_del_mes_id,
-        reply_markup=None
-    )
+    kb = kb_calc_result(user_id, stat_id, True)
+
+    bot.delete_message(chat_id, calc_del_mes_id)
+    if calc_media is None:
+        bot.edit_message_text(
+            calc_text, chat_id, calc_del_mes_id,
+            reply_markup=kb
+        )
+    else:
+        bot.send_photo(
+            chat_id, calc_media, calc_text,
+            reply_markup=kb
+        )
+
     bot.delete_state(user_id, chat_id)
     send_main(message, bot, user_id, True)
 

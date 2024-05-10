@@ -2,7 +2,6 @@ from typing import Literal
 from telebot import TeleBot
 from datetime import datetime
 
-from common.calculation import get_count_value_bet
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
@@ -765,19 +764,19 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
 def msg_calculation(user_id: int, calc: Calculation):
     lang = get_lang(user_id)
 
-    is_result = calc.in_stat
+    is_saved = calc.in_stat
     calc_result = calcService.get_result(calc)
 
     texts = {
         'ru': {
-            'dep': 'Депозит' if not is_result else 'Итоговый депозит',
+            'dep': 'Депозит' if not is_saved else 'Итоговый депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена',
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
-            'profit': 'Прибыль' if not is_result else 'Прибыль от сделки',
-            'buy': 'Купите' if not is_result else 'Было куплено',
+            'profit': 'Прибыль' if not is_saved else 'Прибыль от сделки',
+            'buy': 'Купите' if not is_saved else 'Было куплено',
             'sum': 'Сумма',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
@@ -793,14 +792,14 @@ def msg_calculation(user_id: int, calc: Calculation):
             'stops': 'Стопы',
         },
         'en': {
-            'dep': 'Deposit' if not is_result else 'Final deposit',
+            'dep': 'Deposit' if not is_saved else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
             'sl': 'Stop',
 
             'conclusion': 'Take-profit',
-            'profit': 'Profit' if not is_result else 'Deal profit',
-            'buy': 'Buy' if not is_result else 'Bought',
+            'profit': 'Profit' if not is_saved else 'Deal profit',
+            'buy': 'Buy' if not is_saved else 'Bought',
             'sum': 'Sum',
             'style': 'Trading style',
             'trading_type': 'Trading type',
@@ -849,9 +848,9 @@ def msg_calculation(user_id: int, calc: Calculation):
     )
 
     # Кол-во и сумма покупки
-    count_bet, value_bet, _ = get_count_value_bet(calc)
+    count_bet, value_bet = calc_result.count_bet, calc_result.value_bet
 
-    if is_result:
+    if is_saved:
         saved_mes = '#saved '
 
         stats = calcService.get_stats(user_id, calc.market)

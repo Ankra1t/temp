@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from config_logger import logger
@@ -113,19 +113,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
 
-                # file_path = hti.create_calculation_image(
-                #     user_id, calc_info, not is_cancel
-                # )
-
-                # with open(file_path, 'rb') as photo:
-                #     bot.delete_message(chat_id, mes_id)
-                #     bot.send_photo(
-                #         chat_id, photo, caption=mes,
-                #         reply_markup=kb_main(
-                #             user_id, is_valid, True, saved_stat_id
-                #         ),
-                #     )
-                # os.remove(file_path)
 
     if type == 'sum':
         bot.set_state(user_id, StatsState.sum, chat_id)
@@ -154,27 +141,46 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'delete_calc' in type:
         if '_yes' in type:
             if db.delete_calculation(stat_id):
-                bot.edit_message_text(
-                    msg_calculation_deleted(user_id), chat_id, mes_id
+                edit_message(
+                    bot, call.message, 'text',
+                    msg_calculation_deleted(user_id),
                 )
                 send_main(call.message, bot, user_id, True)
         elif '_no' in type:
-            text = call.message.text or 'err\n'
+            prev_type = call.message.content_type
+
+            if prev_type == 'text':
+                text = call.message.html_text or 'err\n'
+            else:
+                text = call.message.html_caption or 'err\n'
+
             text = '\n'.join(text.split('\n')[:-1])
+            media = call.message.photo[-1].file_id if call.message.photo else None
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = db.get_calculation(stat_id)
-
-            bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=kb_main(user_id, is_valid, calc_info)
+            print(calc_info)
+            edit_message(
+                bot, call.message, prev_type, # type: ignore
+                text,
+                kb_main(user_id, is_valid, calc_info),
+                media
             )
         else:
-            bot.delete_message(chat_id, mes_id)
-            bot.send_message(
-                chat_id,
-                msg_calculate_delete(user_id, call.message.html_text or ''),
-                reply_markup=kb_calculate_delete(user_id, stat_id)
+            prev_type = call.message.content_type
+
+            if prev_type == 'text':
+                text = call.message.html_text or 'err\n'
+            else:
+                text = call.message.html_caption or 'err\n'
+
+            media = call.message.photo[-1].file_id if call.message.photo else None
+
+            edit_message(
+                bot, call.message, prev_type, # type: ignore
+                msg_calculate_delete(user_id, text),
+                kb_calculate_delete(user_id, stat_id),
+                media
             )
 
     if 'change_calc' in type:
@@ -184,26 +190,46 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             kind = type_arr[1]
 
         if kind == '':
-            bot.edit_message_text(
-                msg_calculate_change(user_id, call.message.html_text or ''),
-                chat_id, mes_id,
-                reply_markup=kb_calculate_change(user_id, stat_id)
+            prev_type = call.message.content_type
+
+            if prev_type == 'text':
+                text = call.message.html_text or 'err\n'
+            else:
+                text = call.message.html_caption or 'err\n'
+
+            media = call.message.photo[-1].file_id if call.message.photo else None
+
+            edit_message(
+                bot, call.message, prev_type, # type: ignore
+                msg_calculate_change(user_id, text),
+                kb_calculate_change(user_id, stat_id),
+                media
             )
         elif kind == 'back':
-            text = call.message.html_text or 'err\n'
+            prev_type = call.message.content_type
+
+            if prev_type == 'text':
+                text = call.message.html_text or 'err\n'
+            else:
+                text = call.message.html_caption or 'err\n'
+
             text = '\n'.join(text.split('\n')[:-1])
+            media = call.message.photo[-1].file_id if call.message.photo else None
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = db.get_calculation(stat_id)
 
-            bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=kb_main(user_id, is_valid, calc_info)
+            edit_message(
+                bot, call.message, prev_type, # type: ignore
+                text,
+                kb_main(user_id, is_valid, calc_info),
+                media
             )
         elif kind == 'open_price':
-            bot.edit_message_text(
-                msg_enter_open_price(user_id), chat_id, mes_id,
-                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            edit_message(
+                bot, call.message, 'text',
+                msg_enter_open_price(user_id),
+                kb_deal_profit_cancel(user_id, stat_id)
             )
             bot.set_state(user_id, CalculateState.open_price, chat_id)
             set_state_data(
@@ -213,9 +239,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 }
             )
         elif kind == 'stop_loss':
-            bot.edit_message_text(
-                msg_enter_stop_loss(user_id), chat_id, mes_id,
-                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            edit_message(
+                bot, call.message, 'text',
+                msg_enter_stop_loss(user_id),
+                kb_deal_profit_cancel(user_id, stat_id)
             )
             bot.set_state(user_id, CalculateState.stop_loss, chat_id)
             set_state_data(
@@ -236,9 +263,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 state = CalculateState.tool
                 msg = msg_enter_tool(user_id)
 
-            bot.edit_message_text(
-                msg, chat_id, mes_id,
-                reply_markup=kb_deal_profit_cancel(user_id, stat_id)
+            edit_message(
+                bot, call.message, 'text', msg,
+                kb_deal_profit_cancel(user_id, stat_id)
             )
             bot.set_state(user_id, state, chat_id)
             set_state_data(
@@ -248,9 +275,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 }
             )
         elif kind == 'style':
-            bot.edit_message_text(
-                msg_enter_trading_style(user_id), chat_id, mes_id,
-                reply_markup=kb_trading_style(user_id, 'ch_calc')
+            edit_message(
+                bot, call.message, 'text',
+                msg_enter_trading_style(user_id),
+                kb_trading_style(user_id, 'ch_calc')
             )
             bot.set_state(user_id, CalculateState.trading_style, chat_id)
             set_state_data(
@@ -261,8 +289,15 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
 
     if type == 'add_img':
-        text = (call.message.html_text or '') + \
-            f'\n\n{msg_enter_calc_image(user_id)}'
+        prev_type = call.message.content_type
+
+        if prev_type == 'text':
+            text = call.message.html_text or 'err\n'
+        else:
+            text = call.message.html_caption or 'err\n'
+
+        text = '\n'.join(text.split('\n')[:-1])
+        media = call.message.photo[-1].file_id if call.message.photo else None
 
         delete_message(bot, chat_id, mes_id)
         new_mes = bot.send_message(
@@ -274,7 +309,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {
             'stat_id': stat_id,
             'calc_text': text,
-            'calc_del_mes_id': new_mes.id
+            'calc_media': media,
+            'calc_del_mes_id': new_mes.id,
         })
 
     bot.answer_callback_query(call.id)

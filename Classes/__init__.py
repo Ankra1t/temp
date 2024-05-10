@@ -19,6 +19,6 @@ serv_tasks = ServiceTasks(db)
 currencyService = CurrencyService(CURRENCYAPI_KEY)
 calcService = CalculationService(db, currencyService)
 
-hti = HTIService()
+hti = HTIService(calcService)
 text_editor = TextEditor()
 tariff_manager = TariffManager()

@@ -41,7 +41,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-    logger.info(f'callback "settings_factory" user_tg_id={user_id} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
+    logger.info(
+        f'callback "settings_factory" user_tg_id={user_id} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
 
     if type == 'set_deposit':
         bot.edit_message_text(
@@ -111,7 +112,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         'trading_style': value
                     }
                 )
-                choose_calculate_step(bot, user_id, chat_id, mes_id, True, last_value='trading_style')
+                choose_calculate_step(
+                    bot, user_id, chat_id, mes_id, True, last_value='trading_style')
 
             else:
                 db.set_user_trading_style(user_db_id, value)
@@ -146,8 +148,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             else:
                 if 'calc' in type:
-                    set_state_data(bot, user_id, chat_id, {'currency': currency.upper()})
-                    choose_calculate_step(bot, user_id, chat_id, mes_id, True, last_value='currency')
+                    set_state_data(bot, user_id, chat_id, {
+                                   'currency': currency.upper()})
+                    choose_calculate_step(
+                        bot, user_id, chat_id, mes_id, True, last_value='currency')
                 else:
                     db.set_user_currency(user_db_id, currency.upper())
                     bot.edit_message_text(
@@ -388,8 +392,16 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_trading_type(user_id)
             )
         else:
-            db.set_user_trading_type(user_db_id, trading_value) # type: ignore
+            db.set_user_trading_type(user_db_id, trading_value)  # type: ignore
             send_settings(bot, call.message, user_id)
+
+    if type == 'calc_output':
+        cur_calc_output = db.get_user_calc_output(user_db_id)
+        db.set_user_calc_output(
+            user_db_id,
+            'text' if cur_calc_output == 'photo' else 'photo'
+        )
+        send_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

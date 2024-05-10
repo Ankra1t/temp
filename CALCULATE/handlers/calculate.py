@@ -394,16 +394,6 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     db.set_user_currency(user_db_id, currency)
 
     bot.delete_state(user_id, chat_id)
-    # file_path = hti.create_calculation_image(user_id, calc_info)
-    # mes = get_msg_of_calc(user_id, calc_info)
-
-    # with open(file_path, 'rb') as photo:
-    #     bot.send_photo(
-    #         chat_id, photo, caption=mes,
-    #         reply_markup=kb_main(user_id, is_valid, True, new_id),
-    #     )
-    # os.remove(file_path)
-
 
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):

@@ -73,20 +73,22 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
+    btn_delete = getButton(
+        f'❌ {texts[lang]["del"]}',
+        'delete_calc', stat_id
+    )
+    btn_change = getButton(
+        f'✏️ {texts[lang]["change"]}',
+        'change_calc', stat_id
+    )
+    keyboard.add(btn_delete, btn_change)
+
     if is_saved:
         btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
         keyboard.add(btn_add_img)
     else:
         btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
-        btn_delete = getButton(
-            f'❌ {texts[lang]["del"]}',
-            'delete_calc', stat_id
-        )
-        btn_change = getButton(
-            f'✏️ {texts[lang]["change"]}',
-            'change_calc', stat_id
-        )
-        keyboard.add(btn_delete, btn_change, btn_save)
+        keyboard.add(btn_save)
 
     return keyboard
 
