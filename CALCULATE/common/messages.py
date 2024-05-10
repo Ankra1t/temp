@@ -778,6 +778,7 @@ def msg_calculation(user_id: int, calc: Calculation):
             'conclusion': 'Тейк-профит',
             'profit': 'Прибыль' if not is_result else 'Прибыль от сделки',
             'buy': 'Купите' if not is_result else 'Было куплено',
+            'sum': 'Сумма',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
 
@@ -800,6 +801,7 @@ def msg_calculation(user_id: int, calc: Calculation):
             'conclusion': 'Take-profit',
             'profit': 'Profit' if not is_result else 'Deal profit',
             'buy': 'Buy' if not is_result else 'Bought',
+            'sum': 'Sum',
             'style': 'Trading style',
             'trading_type': 'Trading type',
 
@@ -875,16 +877,28 @@ def msg_calculation(user_id: int, calc: Calculation):
                 conclusion += f' (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) — {get_print_float(rate * 100, round_count)}%'
 
             p_show += f'{get_print_float(p_val, round_count)}'
+            if i != calc_result.tp_count - 1:
+                if i % 2 == 1:
+                    conclusion += '\n'
+                else:
+                    conclusion += ' | '
+
+                if i % 3 == 2:
+                    p_show += '\n'
+                else:
+                    p_show += ' | '
 
         profit_result = f"""<b>{texts[lang]['conclusion']}</b>:
 {conclusion}
 
 <b>{texts[lang]["profit"]} ({calc.currency})</b>:
-{TAB}{p_show}"""
+{p_show}"""
 
     return '\n'.join((
         f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        '',
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
+        f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
         '',
         f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
         f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',

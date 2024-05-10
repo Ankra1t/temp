@@ -103,8 +103,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 else:
                     is_cancel = True
 
-                is_valid = pay_guard.valid_use_calc(user_id, bot)
-
                 calc_info = db.get_calculation(stat_id)
                 if calc_info is None:
                     return
@@ -187,12 +185,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if kind == '':
             bot.edit_message_text(
-                msg_calculate_change(user_id, call.message.text or ''),
+                msg_calculate_change(user_id, call.message.html_text or ''),
                 chat_id, mes_id,
                 reply_markup=kb_calculate_change(user_id, stat_id)
             )
         elif kind == 'back':
-            text = call.message.text or 'err\n'
+            text = call.message.html_text or 'err\n'
             text = '\n'.join(text.split('\n')[:-1])
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
