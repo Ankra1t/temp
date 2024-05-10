@@ -87,11 +87,11 @@ def choose_calculate_step(
         last_tools = db.get_last_tools(user_db_id, calc_type)
         keyboard = kb_tool(user_id, last_tools)
 
-    elif trading_style is None:
-        text += msg_enter_trading_style(user_id)
-        edit_to = names[lang]['style']
-        state = CalculateState.trading_style
-        keyboard = kb_trading_style(user_id, 'calc')
+    # elif trading_style is None:
+    #     text += msg_enter_trading_style(user_id)
+    #     edit_to = names[lang]['style']
+    #     state = CalculateState.trading_style
+    #     keyboard = kb_trading_style(user_id, 'calc')
 
     elif currency is None:
         text += msg_enter_currency(user_id)
