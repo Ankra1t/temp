@@ -140,15 +140,14 @@ def handle_calc_image(message: Message, bot: TeleBot):
     calc_text = '\n'.join(calc_text.split('\n')[:-1])
     kb = kb_calc_result(user_id, stat_id, True)
 
-    bot.delete_message(chat_id, calc_del_mes_id)
-    if calc_media is None:
-        bot.edit_message_text(
+    if calc_media is not None:
+        bot.edit_message_caption(
             calc_text, chat_id, calc_del_mes_id,
             reply_markup=kb
         )
     else:
-        bot.send_photo(
-            chat_id, calc_media, calc_text,
+        bot.edit_message_caption(
+            calc_text, chat_id, calc_del_mes_id,
             reply_markup=kb
         )
 

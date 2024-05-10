@@ -296,14 +296,21 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             text = call.message.html_caption or 'err\n'
 
-        text = '\n'.join(text.split('\n')[:-1])
+        text += f'\n\n{msg_enter_calc_image(user_id)}'
         media = call.message.photo[-1].file_id if call.message.photo else None
 
         delete_message(bot, chat_id, mes_id)
-        new_mes = bot.send_message(
-            chat_id, text,
-            reply_markup=kb_calc_image(user_id, stat_id)
-        )
+        if prev_type == 'text':
+            new_mes = bot.send_message(
+                chat_id, text,
+                reply_markup=kb_calc_image(user_id, stat_id)
+            )
+        else:
+            new_mes = bot.send_photo(
+                chat_id, media, text,
+                reply_markup=kb_calc_image(user_id, stat_id)
+            )
+
         bot.set_state(user_id, StatsState.add_image, chat_id)
 
         set_state_data(bot, user_id, chat_id, {
