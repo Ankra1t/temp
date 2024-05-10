@@ -239,7 +239,7 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 {POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
 
-{POINT} {texts[lang]["calc_output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>"""
+{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>"""
 
 
 def msg_deposit(user_id: int):
