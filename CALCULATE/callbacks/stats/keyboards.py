@@ -203,11 +203,13 @@ def kb_calculate_change(user_id: int, stat_id: int):
             'open_price': 'Цену входа',
             'stop_loss': 'Стоп-лосс',
             'tool': 'Инструмент',
+            'style': 'Стиль',
         },
         'en': {
             'open_price': 'Open price',
             'stop_loss': 'Stop-loss',
             'tool': 'Tool',
+            'style': 'Style',
         },
     }
 
@@ -216,11 +218,13 @@ def kb_calculate_change(user_id: int, stat_id: int):
     btn_sl = getButton(texts[lang]["stop_loss"],
                        'change_calc+stop_loss', stat_id)
     btn_tool = getButton(texts[lang]["tool"], 'change_calc+tool', stat_id)
+    btn_style = getButton(texts[lang]["style"], 'change_calc+style', stat_id)
     btn_back = getButton(back_txt(lang), 'change_calc+back', stat_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_op, btn_sl)
-    keyboard.add(btn_tool, btn_back)
+    keyboard.add(btn_tool, btn_style)
+    keyboard.add(btn_back)
     return keyboard
 
 

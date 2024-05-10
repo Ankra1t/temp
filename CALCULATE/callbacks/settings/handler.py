@@ -23,17 +23,17 @@ from .keyboards import (
     kb_splitting, kb_splitting_last, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
-from ..pages import send_main, send_settings, send_summury_profit_settings, send_user_deposit
+from ..pages import send_calculation, send_main, send_settings, send_summury_profit_settings, send_user_deposit
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
 
-    trading_value = callback_data.get('trading_style', '')
-    summury_type = callback_data.get('summury_type', '')
-    take_profit_add = callback_data.get('take_profit', '')
-    add_count = callback_data.get('add_count', '')
+    trading_value = callback_data.get('style', '')
+    summury_type = callback_data.get('sum_type', '')
+    take_profit_add = callback_data.get('tp', '')
+    add_count = callback_data.get('count', '')
 
     user_id = call.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -88,7 +88,22 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             if value == '**off**':
                 value = None
 
-            if 'calc' in type:
+            if 'ch_calc' in type:
+                with bot.retrieve_data(user_id, chat_id) as data:
+                    stat_id = data.get('stat_id')
+
+                calc_info = db.get_calculation(stat_id)
+                if calc_info is None:
+                    return
+
+                if value != '**cancel**':
+                    db.change_calculation_style(stat_id, value)
+                    calc_info.trading_style = value
+
+                send_calculation(bot, call.message, user_id, calc_info, True)
+                bot.delete_state(user_id, chat_id)
+
+            elif 'calc' in type:
                 value = value or False
 
                 set_state_data(
@@ -97,6 +112,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     }
                 )
                 choose_calculate_step(bot, user_id, chat_id, mes_id, True, last_value='trading_style')
+
             else:
                 db.set_user_trading_style(user_db_id, value)
 

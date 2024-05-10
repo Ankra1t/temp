@@ -72,7 +72,8 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_forex_pair" user_tg_id={user_id} value={pair}')
+    logger.info(
+        f'callback "handle_forex_pair" user_tg_id={user_id} value={pair}')
 
     pair = pair.upper().replace(' ', '/')
 
@@ -142,7 +143,8 @@ def handle_currency(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_currency" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_currency" user_tg_id={user_id} value={value}')
 
     check = currencyService.getPrice('USD', value)
     if not check:
@@ -199,7 +201,8 @@ def handle_risk_percent(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_risk_percent" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_risk_percent" user_tg_id={user_id} value={value}')
 
     # if value <= 0 or value >= 100:
     #     bot.send_message(
@@ -230,14 +233,30 @@ def handle_trading_style(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
 
     value = value.lower()
 
-    set_state_data(bot, user_id, chat_id, {'trading_style': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id,
-                          last_value='trading_style')
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
 
+    if stat_id is None:
+        set_state_data(bot, user_id, chat_id, {'trading_style': value})
+        choose_calculate_step(
+            bot, user_id, chat_id, mes_id,
+            last_value='trading_style'
+        )
+    else:
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        db.change_calculation_style(stat_id, value)
+        calc_info.trading_style = value
+
+        send_calculation(bot, message, user_id, calc_info, True)
+        bot.delete_state(user_id, chat_id)
 
 def handle_open_price(message: Message, bot: TeleBot):
     user_id = message.from_user.id
@@ -253,7 +272,8 @@ def handle_open_price(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_open_price" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_open_price" user_tg_id={user_id} value={value}')
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
@@ -296,7 +316,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_stop_loss" user_tg_id={user_id} value={stop_loss}')
+    logger.info(
+        f'callback "handle_stop_loss" user_tg_id={user_id} value={stop_loss}')
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')

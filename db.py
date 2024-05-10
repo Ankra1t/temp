@@ -1708,6 +1708,19 @@ class Database:
             self.connection.rollback()
             return False
 
+    def change_calculation_style(self, id: int, value: str | None):
+        query = 'UPDATE calculations SET trading_style = %s WHERE id = %s'
+        params = (value, id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
     def delete_calculation(self, id: int):
         query = 'DELETE FROM calculations WHERE id = %s'
         params = id,

@@ -23,10 +23,10 @@ def getButton(
         text, None,
         callback_data=settings_factory.new(
             type=type,
-            summury_type=summury_type,
-            take_profit=take_profit or '',
-            add_count=add_count or '',
-            trading_style=trading_style or '',
+            sum_type=summury_type,
+            tp=take_profit or '',
+            count=add_count or '',
+            style=trading_style or '',
         ))
 
 
@@ -61,7 +61,8 @@ def kb_settings(user_id: int):
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
-    btn_trading_type = getButton('🔧 ' + texts[lang]["trading_type"], 'trading_type')
+    btn_trading_type = getButton(
+        '🔧 ' + texts[lang]["trading_type"], 'trading_type')
     btn_deposit_update = getButton(
         '📐 ' + texts[lang]["deposit"], 'deposit_update')
 
@@ -490,7 +491,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'style_{type}',
@@ -540,8 +541,17 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
             back_txt(lang), None, calculate_factory.new('calc_back')
         )
         btn_settings = get_settings_from_calc_button()
-        btn_cancel = getButton(cancel_txt(lang), 'go_main')
+        btn_cancel = getButton(
+            cancel_txt(lang),
+            'go_main'
+        )
         keyboard.add(btn_back, btn_settings, btn_cancel)
+    elif type == 'ch_calc':
+        btn_cancel = getThisButton(
+            cancel_txt(lang),
+            '**cancel**'
+        )
+        keyboard.add(btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         keyboard.add(btn_cancel)
@@ -563,8 +573,10 @@ def kb_trading_type(user_id: int):
         },
     }
 
-    btn_margin = getButton(texts[lang]['margin'], 'trading_type', trading_style='margin')
-    btn_spot = getButton(texts[lang]['spot'], 'trading_type', trading_style='spot')
+    btn_margin = getButton(texts[lang]['margin'],
+                           'trading_type', trading_style='margin')
+    btn_spot = getButton(texts[lang]['spot'],
+                         'trading_type', trading_style='spot')
     btn_back = getButton(back_txt(lang), 'go_settings')
 
     keyboard = InlineKeyboardMarkup(row_width=2)

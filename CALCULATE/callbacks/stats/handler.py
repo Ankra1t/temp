@@ -14,13 +14,14 @@ from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
     msg_calculation_deleted, msg_enter_calc_image,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
-    msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool,
+    msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
-from CALCULATE.callbacks import kb_main
 from CALCULATE.states import StatsState
 from models import MARKETS_TYPE
 
+from ..main.keyboards import kb_main
+from ..settings.keyboards import kb_trading_style
 from .keyboards import (
     kb_calc_image, kb_calculate_change,
     kb_calculate_delete, kb_deal_profit_cancel,
@@ -195,6 +196,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = '\n'.join(text.split('\n')[:-1])
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
+            calc_info = db.get_calculation(stat_id)
 
             bot.edit_message_text(
                 text, chat_id, mes_id,
@@ -241,6 +243,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 reply_markup=kb_deal_profit_cancel(user_id, stat_id)
             )
             bot.set_state(user_id, state, chat_id)
+            set_state_data(
+                bot, user_id, chat_id, {
+                    'stat_id': stat_id,
+                    'del_mes_id': call.message.id
+                }
+            )
+        elif kind == 'style':
+            bot.edit_message_text(
+                msg_enter_trading_style(user_id), chat_id, mes_id,
+                reply_markup=kb_trading_style(user_id, 'ch_calc')
+            )
+            bot.set_state(user_id, CalculateState.trading_style, chat_id)
             set_state_data(
                 bot, user_id, chat_id, {
                     'stat_id': stat_id,
