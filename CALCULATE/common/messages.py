@@ -149,6 +149,7 @@ def msg_settings(user_id: int):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    calc_output = db.get_user_calc_output(user_db_id)
 
     u_base = db.get_calc_user_settings(user_db_id)
     if u_base is None:
@@ -173,6 +174,10 @@ def msg_settings(user_id: int):
 
             'margin': 'маржинальный',
             'spot': 'спотовый',
+
+            'output': 'Вывод расчета',
+            'by_text': 'текстом',
+            'by_image': 'картинкой',
         },
         'en': {
             'name': 'Settings',
@@ -191,6 +196,10 @@ def msg_settings(user_id: int):
 
             'margin': 'margin',
             'spot': 'spot',
+
+            'output': 'Calc output',
+            'by_text': 'in text',
+            'by_image': 'in image',
         },
     }
 
@@ -228,7 +237,9 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
-{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>"""
+{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
+
+{POINT} {texts[lang]["calc_output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>"""
 
 
 def msg_deposit(user_id: int):

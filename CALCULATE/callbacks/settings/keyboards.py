@@ -42,7 +42,7 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'reset': 'Сброс',
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
-            'calc_output': 'Вывод в ' + ('тексте' if cur_calc_output == 'text' else 'картинке'),
+            'calc_output': 'Вывод расчета: ' + ('текстом' if cur_calc_output == 'text' else 'картинкой'),
         },
         'en': {
             'base': 'Base values',
@@ -53,7 +53,7 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'reset': 'Reset',
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
-            'calc_output': 'Output in ' + ('text' if cur_calc_output == 'text' else 'image'),
+            'calc_output': 'Calc output: ' + ('in text' if cur_calc_output == 'text' else 'in image'),
         }
     }
 
