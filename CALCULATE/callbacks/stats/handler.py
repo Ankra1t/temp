@@ -113,7 +113,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
 
-
     if type == 'sum':
         bot.set_state(user_id, StatsState.sum, chat_id)
         set_state_data(bot, user_id, chat_id, {'stat_id': stat_id})

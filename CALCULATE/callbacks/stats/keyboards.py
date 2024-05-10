@@ -106,7 +106,7 @@ def kb_freeze_calc(user_id: int):
     btn_6 = getButton(f'6 {hours[lang]}', 'time+6')
     btn_9 = getButton(f'9 {hours[lang]}', 'time+9')
     btn_12 = getButton(f'12 {hours[lang]}', 'time+12')
-    btn_back = getButton(cancel_txt(lang), 'profit+cancel')
+    btn_back = getButton(cancel_txt(lang), 'go_main')
 
     keyboard.add(btn_3, btn_6)
     keyboard.add(btn_9, btn_12)
