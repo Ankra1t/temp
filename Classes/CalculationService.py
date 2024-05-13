@@ -93,7 +93,7 @@ class CalculationService():
             stat_profit = stat.profit or 0
 
             if stat_profit > 0:
-                tp_count += round(stat_profit / stat.risk_value)
+                tp_count += round(stat_profit / stat.risk_value, 1)
             if stat_profit < 0:
                 sl_count += round(abs(stat_profit) / stat.risk_value, 1)
 
@@ -115,7 +115,7 @@ class CalculationService():
         return CalculatorStats(
             currency=base_currency,
             profit=profit,
-            tp_count=int(tp_count),
+            tp_count=round(tp_count, 1),
             sl_count=round(sl_count, 1),
             all_stats_count=len(all_stats),
             saved_stats_count=len(saved_stats),
