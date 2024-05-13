@@ -751,8 +751,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     elif type == 'crypto' and tool != '':
         text += f'<b><u>{tool}</u></b>\n'
 
-    text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
-
     for el in type_list:
         item = vars_dict[el]
         if item is not None:
@@ -767,8 +765,8 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
                     '\n'
                 ))
 
+    text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
     text += '\n'
-
     return text
 
 

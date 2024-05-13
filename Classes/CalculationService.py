@@ -303,7 +303,7 @@ class CalculationService():
                 'style': 'Стиль торговли',
                 'trading_type': 'Тип торговли',
 
-                'coin': 'монет',
+                'coin': 'монеты',
                 'paper': 'акций',
                 'lot': 'лота',
 
@@ -449,7 +449,7 @@ class CalculationService():
     {profit_info}
 </div>
 """,
-f"""#{tool} {saved_mes}- {texts[lang][long_short]}
+f"""#{tool.replace("/", "").upper()} {saved_mes}- {texts[lang][long_short]}
 
 <b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}
 <b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}
