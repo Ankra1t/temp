@@ -1,3 +1,4 @@
+from typing import Literal
 from CALCULATE.common.messages import POINT
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_lang, get_print_float
@@ -59,8 +60,8 @@ def msg_referral_list(user_id: int, referrals: list[UserInfo]):
     res = ''
     if len(referrals) != 0:
         for ref in referrals:
-            name = f'@{ref.username}' if ref.username else '-'
-            
+            name = f'@{ref.tg_username}' if ref.tg_username else '-'
+
             purchase = db.get_purchases_by_user(user_id)
             money = 0
             for el in purchase:
@@ -164,6 +165,25 @@ def msg_user_account(user_id: int, spent: float, refs: int):
 # {texts[lang]['spent']}: <b>{get_print_float(spent)}</b>
 
 
+def msg_user_params(user_id: int, user: UserInfo):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Параметры',
+            'name': 'Никнейм',
+        },
+        'en': {
+            'main': 'Params',
+            'name': 'Nickname',
+        },
+    }
+
+    return f"""🛠 <b><u>{texts[lang]['main']}</u></b>
+
+<b>{texts[lang]['name']}</b>: {user.nickname or '-'}"""
+
+
 def msg_user_purchases(user_id: int, purchases: list[Purchase]):
     lang = get_lang(user_id)
 
@@ -215,3 +235,42 @@ def msg_user_purchases(user_id: int, purchases: list[Purchase]):
         result += products['calc_signals']
 
     return result
+
+
+def msg_enter_nickname(user_id: int, error: Literal['min', 'max', 'taken', 'default'] | None = None):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'err_min': 'Минимальная длина 4 символа',
+            'err_max': 'Максимальная длина 16 символа',
+            'err': 'Ошибка',
+            'taken': 'Имя уже занято',
+            'main': 'Введите никнейм',
+            'dop': 'В никнейме могут быть только символы латинского алфавита и цифры'
+        },
+        'en': {
+            'err_min': 'Min length 4 symbols',
+            'err_max': 'Max length 16 symbols',
+            'err': 'Error',
+            'taken': 'The name is already taken',
+            'main': 'Enter nickname',
+            'dop': 'The nickname can only contain Latin alphabet characters and numbers'
+        },
+    }
+
+    error_mes = ''
+    if error == 'min':
+        error_mes = texts[lang]['err_min']
+    elif error == 'max':
+        error_mes = texts[lang]['err_max']
+    elif error == 'default':
+        error_mes = texts[lang]['err']
+    elif error == 'taken':
+        error_mes = texts[lang]['taken']
+
+    if error_mes != '':
+        error_mes = f'❗️ {error_mes}\n\n'
+
+    return error_mes + f"""<i>{texts[lang]['dop']}</i>
+✍ {texts[lang]['main']}"""

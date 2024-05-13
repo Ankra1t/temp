@@ -9,13 +9,13 @@ from AuthRoles import get_site_code
 
 from config_logger import logger
 
-from MAIN.common.messages import default_menu, msg_site_login, msg_user_account
+from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_params
 from messages.education import termins
 from messages.users import msg_start
 
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
-from .account.keyboards import kb_user_account
+from .account.keyboards import kb_user_account, kb_user_params
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
@@ -150,3 +150,25 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
             send_site_code(bot, new_message, user_id, False, False, code)
 
         Timer(3, get_default).start()
+
+
+def send_user_params(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    user = db.get_user_by_tg_id(user_id)
+
+    if user is not None:
+        text = msg_user_params(user_id, user)
+        kb = kb_user_params(user_id)
+
+        if is_first:
+            bot.send_message(
+                chat_id, text,
+                reply_markup=kb
+            )
+        else:
+            bot.edit_message_text(
+                text, chat_id, mes_id,
+                reply_markup=kb
+            )

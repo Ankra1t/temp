@@ -236,7 +236,7 @@ def send_admin_client(
 
     sub_show = f'Подписка до: <b>{fin_date}</b> {type_subscribe_show}'
 
-    nikname = f'@{client.username}' if client.username != '' else ''
+    nikname = f'@{client.tg_username}' if client.tg_username != '' else ''
     count_ref = len(db.get_user_referals(client_db_id))
     is_banned = client.ban == 1
 
@@ -248,7 +248,7 @@ def send_admin_client(
     if client.refer_id is not None:
         ref_user = db.get_user_by_id(client.refer_id)
         if ref_user is not None:
-            ref_show = f'Пришел от: <b>{f"@{ref_user.username}" if ref_user.username != "" else ref_user.id}</b>\n'
+            ref_show = f'Пришел от: <b>{f"@{ref_user.tg_username}" if ref_user.tg_username != "" else ref_user.id}</b>\n'
 
     calcs = db.get_calculations_by_user(client.id)
     calcs_count = len(calcs)

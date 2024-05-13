@@ -138,7 +138,7 @@ class BlockTGBotSender(object):
             user_i: UserInfo = users_info[i]
 
             if current_batch < self.c_tg:
-                username = '@' + user_i.username if user_i.username else 'Скрыт'
+                username = '@' + user_i.tg_username if user_i.tg_username else 'Скрыт'
                 try:
                     # self.send_by_type(user)
                     current_batch += self.c_by_user

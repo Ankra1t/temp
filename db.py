@@ -555,16 +555,6 @@ class Database:
 
         pass
 
-    # def _data_to_client(self, data: DictRow):
-    #     return Client(
-    #         user=UserInfo(
-    #             data.get('user_id')
-    #         ),
-    #         subscribes=Subscribe(
-
-    #         )
-    #     )
-
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
         return Transactions(
@@ -852,19 +842,24 @@ class Database:
 
     # # # # # # # #  Users
     def _data_to_user(self, data: DictRow):
+        name = data.get('name')
+        if name is not None and 'NewUser_' in name:
+            name = None
+
         return UserInfo(
             id=data.get('id'),
             tg_id=data.get('id_telegram'),
-            username=data.get('username_tg') or '',
+            tg_username=data.get('username_tg') or '',
             refer_id=data.get('refer_id'),
             ban=data.get('ban') or 0,
             registration_dt=data.get('created_at') or datetime(2012, 12, 12),
             uses_count=data.get('uses_count'),
             block=data.get('block') or False,
+            nickname=name,
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count '
+        'SELECT u.id, u.name, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 
@@ -1166,6 +1161,38 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return 'text'
+
+    def get_user_by_name(self, name: str):
+        query = self.USER_INFO_QUERY + 'WHERE u.name = %s OR u.username_tg = %s'
+        params = (name, name)
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchone()
+            if data is None:
+                return data
+
+            return self._data_to_user(data)
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return None
+
+    def set_user_nickname(self, id: int, nickname: str):
+        if self.get_user_by_name(nickname) is not None:
+            return 'Nickname has taken'
+
+        query = 'UPDATE users SET name = %s WHERE id = %s'
+        params = nickname, id
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
 
     # # # # # # # #  Users Сервисные запросы
     def set_task(self, task: Task):

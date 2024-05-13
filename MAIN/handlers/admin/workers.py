@@ -36,7 +36,7 @@ def handle_add_id(message: Message, bot: TeleBot):
     set_state_data(bot, user_id, chat_id, {'id': id})
     bot.delete_state(user_id, chat_id)
     bot.send_message(
-        chat_id, f'Добавить @{user.username} с id: <b>{id}</b>?',
+        chat_id, f'Добавить @{user.tg_username} с id: <b>{id}</b>?',
         reply_markup=kb_admin_workers_confirm(id, current_role, 'add')
     )
 

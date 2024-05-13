@@ -92,8 +92,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 text += '\nНет пользователей'
             else:
                 for user in users:
-                    nik = f'@{user.username}' if (
-                        user.username is not None) else 'Скрыт'
+                    nik = f'@{user.tg_username}' if (
+                        user.tg_username is not None) else 'Скрыт'
                     ban = '(BAN)' if user.ban == 1 else ''
 
                     text += f'\n{ban} {user.tg_id} | {nik}\n'

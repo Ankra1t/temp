@@ -61,8 +61,8 @@ def get_print_signal_info(open_price: float, stop_loss: float):
 
 
 def get_short_user_info(user: UserInfo):
-    if user.username != '':
-        nik = f'| @{user.username} '
+    if user.tg_username != '':
+        nik = f'| @{user.tg_username} '
     elif user.tg_id > 0:
         nik = f'| {user.tg_id} '
     else:

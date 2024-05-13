@@ -59,7 +59,7 @@ class PaymentsBanker(object):
             "amount": price,
             "description": '-',
             "header": self.header,
-            "payer": user.username or user.tg_id,
+            "payer": user.tg_username or user.tg_id,
             "is_convert_payments": False,
             "data": {},
             "sign": sign,
@@ -301,7 +301,7 @@ class PaymentsBanker(object):
                 if user is not None:
                     notifier.send_notification('text', mess_user_paid(
                         user_id=user.id,
-                        user_nike='@' + user.username if user.username else user.tg_id,
+                        user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
                         summ_paid=summ_full,
                         tariff_name=transaction.name,
                         finish_date=finish_date

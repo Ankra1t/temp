@@ -129,7 +129,7 @@ class BaseStatistics(object):
 {}
         """.format(user.id,
                    user.tg_id,
-                   user.username,
+                   user.tg_username,
                    purchases
                    )
         return template

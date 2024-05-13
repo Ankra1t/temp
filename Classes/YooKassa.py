@@ -146,7 +146,7 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
         )
         notifier.send_notification('text', mess_user_paid(
             user_id=user.id,
-            user_nike='@' + user.username if user.username else user.tg_id,
+            user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
             summ_paid=summ_full,
             tariff_name=transaction.name,
             finish_date=finish_date_show

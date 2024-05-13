@@ -2,14 +2,16 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
-from db import db
+from db import LANGUAGES, db
 
-from .keyboards import kb_user_purchases, kb_user_referral, kb_user_referral_list
+from .keyboards import kb_params_choose_lang, kb_user_params_back, kb_user_purchases, kb_user_referral, kb_user_referral_list, kb_params_choose_lang
 from .filter import user_account_factory, UserAccountCallbackFilter
+from ..pages import send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
-from MAIN.callbacks import send_user_account, send_user_main
-from MAIN.common.messages import msg_referral, msg_referral_list, msg_user_purchases
+from MAIN.common.messages import msg_enter_nickname, msg_referral, msg_referral_list, msg_user_purchases
+
+from CALCULATE.common.messages import msg_choose_lang
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -20,7 +22,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
-    logger.info(f'callback "user_account_factory" user_tg_id={user_id} type={type}')
+    logger.info(
+        f'callback "user_account_factory" user_tg_id={user_id} type={type}')
 
     if type == 'purchases':
         purchases = db.get_purchases_by_user(user_id)
@@ -64,6 +67,33 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             'Введите новый пароль:', chat_id, mes_id
         )
         bot.set_state(user_id, UserAccountState.password, chat_id)
+
+    if type == 'params':
+        send_user_params(bot, call.message, user_id)
+
+    if 'set_lang' in type:
+        is_edit_lang = False
+
+        for lang in LANGUAGES:
+            if f'_{lang}' in type:
+                is_edit_lang = True
+                user_db_id = db.get_user_id_by_tg_id(user_id)
+                db.set_user_lang(user_db_id, lang)
+                send_user_params(bot, call.message, user_id)
+
+        if not is_edit_lang:
+            bot.edit_message_text(
+                msg_choose_lang(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_params_choose_lang(user_id)
+            )
+
+    if type == 'set_name':
+        bot.edit_message_text(
+            msg_enter_nickname(user_id), chat_id, mes_id,
+            reply_markup=kb_user_params_back(user_id)
+        )
+        bot.set_state(user_id, UserAccountState.nickname, chat_id)
 
     bot.answer_callback_query(call.id)
 
