@@ -72,7 +72,7 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
 
     keyboard = InlineKeyboardMarkup(row_width=3)
 
-    if open_price is not None:
+    if open_price is not None and open_price != 1.:
         btn_value = getButton(str(open_price), f'open_price+{open_price}')
         keyboard.add(btn_value)
 

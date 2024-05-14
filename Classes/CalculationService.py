@@ -407,7 +407,7 @@ class CalculationService():
                 tp_val = calc_result.tp_values[i]
                 p_val = calc_result.profit_values[i]
 
-                conclusion += f'<div>{get_print_float(tp_val, price_round_count)} {calc.currency} (x{tp_ratio})</div>'
+                conclusion += f'<div>{get_print_float(tp_val, price_round_count)} {trading_currency} (x{tp_ratio})</div>'
                 p_show += f'<span class="value">{get_print_float(p_val, round_count)}</span>'
 
             profit_info = f"""

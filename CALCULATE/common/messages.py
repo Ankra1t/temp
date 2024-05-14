@@ -1165,6 +1165,17 @@ def msg_enter_tool(user_id: int):
     return f'✍ {texts[lang]}:'
 
 
+def msg_enter_pair_price(user_id: int, pair: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите цену пары',
+        'en': 'Enter price of pair'
+    }
+
+    return f'✍ {texts[lang]} <b>{pair}</b>'
+
+
 def msg_enter_deposit(user_id: int):
     lang = get_lang(user_id)
 

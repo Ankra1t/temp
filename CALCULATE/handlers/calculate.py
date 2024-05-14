@@ -94,13 +94,13 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     prices = currencyService.getPairsPrice(pairs)
 
-    if prices == False and len(pairs) == 3:
-        new_mes = bot.send_message(
-            chat_id, msg_pair_not_found(user_id, pair),
-            reply_markup=kb_pair(user_id)
-        )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
-        return
+    # if prices == False and len(pairs) == 3:
+    #     new_mes = bot.send_message(
+    #         chat_id, msg_pair_not_found(user_id, pair),
+    #         reply_markup=kb_pair(user_id)
+    #     )
+    #     set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+    #     return
 
     forex = ForexInfo(
         pair=(pair_arr[0], pair_arr[1]),
@@ -126,6 +126,36 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
+
+
+def handle_forex_pair_price(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    pair_price = digit_accept(message)
+    if pair_price is None:
+        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    logger.info(
+        f'callback "handle_forex_pair_price" user_tg_id={user_id} value={pair_price}'
+    )
+
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        forex: ForexInfo = data.get('forex')
+        current_pair = data.get('current_pair')
+
+        forex.cross_prices[current_pair] = pair_price
+        data['forex'] = forex
+
+    set_state_data(bot, user_id, chat_id, {'forex': forex})
+    choose_calculate_step(
+        bot, user_id, chat_id,
+        mes_id, last_value='forex'
+    )
 
 
 def handle_currency(message: Message, bot: TeleBot):
@@ -257,6 +287,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
+
 
 def handle_open_price(message: Message, bot: TeleBot):
     user_id = message.from_user.id
@@ -395,6 +426,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     bot.delete_state(user_id, chat_id)
 
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -410,3 +442,4 @@ def registration(bot: TeleBot):
     reg_mes(handle_stop_loss, state=CalculateState.stop_loss)
 
     reg_mes(handle_forex_pair, state=ForexCalcState.pair)
+    reg_mes(handle_forex_pair_price, state=ForexCalcState.pair_price)

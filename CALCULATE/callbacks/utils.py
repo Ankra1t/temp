@@ -12,7 +12,7 @@ from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
     msg_calculate, msg_enter_currency, msg_enter_deposit,
-    msg_enter_open_price, msg_enter_pair, msg_enter_risk_percent,
+    msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
     msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 )
 from CALCULATE.states import CalculateState, ForexCalcState
@@ -87,6 +87,25 @@ def choose_calculate_step(
         last_tools = db.get_last_tools(user_db_id, calc_type)
         keyboard = kb_tool(user_id, last_tools)
 
+    elif (
+        calc_type == 'forex' and
+        forex is not None and
+        currency not in forex.pair and
+        (
+            len(forex.cross_prices.keys()) == 0 or
+            len(forex.cross_prices.keys()) == 1
+        )
+    ):
+        pair = f'{currency}/{forex.pair[1]}'
+
+        if pair in forex.cross_prices:
+            pair = f'{forex.pair[0]}/{currency}'
+
+        text += msg_enter_pair_price(user_id, pair)
+        edit_to = pair
+        state = ForexCalcState.pair_price
+        set_state_data(bot, user_id, chat_id, {'current_pair': pair})
+
     # elif trading_style is None:
     #     text += msg_enter_trading_style(user_id)
     #     edit_to = names[lang]['style']
@@ -139,7 +158,8 @@ def choose_calculate_step(
         )
         new_mes_id = new_mes.id
 
-    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id, 'edit_mes': edit_to})
+    set_state_data(bot, user_id, chat_id, {
+                   'del_mes_id': new_mes_id, 'edit_mes': edit_to})
 
 
 def choose_first_calculate_step(
@@ -182,7 +202,8 @@ def choose_first_calculate_step(
              (unfinished_calc.risk_value == risk[0] and unfinished_calc.is_risk_percent == risk[1]))
         ):
             prev_values['updated_risk'] = unfinished_calc.update_risk_rate
-            risk = risk or [unfinished_calc.risk_value, unfinished_calc.is_risk_percent]
+            risk = risk or [unfinished_calc.risk_value,
+                            unfinished_calc.is_risk_percent]
 
     # Проверяем подписку
     if not pay_guard.valid_use_calc(user_id, bot):
