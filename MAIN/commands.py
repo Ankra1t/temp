@@ -1,4 +1,3 @@
-from time import sleep
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -66,8 +65,6 @@ def _site(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
-    sleep(5)
-    bot.send_message(message.chat.id, 'test')
     pass
 
 

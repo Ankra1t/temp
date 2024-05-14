@@ -428,13 +428,19 @@ class CalculationService():
         return (f"""
 <header class="header">
     <div class="header_name">
-        <div class="title">{tool}</div>
+        <div class="title {long_short}">{tool}</div>
         <div class="market">- {market_translates[lang][calc.market]}</div>
     </div>
 </header>
-<div class="major">
-    <div class="name">{texts[lang]['buy']}:</div>
-    <div class="value">{get_print_float(count_bet)} {tool_name}</div>
+<div class="content major">
+    <div class="block">
+        <div class="name">{texts[lang]['buy']}:</div>
+        <div class="value">{get_print_float(count_bet)} {tool_name}</div>
+    </div>
+    <div class="block">
+        <div class="name">{texts[lang]['sum']}:</div>
+        <div class="value">{get_print_float(value_bet, price_round_count)} {calc.currency}</div>
+    </div>
 </div>
 
 <div class="content">
