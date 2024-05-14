@@ -815,8 +815,8 @@ class Database:
 
     def success_transaction(self, id: int):
         datetime_now = get_datetime_now()
-        query = "UPDATE transactions set status = %s, payment_date = %s, created_at = %s WHERE id = %s"
-        params = ('paid', datetime_now, datetime_now, id, )
+        query = "UPDATE transactions set status = %s, payment_date = %s WHERE id = %s"
+        params = ('paid', datetime_now, id)
 
         try:
             self.curs.execute(query, params)
@@ -856,10 +856,12 @@ class Database:
             uses_count=data.get('uses_count'),
             block=data.get('block') or False,
             nickname=name,
+            refer_sum=data.get('refer_sum'),
         )
 
     USER_INFO_QUERY = (
-        'SELECT u.id, u.name, tu.block, u.id_telegram, u.username_tg, u.refer_id, u.ban, u.created_at, tu.uses_count '
+        'SELECT u.id, u.name, u.refer_sum, tu.block, u.id_telegram, u.username_tg, '
+        'u.refer_id, u.ban, u.created_at, tu.uses_count '
         'FROM users as u LEFT JOIN tgbotusers as tu ON u.id = tu.user_id '
     )
 
@@ -1184,6 +1186,19 @@ class Database:
 
         query = 'UPDATE users SET name = %s WHERE id = %s'
         params = nickname, id
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def set_user_refer_sum(self, id: int, value: int):
+        query = 'UPDATE users SET refer_sum = %s WHERE id = %s'
+        params = value, id
 
         try:
             self.curs.execute(query, params)

@@ -1,3 +1,5 @@
+import ast
+import traceback
 from httpx import request
 from telebot import TeleBot
 from hashlib import sha256
@@ -33,6 +35,9 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
 
     try:
         data = {
+            'payload': {
+                'rub_price': tariff.price
+            },
             'asset': currency,
             'amount': price,
             'description': name,
@@ -40,8 +45,14 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
             'paid_btn_url': redirect_url,
             'expires_in': 1200
         }
-        req = request('get', 'https://pay.crypt.bot/api/createInvoice',
-                          params=data, headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN})
+
+        query = 'https://pay.crypt.bot/api/createInvoice'
+        query = 'https://testnet-pay.crypt.bot/api/createInvoice'
+        req = request(
+            'get', query,
+            params=data, headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN}
+        )
+
         payment = req.json().get('result')
         if payment.get('status') != InvoiceStatus.ACTIVE:
             return False
@@ -117,6 +128,22 @@ def cryptoPay_payment_updates(bot: TeleBot, request: Request):
 
     user = db.get_user_by_id(transaction.user_id)
     if user is not None:
+        try:
+            if user.refer_id is not None:
+                refer = db.get_user_by_id(user.refer_id)
+                if refer is not None:
+                    rub_price = ast.literal_eval(payment.get('payload', "{}"))
+                    rub_price = int(rub_price.get('rub_price', 0) * 0.2)
+
+                    db.set_user_refer_sum(
+                        refer.id,
+                        refer.refer_sum + rub_price
+                    )
+        except Exception as e:
+            print(e)
+            print(traceback.print_exc())
+            pass
+
         bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(

@@ -138,6 +138,13 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
 
     user = db.get_user_by_id(transaction.user_id)
     if user is not None:
+        if user.refer_id is not None:
+            refer = db.get_user_by_id(user.refer_id)
+            if refer is not None:
+                db.set_user_refer_sum(
+                    refer.id, refer.refer_sum + int(transaction.sum * 0.2)
+                )
+
         bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(

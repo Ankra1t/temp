@@ -153,6 +153,7 @@ class UserInfo(BaseModel):
     tg_username: str
     nickname: Optional[str]
     refer_id: Optional[int]
+    refer_sum: int
     ban: int
     registration_dt: datetime
     uses_count: Optional[int]
