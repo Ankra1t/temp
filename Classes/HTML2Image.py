@@ -89,7 +89,7 @@ css_template = """body,
 	font-size: 50px;
 	line-height: 1.4;
 	font-weight: 500;
- 	overflow: hidden;
+	overflow: hidden;
 }
 
 .main {
@@ -174,7 +174,6 @@ css_template = """body,
 
 .block {
 	display: flex;
-	justify-content: space-between;
 	padding: 40px 0;
 
 	position: relative;
@@ -199,16 +198,15 @@ css_template = """body,
 }
 
 .profit {
-	flex: 1 1 auto;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	align-items: center;
 	gap: 15px 30px;
 	flex-wrap: wrap;
 }
 
 .profit span {
-	flex: 0 0 49%;
+	text-align: center;
 }
 
 .profit span:nth-child(2n) {

@@ -288,7 +288,8 @@ def send_calculation(
         )
 
         with open(file_path, 'rb') as photo:
-            bot.delete_message(chat_id, mes_id)
+            if not is_first:
+                bot.delete_message(chat_id, mes_id)
             bot.send_photo(
                 chat_id, photo, caption=caption,
                 reply_markup=kb,
