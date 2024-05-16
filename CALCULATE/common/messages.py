@@ -878,29 +878,17 @@ def msg_calculation(user_id: int, calc: Calculation):
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
-            conclusion += f'  <u>{get_print_float(tp_val, price_round_count)} {trading_currency}</u> (x{tp_ratio})'
+            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} к 1)'
 
             if calc_result.profit_rate_values is not None:
                 rate = calc_result.profit_rate_values[i]
-                conclusion += f' (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) — {get_print_float(rate * 100, round_count)}%'
+                conclusion += f' -- (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) {get_print_float(rate * 100, round_count)}%'
 
-            p_show += f'{get_print_float(p_val, round_count)}'
             if i != calc_result.tp_count - 1:
-                if i % 2 == 1:
-                    conclusion += '\n'
-                else:
-                    conclusion += ' | '
+                conclusion += '\n'
 
-                if i % 3 == 2:
-                    p_show += '\n'
-                else:
-                    p_show += ' | '
-
-        profit_result = f"""<b>{texts[lang]['conclusion']}</b>:
-{conclusion}
-
-<b>{texts[lang]["profit"]} ({calc.currency})</b>:
-{p_show}"""
+        profit_result = f"""<b>{texts[lang]['conclusion']} | {texts[lang]["profit"]}</b>:
+{conclusion}"""
 
     return '\n'.join((
         f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
