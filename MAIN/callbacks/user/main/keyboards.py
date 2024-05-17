@@ -11,12 +11,13 @@ def getButton(text: str, type: str):
     return InlineKeyboardButton(text, None, user_main_factory.new(type=type))
 
 
-def kb_user_main(user_id: int):
+def kb_user_main(user_id: int, new_user=False):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {
         'ru': {
+            'try': 'Попробовать расчёт',
             'buy': 'Купить',
             'calc': 'Калькулятор',
             'account': 'Личный кабинет',
@@ -24,6 +25,7 @@ def kb_user_main(user_id: int):
             'site': 'Войти на сайт',
         },
         'en': {
+            'try': 'Try the calculation',
             'buy': 'Buy',
             'calc': 'Calculator',
             'account': 'Profile',
@@ -34,13 +36,18 @@ def kb_user_main(user_id: int):
 
     # btn1 = getButton("Рекомендации", 'signals')
     # btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
+    btn_try = getButton(f"✏️ {texts[lang]['try']}", 'try')
     btn_support = getButton(f"{texts[lang]['support']}", 'support')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
     btn_account = getButton(f"👨 {texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
-    keyboard.add(btn_calc)
+    if new_user:
+        keyboard.add(btn_try)
+    else:
+        keyboard.add(btn_calc)
+
     keyboard.add(btn_support, btn_account)
     return keyboard
 

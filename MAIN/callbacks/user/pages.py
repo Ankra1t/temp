@@ -24,13 +24,13 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     bot.delete_state(user_id, chat_id)
 
-    if not new_user and message.text is not None and len(message.text.split()) == 2:
-        _, code = message.text.split()
-        if code == 'site':
-            send_site_code(bot, message, user_id, True)
-            return
+    # if not new_user and message.text is not None and len(message.text.split()) == 2:
+    #     _, code = message.text.split()
+    #     if code == 'site':
+    #         send_site_code(bot, message, user_id, True)
+    #         return
 
-    keyboard = kb_user_main(user_id)
+    keyboard = kb_user_main(user_id, new_user)
 
     if not new_user:
         text = text_editor.get_text(

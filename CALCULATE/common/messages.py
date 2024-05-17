@@ -744,7 +744,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     }
 
     pair = '/'.join(forex.pair) if (forex is not None) else ''
-    text = ''
+    text = f'{market_translates[lang].get(type, "")}\n\n'
 
     if type == 'forex' and pair != '':
         text += f'<b><u>{pair}</u></b>\n'
