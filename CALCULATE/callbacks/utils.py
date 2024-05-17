@@ -73,7 +73,14 @@ def choose_calculate_step(
     text = msg_calculate(bot, user_id, chat_id)
     keyboard = kb_calc_cancel(user_id)
 
-    if calc_type == 'forex' and forex is None:
+
+    if currency is None:
+        text += msg_enter_currency(user_id)
+        edit_to = names[lang]['currency']
+        state = CalculateState.currency
+        keyboard = kb_change_currency(user_id, 'calc')
+
+    elif calc_type == 'forex' and forex is None:
         text += msg_enter_pair(user_id)
         edit_to = names[lang]['pair']
         state = ForexCalcState.pair
@@ -111,12 +118,6 @@ def choose_calculate_step(
     #     edit_to = names[lang]['style']
     #     state = CalculateState.trading_style
     #     keyboard = kb_trading_style(user_id, 'calc')
-
-    elif currency is None:
-        text += msg_enter_currency(user_id)
-        edit_to = names[lang]['currency']
-        state = CalculateState.currency
-        keyboard = kb_change_currency(user_id, 'calc')
 
     elif deposit is None:
         text += msg_enter_deposit(user_id)

@@ -12,16 +12,15 @@ def registration(user_id: int, username: str = '', referral_id: int | None = Non
     access_token = db.get_access_token() or ''
 
     data: dict[str, str | int | None] = {
-        'id_telegram': user_id,
+        'tgId': user_id,
         'tg_api_auth_token': access_token,
-        'username_tg': username,
-        'refer_id': referral_id
+        'tgUsername': username,
     }
 
     try:
         response = requests.post(
-            f'{API_URL}/auth/tg_register',
-            json.dumps(data).encode(), headers=HEADERS
+            f'{API_URL}/tg/auth/registration',
+            json.dumps(data).encode(), headers=HEADERS | {'tg-api-key': access_token}
         )
 
         logger.info(
@@ -87,7 +86,7 @@ def check_registrate(tg_id: int):
     worker_role = db.get_worker_role(user_db_id)
 
     if worker_role is not None:
-        user_role = worker_role
+        user_role = 1
     elif user_db_id > 0:
         user_role = 0
     else:

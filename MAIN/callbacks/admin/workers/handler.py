@@ -78,6 +78,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         markup = kb_admin_workers_back(role)
 
         bot.set_state(user_id, state, chat_id)
+
         set_state_data(bot, user_id, chat_id, {'role': role})
         bot.edit_message_text(text, chat_id, mes_id, reply_markup=markup)
 
@@ -88,7 +89,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id
             )
         else:
-            db.add_worker(id, role)
+            if role == 1:
+                role_show = 'ADMIN'
+            else:
+                role_show = 'EDITOR'
+
+            db.add_worker(id, role_show)
             bot.edit_message_text('Успешно!', chat_id, mes_id)
 
     if type == 'delete_yes':

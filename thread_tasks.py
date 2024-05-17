@@ -87,9 +87,9 @@ def _check_tariff():
 def _check_infinite_tasks(bot: TeleBot):
     sleep_time_check = 30
     while True:
-        _check_finish_paid_subscribe(bot)
-        _check_finish_trial_subscribe(bot)
-        _check_tariff()
+        # _check_finish_paid_subscribe(bot)
+        # _check_finish_trial_subscribe(bot)
+        # _check_tariff()
         time.sleep(sleep_time_check)
 
 

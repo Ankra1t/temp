@@ -48,7 +48,7 @@ class CalculationService():
 
         if user_settings and user_settings.is_updating_deposit:
             self.db.set_user_base(
-                calc_info.user_id, 'base_deposit',
+                calc_info.user_id, 'deposit',
                 (user_settings.deposit or 0.) + (calc_info.profit or 0.)
             )
 

@@ -419,9 +419,9 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     db.minus_calculator_uses_count(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)
 
-    db.set_user_base(user_db_id, 'base_risk', risk[0])
+    db.set_user_base(user_db_id, 'risk', risk[0])
     db.set_user_risk_is_percent(user_db_id, risk[1])
-    db.set_user_base(user_db_id, 'base_deposit', deposit)
+    db.set_user_base(user_db_id, 'deposit', deposit)
     db.set_user_currency(user_db_id, currency)
 
     bot.delete_state(user_id, chat_id)

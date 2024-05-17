@@ -17,7 +17,7 @@ from CALCULATE.common.messages import (
 
 
 def handle_new_value(type: BASE_VALUE_TYPE):
-    if type == 'base_currency':
+    if type == 'currency':
         return
 
     def r_func(message: Message, bot: TeleBot):
@@ -40,7 +40,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         logger.info(f'callback "handle_new_value" user_tg_id={user_id} value={value}')
 
-        # if type == 'base_risk' and (value <= 0 or value >= 100):
+        # if type == 'risk' and (value <= 0 or value >= 100):
         #     bot.send_message(
         #         chat_id,
         #         msg_percent_error(user_id),
@@ -49,14 +49,14 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         #     return
 
         db.set_user_base(user_db_id, type, value)
-        if type == 'base_risk':
+        if type == 'risk':
             db.set_user_risk_is_percent(user_db_id, is_percent)
 
         with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
 
         if action == 'welcome':
-            if type == 'base_deposit':
+            if type == 'deposit':
                 bot.set_state(user_id, SettingsState.risk_percent, chat_id)
                 bot.send_message(chat_id, msg_enter_risk_percent(user_id))
             else:
@@ -68,7 +68,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         else:
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
-            if type == 'base_deposit':
+            if type == 'deposit':
                 send_user_deposit(bot, message, user_id, True)
             else:
                 send_settings(bot, message, user_id, True)
@@ -263,9 +263,9 @@ def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
-    reg_mes(handle_new_value('base_deposit'),
+    reg_mes(handle_new_value('deposit'),
             state=SettingsState.deposit)
-    reg_mes(handle_new_value('base_risk'),
+    reg_mes(handle_new_value('risk'),
             state=SettingsState.risk_percent)
     reg_mes(handle_day_risk,
             state=SettingsState.day_risk)

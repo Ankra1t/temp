@@ -6,7 +6,7 @@ from datetime import datetime
 TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
-
+ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 
 
 class Invoice(BaseModel):
@@ -179,7 +179,7 @@ class Worker(BaseModel):
     id: int
     tg_id: int
     username: str
-    role: int
+    role: ROLE_TYPE
 
 
 class PostDetails(BaseModel):
@@ -301,4 +301,3 @@ class UnfinishedCalculation(BaseModel):
     risk_value: Optional[float] = None
     is_risk_percent: Optional[bool] = None
     update_risk_rate: Optional[float] = None
-

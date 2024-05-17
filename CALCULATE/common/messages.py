@@ -343,7 +343,7 @@ def msg_summury_profit_settings(user_id: int):
 
     info_result = ''
 
-    if split_values is not None:
+    if split_values is not None and len(split_values)!=0:
         on_off = "on"
 
         for i, el in enumerate(tp_ratio):
