@@ -66,6 +66,7 @@ def choose_calculate_step(
         currency = data.get('currency')
         risk = data.get('risk')
         updated_risk = data.get('updated_risk')
+        is_try = data.get('is_try', False)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -143,6 +144,9 @@ def choose_calculate_step(
         edit_to = names[lang]['sl']
         state = CalculateState.stop_loss
 
+    if is_try:
+        keyboard = None
+
     bot.set_state(user_id, state, chat_id)
 
     new_mes_id = mes_id
@@ -166,7 +170,8 @@ def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,
     type: MARKETS_TYPE,
     is_edit=False,
-    is_continue=False
+    is_continue=False,
+    is_try=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -224,6 +229,8 @@ def choose_first_calculate_step(
             'deposit': deposit,
             'currency': currency,
             'risk': risk,
+            'is_try': is_try,
+            'tool': 'BTC/USDT'
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

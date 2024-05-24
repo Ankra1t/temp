@@ -481,23 +481,65 @@ def msg_welcome(user_id: int):
 
     texts = {
         'ru': {
-            '1': 'Приветствую, трейдер',
-            '2': 'Добро пожаловать в мир точных расчетов и успешных сделок! Здесь ты найдешь своего верного компаньона – Калькулятор трейдинга. 📈✨ Готов покорять финансовые вершины?',
-            '3': 'Введем твои базовые данные? 🌐📊'
+            'main': 'Вы сейчас получили профессиональный калькулятор расчета рисков для всех мировых рынков',
+            'default': 'По умолчанию стоит',
+            'market': 'Рынок',
+            'tool': 'Инструмент',
+
+            'task': 'Ваша задача',
+            'task_op': 'укажите цену',
+            'task_sl': 'укажите цену стоп-лосса',
         },
         'en': {
-            '1': 'Greetings, trader',
-            '2': 'Welcome to the realm of precise calculations and successful trades! Here, you\'ll discover your reliable companion – the Trading Calculator. 📈✨ Ready to conquer financial peaks?',
-            '3': 'Let\'s enter your basic data?🌐📊'
+            'main': 'You have now received a professional risk calculator for all global markets',
+            'default': 'By default, it is',
+            'market': 'Market',
+            'tool': 'Tool',
+
+            'task': 'Your task',
+            'task_op': 'enter price',
+            'task_sl': 'enter stop-loss price',
         }
     }
 
-    return f"""
-⚡️ {texts[lang]["1"]}! 🚀
-{texts[lang]["2"]}
+    return f"""⚡️ {texts[lang]["main"]}!
 
-{texts[lang]["3"]}
-"""
+<u>{texts[lang]["default"]}</u>:
+ {POINT} {texts[lang]["market"]}: <b>{market_translates[lang]['crypto']}</b>
+ {POINT} {texts[lang]["tool"]}: <b>BTC/USDT</b>
+
+👉<b>{texts[lang]["task"]}</b>:
+ {POINT} {texts[lang]["task_op"]}
+ {POINT} {texts[lang]["task_sl"]}"""
+
+
+def msg_first_calc_info(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': """В расчетах выше Вы получили:
+
+<b>Купите:</b> количество монет, которое вам нужно для покупки, исходя из вашего депозита.
+
+<b>Сумма:</b> сумма, на которое необходимо купить количество монет
+
+<b>Тейк-профит:</b> ближайшие 3 цены, в которых вы можете зафиксировать свою прибыль
+
+👉А теперь Вы можете настроить этот калькулятор под свои запросы, свой депозит, процент риска на сделку, ближайшие тейк-профиты и многие другие фишки для управления капиталом.
+""",
+        'en': """In the calculations above, you got:
+
+<b>Buy:</b> The number of coins you need to buy based on your deposit.
+
+<b>Amount:</b> the amount for which you need to buy the number of coins
+
+<b>Take profit:</b> the next 3 prices where you can lock in your profit
+
+👉And now you can customize this calculator to suit your needs, your deposit, the percentage of risk per trade, the nearest take profits and many other money management chips.
+""",
+    }
+
+    return texts[lang]
 
 
 def msg_success_base_set(user_id: int):
@@ -691,7 +733,7 @@ def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
 
 
 # Калькулятор
-def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
+def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
     lang = get_lang(user_id)
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -744,12 +786,13 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     }
 
     pair = '/'.join(forex.pair) if (forex is not None) else ''
-    text = f'{market_translates[lang].get(type, "")}\n\n'
+    text = ''
 
     if type == 'forex' and pair != '':
-        text += f'<b><u>{pair}</u></b>\n'
+        text += f'<b><u>{pair}</u></b>'
     elif type == 'crypto' and tool != '':
-        text += f'<b><u>{tool}</u></b>\n'
+        text += f'<b><u>{tool}</u></b>'
+    text += f' - {market_translates[lang].get(type, "")}\n\n'
 
     for el in type_list:
         item = vars_dict[el]
@@ -765,12 +808,14 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
                     '\n'
                 ))
 
-    text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+    if not is_try:
+        text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+
     text += '\n'
     return text
 
 
-def msg_calculation(user_id: int, calc: Calculation):
+def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     lang = get_lang(user_id)
 
     is_saved = calc.in_stat
@@ -903,8 +948,8 @@ def msg_calculation(user_id: int, calc: Calculation):
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
         '',
-        f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}',
-        trading_style
+        f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}' if not is_try else '',
+        trading_style if not is_try else ''
     ))
 
 

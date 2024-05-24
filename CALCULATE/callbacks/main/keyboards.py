@@ -86,3 +86,25 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
 
     keyboard.add(*buttons)
     return keyboard
+
+
+def kb_after_first_settings(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'calc': 'Новый расчет',
+            'settings': 'Расширенные настройки',
+        },
+        'en': {
+            'calc': 'Новый расчет',
+            'settings': 'Расширенные настройки',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('⌨️ ' + texts[lang]['calc'], 'calc'),
+        getButton('⚙️ ' + texts[lang]['settings'], 'settings'),
+    )
+    return keyboard

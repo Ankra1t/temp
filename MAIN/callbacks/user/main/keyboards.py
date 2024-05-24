@@ -47,8 +47,8 @@ def kb_user_main(user_id: int, new_user=False):
         keyboard.add(btn_try)
     else:
         keyboard.add(btn_calc)
+        keyboard.add(btn_support, btn_account)
 
-    keyboard.add(btn_support, btn_account)
     return keyboard
 
 

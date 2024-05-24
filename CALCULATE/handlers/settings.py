@@ -1,13 +1,17 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
-from CALCULATE.callbacks.settings.keyboards import kb_deposit_cancel
 from Classes import currencyService
 from db import db, BASE_VALUE_TYPE
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 
-from CALCULATE.callbacks import kb_base_cancel, kb_splitting, kb_trading_style, send_settings, send_user_deposit
+from CALCULATE.callbacks import (
+    kb_base_cancel, kb_splitting, kb_trading_style,
+    send_settings, send_user_deposit, kb_deposit_cancel,
+    kb_after_first_settings,
+)
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit,
@@ -38,7 +42,8 @@ def handle_new_value(type: BASE_VALUE_TYPE):
             )
             return
 
-        logger.info(f'callback "handle_new_value" user_tg_id={user_id} value={value}')
+        logger.info(
+            f'callback "handle_new_value" user_tg_id={user_id} value={value}')
 
         # if type == 'base_risk' and (value <= 0 or value >= 100):
         #     bot.send_message(
@@ -90,7 +95,8 @@ def handle_new_currency(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_new_currency" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_new_currency" user_tg_id={user_id} value={value}')
 
     check = currencyService.getPrice('USD', value)
     if not check:
@@ -136,7 +142,8 @@ def handle_splitting(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_splitting" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_splitting" user_tg_id={user_id} value={value}')
 
     if sum(current_split) + value > 100:
         bot.send_message(
@@ -173,7 +180,8 @@ def handle_day_risk(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_day_risk" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_day_risk" user_tg_id={user_id} value={value}')
 
     is_percent = value.endswith('%')
     value = value.replace('%', '')
@@ -212,7 +220,8 @@ def handle_round_count(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_round_count" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_round_count" user_tg_id={user_id} value={value}')
 
     if value < 0 or value > 5:
         bot.send_message(
@@ -243,7 +252,8 @@ def handle_trading_style(message: Message, bot: TeleBot):
         )
         return
 
-    logger.info(f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
 
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
@@ -258,6 +268,47 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     send_settings(bot, message, user_id, True)
 
+
+def handle_first_deposit(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    value = digit_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_text_error(user_id)
+        )
+        return
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    db.set_user_base(user_db_id, 'base_deposit', value)
+
+    bot.set_state(user_id, FirstCalcState.risk, chat_id)
+    bot.send_message(
+        chat_id, 'Введите процент риска от депозита на сделку\n\n <i>Чаще всего трейдеры рискуют не более <b>1%</b> от депозита на <u>каждую</u> сделку</i>'
+    )
+
+
+def handle_first_risk(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    message.text = (message.text or '').replace('%', '')
+
+    value = digit_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_text_error(user_id)
+        )
+        return
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    db.set_user_base(user_db_id, 'base_risk', value)
+
+    bot.send_message(
+        chat_id, 'Вы провели первоначальную настройку. Теперь вы можете сделать новый расчет, либо изменить расширенные настройки.',
+        reply_markup=kb_after_first_settings(user_id)
+    )
 
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
@@ -276,3 +327,6 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_new_currency, state=SettingsState.currency)
     reg_mes(handle_splitting, state=SettingsState.splitting)
+
+    reg_mes(handle_first_deposit, state=FirstCalcState.deposit)
+    reg_mes(handle_first_risk, state=FirstCalcState.risk)

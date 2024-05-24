@@ -587,3 +587,18 @@ def kb_trading_type(user_id: int):
     keyboard.add(btn_margin, btn_spot)
     keyboard.add(btn_back)
     return keyboard
+
+
+def kb_first_calc_info(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Настроить свой калькулятор',
+        'en': 'Set up your calculator',
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(f'⚙️ {texts[lang]}', 'set_first_settings'),
+    )
+    return keyboard

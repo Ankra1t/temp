@@ -9,7 +9,9 @@ from db import db
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_deposit, msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_first_calc_info, msg_calculation, msg_deposit,
+    msg_freeze_calc, msg_main, msg_main_freeze,
+    msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
 )
 
@@ -18,7 +20,7 @@ from models import MARKETS_TYPE, Calculation
 
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
+from .settings.keyboards import kb_change_deposit, kb_first_calc_info, kb_settings, kb_summury_profit
 from .stats.keyboards import kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
@@ -263,6 +265,7 @@ def send_calculation(
     user_id: int,
     calc: Calculation,
     is_first=False,
+    is_try=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -273,15 +276,24 @@ def send_calculation(
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
+
     kb = kb_main(user_id, is_access, calc)
+    if is_try:
+        kb = None
 
     if calc_output == 'text':
-        text = msg_calculation(user_id, calc)
+        text = msg_calculation(user_id, calc, is_try)
 
         if is_first:
             bot.send_message(chat_id, text, reply_markup=kb)
         else:
             edit_message(bot, message, 'text', text, kb)
+
+        if is_try:
+            bot.send_message(
+                chat_id, msg_first_calc_info(user_id),
+                reply_markup=kb_first_calc_info(user_id)
+            )
     else:
         file_path, caption = hti.create_calculation_image(
             user_id, calc

@@ -364,6 +364,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         tool = data.get('tool')
         updated_risk = data.get('updated_risk') or 1.
 
+        is_try = data.get('is_try', False)
+
     if stat_id is not None:
         calc_info = db.get_calculation(stat_id)
         if calc_info is None:
@@ -411,18 +413,19 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         trading_type=trading_type,
     )
 
-    new_id = db.add_calculation(calc_info)
-    calc_info.id = new_id
+    if not is_try:
+        new_id = db.add_calculation(calc_info)
+        calc_info.id = new_id
 
-    send_calculation(bot, message, user_id, calc_info, True)
+        db.minus_calculator_uses_count(user_db_id)
+        db.delete_unfinished_calc_by_user(user_db_id)
 
-    db.minus_calculator_uses_count(user_db_id)
-    db.delete_unfinished_calc_by_user(user_db_id)
+        db.set_user_base(user_db_id, 'base_risk', risk[0])
+        db.set_user_risk_is_percent(user_db_id, risk[1])
+        db.set_user_base(user_db_id, 'base_deposit', deposit)
+        db.set_user_currency(user_db_id, currency)
 
-    db.set_user_base(user_db_id, 'base_risk', risk[0])
-    db.set_user_risk_is_percent(user_db_id, risk[1])
-    db.set_user_base(user_db_id, 'base_deposit', deposit)
-    db.set_user_currency(user_db_id, currency)
+    send_calculation(bot, message, user_id, calc_info, True, is_try)
 
     bot.delete_state(user_id, chat_id)
 

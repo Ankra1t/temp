@@ -2,6 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.common.messages import msg_welcome
 from common.utils import edit_message
 from db import db
 from Classes import text_editor
@@ -19,6 +20,8 @@ from .account.keyboards import kb_user_account, kb_user_params
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
+    new_user = True
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -49,17 +52,16 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
             )
 
     else:
-        text = text_editor.get_text(user_id, 'welcome_user')
-        media = text_editor.get_media_id(user_id, 'welcome_user')
+        text = msg_welcome(user_id)
 
-        if media != '':
-            bot.send_animation(
-                chat_id, media,
+        if is_first:
+            bot.send_message(
+                chat_id, text,
                 reply_markup=keyboard
             )
         else:
-            bot.send_message(
-                chat_id, text,
+            bot.edit_message_text(
+                text, chat_id, mes_id,
                 reply_markup=keyboard
             )
 

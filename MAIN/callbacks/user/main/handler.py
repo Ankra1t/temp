@@ -49,7 +49,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.delete_message(chat_id, mes_id)
         choose_first_calculate_step(
-            bot, user_id, call.message, market
+            bot, user_id, call.message, market, is_try=True
         )
 
     if type == 'signals':

@@ -3,6 +3,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 from CALCULATE.callbacks.utils import choose_calculate_step
 
+from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from db import db, LANGUAGES
 from Classes import text_editor
@@ -402,6 +403,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             'text' if cur_calc_output == 'photo' else 'photo'
         )
         send_settings(bot, call.message, user_id)
+
+    if type == 'set_first_settings':
+        bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+        bot.edit_message_text(
+            msg_enter_deposit(user_id), chat_id, mes_id
+        )
 
     bot.answer_callback_query(call.id)
 
