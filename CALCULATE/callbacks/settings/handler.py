@@ -406,8 +406,11 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'set_first_settings':
         bot.set_state(user_id, FirstCalcState.deposit, chat_id)
-        bot.edit_message_text(
-            msg_enter_deposit(user_id), chat_id, mes_id
+        bot.edit_message_reply_markup(
+            chat_id, mes_id, reply_markup=None
+        )
+        bot.send_message(
+            chat_id, msg_enter_deposit(user_id),
         )
 
     bot.answer_callback_query(call.id)

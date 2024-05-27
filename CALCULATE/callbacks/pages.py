@@ -9,7 +9,7 @@ from db import db
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_first_calc_info, msg_calculation, msg_deposit,
+    msg_calculation, msg_deposit,
     msg_freeze_calc, msg_main, msg_main_freeze,
     msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
@@ -279,21 +279,15 @@ def send_calculation(
 
     kb = kb_main(user_id, is_access, calc)
     if is_try:
-        kb = None
+        kb = kb_first_calc_info(user_id)
 
-    if calc_output == 'text':
+    if calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)
 
         if is_first:
             bot.send_message(chat_id, text, reply_markup=kb)
         else:
             edit_message(bot, message, 'text', text, kb)
-
-        if is_try:
-            bot.send_message(
-                chat_id, msg_first_calc_info(user_id),
-                reply_markup=kb_first_calc_info(user_id)
-            )
     else:
         file_path, caption = hti.create_calculation_image(
             user_id, calc

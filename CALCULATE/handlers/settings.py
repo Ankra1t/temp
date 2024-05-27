@@ -1,3 +1,4 @@
+import re
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -14,8 +15,9 @@ from CALCULATE.callbacks import (
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit,
-    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style, msg_splitting_error,
+    msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit, msg_enter_first_risk,
+    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style,
+    msg_after_first_settings, msg_splitting_error,
     msg_success_base_set, msg_success_edit, msg_text_error
 )
 
@@ -273,10 +275,14 @@ def handle_first_deposit(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    match = re.match(r'[0-9]+(.*)', message.text or '')
+    if match is not None:
+        message.text = (message.text or '').replace(match.group(1), '')
+
     value = digit_accept(message)
     if value is None:
         bot.send_message(
-            chat_id, msg_text_error(user_id)
+            chat_id, msg_digit_error(user_id)
         )
         return
 
@@ -285,7 +291,7 @@ def handle_first_deposit(message: Message, bot: TeleBot):
 
     bot.set_state(user_id, FirstCalcState.risk, chat_id)
     bot.send_message(
-        chat_id, 'Введите процент риска от депозита на сделку\n\n <i>Чаще всего трейдеры рискуют не более <b>1%</b> от депозита на <u>каждую</u> сделку</i>'
+        chat_id, msg_enter_first_risk(user_id)
     )
 
 
@@ -298,7 +304,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         bot.send_message(
-            chat_id, msg_text_error(user_id)
+            chat_id, msg_digit_error(user_id)
         )
         return
 
@@ -306,7 +312,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
     db.set_user_base(user_db_id, 'base_risk', value)
 
     bot.send_message(
-        chat_id, 'Вы провели первоначальную настройку. Теперь вы можете сделать новый расчет, либо изменить расширенные настройки.',
+        chat_id, msg_after_first_settings(user_id),
         reply_markup=kb_after_first_settings(user_id)
     )
 

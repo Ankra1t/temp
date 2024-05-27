@@ -513,30 +513,12 @@ def msg_welcome(user_id: int):
  {POINT} {texts[lang]["task_sl"]}"""
 
 
-def msg_first_calc_info(user_id: int):
+def msg_after_first_settings(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': """В расчетах выше Вы получили:
-
-<b>Купите:</b> количество монет, которое вам нужно для покупки, исходя из вашего депозита.
-
-<b>Сумма:</b> сумма, на которое необходимо купить количество монет
-
-<b>Тейк-профит:</b> ближайшие 3 цены, в которых вы можете зафиксировать свою прибыль
-
-👉А теперь Вы можете настроить этот калькулятор под свои запросы, свой депозит, процент риска на сделку, ближайшие тейк-профиты и многие другие фишки для управления капиталом.
-""",
-        'en': """In the calculations above, you got:
-
-<b>Buy:</b> The number of coins you need to buy based on your deposit.
-
-<b>Amount:</b> the amount for which you need to buy the number of coins
-
-<b>Take profit:</b> the next 3 prices where you can lock in your profit
-
-👉And now you can customize this calculator to suit your needs, your deposit, the percentage of risk per trade, the nearest take profits and many other money management chips.
-""",
+        'ru': '<b>Совершите</b> первый расчет или продолжите настройку калькулятора',
+        'en': '<b>Make</b> the first calculation or continue setting up the calculator',
     }
 
     return texts[lang]
@@ -792,7 +774,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
         text += f'<b><u>{pair}</u></b>'
     elif type == 'crypto' and tool != '':
         text += f'<b><u>{tool}</u></b>'
-    text += f' - {market_translates[lang].get(type, "")}\n\n'
+    text += f' - {market_translates[lang].get(type, "")} {"(demo)" if is_try else ""}\n\n'
 
     for el in type_list:
         item = vars_dict[el]
@@ -844,6 +826,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Тейки',
             'stops': 'Стопы',
+
+            'try': '<b>Трейдинг</b> - управление капиталом, с заранее известным % или суммой риска на каждую сделку.'
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -867,6 +851,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
+
+            'try': '<b>Trading</b> is money management, with a pre-known % or amount of risk for each transaction.'
         }
     }
 
@@ -889,9 +875,14 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         trading_currency = calc.forex_info.pair[1]
         tool = ''.join(calc.forex_info.pair)
 
-    trading_style = ''
-    if calc.trading_style is not None:
-        trading_style = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+    trading_style_type = ''
+    try_mes = ''
+    if is_try:
+        try_mes = texts[lang]['try'] + '\n'
+    else:
+        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}\n'
+        if calc.trading_style is not None:
+            trading_style_type = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -936,7 +927,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 {conclusion}"""
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
         '',
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
@@ -948,8 +939,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
         '',
-        f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}' if not is_try else '',
-        trading_style if not is_try else ''
+        trading_style_type + try_mes
     ))
 
 
@@ -1232,6 +1222,25 @@ def msg_enter_risk_percent(user_id: int):
 
 {get_risk_annotation(lang)}
 """
+
+
+def msg_enter_first_risk(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': '👉 <b>Введите % риска на сделку</b>',
+            'info': '<i>Чаще всего трейдеры рискуют не более <b>1%</b> от депозита на <u>каждую</u> сделку</i>'
+        },
+        'en': {
+            'main': '👉 <b>Enter the % of risk per trade</b>',
+            'info': '<i>Most often, traders risk no more than <b>1%</b> of the deposit on <u>each</u> transaction</i>'
+        }
+    }
+
+    return f"""{texts[lang]['main']}
+
+{texts[lang]['info']}"""
 
 
 def msg_enter_day_risk(user_id: int):

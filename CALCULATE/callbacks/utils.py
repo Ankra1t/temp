@@ -71,7 +71,7 @@ def choose_calculate_step(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    text = msg_calculate(bot, user_id, chat_id)
+    text = msg_calculate(bot, user_id, chat_id, is_try)
     keyboard = kb_calc_cancel(user_id)
 
     if calc_type == 'forex' and forex is None:
@@ -230,7 +230,7 @@ def choose_first_calculate_step(
             'currency': currency,
             'risk': risk,
             'is_try': is_try,
-            'tool': 'BTC/USDT'
+            'tool': 'BTC/USDT' if is_try else None
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)
