@@ -242,7 +242,7 @@ def kb_choose_lang(user_id: int, is_first=False):
     texts = {
         'ru': {
             'ru': 'Русский',
-            'en': 'Английский',
+            'en': 'English',
         },
         'en': {
             'ru': 'Russian',

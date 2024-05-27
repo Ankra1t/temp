@@ -174,8 +174,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     u_base = db.get_calc_user_settings(user_db_id)
                     market = u_base.market if (u_base is not None) else 'crypto'
 
+                    bot.delete_message(chat_id, mes_id)
                     choose_first_calculate_step(
-                        bot, user_id, call.message, market, is_try=True, is_edit=True
+                        bot, user_id, call.message, market, is_try=True
                     )
                 else:
                     send_settings(bot, call.message, user_id)

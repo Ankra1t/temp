@@ -114,7 +114,7 @@ def kb_params_choose_lang(user_id: int):
     texts = {
         'ru': {
             'ru': 'Русский',
-            'en': 'Английский',
+            'en': 'English',
         },
         'en': {
             'ru': 'Russian',
