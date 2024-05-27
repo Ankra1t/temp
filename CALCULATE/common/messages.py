@@ -852,6 +852,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Тейки',
             'stops': 'Стопы',
+
+            'to': 'к',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -875,6 +877,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
+
+            'to': 'to',
         }
     }
 
@@ -933,7 +937,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
-            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} к 1)'
+            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if calc_result.profit_rate_values is not None:
                 rate = calc_result.profit_rate_values[i]
