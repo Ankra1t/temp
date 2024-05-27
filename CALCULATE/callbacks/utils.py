@@ -8,12 +8,12 @@ from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
 from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
-from .settings.keyboards import kb_change_currency, kb_trading_style
+from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_calculate, msg_enter_currency, msg_enter_deposit,
+    msg_calculate, msg_calculate_test, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
-    msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
+    msg_enter_stop_loss, msg_enter_tool, msg_welcome
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 
@@ -146,15 +146,20 @@ def choose_calculate_step(
 
     if is_try:
         keyboard = None
+        text = msg_calculate_test(bot, user_id, chat_id)
+        if open_price is None:
+            bot.send_message(
+                chat_id, msg_welcome(user_id)
+            )
 
     bot.set_state(user_id, state, chat_id)
 
-    new_mes_id = mes_id
     if is_edit:
         bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard,
         )
+        new_mes_id = mes_id
     else:
         new_mes = bot.send_message(
             user_id, text,
@@ -162,8 +167,13 @@ def choose_calculate_step(
         )
         new_mes_id = new_mes.id
 
-    set_state_data(bot, user_id, chat_id, {
-                   'del_mes_id': new_mes_id, 'edit_mes': edit_to})
+    if not is_try:
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes_id,
+                'edit_mes': edit_to
+            }
+        )
 
 
 def choose_first_calculate_step(
@@ -226,9 +236,9 @@ def choose_first_calculate_step(
 
             'trading_style': style,
             'trading_type': trading_type,
-            'deposit': deposit,
+            'deposit': deposit if not is_try else 5000,
             'currency': currency,
-            'risk': risk,
+            'risk': risk if not is_try else [1, True],
             'is_try': is_try,
             'tool': 'BTC/USDT' if is_try else None
         } | prev_values

@@ -15,7 +15,7 @@ TAB = '   '
 
 market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
     'ru': {
-        'crypto': 'Криптовалюта',
+        'crypto': 'Криптовалюты',
         'paper': 'Акции',
         'forex': 'Форекс',
         'RF': 'РФ',
@@ -178,7 +178,7 @@ def msg_settings(user_id: int, is_risk_update=False):
             'output': 'Вывод расчета',
             'by_text': 'текстом',
             'by_image': 'картинкой',
-            
+
             'is_risk_update': 'Изменение риска во время расчета'
         },
         'en': {
@@ -202,7 +202,7 @@ def msg_settings(user_id: int, is_risk_update=False):
             'output': 'Calc output',
             'by_text': 'in text',
             'by_image': 'in image',
-            
+
             'is_risk_update': 'Risk change during calculation'
         },
     }
@@ -484,38 +484,23 @@ def msg_freeze_calc(user_id: int, risk_value: str):
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
-    texts = {
-        'ru': {
-            'main': 'Вы сейчас получили профессиональный калькулятор расчета рисков для всех мировых рынков',
-            'default': 'По умолчанию стоит',
-            'market': 'Рынок',
-            'tool': 'Инструмент',
+    if lang == 'ru':
+        return f"""
+<b>Проведите тестовый расчет</b>
+и получите результат:
 
-            'task': 'Ваша задача',
-            'task_op': 'укажите цену',
-            'task_sl': 'укажите цену стоп-лосса',
-        },
-        'en': {
-            'main': 'You have now received a professional risk calculator for all global markets',
-            'default': 'By default, it is',
-            'market': 'Market',
-            'tool': 'Tool',
+- объем покупки/продажи
+- сумма покупки
+- где фиксировать прибыль
+- сохранение live-статистики"""
+    else:
+        return """<b>Perform a test calculation</b>
+and get the result:
 
-            'task': 'Your task',
-            'task_op': 'enter price',
-            'task_sl': 'enter stop-loss price',
-        }
-    }
-
-    return f"""⚡️ {texts[lang]["main"]}!
-
-<u>{texts[lang]["default"]}</u>:
- {POINT} {texts[lang]["market"]}: <b>{market_translates[lang]['crypto']}</b>
- {POINT} {texts[lang]["tool"]}: <b>BTC/USDT</b>
-
-👉<b>{texts[lang]["task"]}</b>:
- {POINT} {texts[lang]["task_op"]}
- {POINT} {texts[lang]["task_sl"]}"""
+- purchase/sale volume
+- purchase amount
+- where to fix profits
+- saving live statistics"""
 
 
 def msg_after_first_settings(user_id: int):
@@ -802,6 +787,42 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
     return text
 
 
+def msg_calculate_test(bot: TeleBot, user_id: int, chat_id: int):
+    lang = get_lang(user_id)
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        open_price = data.get('open_price')
+
+    if lang == 'ru':
+        if open_price is None:
+            return f"""<b>Пример расчета:</b>
+
+Инструмент: <b>BTC/USDT</b>
+Рынок: <b>Криптовалюта</b>
+Депозит: <b>5000 USDT</b>
+Риск на сделку: <b>50 USDT</b>
+
+👉 Введите <b>цену открытия</b> сделки:"""
+        else:
+            return """👉 Введите цену <b>STOP LOSS</b>:
+
+<i>Stop Loss - цена, при которой трейдер фиксирует свой убыток</i>"""
+    else:
+        if open_price is None:
+            return f"""<b>Test calculation:</b>
+
+Tool: <b>BTC/USDT</b>
+Market: <b>Crypto</b>
+Deposit: <b>5000 USDT</b>
+Deal risk: <b>50 USDT</b>
+
+👉 Enter deal <b>open price</b>:"""
+        else:
+            return """👉 enter <b>STOP LOSS</b> price:
+
+<i>Stop Loss - the price at which the trader fixes his loss</i>"""
+
+
 def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     lang = get_lang(user_id)
 
@@ -818,7 +839,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'conclusion': 'Тейк-профит',
             'profit': 'Прибыль' if not is_saved else 'Прибыль от сделки',
             'buy': 'Купите' if not is_saved else 'Было куплено',
-            'sum': 'Сумма',
+            'sum': 'Сумма покупки',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
 
@@ -831,8 +852,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Тейки',
             'stops': 'Стопы',
-
-            'try': '<b>Трейдинг</b> - управление капиталом, с заранее известным % или суммой риска на каждую сделку.'
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -856,8 +875,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
-
-            'try': '<b>Trading</b> is money management, with a pre-known % or amount of risk for each transaction.'
         }
     }
 
@@ -881,10 +898,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         tool = ''.join(calc.forex_info.pair)
 
     trading_style_type = ''
-    try_mes = ''
-    if is_try:
-        try_mes = texts[lang]['try'] + '\n'
-    else:
+    if not is_try:
         trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}\n'
         if calc.trading_style is not None:
             trading_style_type = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
@@ -936,15 +950,15 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         '',
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
-        '',
         f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
         f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        '',
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
         '',
-        trading_style_type + try_mes
+        trading_style_type
     ))
 
 
@@ -1212,7 +1226,7 @@ def msg_enter_deposit(user_id: int):
         'en': 'Enter the deposit size'
     }
 
-    return f'✍ {texts[lang]}:'
+    return f'👉 {texts[lang]}:'
 
 
 def msg_enter_risk_percent(user_id: int):

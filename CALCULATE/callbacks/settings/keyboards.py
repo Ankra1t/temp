@@ -237,7 +237,7 @@ def kb_change_market(user_id: int):
     return keyboard
 
 
-def kb_choose_lang(user_id: int):
+def kb_choose_lang(user_id: int, is_first=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -250,14 +250,17 @@ def kb_choose_lang(user_id: int):
         }
     }
 
+    first = 'first' if is_first else ''
+
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', 'choose_lang_ru')
-    btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', 'choose_lang_en')
-    btn_back = getButton(cancel_txt(lang), 'go_settings')
+    btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', f'{first}_choose_lang_ru')
+    btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', f'{first}_choose_lang_en')
 
     keyboard.add(btn1, btn2)
-    keyboard.add(btn_back)
+    if not is_first:
+        keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
+
     return keyboard
 
 

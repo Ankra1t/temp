@@ -2,7 +2,8 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.common.messages import msg_welcome
+from CALCULATE.callbacks import kb_choose_lang
+from CALCULATE.common.messages import msg_choose_lang
 from common.utils import edit_message
 from db import db
 from Classes import text_editor
@@ -52,18 +53,10 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
             )
 
     else:
-        text = msg_welcome(user_id)
-
-        if is_first:
-            bot.send_message(
-                chat_id, text,
-                reply_markup=keyboard
-            )
-        else:
-            bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=keyboard
-            )
+        bot.send_message(
+            chat_id, msg_choose_lang(user_id),
+            reply_markup=kb_choose_lang(user_id, True)
+        )
 
 
 def send_user_education(bot: TeleBot, message: Message, user_id: int):

@@ -93,11 +93,11 @@ def kb_after_first_settings(user_id: int):
 
     texts = {
         'ru': {
-            'calc': 'New calculation',
+            'calc': 'Новый расчет',
             'settings': 'Настройки',
         },
         'en': {
-            'calc': 'Новый расчет',
+            'calc': 'New calculation',
             'settings': 'Settings',
         },
     }

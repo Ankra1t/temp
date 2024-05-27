@@ -904,7 +904,7 @@ class Database:
                 '(user_id, market, base_currency, base_deposit, base_risk, '
                 'risk_is_percent) VALUES (%s, %s, %s, %s, %s, %s)'
             )
-            params = id, market, 'USDT', 5000, 2, True
+            params = id, market, 'USDT', 5000, 1, True
         else:
             query = 'INSERT INTO tgcalc_user_settings (user_id, market) VALUES (%s, %s)'
             params = id, market

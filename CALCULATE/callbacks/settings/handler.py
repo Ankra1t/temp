@@ -1,7 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from CALCULATE.callbacks.utils import choose_calculate_step
+from CALCULATE.callbacks.utils import choose_calculate_step, choose_first_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
@@ -168,7 +168,18 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             if f'_{lang}' in type:
                 is_edit_lang = True
                 db.set_user_lang(user_db_id, lang)
-                send_settings(bot, call.message, user_id)
+
+                if 'first' in type:
+                    user_db_id = db.get_user_id_by_tg_id(user_id)
+                    u_base = db.get_calc_user_settings(user_db_id)
+                    market = u_base.market if (u_base is not None) else 'crypto'
+
+                    choose_first_calculate_step(
+                        bot, user_id, call.message, market, is_try=True, is_edit=True
+                    )
+                else:
+                    send_settings(bot, call.message, user_id)
+
 
         if not is_edit_lang:
             bot.edit_message_text(
