@@ -145,7 +145,7 @@ def msg_main_freeze(user_id: int, freeze_dt: datetime):
 """
 
 
-def msg_settings(user_id: int):
+def msg_settings(user_id: int, is_risk_update=False):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -178,6 +178,8 @@ def msg_settings(user_id: int):
             'output': 'Вывод расчета',
             'by_text': 'текстом',
             'by_image': 'картинкой',
+            
+            'is_risk_update': 'Изменение риска во время расчета'
         },
         'en': {
             'name': 'Settings',
@@ -200,6 +202,8 @@ def msg_settings(user_id: int):
             'output': 'Calc output',
             'by_text': 'in text',
             'by_image': 'in image',
+            
+            'is_risk_update': 'Risk change during calculation'
         },
     }
 
@@ -239,7 +243,8 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 {POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
 
-{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>"""
+{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>
+{POINT} {texts[lang]["is_risk_update"]}: <b>{texts[lang]['on'] if is_risk_update else texts[lang]['off']}</b>"""
 
 
 def msg_deposit(user_id: int):

@@ -5,6 +5,7 @@ from telebot import TeleBot
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, set_state_data
 from db import db
+from data.data import liteDb
 
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
@@ -68,9 +69,10 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
+    is_risk_update = liteDb.getRiskUpdate(user_id)
 
-    msg = msg_settings(user_id)
-    markup = kb_settings(user_id, calc_output)
+    msg = msg_settings(user_id, is_risk_update)
+    markup = kb_settings(user_id, calc_output, is_risk_update)
 
     if is_first:
         bot.send_message(

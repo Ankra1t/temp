@@ -1,5 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
@@ -60,6 +61,7 @@ def kb_tool(user_id: int, prev_tools: list[str]):
 
 def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None):
     lang = get_lang(user_id)
+    is_user_risk_update = liteDb.getRiskUpdate(user_id)
 
     texts = {
         'ru': {
@@ -76,7 +78,7 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
         btn_value = getButton(str(open_price), f'open_price+{open_price}')
         keyboard.add(btn_value)
 
-    if is_risk_update:
+    if is_risk_update and is_user_risk_update:
         btn_risk_50 = getButton(f'1/2 {texts[lang]["risk"]}', 'risk0.5')
         btn_risk_33 = getButton(f'1/3 {texts[lang]["risk"]}', 'risk0.33')
         keyboard.add(btn_risk_50, btn_risk_33)

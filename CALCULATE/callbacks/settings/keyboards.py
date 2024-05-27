@@ -30,7 +30,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
+def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk_update=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -43,6 +43,10 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
             'calc_output': 'Вывод расчета: ' + ('текстом' if cur_calc_output == 'photo' else 'картинкой'),
+
+            'on': 'Вкл.',
+            'off': 'Выкл.',
+            'is_risk_update': 'изменение риска'
         },
         'en': {
             'base': 'Base values',
@@ -54,6 +58,10 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
             'calc_output': 'Calc output: ' + ('in text' if cur_calc_output == 'photo' else 'in image'),
+
+            'on': 'On',
+            'off': 'Off',
+            'is_risk_update': 'risk update'
         }
     }
 
@@ -76,11 +84,17 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
     btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
     btn_back = getButton(back_txt(lang), 'go_main')
 
+    btn_risk_update = getButton(
+        f'{texts[lang]["off" if is_risk_update else "on"]} {texts[lang]["is_risk_update"]}',
+        'set_risk_update'
+    )
+
     keyboard.add(btn_market, btn_deposit_update)
     keyboard.add(btn_base, btn_summury_profit)
     keyboard.add(btn_style, btn_trading_type)
     keyboard.add(btn_lang, btn_reset)
     keyboard.add(btn_output)
+    keyboard.add(btn_risk_update)
     keyboard.add(btn_back)
     return keyboard
 

@@ -6,6 +6,7 @@ from CALCULATE.callbacks.utils import choose_calculate_step
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from db import db, LANGUAGES
+from data.data import liteDb
 from Classes import text_editor
 
 from common.utils import delete_message, get_lang, set_state_data
@@ -412,6 +413,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.send_message(
             chat_id, msg_enter_deposit(user_id),
         )
+
+    if type == 'set_risk_update':
+        liteDb.reverseRiskUpdate(user_id)
+        send_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 
