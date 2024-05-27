@@ -586,8 +586,8 @@ def msg_pair_error(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валютную пару текстом',
-        'en': 'Enter the currency pair in words'
+        'ru': 'Введите валютную пару в формате XXX/XXX (только латиницей)',
+        'en': 'Enter the currency pair in XXX/XXX (only in Latin)'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -640,6 +640,18 @@ def msg_text_error(user_id: int):
     }
 
     return f'❗️ {texts[lang]}:'
+
+
+def msg_latin_error(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Допустимы только латинские символы',
+        'en': 'Only latin characters are allowed'
+    }
+
+    return f'❗️ {texts[lang]}:'
+
 
 
 def msg_percent_error(user_id: int):
