@@ -66,12 +66,12 @@ class AuthMiddleWare(BaseMiddleware):
                 db.create_tg_user_tables(new_user.id)
 
                 # Проверка языка
-                lang = message.from_user.language_code.lower()
-                lang = lang if (lang in LANGUAGES) else 'en'
+                user_lang = message.from_user.language_code.lower()
+                lang = user_lang if (user_lang in LANGUAGES) else 'en'
                 db.set_user_lang(new_user.id, lang)
 
                 # Уведомление о регистрации
-                notifier.send_user_is_registered(new_user)
+                notifier.send_user_is_registered(new_user, user_lang)
             else:
                 logger.error(
                     f'Ошибка регистрации пользователя tg_id = {user_id} {username}'

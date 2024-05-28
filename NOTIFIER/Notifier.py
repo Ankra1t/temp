@@ -33,16 +33,13 @@ class Notifier():
     def send_notification(self, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         self._send(self.bot, type, text, media_id)
 
-    def send_user_is_registered(self, new_user: UserInfo):
-        message = f'<b>Зарегистрирован новый пользователь</b>\n\n'
-
+    def send_user_is_registered(self, new_user: UserInfo, user_lang='ru'):
         if new_user.tg_username != '-':
-            message += f'@{new_user.tg_username}'
+            message = f'@{new_user.tg_username}'
         else:
-            message += f'tg ID: <b>{new_user.tg_id}</b>'
+            message = f'tg ID: <b>{new_user.tg_id}</b>'
 
-        message += '\n'
-
-        message += f'Дата и время: {get_str_by_datetime(new_user.registration_dt)}'
+        message = f'{message} ({user_lang})'
+        message += f'\n{get_str_by_datetime(new_user.registration_dt)}'
 
         self._send(self.bot_users, 'text', message)
