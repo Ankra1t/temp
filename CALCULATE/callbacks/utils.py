@@ -71,7 +71,8 @@ def choose_calculate_step(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    text = msg_calculate(bot, user_id, chat_id, is_try)
+    # text = msg_calculate(bot, user_id, chat_id, is_try)
+    text = ''
     keyboard = kb_calc_cancel(user_id)
 
     if calc_type == 'forex' and forex is None:
@@ -81,7 +82,7 @@ def choose_calculate_step(
         keyboard = kb_pair(user_id)
 
     elif calc_type != 'forex' and tool is None:
-        text += msg_enter_tool(user_id)
+        text += msg_enter_tool(user_id, calc_type)
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
