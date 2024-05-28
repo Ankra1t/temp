@@ -11,6 +11,7 @@ ngrok.exe
 config_global.py
 _index.py
 _test.py
+data/data.db
 
 pyrightconfig.json
 4p_bot.db
