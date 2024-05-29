@@ -56,6 +56,17 @@ def paid_subscribe_msg(user_id: int, end_date: str, tariff_name: str):
     return texts[lang]
 
 
+def paid_subscribe_refer_msg(refer_id: int, user: str, sum: str):
+    lang = get_lang(refer_id)
+
+    texts = {
+        'ru': f'Ваш реферал {user} оплатил подписку на {sum}',
+        'en': f'Your referral {user} paid for subscription by {sum}',
+    }
+
+    return texts[lang]
+
+
 def welcome_msg():
     return f"""
 <b>«Для Людей»</b> - проект, в котором собраны обычные, простые, добрые люди. 

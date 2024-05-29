@@ -1,6 +1,5 @@
 import sqlite3
 
-
 class Data:
     def __init__(self):
         self.connection = sqlite3.connect(
@@ -113,5 +112,15 @@ class Data:
         except Exception as e:
             print(e)
 
+    def getFirstTriesCount(self) -> int:
+        try:
+            data = self.curs.execute("SELECT COUNT(*) FROM Users WHERE first_try = ?", (True,)).fetchone()
+            return data[0] if data is not None else 0
+        except Exception as e:
+            print(e)
+            return 0
 
 liteDb = Data()
+liteDb.setFirstTry(2)
+liteDb.setFirstTry(3)
+liteDb.setFirstTry(4)

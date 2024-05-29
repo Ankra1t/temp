@@ -6,6 +6,7 @@ from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_print_float
 from db import db
+from data.data import liteDb
 from Classes import base_statis
 
 from MAIN.common.utils import get_print_signal_info
@@ -41,10 +42,12 @@ def send_admin_main(
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
+    count_first_tries = liteDb.getFirstTriesCount()
+
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
-        count_admins, count_fut_posts
+        count_admins, count_fut_posts, count_first_tries
     )
 
     if is_first:
