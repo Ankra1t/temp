@@ -6,6 +6,7 @@ from NOTIFIER import notifier
 
 from config_logger import logger
 from common.utils import delete_message, is_digit
+
 from db import db, LANGUAGES
 from AuthRoles import check_registrate, registration
 
@@ -64,6 +65,7 @@ class AuthMiddleWare(BaseMiddleware):
 
             if new_user is not None and is_registered:
                 db.create_tg_user_tables(new_user.id)
+                num = db.get_today_users_count()
 
                 # Проверка языка
                 user_lang = message.from_user.language_code.lower()
@@ -71,7 +73,7 @@ class AuthMiddleWare(BaseMiddleware):
                 db.set_user_lang(new_user.id, lang)
 
                 # Уведомление о регистрации
-                notifier.send_user_is_registered(new_user, user_lang)
+                notifier.send_user_is_registered(new_user, user_lang, num)
             else:
                 logger.error(
                     f'Ошибка регистрации пользователя tg_id = {user_id} {username}'

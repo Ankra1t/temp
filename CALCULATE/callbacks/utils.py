@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from Classes import pay_guard
+from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
@@ -11,7 +12,7 @@ from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_calculate, msg_calculate_test, msg_enter_currency, msg_enter_deposit,
+    msg_calculate_test, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
     msg_enter_stop_loss, msg_enter_tool, msg_welcome
 )
@@ -230,6 +231,8 @@ def choose_first_calculate_step(
         bot.set_state(user_id, ForexCalcState.pair, chat_id)
     else:
         bot.set_state(user_id, CalculateState.tool, chat_id)
+
+    liteDb.addStartCalcCount(user_id)
 
     set_state_data(
         bot, user_id, chat_id, {

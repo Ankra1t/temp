@@ -31,6 +31,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     is_rus = bot.get_chat_member(chat_id, user_id).user.language_code == 'ru'
     is_valid_use = pay_guard.valid_use_calc(user_id, bot)
@@ -66,6 +67,7 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
@@ -161,6 +163,7 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calcs = db.get_calculations_by_user(user_db_id)

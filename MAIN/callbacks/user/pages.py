@@ -4,10 +4,11 @@ from telebot.types import Message
 
 from CALCULATE.callbacks import kb_choose_lang
 from CALCULATE.common.messages import msg_choose_lang
-from common.utils import edit_message
-from db import db
 from Classes import text_editor
 from AuthRoles import get_site_code
+from common.utils import edit_message
+from db import db
+from data.data import liteDb
 
 from config_logger import logger
 
@@ -86,6 +87,7 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     referals = len(db.get_user_referals(user_db_id))
@@ -150,6 +152,7 @@ def send_user_params(bot: TeleBot, message: Message, user_id: int, is_first=Fals
     mes_id = message.id
 
     user = db.get_user_by_tg_id(user_id)
+    liteDb.addPagesCount(user_id)
 
     if user is not None:
         text = msg_user_params(user_id, user)

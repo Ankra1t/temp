@@ -4,20 +4,21 @@ from telebot.types import Message
 
 from config_logger import logger
 from Classes import currencyService
+from data.data import liteDb
 from db import db
 from models import MARKETS_TYPE, Calculation, ForexInfo
 
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import (
     choose_calculate_step, kb_tool,
-    send_calculation, kb_pair, kb_change_currency,
+    send_calculation, kb_change_currency,
     kb_calc_cancel, kb_trading_style
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (
     msg_currency_error, msg_latin_error, msg_trading_style_error,
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
-    msg_pair_not_found, msg_sl_op_equal_error, msg_text_error,
+    msg_sl_op_equal_error, msg_text_error,
 )
 
 
@@ -440,6 +441,8 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         db.set_user_risk_is_percent(user_db_id, risk[1])
         db.set_user_base(user_db_id, 'base_deposit', deposit)
         db.set_user_currency(user_db_id, currency)
+    else:
+        liteDb.setFirstTry(user_id)
 
     send_calculation(bot, message, user_id, calc_info, True, is_try)
 

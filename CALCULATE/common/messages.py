@@ -893,6 +893,16 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         }
     }
 
+    attention = ''
+    count_zero = 0
+    for el in calc_result.tp_values:
+        if el == 0:
+            count_zero += 1
+
+    if count_zero > calc_result.tp_count // 2:
+        attention = '\n⚠️ При текущих значениях стоп-лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
+        attention+= '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
+
     if calc.market == 'crypto':
         tool_name = texts[lang]["coin"]
     elif calc.market == 'forex':
@@ -962,7 +972,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     return '\n'.join((
         f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
-        '',
+        attention,
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
