@@ -38,7 +38,7 @@ def kb_user_account(user_id: int):
     back = getButton(back_txt(lang), 'main')
     # btn5 = getButton("Пополнить баланс")
 
-    keyboard.add(purchases, referral)
+    keyboard.add(purchases) #, referral
     keyboard.add(params, back)
     return keyboard
 
