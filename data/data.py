@@ -121,6 +121,3 @@ class Data:
             return 0
 
 liteDb = Data()
-liteDb.setFirstTry(2)
-liteDb.setFirstTry(3)
-liteDb.setFirstTry(4)
