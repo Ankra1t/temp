@@ -46,7 +46,7 @@ def send_admin_main(
 
     count_first_tries = 0
     for el in todays_users:
-        if liteDb.getFirstTryUser(el.get('id', -1)) == 1:
+        if liteDb.getFirstTryUser(el.get('id_telegram', -1)) == 1:
             count_first_tries += 1
 
     keyboard = kb_admin_main()
