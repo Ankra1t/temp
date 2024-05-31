@@ -62,7 +62,7 @@ def get_print_signal_info(open_price: float, stop_loss: float):
 
 
 def get_short_user_info(user: UserInfo):
-    if user.tg_username != '-':
+    if user.tg_username != '-' and user.tg_username != '':
         nik = f'| @{user.tg_username} '
     elif user.tg_id > 0:
         nik = f'| {user.tg_id} '
@@ -77,7 +77,7 @@ def get_short_user_info(user: UserInfo):
     if calcs_count >= 1:
         is_set_settings = 1
     else:
-        markets = ('crypto', 'forex', 'RF', 'USA')
+        markets = ('forex', 'RF', 'USA')
         for el in markets:
             calc_settings = db.get_calc_user_settings(user.id, el)
             if calc_settings is not None and calc_settings.deposit is not None and calc_settings.risk is not None:
