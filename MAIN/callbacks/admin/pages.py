@@ -42,12 +42,18 @@ def send_admin_main(
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    count_first_tries = liteDb.getFirstTriesCount()
+    todays_users = db.get_today_users()
+
+    count_first_tries = 0
+    for el in todays_users:
+        if liteDb.getFirstTryUser(el.get('id', -1)) == 1:
+            count_first_tries += 1
 
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
-        count_admins, count_fut_posts, count_first_tries
+        count_admins, count_fut_posts, 
+        len(todays_users), count_first_tries
     )
 
     if is_first:

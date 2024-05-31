@@ -877,6 +877,27 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_today_users(self) -> list[DictRow]:
+        now = get_datetime_now() + timedelta(hours=3)
+        start = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) - timedelta(hours=3)
+        end = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) + timedelta(days=1) - timedelta(hours=3)
+
+        query = 'SELECT * FROM users WHERE created_at > %s AND created_at < %s'
+        params = start, end
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return data
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return []
+
     def get_today_users_count(self) -> int:
         now = get_datetime_now() + timedelta(hours=3)
         start = datetime(
