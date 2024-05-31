@@ -77,10 +77,9 @@ def get_short_user_info(user: UserInfo):
     if calcs_count > 1:
         is_set_settings = 1
     else:
-        markets = ('forex', 'RF', 'USA')
+        markets = ('forex', 'RF')
         for el in markets:
-            calc_settings = db.get_calc_user_settings(user.id, el)
-            print(calc_settings)
+            calc_settings = db.get_calc_user_settings(user.id, el, False)
             if calc_settings is not None and calc_settings.deposit is not None and calc_settings.risk is not None:
                 is_set_settings = 1
                 break

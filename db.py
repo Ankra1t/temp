@@ -1375,7 +1375,7 @@ class Database:
             self.connection.rollback()
             return default
 
-    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None) -> UserCalcSettings | None:
+    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None, is_create=True) -> UserCalcSettings | None:
         market = market or self.get_user_current_market(user_id)
 
         query = 'SELECT * FROM tgcalc_user_settings WHERE user_id = %s AND market = %s'
@@ -1385,11 +1385,11 @@ class Database:
             self.curs.execute(query, params)
 
             data = self.curs.fetchone()
-            if data is None:
+            if is_create and data is None:
                 self.create_tg_user_settings(user_id, market)
                 return self.get_calc_user_settings(user_id)
 
-            return self._data_to_user_calc(data)
+            return self._data_to_user_calc(data) if data is not None else None
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
