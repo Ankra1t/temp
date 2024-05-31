@@ -73,7 +73,7 @@ def get_short_user_info(user: UserInfo):
 
     is_set_settings = 0
     calcs_count = len(db.get_calculations_by_user(user.id))
-    print(calcs_count)
+
     if calcs_count > 1:
         is_set_settings = 1
     else:
