@@ -66,7 +66,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             if len(users) == 0:
                 text += '\nНет пользователей'
             else:
-                text += '<b>ID | Тг данные | Остаток расчетов</b>\n'
+                text += '<b>ID | Тг данные | Тест | Настройка</b>\n'
                 for user in users:
                     text += '\n' + get_short_user_info(user) + '\n'
 

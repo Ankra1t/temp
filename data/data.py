@@ -33,24 +33,24 @@ class Data:
         except Exception as e:
             print(e)
 
-    def addUser(self, userId: int):
+    def addUser(self, tgId: int):
         try:
             data = self.curs.execute(
-                "SELECT * FROM Users WHERE id = ?", (userId,)).fetchone()
+                "SELECT * FROM Users WHERE id = ?", (tgId,)).fetchone()
             if data is not None:
                 return
 
-            self.curs.execute("INSERT INTO Users (id) VALUES (?)", (userId,))
+            self.curs.execute("INSERT INTO Users (id) VALUES (?)", (tgId,))
             self.connection.commit()
         except Exception as e:
             print(e)
 
-    def getRiskUpdate(self, userId: int) -> bool:
-        self.addUser(userId)
+    def getRiskUpdate(self, tgId: int) -> bool:
+        self.addUser(tgId)
         try:
             data = self.curs.execute(
                 "SELECT is_risk_update FROM Users WHERE id = ?",
-                (userId,)
+                (tgId,)
             ).fetchone()
 
             if data is None:
@@ -61,52 +61,52 @@ class Data:
             print(e)
             return False
 
-    def reverseRiskUpdate(self, userId: int):
-        prev_value = self.getRiskUpdate(userId)
+    def reverseRiskUpdate(self, tgId: int):
+        prev_value = self.getRiskUpdate(tgId)
         try:
             self.curs.execute(
                 'UPDATE Users SET is_risk_update = ? WHERE id = ?',
-                (not prev_value, userId)
+                (not prev_value, tgId)
             )
             self.connection.commit()
         except Exception as e:
             print(e)
 
-    def setFirstTry(self, userId: int):
-        self.addUser(userId)
+    def setFirstTry(self, tgId: int):
+        self.addUser(tgId)
         try:
             self.curs.execute(
-                "UPDATE Users SET first_try = ? WHERE id = ?", (True, userId,)
+                "UPDATE Users SET first_try = ? WHERE id = ?", (True, tgId,)
             )
             self.connection.commit()
         except Exception as e:
             print(e)
 
-    def addStartCalcCount(self, userId: int):
-        self.addUser(userId)
+    def addStartCalcCount(self, tgId: int):
+        self.addUser(tgId)
         try:
             data = self.curs.execute(
-                "SELECT start_calc_count FROM Users WHERE id = ?", (userId,)
+                "SELECT start_calc_count FROM Users WHERE id = ?", (tgId,)
             ).fetchone()
             data = data[0] if data is not None else 0
 
             self.curs.execute(
-                "UPDATE Users SET start_calc_count = ? WHERE id = ?", (data + 1, userId,)
+                "UPDATE Users SET start_calc_count = ? WHERE id = ?", (data + 1, tgId,)
             )
             self.connection.commit()
         except Exception as e:
             print(e)
 
-    def addPagesCount(self, userId: int):
-        self.addUser(userId)
+    def addPagesCount(self, tgId: int):
+        self.addUser(tgId)
         try:
             data = self.curs.execute(
-                "SELECT pages_count FROM Users WHERE id = ?", (userId,)
+                "SELECT pages_count FROM Users WHERE id = ?", (tgId,)
             ).fetchone()
             data = data[0] if data is not None else 0
 
             self.curs.execute(
-                "UPDATE Users SET pages_count = ? WHERE id = ?", (data + 1, userId,)
+                "UPDATE Users SET pages_count = ? WHERE id = ?", (data + 1, tgId,)
             )
             self.connection.commit()
         except Exception as e:
@@ -115,6 +115,14 @@ class Data:
     def getFirstTriesCount(self) -> int:
         try:
             data = self.curs.execute("SELECT COUNT(*) FROM Users WHERE first_try = ?", (True,)).fetchone()
+            return data[0] if data is not None else 0
+        except Exception as e:
+            print(e)
+            return 0
+
+    def getFirstTryUser(self, tgId: int) -> int:
+        try:
+            data = self.curs.execute("SELECT first_try FROM Users WHERE id = ?", (tgId,)).fetchone()
             return data[0] if data is not None else 0
         except Exception as e:
             print(e)
