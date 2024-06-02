@@ -260,7 +260,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 msg = msg_enter_pair(user_id)
             else:
                 state = CalculateState.tool
-                msg = msg_enter_tool(user_id)
+                msg = msg_enter_tool(user_id, stat.market)
 
             edit_message(
                 bot, call.message, 'text', msg,

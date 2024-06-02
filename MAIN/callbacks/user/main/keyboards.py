@@ -11,12 +11,13 @@ def getButton(text: str, type: str):
     return InlineKeyboardButton(text, None, user_main_factory.new(type=type))
 
 
-def kb_user_main(user_id: int):
+def kb_user_main(user_id: int, new_user=False):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {
         'ru': {
+            'try': 'Попробовать расчёт',
             'buy': 'Купить',
             'calc': 'Калькулятор',
             'account': 'Личный кабинет',
@@ -24,6 +25,7 @@ def kb_user_main(user_id: int):
             'site': 'Войти на сайт',
         },
         'en': {
+            'try': 'Try the calculation',
             'buy': 'Buy',
             'calc': 'Calculator',
             'account': 'Profile',
@@ -34,14 +36,19 @@ def kb_user_main(user_id: int):
 
     # btn1 = getButton("Рекомендации", 'signals')
     # btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
+    btn_try = getButton(f"✏️ {texts[lang]['try']}", 'try')
     btn_support = getButton(f"{texts[lang]['support']}", 'support')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
-    btn_account = getButton(f"👨 {texts[lang]['account']}", 'account')
+    btn_account = getButton(f"{texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
-    keyboard.add(btn_calc)
-    keyboard.add(btn_support, btn_account)
+    if new_user:
+        keyboard.add(btn_try)
+    else:
+        keyboard.add(btn_calc)
+        keyboard.add(btn_support, btn_account)
+
     return keyboard
 
 
@@ -83,25 +90,32 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
     keyboard.add(*buttons)
     return keyboard
 
+
 def kb_support(user_id: int, link: str):
     link = link.replace('@', '')
     lang = get_lang(user_id)
 
     texts = {
         'ru': {
-            'operator': 'Перейти к оператору',
+            'operator': 'Оператор',
+            'news': 'Новости',
         },
         'en': {
-            'operator': 'Contact the customer support',
+            'operator': 'Support',
+            'news': 'News',
         },
     }
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    news_link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+    btn_news = InlineKeyboardButton(
+        texts[lang]['news'], f'https://t.me/{news_link}'
+    )
 
     btn_link = InlineKeyboardButton(
         texts[lang]['operator'], f'https://t.me/{link}'
     )
     btn_back = getButton(back_txt(lang), 'main')
 
-    keyboard.add(btn_link, btn_back)
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_link, btn_news, btn_back)
     return keyboard

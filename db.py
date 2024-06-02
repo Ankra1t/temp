@@ -877,6 +877,48 @@ class Database:
             self.connection.rollback()
             return []
 
+    def get_today_users(self) -> list[DictRow]:
+        now = get_datetime_now() + timedelta(hours=3)
+        start = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) - timedelta(hours=3)
+        end = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) + timedelta(days=1) - timedelta(hours=3)
+
+        query = 'SELECT * FROM users WHERE created_at > %s AND created_at < %s'
+        params = start, end
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return data
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return []
+
+    def get_today_users_count(self) -> int:
+        now = get_datetime_now() + timedelta(hours=3)
+        start = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) - timedelta(hours=3)
+        end = datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) + timedelta(days=1) - timedelta(hours=3)
+
+        query = 'SELECT * FROM users WHERE created_at > %s AND created_at < %s'
+        params = start, end
+
+        try:
+            self.curs.execute(query, params)
+            data = self.curs.fetchall()
+            return len(data)
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return 0
+
     def check_tg_user_tables(self, id: int):
         query = 'SELECT * FROM \"BotSettings\" WHERE "userId" = %s'
         query2 = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s'
@@ -902,9 +944,15 @@ class Database:
 
         currency = None
         if market == 'crypto':
-            currency = 'USDT'
-
-        params = id, market, currency
+            query = (
+                'INSERT INTO tgcalc_user_settings '
+                '(user_id, market, base_currency, base_deposit, base_risk, '
+                'risk_is_percent) VALUES (%s, %s, %s, %s, %s, %s)'
+            )
+            params = id, market, 'USDT', 5000, 1, True
+        else:
+            query = 'INSERT INTO tgcalc_user_settings (user_id, market) VALUES (%s, %s)'
+            params = id, market
 
         self.curs.execute(query, params)
         self.connection.commit()
@@ -1352,7 +1400,7 @@ class Database:
             self.connection.rollback()
             return default
 
-    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None) -> UserCalcSettings | None:
+    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None, is_create=True) -> UserCalcSettings | None:
         market = market or self.get_user_current_market(user_id)
 
         query = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s AND market = %s'
@@ -1362,11 +1410,11 @@ class Database:
             self.curs.execute(query, params)
 
             data = self.curs.fetchone()
-            if data is None:
+            if is_create and data is None:
                 self.create_tg_user_settings(user_id, market)
                 return self.get_calc_user_settings(user_id)
 
-            return self._data_to_user_calc(data)
+            return self._data_to_user_calc(data) if data is not None else None
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()

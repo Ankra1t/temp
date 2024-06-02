@@ -76,7 +76,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
         btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
         btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
         buttons.append(btn_stats)
-        buttons.append(btn_buy)
+        # buttons.append(btn_buy)
     else:
         kb = kb_calc_result(user_id, stat_id, saved)
         buttons_rows = kb.keyboard
@@ -85,4 +85,26 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             keyboard.add(*row, row_width=kb.row_width)
 
     keyboard.add(*buttons)
+    return keyboard
+
+
+def kb_after_first_settings(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'calc': 'Новый расчет',
+            'settings': 'Настройки',
+        },
+        'en': {
+            'calc': 'New calculation',
+            'settings': 'Settings',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('⌨️ ' + texts[lang]['calc'], 'calc'),
+        getButton('⚙️ ' + texts[lang]['settings'], 'settings'),
+    )
     return keyboard

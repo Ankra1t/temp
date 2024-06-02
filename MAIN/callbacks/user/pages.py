@@ -2,10 +2,13 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.utils import edit_message
-from db import db
+from CALCULATE.callbacks import kb_choose_lang
+from CALCULATE.common.messages import msg_choose_lang
 from Classes import text_editor
 from AuthRoles import get_site_code
+from common.utils import edit_message
+from db import db
+from data.data import liteDb
 
 from config_logger import logger
 
@@ -24,13 +27,13 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     bot.delete_state(user_id, chat_id)
 
-    if not new_user and message.text is not None and len(message.text.split()) == 2:
-        _, code = message.text.split()
-        if code == 'site':
-            send_site_code(bot, message, user_id, True)
-            return
+    # if not new_user and message.text is not None and len(message.text.split()) == 2:
+    #     _, code = message.text.split()
+    #     if code == 'site':
+    #         send_site_code(bot, message, user_id, True)
+    #         return
 
-    keyboard = kb_user_main(user_id)
+    keyboard = kb_user_main(user_id, new_user)
 
     if not new_user:
         text = text_editor.get_text(
@@ -49,19 +52,10 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
             )
 
     else:
-        text = text_editor.get_text(user_id, 'welcome_user')
-        media = text_editor.get_media_id(user_id, 'welcome_user')
-
-        if media != '':
-            bot.send_animation(
-                chat_id, media,
-                reply_markup=keyboard
-            )
-        else:
-            bot.send_message(
-                chat_id, text,
-                reply_markup=keyboard
-            )
+        bot.send_message(
+            chat_id, msg_choose_lang(user_id),
+            reply_markup=kb_choose_lang(user_id, True)
+        )
 
 
 def send_user_education(bot: TeleBot, message: Message, user_id: int):
@@ -93,6 +87,7 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     referals = len(db.get_user_referals(user_db_id))
@@ -157,6 +152,7 @@ def send_user_params(bot: TeleBot, message: Message, user_id: int, is_first=Fals
     mes_id = message.id
 
     user = db.get_user_by_tg_id(user_id)
+    liteDb.addPagesCount(user_id)
 
     if user is not None:
         text = msg_user_params(user_id, user)

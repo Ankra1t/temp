@@ -1,10 +1,12 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from CALCULATE.callbacks.utils import choose_calculate_step
+from CALCULATE.callbacks.utils import choose_calculate_step, choose_first_calculate_step
 
+from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from db import db, LANGUAGES
+from data.data import liteDb
 from Classes import text_editor
 
 from common.utils import delete_message, get_lang, set_state_data
@@ -166,7 +168,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             if f'_{lang}' in type:
                 is_edit_lang = True
                 db.set_user_lang(user_db_id, lang)
-                send_settings(bot, call.message, user_id)
+
+                if 'first' in type:
+                    user_db_id = db.get_user_id_by_tg_id(user_id)
+                    u_base = db.get_calc_user_settings(user_db_id)
+                    market = u_base.market if (u_base is not None) else 'crypto'
+
+                    bot.delete_message(chat_id, mes_id)
+                    choose_first_calculate_step(
+                        bot, user_id, call.message, market, is_try=True
+                    )
+                else:
+                    send_settings(bot, call.message, user_id)
+
 
         if not is_edit_lang:
             bot.edit_message_text(
@@ -401,6 +415,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             user_db_id,
             'text' if cur_calc_output == 'photo' else 'photo'
         )
+        send_settings(bot, call.message, user_id)
+
+    if type == 'set_first_settings':
+        bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+        bot.edit_message_reply_markup(
+            chat_id, mes_id, reply_markup=None
+        )
+        bot.send_message(
+            chat_id, msg_enter_deposit(user_id),
+        )
+
+    if type == 'set_risk_update':
+        liteDb.reverseRiskUpdate(user_id)
         send_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)

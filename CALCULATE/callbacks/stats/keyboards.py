@@ -58,13 +58,13 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     texts = {
         'ru': {
-            'save': 'Результат сделки',
+            'save': 'Сохранить в статистику',
             'del': 'Удалить',
             'change': 'Изменить',
             'img': 'Прикрепить фото',
         },
         'en': {
-            'save': 'Deal result',
+            'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
             'img': 'Attach image',

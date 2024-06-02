@@ -30,7 +30,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
+def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk_update=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -43,6 +43,10 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
             'calc_output': 'Вывод расчета: ' + ('текстом' if cur_calc_output == 'photo' else 'картинкой'),
+
+            'on': 'Вкл.',
+            'off': 'Выкл.',
+            'is_risk_update': 'изменение риска'
         },
         'en': {
             'base': 'Base values',
@@ -54,6 +58,10 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
             'calc_output': 'Calc output: ' + ('in text' if cur_calc_output == 'photo' else 'in image'),
+
+            'on': 'On',
+            'off': 'Off',
+            'is_risk_update': 'risk update'
         }
     }
 
@@ -76,11 +84,17 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo']):
     btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
     btn_back = getButton(back_txt(lang), 'go_main')
 
+    btn_risk_update = getButton(
+        f'{texts[lang]["off" if is_risk_update else "on"]} {texts[lang]["is_risk_update"]}',
+        'set_risk_update'
+    )
+
     keyboard.add(btn_market, btn_deposit_update)
     keyboard.add(btn_base, btn_summury_profit)
     keyboard.add(btn_style, btn_trading_type)
     keyboard.add(btn_lang, btn_reset)
     keyboard.add(btn_output)
+    keyboard.add(btn_risk_update)
     keyboard.add(btn_back)
     return keyboard
 
@@ -223,12 +237,12 @@ def kb_change_market(user_id: int):
     return keyboard
 
 
-def kb_choose_lang(user_id: int):
+def kb_choose_lang(user_id: int, is_first=False):
     lang = get_lang(user_id)
     texts = {
         'ru': {
             'ru': 'Русский',
-            'en': 'Английский',
+            'en': 'English',
         },
         'en': {
             'ru': 'Russian',
@@ -236,14 +250,17 @@ def kb_choose_lang(user_id: int):
         }
     }
 
+    first = 'first' if is_first else ''
+
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', 'choose_lang_ru')
-    btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', 'choose_lang_en')
-    btn_back = getButton(cancel_txt(lang), 'go_settings')
+    btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', f'{first}_choose_lang_ru')
+    btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', f'{first}_choose_lang_en')
 
     keyboard.add(btn1, btn2)
-    keyboard.add(btn_back)
+    if not is_first:
+        keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
+
     return keyboard
 
 
@@ -586,4 +603,19 @@ def kb_trading_type(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_margin, btn_spot)
     keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_first_calc_info(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Настроить свой калькулятор',
+        'en': 'Set up your calculator',
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(f'⚙️ {texts[lang]}', 'set_first_settings'),
+    )
     return keyboard

@@ -12,3 +12,8 @@ class SettingsState(StatesGroup):
 
     summury_profit = State()
     splitting = State()
+
+
+class FirstCalcState(StatesGroup):
+    deposit = State()
+    risk = State()

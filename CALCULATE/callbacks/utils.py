@@ -2,18 +2,19 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from Classes import pay_guard
+from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
 from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
-from .settings.keyboards import kb_change_currency, kb_trading_style
+from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_calculate, msg_enter_currency, msg_enter_deposit,
+    msg_calculate_test, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
-    msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
+    msg_enter_stop_loss, msg_enter_tool, msg_welcome
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 
@@ -66,11 +67,13 @@ def choose_calculate_step(
         currency = data.get('currency')
         risk = data.get('risk')
         updated_risk = data.get('updated_risk')
+        is_try = data.get('is_try', False)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    text = msg_calculate(bot, user_id, chat_id)
+    # text = msg_calculate(bot, user_id, chat_id, is_try)
+    text = ''
     keyboard = kb_calc_cancel(user_id)
 
 
@@ -87,7 +90,7 @@ def choose_calculate_step(
         keyboard = kb_pair(user_id)
 
     elif calc_type != 'forex' and tool is None:
-        text += msg_enter_tool(user_id)
+        text += msg_enter_tool(user_id, calc_type)
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
@@ -144,14 +147,22 @@ def choose_calculate_step(
         edit_to = names[lang]['sl']
         state = CalculateState.stop_loss
 
+    if is_try:
+        keyboard = None
+        text = msg_calculate_test(bot, user_id, chat_id)
+        if open_price is None:
+            bot.send_message(
+                chat_id, msg_welcome(user_id)
+            )
+
     bot.set_state(user_id, state, chat_id)
 
-    new_mes_id = mes_id
     if is_edit:
         bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard,
         )
+        new_mes_id = mes_id
     else:
         new_mes = bot.send_message(
             user_id, text,
@@ -159,15 +170,21 @@ def choose_calculate_step(
         )
         new_mes_id = new_mes.id
 
-    set_state_data(bot, user_id, chat_id, {
-                   'del_mes_id': new_mes_id, 'edit_mes': edit_to})
+    if not is_try:
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes_id,
+                'edit_mes': edit_to
+            }
+        )
 
 
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,
     type: MARKETS_TYPE,
     is_edit=False,
-    is_continue=False
+    is_continue=False,
+    is_try=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -216,15 +233,19 @@ def choose_first_calculate_step(
     else:
         bot.set_state(user_id, CalculateState.tool, chat_id)
 
+    liteDb.addStartCalcCount(user_id)
+
     set_state_data(
         bot, user_id, chat_id, {
             'calc_type': type,
 
             'trading_style': style,
             'trading_type': trading_type,
-            'deposit': deposit,
+            'deposit': deposit if not is_try else 5000,
             'currency': currency,
-            'risk': risk,
+            'risk': risk if not is_try else [1, True],
+            'is_try': is_try,
+            'tool': 'BTC/USDT' if is_try else None
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

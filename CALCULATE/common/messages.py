@@ -15,7 +15,7 @@ TAB = '   '
 
 market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
     'ru': {
-        'crypto': 'Криптовалюта',
+        'crypto': 'Криптовалюты',
         'paper': 'Акции',
         'forex': 'Форекс',
         'RF': 'РФ',
@@ -145,7 +145,7 @@ def msg_main_freeze(user_id: int, freeze_dt: datetime):
 """
 
 
-def msg_settings(user_id: int):
+def msg_settings(user_id: int, is_risk_update=False):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -178,6 +178,8 @@ def msg_settings(user_id: int):
             'output': 'Вывод расчета',
             'by_text': 'текстом',
             'by_image': 'картинкой',
+
+            'is_risk_update': 'Изменение риска во время расчета'
         },
         'en': {
             'name': 'Settings',
@@ -200,6 +202,8 @@ def msg_settings(user_id: int):
             'output': 'Calc output',
             'by_text': 'in text',
             'by_image': 'in image',
+
+            'is_risk_update': 'Risk change during calculation'
         },
     }
 
@@ -239,7 +243,8 @@ def msg_settings(user_id: int):
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
 {POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
 
-{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>"""
+{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>
+{POINT} {texts[lang]["is_risk_update"]}: <b>{texts[lang]['on'] if is_risk_update else texts[lang]['off']}</b>"""
 
 
 def msg_deposit(user_id: int):
@@ -479,25 +484,34 @@ def msg_freeze_calc(user_id: int, risk_value: str):
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
+    if lang == 'ru':
+        return f"""
+<b>Проведите тестовый расчет</b>
+и получите результат:
+
+- объем покупки/продажи
+- сумма покупки
+- где фиксировать прибыль
+- сохранение live-статистики"""
+    else:
+        return """<b>Perform a test calculation</b>
+and get the result:
+
+- purchase/sale volume
+- purchase amount
+- where to fix profits
+- saving live statistics"""
+
+
+def msg_after_first_settings(user_id: int):
+    lang = get_lang(user_id)
+
     texts = {
-        'ru': {
-            '1': 'Приветствую, трейдер',
-            '2': 'Добро пожаловать в мир точных расчетов и успешных сделок! Здесь ты найдешь своего верного компаньона – Калькулятор трейдинга. 📈✨ Готов покорять финансовые вершины?',
-            '3': 'Введем твои базовые данные? 🌐📊'
-        },
-        'en': {
-            '1': 'Greetings, trader',
-            '2': 'Welcome to the realm of precise calculations and successful trades! Here, you\'ll discover your reliable companion – the Trading Calculator. 📈✨ Ready to conquer financial peaks?',
-            '3': 'Let\'s enter your basic data?🌐📊'
-        }
+        'ru': '<b>Совершите</b> первый расчет или продолжите настройку калькулятора',
+        'en': '<b>Make</b> the first calculation or continue setting up the calculator',
     }
 
-    return f"""
-⚡️ {texts[lang]["1"]}! 🚀
-{texts[lang]["2"]}
-
-{texts[lang]["3"]}
-"""
+    return texts[lang]
 
 
 def msg_success_base_set(user_id: int):
@@ -572,8 +586,8 @@ def msg_pair_error(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валютную пару текстом',
-        'en': 'Enter the currency pair in words'
+        'ru': 'Введите валютную пару в формате XXX/XXX (только латиницей)',
+        'en': 'Enter the currency pair in XXX/XXX (only in Latin)'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -623,6 +637,17 @@ def msg_text_error(user_id: int):
     texts = {
         'ru': 'Введите значение текстом',
         'en': 'Enter the value in words'
+    }
+
+    return f'❗️ {texts[lang]}:'
+
+
+def msg_latin_error(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Допустимы только латинские символы',
+        'en': 'Only latin characters are allowed'
     }
 
     return f'❗️ {texts[lang]}:'
@@ -691,7 +716,7 @@ def msg_splitting_error(user_id: int, error: Literal['digit', 'sum']):
 
 
 # Калькулятор
-def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
+def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
     lang = get_lang(user_id)
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -747,9 +772,10 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
     text = ''
 
     if type == 'forex' and pair != '':
-        text += f'<b><u>{pair}</u></b>\n'
+        text += f'<b><u>{pair}</u></b>'
     elif type == 'crypto' and tool != '':
-        text += f'<b><u>{tool}</u></b>\n'
+        text += f'<b><u>{tool}</u></b>'
+    text += f' - {market_translates[lang].get(type, "")} {"(demo)" if is_try else ""}\n\n'
 
     for el in type_list:
         item = vars_dict[el]
@@ -765,12 +791,50 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int):
                     '\n'
                 ))
 
-    text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+    if not is_try:
+        text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+
     text += '\n'
     return text
 
 
-def msg_calculation(user_id: int, calc: Calculation):
+def msg_calculate_test(bot: TeleBot, user_id: int, chat_id: int):
+    lang = get_lang(user_id)
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        open_price = data.get('open_price')
+
+    if lang == 'ru':
+        if open_price is None:
+            return f"""<b>Пример расчета:</b>
+
+Инструмент: <b>BTC/USDT</b>
+Рынок: <b>Криптовалюта</b>
+Депозит: <b>5000 USDT</b>
+Риск на сделку: <b>50 USDT</b>
+
+👉 Введите <b>цену открытия</b> сделки:"""
+        else:
+            return """👉 Введите цену <b>STOP LOSS</b>:
+
+<i>Stop Loss - цена, при которой трейдер фиксирует свой убыток</i>"""
+    else:
+        if open_price is None:
+            return f"""<b>Test calculation:</b>
+
+Tool: <b>BTC/USDT</b>
+Market: <b>Crypto</b>
+Deposit: <b>5000 USDT</b>
+Deal risk: <b>50 USDT</b>
+
+👉 Enter deal <b>open price</b>:"""
+        else:
+            return """👉 enter <b>STOP LOSS</b> price:
+
+<i>Stop Loss - the price at which the trader fixes his loss</i>"""
+
+
+def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     lang = get_lang(user_id)
 
     is_saved = calc.in_stat
@@ -786,7 +850,7 @@ def msg_calculation(user_id: int, calc: Calculation):
             'conclusion': 'Тейк-профит',
             'profit': 'Прибыль' if not is_saved else 'Прибыль от сделки',
             'buy': 'Купите' if not is_saved else 'Было куплено',
-            'sum': 'Сумма',
+            'sum': 'Сумма покупки',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
 
@@ -799,6 +863,8 @@ def msg_calculation(user_id: int, calc: Calculation):
 
             'takes': 'Тейки',
             'stops': 'Стопы',
+
+            'to': 'к',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -822,8 +888,20 @@ def msg_calculation(user_id: int, calc: Calculation):
 
             'takes': 'Take-profits',
             'stops': 'Stop-losses',
+
+            'to': 'to',
         }
     }
+
+    attention = ''
+    count_zero = 0
+    for el in calc_result.tp_values:
+        if el == 0:
+            count_zero += 1
+
+    if count_zero > calc_result.tp_count // 2:
+        attention = '\n⚠️ При текущих значениях стоп-лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
+        attention+= '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
 
     if calc.market == 'crypto':
         tool_name = texts[lang]["coin"]
@@ -844,9 +922,11 @@ def msg_calculation(user_id: int, calc: Calculation):
         trading_currency = calc.forex_info.pair[1]
         tool = ''.join(calc.forex_info.pair)
 
-    trading_style = ''
-    if calc.trading_style is not None:
-        trading_style = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+    trading_style_type = ''
+    if not is_try:
+        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}\n'
+        if calc.trading_style is not None:
+            trading_style_type = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -878,7 +958,7 @@ def msg_calculation(user_id: int, calc: Calculation):
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
-            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} к 1)'
+            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if calc_result.profit_rate_values is not None:
                 rate = calc_result.profit_rate_values[i]
@@ -891,20 +971,19 @@ def msg_calculation(user_id: int, calc: Calculation):
 {conclusion}"""
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
-        '',
+        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
+        attention,
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
-        '',
         f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
         f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        '',
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
         '',
-        f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}',
-        trading_style
+        trading_style_type
     ))
 
 
@@ -1139,54 +1218,87 @@ def msg_enter_email(user_id: int):
         'en': 'Enter <b>email</b> to receive the receipt after payment',
     }
 
-    return f'✍ {texts[lang]}:'
+    return f'👉 {texts[lang]}:'
 
 
-def msg_enter_tool(user_id: int):
+def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto'):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите Ваш инструмент',
-        'en': 'Enter Your tool'
+        'ru': {
+            'main': 'Введите Ваш <b>инструмент</b>',
+            'crypto': '<i>(например BTC или DOGE)</i>',
+            'RF': '<i>(например GAZP или SBER)</i>',
+            'USA': '<i>(например MCD или AMZN)</i>',
+        },
+        'en': {
+            'main': 'Enter Your <b>tool</b>',
+            'crypto': '<i>(ex. BTC or DOGE)</i>',
+            'RF': '<i>(ex. GAZP or SBER)</i>',
+            'USA': '<i>(ex. MCD or AMZN)</i>',
+        },
     }
 
-    return f'✍ {texts[lang]}:'
+    info = ''
+    if market in ('crypto', 'RF', 'USA'):
+        info = '\n\n' + texts[lang][market]
+
+    return f'👉 {texts[lang]["main"]}:  {info}'
 
 
 def msg_enter_pair_price(user_id: int, pair: str):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите цену пары',
-        'en': 'Enter price of pair'
+        'ru': 'Введите <b>цену пары</b>',
+        'en': 'Enter <b>price of pair</b>'
     }
 
-    return f'✍ {texts[lang]} <b>{pair}</b>'
+    return f'👉 {texts[lang]} <b>{pair}</b>'
 
 
 def msg_enter_deposit(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите размер депозита',
-        'en': 'Enter the deposit size'
+        'ru': 'Введите <b>размер депозита</b>',
+        'en': 'Enter the <b>deposit size</b>'
     }
 
-    return f'✍ {texts[lang]}:'
+    return f'👉 {texts[lang]}:'
 
 
 def msg_enter_risk_percent(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите <u>риск</u> на сделку',
-        'en': 'Enter <u>risk</u> of the deal',
+        'ru': 'Введите <b>риск</b> на сделку',
+        'en': 'Enter <b>risk</b> of the deal',
     }
 
-    return f"""✍ {texts[lang]}
+    return f"""👉 {texts[lang]}
 
 {get_risk_annotation(lang)}
 """
+
+
+def msg_enter_first_risk(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Введите <b>% риска</b> на сделку',
+            'info': '<i>Чаще всего трейдеры рискуют не более <b>1%</b> от депозита на <u>каждую</u> сделку</i>'
+        },
+        'en': {
+            'main': 'Enter the <b>% of risk</b> per trade',
+            'info': '<i>Most often, traders risk no more than <b>1%</b> of the deposit on <u>each</u> transaction</i>'
+        }
+    }
+
+    return f"""👉 {texts[lang]['main']}
+
+{texts[lang]['info']}"""
 
 
 def msg_enter_day_risk(user_id: int):
@@ -1194,12 +1306,12 @@ def msg_enter_day_risk(user_id: int):
 
     texts = {
         'ru': {
-            'main': 'Введите <u>риск на день</u>',
+            'main': 'Введите <b>риск на день</b>',
             'desc1': '"<b>Риск на день</b>" - процент или сумма капитала, превышая которую, система будет напоминать об этом.',
             'desc2': 'Трейдинг строится на систематической торговле, и риски на день/неделю/месяц нужно контролировать',
         },
         'en': {
-            'main': 'Enter <u>daily risk</u>',
+            'main': 'Enter <b>daily risk</b>',
             'desc1': '"<b>Daily risk</b>" - the percentage or amount of capital, when exceeding which the system will remind you about it.',
             'desc2': 'Trading is based on systematic deals, and the risks for the day/week/month are needed to be controlled',
         },
@@ -1208,7 +1320,7 @@ def msg_enter_day_risk(user_id: int):
     return f""" {texts[lang]['desc1']}
 {texts[lang]['desc2']}
 
-✍ {texts[lang]['main']}
+👉 {texts[lang]['main']}
 {get_risk_annotation(lang)}
 """
 
@@ -1218,16 +1330,16 @@ def msg_enter_trading_style(user_id: int):
 
     texts = {
         'ru': {
-            'choose': 'Выберите <u>стиль торговли</u> из списка ниже',
+            'choose': 'Выберите <b>стиль торговли</b> из списка ниже',
             'enter': 'Либо введите <i>свой вариант</i>'
         },
         'en': {
-            'choose': 'Select <u>trading style</u> from the list below',
+            'choose': 'Select <b>trading style</b> from the list below',
             'enter': 'Or enter <i>your option</i>'
         },
     }
 
-    return f"""✍ {texts[lang]['choose']}.
+    return f"""👉 {texts[lang]['choose']}.
 {texts[lang]['enter']}:
 """
 
@@ -1237,16 +1349,16 @@ def msg_enter_round_count(user_id: int):
 
     texts = {
         'ru': {
-            'main': 'Введите <u>количество знаков</u> после запятой',
+            'main': 'Введите <b>количество знаков</b> после запятой',
             'max': '<i>Максимум</i>: <b>5</b>'
         },
         'en': {
-            'main': 'Enter the <u>number of signs</u> after dot',
+            'main': 'Enter the <b>number of signs</b> after dot',
             'max': '<i>Max</i>: <b>5</b>'
         },
     }
 
-    return f"""✍ {texts[lang]['main']}
+    return f"""👉 {texts[lang]['main']}
 {texts[lang]['max']}
 """
 
@@ -1255,44 +1367,44 @@ def msg_enter_currency(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валюту или выберите из списка',
-        'en': 'Enter the currency or select from the list below'
+        'ru': 'Введите <b>валюту</b> или выберите из списка',
+        'en': 'Enter the <b>currency</b> or select from the list below'
     }
 
-    return f'✍ {texts[lang]}:'
+    return f'👉 {texts[lang]}:'
 
 
 def msg_enter_pair(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите валютную пару',
-        'en': 'Enter the currency pair'
+        'ru': 'Введите <b>валютную пару</b>',
+        'en': 'Enter the <b>currency pair</b>'
     }
 
-    return f"""✍ {texts[lang]} (XXX XXX):"""
+    return f"""👉 {texts[lang]} (XXX XXX):"""
 
 
 def msg_enter_open_price(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите цену открытия сделки',
-        'en': 'Enter the price of the deal opening'
+        'ru': 'Введите <b>цену открытия</b> сделки',
+        'en': 'Enter the <b>opening price</b> of the deal'
     }
 
-    return f'✍ {texts[lang]}:'
+    return f'👉 {texts[lang]}:'
 
 
 def msg_enter_stop_loss(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        text = 'Введите цену стоп-лосса:'
+        text = 'Введите цену <b>стоп-лосса</b>:'
     else:
-        text = 'Enter the stop-loss price'
+        text = 'Enter the <b>stop loss</b> price'
 
-    return f'✍ {text}'
+    return f'👉 {text}'
 
 
 def msg_enter_profit_minus(user_id: int):
@@ -1303,7 +1415,7 @@ def msg_enter_profit_minus(user_id: int):
     else:
         text = 'Enter <b>loss</b> of this deal:'
 
-    return f'✍ {text}'
+    return f'👉 {text}'
 
 
 def msg_enter_profit_sum(user_id: int):
@@ -1314,7 +1426,7 @@ def msg_enter_profit_sum(user_id: int):
     else:
         text = 'Enter <b>profit</b> of this deal:'
 
-    return f'✍ {text}'
+    return f'👉 {text}'
 
 
 def msg_choose_lang(user_id: int):

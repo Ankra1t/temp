@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardButton
 from common.dt import get_str_by_datetime
 
+from data.data import liteDb
 from db import LANGUAGES_TYPE, db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
@@ -61,7 +62,7 @@ def get_print_signal_info(open_price: float, stop_loss: float):
 
 
 def get_short_user_info(user: UserInfo):
-    if user.tg_username != '':
+    if user.tg_username != '-' and user.tg_username != '':
         nik = f'| @{user.tg_username} '
     elif user.tg_id > 0:
         nik = f'| {user.tg_id} '
@@ -69,8 +70,21 @@ def get_short_user_info(user: UserInfo):
         nik = ''
 
     ban = '| (BAN)' if user.ban == 1 else ''
-    uses_count = f' | <i>{user.uses_count}</i>' if user.uses_count is not None else ''
 
+    is_set_settings = 0
+    calcs_count = len(db.get_calculations_by_user(user.id))
+
+    if calcs_count > 1:
+        is_set_settings = 1
+    else:
+        markets = ('forex', 'RF')
+        for el in markets:
+            calc_settings = db.get_calc_user_settings(user.id, el, False)
+            if calc_settings is not None and calc_settings.deposit is not None and calc_settings.risk is not None:
+                is_set_settings = 1
+                break
+
+    is_tried = liteDb.getFirstTryUser(user.tg_id)
     user_subsribe = db.get_current_subscribe_user(user.id)
 
     if user_subsribe is None:
@@ -86,7 +100,7 @@ def get_short_user_info(user: UserInfo):
         info = f'Подписка до: {sub_show}'
 
     user_show = (
-        f'{user.id} {nik}<b>{ban}</b>{uses_count}'
+        f'{user.id} {nik}<b>{ban}</b> | {is_tried} | {is_set_settings}'
         f'\n{info}'
         f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
     )

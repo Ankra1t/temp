@@ -5,11 +5,14 @@ from telebot import TeleBot
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, set_state_data
 from db import db
+from data.data import liteDb
 
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_deposit, msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses, msg_settings, msg_manual,
+    msg_calculation, msg_deposit,
+    msg_freeze_calc, msg_main, msg_main_freeze,
+    msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
 )
 
@@ -18,7 +21,7 @@ from models import MARKETS_TYPE, Calculation
 
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_change_deposit, kb_settings, kb_summury_profit
+from .settings.keyboards import kb_change_deposit, kb_first_calc_info, kb_settings, kb_summury_profit
 from .stats.keyboards import kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
@@ -28,6 +31,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     is_rus = bot.get_chat_member(chat_id, user_id).user.language_code == 'ru'
     is_valid_use = pay_guard.valid_use_calc(user_id, bot)
@@ -63,12 +67,14 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
+    is_risk_update = liteDb.getRiskUpdate(user_id)
 
-    msg = msg_settings(user_id)
-    markup = kb_settings(user_id, calc_output)
+    msg = msg_settings(user_id, is_risk_update)
+    markup = kb_settings(user_id, calc_output, is_risk_update)
 
     if is_first:
         bot.send_message(
@@ -157,6 +163,7 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
+    liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calcs = db.get_calculations_by_user(user_db_id)
@@ -263,6 +270,7 @@ def send_calculation(
     user_id: int,
     calc: Calculation,
     is_first=False,
+    is_try=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -273,10 +281,13 @@ def send_calculation(
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
-    kb = kb_main(user_id, is_access, calc)
 
-    if calc_output == 'text':
-        text = msg_calculation(user_id, calc)
+    kb = kb_main(user_id, is_access, calc)
+    if is_try:
+        kb = kb_first_calc_info(user_id)
+
+    if calc_output == 'text' or is_try:
+        text = msg_calculation(user_id, calc, is_try)
 
         if is_first:
             bot.send_message(chat_id, text, reply_markup=kb)

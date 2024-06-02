@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from config_logger import logger
 from db import db
 from AuthRoles import check_registrate
-from CALCULATE.callbacks import send_main
+from CALCULATE.callbacks import send_main, choose_first_calculate_step
 from CALCULATE.common.messages import msg_support
 from MAIN.callbacks import (
     send_user_education, send_user_account, send_site_code,
@@ -41,6 +41,16 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'calculator':
         send_main(call.message, bot, user_id)
+
+    if type == 'try':
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        u_base = db.get_calc_user_settings(user_db_id)
+        market = u_base.market if (u_base is not None) else 'crypto'
+
+        bot.delete_message(chat_id, mes_id)
+        choose_first_calculate_step(
+            bot, user_id, call.message, market, is_try=True
+        )
 
     if type == 'signals':
         send_in_development(bot, call.message)
