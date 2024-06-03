@@ -84,7 +84,7 @@ class Payments(object):
             str(iv.invoice_id),
             iv.pay_url,
             iv.amount,
-            'wait_payments',
+            'WAIT',
             iv.asset,
             tariff.name,
             tariff.duration_days,

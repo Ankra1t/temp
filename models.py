@@ -72,7 +72,7 @@ class Price:
         duration: int,
         price: int,
         currency: str,
-        switch_active: int,
+        switch_active: bool,
         type_product: PRODUCT_TYPE,
         description: str,
         id: Optional[int] = None,
@@ -154,7 +154,7 @@ class UserInfo(BaseModel):
     nickname: Optional[str]
     refer_id: Optional[int]
     refer_sum: int
-    ban: int
+    ban: bool
     registration_dt: datetime
     uses_count: Optional[int]
     block: bool = False

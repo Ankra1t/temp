@@ -52,7 +52,7 @@ class GuardPaymentAccess():
 
     # Платные подписки
     def set_paid_subscribe(self, transaction: Transactions):
-        """Добавить платную подписку для пользователя по результату оплаты (транзакция paid)"""
+        """Добавить платную подписку для пользователя по результату оплаты (транзакция PAID)"""
         subscribe_days = transaction.duration_days
 
         finish_date = get_datetime_now() + timedelta(days=subscribe_days)
@@ -77,7 +77,7 @@ class GuardPaymentAccess():
 
     def get_users_note_fin_paid(self):
         """Получаем платных пользователей у которых закончилась Платная подписка - для рассылки уведомлений"""
-        return db.get_users_finished_subscribe('paid')
+        return db.get_users_finished_subscribe('PAID')
 
     def get_paid_users(self):
         """Получаем пользователей с активными подписками для платной рассылки рекомендаций"""
@@ -142,7 +142,7 @@ class GuardPaymentAccess():
         """Получить пользователей для рассылки рекомендаций"""
 
         # Деактивируем подписки с просроченной датой действия
-        db.check_unactive_subscribes('paid')
+        db.check_unactive_subscribes('PAID')
         db.check_unactive_subscribes('trial')
 
         # Получить пользователей с платной подпиской рекомендации или рекомендации+калькулятор
@@ -158,7 +158,7 @@ class GuardPaymentAccess():
         db.check_unactive_subscribes('trial')
 
     def set_paid_subscribe_unactive_many_users(self):
-        db.check_unactive_subscribes('paid')
+        db.check_unactive_subscribes('PAID')
 
     def set_subscribe_unactive(self, subscribe_id: int):
         """Убираем активность у подписки по subscribe_id """

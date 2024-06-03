@@ -11,7 +11,7 @@ class TariffManager(object):
         pass
 
     def admin_discount_list(self, bot: TeleBot, message: types.Message, type_discount='active'):
-        list = db.get_prices(1)
+        list = db.get_prices(True)
         count = 0
         if len(list) == 0:
             bot.send_message(

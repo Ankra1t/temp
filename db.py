@@ -17,7 +17,7 @@ from models import (
     MARKETS_TYPE
 )
 
-SUBSCRIBE_TYPE = Literal['trial', 'paid']
+SUBSCRIBE_TYPE = Literal['trial', 'PAID']
 BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
@@ -74,7 +74,7 @@ class Database:
             currency_crypto=data.get('currencyCrypto'),
         )
 
-    def get_prices(self, active: int = 1, switch_active: int | None = None) -> list[Price]:
+    def get_prices(self, active: bool = True, switch_active: bool | None = None) -> list[Price]:
         """Получение тарифа"""
         self.check_tariffs_datetime()
 
@@ -97,7 +97,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_prices_by_product(self, product_type: str, active: int, switch_active: int | None = None) -> list[Price]:
+    def get_prices_by_product(self, product_type: str, active: bool, switch_active: bool | None = None) -> list[Price]:
         """Получение тарифа по типу продукта"""
         self.check_tariffs_datetime()
 
@@ -118,7 +118,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_price_by_id(self, id: int, switch_active: int | None = None):
+    def get_price_by_id(self, id: int, switch_active: bool | None = None):
         if switch_active is None:
             query = "SELECT * FROM \"Tariff\" WHERE id = %s"
             params = (id,)
@@ -294,7 +294,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    def switch_tariff(self, tariff_id: int, switch_active: int):
+    def switch_tariff(self, tariff_id: int, switch_active: bool):
         """Включить или выключить тариф"""
         query = "UPDATE \"Tariff\" set \"switchActive\" = %s WHERE id = %s"
         params = (switch_active, tariff_id)
@@ -310,7 +310,7 @@ class Database:
 
     def set_findate_tariff(self, tariff_id: int, fin_date: datetime | None):
         """Установить дату окончания тарифа"""
-        query = "UPDATE \"Tariff\" set \"priceFindate\" = %s WHERE id = %s"
+        query = "UPDATE \"Tariff\" set \"tariffFindate\" = %s WHERE id = %s"
         params = (fin_date, tariff_id)
 
         try:
@@ -325,8 +325,8 @@ class Database:
     def check_tariffs_datetime(self):
         """Установить дату окончания тарифа"""
         now = get_datetime_now()
-        query_finish = "UPDATE \"Tariff\" set \"switchActive\" = %s, \"priceFindate\" = %s WHERE \"priceFindate\" < %s"
-        params_finish = (0, None, now)
+        query_finish = "UPDATE \"Tariff\" set \"switchActive\" = %s, \"tariffFindate\" = %s WHERE \"tariffFindate\" < %s"
+        params_finish = (False, None, now)
 
         query_discount = 'UPDATE \"Tariff\" set \"discountPercent\" = %s, \"discountFindate\" = %s WHERE \"discountFindate\" < %s'
         params_discount = (None, None, now)
@@ -401,7 +401,7 @@ class Database:
         query = (
             'SELECT u.* FROM \"User\" as u JOIN "Subscribe" as sub ON sub.\"userId\" = u.id '
             'WHERE sub."finishDt" < %s AND sub.active = %s '
-            f'AND sub."transactionId" is {"not" if type == "paid" else ""} NULL'
+            f'AND sub."transactionId" is {"not" if type == "PAID" else ""} NULL'
         )
         params = (datetime_now, True)
 
@@ -542,7 +542,7 @@ class Database:
             'AND (p."productType" = %s OR p."productType" = %s) '
             'AND u.ban = %s '
         )
-        params = ('paid', 'trial', 1, 'signals', 'calc_signals', ban, )
+        params = ('PAID', 'trial', 1, 'signals', 'calc_signals', ban, )
 
         try:
             self.curs.execute(query, params)
@@ -605,7 +605,7 @@ class Database:
             'SELECT * FROM "Transaction" '
             "WHERE code = %s AND status = %s"
         )
-        params = (code, 'wait_payments')
+        params = (code, 'WAIT')
 
         try:
             self.curs.execute(query, params)
@@ -621,7 +621,7 @@ class Database:
         query = ('SELECT * FROM "Transaction" '
                  'WHERE "userId" = %s AND status = %s'
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (user_id, status, )
 
         try:
@@ -639,7 +639,7 @@ class Database:
         query = ('SELECT * FROM "Transaction" '
                  "WHERE status = %s"
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (status,)
 
         try:
@@ -655,7 +655,7 @@ class Database:
     def get_paid_users_count(self) -> int:  # TODO
         """Получить все оплаченные транзакции"""
         query = 'SELECT "userId" FROM "Transaction" WHERE status = %s GROUP BY "userId"'
-        params = ('paid',)
+        params = ('PAID',)
 
         try:
             self.curs.execute(query, params)
@@ -674,7 +674,7 @@ class Database:
                  'WHERE ("boughtAt" BETWEEN %s AND %s ) '
                  "AND status = %s "
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (start_date, fin_date, status, )
 
         try:
@@ -693,7 +693,7 @@ class Database:
                  'FROM "Transaction" '
                  'WHERE "productType" = %s AND status = %s '
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (product, status,)
 
         try:
@@ -711,7 +711,7 @@ class Database:
         query = ('SELECT sum(sum) FROM "Transaction" '
                  "WHERE status = %s"
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (status,)
 
         try:
@@ -729,7 +729,7 @@ class Database:
                  'WHERE ("boughtAt" BETWEEN %s AND %s ) '
                  "AND status = %s "
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (start_date, fin_date, status,)
 
         try:
@@ -748,7 +748,7 @@ class Database:
                  'WHERE "productType" = %s '
                  "AND status = %s "
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (product, status,)
 
         try:
@@ -763,7 +763,7 @@ class Database:
     def get_purchases_by_user(self, user_id: int) -> list[Purchase]:
         """Получение покупок пользователя"""
         query = 'SELECT * FROM "Transaction" WHERE "userId" = %s AND status = %s '
-        params = (user_id, 'paid',)
+        params = (user_id, 'PAID',)
 
         try:
             self.curs.execute(query, params)
@@ -800,7 +800,7 @@ class Database:
                  "t.status = %s "
                  "AND t.price_id = p.id"
                  )
-        status = 'paid'
+        status = 'PAID'
         params = (status,)
 
         try:
@@ -816,7 +816,7 @@ class Database:
     def success_transaction(self, id: int):
         datetime_now = get_datetime_now()
         query = 'UPDATE "Transaction" set status = %s, "boughtAt" = %s WHERE id = %s'
-        params = ('paid', datetime_now, id)
+        params = ('PAID', datetime_now, id)
 
         try:
             self.curs.execute(query, params)
@@ -851,7 +851,7 @@ class Database:
             tg_id=data.get('tgId'),
             tg_username=data.get('tgUsername') or '',
             refer_id=data.get('referId'),
-            ban=data.get('ban') or 0,
+            ban=data.get('ban') or False,
             registration_dt=data.get('createdAt') or datetime(2012, 12, 12),
             uses_count=data.get('usesCount'),
             block=data.get('isBlocked') or False,
@@ -886,7 +886,7 @@ class Database:
             now.year, now.month, now.day, 0, 0, 0, 0
         ) + timedelta(days=1) - timedelta(hours=3)
 
-        query = 'SELECT * FROM users WHERE created_at > %s AND created_at < %s'
+        query = 'SELECT * FROM "User" WHERE "createdAt" > %s AND "createdAt" < %s'
         params = start, end
 
         try:
@@ -897,27 +897,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return []
-
-    def get_today_users_count(self) -> int:
-        now = get_datetime_now() + timedelta(hours=3)
-        start = datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) - timedelta(hours=3)
-        end = datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) + timedelta(days=1) - timedelta(hours=3)
-
-        query = 'SELECT * FROM users WHERE created_at > %s AND created_at < %s'
-        params = start, end
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return len(data)
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return 0
 
     def check_tg_user_tables(self, id: int):
         query = 'SELECT * FROM \"BotSettings\" WHERE "userId" = %s'
@@ -1023,8 +1002,8 @@ class Database:
         """
         params = None
 
-        query = self.USER_INFO_QUERY + 'WHERE u.ban = 1 '
-        query += f"ORDER BY u.created_at {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
+        query = self.USER_INFO_QUERY + 'WHERE u.ban = true '
+        query += f'ORDER BY u."createdAt" {"ASC" if sort_by == "old" else "DESC"}, u.id ASC '
 
         if limit is not None:
             query += "LIMIT %s OFFSET %s "
@@ -1326,7 +1305,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_user_ban(self, id: int, ban: int):
+    def set_user_ban(self, id: int, ban: bool):
         query = 'UPDATE \"User\" set ban = %s WHERE id = %s'
         params = (ban, id)
 
@@ -1359,14 +1338,10 @@ class Database:
             risk_value, data.get('isRiskPercent')
         )
 
-        day_risk = None
-        if data.get('dayRisk') is not None:
-            value = str(data.get('dayRisk', ''))
-
-            is_percent = value.endswith('%')
-            value = value.replace('%', '')
-
-            day_risk = float(value), is_percent
+        day_risk_value = data.get('dayRisk')
+        day_risk = None if (day_risk_value is None) else (
+            day_risk_value, data.get('isDayRiskPercent')
+        )
 
         return UserCalcSettings(
             user_id=data.get('userId'),
@@ -1606,10 +1581,9 @@ class Database:
 
     def set_user_day_risk(self, user_id: int, value: float, is_percent=False):
         market = self.get_user_current_market(user_id)
-        result = f'{value}{"%" if is_percent else ""}'
 
-        query = 'UPDATE "CalcSettings" SET "dayRisk" = %s WHERE "userId" = %s AND market = %s'
-        params = (result, user_id, market)
+        query = 'UPDATE "CalcSettings" SET "dayRisk" = %s, "isDayRiskPercent" = %s WHERE "userId" = %s AND market = %s'
+        params = (value, is_percent, user_id, market)
 
         try:
             self.curs.execute(query, params)
@@ -1993,7 +1967,7 @@ class Database:
         )
 
     WORKER_QUERY = (
-        'SELECT w."userId" as id, w.role, u."tgId", u."tguserName" FROM "Admin" as w '
+        'SELECT w."userId" as id, w.role, u."tgId", u."tgUsername" FROM "Admin" as w '
         'LEFT JOIN \"User\" as u ON u.id = w."userId" '
     )
 
@@ -2196,7 +2170,7 @@ class Database:
             )
 
         query = """
-            INSERT INTO tgbot_posts (content, message_type, media, direct, sendDt, open_price, stop_loss, name, ticker)
+            INSERT INTO BotPost (message, "messageType", "mediaId", direct, "sendDt", "openPrice", stopLoss, name, ticker)
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (post.content, post.mes_type, post.media,
@@ -2262,7 +2236,7 @@ class Database:
         )
 
     def get_texts(self) -> list[Text]:
-        query = 'SELECT * FROM tgbot_texts'
+        query = 'SELECT * FROM "BotText"'
 
         try:
             self.curs.execute(query)
@@ -2274,7 +2248,7 @@ class Database:
             return []
 
     def get_text_by_name(self, name: str):
-        query = 'SELECT * FROM tgbot_texts WHERE name = %s'
+        query = 'SELECT * FROM "BotText" WHERE name = %s'
         params = (name,)
 
         try:
@@ -2292,9 +2266,9 @@ class Database:
 
         try:
             if check_text is None:
-                query = 'INSERT INTO tgbot_texts(message, message_type, name) VALUES(%s, %s, %s)'
+                query = 'INSERT INTO "BotText"(message, "messageType", name) VALUES(%s, %s, %s)'
             else:
-                query = 'UPDATE tgbot_texts SET message = %s, message_type = %s WHERE name = %s'
+                query = 'UPDATE "BotText" SET message = %s, "messageType" = %s WHERE name = %s'
 
             params = (text, mes_type, name)
 

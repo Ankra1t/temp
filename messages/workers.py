@@ -3,7 +3,6 @@ def admin_main_msg(
         count_with_sub: int,
         count_blocked: int,
         count_admins: int,
-        count_fut_post: int,
         count_today_users: int,
         count_first_tries: int
 ):
@@ -18,7 +17,6 @@ def admin_main_msg(
 Из них провели тестовый расчёт: {count_first_tries}
 
 Количество администраторов: {count_admins}
-Количество отложенных постов: {count_fut_post}
 """
 
 

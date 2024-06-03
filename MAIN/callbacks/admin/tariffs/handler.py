@@ -69,8 +69,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'on_off':
         tariff = db.get_price_by_id(tariff_id)
         if tariff is not None:
-            new_switch_active = abs(tariff.switch_active - 1)
-            if db.switch_tariff(tariff_id, new_switch_active):
+            if db.switch_tariff(tariff_id, not tariff.switch_active):
                 send_admin_tariffs_list_item(bot, call.message, user_id, page)
 
     if 'edit' in type:

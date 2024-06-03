@@ -65,7 +65,7 @@ class AuthMiddleWare(BaseMiddleware):
 
             if new_user is not None and is_registered:
                 db.create_tg_user_tables(new_user.id)
-                num = db.get_today_users_count()
+                num = len(db.get_today_users())
 
                 # Проверка языка
                 user_lang = message.from_user.language_code.lower()

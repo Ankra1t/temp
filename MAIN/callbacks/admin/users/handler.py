@@ -94,7 +94,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 for user in users:
                     nik = f'@{user.tg_username}' if (
                         user.tg_username is not None) else 'Скрыт'
-                    ban = '(BAN)' if user.ban == 1 else ''
+                    ban = '(BAN)' if user.ban else ''
 
                     text += f'\n{ban} {user.tg_id} | {nik}\n'
 
@@ -201,9 +201,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         user = db.get_user_by_id(client_db_id)
         if user is None:
             return
-        is_banned = user.ban == 1
 
-        if is_banned:
+        if user.ban:
             text = f'Разбанить пользователя с id[{client_db_id}]'
         else:
             text = f'Забанить пользователя с id[{client_db_id}]'
@@ -222,7 +221,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if 'cancel_sub' in type:
             pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
         if 'ban' in type:
-            db.set_user_ban(user.id, abs(user.ban - 1))
+            db.set_user_ban(user.id, not user.ban)
 
         bot.edit_message_text('Успешно!', chat_id, mes_id)
 

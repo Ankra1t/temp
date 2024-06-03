@@ -37,7 +37,6 @@ def send_admin_main(
 
     count_all = db.get_users_count()
     count_admins = len(db.get_all_workes())
-    count_fut_posts = len(db.get_all_posts())
 
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
@@ -52,8 +51,7 @@ def send_admin_main(
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
-        count_admins, count_fut_posts, 
-        len(todays_users), count_first_tries
+        count_admins, len(todays_users), count_first_tries
     )
 
     if is_first:
@@ -247,7 +245,7 @@ def send_admin_client(
 
     nikname = f'@{client.tg_username}' if client.tg_username != '' else ''
     count_ref = len(db.get_user_referals(client_db_id))
-    is_banned = client.ban == 1
+    is_banned = client.ban
 
     block_show = ''
     if client.block:

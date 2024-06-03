@@ -287,7 +287,7 @@ def handle_first_deposit(message: Message, bot: TeleBot):
         return
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    db.set_user_base(user_db_id, 'base_deposit', value)
+    db.set_user_base(user_db_id, 'deposit', value)
 
     bot.set_state(user_id, FirstCalcState.risk, chat_id)
     bot.send_message(
@@ -309,7 +309,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
         return
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    db.set_user_base(user_db_id, 'base_risk', value)
+    db.set_user_base(user_db_id, 'risk', value)
 
     bot.send_message(
         chat_id, msg_after_first_settings(user_id),

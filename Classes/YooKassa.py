@@ -80,7 +80,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str, user
         code,
         url,
         price,
-        'wait_payments',
+        'WAIT',
         currency,
         name,
         tariff.duration_days,

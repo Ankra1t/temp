@@ -69,7 +69,7 @@ def get_short_user_info(user: UserInfo):
     else:
         nik = ''
 
-    ban = '| (BAN)' if user.ban == 1 else ''
+    ban = '| (BAN)' if user.ban else ''
 
     is_set_settings = 0
     calcs_count = len(db.get_calculations_by_user(user.id))

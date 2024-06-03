@@ -207,7 +207,7 @@ def handle_description(message: Message, bot: TeleBot):
             currency='USDT',
             type_product=type_product,
             image=image,
-            switch_active=1
+            switch_active=True
         ))
 
         bot.send_message(chat_id, '✅ Тариф создан!')

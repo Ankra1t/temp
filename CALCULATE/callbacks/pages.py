@@ -215,7 +215,7 @@ def send_tariffs_list_item(
     chat_id = message.chat.id
     mes_id = message.id
 
-    tariffs = db.get_prices_by_product(tariff_type, 1, 1)
+    tariffs = db.get_prices_by_product(tariff_type, True, True)
     count = len(tariffs)
 
     if count == 0:

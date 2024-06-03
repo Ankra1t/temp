@@ -223,7 +223,7 @@ class PaymentsBanker(object):
             str(iv.invoice_id),
             iv.pay_url,
             iv.amount or 0,
-            'wait_payments',
+            'WAIT',
             iv.asset or '',
             price.name,
             price.duration_days,
@@ -309,4 +309,4 @@ class PaymentsBanker(object):
 
             else:
                 logger.error(f'-----> Не нашли транзакцию по параметрам чека {update.payload} '
-                             f'и статусу status "wait_payments"  ')
+                             f'и статусу status "WAIT"  ')
