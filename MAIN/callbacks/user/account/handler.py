@@ -4,14 +4,17 @@ from telebot.types import CallbackQuery
 from config_logger import logger
 from db import LANGUAGES, db
 
-from .keyboards import kb_params_choose_lang, kb_user_params_back, kb_user_purchases, kb_user_referral, kb_user_referral_list, kb_params_choose_lang
+from .keyboards import (
+    kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,
+    kb_user_referral, kb_user_referral_list, kb_params_choose_lang
+)
 from .filter import user_account_factory, UserAccountCallbackFilter
 from ..pages import send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
 from MAIN.common.messages import msg_enter_nickname, msg_referral, msg_referral_list, msg_user_purchases
 
-from CALCULATE.common.messages import msg_choose_lang
+from CALCULATE.common.messages import msg_choose_lang, msg_support
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
@@ -39,6 +42,16 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'back':
         send_user_account(bot, call.message, user_id)
+
+    if type == 'support':
+        sup = db.get_support_name()
+        msg = msg_support(user_id)
+
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb_support(user_id, sup)
+        )
+        bot.delete_state(user_id, mes_id)
 
     if type == 'referral':
         user_db_id = db.get_user_id_by_tg_id(user_id)

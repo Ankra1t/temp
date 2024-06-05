@@ -21,16 +21,19 @@ def kb_user_account(user_id: int):
             'refs': 'Рефералка',
             'purchases': 'Мои покупки',
             'params': 'Параметры',
+            'support': 'Тех. поддержка',
         },
         'en': {
             'refs': 'Referral program',
             'purchases': 'My purchases',
             'params': 'Params',
+            'support': 'Support',
         }
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
+    btn_support = getButton(f"{texts[lang]['support']}", 'support')
     referral = getButton(f"🌐 {texts[lang]['refs']}", 'referral')
     purchases = getButton(f"🛍 {texts[lang]['purchases']}", 'purchases')
     params = getButton(f"🛠 {texts[lang]['params']}", 'params')
@@ -39,7 +42,8 @@ def kb_user_account(user_id: int):
     # btn5 = getButton("Пополнить баланс")
 
     keyboard.add(purchases, referral)
-    keyboard.add(params, back)
+    keyboard.add(params, btn_support)
+    keyboard.add(back)
     return keyboard
 
 
@@ -139,4 +143,34 @@ def kb_user_params_back(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
     btn_back = getButton(cancel_txt(lang), 'params')
     keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_support(user_id: int, link: str):
+    link = link.replace('@', '')
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'operator': 'Оператор',
+            'news': 'Новости',
+        },
+        'en': {
+            'operator': 'Support',
+            'news': 'News',
+        },
+    }
+
+    news_link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+    btn_news = InlineKeyboardButton(
+        texts[lang]['news'], f'https://t.me/{news_link}'
+    )
+
+    btn_link = InlineKeyboardButton(
+        texts[lang]['operator'], f'https://t.me/{link}'
+    )
+    btn_back = getButton(back_txt(lang), 'main')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(btn_link, btn_news, btn_back)
     return keyboard
