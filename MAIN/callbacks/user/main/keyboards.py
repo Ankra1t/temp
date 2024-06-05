@@ -23,6 +23,7 @@ def kb_user_main(user_id: int, new_user=False):
             'account': 'Личный кабинет',
             'support': 'Тех. поддержка',
             'site': 'Войти на сайт',
+            'channel': 'Канал',
         },
         'en': {
             'try': 'Try the calculation',
@@ -31,6 +32,7 @@ def kb_user_main(user_id: int, new_user=False):
             'account': 'Profile',
             'support': 'Support',
             'site': 'Go to the website',
+            'channel': 'Сhannel',
         }
     }
 
@@ -43,11 +45,16 @@ def kb_user_main(user_id: int, new_user=False):
     btn_account = getButton(f"{texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
+    news_link = 'my_investors' if lang == 'ru' else 'my_traders'
+    btn_channel = InlineKeyboardButton(
+        texts[lang]['channel'], f'https://t.me/{news_link}'
+    )
+
     if new_user:
         keyboard.add(btn_try)
     else:
         keyboard.add(btn_calc)
-        keyboard.add(btn_support, btn_account)
+        keyboard.add(btn_channel, btn_account)
 
     return keyboard
 

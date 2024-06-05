@@ -1,4 +1,5 @@
-from config_global import CURRENCYAPI_KEY
+from Classes.CoinmarketService import CoinmarketService
+from config_global import COINMARKET_KEY, CURRENCYAPI_KEY
 
 from db import db
 
@@ -22,3 +23,5 @@ calcService = CalculationService(db, currencyService)
 hti = HTIService(calcService)
 text_editor = TextEditor()
 tariff_manager = TariffManager()
+
+coinmarketService = CoinmarketService(COINMARKET_KEY)

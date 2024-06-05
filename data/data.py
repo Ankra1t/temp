@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class Data:
     def __init__(self):
         self.connection = sqlite3.connect(
@@ -91,7 +92,8 @@ class Data:
             data = data[0] if data is not None else 0
 
             self.curs.execute(
-                "UPDATE Users SET start_calc_count = ? WHERE id = ?", (data + 1, tgId,)
+                "UPDATE Users SET start_calc_count = ? WHERE id = ?", (
+                    data + 1, tgId,)
             )
             self.connection.commit()
         except Exception as e:
@@ -106,7 +108,8 @@ class Data:
             data = data[0] if data is not None else 0
 
             self.curs.execute(
-                "UPDATE Users SET pages_count = ? WHERE id = ?", (data + 1, tgId,)
+                "UPDATE Users SET pages_count = ? WHERE id = ?", (
+                    data + 1, tgId,)
             )
             self.connection.commit()
         except Exception as e:
@@ -114,7 +117,8 @@ class Data:
 
     def getFirstTriesCount(self) -> int:
         try:
-            data = self.curs.execute("SELECT COUNT(*) FROM Users WHERE first_try = ?", (True,)).fetchone()
+            data = self.curs.execute(
+                "SELECT COUNT(*) FROM Users WHERE first_try = ?", (True,)).fetchone()
             return data[0] if data is not None else 0
         except Exception as e:
             print(e)
@@ -122,10 +126,50 @@ class Data:
 
     def getFirstTryUser(self, tgId: int) -> int:
         try:
-            data = self.curs.execute("SELECT first_try FROM Users WHERE id = ?", (tgId,)).fetchone()
+            data = self.curs.execute(
+                "SELECT first_try FROM Users WHERE id = ?", (tgId,)).fetchone()
             return data[0] if data is not None else 0
         except Exception as e:
             print(e)
             return 0
 
+    def createFeeTable(self):
+        try:
+            #             self.curs.execute("""
+            # DROP TABLE Exchanges;
+            # """)
+            self.curs.execute("""
+CREATE TABLE IF NOT EXISTS Exchanges (
+    id INTEGER PRIMARY KEY,
+    name STRING NOT NULL,
+    maker_fee FLOAT NOT NULL,
+    taker_fee FLOAT NOT NULL
+);
+""")
+        except Exception as e:
+            print(e)
+
+    def addExchange(self, id: int, name: str, maker_fee: float, taker_fee: float):
+        try:
+            data = self.curs.execute(
+                'SELECT * FROM Exchanges WHERE id = ?', (id,)
+            ).fetchone()
+
+            if data is None:
+                self.curs.execute(
+                    'INSERT INTO Exchanges (id, name, maker_fee, taker_fee) VALUES (?, ?, ?, ?)',
+                    (id, name, maker_fee, taker_fee)
+                )
+            else:
+                self.curs.execute(
+                    'UPDATE Exchanges SET name = ?, maker_fee = ?, taker_fee = ? WHERE id = ?',
+                    (name, maker_fee, taker_fee, id)
+                )
+
+            self.connection.commit()
+        except Exception as e:
+            print(e)
+
+
 liteDb = Data()
+liteDb.createFeeTable()

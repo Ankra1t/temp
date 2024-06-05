@@ -6,9 +6,9 @@ from common.utils import delete_message
 from db import db
 
 from ..stats.keyboards import kb_calc_result
-from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats, send_tariffs_list_item
+from .filter import main_factory, MainCallbackFilter
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):

@@ -22,6 +22,7 @@ from .account.keyboards import kb_user_account, kb_user_params
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
+    # new_user=True
     chat_id = message.chat.id
     mes_id = message.id
 

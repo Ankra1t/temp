@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from Classes import pay_guard
+from Classes import pay_guard, text_editor
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
@@ -151,7 +151,10 @@ def choose_calculate_step(
         text = msg_calculate_test(bot, user_id, chat_id)
         if open_price is None:
             bot.send_message(
-                chat_id, msg_welcome(user_id)
+                chat_id,
+                text_editor.get_text(
+                    user_id, 'welcome'
+                ) or msg_welcome(user_id)
             )
 
     bot.set_state(user_id, state, chat_id)
