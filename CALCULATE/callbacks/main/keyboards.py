@@ -33,14 +33,16 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
             'buy': 'Купить',
-            'stats': 'Статистика',
+            'stats': 'Ваша статистика',
+            'link': 'Обновления',
         },
         'en': {
             'calc': 'New calculation',
             'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
             'buy': 'Buy',
-            'stats': 'Stats',
+            'stats': 'Your stats',
+            'link': 'Updates',
         }
     }
 
@@ -75,7 +77,12 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     if stat is None:
         btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
         btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
+
+        link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+        btn_link = InlineKeyboardButton(texts[lang]['link'], f'https://t.me/{link}')
+
         buttons.append(btn_stats)
+        buttons.append(btn_link)
         # buttons.append(btn_buy)
     else:
         kb = kb_calc_result(user_id, stat_id, saved)

@@ -36,7 +36,7 @@ def handle_tool(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    if not re.match(r'^[a-zA-Z ]+$', tool):
+    if not re.match(r'^[a-zA-Z0-9 ]+$', tool):
         new_mes = bot.send_message(
             chat_id, msg_latin_error(user_id),
             reply_markup=kb_tool(user_id, [])
