@@ -1,4 +1,7 @@
+import json
 import sqlite3
+
+from models import Exchange
 
 
 class Data:
@@ -16,12 +19,14 @@ class Data:
 				    is_risk_update BOOLEAN NOT NULL DEFAULT(FALSE),
 				    first_try BOOLEAN NOT NULL DEFAULT(FALSE),
                     start_calc_count INTEGER NOT NULL DEFAULT(0),
-                    pages_count INTEGER NOT NULL DEFAULT(0)
+                    pages_count INTEGER NOT NULL DEFAULT(0),
+                    exchange STRING,
+                    fee FLOAT
                 );
 			''')
             self.curs.execute('''
-                INSERT INTO NewTemp (id, is_risk_update)
-                SELECT id, is_risk_update
+                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count)
+                SELECT id, is_risk_update, first_try, start_calc_count, pages_count
                 FROM Users;
 			''')
             self.curs.execute('''
@@ -133,43 +138,158 @@ class Data:
             print(e)
             return 0
 
+    def getUserExchange(self, tgId: int) -> tuple[str, float] | None:
+        try:
+            data = self.curs.execute(
+                'SELECT exchange, fee from Users WHERE id = ?', (tgId,)
+            ).fetchone()
+
+            if data is None or data[0] is None or data[1] is None:
+                return None
+
+            return (data[0], data[1])
+        except Exception as e:
+            print(e)
+            return None
+
+    def setUserExchange(self, tgId: int, value: tuple[str, float]) -> bool:
+        self.addUser(tgId)
+        try:
+            self.curs.execute(
+                'UPDATE Users SET exchange = ?, fee = ? WHERE id = ?',
+                (*value, tgId,)
+            )
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
     def createFeeTable(self):
         try:
-            #             self.curs.execute("""
-            # DROP TABLE Exchanges;
-            # """)
+            self.curs.execute("""
+DROP TABLE Exchanges;
+""")
             self.curs.execute("""
 CREATE TABLE IF NOT EXISTS Exchanges (
     id INTEGER PRIMARY KEY,
     name STRING NOT NULL,
     maker_fee FLOAT NOT NULL,
-    taker_fee FLOAT NOT NULL
+    taker_fee FLOAT NOT NULL,
+    fees STRING
 );
 """)
         except Exception as e:
             print(e)
 
-    def addExchange(self, id: int, name: str, maker_fee: float, taker_fee: float):
+    def addExchange(self, id: int, name: str, maker_fee: float, taker_fee: float, fees: list[tuple[str, float, float]]):
         try:
             data = self.curs.execute(
-                'SELECT * FROM Exchanges WHERE id = ?', (id,)
+                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges WHERE id = ?', (
+                    id,)
             ).fetchone()
+
+            if len(fees) == 0:
+                fees_str = None
+            else:
+                fees_str = json.dumps(fees)
 
             if data is None:
                 self.curs.execute(
-                    'INSERT INTO Exchanges (id, name, maker_fee, taker_fee) VALUES (?, ?, ?, ?)',
-                    (id, name, maker_fee, taker_fee)
+                    'INSERT INTO Exchanges (id, name, maker_fee, taker_fee, fees) VALUES (?, ?, ?, ?, ?)',
+                    (id, name, maker_fee, taker_fee, fees_str)
                 )
             else:
                 self.curs.execute(
-                    'UPDATE Exchanges SET name = ?, maker_fee = ?, taker_fee = ? WHERE id = ?',
-                    (name, maker_fee, taker_fee, id)
+                    'UPDATE Exchanges SET name = ?, maker_fee = ?, taker_fee = ?, fees = ? WHERE id = ?',
+                    (name, maker_fee, taker_fee, fees_str or data[4], id)
                 )
 
             self.connection.commit()
         except Exception as e:
             print(e)
 
+    def getExchanges(self) -> list[Exchange]:
+        try:
+            data = self.curs.execute(
+                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges'
+            ).fetchall()
+
+            if data is None:
+                return []
+
+            return [
+                Exchange(
+                    id=el[0],
+                    name=el[1],
+                    maker_fee=el[2],
+                    taker_fee=el[3],
+                    fees=json.loads(el[4]) if el[4] is not None else []
+                ) for el in data
+            ]
+        except Exception as e:
+            print(e)
+            return []
+
+    def getExchangeByName(self, name: str) -> Exchange | None:
+        try:
+            data = self.curs.execute(
+                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges WHERE name = ?', 
+                (name,)
+            ).fetchone()
+
+            if data is None:
+                return None
+
+            return Exchange(
+                id=data[0],
+                name=data[1],
+                maker_fee=data[2],
+                taker_fee=data[3],
+                fees=json.loads(data[4]) if data[4] is not None else []
+            )
+
+        except Exception as e:
+            print(e)
+            return None
+
+    def createCalcTable(self):
+        try:
+#             self.curs.execute("""
+# DROP TABLE Exchanges;
+# """)
+            self.curs.execute("""
+CREATE TABLE IF NOT EXISTS Calcs (
+    id INTEGER PRIMARY KEY,
+    exchange STRING,
+    fee FLOAT
+);
+""")
+        except Exception as e:
+            print(e)
+
+    def addCalc(self, id: int, name: str, fee: float):
+        try:
+            self.curs.execute(
+                'INSERT INTO Calcs (id, name, fee) VALUES (?, ?, ?)',
+                (id, name, fee)
+            )
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def getCalc(self, id: int) -> None | tuple[str, float]:
+        try:
+            data = self.curs.execute('SELECT name, fee FROM Calcs WHERE id = ?', (id,)).fetchone()
+            if data is None:
+                return None
+
+            return data[0], data[1]
+        except Exception as e:
+            print(e)
+            return None
+
 
 liteDb = Data()
-liteDb.createFeeTable()
+liteDb.createCalcTable()

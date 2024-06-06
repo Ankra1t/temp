@@ -377,6 +377,107 @@ def msg_summury_profit_settings(user_id: int):
 """
 
 
+def msg_exchange(user_id: int, exchange: tuple[str, float] | None = None):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Настройки биржы',
+            'now': 'Текущая',
+            'fee': 'Комиссии',
+        },
+        'en': {
+            'main': 'Exchange settings',
+            'now': 'Current',
+            'fee': 'Fees',
+        },
+    }
+
+    current = ''
+    if exchange is not None:
+        current = f"""\n\n{texts[lang]["now"]}: <b>{exchange[0]}</b>
+{texts[lang]["fee"]}: <b>{exchange[1] or 0}</b>"""
+
+    return f"""<b><u>{texts[lang]['main']}</u></b>{current}"""
+
+
+def msg_maker_or_taker(user_id: int, maker_fee: float, taker_fee: float):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': f'Выберите тип мейкер ({maker_fee} %) или тейкер ({taker_fee} %)',
+        'en': f'Choose type maker ({maker_fee} %) or taker ({taker_fee} %)',
+    }
+
+    return f"""{texts[lang]}"""
+
+
+def msg_enter_exchange(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Выберите <b>биржу</b> или введите свою',
+        },
+        'en': {
+            'main': 'Select the <b>exchange</b> or enter your own',
+        },
+    }
+
+    return f'👉 {texts[lang]["main"]}'
+
+
+def msg_enter_exchange_not_found(user_id: int, is_diff=False):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Данная биржа не найдена',
+            'info': 'Попробуйте снова',
+            'info_diff': 'Может быть вы имели в виду',
+        },
+        'en': {
+            'main': 'This exchange was not found',
+            'info': 'Try again',
+            'info_diff': ' Maybe you meant',
+        },
+    }
+
+    return f'{texts[lang]["main"]}. {texts[lang]["info_diff" if is_diff else "info"]}:'
+
+
+def msg_choose_exchange_level(user_id: int, fees: list[tuple[str, float, float]]):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Выберите один из уровней',
+            'fee': 'Комиссия мейкера/тейкера ',
+        },
+        'en': {
+            'main': 'Choose one of the levels',
+            'fee': 'level - fee maker/taker',
+        },
+    }
+
+    levels = f'\n\n<i>{texts[lang]["fee"]} (%)</i>'
+    for el in fees:
+        levels += f'\n{el[0]} - <b>{el[1]}/{el[2]}</b>'
+
+    return f'👉 {texts[lang]["main"]}' + levels
+
+
+def msg_enter_fee(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': f'Введите значение <b>комисии</b>',
+        'en': f'Enter value of <b>fee</b>',
+    }
+
+    return f'👉 {texts[lang]}:'
+
+
 def msg_support(user_id: int):
     lang = get_lang(user_id)
 
@@ -901,7 +1002,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     if count_zero > calc_result.tp_count // 2:
         attention = '\n⚠️ При текущих значениях стоп-лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
-        attention+= '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
+        attention += '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
 
     if calc.market == 'crypto':
         tool_name = texts[lang]["coin"]

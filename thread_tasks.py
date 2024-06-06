@@ -93,7 +93,7 @@ def _check_infinite_tasks(bot: TeleBot):
         time.sleep(sleep_time_check)
 
 # Проверка рассылок каждые 30 сек - в отдельном потоке
-def _check_exchanges(bot: TeleBot):
+def _check_exchanges():
     sleep_time_check = 60 * 60 * 12
     while True:
         try:
@@ -108,5 +108,5 @@ def run_thread(bot: TeleBot):
         target=_check_infinite_tasks, args=(bot,), name='check_unfinit_tasks'
     ).start()
     threading.Thread(
-        target=_check_exchanges, args=(bot,), name='_check_exchanges'
+        target=_check_exchanges, name='_check_exchanges'
     ).start()

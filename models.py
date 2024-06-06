@@ -302,3 +302,10 @@ class UnfinishedCalculation(BaseModel):
     is_risk_percent: Optional[bool] = None
     update_risk_rate: Optional[float] = None
 
+class Exchange(BaseModel):
+    id: int
+    name: str
+
+    maker_fee: float
+    taker_fee: float
+    fees: list[tuple[str, float, float]]

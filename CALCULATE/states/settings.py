@@ -13,6 +13,9 @@ class SettingsState(StatesGroup):
     summury_profit = State()
     splitting = State()
 
+    exchange = State()
+    fee = State()
+
 
 class FirstCalcState(StatesGroup):
     deposit = State()

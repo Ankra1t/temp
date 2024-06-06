@@ -46,7 +46,9 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
 
             'on': 'Вкл.',
             'off': 'Выкл.',
-            'is_risk_update': 'изменение риска'
+            'is_risk_update': 'изменение риска',
+
+            'exchange': 'Биржа'
         },
         'en': {
             'base': 'Base values',
@@ -61,7 +63,9 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
 
             'on': 'On',
             'off': 'Off',
-            'is_risk_update': 'risk update'
+            'is_risk_update': 'risk update',
+
+            'exchange': 'Биржа'
         }
     }
 
@@ -82,6 +86,7 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
 
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
     btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
+    btn_exchange = getButton(texts[lang]['exchange'], 'exchange')
     btn_back = getButton(back_txt(lang), 'go_main')
 
     btn_risk_update = getButton(
@@ -95,7 +100,7 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
     keyboard.add(btn_lang, btn_reset)
     keyboard.add(btn_output)
     keyboard.add(btn_risk_update)
-    keyboard.add(btn_back)
+    keyboard.add(btn_exchange, btn_back)
     return keyboard
 
 
@@ -618,4 +623,97 @@ def kb_first_calc_info(user_id: int):
     keyboard.add(
         getButton(f'⚙️ {texts[lang]}', 'set_first_settings'),
     )
+    return keyboard
+
+
+def kb_exchange(user_id: int, is_exchange: bool = False):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'set_exchange': 'Установить биржу',
+            'change_exchange': 'Изменить биржу',
+            'change_fee': 'Изменить комиссию',
+        },
+        'en': {
+            'set_exchange': 'Set exchange',
+            'change_exchange': 'Change exchange',
+            'change_fee': 'Change fee',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    if is_exchange:
+        keyboard.add(
+            getButton(texts[lang]['change_exchange'], 'set_exchange'),
+            getButton(texts[lang]['change_fee'], 'set_fee'),
+        )
+    else:
+        keyboard.add(
+            getButton(texts[lang]['set_exchange'], 'set_exchange'),
+        )
+
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: float):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'maker': 'Мейкер',
+            'taker': 'Тейкер',
+        },
+        'en': {
+            'maker': 'Maker',
+            'taker': 'Taker',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    keyboard.add(
+        getButton(texts[lang]['maker'], f'set_ex_fee++{name}++{maker_fee}'),
+        getButton(texts[lang]['taker'], f'set_ex_fee++{name}++{taker_fee}'),
+        getButton(cancel_txt(lang), 'exchange')
+    )
+
+    return keyboard
+
+
+def kb_enter_exchange(user_id: int, values: list[str] = []):
+    lang = get_lang(user_id)
+
+    if len(values) == 0:
+        values = ['Bybit', 'Binance', 'OKX', 'KuCoin']
+
+    buttons = []
+    for el in values:
+        buttons.append(getButton(el, f'set_exchange++{el}'))
+    buttons.append(getButton(back_txt(lang), 'exchange'))
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+def kb_choose_exchange_level(user_id: int, exchange: str,  values: list[str]):
+    lang = get_lang(user_id)
+
+    buttons = []
+    for el in values:
+        buttons.append(getButton(el, f'set_ex_lvl++{exchange}++{el}'))
+    buttons.append(getButton(back_txt(lang), 'exchange'))
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+def kb_change_fee(user_id: int):
+    lang = get_lang(user_id)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
