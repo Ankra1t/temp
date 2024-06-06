@@ -285,6 +285,9 @@ class CalculationResult(BaseModel):
     profit_values: list[float]
     profit_rate_values: Optional[list[float]] = None
 
+    exchange: Optional[str] = None
+    fee: Optional[float] = None
+
 
 class UnfinishedCalculation(BaseModel):
     id: int

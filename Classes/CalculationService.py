@@ -1,6 +1,7 @@
 from common.utils import get_decimal_count, get_lang, get_print_float
 from common.dt import get_datetime_now
 
+from data.data import liteDb
 from db import LANGUAGES_TYPE, Database
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
 
@@ -224,7 +225,14 @@ class CalculationService():
         return count_bet, value_bet, spot_rate
 
     def get_result(self, calc: Calculation):
+        exchange_fee = liteDb.getCalc(calc.id)
+        fee_rate = exchange_fee[1] if exchange_fee is not None else 0
+        fee_rate /= 100
+
         count_bet, value_bet, _ = self.get_count_value_bet(calc)
+
+        fee = value_bet * fee_rate
+        value_bet += fee
 
         tp_values: list[float] = []
         profit_values: list[float] = []
@@ -267,7 +275,7 @@ class CalculationService():
                         f'{calc.currency}/{calc.forex_info.pair[1]}', 1
                     )
 
-            profit_values.append(profit_i)
+            profit_values.append(profit_i - 2 * fee)
 
         return CalculationResult(
             count_bet=count_bet,
@@ -277,6 +285,9 @@ class CalculationService():
             profit_rate_values=profit_rate_values,
             profit_values=profit_values,
             tp_values=tp_values,
+
+            exchange=exchange_fee[0] if exchange_fee is not None else None,
+            fee=fee or None,
         )
 
     def html_calculation(

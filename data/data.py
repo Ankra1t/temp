@@ -270,7 +270,7 @@ CREATE TABLE IF NOT EXISTS Calcs (
     def addCalc(self, id: int, name: str, fee: float):
         try:
             self.curs.execute(
-                'INSERT INTO Calcs (id, name, fee) VALUES (?, ?, ?)',
+                'INSERT INTO Calcs (id, exchange, fee) VALUES (?, ?, ?)',
                 (id, name, fee)
             )
             self.connection.commit()
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS Calcs (
 
     def getCalc(self, id: int) -> None | tuple[str, float]:
         try:
-            data = self.curs.execute('SELECT name, fee FROM Calcs WHERE id = ?', (id,)).fetchone()
+            data = self.curs.execute('SELECT exchange, fee FROM Calcs WHERE id = ?', (id,)).fetchone()
             if data is None:
                 return None
 

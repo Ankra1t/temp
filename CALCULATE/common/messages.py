@@ -966,6 +966,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'stops': 'Стопы',
 
             'to': 'к',
+
+            'fee': 'Комиссия биржи'
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -991,6 +993,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'stops': 'Stop-losses',
 
             'to': 'to',
+
+            'fee': 'Exchange fee'
         }
     }
 
@@ -1040,6 +1044,10 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     # Кол-во и сумма покупки
     count_bet, value_bet = calc_result.count_bet, calc_result.value_bet
 
+    fee_text = ''
+    if calc_result.fee is not None:
+        fee_text = f'<b>{texts[lang]["fee"]}</b>: {get_print_float(calc_result.fee, round_count)} {calc.currency}\n'
+
     if is_saved:
         saved_mes = '#saved '
 
@@ -1083,7 +1091,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
-        '',
+        fee_text,
         trading_style_type
     ))
 

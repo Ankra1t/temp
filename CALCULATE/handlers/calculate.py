@@ -434,6 +434,10 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         new_id = db.add_calculation(calc_info)
         calc_info.id = new_id
 
+        userExchange = liteDb.getUserExchange(user_id)
+        if userExchange is not None:
+            liteDb.addCalc(new_id, userExchange[0], userExchange[1])
+
         db.minus_calculator_uses_count(user_db_id)
         db.delete_unfinished_calc_by_user(user_db_id)
 
