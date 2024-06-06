@@ -37,12 +37,16 @@ def send_admin_main(
 
     count_all = db.get_users_count()
     count_admins = len(db.get_all_workes())
-    count_fut_posts = len(db.get_all_posts())
 
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
     todays_users = db.get_today_users()
+
+    users = db.get_all_users()
+    count_refs = 0
+    for u in users:
+        count_refs += 1 if u.refer_id else 0
 
     count_first_tries = 0
     for el in todays_users:
@@ -52,8 +56,8 @@ def send_admin_main(
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
-        count_admins, count_fut_posts, 
-        len(todays_users), count_first_tries
+        count_admins, len(todays_users), count_first_tries,
+        count_refs
     )
 
     if is_first:
