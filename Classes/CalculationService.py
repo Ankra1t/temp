@@ -341,7 +341,7 @@ class CalculationService():
                 'trading_type': 'Trading type',
 
                 'coin': 'coins',
-                'paper': 'papers',
+                'paper': 'shares',
                 'lot': 'lots',
 
                 'margin': 'margin',
@@ -474,3 +474,10 @@ f"""#{tool.replace("/", "").upper()} {saved_mes}- {texts[lang][long_short]}
 <b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}
 {trading_style}"""
 )
+
+# Новый расчёт -> Сделать расчёт
+# Моя биржа
+# Шорт = мейкер
+# Лонг = тейкер
+# При изменении депозита сразу давать возможность вводить
+# Объяснение вкладок больших кнопок

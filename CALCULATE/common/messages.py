@@ -983,7 +983,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'trading_type': 'Trading type',
 
             'coin': 'coins',
-            'paper': 'papers',
+            'paper': 'shares',
             'lot': 'lots',
 
             'margin': 'margin',
