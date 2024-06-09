@@ -717,3 +717,13 @@ def kb_change_fee(user_id: int):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
+
+
+def kb_try(user_id: int):
+    lang = get_lang(user_id)
+
+    text = 'Попробовать' if lang == 'ru' else 'Try'
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(getButton(text, 'first_try'))
+    return keyboard

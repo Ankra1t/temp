@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from Classes import pay_guard, text_editor
+from Classes import pay_guard
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
@@ -12,9 +12,10 @@ from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_calculate_test, msg_enter_currency, msg_enter_deposit,
-    msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
-    msg_enter_stop_loss, msg_enter_tool, msg_welcome
+    msg_enter_currency, msg_enter_deposit,
+    msg_enter_open_price, msg_enter_pair,
+    msg_enter_pair_price, msg_enter_risk_percent,
+    msg_enter_stop_loss, msg_enter_tool,
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 
@@ -82,8 +83,8 @@ def choose_calculate_step(
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
 
-    elif calc_type != 'forex' and tool is None:
-        text += msg_enter_tool(user_id, calc_type)
+    elif (calc_type != 'forex' or is_try) and tool is None:
+        text += msg_enter_tool(user_id, calc_type, is_try)
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
@@ -132,7 +133,7 @@ def choose_calculate_step(
         state = CalculateState.risk_percent
 
     elif open_price is None:
-        text += msg_enter_open_price(user_id)
+        text += msg_enter_open_price(user_id, is_try)
         edit_to = names[lang]['op']
         state = CalculateState.open_price
 
@@ -142,20 +143,12 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
-        text += msg_enter_stop_loss(user_id)
+        text += msg_enter_stop_loss(user_id, is_try)
         edit_to = names[lang]['sl']
         state = CalculateState.stop_loss
 
     if is_try:
         keyboard = None
-        text = msg_calculate_test(bot, user_id, chat_id)
-        if open_price is None:
-            bot.send_message(
-                chat_id,
-                text_editor.get_text(
-                    user_id, 'welcome'
-                ) or msg_welcome(user_id)
-            )
 
     bot.set_state(user_id, state, chat_id)
 
@@ -179,7 +172,7 @@ def choose_calculate_step(
                 'edit_mes': edit_to
             }
         )
-
+#KPZ3EGHRPLYW3JHC
 
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,
@@ -239,7 +232,7 @@ def choose_first_calculate_step(
 
     set_state_data(
         bot, user_id, chat_id, {
-            'calc_type': type,
+            'calc_type': None if is_try else type,
 
             'trading_style': style,
             'trading_type': trading_type,
@@ -247,7 +240,6 @@ def choose_first_calculate_step(
             'currency': currency,
             'risk': risk if not is_try else [1, True],
             'is_try': is_try,
-            'tool': 'BTC/USDT' if is_try else None
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

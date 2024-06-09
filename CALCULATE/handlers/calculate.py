@@ -2,13 +2,14 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
+from common.vars import TOKENS
 from config_logger import logger
-from Classes import currencyService
+from Classes import currencyService, sharesService
 from data.data import liteDb
 from db import db
 from models import MARKETS_TYPE, Calculation, ForexInfo
 
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import (
     choose_calculate_step, kb_tool,
     send_calculation, kb_change_currency,
@@ -51,10 +52,26 @@ def handle_tool(message: Message, bot: TeleBot):
         calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
 
     tool = tool.upper().replace('/', '').replace(' ', '')
+
+    is_shares = False
+    if calc_type is None:
+        is_shares = sharesService.check(tool)
+
+    if not is_shares or tool in TOKENS:
+        calc_type = 'crypto'
+    else:
+        lang = get_lang(user_id)
+        if lang == 'ru':
+            calc_type = 'RF'
+        else:
+            calc_type = 'USA'
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        data['calc_type'] = calc_type
+
     if calc_type == 'crypto':
         if tool.endswith('USDT'):
             tool = tool.replace('USDT', '')
-
         tool += '/USDT'
 
     if stat_id is None:
@@ -159,7 +176,6 @@ def handle_forex_pair_price(message: Message, bot: TeleBot):
     logger.info(
         f'callback "handle_forex_pair_price" user_tg_id={user_id} value={pair_price}'
     )
-
 
     with bot.retrieve_data(user_id, chat_id) as data:
         forex: ForexInfo = data.get('forex')
@@ -369,6 +385,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
+        calc_type = data.get('calc_type', 'crypto')
 
         deposit: float = data.get('deposit') or 1.0
         risk: tuple[float, bool] = data.get('risk') or (1., False)
@@ -421,7 +438,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         stop_loss=stop_loss,
         round_count=u_base.round_count,
         currency=currency,
-        market=u_base.market,
+        market=calc_type,
         tp_ratio=u_base.tp_ratio,
         split_values=u_base.split_values,
         trading_style=trading_style or None,

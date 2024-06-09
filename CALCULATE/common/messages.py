@@ -1,4 +1,5 @@
 from typing import Literal
+from numpy import info
 from telebot import TeleBot
 from datetime import datetime
 
@@ -409,7 +410,18 @@ def msg_maker_or_taker(user_id: int, maker_fee: float, taker_fee: float):
         'en': f'Choose type maker ({maker_fee} %) or taker ({taker_fee} %)',
     }
 
-    return f"""{texts[lang]}"""
+    if lang == 'ru':
+        info = """<b>Мейкеры</b> - это трейдеры, которые создают ордера и размещают их книге ордеров, ожидая, пока их выполнят другие.
+<b>Тейкеры</b> - это трейдеры, которые принимают существующие ордера из книги заявок.
+<i>Основное различие между ними заключается в том, что мейкеры предоставляют ликвидность, а тейкеры ее потребляют.</i>"""
+    else:
+        info = """<b>Makers</b> are traders who create orders and place them in the order book, waiting for others to execute them.
+<b>Takers</b> are traders who accept existing orders from the order book.
+<i>The main difference between them is that makers provide liquidity, and takers consume it.</i>"""
+
+    return f"""{texts[lang]}
+
+{info}"""
 
 
 def msg_enter_exchange(user_id: int):
@@ -586,22 +598,53 @@ def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        return f"""
-<b>Проведите тестовый расчет</b>
-и получите результат:
+        return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
 
-- объем покупки/продажи
-- сумма покупки
-- где фиксировать прибыль
-- сохранение live-статистики"""
+Нужен для управления риском во время торговли.
+
+Трейдеры рискуют не более <b>1-2% депозита</b> на каждую сделку.
+
+<i>на примере акций Газпром: </i>
+
+<b>Ваш</b> <b>депозит</b>: 100 000 руб
+<b>Риск</b>: 1% (1 000 руб)
+<b>Цена за акцию</b>: 125 руб
+<b>Стоп</b>: 120 руб
+
+👉Вопрос
+
+Сколько нужно купить акций, чтобы при цене 120, убыток составлял только 1 000 руб из 100 000 руб?
+
+Калькулятор рассчитал:
+<b>200 акций.</b>
+
+Высчитывает и ближайшие тейк-профиты, где фиксируется прибыль.
+
+<b>Попробуйте теперь Вы.</b>"""
     else:
-        return """<b>Perform a test calculation</b>
-and get the result:
+        return """This calculator is already used by 15,000 people around the world. 
 
-- purchase/sale volume
-- purchase amount
-- where to fix profits
-- saving live statistics"""
+It is intended for managing risk while trading.
+
+Traders risk no more than <b>1-2% of their deposit</b> on each trade.
+
+<i>On the example of Amazon shares: </i>
+
+<b>Your deposit</b>: 100,000 USD
+<b>Risk</b>: 1% (1 000 USD)
+<b>Price per share</b>: 185 USD
+<b>Stop loss</b>: 180 USD
+
+👉Question
+
+How many shares should you buy so that at the price of 180, the loss is only 1,000 USD out of 100,000 USD?
+
+The calculator has figured out:
+<b>200 shares.</b>
+
+It also calculates the nearest take profit where the profit is fixed.
+
+<b>Try it now.</b>"""
 
 
 def msg_after_first_settings(user_id: int):
@@ -1031,7 +1074,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     if not is_try:
         trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}\n'
         if calc.trading_style is not None:
-            trading_style_type = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+            trading_style_type += f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -1330,7 +1373,7 @@ def msg_enter_email(user_id: int):
     return f'👉 {texts[lang]}:'
 
 
-def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto'):
+def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto', is_try=False):
     lang = get_lang(user_id)
 
     texts = {
@@ -1351,6 +1394,9 @@ def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto'):
     info = ''
     if market in ('crypto', 'RF', 'USA'):
         info = '\n\n' + texts[lang][market]
+
+    if is_try:
+        info = '\n<i>(BTC, ETH, AMZN, GAZP)</i>'
 
     return f'👉 {texts[lang]["main"]}:  {info}'
 
@@ -1494,24 +1540,33 @@ def msg_enter_pair(user_id: int):
     return f"""👉 {texts[lang]} (XXX XXX):"""
 
 
-def msg_enter_open_price(user_id: int):
+def msg_enter_open_price(user_id: int, is_try=False):
     lang = get_lang(user_id)
 
     texts = {
         'ru': 'Введите <b>цену открытия</b> сделки',
         'en': 'Enter the <b>opening price</b> of the deal'
     }
+    info = {
+        'ru': '(по какой цене будете покупать?)',
+        'en': '(at what price will you buy?)'
+    }
 
-    return f'👉 {texts[lang]}:'
+    return f"""👉 {texts[lang]}:
+{"" if not is_try else f"<i>{info[lang]}</i>"}"""
 
 
-def msg_enter_stop_loss(user_id: int):
+def msg_enter_stop_loss(user_id: int, is_try=False):
     lang = get_lang(user_id)
 
     if lang == 'ru':
         text = 'Введите цену <b>стоп-лосса</b>:'
+        if is_try:
+            text += '\n<i>(по какой цене будете фиксировать убыток?)</i>'
     else:
         text = 'Enter the <b>stop loss</b> price'
+        if is_try:
+            text += '\n<i>(at what price will you fix the loss?)</i>'
 
     return f'👉 {text}'
 

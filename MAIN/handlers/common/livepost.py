@@ -13,6 +13,7 @@ def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
         return
 
     try:
+        print(message.html_text)
         if message.animation:
             print(message.animation.file_id)
     except:

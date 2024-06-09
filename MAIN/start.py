@@ -7,11 +7,11 @@ from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 
 
 def send_start_by_user(
-        bot: TeleBot,
-        message: Message,
-        user_id: int,
-        user_role: int,
-        has_registered_now=False
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    user_role: int,
+    has_registered_now=False
 ):
     chat_id = message.chat.id
     bot.delete_state(user_id, chat_id)

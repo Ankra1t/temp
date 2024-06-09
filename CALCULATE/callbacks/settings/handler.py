@@ -15,7 +15,7 @@ from CALCULATE.common.messages import (
     msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_fee,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
-    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base,
+    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
@@ -23,7 +23,7 @@ from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
     kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
-    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
+    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type, kb_try
 )
 from ..pages import send_calculation, send_exchange_settings, send_main, send_maker_or_taker, send_settings, send_summury_profit_settings, send_user_deposit
 
@@ -170,15 +170,17 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 db.set_user_lang(user_db_id, lang)
 
                 if 'first' in type:
-                    user_db_id = db.get_user_id_by_tg_id(user_id)
-                    u_base = db.get_calc_user_settings(user_db_id)
-                    market = u_base.market if (
-                        u_base is not None) else 'crypto'
+                    lang = get_lang(user_id)
+
+                    photo_name = 'wel_ru' if lang == 'ru' else 'wel_en'
+                    text = msg_welcome(user_id)
 
                     bot.delete_message(chat_id, mes_id)
-                    choose_first_calculate_step(
-                        bot, user_id, call.message, market, is_try=True
-                    )
+                    with open(f'src/img/{photo_name}.jpg', 'rb') as photo:
+                        bot.send_photo(
+                            chat_id, photo, text,
+                            reply_markup=kb_try(user_id)
+                        )
                 else:
                     send_settings(bot, call.message, user_id)
 
@@ -188,6 +190,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_choose_lang(user_id)
             )
+
+    if type == 'first_try':
+        bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
+        choose_first_calculate_step(
+            bot, user_id, call.message, 'crypto', is_try=True
+        )
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
