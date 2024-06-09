@@ -1,5 +1,4 @@
 from typing import Literal
-from numpy import info
 from telebot import TeleBot
 from datetime import datetime
 
