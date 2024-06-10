@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS Exchanges (
     def getExchangeByName(self, name: str) -> Exchange | None:
         try:
             data = self.curs.execute(
-                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges WHERE name = ?', 
+                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges WHERE name = ?',
                 (name,)
             ).fetchone()
 
@@ -255,9 +255,9 @@ CREATE TABLE IF NOT EXISTS Exchanges (
 
     def createCalcTable(self):
         try:
-#             self.curs.execute("""
-# DROP TABLE Exchanges;
-# """)
+            #             self.curs.execute("""
+            # DROP TABLE Exchanges;
+            # """)
             self.curs.execute("""
 CREATE TABLE IF NOT EXISTS Calcs (
     id INTEGER PRIMARY KEY,
@@ -282,7 +282,8 @@ CREATE TABLE IF NOT EXISTS Calcs (
 
     def getCalc(self, id: int) -> None | tuple[str, float]:
         try:
-            data = self.curs.execute('SELECT exchange, fee FROM Calcs WHERE id = ?', (id,)).fetchone()
+            data = self.curs.execute(
+                'SELECT exchange, fee FROM Calcs WHERE id = ?', (id,)).fetchone()
             if data is None:
                 return None
 
@@ -291,6 +292,54 @@ CREATE TABLE IF NOT EXISTS Calcs (
             print(e)
             return None
 
+    def createTonStorage(self):
+        try:
+            self.curs.execute("""
+CREATE TABLE IF NOT EXISTS TonStorage (
+    key STRING PRIMARY KEY,
+    value STRING NOT NULL
+);
+""")
+        except:
+            pass
+
+    def setTonStorage(self, key: str, value: str):
+        try:
+            self.curs.execute(
+                'INSERT INTO TonStorage (key, value) VALUES (?, ?)',
+                (key, value)
+            )
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+            pass
+
+    def getTonStorage(self, key: str) -> str | None:
+        try:
+            data = self.curs.execute(
+                'SELECT value FROM TonStorage WHERE key = ?',
+                (key,)
+            ).fetchone()
+
+            return data[0] if data is not None else None
+        except Exception as e:
+            print(e)
+            return None
+
+    def delTonStorage(self, key: str):
+        try:
+            self.curs.execute(
+                'DELETE FROM TonStorage WHERE key = ?',
+                (key)
+            )
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+            pass
 
 liteDb = Data()
-liteDb.createCalcTable()
+liteDb.createTonStorage()
