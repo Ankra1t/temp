@@ -95,7 +95,7 @@ def _check_infinite_tasks(bot: TeleBot):
 # Проверка рассылок каждые 30 сек - в отдельном потоке
 def _check_exchanges():
     sleep_time_check = 60 * 60 * 12
-    while False:
+    while True:
         try:
             coinmarketService.get()
         except:
