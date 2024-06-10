@@ -53,6 +53,10 @@ def get_ton_manifest():
         "url": f"https://t.me/{bot.get_me().username}",
         "name": "Calc",
         "iconUrl": f"{request.url_root}{base_url}/icon.png",
+        "1": request.url,
+        "2": request.remote_addr,
+        "3": request.host_url,
+        "4": request.url_rule,
     })
 
 
