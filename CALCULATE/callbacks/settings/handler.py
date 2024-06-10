@@ -12,7 +12,8 @@ from Classes import text_editor
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_dop_settings, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_fee,
+    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset,
+    msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_fee,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
     msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
@@ -21,11 +22,15 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
-    kb_choose_lang, kb_base_cancel, kb_dop_settings, kb_enter_exchange, kb_settings_confirm,
+    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type, kb_try
 )
-from ..pages import send_calculation, send_exchange_settings, send_main, send_maker_or_taker, send_settings, send_summury_profit_settings, send_user_deposit
+from ..pages import (
+    send_calculation, send_dop_settings, send_exchange_settings, send_main,
+    send_maker_or_taker, send_settings, send_summury_profit_settings,
+    send_user_deposit
+)
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -423,7 +428,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             user_db_id,
             'text' if cur_calc_output == 'photo' else 'photo'
         )
-        send_settings(bot, call.message, user_id)
+        send_dop_settings(bot, call.message, user_id)
 
     if type == 'set_first_settings':
         bot.set_state(user_id, FirstCalcState.deposit, chat_id)
@@ -436,7 +441,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'set_risk_update':
         liteDb.reverseRiskUpdate(user_id)
-        send_settings(bot, call.message, user_id)
+        send_dop_settings(bot, call.message, user_id)
 
     if type == 'exchange':
         exchange = liteDb.getUserExchange(user_id)
@@ -508,14 +513,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_exchange_settings(bot, call.message, user_id)
 
     if type == 'dop':
-        calc_output = db.get_user_calc_output(user_db_id)
-        is_risk_update = liteDb.getRiskUpdate(user_id)
-
-        bot.edit_message_text(
-            msg_dop_settings(user_id, calc_output, is_risk_update),
-            chat_id, mes_id,
-            reply_markup=kb_dop_settings(user_id, calc_output, is_risk_update)
-        )
+        send_dop_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

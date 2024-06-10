@@ -10,7 +10,7 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_deposit, msg_exchange,
+    msg_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
@@ -21,7 +21,7 @@ from models import MARKETS_TYPE, Calculation
 
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_change_deposit, kb_exchange, kb_first_calc_info, kb_maker_or_taker, kb_settings, kb_summury_profit
+from .settings.keyboards import kb_change_deposit, kb_dop_settings, kb_exchange, kb_first_calc_info, kb_maker_or_taker, kb_settings, kb_summury_profit
 from .stats.keyboards import kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
@@ -74,6 +74,28 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     msg = msg_settings(user_id, is_risk_update)
     markup = kb_settings(user_id)
+
+    if is_first:
+        bot.send_message(
+            chat_id, msg,
+            reply_markup=markup
+        )
+    else:
+        edit_message(bot, message, 'text', msg, markup)
+
+
+def send_dop_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    calc_output = db.get_user_calc_output(user_db_id)
+    is_risk_update = liteDb.getRiskUpdate(user_id)
+
+    msg = msg_dop_settings(user_id, calc_output, is_risk_update)
+    markup = kb_dop_settings(user_id, calc_output, is_risk_update)
 
     if is_first:
         bot.send_message(
