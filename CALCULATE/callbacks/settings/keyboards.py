@@ -624,11 +624,13 @@ def kb_exchange(user_id: int, is_exchange: bool = False):
             'set_exchange': 'Установить биржу',
             'change_exchange': 'Изменить биржу',
             'change_fee': 'Изменить комиссию',
+            'off': 'Отключение',
         },
         'en': {
             'set_exchange': 'Set exchange',
             'change_exchange': 'Change exchange',
             'change_fee': 'Change fee',
+            'off': 'Off',
         },
     }
 
@@ -639,12 +641,16 @@ def kb_exchange(user_id: int, is_exchange: bool = False):
             getButton(texts[lang]['change_exchange'], 'set_exchange'),
             getButton(texts[lang]['change_fee'], 'set_fee'),
         )
+        keyboard.add(
+            # getButton(f'⭕️ {texts[lang]["off"]}', 'off_exchange'),
+            getButton(back_txt(lang), 'go_settings')
+        )
     else:
         keyboard.add(
             getButton(texts[lang]['set_exchange'], 'set_exchange'),
         )
+        keyboard.add(getButton(back_txt(lang), 'go_settings'))
 
-    keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
 
 
