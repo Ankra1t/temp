@@ -152,13 +152,14 @@ class Data:
             print(e)
             return None
 
-    def setUserExchange(self, tgId: int, value: tuple[str, float]) -> bool:
+    def setUserExchange(self, tgId: int, value: tuple[str | None, float | None]) -> bool:
         self.addUser(tgId)
         try:
             self.curs.execute(
                 'UPDATE Users SET exchange = ?, fee = ? WHERE id = ?',
                 (*value, tgId,)
             )
+            self.connection.commit()
             return True
         except Exception as e:
             print(e)

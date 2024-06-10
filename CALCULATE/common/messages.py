@@ -319,6 +319,41 @@ def msg_settings_change_market(user_id: int):
     return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
 
 
+def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Дополнительные настройки',
+            'output': 'Здесь вы можете настроить тип вывод расчёта',
+            'current':  'Текущее значение',
+            'text': 'текст',
+            'photo': 'картинка',
+            'risk': 'А также функцию изменения риска в момент расчёта',
+            'on': 'включено',
+            'off': 'выключено'
+        },
+        'en': {
+            'main': 'Extra settings',
+            'output': 'Here you can configure the type of calculation',
+            'current':  'Current value',
+            'text': 'text',
+            'photo': 'image',
+            'risk': 'As well as the function of changing risk at the calculation',
+            'on': 'on',
+            'off': 'off'
+        }
+    }
+
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{texts[lang]['output']}
+{texts[lang]['current']}: <b>{texts[lang][output]}</b>
+
+{texts[lang]['risk']}
+{texts[lang]['current']}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
+
+
 def msg_summury_profit_settings(user_id: int):
     lang = get_lang(user_id)
 
@@ -1122,7 +1157,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 {conclusion}"""
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/", "").upper()}</u></b> {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
+        f'#<b><u>{tool.replace("/", "").replace("USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
         attention,
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',

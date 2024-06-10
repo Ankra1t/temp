@@ -70,11 +70,10 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    calc_output = db.get_user_calc_output(user_db_id)
     is_risk_update = liteDb.getRiskUpdate(user_id)
 
     msg = msg_settings(user_id, is_risk_update)
-    markup = kb_settings(user_id, calc_output, is_risk_update)
+    markup = kb_settings(user_id)
 
     if is_first:
         bot.send_message(

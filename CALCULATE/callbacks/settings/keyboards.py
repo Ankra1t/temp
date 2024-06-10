@@ -30,7 +30,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk_update=False):
+def kb_settings(user_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -42,11 +42,7 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
             'reset': 'Сброс',
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
-            'calc_output': 'Вывод расчета: ' + ('текстом' if cur_calc_output == 'photo' else 'картинкой'),
-
-            'on': 'Вкл.',
-            'off': 'Выкл.',
-            'is_risk_update': 'изменение риска',
+            'dop': 'Дополнительно',
 
             'exchange': 'Биржа'
         },
@@ -59,13 +55,9 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
             'reset': 'Reset',
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
-            'calc_output': 'Calc output: ' + ('in text' if cur_calc_output == 'photo' else 'in image'),
+            'dop': 'Extra',
 
-            'on': 'On',
-            'off': 'Off',
-            'is_risk_update': 'risk update',
-
-            'exchange': 'Биржа'
+            'exchange': 'Exchange'
         }
     }
 
@@ -85,22 +77,20 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
     )
 
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
-    btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
-    btn_exchange = getButton(texts[lang]['exchange'], 'exchange')
+    btn_exchange = getButton('📈 ' + texts[lang]['exchange'], 'exchange')
+    btn_dop = getButton(texts[lang]['dop'], 'dop')
+
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    btn_risk_update = getButton(
-        f'{texts[lang]["off" if is_risk_update else "on"]} {texts[lang]["is_risk_update"]}',
-        'set_risk_update'
+    keyboard.add(
+        btn_market, btn_exchange,
+        btn_deposit_update, btn_base,
+        btn_summury_profit, btn_style,
+        btn_trading_type, btn_lang,
+        btn_reset, btn_dop
     )
 
-    keyboard.add(btn_market, btn_deposit_update)
-    keyboard.add(btn_base, btn_summury_profit)
-    keyboard.add(btn_style, btn_trading_type)
-    keyboard.add(btn_lang, btn_reset)
-    keyboard.add(btn_output)
-    keyboard.add(btn_risk_update)
-    keyboard.add(btn_exchange, btn_back)
+    keyboard.add(btn_back)
     return keyboard
 
 
@@ -699,7 +689,7 @@ def kb_enter_exchange(user_id: int, values: list[str] = []):
     return keyboard
 
 
-def kb_choose_exchange_level(user_id: int, exchange: str,  values: list[str]):
+def kb_choose_exchange_level(user_id: int, exchange: str, values: list[str]):
     lang = get_lang(user_id)
 
     buttons = []
@@ -726,4 +716,38 @@ def kb_try(user_id: int):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(text, 'first_try'))
+    return keyboard
+
+
+def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'calc_output': 'Вывод расчета: ' + ('текстом 📝' if output == 'photo' else 'картинкой 🖼'),
+
+            'on': '✅ Вкл.',
+            'off': '⭕️ Выкл.',
+            'is_risk_update': 'изменение риска',
+        },
+        'en': {
+            'calc_output': 'Calc output: ' + ('in text 📝' if output == 'photo' else 'in image 🖼'),
+            'dop': 'Extra',
+
+            'on': '✅ On',
+            'off': '⭕️ Off',
+            'is_risk_update': 'risk update',
+        }
+    }
+
+    btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
+    btn_risk_update = getButton(
+        f'{texts[lang]["off" if risk_upd else "on"]} {texts[lang]["is_risk_update"]}',
+        'set_risk_update'
+    )
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(btn_output)
+    keyboard.add(btn_risk_update)
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
