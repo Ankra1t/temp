@@ -56,7 +56,6 @@ def get_ton_manifest():
         "1": request.url,
         "2": request.remote_addr,
         "3": request.host_url,
-        "4": request.url_rule,
     })
 
 
