@@ -1,7 +1,7 @@
-import json
+import asyncio
 from pytonconnect import TonConnect
 from telebot import TeleBot
-from telebot.types import CallbackQuery
+from telebot.types import CallbackQuery, Message
 
 from Classes.TonWallet import get_connector
 from config_logger import logger
@@ -9,7 +9,7 @@ from db import LANGUAGES, db
 
 from .keyboards import (
     kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,
-    kb_user_referral, kb_user_referral_list, kb_params_choose_lang
+    kb_user_referral, kb_user_referral_list, kb_params_choose_lang, kb_wallet_connect, kb_wallets
 )
 from .filter import user_account_factory, UserAccountCallbackFilter
 from ..pages import send_user_account, send_user_main, send_user_params
@@ -29,7 +29,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     logger.info(
-        f'callback "user_account_factory" user_tg_id={user_id} type={type}')
+        f'callback "user_account_factory" user_tg_id={user_id} type={type}'
+    )
 
     if type == 'purchases':
         purchases = db.get_purchases_by_user(user_id)
@@ -112,17 +113,19 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.set_state(user_id, UserAccountState.nickname, chat_id)
 
     if type == 'wallet':
-        try:
-            walletPage(bot, chat_id).send(None)
-        except StopIteration as e:
-            print(e)
-        except Exception as e:
-            print(e)
+        asyncio.run(walletPage(bot, chat_id, user_id))
+
+    if 'connect++' in type:
+        _, wallet = type.split('++')
+        asyncio.run(connect_wallet(bot, chat_id, user_id, mes_id, wallet))
+
+    if type == 'wallet_check':
+        asyncio.run(check_wallet(bot, chat_id, user_id, mes_id))
 
     bot.answer_callback_query(call.id)
 
 
-async def walletPage(bot: TeleBot, chat_id: int):
+async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
     connector = get_connector(chat_id)
     connected = await connector.restore_connection()
 
@@ -133,11 +136,52 @@ async def walletPage(bot: TeleBot, chat_id: int):
         pass
     else:
         wallets_list = TonConnect.get_wallets()  # type: ignore
-        message = ''
-        for wallet in wallets_list:
-            message += f'\n\n {wallet["name"]}'
-            print(wallet)
-        bot.send_message(chat_id, message)
+        wallets_names = [el['name'] for el in wallets_list]
+        kb = kb_wallets(user_id, wallets_names)
+
+        bot.send_message(
+            chat_id, 'Коннект',
+            reply_markup=kb
+        )
+
+
+async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, wallet_name: str):
+    connector = get_connector(chat_id)
+
+    wallets_list = connector.get_wallets()
+    wallet = None
+
+    for w in wallets_list:
+        if w['name'] == wallet_name:
+            wallet = w
+
+    if wallet is None:
+        raise Exception(f'Unknown wallet: {wallet_name}')
+
+    generated_url = await connector.connect(wallet)
+    kb = kb_wallet_connect(user_id, generated_url)
+
+    bot.edit_message_text(
+        'КОННЕКТ', chat_id, mes_id, reply_markup=kb
+    )
+
+    def status_changed(wallet_info):
+        # update state/reactive variables to show updates in the ui
+        print('wallet_info:', wallet_info)
+
+    connector.on_status_change(status_changed)
+
+
+async def check_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int):
+    connector = get_connector(chat_id)
+    is_connected = await connector.restore_connection()
+    print(is_connected)
+    if connector.connected and connector.account is not None and connector.account.address:
+        wallet_address = connector.account.address
+        bot.edit_message_text(
+            f'You are connected with address <code>{wallet_address}</code>', chat_id, mes_id,
+        )
+        return
 
 
 def registration(bot: TeleBot):

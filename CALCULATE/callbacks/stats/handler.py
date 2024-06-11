@@ -158,7 +158,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = db.get_calculation(stat_id)
-            print(calc_info)
+
             edit_message(
                 bot, call.message, prev_type, # type: ignore
                 text,

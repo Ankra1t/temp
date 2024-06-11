@@ -46,6 +46,9 @@ def kb_user_account(user_id: int):
 
     keyboard.add(purchases, referral)
     keyboard.add(params, btn_support)
+    if user_id == 6919899538:
+        keyboard.add(wallet)
+
     keyboard.add(back)
     return keyboard
 
@@ -176,4 +179,33 @@ def kb_support(user_id: int, link: str):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_link, btn_news, btn_back)
+    return keyboard
+
+
+def kb_wallets(user_id: int, wallets: list[str]):
+    row_width = 2
+    lang = get_lang(user_id)
+
+    back = getButton(back_txt(lang), 'back')
+    wal_buttons = [getButton(el, f'connect++{el}') for el in wallets]
+
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
+    keyboard.add(*wal_buttons, back)
+    return keyboard
+
+
+def kb_wallet_connect(user_id: int, url: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Подключить',
+        'en': 'Connect',
+    }
+
+    back = getButton(back_txt(lang), 'wallet')
+    url_btn = InlineKeyboardButton(texts[lang], url)
+    btn_check = getButton('CHECK', 'wallet_check')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(url_btn, btn_check, back)
     return keyboard
