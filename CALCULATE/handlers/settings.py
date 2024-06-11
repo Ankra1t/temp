@@ -315,6 +315,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     db.set_user_base(user_db_id, 'base_risk', value)
+    db.set_user_risk_is_percent(user_db_id, True)
 
     data = db.get_calc_user_settings(user_db_id, 'crypto')
     dep = 0
