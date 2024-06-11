@@ -22,12 +22,14 @@ def kb_user_account(user_id: int):
             'purchases': 'Мои покупки',
             'params': 'Параметры',
             'support': 'Тех. поддержка',
+            'wallet': 'Кошелёк',
         },
         'en': {
             'refs': 'Referral program',
             'purchases': 'My purchases',
             'params': 'Params',
             'support': 'Support',
+            'wallet': 'Wallet',
         }
     }
 
@@ -38,6 +40,7 @@ def kb_user_account(user_id: int):
     purchases = getButton(f"🛍 {texts[lang]['purchases']}", 'purchases')
     params = getButton(f"🛠 {texts[lang]['params']}", 'params')
     # password = getButton('Изменить пароль', 'password')
+    wallet = getButton(texts[lang]['wallet'], 'wallet')
     back = getButton(back_txt(lang), 'main')
     # btn5 = getButton("Пополнить баланс")
 

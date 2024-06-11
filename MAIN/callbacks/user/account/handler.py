@@ -1,6 +1,9 @@
+import json
+from pytonconnect import TonConnect
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from Classes.TonWallet import get_connector
 from config_logger import logger
 from db import LANGUAGES, db
 
@@ -108,7 +111,33 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, UserAccountState.nickname, chat_id)
 
+    if type == 'wallet':
+        try:
+            walletPage(bot, chat_id).send(None)
+        except StopIteration as e:
+            print(e)
+        except Exception as e:
+            print(e)
+
     bot.answer_callback_query(call.id)
+
+
+async def walletPage(bot: TeleBot, chat_id: int):
+    connector = get_connector(chat_id)
+    connected = await connector.restore_connection()
+
+    if connected:
+        # mk_b.button(text='Send Transaction', callback_data='send_tr')
+        # mk_b.button(text='Disconnect', callback_data='disconnect')
+        # await message.answer(text='You are already connected!', reply_markup=mk_b.as_markup())
+        pass
+    else:
+        wallets_list = TonConnect.get_wallets()  # type: ignore
+        message = ''
+        for wallet in wallets_list:
+            message += f'\n\n {wallet["name"]}'
+            print(wallet)
+        bot.send_message(chat_id, message)
 
 
 def registration(bot: TeleBot):

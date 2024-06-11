@@ -5,6 +5,7 @@ def admin_main_msg(
         count_admins: int,
         count_today_users: int,
         count_first_tries: int,
+        count_first_lang: int,
         count_refs: int
 ):
     return f"""🏠 <b><u>Главная</u></b>
@@ -16,6 +17,7 @@ def admin_main_msg(
 
 Зарегестрировались сегодня: {count_today_users}
 Из них провели тестовый расчёт: {count_first_tries}
+Из них выбрали язык: {count_first_lang}
 
 Количество администраторов: {count_admins}
 Количество по рефералке: {count_refs}

@@ -18,15 +18,16 @@ class Data:
                     id INTEGER PRIMARY KEY,
 				    is_risk_update BOOLEAN NOT NULL DEFAULT(FALSE),
 				    first_try BOOLEAN NOT NULL DEFAULT(FALSE),
+				    first_lang BOOLEAN NOT NULL DEFAULT(FALSE),
                     start_calc_count INTEGER NOT NULL DEFAULT(0),
                     pages_count INTEGER NOT NULL DEFAULT(0),
                     exchange STRING,
-                    fee FLOAT
+                    fee FLOAT,
                 );
 			''')
             self.curs.execute('''
-                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count)
-                SELECT id, is_risk_update, first_try, start_calc_count, pages_count
+                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee)
+                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee
                 FROM Users;
 			''')
             self.curs.execute('''
@@ -165,6 +166,35 @@ class Data:
             print(e)
             return False
 
+    def setFirstLang(self, tgId: int):
+        self.addUser(tgId)
+        try:
+            self.curs.execute(
+                "UPDATE Users SET first_lang = ? WHERE id = ?", (True, tgId,)
+            )
+            self.connection.commit()
+        except Exception as e:
+            print(e)
+
+    def getFirstLangsCount(self) -> int:
+        try:
+            data = self.curs.execute(
+                "SELECT COUNT(*) FROM Users WHERE first_lang = ?", (True,)).fetchone()
+            return data[0] if data is not None else 0
+        except Exception as e:
+            print(e)
+            return 0
+
+    def getFirstLang(self, tgId: int) -> int:
+        try:
+            data = self.curs.execute(
+                "SELECT first_lang FROM Users WHERE id = ?", (tgId,)).fetchone()
+            return data[0] if data is not None else 0
+        except Exception as e:
+            print(e)
+            return 0
+
+    # FEES
     def createFeeTable(self):
         try:
             self.curs.execute("""
@@ -343,3 +373,4 @@ CREATE TABLE IF NOT EXISTS TonStorage (
 
 liteDb = Data()
 liteDb.createTonStorage()
+liteDb.createUsersTable()

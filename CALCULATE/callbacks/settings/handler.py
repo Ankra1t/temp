@@ -175,6 +175,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 db.set_user_lang(user_db_id, lang)
 
                 if 'first' in type:
+                    liteDb.setFirstLang(user_id)
                     lang = get_lang(user_id)
 
                     photo_name = 'wel_ru' if lang == 'ru' else 'wel_en'

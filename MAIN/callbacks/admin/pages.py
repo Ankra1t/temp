@@ -48,16 +48,18 @@ def send_admin_main(
     for u in users:
         count_refs += 1 if u.refer_id else 0
 
-    count_first_tries = 0
+    count_first_tries = count_first_lang = 0
     for el in todays_users:
         if liteDb.getFirstTryUser(el.get('id_telegram', -1)) == 1:
             count_first_tries += 1
+        if liteDb.getFirstLang(el.get('id_telegram', -1)) == 1:
+            count_first_lang += 1
 
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
         count_admins, len(todays_users), count_first_tries,
-        count_refs
+        count_first_lang, count_refs
     )
 
     if is_first:
