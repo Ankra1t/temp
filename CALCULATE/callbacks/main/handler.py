@@ -47,6 +47,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot, user_id, call.message, market, False, '_continue' in type
         )
 
+    if type == 'first_try':
+        bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
+        choose_first_calculate_step(
+            bot, user_id, call.message, 'crypto', is_edit=True, is_try=True
+        )
+
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)
 

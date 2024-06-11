@@ -316,8 +316,13 @@ def handle_first_risk(message: Message, bot: TeleBot):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     db.set_user_base(user_db_id, 'base_risk', value)
 
+    data = db.get_calc_user_settings(user_db_id, 'crypto')
+    dep = 0
+    if data is not None:
+        dep = data.deposit or dep
+
     bot.send_message(
-        chat_id, msg_after_first_settings(user_id),
+        chat_id, msg_after_first_settings(user_id, dep, value),
         reply_markup=kb_after_first_settings(user_id)
     )
 

@@ -31,6 +31,9 @@ def _teststart(message: Message, bot: TeleBot, data: dict):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    db.set_calculator_user_market(user_db_id, 'crypto')
+
     send_start_by_user(
         bot, message, user_id,
         0, True,

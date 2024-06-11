@@ -326,7 +326,7 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'ru': {
             'main': 'Дополнительные настройки',
             'output': 'Здесь вы можете настроить тип вывод расчёта',
-            'current':  'Текущее значение',
+            'current': 'Текущее значение',
             'text': 'текст',
             'photo': 'картинка',
             'risk': 'А также функцию изменения риска в момент расчёта',
@@ -336,7 +336,7 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'en': {
             'main': 'Extra settings',
             'output': 'Here you can configure the type of calculation',
-            'current':  'Current value',
+            'current': 'Current value',
             'text': 'text',
             'photo': 'image',
             'risk': 'As well as the function of changing risk at the calculation',
@@ -632,6 +632,21 @@ def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
+        return f"""<b>Поздравляем!!! 🥳</b>
+<b>Теперь мы </b><a href="https://t.me/profmarkets">вместе</a>
+
+<b>Риски в сделках</b> - вот, что нужно контролировать трейдеру.
+
+Настройте калькулятор ниже и получайте мгновенные расчеты."""
+    else:
+        return """<b>Congratulations!!! 🥳</b>
+<b>Now we are </b><a href="https://t.me/promarketsen">together</a>
+
+<b>Trade risk</b> is what a trader must control.
+
+Set up the calculator below and get instant calculations."""
+
+    if lang == 'ru':
         return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
 
 Нужен для управления риском во время торговли.
@@ -681,15 +696,26 @@ It also calculates the nearest take profit where the profit is fixed.
 <b>Try it now.</b>"""
 
 
-def msg_after_first_settings(user_id: int):
+def msg_after_first_settings(user_id: int, dep: float, percent: float):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': '<b>Совершите</b> первый расчет или продолжите настройку калькулятора',
-        'en': '<b>Make</b> the first calculation or continue setting up the calculator',
+        'ru': {
+            'main': 'Вы указали',
+            'dep': 'Депозит',
+            'risk': 'Риск на сделку'
+        },
+        'en': {
+            'main': 'You have entered',
+            'dep': 'Deposit',
+            'risk': 'Trade risk'
+        },
     }
 
-    return texts[lang]
+    return f"""{texts[lang]['main']}
+
+<b>{texts[lang]['dep']}</b>: {dep} USDT
+<b>{texts[lang]['risk']}</b>: {percent} %"""
 
 
 def msg_success_base_set(user_id: int):
@@ -1157,7 +1183,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 {conclusion}"""
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/", "").replace("USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b> {"(demo)" if is_try else ""}',
+        f'#<b><u>{tool.replace("/", "").replace("USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
         attention,
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
@@ -1407,7 +1433,7 @@ def msg_enter_email(user_id: int):
     return f'👉 {texts[lang]}:'
 
 
-def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto', is_try=False):
+def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto'):
     lang = get_lang(user_id)
 
     texts = {
@@ -1427,10 +1453,7 @@ def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto', is_try=False):
 
     info = ''
     if market in ('crypto', 'RF', 'USA'):
-        info = '\n\n' + texts[lang][market]
-
-    if is_try:
-        info = '\n<i>(BTC, ETH, AMZN, GAZP)</i>'
+        info = '\n' + texts[lang][market]
 
     return f'👉 {texts[lang]["main"]}:  {info}'
 
@@ -1450,11 +1473,11 @@ def msg_enter_deposit(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите <b>размер депозита</b>',
-        'en': 'Enter the <b>deposit size</b>'
+        'ru': 'Какой <b>размер депозита</b> для торговли',
+        'en': 'What is the <b>deposit size</b> for trading'
     }
 
-    return f'👉 {texts[lang]}:'
+    return f'👉 {texts[lang]}?'
 
 
 def msg_enter_risk_percent(user_id: int):

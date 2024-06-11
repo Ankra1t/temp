@@ -1,7 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from CALCULATE.callbacks.utils import choose_calculate_step, choose_first_calculate_step
+from CALCULATE.callbacks.utils import choose_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
@@ -22,9 +22,9 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
-    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_settings_confirm,
+    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
-    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type, kb_try
+    kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
 from ..pages import (
     send_calculation, send_dop_settings, send_exchange_settings, send_main,
@@ -176,17 +176,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 if 'first' in type:
                     liteDb.setFirstLang(user_id)
-                    lang = get_lang(user_id)
 
-                    photo_name = 'wel_ru' if lang == 'ru' else 'wel_en'
-                    text = msg_welcome(user_id)
-
-                    bot.delete_message(chat_id, mes_id)
-                    with open(f'src/img/{photo_name}.png', 'rb') as photo:
-                        bot.send_photo(
-                            chat_id, photo, text,
-                            reply_markup=kb_try(user_id)
-                        )
+                    bot.edit_message_text(
+                        msg_welcome(user_id), chat_id, mes_id,
+                        reply_markup=kb_first_calc_info(user_id),
+                        disable_web_page_preview=True
+                    )
                 else:
                     send_settings(bot, call.message, user_id)
 
@@ -196,12 +191,6 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_choose_lang(user_id)
             )
-
-    if type == 'first_try':
-        bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
-        choose_first_calculate_step(
-            bot, user_id, call.message, 'crypto', is_try=True
-        )
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)

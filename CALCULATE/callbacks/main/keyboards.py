@@ -37,7 +37,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'link': 'Обновления',
         },
         'en': {
-            'calc': 'New calculation',
+            'calc': 'Make a calculation',
             'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
             'buy': 'Buy',
@@ -104,14 +104,14 @@ def kb_after_first_settings(user_id: int):
             'settings': 'Настройки',
         },
         'en': {
-            'calc': 'New calculation',
+            'calc': 'Make a calculation',
             'settings': 'Settings',
         },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('⌨️ ' + texts[lang]['calc'], 'calc'),
+        getButton('⌨️ ' + texts[lang]['calc'], 'first_try'),
         getButton('⚙️ ' + texts[lang]['settings'], 'settings'),
     )
     return keyboard

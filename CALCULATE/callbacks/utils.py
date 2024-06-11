@@ -83,8 +83,8 @@ def choose_calculate_step(
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
 
-    elif (calc_type != 'forex' or is_try) and tool is None:
-        text += msg_enter_tool(user_id, calc_type, is_try)
+    elif calc_type != 'forex' and tool is None:
+        text += msg_enter_tool(user_id, calc_type)
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
@@ -232,13 +232,13 @@ def choose_first_calculate_step(
 
     set_state_data(
         bot, user_id, chat_id, {
-            'calc_type': None if is_try else type,
+            'calc_type': type,
 
             'trading_style': style,
             'trading_type': trading_type,
-            'deposit': deposit if not is_try else 5000,
+            'deposit': deposit,
             'currency': currency,
-            'risk': risk if not is_try else [1, True],
+            'risk': risk,
             'is_try': is_try,
         } | prev_values
     )

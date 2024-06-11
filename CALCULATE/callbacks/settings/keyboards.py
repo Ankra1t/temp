@@ -715,16 +715,6 @@ def kb_change_fee(user_id: int):
     return keyboard
 
 
-def kb_try(user_id: int):
-    lang = get_lang(user_id)
-
-    text = 'Попробовать' if lang == 'ru' else 'Try'
-
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(getButton(text, 'first_try'))
-    return keyboard
-
-
 def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bool):
     lang = get_lang(user_id)
 

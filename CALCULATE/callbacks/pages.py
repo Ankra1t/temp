@@ -342,8 +342,6 @@ def send_calculation(
     calc_output = db.get_user_calc_output(user_db_id)
 
     kb = kb_main(user_id, is_access, calc)
-    if is_try:
-        kb = kb_first_calc_info(user_id)
 
     if calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)
