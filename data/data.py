@@ -372,5 +372,3 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             pass
 
 liteDb = Data()
-liteDb.createTonStorage()
-liteDb.createUsersTable()

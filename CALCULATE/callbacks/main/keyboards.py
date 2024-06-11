@@ -29,7 +29,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'calc': 'Новый расчёт',
+            'calc': 'Сделать расчёт',
             'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
             'buy': 'Купить',
@@ -100,7 +100,7 @@ def kb_after_first_settings(user_id: int):
 
     texts = {
         'ru': {
-            'calc': 'Новый расчет',
+            'calc': 'Сделать расчёт',
             'settings': 'Настройки',
         },
         'en': {

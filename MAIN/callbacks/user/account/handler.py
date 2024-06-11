@@ -20,6 +20,8 @@ from MAIN.common.messages import msg_enter_nickname, msg_referral, msg_referral_
 from CALCULATE.common.messages import msg_choose_lang, msg_support
 
 
+connector = get_connector(6919899538)
+
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
@@ -126,7 +128,6 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
 
 async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
-    connector = get_connector(chat_id)
     connected = await connector.restore_connection()
 
     if connected:
@@ -146,8 +147,6 @@ async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
 
 
 async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, wallet_name: str):
-    connector = get_connector(chat_id)
-
     wallets_list = connector.get_wallets()
     wallet = None
 
@@ -168,14 +167,12 @@ async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, 
     def status_changed(wallet_info):
         # update state/reactive variables to show updates in the ui
         print('wallet_info:', wallet_info)
+        unsub()
 
-    connector.on_status_change(status_changed)
+    unsub = connector.on_status_change(status_changed, status_changed)
 
 
 async def check_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int):
-    connector = get_connector(chat_id)
-    is_connected = await connector.restore_connection()
-    print(is_connected)
     if connector.connected and connector.account is not None and connector.account.address:
         wallet_address = connector.account.address
         bot.edit_message_text(
