@@ -16,8 +16,8 @@ def admin_main_msg(
 Бесплатных: {int(count_all) - int(count_with_sub)}
 
 Зарегестрировались сегодня: {count_today_users}
-Из них провели тестовый расчёт: {count_first_tries}
 Из них выбрали язык: {count_first_lang}
+Из них провели тестовый расчёт: {count_first_tries}
 
 Количество администраторов: {count_admins}
 Количество по рефералке: {count_refs}

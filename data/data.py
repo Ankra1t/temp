@@ -22,7 +22,7 @@ class Data:
                     start_calc_count INTEGER NOT NULL DEFAULT(0),
                     pages_count INTEGER NOT NULL DEFAULT(0),
                     exchange STRING,
-                    fee FLOAT,
+                    fee FLOAT
                 );
 			''')
             self.curs.execute('''
