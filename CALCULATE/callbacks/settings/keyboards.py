@@ -679,7 +679,7 @@ def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: floa
     return keyboard
 
 
-def kb_enter_exchange(user_id: int, values: list[str] = []):
+def kb_enter_exchange(user_id: int, values: list[str] = [], is_first=False):
     lang = get_lang(user_id)
 
     if len(values) == 0:
@@ -688,7 +688,9 @@ def kb_enter_exchange(user_id: int, values: list[str] = []):
     buttons = []
     for el in values:
         buttons.append(getButton(el, f'set_exchange++{el}'))
-    buttons.append(getButton(back_txt(lang), 'exchange'))
+    buttons.append(
+        getButton(back_txt(lang), 'go_settings' if is_first else 'exchange')
+    )
 
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)

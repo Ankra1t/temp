@@ -1,4 +1,3 @@
-import json
 import telebot
 import flask
 from flask import jsonify, request, send_file

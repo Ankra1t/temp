@@ -21,7 +21,10 @@ from models import MARKETS_TYPE, Calculation
 
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
-from .settings.keyboards import kb_change_deposit, kb_dop_settings, kb_exchange, kb_first_calc_info, kb_maker_or_taker, kb_settings, kb_summury_profit
+from .settings.keyboards import (
+    kb_change_deposit, kb_dop_settings, kb_exchange,
+    kb_maker_or_taker, kb_settings, kb_summury_profit,
+)
 from .stats.keyboards import kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 

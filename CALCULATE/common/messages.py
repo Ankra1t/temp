@@ -1183,7 +1183,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 {conclusion}"""
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/", "").replace("USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
         attention,
         f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',

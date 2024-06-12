@@ -43,12 +43,12 @@ def kb_tool(user_id: int, prev_tools: list[str]):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     buttons = []
-    for i, el in enumerate(prev_tools):
+    for el in prev_tools:
         if el == '':
             continue
 
-        buttons.append(getButton(el, f'tool++{el}'))
-        if len(buttons) == 2:
+        buttons.append(getButton(el.replace('/USDT', ''), f'tool++{el}'))
+        if len(buttons) == 3:
             break
 
     btn_settings = get_settings_from_calc_button()

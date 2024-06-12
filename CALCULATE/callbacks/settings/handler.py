@@ -437,7 +437,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         exchange = liteDb.getUserExchange(user_id)
 
         if exchange is None:
-            type = 'set_exchange'
+            bot.edit_message_text(
+                msg_enter_exchange(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_enter_exchange(user_id, is_first=True)
+            )
+            bot.set_state(user_id, SettingsState.exchange, chat_id)
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
         else:
             send_exchange_settings(bot, call.message, user_id)
 

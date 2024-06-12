@@ -132,7 +132,8 @@ class CalculationService():
 
         day_risk = user_settings.day_risk
         deposit = user_settings.deposit
-        currency = user_settings.currency or ('USDT' if market == 'crypto' else 'USD')
+        currency = user_settings.currency or (
+            'USDT' if market == 'crypto' else 'USD')
 
         if day_risk[1] and deposit is None:
             return False
@@ -436,11 +437,17 @@ class CalculationService():
                 </div>
             """
 
+        market = ''
+        if calc.market == 'crypto':
+            market = 'Крипто' if lang == 'ru' else 'Crypto'
+        else:
+            market = market_translates[lang][calc.market]
+
         return (f"""
 <header class="header">
     <div class="header_name">
-        <div class="title {long_short}">{tool}</div>
-        <div class="market">- {market_translates[lang][calc.market]}</div>
+        <div class="title {long_short}">{tool.replace('/USDT', '').upper()}</div>
+        <div class="market">- {market}</div>
     </div>
 </header>
 <div class="content major">
@@ -465,15 +472,13 @@ class CalculationService():
     </div>
     {profit_info}
 </div>
-""",
-f"""#{tool.replace("/", "").upper()} {saved_mes}- {texts[lang][long_short]}
+""", f"""#{tool.replace("/USDT", "").upper()} {saved_mes}- {texts[lang][long_short]}
 
 <b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}
 <b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}
 
 <b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}
-{trading_style}"""
-)
+{trading_style}""")
 
 # Моя биржа
 # Шорт = мейкер

@@ -1,7 +1,7 @@
 import asyncio
 from pytonconnect import TonConnect
 from telebot import TeleBot
-from telebot.types import CallbackQuery, Message
+from telebot.types import CallbackQuery
 
 from Classes.TonWallet import get_connector
 from config_logger import logger
