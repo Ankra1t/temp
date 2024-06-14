@@ -9,6 +9,7 @@ from telebot.types import CallbackQuery
 from selenium import webdriver as wd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
@@ -17,7 +18,7 @@ from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from data.data import liteDb
-from config_global import RU_CHANNEL_ID
+from config_global import PROD, RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
@@ -48,7 +49,13 @@ def createScreen(
     type: Literal['bars', 'candles'] = 'bars',
     scale=0
 ):
-    browser = wd.Chrome()
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    if PROD:
+        options.add_argument('--headless')
+
+    browser = wd.Chrome(options=options)
     browser.maximize_window()
 
     browser.get(
