@@ -1199,6 +1199,82 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
+def msg_channel_calculation(calc: Calculation):
+    lang = 'ru'
+
+    calc_result = calcService.get_result(calc)
+
+    texts = {
+        'ru': {
+            'open': 'Цена',
+            'sl': 'Стоп',
+
+            'conclusion': 'Тейк-профит',
+            'style': 'Стиль торговли',
+
+            'to': 'к',
+        },
+        'en': {
+            'open': 'Price',
+            'sl': 'Stop',
+
+            'conclusion': 'Take-profit',
+            'style': 'Trading style',
+
+            'to': 'to',
+        }
+    }
+
+
+    if calc.open_price > calc.stop_loss:
+        long_short = 'long'
+    else:
+        long_short = 'short'
+
+    # Валюта торговли
+    trading_currency = calc.currency
+    tool = calc.tool or ''
+    if calc.forex_info is not None and calc.market == 'forex':
+        trading_currency = calc.forex_info.pair[1]
+        tool = ''.join(calc.forex_info.pair)
+
+    trading_style_type = ''
+    if calc.trading_style is not None:
+        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+
+    # Округление
+    round_count = calc.round_count or 5
+    price_round_count = max(
+        get_decimal_count(calc.open_price),
+        get_decimal_count(calc.stop_loss),
+        round_count
+    )
+
+    conclusion = ''
+    for i in range(calc_result.tp_count):
+        tp_ratio = calc.tp_ratio[i]
+        tp_val = calc_result.tp_values[i]
+
+        conclusion += f'{get_print_float(tp_val, price_round_count)} {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+
+        if i != calc_result.tp_count - 1:
+            conclusion += '\n'
+
+    profit_result = f"""<b>{texts[lang]['conclusion']}</b>:
+{conclusion}"""
+
+    return '\n'.join((
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b> ({long_short}) - <b>{market_translates[lang][calc.market]}</b>',
+        '',
+        f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
+        f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        '',
+        profit_result,
+        '',
+        trading_style_type
+    ))
+
+
 def msg_calculate_delete(user_id: int, prev_message: str):
     lang = get_lang(user_id)
 

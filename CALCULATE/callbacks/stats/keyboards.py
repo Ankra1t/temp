@@ -5,7 +5,8 @@ from CALCULATE.common.messages import market_translates
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
-from db import db
+from data.data import liteDb
+from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE
 
 from .filter import stats_factory
@@ -56,6 +57,10 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
 def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     lang = get_lang(user_id)
 
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    isAdmin = db.get_worker_role(user_db_id)
+    isSended = liteDb.checkSendCalc(stat_id)
+
     texts = {
         'ru': {
             'save': 'Сохранить в статистику',
@@ -89,6 +94,11 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     else:
         btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
         keyboard.add(btn_save)
+
+    if isAdmin and not isSended:
+        keyboard.add(
+            getButton('Выложить в каналах', 'send_to_channels', stat_id)
+        )
 
     return keyboard
 
@@ -237,4 +247,17 @@ def kb_calc_image(user_id: int, stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
+    texts = {
+        'ru': 'Рассчитать для себя',
+        'en': 'Calculate for you',
+    }
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton(texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'),
+    )
     return keyboard

@@ -101,3 +101,4 @@ def commands_registration(bot: TeleBot):
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
+    bot.register_channel_post_handler(_test, pass_bot=True)

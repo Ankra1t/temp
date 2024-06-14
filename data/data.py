@@ -283,6 +283,7 @@ CREATE TABLE IF NOT EXISTS Exchanges (
             print(e)
             return None
 
+    # Calc
     def createCalcTable(self):
         try:
             #             self.curs.execute("""
@@ -322,6 +323,7 @@ CREATE TABLE IF NOT EXISTS Calcs (
             print(e)
             return None
 
+    # Ton
     def createTonStorage(self):
         try:
             self.curs.execute("""
@@ -371,4 +373,43 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             return False
             pass
 
+    # Sended Calc
+    def createSendCalcTable(self):
+        try:
+            #             self.curs.execute("""
+            # DROP TABLE Exchanges;
+            # """)
+            self.curs.execute("""
+                CREATE TABLE IF NOT EXISTS SendCalcs (
+                    id INTEGER PRIMARY KEY
+                );
+            """)
+        except Exception as e:
+            print(e)
+
+    def addSendCalc(self, id: int):
+        try:
+            self.curs.execute(
+                'INSERT INTO SendCalcs (id) VALUES (?)',
+                (id,)
+            )
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def checkSendCalc(self, id: int):
+        try:
+            data = self.curs.execute(
+                'SELECT * FROM SendCalcs WHERE id = ?', (id,)).fetchone()
+            if data is None:
+                return False
+
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
 liteDb = Data()
+liteDb.createSendCalcTable()

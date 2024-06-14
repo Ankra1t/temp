@@ -1,18 +1,28 @@
 from datetime import timedelta
+import os
+from time import sleep
+from typing import Literal
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
+from selenium import webdriver as wd
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
+from data.data import liteDb
+from config_global import RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
-    msg_calculation_deleted, msg_enter_calc_image,
+    msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_image,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
@@ -23,12 +33,79 @@ from models import MARKETS_TYPE
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
-    kb_calc_image, kb_calculate_change,
-    kb_calculate_delete, kb_deal_profit_cancel,
+    kb_calc_image, kb_calc_result, kb_calculate_change,
+    kb_calculate_delete, kb_channel_url, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_calculation, send_freeze, send_main, send_stats
+
+
+def createScreen(
+    tool: str,
+    time: Literal['1h', '4h', '1d'] = '1h',
+    type: Literal['bars', 'candles'] = 'bars',
+    scale=0
+):
+    browser = wd.Chrome()
+    browser.maximize_window()
+
+    browser.get(f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
+    browser.execute_script(
+        "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
+    )
+    browser.refresh()
+
+    interval_buttons = browser.find_elements(
+        By.CLASS_NAME, 'self-tool--time-interval-item'
+    )
+    for el in interval_buttons:
+        if el.text == time:
+            el.click()
+
+    fulscreen_btn = browser.find_element(
+        By.CLASS_NAME, 'iconicon_fullscreen_on'
+    )
+    fulscreen_btn.click()
+
+    bars_select = browser.find_element(
+        By.CSS_SELECTOR, '.self-tool__padding-horizen.flex-align-center.tv-self--chart-type-anchor.pointer.hover-color-white'
+    )
+    ActionChains(browser).move_to_element(bars_select).perform()
+
+    bars_btn = browser.find_element(
+        By.CLASS_NAME, f'iconicon_ktv_{type}'
+    )
+    bars_btn.click()
+
+    click_place = browser.find_element(
+        By.CLASS_NAME, 'self-tv_tool-header'
+    )
+    ActionChains(browser).move_to_element_with_offset(
+        click_place, 600, 30
+    ).context_click().move_by_offset(
+        50, 250
+    ).click().perform()
+
+    scale = min(max(scale, 0), 10)
+    mas = [Keys.UP for _ in range(scale)]
+    ActionChains(browser).key_down(Keys.CONTROL).send_keys(*mas).perform()
+
+    go_away = browser.find_element(
+        By.CLASS_NAME, 'by-footer-derivatives__bg'
+    )
+    ActionChains(browser).move_to_element(
+        go_away
+    ).perform()
+
+    sleep(2)
+    table = browser.find_element(By.ID, "tv_chart_container")
+
+    file_path = '_calc_images/table.png'
+    table.screenshot(file_path)
+    browser.close()
+
+    return file_path
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -160,7 +237,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             calc_info = db.get_calculation(stat_id)
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 text,
                 kb_main(user_id, is_valid, calc_info),
                 media
@@ -176,7 +253,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 msg_calculate_delete(user_id, text),
                 kb_calculate_delete(user_id, stat_id),
                 media
@@ -199,7 +276,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 msg_calculate_change(user_id, text),
                 kb_calculate_change(user_id, stat_id),
                 media
@@ -219,7 +296,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             calc_info = db.get_calculation(stat_id)
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 text,
                 kb_main(user_id, is_valid, calc_info),
                 media
@@ -318,6 +395,35 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             'calc_media': media,
             'calc_del_mes_id': new_mes.id,
         })
+
+    if type == 'send_to_channels':
+        stat = db.get_calculation(stat_id)
+        if stat is None:
+            return
+
+        file_path = createScreen(
+            (stat.tool or '').replace('/', '').upper(), 
+            '1h', 'candles', 6
+        )
+        text = msg_channel_calculation(stat)
+        print(1)
+        with open(file_path, 'rb') as photo:
+            bot.send_photo(
+                RU_CHANNEL_ID,
+                photo, text,
+                reply_markup=kb_channel_url(
+                    'ru', stat_id, bot.get_me().username
+                )
+            )
+        os.remove(file_path)
+        print(2)
+
+        liteDb.addSendCalc(stat_id)
+        bot.edit_message_reply_markup(
+            chat_id, mes_id,
+            reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
+        )
+        print(3)
 
     bot.answer_callback_query(call.id)
 
