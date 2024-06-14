@@ -60,10 +60,12 @@ def createScreen(
 
     browser.get(
         f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
-    browser.execute_script(
-        "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
-    )
-    browser.refresh()
+
+    if not PROD:
+        browser.execute_script(
+            "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
+        )
+        browser.refresh()
 
     interval_buttons = browser.find_elements(
         By.CLASS_NAME, 'self-tool--time-interval-item'
