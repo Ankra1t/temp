@@ -10,7 +10,9 @@ from selenium import webdriver as wd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
@@ -67,6 +69,11 @@ def createScreen(
         )
         browser.refresh()
 
+    WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'self-tool--time-interval-item')
+        )
+    )
     interval_buttons = browser.find_elements(
         By.CLASS_NAME, 'self-tool--time-interval-item'
     )
@@ -74,23 +81,31 @@ def createScreen(
         if el.text == time:
             el.click()
 
-    fulscreen_btn = browser.find_element(
-        By.CLASS_NAME, 'iconicon_fullscreen_on'
+    fulscreen_btn = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'iconicon_fullscreen_on')
+        )
     )
     fulscreen_btn.click()
 
-    bars_select = browser.find_element(
-        By.CSS_SELECTOR, '.self-tool__padding-horizen.flex-align-center.tv-self--chart-type-anchor.pointer.hover-color-white'
+    bars_select = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, '.self-tool__padding-horizen.flex-align-center.tv-self--chart-type-anchor.pointer.hover-color-white')
+        )
     )
     ActionChains(browser).move_to_element(bars_select).perform()
 
-    bars_btn = browser.find_element(
-        By.CLASS_NAME, f'iconicon_ktv_{type}'
+    bars_btn = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, f'iconicon_ktv_{type}')
+        )
     )
     bars_btn.click()
 
-    click_place = browser.find_element(
-        By.CLASS_NAME, 'self-tv_tool-header'
+    click_place = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'self-tv_tool-header')
+        )
     )
     ActionChains(browser).move_to_element_with_offset(
         click_place, randint(100, 600), 30
@@ -102,15 +117,21 @@ def createScreen(
     mas = [Keys.UP for _ in range(scale)]
     ActionChains(browser).key_down(Keys.CONTROL).send_keys(*mas).perform()
 
-    go_away = browser.find_element(
-        By.CLASS_NAME, 'by-footer-derivatives__bg'
+    go_away = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'by-footer-derivatives__bg')
+        )
     )
     ActionChains(browser).move_to_element(
         go_away
     ).perform()
 
     sleep(2)
-    table = browser.find_element(By.ID, "tv_chart_container")
+    table = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.ID, "tv_chart_container")
+        )
+    )
 
     file_path = '_calc_images/table.png'
     table.screenshot(file_path)
