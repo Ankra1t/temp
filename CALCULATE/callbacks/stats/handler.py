@@ -66,7 +66,7 @@ def createScreen(
         # service=Service(ChromeDriverManager().install())
     )
     print('BROWSER CRAETED')
-    browser.maximize_window()
+    # browser.maximize_window()
 
     browser.get(
         f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}'
@@ -80,7 +80,7 @@ def createScreen(
 
     print('GET SITE')
     sleep(5)
-    print(browser.title)
+    print(browser._is_remote)
     WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
             (By.CLASS_NAME, 'self-tool--time-interval-item')
