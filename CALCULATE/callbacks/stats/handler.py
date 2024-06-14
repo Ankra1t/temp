@@ -59,14 +59,26 @@ def createScreen(
     options.add_argument('--disable-dev-shm-usage')
     if PROD:
         options.add_argument('--headless')
-        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument("--disable-blink-features")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option(
+            "excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        options.add_argument("start-maximized")
 
     browser = wd.Chrome(
         options=options,
-        service=Service(executable_path='/usr/bin/chromedriver' if PROD else None) # type:ignore
+        service=Service(
+            executable_path='/usr/bin/chromedriver' if PROD else None,  # type:ignore
+        )
         # service=Service(ChromeDriverManager().install())
     )
-    print('BROWSER CRAETED')
+    browser.execute_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    browser.execute_cdp_cmd('Network.setUserAgentOverride', {
+        "userAgent": 'Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
+    }
+    )
     # browser.maximize_window()
 
     browser.get(
@@ -78,10 +90,10 @@ def createScreen(
     print(browser.page_source)
 
     performance_log = browser.get_log('performance')
-    print (str(performance_log).strip('[]'))
+    print(str(performance_log).strip('[]'))
 
     for entry in browser.get_log('performance'):
-        print (entry)
+        print(entry)
 
     if not PROD:
         browser.execute_script(
