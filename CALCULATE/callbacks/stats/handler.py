@@ -62,13 +62,14 @@ def createScreen(
 
     browser = wd.Chrome(
         options=options,
-        service=Service(ChromeDriverManager().install())
+        service=Service(ChromeDriverManager(chrome_type='chromium').install())
     )
     print('BROWSER CRAETED')
     browser.maximize_window()
 
     browser.get(
-        f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
+        f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}'
+    )
 
     if not PROD:
         browser.execute_script(
