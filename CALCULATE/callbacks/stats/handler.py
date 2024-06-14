@@ -10,9 +10,11 @@ from selenium import webdriver as wd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
@@ -57,7 +59,10 @@ def createScreen(
     if PROD:
         options.add_argument('--headless')
 
-    browser = wd.Chrome(options=options)
+    browser = wd.Chrome(
+        options=options,
+        service=Service(ChromeDriverManager().install())
+    )
     browser.maximize_window()
 
     browser.get(
