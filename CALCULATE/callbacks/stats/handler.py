@@ -59,6 +59,7 @@ def createScreen(
     options.add_argument('--disable-dev-shm-usage')
     if PROD:
         options.add_argument('--headless')
+        options.add_argument('--disable-blink-features=AutomationControlled')
 
     browser = wd.Chrome(
         options=options,
