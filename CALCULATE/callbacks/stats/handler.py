@@ -419,7 +419,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 (stat.tool or '').replace('/', '').upper(),
                 '1h', 'candles', 6
             )
-        except:
+        except Exception as e:
+            print(e)
             file_path = None
 
         text = msg_channel_calculation(stat)
@@ -503,7 +504,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 (stat.tool or '').replace('/', '').upper(),
                 '1h', 'candles', 6
             )
-        except:
+        except Exception as e:
+            print(e)
             file_path = None
 
         text = msg_channel_calculation(stat) \
