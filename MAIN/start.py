@@ -32,7 +32,8 @@ def send_start_by_user(
         if calc is None:
             return
 
-        u_base = db.get_calc_user_settings(user_id, calc.market)
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        u_base = db.get_calc_user_settings(user_db_id, calc.market)
 
         deposit = risk = None
         if u_base is None or u_base.deposit is None:
