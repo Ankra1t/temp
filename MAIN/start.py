@@ -64,7 +64,7 @@ def send_start_by_user(
             split_values=calc.split_values
         )
 
-        new_id = db.add_calculation(calc)
+        new_id = db.add_calculation(new_calc)
         new_calc.id = new_id or -1
 
         send_calculation(bot, message, user_id, new_calc, True)
