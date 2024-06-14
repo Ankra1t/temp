@@ -53,6 +53,7 @@ def createScreen(
     type: Literal['bars', 'candles'] = 'bars',
     scale=0
 ):
+    print('START')
     options = Options()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
@@ -63,11 +64,13 @@ def createScreen(
         options=options,
         service=Service(ChromeDriverManager().install())
     )
+    print('BROWSER CRAETED')
     browser.maximize_window()
 
     browser.get(
         f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
 
+    print('GET SITE')
     if not PROD:
         browser.execute_script(
             "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
@@ -79,9 +82,12 @@ def createScreen(
             (By.CLASS_NAME, 'self-tool--time-interval-item')
         )
     )
+    print('GET ELEMENT')
     interval_buttons = browser.find_elements(
         By.CLASS_NAME, 'self-tool--time-interval-item'
     )
+    print('GET ELEMENTS')
+    print(interval_buttons)
     for el in interval_buttons:
         if el.text == time:
             el.click()
