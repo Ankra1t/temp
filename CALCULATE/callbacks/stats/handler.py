@@ -56,14 +56,14 @@ def createScreen(
     print('START')
     options = Options()
     options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument('--disable-dev-shm-usage')
     if PROD:
         options.add_argument('--headless')
-        options.add_argument('--remote-debugging-port=9222')
 
     browser = wd.Chrome(
         options=options,
-        service=Service(ChromeDriverManager().install())
+        service=Service(executable_path='/usr/bin/chromedriver' if PROD else None)
+        # service=Service(ChromeDriverManager().install())
     )
     print('BROWSER CRAETED')
     browser.maximize_window()
