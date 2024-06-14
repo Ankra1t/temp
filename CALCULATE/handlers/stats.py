@@ -5,6 +5,7 @@ from telebot.types import Message
 
 from config_logger import logger
 from Classes import calcService
+from data.data import liteDb
 from db import db
 from common.utils import delete_message, digit_accept, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
@@ -13,7 +14,7 @@ from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
     kb_deal_profit_minus, kb_calc_image,
     send_main, send_calculation, send_freeze,
-    kb_calc_result,
+    kb_calc_result, send_confirm_calc_send
 )
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
@@ -155,6 +156,61 @@ def handle_calc_image(message: Message, bot: TeleBot):
     send_main(message, bot, user_id, True)
 
 
+def handle_send_text(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    new_text = message.html_text
+    if new_text is None:
+        new_mes = bot.send_message(
+            chat_id, 'Введите текст:'
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data['stat_id']
+
+    send_data = liteDb.getSendCalc(stat_id)
+    if send_data is None:
+        return
+
+    liteDb.addSendCalc(
+        stat_id, new_text, send_data[2]
+    )
+
+    send_confirm_calc_send(bot, message, stat_id, True)
+
+
+def handle_send_photo(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    new_photo = message.photo[0] \
+        if message.photo is not None and len(message.photo) > 0 \
+        else None
+
+    if new_photo is None:
+        new_mes = bot.send_message(
+            chat_id, 'Отправьте фото:'
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data['stat_id']
+
+    send_data = liteDb.getSendCalc(stat_id)
+    if send_data is None:
+        return
+
+    liteDb.addSendCalc(
+        stat_id, send_data[1], new_photo.file_id
+    )
+
+    send_confirm_calc_send(bot, message, stat_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -163,3 +219,6 @@ def registration(bot: TeleBot):
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
     reg_mes(handle_calc_image, state=StatsState.add_image)
+
+    reg_mes(handle_send_text, state=StatsState.send_add_text)
+    reg_mes(handle_send_photo, state=StatsState.send_add_photo)

@@ -5,7 +5,7 @@ from .pages import (
     send_main, send_settings, send_manual_page,
     send_summury_profit_settings, send_stats, send_user_deposit,
     send_tariffs_list_item, send_user_tariffs, send_calculation,
-    send_freeze, send_exchange_settings
+    send_freeze, send_exchange_settings, send_confirm_calc_send
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 
@@ -22,7 +22,8 @@ from .stats.handler import registration as _reg_stats
 from .stats.keyboards import (
     kb_stats, kb_calc_result, kb_freeze_calc,
     kb_deal_result, kb_deal_profit_minus, kb_deal_profit_cancel,
-    kb_calculate_delete, kb_calculate_change, kb_calc_image
+    kb_calculate_delete, kb_calculate_change, kb_calc_image,
+    kb_confirm_channel_post
 )
 
 from .settings.handler import registration as _reg_settings

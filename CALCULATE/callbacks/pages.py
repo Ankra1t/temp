@@ -10,7 +10,7 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_deposit, msg_dop_settings, msg_exchange,
+    msg_calculation, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual,
     msg_stats_page, msg_summury_profit_settings
@@ -25,7 +25,7 @@ from .settings.keyboards import (
     kb_change_deposit, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
-from .stats.keyboards import kb_freeze_calc, kb_stats
+from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 
 
@@ -393,3 +393,33 @@ def send_freeze(
             )
         else:
             edit_message(bot, message, 'text', text, kb)
+
+
+def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    stat = db.get_calculation(stat_id)
+    send_data = liteDb.getSendCalc(stat_id)
+    if stat is None or send_data is None:
+        return
+
+    photo = send_data[2]
+    text = msg_channel_calculation(stat)\
+        + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+    kb = kb_confirm_channel_post(
+        stat_id
+    )
+
+    if photo is None:
+        bot.send_message(
+            chat_id, text,
+            reply_markup=kb
+        )
+    else:
+        bot.send_photo(
+            chat_id,
+            photo, text,
+            reply_markup=kb
+        )

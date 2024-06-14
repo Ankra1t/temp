@@ -376,25 +376,68 @@ CREATE TABLE IF NOT EXISTS TonStorage (
     # Sended Calc
     def createSendCalcTable(self):
         try:
-            #             self.curs.execute("""
-            # DROP TABLE Exchanges;
+            # self.curs.execute("""
+            #     CREATE TABLE IF NOT EXISTS SendCalcs (
+            #         id INTEGER PRIMARY KEY,
+            #         text STRING,
+            #         photo STRING
+            #     );
             # """)
-            self.curs.execute("""
-                CREATE TABLE IF NOT EXISTS SendCalcs (
-                    id INTEGER PRIMARY KEY
+            self.curs.execute('''
+                CREATE TABLE IF NOT EXISTS NewTemp (
+                    id INTEGER PRIMARY KEY,
+                    text STRING,
+                    photo STRING,
+                    send BOOLEAN DEFAULT(FALSE)
                 );
-            """)
+			''')
+            self.curs.execute('''
+                INSERT INTO NewTemp (id)
+                SELECT id
+                FROM SendCalcs;
+			''')
+            self.curs.execute('''
+                DROP TABLE SendCalcs;
+			''')
+            self.curs.execute('''
+                ALTER TABLE NewTemp RENAME TO SendCalcs;
+			''')
+            self.connection.commit()
         except Exception as e:
             print(e)
 
-    def addSendCalc(self, id: int):
+    def addSendCalc(self, id: int, text: str | None=None, photo: str | None = None):
         try:
-            self.curs.execute(
-                'INSERT INTO SendCalcs (id) VALUES (?)',
+            data = self.curs.execute(
+                'SELECT * FROM SendCalcs WHERE id = ?',
                 (id,)
-            )
+            ).fetchone()
+
+            if data is None:
+                self.curs.execute(
+                    'INSERT INTO SendCalcs (id, text, photo) VALUES (?, ?, ?)',
+                    (id, text, photo)
+                )
+            else:
+                self.curs.execute(
+                    'UPDATE SendCalcs SET text = ?, photo = ? WHERE id = ?',
+                    (text, photo, id)
+                )
+
             self.connection.commit()
             return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def sendSendCalc(self, id: int):
+        try:
+            self.curs.execute(
+                'UPDATE SendCalcs SET send = ? WHERE id = ?',
+                (True, id)
+            )
+            self.connection.commit()
+            return False
         except Exception as e:
             print(e)
             return False
@@ -402,9 +445,34 @@ CREATE TABLE IF NOT EXISTS TonStorage (
     def checkSendCalc(self, id: int):
         try:
             data = self.curs.execute(
-                'SELECT * FROM SendCalcs WHERE id = ?', (id,)).fetchone()
+                'SELECT send FROM SendCalcs WHERE id = ?', (id,)
+            ).fetchone()
             if data is None:
                 return False
+
+            return data[0] == 1
+        except Exception as e:
+            print(e)
+            return False
+
+    def getSendCalc(self, id: int) -> tuple[int, str | None, str | None, bool] | None:
+        try:
+            data = self.curs.execute(
+                'SELECT * FROM SendCalcs WHERE id = ?', (id,)
+            ).fetchone()
+            if data is None:
+                return None
+
+            return (*data[:3], data[3] == 1)
+        except Exception as e:
+            print(e)
+            return None
+
+    def delSendCalc(self, id: int):
+        try:
+            self.curs.execute(
+                'DELETE FROM SendCalcs WHERE id = ?', (id,)
+            )
 
             return True
         except Exception as e:
@@ -412,4 +480,4 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             return False
 
 liteDb = Data()
-liteDb.createSendCalcTable()
+# liteDb.createSendCalcTable()

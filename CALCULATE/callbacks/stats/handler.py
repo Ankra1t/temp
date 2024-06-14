@@ -1,5 +1,6 @@
 from datetime import timedelta
 import os
+from random import randint
 from time import sleep
 from typing import Literal
 from telebot import TeleBot
@@ -34,11 +35,11 @@ from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
     kb_calc_image, kb_calc_result, kb_calculate_change,
-    kb_calculate_delete, kb_channel_url, kb_deal_profit_cancel,
+    kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_calculation, send_freeze, send_main, send_stats
+from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
 
 def createScreen(
@@ -50,7 +51,8 @@ def createScreen(
     browser = wd.Chrome()
     browser.maximize_window()
 
-    browser.get(f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
+    browser.get(
+        f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}')
     browser.execute_script(
         "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
     )
@@ -82,7 +84,7 @@ def createScreen(
         By.CLASS_NAME, 'self-tv_tool-header'
     )
     ActionChains(browser).move_to_element_with_offset(
-        click_place, 600, 30
+        click_place, randint(100, 600), 30
     ).context_click().move_by_offset(
         50, 250
     ).click().perform()
@@ -401,29 +403,182 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if stat is None:
             return
 
-        file_path = createScreen(
-            (stat.tool or '').replace('/', '').upper(), 
-            '1h', 'candles', 6
+        new_mes = bot.send_message(
+            chat_id, 'Генерация изображения...',
         )
+
+        try:
+            file_path = createScreen(
+                (stat.tool or '').replace('/', '').upper(),
+                '1h', 'candles', 6
+            )
+        except:
+            file_path = None
+
         text = msg_channel_calculation(stat)
-        print(1)
-        with open(file_path, 'rb') as photo:
-            bot.send_photo(
-                RU_CHANNEL_ID,
-                photo, text,
-                reply_markup=kb_channel_url(
-                    'ru', stat_id, bot.get_me().username
+
+        if file_path is None:
+            bot.edit_message_text(
+                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+            )
+
+            main_mes = bot.send_message(
+                chat_id, text,
+                reply_markup=kb_confirm_channel_post(
+                    stat_id
                 )
             )
-        os.remove(file_path)
-        print(2)
+        else:
+            bot.delete_message(new_mes.chat.id, new_mes.id)
 
-        liteDb.addSendCalc(stat_id)
+            with open(file_path, 'rb') as photo:
+                main_mes = bot.send_photo(
+                    chat_id,
+                    photo, text,
+                    reply_markup=kb_confirm_channel_post(
+                        stat_id
+                    )
+                )
+            os.remove(file_path)
+
+        photo_str = None
+        if main_mes.photo is not None and len(main_mes.photo) > 0:
+            photo_str = main_mes.photo[-1].file_id
+
+        liteDb.addSendCalc(stat_id, None, photo_str)
         bot.edit_message_reply_markup(
             chat_id, mes_id,
             reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
         )
-        print(3)
+
+    if type == 'stc+send':
+        send_data = liteDb.getSendCalc(stat_id)
+        stat = db.get_calculation(stat_id)
+        if send_data is None or stat is None:
+            return
+
+        photo = send_data[2]
+        text = msg_channel_calculation(stat)\
+            + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+        kb = kb_channel_url(
+            'ru', stat_id, bot.get_me().username
+        )
+
+        if photo is None:
+            bot.send_message(
+                RU_CHANNEL_ID, text,
+                reply_markup=kb
+            )
+        else:
+            bot.send_photo(
+                RU_CHANNEL_ID,
+                photo, text,
+                reply_markup=kb
+            )
+
+        bot.delete_message(chat_id, mes_id)
+        bot.send_message(chat_id, 'Отправлено')
+        liteDb.sendSendCalc(stat_id)
+
+    if type == 'stc+rescreen':
+        send_data = liteDb.getSendCalc(stat_id)
+        stat = db.get_calculation(stat_id)
+        if stat is None or send_data is None:
+            return
+
+        new_mes = bot.send_message(
+            chat_id, 'Генерация изображения...',
+        )
+
+        try:
+            file_path = createScreen(
+                (stat.tool or '').replace('/', '').upper(),
+                '1h', 'candles', 6
+            )
+        except:
+            file_path = None
+
+        text = msg_channel_calculation(stat) \
+            + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+        if file_path is None:
+            bot.edit_message_text(
+                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+            )
+
+            main_mes = bot.send_message(
+                chat_id, text,
+                reply_markup=kb_confirm_channel_post(
+                    stat_id
+                )
+            )
+        else:
+            bot.delete_message(new_mes.chat.id, new_mes.id)
+
+            with open(file_path, 'rb') as photo:
+                main_mes = bot.send_photo(
+                    chat_id, photo, text,
+                    reply_markup=kb_confirm_channel_post(
+                        stat_id
+                    )
+                )
+            os.remove(file_path)
+
+        photo_str = None
+        if main_mes.photo is not None and len(main_mes.photo) > 0:
+            photo_str = main_mes.photo[-1].file_id
+
+        liteDb.addSendCalc(stat_id, send_data[1], photo_str)
+        bot.delete_message(chat_id, mes_id)
+
+    if type == 'stc+text':
+        bot.delete_message(chat_id, mes_id)
+        new_mes = bot.send_message(
+            chat_id, '👉 Введите <b>доп текст</b>:',
+        )
+
+        bot.set_state(user_id, StatsState.send_add_text, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes.id, 'stat_id': stat_id
+            }
+        )
+
+    if type == 'stc+photo':
+        bot.delete_message(chat_id, mes_id)
+        new_mes = bot.send_message(
+            chat_id, '👉 Отправьте <b>новое фото</b>:',
+        )
+
+        bot.set_state(user_id, StatsState.send_add_photo, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes.id, 'stat_id': stat_id
+            }
+        )
+
+    if type == 'stc-photo':
+        send_data = liteDb.getSendCalc(stat_id)
+        if send_data is None:
+            return
+
+        liteDb.addSendCalc(
+            stat_id, send_data[1], None
+        )
+        bot.delete_message(chat_id, mes_id)
+        send_confirm_calc_send(bot, call.message, stat_id, True)
+
+    if type == 'stc-text':
+        send_data = liteDb.getSendCalc(stat_id)
+        if send_data is None:
+            return
+
+        liteDb.addSendCalc(
+            stat_id, None, send_data[2]
+        )
+        bot.delete_message(chat_id, mes_id)
+        send_confirm_calc_send(bot, call.message, stat_id, True)
 
     bot.answer_callback_query(call.id)
 

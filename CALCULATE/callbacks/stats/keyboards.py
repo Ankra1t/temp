@@ -59,7 +59,7 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     isAdmin = db.get_worker_role(user_db_id)
-    isSended = liteDb.checkSendCalc(stat_id)
+    isSended = liteDb.getSendCalc(stat_id) is not None
 
     texts = {
         'ru': {
@@ -250,6 +250,39 @@ def kb_calc_image(user_id: int, stat_id: int):
     return keyboard
 
 
+def kb_confirm_channel_post(stat_id: int):
+    send_data = liteDb.getSendCalc(stat_id)
+
+    send = getButton('Отправить', f'stc+send', stat_id)
+    rescreen = getButton('Повтор скрина', f'stc+rescreen', stat_id)
+
+    is_text = False
+    is_photo = False
+    if send_data is not None:
+        is_text = send_data[1] is not None
+        is_photo = send_data[2] is not None
+
+    if is_text:
+        add_text = getButton('Убрать текст', 'stc-text', stat_id)
+    else:
+        add_text = getButton('Доп текст', 'stc+text', stat_id)
+
+    if is_photo:
+        add_photo = getButton('Убрать фото', 'stc-photo', stat_id)
+    else:
+        add_photo = getButton('Своё фото', 'stc+photo', stat_id)
+
+    cancel = getButton(cancel_txt('ru'), 'go_main')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        send, rescreen,
+        # add_text,
+        add_photo, cancel,
+    )
+    return keyboard
+
+
 def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
     texts = {
         'ru': 'Рассчитать для себя',
@@ -258,6 +291,7 @@ def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton(texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'),
+        InlineKeyboardButton(
+            texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'),
     )
     return keyboard
