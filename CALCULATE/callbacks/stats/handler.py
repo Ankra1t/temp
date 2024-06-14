@@ -77,6 +77,7 @@ def createScreen(
         browser.refresh()
 
     print('GET SITE')
+    print(browser.title)
     WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
             (By.CLASS_NAME, 'self-tool--time-interval-item')
