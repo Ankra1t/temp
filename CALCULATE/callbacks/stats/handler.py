@@ -62,7 +62,7 @@ def createScreen(
 
     browser = wd.Chrome(
         options=options,
-        service=Service(executable_path='/usr/bin/chromedriver' if PROD else None)
+        service=Service(executable_path='/usr/bin/chromedriver' if PROD else None) # type:ignore
         # service=Service(ChromeDriverManager().install())
     )
     print('BROWSER CRAETED')
@@ -79,6 +79,7 @@ def createScreen(
         browser.refresh()
 
     print('GET SITE')
+    sleep(5)
     print(browser.title)
     WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
