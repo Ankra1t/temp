@@ -56,9 +56,9 @@ def createScreen(
     print('START')
     options = Options()
     options.add_argument('--no-sandbox')
-    # options.add_argument('--disable-dev-shm-usage')
-    # if PROD:
-    #     options.add_argument('--headless')
+    options.add_argument('--disable-dev-shm-usage')
+    if PROD:
+        options.add_argument('--headless')
 
     browser = wd.Chrome(
         options=options,
@@ -72,15 +72,22 @@ def createScreen(
         f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}'
     )
 
+    print(browser.title)
+
+    print(browser.page_source)
+
+    performance_log = browser.get_log('performance')
+    print (str(performance_log).strip('[]'))
+
+    for entry in browser.get_log('performance'):
+        print (entry)
+
     if not PROD:
         browser.execute_script(
             "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
         )
         browser.refresh()
 
-    print('GET SITE')
-    sleep(5)
-    print(browser._is_remote)
     WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
             (By.CLASS_NAME, 'self-tool--time-interval-item')
