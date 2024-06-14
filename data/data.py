@@ -376,32 +376,32 @@ CREATE TABLE IF NOT EXISTS TonStorage (
     # Sended Calc
     def createSendCalcTable(self):
         try:
-            # self.curs.execute("""
-            #     CREATE TABLE IF NOT EXISTS SendCalcs (
-            #         id INTEGER PRIMARY KEY,
-            #         text STRING,
-            #         photo STRING
-            #     );
-            # """)
-            self.curs.execute('''
-                CREATE TABLE IF NOT EXISTS NewTemp (
+            self.curs.execute("""
+                CREATE TABLE IF NOT EXISTS SendCalcs (
                     id INTEGER PRIMARY KEY,
                     text STRING,
-                    photo STRING,
-                    send BOOLEAN DEFAULT(FALSE)
+                    photo STRING
                 );
-			''')
-            self.curs.execute('''
-                INSERT INTO NewTemp (id)
-                SELECT id
-                FROM SendCalcs;
-			''')
-            self.curs.execute('''
-                DROP TABLE SendCalcs;
-			''')
-            self.curs.execute('''
-                ALTER TABLE NewTemp RENAME TO SendCalcs;
-			''')
+            """)
+            # self.curs.execute('''
+            #     CREATE TABLE IF NOT EXISTS NewTemp (
+            #         id INTEGER PRIMARY KEY,
+            #         text STRING,
+            #         photo STRING,
+            #         send BOOLEAN DEFAULT(FALSE)
+            #     );
+			# ''')
+            # self.curs.execute('''
+            #     INSERT INTO NewTemp (id)
+            #     SELECT id
+            #     FROM SendCalcs;
+			# ''')
+            # self.curs.execute('''
+            #     DROP TABLE SendCalcs;
+			# ''')
+            # self.curs.execute('''
+            #     ALTER TABLE NewTemp RENAME TO SendCalcs;
+			# ''')
             self.connection.commit()
         except Exception as e:
             print(e)
@@ -480,4 +480,4 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             return False
 
 liteDb = Data()
-# liteDb.createSendCalcTable()
+liteDb.createSendCalcTable()
