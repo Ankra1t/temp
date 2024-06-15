@@ -481,4 +481,4 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             return False
 
 liteDb = Data()
-liteDb.createSendCalcTable()
+# liteDb.createSendCalcTable()

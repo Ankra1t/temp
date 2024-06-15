@@ -525,14 +525,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         photo = send_data[2]
-        text = msg_channel_calculation(stat)\
-            + (f'\n{send_data[1]}' if send_data[1] is not None else '')
-
-        kb = kb_channel_url(
-            'ru', stat_id, bot.get_me().username
-        )
 
         for CHANNEL_ID in (RU_CHANNEL_ID, EN_CHANNEL_ID):
+            lang = 'ru' if CHANNEL_ID == RU_CHANNEL_ID else 'en'
+
+            text = msg_channel_calculation(stat, lang)\
+                + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+            kb = kb_channel_url(
+                lang, stat_id, bot.get_me().username
+            )
+
             if photo is None:
                 bot.send_message(
                     CHANNEL_ID, text,

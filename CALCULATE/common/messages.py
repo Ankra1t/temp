@@ -1199,9 +1199,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(calc: Calculation):
-    lang = 'ru'
-
+def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru'):
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1224,7 +1222,6 @@ def msg_channel_calculation(calc: Calculation):
             'to': 'to',
         }
     }
-
 
     if calc.open_price > calc.stop_loss:
         long_short = 'long'
