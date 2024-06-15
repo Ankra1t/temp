@@ -22,7 +22,7 @@ from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from data.data import liteDb
-from config_global import PROD, RU_CHANNEL_ID
+from config_global import EN_CHANNEL_ID, PROD, RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
@@ -62,7 +62,8 @@ def createScreen(
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option(
-            "excludeSwitches", ["enable-automation"])
+            "excludeSwitches", ["enable-automation"]
+        )
         options.add_experimental_option('useAutomationExtension', False)
         options.add_argument("start-maximized")
 
@@ -531,17 +532,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             'ru', stat_id, bot.get_me().username
         )
 
-        if photo is None:
-            bot.send_message(
-                RU_CHANNEL_ID, text,
-                reply_markup=kb
-            )
-        else:
-            bot.send_photo(
-                RU_CHANNEL_ID,
-                photo, text,
-                reply_markup=kb
-            )
+        for CHANNEL_ID in (RU_CHANNEL_ID, EN_CHANNEL_ID):
+            if photo is None:
+                bot.send_message(
+                    CHANNEL_ID, text,
+                    reply_markup=kb
+                )
+            else:
+                bot.send_photo(
+                    CHANNEL_ID,
+                    photo, text,
+                    reply_markup=kb
+                )
 
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, 'Отправлено')

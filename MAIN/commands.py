@@ -78,6 +78,7 @@ def _site(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
+    print(message.chat.id)
     pass
 
 
