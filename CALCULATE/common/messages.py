@@ -2,6 +2,7 @@ from typing import Literal
 from telebot import TeleBot
 from datetime import datetime
 
+from Classes import text_editor
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
@@ -1237,7 +1238,19 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
 
     trading_style_type = ''
     if calc.trading_style is not None:
-        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+        if lang == 'en':
+            try:
+                result = str(
+                    text_editor.translator.translate(
+                        calc.trading_style, 'en', 'ru'
+                    ).text
+                )
+            except:
+                result = calc.trading_style
+        else:
+            result = calc.trading_style
+
+        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
