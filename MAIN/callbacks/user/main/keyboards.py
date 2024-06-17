@@ -31,7 +31,23 @@ def kb_user_main(user_id: int, new_user=False):
             'account': 'Profile',
             'site': 'Go to the website',
             'channel': 'Сhannel',
-        }
+        },
+        'uz': {
+            'try': 'Hisoblashni sinab ko\'ring',
+            'buy': 'Sotib olish',
+            'calc': 'Kalkulyator',
+            'account': 'Shaxsiy kabinet',
+            'site': 'Saytga kiring',
+            'channel': 'Rohanna',
+        },
+        'tr': {
+            'try': 'Hesaplamayı deneyin',
+            'buy': 'Satın al',
+            'calc': 'Hesap makinesi',
+            'account': 'Kişisel Hesap',
+            'site': 'Siteye giriş yap',
+            'channel': 'kanal',
+        },
     }
 
     # btn1 = getButton("Рекомендации", 'signals')
@@ -76,7 +92,13 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
         },
         'en': {
             'site': 'Go to the website',
-        }
+        },
+        'uz': {
+            'site': 'Saytga kiring',
+        },
+        'tr': {
+            'site': 'Siteye giriş yap',
+        },
     }
 
     btn_link = InlineKeyboardButton(

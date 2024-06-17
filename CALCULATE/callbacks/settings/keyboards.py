@@ -58,7 +58,33 @@ def kb_settings(user_id: int):
             'dop': 'Extra',
 
             'exchange': 'Exchange'
-        }
+        },
+        'uz': {
+            'base': 'Asosiy qiymatlar',
+            'lang': 'Tillar',
+            'market': 'Bozor',
+            'style': 'Savdo uslubi',
+            'trading_type': 'Savdo turi',
+            'reset': 'Qayta o\'rnatish',
+            'deposit': 'Depozit',
+            'summury_profit': 'Foyda taqsimoti',
+            'dop': 'Bundan tashqari',
+
+            'exchange': 'Almashish'
+        },
+        'tr': {
+            'base': 'Temel değerler',
+            'lang': 'Dil',
+            'market': 'Pazar',
+            'style': 'Ticaret tarzı',
+            'trading_type': 'Ticaret türü',
+            'reset': 'Sıfırla',
+            'deposit': 'Depozito',
+            'summury_profit': 'Kâr bölümü',
+            'dop': 'Ek',
+
+            'exchange': 'Borsa'
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -106,7 +132,17 @@ def kb_change_base(user_id: int):
             'risk': 'Risk percent',
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
-        }
+        },
+        'uz': {
+            'risk': 'Xavf foizi',
+            'day_risk': 'Kuniga xavf',
+            'round_count': 'Yaxlitlash',
+        },
+        'tr': {
+            'risk': 'Risk yüzdesi',
+            'day_risk': 'Günlük risk',
+            'round_count': 'Yuvarlama',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -146,6 +182,18 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
             'currency': 'Change currency',
             'update_on': 'Update on',
             'update_off': 'Update off',
+        },
+        'uz': {
+            'change': 'Depozitni o\'zgartirish',
+            'currency': 'Valyutani almashtirish',
+            'update_on': 'Yangilashni yoqing',
+            'update_off': 'Yangilash o\'chirilgan',
+        },
+        'tr': {
+            'change': 'Depozitoyu değiştir',
+            'currency': 'Para birimini değiştir',
+            'update_on': 'Güncellemeyi aç',
+            'update_off': 'Güncellemeyi kapat',
         },
     }
 
@@ -238,11 +286,27 @@ def kb_choose_lang(user_id: int, is_first=False):
         'ru': {
             'ru': 'Русский',
             'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
         },
         'en': {
             'ru': 'Russian',
             'en': 'English',
-        }
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'uz': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'tr': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
     }
 
     first = 'first' if is_first else ''
@@ -251,8 +315,10 @@ def kb_choose_lang(user_id: int, is_first=False):
 
     btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', f'{first}_choose_lang_ru')
     btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', f'{first}_choose_lang_en')
+    btn3 = getButton(f'🇺🇿 {texts[lang]["uz"]}', f'{first}_choose_lang_uz')
+    btn4 = getButton(f'🇹🇷 {texts[lang]["tr"]}', f'{first}_choose_lang_tr')
 
-    keyboard.add(btn1, btn2)
+    keyboard.add(btn1, btn2, btn3, btn4)
     if not is_first:
         keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
 
@@ -269,7 +335,15 @@ def kb_settings_confirm(user_id: int, action: str):
         'en': {
             'yes': 'Yes',
             'no': 'No',
-        }
+        },
+        'uz': {
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+        },
+        'tr': {
+            'yes': 'Evet',
+            'no': 'HAYIR',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -290,7 +364,13 @@ def kb_summury_profit(user_id: int):
         },
         'en': {
             'change': 'Change',
-        }
+        },
+        'uz': {
+            'change': 'O\'zgartirish',
+        },
+        'tr': {
+            'change': 'Değiştir',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -318,7 +398,15 @@ def kb_summury_profit_type(user_id: int):
         'en': {
             'default': 'Simple',
             'splitting': 'Splitting',
-        }
+        },
+        'uz': {
+            'default': 'Oddiy',
+            'splitting': 'Ajratish',
+        },
+        'tr': {
+            'default': 'Basit',
+            'splitting': 'Ayrılma',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -349,7 +437,13 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         },
         'en': {
             'save': 'Save',
-        }
+        },
+        'uz': {
+            'save': 'Saqlash',
+        },
+        'tr': {
+            'save': 'Kaydet',
+        },
     }
 
     # Максимальный тейк-профит
@@ -412,7 +506,15 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         'en': {
             'last': 'Remains',
             'save': 'Save',
-        }
+        },
+        'uz': {
+            'last': 'Qolgan',
+            'save': 'Saqlash',
+        },
+        'tr': {
+            'last': 'Kalan',
+            'save': 'Kaydet',
+        },
     }
 
     # Максимальный тейк-профит
@@ -535,7 +637,15 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
         'en': {
             'off_settings': 'Off',
             'off': 'Skip',
-        }
+        },
+        'uz': {
+            'off_settings': 'Yoqish; ishga tushirish',
+            'off': 'Oʻtkazib yuborish',
+        },
+        'tr': {
+            'off_settings': 'Kapat',
+            'off': 'Atla',
+        },
     }
 
     buttons = []
@@ -587,6 +697,14 @@ def kb_trading_type(user_id: int):
             'margin': 'Margin',
             'spot': 'Spot',
         },
+        'uz': {
+            'margin': 'Marjinal',
+            'spot': 'Spot',
+        },
+        'tr': {
+            'margin': 'Marjinal',
+            'spot': 'Spot',
+        },
     }
 
     btn_margin = getButton(texts[lang]['margin'],
@@ -607,6 +725,8 @@ def kb_first_calc_info(user_id: int):
     texts = {
         'ru': 'Настроить свой калькулятор',
         'en': 'Set up your calculator',
+        'uz': 'Kalkulyatoringizni sozlang',
+        'tr': 'Hesap makinenizi özelleştirin',
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -629,8 +749,20 @@ def kb_exchange(user_id: int, is_exchange: bool = False):
         'en': {
             'set_exchange': 'Set exchange',
             'change_exchange': 'Change exchange',
-            'change_fee': 'Change fee',
+            'change_fee': 'Change the fee',
             'off': 'Off',
+        },
+        'uz': {
+            'set_exchange': 'Almashinuvni o\'rnating',
+            'change_exchange': 'O\'zgartirish almashinuvi',
+            'change_fee': 'Komissiyani o\'zgartirish',
+            'off': 'Yoqish; ishga tushirish',
+        },
+        'tr': {
+            'set_exchange': 'Borsayı ayarla',
+            'change_exchange': 'borsayı değiştir',
+            'change_fee': 'Komisyonu değiştir',
+            'off': 'Kapat',
         },
     }
 
@@ -665,6 +797,14 @@ def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: floa
         'en': {
             'maker': 'Maker',
             'taker': 'Taker',
+        },
+        'uz': {
+            'maker': 'Maker',
+            'taker': 'Taker',
+        },
+        'tr': {
+            'maker': 'Yapıcı',
+            'taker': 'Alıcı',
         },
     }
 
@@ -735,7 +875,23 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
             'on': '✅ On',
             'off': '⭕️ Off',
             'is_risk_update': 'risk update',
-        }
+        },
+        'uz': {
+            'calc_output': 'Hisoblash xulosasi: ' + ('matnni bilan 📝' if output == 'photo' else 'rasm bilan  🖼'),
+            'dop': 'Bundan tashqari',
+
+            'on': '✅ Yoqish',
+            'off': '⭕️ O\'chirish',
+            'is_risk_update': 'xavfni yangilash',
+        },
+        'tr': {
+            'calc_output': 'Hesaplamanın çıktısı: ' + ('metinle 📝' if output == 'photo' else 'resimle 🖼'),
+            'dop': 'Ek',
+
+            'on': '✅ Dahil etmek',
+            'off': '⭕️ Kapamak',
+            'is_risk_update': 'risk güncellemesi',
+        },
     }
 
     btn_output = getButton(texts[lang]['calc_output'], 'calc_output')

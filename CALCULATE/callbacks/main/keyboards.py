@@ -43,7 +43,23 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'buy': 'Buy',
             'stats': 'Your stats',
             'link': 'Updates',
-        }
+        },
+        'uz': {
+            'calc': 'Hisoblash',
+            'calc_continue': 'Hisoblashni davom eting',
+            'settings': 'Sozlamalar',
+            'buy': 'Sotib olish',
+            'stats': 'Sizning stastitikangiz',
+            'link': 'Yangilanishlar',
+        },
+        'tr': {
+            'calc': 'Hesaplama',
+            'calc_continue': 'Hesaplamaya devam et',
+            'settings': 'Ayarlar',
+            'buy': 'Satın al',
+            'stats': 'Sizin istatistik',
+            'link': 'Yenilemeler',
+        },
     }
 
     stat_id = -1
@@ -106,6 +122,14 @@ def kb_after_first_settings(user_id: int):
         'en': {
             'calc': 'Make a calculation',
             'settings': 'Settings',
+        },
+        'uz': {
+            'calc': 'Hisoblash',
+            'settings': 'Sozlamalar',
+        },
+        'tr': {
+            'calc': 'Hesaplama',
+            'settings': 'Ayarlar',
         },
     }
 

@@ -65,11 +65,17 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
 
     texts = {
         'ru': {
-            'risk': 'риска'
+            'risk': 'риска',
         },
         'en': {
             'risk': 'of risk'
-        }
+        },
+        'uz': {
+            'risk': 'xavf'
+        },
+        'tr': {
+            'risk': 'risk'
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=3)

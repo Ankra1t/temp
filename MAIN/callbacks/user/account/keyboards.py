@@ -30,7 +30,21 @@ def kb_user_account(user_id: int):
             'params': 'Params',
             'support': 'Support',
             'wallet': 'Wallet',
-        }
+        },
+        'uz': {
+            'refs': 'Yo\'naltirish',
+            'purchases': 'Mening xaridlarim',
+            'params': 'Parametrlar',
+            'support': 'Yordam',
+            'wallet': 'Hamyon',
+        },
+        'tr': {
+            'refs': 'Referans',
+            'purchases': 'Satın alımlarım',
+            'params': 'Paramler',
+            'support': 'Teknik Destek',
+            'wallet': 'Cüzdan',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -62,6 +76,12 @@ def kb_user_referral(user_id: int, referals_count=0):
         },
         'en': {
             'refs': 'List of referrals'
+        },
+        'uz': {
+            'refs': 'Yo\'llanmalar'
+        },
+        'tr': {
+            'refs': 'Yönlendirmelerin listesi'
         },
     }
 
@@ -106,7 +126,15 @@ def kb_user_params(user_id: int):
         },
         'en': {
             'lang': 'Language',
-            'name': 'Change name'
+            'name': 'Change nickname'
+        },
+        'uz': {
+            'lang': 'Tillar',
+            'name': 'Ismni o\'zgartirish'
+        },
+        'tr': {
+            'lang': 'Dil',
+            'name': 'İsmini değiştir'
         },
     }
 
@@ -125,20 +153,38 @@ def kb_params_choose_lang(user_id: int):
         'ru': {
             'ru': 'Русский',
             'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
         },
         'en': {
             'ru': 'Russian',
             'en': 'English',
-        }
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'uz': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'tr': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', 'set_lang_ru')
     btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', 'set_lang_en')
+    btn3 = getButton(f'🇺🇿 {texts[lang]["uz"]}', 'set_lang_uz')
+    btn4 = getButton(f'🇹🇷 {texts[lang]["tr"]}', 'set_lang_tr')
     btn_back = getButton(cancel_txt(lang), 'params')
 
-    keyboard.add(btn1, btn2)
+    keyboard.add(btn1, btn2, btn3, btn4)
     keyboard.add(btn_back)
     return keyboard
 
@@ -164,6 +210,14 @@ def kb_support(user_id: int, link: str):
         'en': {
             'operator': 'Support',
             'news': 'News',
+        },
+        'uz': {
+            'operator': 'Qo\'llab-quvvatlash',
+            'news': 'Yangiliklar',
+        },
+        'tr': {
+            'operator': 'Destek',
+            'news': 'Haberler',
         },
     }
 
@@ -200,6 +254,8 @@ def kb_wallet_connect(user_id: int, url: str):
     texts = {
         'ru': 'Подключить',
         'en': 'Connect',
+        'uz': 'Ulanmoq',
+        'tr': 'Bağlamak',
     }
 
     back = getButton(back_txt(lang), 'wallet')

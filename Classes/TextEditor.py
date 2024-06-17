@@ -17,7 +17,7 @@ class TextEditor(object):
 
         if text is not None:
             result = text.message
-            if lang == 'en':
+            if lang != 'ru':
                 try:
                     result = str(
                         self.translator.translate(

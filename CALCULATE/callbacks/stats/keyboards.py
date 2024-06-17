@@ -73,7 +73,19 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
             'del': 'Delete',
             'change': 'Change',
             'img': 'Attach image',
-        }
+        },
+        'uz': {
+            'save': 'Hisobni saqlash',
+            'del': 'O\'chirish',
+            'change': 'O\'zgartirish',
+            'img': 'Rasmni qo\'shish',
+        },
+        'tr': {
+            'save': 'Hesaplamayı kaydet',
+            'del': 'Silmek',
+            'change': 'Değiştir',
+            'img': 'Resim ekle',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -109,7 +121,9 @@ def kb_freeze_calc(user_id: int):
 
     hours = {
         'ru': 'ч',
-        'en': 'h'
+        'en': 'h',
+        'uz': 'c',
+        'tr': 's',
     }
 
     btn_3 = getButton(f'3 {hours[lang]}', 'time+3')
@@ -136,7 +150,15 @@ def kb_deal_result(user_id: int, stat_id: int):
         'en': {
             'minus': 'Stop-loss',
             'sum': 'Other amount',
-        }
+        },
+        'uz': {
+            'minus': 'Yo\'qotishni to\'xtating',
+            'sum': 'Boshqa miqdor',
+        },
+        'tr': {
+            'minus': 'Stop-loss',
+            'sum': 'Boshqa miqdor',
+        },
     }
 
     row_width = 3
@@ -197,6 +219,14 @@ def kb_calculate_delete(user_id: int, stat_id: int):
             'yes': 'Yes',
             'no': 'No',
         },
+        'uz': {
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+        },
+        'tr': {
+            'yes': 'Evet',
+            'no': 'HAYIR',
+        },
     }
 
     btn_yes = getButton(f'✅ {texts[lang]["yes"]}', 'delete_calc_yes', stat_id)
@@ -222,6 +252,18 @@ def kb_calculate_change(user_id: int, stat_id: int):
             'stop_loss': 'Stop-loss',
             'tool': 'Tool',
             'style': 'Style',
+        },
+        'uz': {
+            'open_price': 'Ochiq narx',
+            'stop_loss': 'Stop-loss',
+            'tool': 'Asbob',
+            'style': 'Uslubi',
+        },
+        'tr': {
+            'open_price': 'açılış fiyatını',
+            'stop_loss': 'Stop-loss',
+            'tool': 'Enstrüman',
+            'style': 'Tarzı',
         },
     }
 

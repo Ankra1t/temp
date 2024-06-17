@@ -30,6 +30,16 @@ def msg_referral(user_id: int, ref_count: int, bot_name: str):
             '2': '<b>Copy</b> the link below and share it with your friends',
             '3': 'In the future, you will receive <b>reward</b> for the activity of your referrals',
         },
+        'uz': {
+            '1': f'<b>Hozirda sizda:</b> {ref_count} ta tavsiya(lar) bor',
+            '2': 'Quyidagi havoladan nusxa oling va do\'stlaringiz bilan baham ko\'ring',
+            '3': 'Kelajakda siz referallaringiz faoliyati uchun mukofot olasiz',
+        },
+        'tr': {
+            '1': f'<b>Şu anda:</b> {ref_count} referansınız var',
+            '2': 'Aşağıdaki bağlantıyı <b>kopyalayın</b> ve arkadaşlarınızla paylaşın',
+            '3': 'Gelecekte, yönlendirmelerinizin etkinliği için <b>ödül</b>',
+        },
     }
 
     return f"""{texts[lang]['1']}
@@ -54,6 +64,16 @@ def msg_referral_list(user_id: int, referrals: list[UserInfo]):
             'name': 'Nick',
             'sum': 'Spent',
             'not': 'Referrals not found',
+        },
+        'uz': {
+            'name': 'Nik',
+            'sum': 'Jami sarflangan',
+            'not': 'Hech qanday havola topilmadi',
+        },
+        'tr': {
+            'name': 'Nickname',
+            'sum': 'Toplam harcama',
+            'not': 'Yönlendirme bulunamadı',
         },
     }
 
@@ -86,6 +106,16 @@ def msg_site_login(user_id: int):
             'name': 'Website',
             'click': 'Press the button to go to the website',
             'time': 'The link is valid for several minutes',
+        },
+        'uz': {
+            'name': 'Saytga kiring',
+            'click': 'Saytga o\'tish uchun tugmani bosing',
+            'time': 'Havola bir necha daqiqa davomida amal qiladi',
+        },
+        'tr': {
+            'name': 'Siteye giriş yap',
+            'click': 'Siteye gitmek için tıklayınız',
+            'time': 'Bağlantı birkaç dakika geçerlidir',
         },
     }
 
@@ -156,6 +186,16 @@ def msg_user_account(user_id: int, spent: float, refs: int):
             'spent': 'Spent',
             'refs': 'Referrals',
         },
+        'uz': {
+            'name': 'Shaxsiy kabinet',
+            'spent': 'Sarflangan',
+            'refs': 'Murojaatlar',
+        },
+        'tr': {
+            'name': 'Kişisel hesap',
+            'spent': 'Harcanmış',
+            'refs': 'Referans',
+        },
     }
 
     return f"""<b><u>{texts[lang]['name']}</u></b>
@@ -175,6 +215,14 @@ def msg_user_params(user_id: int, user: UserInfo):
         },
         'en': {
             'main': 'Params',
+            'name': 'Nickname',
+        },
+        'uz': {
+            'main': 'Parametrlar',
+            'name': 'Nik',
+        },
+        'tr': {
+            'main': 'Paramler',
             'name': 'Nickname',
         },
     }
@@ -201,6 +249,20 @@ def msg_user_purchases(user_id: int, purchases: list[Purchase]):
             'signals': 'Recommendations',
             'calc_signals': 'PRO',
             'date': 'Date',
+        },
+        'uz': {
+            'name': 'Mening xaridlarim',
+            'calc': 'Kalkulyator',
+            'signals': 'Tavsiyalar',
+            'calc_signals': 'PRO',
+            'date': 'Sana',
+        },
+        'tr': {
+            'name': 'Satın alımlarım',
+            'calc': 'Hesap makinesi',
+            'signals': 'Öneriler',
+            'calc_signals': 'PRO',
+            'date': 'Tarih',
         },
     }
 
@@ -250,12 +312,28 @@ def msg_enter_nickname(user_id: int, error: Literal['min', 'max', 'taken', 'defa
             'dop': 'В никнейме могут быть только символы латинского алфавита и цифры'
         },
         'en': {
-            'err_min': 'Min length 4 symbols',
-            'err_max': 'Max length 16 symbols',
+            'err_min': 'Min length is 4 characters',
+            'err_max': 'Max length is 16 characters',
             'err': 'Error',
-            'taken': 'The name is already taken',
-            'main': 'Enter nickname',
-            'dop': 'The nickname can only contain Latin alphabet characters and numbers'
+            'taken': 'The nickname is already in use',
+            'main': 'Enter a nickname',
+            'dop': 'The nickname can only contain Latin letters and numbers'
+        },
+        'uz': {
+            'err_min': 'Minimal uzunlik 4 ta belgi',
+            'err_max': 'Maksimal uzunlik 16 ta belgi',
+            'err': 'Xato',
+            'taken': 'Ism allaqachon olingan',
+            'main': 'Taxallusingizni kiriting',
+            'dop': 'Taxallus faqat lotin alifbosi va belgilarini o\'z ichiga olishi mumkin'
+        },
+        'tr': {
+            'err_min': 'Minimum uzunluk 4 karakter',
+            'err_max': 'Maksimum uzunluk 16 karakter',
+            'err': 'Hata',
+            'taken': 'İsim alınmış',
+            'main': 'Takma adınızı giriniz',
+            'dop': 'Takma ad yalnızca Latin karakterleri ve sayıları içerebilir'
         },
     }
 

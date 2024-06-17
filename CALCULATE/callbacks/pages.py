@@ -291,10 +291,10 @@ def send_tariffs_list_item(
 
         lang = get_lang(user_id)
 
-        if lang == 'en':
-            image = tariff.img_en or tariff.img
-        else:
+        if lang == 'ru':
             image = tariff.img
+        else:
+            image = tariff.img_en or tariff.img
 
         text = msg_user_tariff(user_id, tariff)
         keyboard = kb_tariff_list(

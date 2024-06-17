@@ -41,6 +41,26 @@ names = {
         'op': 'Open price',
         'sl': 'Stop-loss',
     },
+    'uz': {
+        'dep': 'Depozit',
+        'risk': 'Xavf',
+        'currency': 'Valyuta',
+        'pair': 'Juftlik',
+        'tool': 'Asbob',
+        'style': 'Uslubi',
+        'op': 'Ochiq narx',
+        'sl': 'Stop-loss',
+    },
+    'tr': {
+        'dep': 'Depozito',
+        'risk': 'Risk',
+        'currency': 'Para birimi',
+        'pair': 'Çift',
+        'tool': 'Enstrüman',
+        'style': 'Tarzı',
+        'op': 'açılış fiyatını',
+        'sl': 'Stop-loss',
+    },
 }
 
 

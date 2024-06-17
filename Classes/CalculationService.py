@@ -353,7 +353,59 @@ class CalculationService():
 
                 'long': 'long',
                 'short': 'short',
-            }
+            },
+            'uz': {
+                'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
+                'risk': 'Xavf',
+                'open': 'Narx',
+                'sl': 'Stop',
+
+                'conclusion': 'Daromad',
+                'profit': 'Foyda',
+                'buy': 'Sotib olmoq' if not is_saved else 'Sotib olingan',
+                'sum': 'So\'m',
+                'style': 'Savdo uslubi',
+                'trading_type': 'Savdo turi',
+
+                'coin': 'tangalar',
+                'paper': 'ulushlar',
+                'lot': 'juda ko\'p',
+
+                'margin': 'margin',
+                'spot': 'spot',
+
+                'takes': 'Qabul qilish',
+                'stops': 'To\'xtash-yo\'qotishlar',
+
+                'long': 'long',
+                'short': 'short',
+            },
+            'tr': {
+                'dep': 'Depozito' if not is_saved else 'Son depozito',
+                'risk': 'Risk',
+                'open': 'Fiyat',
+                'sl': 'Stop',
+
+                'conclusion': 'Kar almak',
+                'profit': 'Kâr',
+                'buy': 'Satın almak' if not is_saved else 'Satın alınmış',
+                'sum': 'Meblağ',
+                'style': 'Ticaret tarzı',
+                'trading_type': 'Ticaret türü',
+
+                'coin': 'madeni para',
+                'paper': 'hisse senetleri',
+                'lot': 'çok',
+
+                'margin': 'margin',
+                'spot': 'spot',
+
+                'takes': 'Karmaşa',
+                'stops': 'Durma',
+
+                'long': 'long',
+                'short': 'short',
+            },
         }
 
         if calc.market == 'crypto':
