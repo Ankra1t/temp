@@ -734,8 +734,10 @@ def msg_enter_fee(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': f'Komissiya qiymatini kiriting',
-        'en': f'Komisyon değerini girin',
+        'ru': f'Введите значение <b>комисии</b>',
+        'en': f'Enter value of <b>fee</b>',
+        'uz': f'Komissiya qiymatini kiriting',
+        'tr': f'Komisyon değerini girin',
     }
 
     return f'👉 {texts[lang]}:'
@@ -1481,7 +1483,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             count_zero += 1
 
     if count_zero > calc_result.tp_count // 2:
-        attention = '\n⚠️ .'
+        attention = '\n⚠️ При текущих значениях стоп-лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
         attention += '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
 
     if calc.market == 'crypto':
@@ -1833,7 +1835,7 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
             'last': 'Geriye kalan',
             'split': 'ticaret pozisyonu yenilebilir',
             'info': 'Bölünme, madencilik +1 tik karı için parçaların her birini hesaplar \n seçme <u> kaç parça </u> dengeyi bölün',
-            '1': 'İlk </b> alım karmaşası değerini seçin',
+            '1': '<b>İlk</b> alım karmaşası değerini seçin',
             'action': 'Bir Eylem Seçin',
             'tp': 'Varlığı almak için çıktının <b> yüzdesini </b> girin',
             'next': '<b> aşağıdaki </b> alım karmaşası değerini seçin',
@@ -2092,7 +2094,7 @@ def msg_enter_day_risk(user_id: int):
             'desc2': ' Savdo tizimli savdoga asoslanadi, kun/hafta/oy uchun xavflarni nazorat qilish kerak.',
         },
         'tr': {
-            'main': '<b>Günlük riski</и> girin',
+            'main': '<b>Günlük riski</b> girin',
             'desc1': '"<b>Günlük risk</b>" - sermayenin yüzdesi veya miktarı, aşıldığında sistem size bunu hatırlatacaktır.',
             'desc2': 'Trading sistematik ticarete dayanır ve gün/hafta/ay risklerin kontrol edilmesi gerekir',
         },
