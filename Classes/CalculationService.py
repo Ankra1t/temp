@@ -332,9 +332,9 @@ class CalculationService():
                 'dep': 'Deposit' if not is_saved else 'Final deposit',
                 'risk': 'Risk',
                 'open': 'Price',
-                'sl': 'Stop',
+                'sl': 'Stop loss',
 
-                'conclusion': 'Take-profit',
+                'conclusion': 'Take profit',
                 'profit': 'Profit',
                 'buy': 'Buy' if not is_saved else 'Bought',
                 'sum': 'Sum',
@@ -348,8 +348,8 @@ class CalculationService():
                 'margin': 'margin',
                 'spot': 'spot',
 
-                'takes': 'Take-profits',
-                'stops': 'Stop-losses',
+                'takes': 'Take profits',
+                'stops': 'Stop losses',
 
                 'long': 'long',
                 'short': 'short',
@@ -358,7 +358,7 @@ class CalculationService():
                 'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
                 'risk': 'Xavf',
                 'open': 'Narx',
-                'sl': 'Stop',
+                'sl': 'Stop loss',
 
                 'conclusion': 'Daromad',
                 'profit': 'Foyda',
@@ -384,7 +384,7 @@ class CalculationService():
                 'dep': 'Depozito' if not is_saved else 'Son depozito',
                 'risk': 'Risk',
                 'open': 'Fiyat',
-                'sl': 'Stop',
+                'sl': 'Stop loss',
 
                 'conclusion': 'Kar almak',
                 'profit': 'Kâr',

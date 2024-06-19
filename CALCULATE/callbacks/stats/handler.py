@@ -474,6 +474,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
         try:
+            raise Exception('time')
             file_path = createScreen(
                 (stat.tool or '').replace('/', '').upper(),
                 '1h', 'candles', 6
@@ -526,8 +527,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data[2]
 
-        for CHANNEL_ID in (RU_CHANNEL_ID, EN_CHANNEL_ID):
-            lang = 'ru' if CHANNEL_ID == RU_CHANNEL_ID else 'en'
+        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID, EN_CHANNEL_ID)):
+            lang = 'ru' if i == 0 else 'en'
 
             text = msg_channel_calculation(stat, lang)\
                 + (f'\n{send_data[1]}' if send_data[1] is not None else '')

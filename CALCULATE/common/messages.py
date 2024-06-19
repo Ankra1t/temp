@@ -7,7 +7,7 @@ from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from Classes import calcService
-from models import MARKETS_TYPE, Calculation, CalculatorStats, ForexInfo
+from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo
 
 
 POINT = '•'
@@ -43,6 +43,14 @@ market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
         'RF': 'RF',
         'USA': 'USA',
     },
+}
+
+trading_styles_translates = {
+    'пробой уровня': 'breakout',
+    'отбой от уровня': 'bounce',
+    'ложные пробои': 'fakeout',
+    'скользящие средние': 'moving average',
+    'торговля на high/low': 'high/low trading',
 }
 
 
@@ -802,13 +810,13 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
         'en': {
             'name': 'Stats',
             'all': 'Total calculations',
-            'tp': 'Take-profit',
-            'sl': 'Stop-loss',
+            'tp': 'Take profit',
+            'sl': 'Stop loss',
             'saved': 'Saved',
-            'sum': 'Summury',
-            'pieces': 'pieces',
-            'max_profit': 'Large profit',
-            'min_loss': 'Large loss',
+            'sum': 'Summary',
+            'pieces': '',
+            'max_profit': 'Max profit',
+            'min_loss': 'Min loss',
         },
         'uz': {
             'name': 'Statistika',
@@ -1190,9 +1198,9 @@ def msg_sl_op_equal_error(user_id: int):
 
     texts = {
         'ru': 'Цена стоп-лосса и входа равны',
-        'en': 'The price of the stop-loss and entry are equal',
+        'en': 'The price of the stop loss and entry are equal',
         'uz': 'Stop loss va chiqish narxlari teng',
-        'tr': 'Stop-loss ve giriş fiyatları eşittir',
+        'tr': 'Stop loss ve giriş fiyatları eşittir',
     }
 
     return f'⚠️ {texts[lang]}:'
@@ -1397,9 +1405,9 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Deposit' if not is_saved else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
-            'sl': 'Stop',
+            'sl': 'Stop loss',
 
-            'conclusion': 'Take-profit',
+            'conclusion': 'Take profit',
             'profit': 'Profit' if not is_saved else 'Deal profit',
             'buy': 'Buy' if not is_saved else 'Bought',
             'sum': 'Sum',
@@ -1413,8 +1421,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'margin': 'margin',
             'spot': 'spot',
 
-            'takes': 'Take-profits',
-            'stops': 'Stop-losses',
+            'takes': 'Take profits',
+            'stops': 'Stop losses',
 
             'to': 'to',
 
@@ -1424,7 +1432,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
             'risk': 'Risk',
             'open': 'Narxi',
-            'sl': 'Stop',
+            'sl': 'Stop loss',
 
             'conclusion': 'Foyda oling',
             'profit': 'Profit' if not is_saved else 'Bitim profit',
@@ -1451,9 +1459,9 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Depozito' if not is_saved else 'Son depozito',
             'risk': 'Risk',
             'open': 'Fiyat',
-            'sl': 'Stop',
+            'sl': 'Stop loss',
 
-            'conclusion': 'Take-profit',
+            'conclusion': 'Take profit',
             'profit': 'Kâr' if not is_saved else 'Anlaşmak Kâr',
             'buy': 'Satın almak' if not is_saved else 'Satın alınmış',
             'sum': 'Meblağ',
@@ -1589,9 +1597,9 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
         },
         'en': {
             'open': 'Price',
-            'sl': 'Stop',
+            'sl': 'Stop loss',
 
-            'conclusion': 'Take-profit',
+            'conclusion': 'Take profit',
             'style': 'Trading style',
 
             'to': 'to',
@@ -1612,15 +1620,18 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
 
     trading_style_type = ''
     if calc.trading_style is not None:
-        if lang == 'en':
-            try:
-                result = str(
-                    text_editor.translator.translate(
-                        calc.trading_style, 'en', 'ru'
-                    ).text
-                )
-            except:
-                result = calc.trading_style
+        if lang != 'ru':
+            result = trading_styles_translates.get(calc.trading_style)
+
+            if result is None:
+                try:
+                    result = str(
+                        text_editor.translator.translate(
+                            calc.trading_style, 'en', 'ru'
+                        ).text
+                    )
+                except:
+                    result = calc.trading_style
         else:
             result = calc.trading_style
 
@@ -1737,9 +1748,9 @@ def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):
             'next': 'Выберите <b>следующее</b> значение',
         },
         'en': {
-            'name': 'Installation of a take-profit',
+            'name': 'Installation of a take profit',
             'current': 'Current choice',
-            'max': 'Keep in mind that the max take-profit coefficient',
+            'max': 'Keep in mind that the max take profit coefficient',
             'max_count': f'You can choose up to <b>{max_count}</b> values',
             '1': 'Select <b>the first</b> meaning',
             'action': 'Choose an action',
@@ -1811,10 +1822,10 @@ def msg_enter_splitting(user_id: int, tp_ratio: list[int], split: list[float], i
             'last': 'Remaining',
             'split': 'of trading position can be defeated',
             'info': 'Splitting calculates each of the <i>n</i> parts for the mining +1 teak profits\nSelect <u> how many parts </u> divide the balance',
-            '1': 'Select <b> the first </b> take-profit value',
+            '1': 'Select <b> the first </b> take profit value',
             'action': 'Choose an action',
             'tp': 'Enter the <b> percentage of the output </b> for the take profite',
-            'next': 'Select <b>the following</b> take-profit value',
+            'next': 'Select <b>the following</b> take profit value',
         },
         'uz': {
             'name': 'Foyda bo\'linmalarini sozlash',

@@ -36,8 +36,8 @@ def get_html_from_crypto_calc(
             'dep': 'Deposit',
             'risk': 'Risk',
             'open': 'Price',
-            'sl': 'Stop',
-            'conclusion': 'Take-profit',
+            'sl': 'Stop loss',
+            'conclusion': 'Take profit',
             'count': 'Count',
             'sum': 'Sum',
             'style': 'Trading style',
@@ -257,8 +257,8 @@ def get_html_from_forex_calc(
             'dep': 'Deposit',
             'risk': 'Risk',
             'open': 'Price',
-            'sl': 'Stop',
-            'conclusion': 'Take-profit',
+            'sl': 'Stop loss',
+            'conclusion': 'Take profit',
             'count': 'Count',
             'sum': 'Sum',
             'style': 'Trading style',
@@ -431,8 +431,8 @@ def get_html_from_calc_results(
         'en': {
             'deposit': 'Final deposit',
             'sum': 'Deal profit',
-            'takes': 'Take-profits',
-            'stops': 'Stop-losses',
+            'takes': 'Take profits',
+            'stops': 'Stop losses',
         },
     }
 

@@ -39,7 +39,7 @@ names = {
         'tool': 'Tool',
         'style': 'Style',
         'op': 'Open price',
-        'sl': 'Stop-loss',
+        'sl': 'Stop loss',
     },
     'uz': {
         'dep': 'Depozit',
@@ -49,7 +49,7 @@ names = {
         'tool': 'Asbob',
         'style': 'Uslubi',
         'op': 'Ochiq narx',
-        'sl': 'Stop-loss',
+        'sl': 'Stop loss',
     },
     'tr': {
         'dep': 'Depozito',
@@ -59,7 +59,7 @@ names = {
         'tool': 'Enstrüman',
         'style': 'Tarzı',
         'op': 'açılış fiyatını',
-        'sl': 'Stop-loss',
+        'sl': 'Stop loss',
     },
 }
 

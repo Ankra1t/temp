@@ -148,7 +148,7 @@ def kb_deal_result(user_id: int, stat_id: int):
             'sum': 'Иная сумма',
         },
         'en': {
-            'minus': 'Stop-loss',
+            'minus': 'Stop loss',
             'sum': 'Other amount',
         },
         'uz': {
@@ -156,7 +156,7 @@ def kb_deal_result(user_id: int, stat_id: int):
             'sum': 'Boshqa miqdor',
         },
         'tr': {
-            'minus': 'Stop-loss',
+            'minus': 'Stop loss',
             'sum': 'Boshqa miqdor',
         },
     }
@@ -249,19 +249,19 @@ def kb_calculate_change(user_id: int, stat_id: int):
         },
         'en': {
             'open_price': 'Open price',
-            'stop_loss': 'Stop-loss',
+            'stop_loss': 'Stop loss',
             'tool': 'Tool',
             'style': 'Style',
         },
         'uz': {
             'open_price': 'Ochiq narx',
-            'stop_loss': 'Stop-loss',
+            'stop_loss': 'Stop loss',
             'tool': 'Asbob',
             'style': 'Uslubi',
         },
         'tr': {
             'open_price': 'açılış fiyatını',
-            'stop_loss': 'Stop-loss',
+            'stop_loss': 'Stop loss',
             'tool': 'Enstrüman',
             'style': 'Tarzı',
         },
