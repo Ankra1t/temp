@@ -16,7 +16,7 @@ from CALCULATE.callbacks import (
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_latin_error, msg_trading_style_error,
+    msg_choose_direct, msg_currency_error, msg_enter_min_bar, msg_latin_error, msg_trading_style_error,
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
     msg_sl_op_equal_error, msg_text_error,
 )
@@ -384,14 +384,68 @@ def handle_stop_atr(message: Message, bot: TeleBot):
         f'callback "handle_stop_atr" user_tg_id={user_id} value={stop_atr}')
 
     new_mes = bot.send_message(
-        chat_id, 'Выберите направление',
+        chat_id, msg_choose_direct(user_id),
         reply_markup=kb_calc_direct(user_id)
     )
 
     set_state_data(
         bot, user_id, chat_id, {
             'del_mes_id': new_mes.id,
-            'atr': stop_atr
+            'atr': abs(stop_atr)
+        }
+    )
+
+
+def handle_max_bar(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    max_bar = digit_accept(message)
+    if max_bar is None:
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_calc_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    new_mes = bot.send_message(
+        chat_id, msg_enter_min_bar(user_id),
+        reply_markup=kb_calc_cancel(user_id)
+    )
+    set_state_data(
+        bot, user_id, chat_id, {
+            'max_bar': max_bar,
+            'del_mes_id': new_mes.id
+        })
+    bot.set_state(user_id, CalculateState.min_bar, chat_id)
+
+
+def handle_min_bar(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    min_bar = digit_accept(message)
+    if min_bar is None:
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_calc_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        max_bar = data.get('max_bar', 0)
+
+    new_mes = bot.send_message(
+        chat_id, msg_choose_direct(user_id),
+        reply_markup=kb_calc_direct(user_id)
+    )
+
+    set_state_data(
+        bot, user_id, chat_id, {
+            'del_mes_id': new_mes.id,
+            'atr': abs(max_bar - min_bar)
         }
     )
 
@@ -413,3 +467,6 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_forex_pair, state=ForexCalcState.pair)
     reg_mes(handle_forex_pair_price, state=ForexCalcState.pair_price)
+
+    reg_mes(handle_max_bar, state=CalculateState.max_bar)
+    reg_mes(handle_min_bar, state=CalculateState.min_bar)

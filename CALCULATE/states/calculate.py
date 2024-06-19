@@ -14,6 +14,9 @@ class CalculateState(StatesGroup):
 
     tool = State()
 
+    max_bar = State()
+    min_bar = State()
+
 
 class ForexCalcState(StatesGroup):
     pair = State()

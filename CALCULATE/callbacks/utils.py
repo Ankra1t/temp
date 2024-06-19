@@ -8,7 +8,7 @@ from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
-from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
+from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
@@ -168,9 +168,10 @@ def choose_calculate_step(
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
         if True:
-            text+= msg_enter_atr(user_id)
+            text += msg_enter_atr(user_id)
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr
+            keyboard = kb_calc_atr(user_id)
         else:
             text += msg_enter_stop_loss(user_id, is_try)
             edit_to = names[lang]['sl']
@@ -201,6 +202,7 @@ def choose_calculate_step(
                 'edit_mes': edit_to
             }
         )
+
 
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,

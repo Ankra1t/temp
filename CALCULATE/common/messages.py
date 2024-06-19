@@ -2254,6 +2254,45 @@ def msg_enter_atr(user_id: int):
     return f'👉 {texts[lang]}'
 
 
+def msg_enter_max_bar(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': "Введите максимальую цену бара",
+        'en': "Bring the maximum bar price",
+        'uz': "Maksimal bar narxini olib keling",
+        'tr': "Maksimum çubuk fiyatını getirin",
+    }
+
+    return f'👉 {texts[lang]}'
+
+
+def msg_enter_min_bar(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': "Введите минимальную цену бара",
+        'en': "Bring the minimum bar price",
+        'uz': "Minimal bar narxini kiriting",
+        'tr': "Minimum çubuk fiyatını girin",
+    }
+
+    return f'👉 {texts[lang]}'
+
+
+def msg_choose_direct(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': "Выберите направление",
+        'en': "Select the direction",
+        'uz': "Yo'nalishni tanlang",
+        'tr': "Yönü seçin",
+    }
+
+    return f'👇 {texts[lang]}'
+
+
 def msg_enter_profit_minus(user_id: int):
     lang = get_lang(user_id)
 

@@ -1,6 +1,9 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks.calculate.keyboards import kb_calc_cancel
+from CALCULATE.common.messages import msg_enter_max_bar
+from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
 from common.utils import set_state_data
@@ -135,6 +138,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             data['updated_risk'] = value
 
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
+    if type == 'calc_atr':
+        bot.edit_message_text(
+            msg_enter_max_bar(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_calc_cancel(user_id)
+        )
+        bot.set_state(user_id, CalculateState.max_bar, chat_id)
 
     if 'direct+' in type:
         _, action = type.split('+')
