@@ -12,7 +12,7 @@ from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_enter_currency, msg_enter_deposit,
+    msg_enter_atr, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair,
     msg_enter_pair_price, msg_enter_risk_percent,
     msg_enter_stop_loss, msg_enter_tool,
@@ -30,6 +30,7 @@ names = {
         'style': 'Стиль',
         'op': 'Цена входа',
         'sl': 'Стоп-лосс',
+        'atr': 'ATR',
     },
     'en': {
         'dep': 'Deposit',
@@ -40,6 +41,7 @@ names = {
         'style': 'Style',
         'op': 'Open price',
         'sl': 'Stop loss',
+        'atr': 'ATR',
     },
     'uz': {
         'dep': 'Depozit',
@@ -50,6 +52,7 @@ names = {
         'style': 'Uslubi',
         'op': 'Ochiq narx',
         'sl': 'Stop loss',
+        'atr': 'ATR',
     },
     'tr': {
         'dep': 'Depozito',
@@ -60,6 +63,7 @@ names = {
         'style': 'Tarzı',
         'op': 'açılış fiyatını',
         'sl': 'Stop loss',
+        'atr': 'ATR',
     },
 }
 
@@ -163,9 +167,14 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
-        text += msg_enter_stop_loss(user_id, is_try)
-        edit_to = names[lang]['sl']
-        state = CalculateState.stop_loss
+        if True:
+            text+= msg_enter_atr(user_id)
+            edit_to = names[lang]['atr']
+            state = CalculateState.stop_atr
+        else:
+            text += msg_enter_stop_loss(user_id, is_try)
+            edit_to = names[lang]['sl']
+            state = CalculateState.stop_loss
 
     if is_try:
         keyboard = None
@@ -192,7 +201,6 @@ def choose_calculate_step(
                 'edit_mes': edit_to
             }
         )
-#KPZ3EGHRPLYW3JHC
 
 def choose_first_calculate_step(
     bot: TeleBot, user_id: int, message: Message,

@@ -107,3 +107,15 @@ def kb_calc_cancel(user_id: int):
         getButton(cancel_txt(lang), 'go_main')
     )
     return keyboard
+
+
+def kb_calc_direct(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('Long', 'direct+long'),
+        getButton('Short', 'direct+short'),
+        getButton(cancel_txt(lang), 'calc_back'),
+    )
+    return keyboard

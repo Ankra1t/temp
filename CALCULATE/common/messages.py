@@ -1711,7 +1711,6 @@ def msg_enter_save_calc(user_id: int):
         'tr': 'Bu işlemi nasıl tamamladınız?',
     }
 
-
     return texts[lang]
 
 
@@ -2240,6 +2239,19 @@ def msg_enter_stop_loss(user_id: int, is_try=False):
             text += '\n<i>(at what price will you fix the loss?)</i>'
 
     return f'👉 {text}'
+
+
+def msg_enter_atr(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': "Введите цену ATR",
+        'en': "Enter the price of ATR",
+        'uz': "ATR narxini kiriting",
+        'tr': "ATR'nin fiyatını girin",
+    }
+
+    return f'👉 {texts[lang]}'
 
 
 def msg_enter_profit_minus(user_id: int):

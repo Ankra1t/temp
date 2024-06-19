@@ -10,6 +10,7 @@ class CalculateState(StatesGroup):
     risk_percent = State()
     open_price = State()
     stop_loss = State()
+    stop_atr = State()
 
     tool = State()
 

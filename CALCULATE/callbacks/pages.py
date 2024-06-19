@@ -12,7 +12,7 @@ from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
     msg_calculation, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
-    msg_no_uses, msg_settings, msg_manual,
+    msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
     msg_stats_page, msg_summury_profit_settings
 )
 
@@ -423,3 +423,95 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
             photo, text,
             reply_markup=kb
         )
+
+
+
+def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float):
+    chat_id = message.chat.id
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
+        calc_type = data.get('calc_type', 'crypto')
+
+        deposit: float = data.get('deposit') or 1.0
+        risk: tuple[float, bool] = data.get('risk') or (1., False)
+        currency = data.get('currency', 'USD')
+        trading_style = data.get('trading_style')
+        trading_type = data.get('trading_type', 'margin')
+
+        open_price = data.get('open_price') or 0
+        forex = data.get('forex')
+        tool = data.get('tool')
+        updated_risk = data.get('updated_risk') or 1.
+
+        is_try = data.get('is_try', False)
+
+    if stat_id is not None:
+        calc_info = db.get_calculation(stat_id)
+        if calc_info is None:
+            return
+
+        if calc_info.open_price == stop_loss:
+            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            return
+
+        db.change_calculation_stop_loss(stat_id, stop_loss)
+        calc_info.stop_loss = stop_loss
+
+        send_calculation(bot, message, user_id, calc_info, True)
+        bot.delete_state(user_id, chat_id)
+        return
+
+    if open_price == stop_loss:
+        new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    u_base = db.get_calc_user_settings(user_db_id)
+    if u_base is None:
+        return
+
+    risk_value = risk[0]
+    if risk[1]:
+        risk_value *= deposit * 0.01
+
+    calc_info = Calculation(
+        user_id=user_db_id,
+        deposit=deposit,
+        risk_value=risk_value * updated_risk,
+        open_price=open_price,
+        stop_loss=stop_loss,
+        round_count=u_base.round_count,
+        currency=currency,
+        market=calc_type,
+        tp_ratio=u_base.tp_ratio,
+        split_values=u_base.split_values,
+        trading_style=trading_style or None,
+        tool=tool or None,
+        forex_info=forex,
+        trading_type=trading_type,
+    )
+
+    if not is_try:
+        new_id = db.add_calculation(calc_info)
+        calc_info.id = new_id
+
+        userExchange = liteDb.getUserExchange(user_id)
+        if userExchange is not None:
+            liteDb.addCalc(new_id, userExchange[0], userExchange[1])
+
+        db.minus_calculator_uses_count(user_db_id)
+        db.delete_unfinished_calc_by_user(user_db_id)
+
+        db.set_user_base(user_db_id, 'base_risk', risk[0])
+        db.set_user_risk_is_percent(user_db_id, risk[1])
+        db.set_user_base(user_db_id, 'base_deposit', deposit)
+        db.set_user_currency(user_db_id, currency)
+    else:
+        liteDb.setFirstTry(user_id)
+
+    send_calculation(bot, message, user_id, calc_info, True, is_try)
+
+    bot.delete_state(user_id, chat_id)
