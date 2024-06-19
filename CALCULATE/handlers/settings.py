@@ -3,7 +3,6 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_maker_or_taker
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from Classes import currencyService
@@ -15,7 +14,7 @@ from CALCULATE.callbacks import (
     kb_base_cancel, kb_splitting, kb_trading_style,
     send_settings, send_user_deposit, kb_deposit_cancel,
     kb_after_first_settings, kb_enter_exchange, send_exchange_settings,
-    kb_change_fee, kb_choose_exchange_level
+    kb_change_fee, kb_choose_exchange_level, send_maker_or_taker
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (

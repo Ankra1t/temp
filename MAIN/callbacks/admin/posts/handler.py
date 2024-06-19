@@ -6,7 +6,6 @@ from db import db
 from MAIN.states import AdminPostsState
 from common.utils import set_state_data
 from models import Post
-from MAIN.callbacks.admin.workers.handler import _handle_callback
 
 from .keyboards import kb_post_kinds, kb_posts, kb_posts_back
 from .filter import admin_posts_factory, AdminPostsCallbackFilter

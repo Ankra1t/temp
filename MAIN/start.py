@@ -1,12 +1,12 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_calculation
 from CALCULATE.states.calculate import CalculateState
 from data.data import liteDb
 from db import db
 from MAIN.common.utils import send_in_development
 
+from CALCULATE.callbacks import send_calculation
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
 

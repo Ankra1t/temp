@@ -22,7 +22,8 @@ class Data:
                     start_calc_count INTEGER NOT NULL DEFAULT(0),
                     pages_count INTEGER NOT NULL DEFAULT(0),
                     exchange STRING,
-                    fee FLOAT
+                    fee FLOAT,
+                    stop STRING
                 );
 			''')
             self.curs.execute('''
@@ -193,6 +194,32 @@ class Data:
         except Exception as e:
             print(e)
             return 0
+
+    def getUserSpot(self, tgId: int) -> str | None:
+        try:
+            data = self.curs.execute(
+                'SELECT stop FROM Users WHERE id = ?', (tgId,)
+            ).fetchone()
+            if data is None:
+                return None
+
+            return data[0]
+        except Exception as e:
+            print(e)
+            return None
+
+    def setUserSpot(self, tgId: int, stop: str):
+        self.addUser(tgId)
+        try:
+            self.curs.execute(
+                'UPDATE Users SET stop = ? WHERE id = ?', (stop, tgId)
+            )
+            self.connection.commit()
+
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     # FEES
     def createFeeTable(self):
@@ -391,23 +418,23 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             #         photo STRING,
             #         send BOOLEAN DEFAULT(FALSE)
             #     );
-			# ''')
+            # ''')
             # self.curs.execute('''
             #     INSERT INTO NewTemp (id)
             #     SELECT id
             #     FROM SendCalcs;
-			# ''')
+            # ''')
             # self.curs.execute('''
             #     DROP TABLE SendCalcs;
-			# ''')
+            # ''')
             # self.curs.execute('''
             #     ALTER TABLE NewTemp RENAME TO SendCalcs;
-			# ''')
+            # ''')
             self.connection.commit()
         except Exception as e:
             print(e)
 
-    def addSendCalc(self, id: int, text: str | None=None, photo: str | None = None):
+    def addSendCalc(self, id: int, text: str | None = None, photo: str | None = None):
         try:
             data = self.curs.execute(
                 'SELECT * FROM SendCalcs WHERE id = ?',
@@ -480,5 +507,6 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             print(e)
             return False
 
+
 liteDb = Data()
-# liteDb.createSendCalcTable()
+liteDb.createUsersTable()

@@ -1,13 +1,12 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from MAIN.callbacks.user.pages import send_user_education
 
 from config_logger import logger
 from db import db
 
 from .keyboards import kb_user_lesson, kb_user_curs
 from .filter import user_education_factory, UserEducationCallbackFilter
-from MAIN.callbacks import send_user_main, send_user_terms
+from MAIN.callbacks import send_user_main, send_user_terms, send_user_education
 from messages.education import (curs_contents, curs, termins)
 
 

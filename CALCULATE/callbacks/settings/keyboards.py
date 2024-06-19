@@ -44,7 +44,8 @@ def kb_settings(user_id: int):
             'summury_profit': 'Деление профита',
             'dop': 'Дополнительно',
 
-            'exchange': 'Биржа'
+            'exchange': 'Биржа',
+            'stop': 'Стоп',
         },
         'en': {
             'base': 'Base values',
@@ -57,7 +58,8 @@ def kb_settings(user_id: int):
             'summury_profit': 'Profit division',
             'dop': 'Extra',
 
-            'exchange': 'Exchange'
+            'exchange': 'Exchange',
+            'stop': 'Stop loss',
         },
         'uz': {
             'base': 'Asosiy qiymatlar',
@@ -70,7 +72,8 @@ def kb_settings(user_id: int):
             'summury_profit': 'Foyda taqsimoti',
             'dop': 'Bundan tashqari',
 
-            'exchange': 'Almashish'
+            'exchange': 'Almashish',
+            'stop': 'Stop loss',
         },
         'tr': {
             'base': 'Temel değerler',
@@ -83,7 +86,8 @@ def kb_settings(user_id: int):
             'summury_profit': 'Kâr bölümü',
             'dop': 'Ek',
 
-            'exchange': 'Borsa'
+            'exchange': 'Borsa',
+            'stop': 'Stop loss',
         },
     }
 
@@ -105,6 +109,7 @@ def kb_settings(user_id: int):
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
     btn_exchange = getButton('📈 ' + texts[lang]['exchange'], 'exchange')
     btn_dop = getButton(texts[lang]['dop'], 'dop')
+    btn_dop = getButton(texts[lang]['stop'], 'stop_settings')
 
     btn_back = getButton(back_txt(lang), 'go_main')
 
@@ -904,4 +909,35 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     keyboard.add(btn_output)
     keyboard.add(btn_risk_update)
     keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_choose_stop_type(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'simple': 'Простой',
+            'atr': 'ATR',
+        },
+        'en': {
+            'simple': 'Simple',
+            'atr': 'ATR',
+        },
+        'uz': {
+            'simple': 'Oddiy',
+            'atr': 'ATR',
+        },
+        'tr': {
+            'simple': 'Basit',
+            'atr': 'ATR',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(texts[lang]['simple'], 'set_stop+simple'),
+        getButton(texts[lang]['atr'], 'set_stop+atr'),
+        getButton(back_txt(lang), 'go_settings')
+    )
     return keyboard

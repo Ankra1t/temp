@@ -22,7 +22,7 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
-    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
+    kb_choose_lang, kb_base_cancel, kb_choose_stop_type, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
@@ -510,6 +510,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'dop':
         send_dop_settings(bot, call.message, user_id)
+
+
+    if 'set_stop' in type:
+        _, stop_type = type.split('+')
+        liteDb.setUserSpot(user_id, stop_type)
+
+    if type == 'stop_settings' or 'set_stop' in type:
+        spot = liteDb.getUserSpot(user_id)
+
+        bot.edit_message_text(
+            f'Выберите тип стоп лосса\nТекущий: {spot or "-"}', chat_id, mes_id,
+            reply_markup=kb_choose_stop_type(user_id)
+        )
 
     bot.answer_callback_query(call.id)
 
