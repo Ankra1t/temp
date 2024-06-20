@@ -483,10 +483,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             print(e)
             file_path = None
 
-        text = '🇷🇺\n'
-        text += msg_channel_calculation(stat, 'ru')
-        text += '\n\n🇺🇸\n'
-        text += msg_channel_calculation(stat, 'en')
+        text = msg_channel_calculation(stat)
 
         if file_path is None:
             bot.edit_message_text(
