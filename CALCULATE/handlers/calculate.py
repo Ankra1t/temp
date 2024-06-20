@@ -381,7 +381,16 @@ def handle_stop_atr(message: Message, bot: TeleBot):
         return
 
     logger.info(
-        f'callback "handle_stop_atr" user_tg_id={user_id} value={stop_atr}')
+        f'callback "handle_stop_atr" user_tg_id={user_id} value={stop_atr}'
+    )
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stop_type = data.get('stop_type', 'default')
+
+    rate = 1
+    if 'atr_percent' in stop_type:
+        _, percent = stop_type.split('+')
+        rate = float(percent) * 0.01
 
     new_mes = bot.send_message(
         chat_id, msg_choose_direct(user_id),
@@ -391,7 +400,7 @@ def handle_stop_atr(message: Message, bot: TeleBot):
     set_state_data(
         bot, user_id, chat_id, {
             'del_mes_id': new_mes.id,
-            'atr': abs(stop_atr)
+            'atr': abs(stop_atr) * abs(rate)
         }
     )
 
@@ -436,6 +445,12 @@ def handle_min_bar(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         max_bar = data.get('max_bar', 0)
+        stop_type = data.get('stop_type', 'default')
+
+    rate = 1
+    if 'atr_percent' in stop_type:
+        _, percent = stop_type.split('+')
+        rate = float(percent) * 0.01
 
     new_mes = bot.send_message(
         chat_id, msg_choose_direct(user_id),
@@ -445,7 +460,7 @@ def handle_min_bar(message: Message, bot: TeleBot):
     set_state_data(
         bot, user_id, chat_id, {
             'del_mes_id': new_mes.id,
-            'atr': abs(max_bar - min_bar)
+            'atr': abs(max_bar - min_bar) * abs(rate)
         }
     )
 

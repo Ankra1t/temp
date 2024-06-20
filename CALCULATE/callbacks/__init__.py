@@ -6,7 +6,7 @@ from .pages import (
     send_summury_profit_settings, send_stats, send_user_deposit,
     send_tariffs_list_item, send_user_tariffs, send_calculation,
     send_freeze, send_exchange_settings, send_confirm_calc_send,
-    create_and_send_calc, send_maker_or_taker
+    create_and_send_calc, send_maker_or_taker, send_stop_settings
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 

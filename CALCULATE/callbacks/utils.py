@@ -93,6 +93,7 @@ def choose_calculate_step(
         risk = data.get('risk')
         updated_risk = data.get('updated_risk')
         is_try = data.get('is_try', False)
+        stop_type = data.get('stop_type', 'default')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -167,7 +168,7 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
-        if False:
+        if 'atr' in stop_type:
             text += msg_enter_atr(user_id)
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr
@@ -217,6 +218,7 @@ def choose_first_calculate_step(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
 
+    stop_type = liteDb.getUserStop(user_id)
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)
 
@@ -263,6 +265,7 @@ def choose_first_calculate_step(
     set_state_data(
         bot, user_id, chat_id, {
             'calc_type': type,
+            'stop_type': stop_type or '',
 
             'trading_style': style,
             'trading_type': trading_type,

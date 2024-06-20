@@ -14,7 +14,8 @@ from CALCULATE.callbacks import (
     kb_base_cancel, kb_splitting, kb_trading_style,
     send_settings, send_user_deposit, kb_deposit_cancel,
     kb_after_first_settings, kb_enter_exchange, send_exchange_settings,
-    kb_change_fee, kb_choose_exchange_level, send_maker_or_taker
+    kb_change_fee, kb_choose_exchange_level, send_maker_or_taker,
+    send_stop_settings
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -400,6 +401,23 @@ def handle_fee(message: Message, bot: TeleBot):
     send_exchange_settings(bot, message, user_id, True)
 
 
+def handle_atr_percent(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    message.text = (message.text or '').replace('%', '')
+
+    value = digit_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_digit_error(user_id)
+        )
+        return
+
+    liteDb.setUserStop(user_id, f'atr_percent+{value}')
+    send_stop_settings(bot, message, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -423,3 +441,5 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_exchange, state=SettingsState.exchange)
     reg_mes(handle_fee, state=SettingsState.fee)
+
+    reg_mes(handle_atr_percent, state=SettingsState.atr_percent)

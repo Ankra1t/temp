@@ -120,8 +120,7 @@ def kb_settings(user_id: int):
         btn_trading_type, btn_lang,
         btn_reset, btn_dop,
 
-        # btn_stop,
-        btn_back,
+        btn_stop, btn_back,
     )
 
     return keyboard
@@ -921,25 +920,38 @@ def kb_choose_stop_type(user_id: int):
         'ru': {
             'simple': 'Простой',
             'atr': 'ATR',
+            'atr_percent': '% от ATR',
         },
         'en': {
             'simple': 'Simple',
             'atr': 'ATR',
+            'atr_percent': '% of ATR',
         },
         'uz': {
             'simple': 'Oddiy',
             'atr': 'ATR',
+            'atr_percent': '% ATR',
         },
         'tr': {
             'simple': 'Basit',
             'atr': 'ATR',
+            'atr_percent': 'ATR %',
         },
     }
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(
-        getButton(texts[lang]['simple'], 'set_stop+simple'),
+        getButton(texts[lang]['simple'], 'set_stop+default'),
         getButton(texts[lang]['atr'], 'set_stop+atr'),
-        getButton(back_txt(lang), 'go_settings')
+        getButton(texts[lang]['atr_percent'], 'set_stop+atr_percent'),
     )
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_stop_type_cancel(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(getButton(cancel_txt(lang), 'stop_settings'))
     return keyboard

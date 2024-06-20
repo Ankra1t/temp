@@ -22,7 +22,7 @@ from models import MARKETS_TYPE, Calculation
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import (
-    kb_change_deposit, kb_dop_settings, kb_exchange,
+    kb_change_deposit, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
 from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
@@ -425,7 +425,6 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
         )
 
 
-
 def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float):
     chat_id = message.chat.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -515,3 +514,34 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
     send_calculation(bot, message, user_id, calc_info, True, is_try)
 
     bot.delete_state(user_id, chat_id)
+
+
+def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    stop_type = liteDb.getUserStop(user_id)
+
+    if stop_type is None:
+        stop_show = '-'
+    elif stop_type == 'default':
+        stop_show = 'Default'
+    elif stop_type == 'atr':
+        stop_show = 'ATR'
+    else:
+        _, percent = stop_type.split('+')
+        stop_show = f'{percent}% of ATR'
+
+    mes = f'Выберите тип стоп лосса\nТекущий: {stop_show}'
+    kb = kb_choose_stop_type(user_id)
+
+    if is_first:
+        bot.send_message(
+            chat_id, mes,
+            reply_markup=kb
+        )
+    else:
+        bot.edit_message_text(
+            mes, chat_id, mes_id,
+            reply_markup=kb
+        )

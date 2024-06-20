@@ -195,7 +195,7 @@ class Data:
             print(e)
             return 0
 
-    def getUserSpot(self, tgId: int) -> str | None:
+    def getUserStop(self, tgId: int) -> str | None:
         try:
             data = self.curs.execute(
                 'SELECT stop FROM Users WHERE id = ?', (tgId,)
@@ -208,7 +208,7 @@ class Data:
             print(e)
             return None
 
-    def setUserSpot(self, tgId: int, stop: str):
+    def setUserStop(self, tgId: int, stop: str):
         self.addUser(tgId)
         try:
             self.curs.execute(

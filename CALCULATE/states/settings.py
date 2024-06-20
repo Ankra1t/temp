@@ -16,6 +16,7 @@ class SettingsState(StatesGroup):
     exchange = State()
     fee = State()
 
+    atr_percent = State()
 
 class FirstCalcState(StatesGroup):
     deposit = State()

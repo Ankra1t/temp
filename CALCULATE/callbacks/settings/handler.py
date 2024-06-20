@@ -23,12 +23,12 @@ from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
     kb_choose_lang, kb_base_cancel, kb_choose_stop_type, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
-    kb_splitting, kb_splitting_last, kb_trading_style,
+    kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
 from ..pages import (
     send_calculation, send_dop_settings, send_exchange_settings, send_main,
-    send_maker_or_taker, send_settings, send_summury_profit_settings,
+    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings,
     send_user_deposit
 )
 
@@ -511,18 +511,24 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'dop':
         send_dop_settings(bot, call.message, user_id)
 
-
     if 'set_stop' in type:
-        _, stop_type = type.split('+')
-        liteDb.setUserSpot(user_id, stop_type)
+        _, new_stop_type = type.split('+')
 
-    if type == 'stop_settings' or 'set_stop' in type:
-        spot = liteDb.getUserSpot(user_id)
+        if new_stop_type == 'atr_percent':
+            bot.edit_message_text(
+                'Введите % от ATR', chat_id, mes_id,
+                reply_markup=kb_stop_type_cancel(user_id)
+            )
+            bot.set_state(user_id, SettingsState.atr_percent, chat_id)
+        else:
+            stop_type = liteDb.getUserStop(user_id)
 
-        bot.edit_message_text(
-            f'Выберите тип стоп лосса\nТекущий: {spot or "-"}', chat_id, mes_id,
-            reply_markup=kb_choose_stop_type(user_id)
-        )
+            if stop_type != new_stop_type:
+                liteDb.setUserStop(user_id, new_stop_type)
+                send_stop_settings(bot, call.message, user_id)
+
+    if type == 'stop_settings':
+        send_stop_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 
