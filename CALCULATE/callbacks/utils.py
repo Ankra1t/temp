@@ -167,7 +167,7 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
-        if True:
+        if False:
             text += msg_enter_atr(user_id)
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr

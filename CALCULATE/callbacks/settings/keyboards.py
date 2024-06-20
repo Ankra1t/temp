@@ -109,7 +109,7 @@ def kb_settings(user_id: int):
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
     btn_exchange = getButton('📈 ' + texts[lang]['exchange'], 'exchange')
     btn_dop = getButton(texts[lang]['dop'], 'dop')
-    btn_dop = getButton(texts[lang]['stop'], 'stop_settings')
+    btn_stop = getButton(texts[lang]['stop'], 'stop_settings')
 
     btn_back = getButton(back_txt(lang), 'go_main')
 
@@ -118,10 +118,12 @@ def kb_settings(user_id: int):
         btn_deposit_update, btn_base,
         btn_summury_profit, btn_style,
         btn_trading_type, btn_lang,
-        btn_reset, btn_dop
+        btn_reset, btn_dop,
+
+        # btn_stop,
+        btn_back,
     )
 
-    keyboard.add(btn_back)
     return keyboard
 
 

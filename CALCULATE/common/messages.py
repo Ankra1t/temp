@@ -1553,7 +1553,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
-            conclusion += f' {get_print_float(tp_val, price_round_count)} {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            conclusion += f' <code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if calc_result.profit_rate_values is not None:
                 rate = calc_result.profit_rate_values[i]
@@ -1568,10 +1568,10 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     return '\n'.join((
         f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b> ({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
         attention,
-        f'<b>{texts[lang]["buy"]}</b>: {get_print_float(count_bet, 4)} {tool_name}',
+        f'<b>{texts[lang]["buy"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
-        f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
-        f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
@@ -1650,7 +1650,7 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
         tp_ratio = calc.tp_ratio[i]
         tp_val = calc_result.tp_values[i]
 
-        conclusion += f'{get_print_float(tp_val, price_round_count)} {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+        conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
         if i != calc_result.tp_count - 1:
             conclusion += '\n'
@@ -1661,8 +1661,8 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
     return '\n'.join((
         f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b> ({long_short}) - <b>{market_translates[lang][calc.market]}</b>',
         '',
-        f'<b>{texts[lang]["open"]}</b>: {get_print_float(calc.open_price, price_round_count)} {trading_currency}',
-        f'<b>{texts[lang]["sl"]}</b>: {get_print_float(calc.stop_loss, price_round_count)} {trading_currency}',
+        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
