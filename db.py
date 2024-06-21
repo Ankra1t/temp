@@ -21,8 +21,8 @@ SUBSCRIBE_TYPE = Literal['trial', 'PAID']
 BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
-LANGUAGES_TYPE = Literal['ru', 'en']
-LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en')
+LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
+LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
 
 class Database:

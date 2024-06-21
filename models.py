@@ -285,6 +285,9 @@ class CalculationResult(BaseModel):
     profit_values: list[float]
     profit_rate_values: Optional[list[float]] = None
 
+    exchange: Optional[str] = None
+    fee: Optional[float] = None
+
 
 class UnfinishedCalculation(BaseModel):
     id: int
@@ -301,3 +304,11 @@ class UnfinishedCalculation(BaseModel):
     risk_value: Optional[float] = None
     is_risk_percent: Optional[bool] = None
     update_risk_rate: Optional[float] = None
+
+class Exchange(BaseModel):
+    id: int
+    name: str
+
+    maker_fee: float
+    taker_fee: float
+    fees: list[tuple[str, float, float]]

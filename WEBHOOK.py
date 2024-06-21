@@ -1,6 +1,6 @@
 import telebot
 import flask
-from flask import request
+from flask import jsonify, request, send_file
 
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
@@ -39,6 +39,21 @@ def cryptobot_updates():
 @app.route(base_url + YOOKASSA_URL, methods=['POST', 'GET'])
 def yookassa_updates():
     return yooKassa_payment_updates(bot, request)
+
+
+@app.route(base_url + '/icon.png', methods=['GET'])
+def get_icon():
+    return send_file('src/img/icon.png', mimetype='image/png')
+
+
+@app.route(base_url + '/manifest.json', methods=['GET'])
+def get_ton_manifest():
+    return jsonify({
+        # "url": f"https://t.me/{bot.get_me().username}",
+        "url": "https://github.com/XaBbl4/pytonconnect",
+        "name": "Calc",
+        "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
+    })
 
 
 if PROD:

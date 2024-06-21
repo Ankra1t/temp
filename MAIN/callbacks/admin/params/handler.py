@@ -66,6 +66,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {
             'name': text_name
         })
+        bot.delete_message(chat_id, mes_id)
         bot.send_message(
             chat_id,
             f'Отправьте новый текст для name={text_name}',

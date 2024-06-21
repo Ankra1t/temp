@@ -1,7 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
-from CALCULATE.callbacks.utils import choose_calculate_step, choose_first_calculate_step
+from CALCULATE.callbacks.utils import choose_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
@@ -12,20 +12,25 @@ from Classes import text_editor
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_lang, msg_confirm_reset, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit,
+    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_enter_atr_percent,
+    msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_fee,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
-    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base,
+    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
 )
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
-    kb_change_base, kb_change_currency, kb_change_market,
-    kb_choose_lang, kb_base_cancel, kb_settings_confirm,
-    kb_splitting, kb_splitting_last, kb_trading_style,
+    kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
+    kb_choose_lang, kb_base_cancel, kb_choose_stop_type, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
+    kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
-from ..pages import send_calculation, send_main, send_settings, send_summury_profit_settings, send_user_deposit
+from ..pages import (
+    send_calculation, send_dop_settings, send_exchange_settings, send_main,
+    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings,
+    send_user_deposit
+)
 
 
 def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -170,17 +175,15 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 db.set_user_lang(user_db_id, lang)
 
                 if 'first' in type:
-                    user_db_id = db.get_user_id_by_tg_id(user_id)
-                    u_base = db.get_calc_user_settings(user_db_id)
-                    market = u_base.market if (u_base is not None) else 'crypto'
+                    liteDb.setFirstLang(user_id)
 
-                    bot.delete_message(chat_id, mes_id)
-                    choose_first_calculate_step(
-                        bot, user_id, call.message, market, is_try=True
+                    bot.edit_message_text(
+                        msg_welcome(user_id), chat_id, mes_id,
+                        reply_markup=kb_first_calc_info(user_id),
+                        disable_web_page_preview=True
                     )
                 else:
                     send_settings(bot, call.message, user_id)
-
 
         if not is_edit_lang:
             bot.edit_message_text(
@@ -415,7 +418,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             user_db_id,
             'text' if cur_calc_output == 'photo' else 'photo'
         )
-        send_settings(bot, call.message, user_id)
+        send_dop_settings(bot, call.message, user_id)
 
     if type == 'set_first_settings':
         bot.set_state(user_id, FirstCalcState.deposit, chat_id)
@@ -428,7 +431,104 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'set_risk_update':
         liteDb.reverseRiskUpdate(user_id)
-        send_settings(bot, call.message, user_id)
+        send_dop_settings(bot, call.message, user_id)
+
+    if type == 'exchange':
+        exchange = liteDb.getUserExchange(user_id)
+
+        if exchange is None:
+            bot.edit_message_text(
+                msg_enter_exchange(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_enter_exchange(user_id, is_first=True)
+            )
+            bot.set_state(user_id, SettingsState.exchange, chat_id)
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+        else:
+            send_exchange_settings(bot, call.message, user_id)
+
+    if 'set_exchange' in type:
+        if type == 'set_exchange':
+            bot.edit_message_text(
+                msg_enter_exchange(user_id),
+                chat_id, mes_id,
+                reply_markup=kb_enter_exchange(user_id)
+            )
+            bot.set_state(user_id, SettingsState.exchange, chat_id)
+            set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+        else:
+            exchange_value = type.split('++')[1]
+
+            exchange = liteDb.getExchangeByName(exchange_value)
+            if exchange is None:
+                return
+
+            if len(exchange.fees) != 0:
+                bot.edit_message_text(
+                    msg_choose_exchange_level(user_id, exchange.fees),
+                    chat_id, mes_id,
+                    reply_markup=kb_choose_exchange_level(
+                        user_id, exchange.name, [el[0] for el in exchange.fees]
+                    )
+                )
+            else:
+                send_maker_or_taker(
+                    bot, call.message, chat_id,
+                    (exchange.name, exchange.maker_fee, exchange.taker_fee)
+                )
+
+    if 'set_ex_lvl' in type:
+        _, name, lvl_name = type.split('++')
+
+        exchange = liteDb.getExchangeByName(name)
+        if exchange is None:
+            return
+
+        maker_fee, taker_fee = 0, 0
+        for fee in exchange.fees:
+            if fee[0] == lvl_name:
+                maker_fee, taker_fee = fee[1], fee[2]
+                break
+
+        send_maker_or_taker(
+            bot, call.message, user_id,
+            (exchange.name, maker_fee, taker_fee)
+        )
+
+    if type == 'set_fee':
+        bot.edit_message_text(
+            msg_enter_fee(user_id), chat_id, mes_id,
+            reply_markup=kb_change_fee(user_id)
+        )
+        bot.set_state(user_id, SettingsState.fee, chat_id)
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+
+    if 'set_ex_fee' in type:
+        _, name, value = type.split('++')
+        liteDb.setUserExchange(user_id, (name, float(value)))
+        send_exchange_settings(bot, call.message, user_id)
+
+    if type == 'dop':
+        send_dop_settings(bot, call.message, user_id)
+
+    if 'set_stop' in type:
+        _, new_stop_type = type.split('+')
+
+        if new_stop_type == 'atr_percent':
+            bot.edit_message_text(
+                msg_enter_atr_percent(user_id), chat_id, mes_id,
+                reply_markup=kb_stop_type_cancel(user_id)
+            )
+            bot.set_state(user_id, SettingsState.atr_percent, chat_id)
+        else:
+            stop_type = liteDb.getUserStop(user_id)
+
+            if stop_type != new_stop_type:
+                liteDb.setUserStop(user_id, new_stop_type)
+                send_stop_settings(bot, call.message, user_id)
+
+    if type == 'stop_settings':
+        send_stop_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 
@@ -438,4 +538,5 @@ def registration(bot: TeleBot):
     bot.register_callback_query_handler(
         _settings_callback_handler,
         lambda _: True, pass_bot=True,
-        settings=settings_factory.filter())
+        settings=settings_factory.filter()
+    )

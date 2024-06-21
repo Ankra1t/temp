@@ -2,12 +2,11 @@ from datetime import timedelta
 from telebot import TeleBot
 from telebot.types import Message
 
-from MAIN.callbacks.admin.pages import send_admin_tariffs
 from common.utils import digit_accept, text_accept, set_state_data
 from common.dt import get_datetime_by_str, get_str_by_datetime
 
 from MAIN.callbacks import (
-    kb_admin_tariffs_list_back, send_admin_tariffs_list_item, kb_admin_tariffs_back
+    kb_admin_tariffs_list_back, send_admin_tariffs_list_item, kb_admin_tariffs_back, send_admin_tariffs
 )
 from MAIN.states import AdminTariffState
 

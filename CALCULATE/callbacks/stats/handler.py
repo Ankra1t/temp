@@ -1,18 +1,34 @@
 from datetime import timedelta
+import os
+from random import randint
+from time import sleep
+from typing import Literal
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
+from selenium import webdriver as wd
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
+from data.data import liteDb
+from config_global import EN_CHANNEL_ID, PROD, RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
-    msg_calculation_deleted, msg_enter_calc_image,
+    msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_image,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
@@ -23,12 +39,141 @@ from models import MARKETS_TYPE
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
-    kb_calc_image, kb_calculate_change,
-    kb_calculate_delete, kb_deal_profit_cancel,
+    kb_calc_image, kb_calc_result, kb_calculate_change,
+    kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_calculation, send_freeze, send_main, send_stats
+from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+
+
+def createScreen(
+    tool: str,
+    time: Literal['1h', '4h', '1d'] = '1h',
+    type: Literal['bars', 'candles'] = 'bars',
+    scale=0
+):
+    print('START')
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    if PROD:
+        options.add_argument('--headless')
+        options.add_argument("--disable-blink-features")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option(
+            "excludeSwitches", ["enable-automation"]
+        )
+        options.add_experimental_option('useAutomationExtension', False)
+        options.add_argument("start-maximized")
+
+    browser = wd.Chrome(
+        options=options,
+        service=Service(
+            executable_path='/usr/bin/chromedriver' if PROD else None,  # type:ignore
+        )
+        # service=Service(ChromeDriverManager().install())
+    )
+    browser.execute_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    browser.execute_cdp_cmd('Network.setUserAgentOverride', {
+        "userAgent": 'Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
+    }
+    )
+    # browser.maximize_window()
+
+    browser.get(
+        f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}'
+    )
+
+    print(browser.title)
+
+    print(browser.page_source)
+
+    performance_log = browser.get_log('performance')
+    print(str(performance_log).strip('[]'))
+
+    for entry in browser.get_log('performance'):
+        print(entry)
+
+    if not PROD:
+        browser.execute_script(
+            "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
+        )
+        browser.refresh()
+
+    WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'self-tool--time-interval-item')
+        )
+    )
+    print('GET ELEMENT')
+    interval_buttons = browser.find_elements(
+        By.CLASS_NAME, 'self-tool--time-interval-item'
+    )
+    print('GET ELEMENTS')
+    print(interval_buttons)
+    for el in interval_buttons:
+        if el.text == time:
+            el.click()
+
+    fulscreen_btn = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'iconicon_fullscreen_on')
+        )
+    )
+    fulscreen_btn.click()
+
+    bars_select = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, '.self-tool__padding-horizen.flex-align-center.tv-self--chart-type-anchor.pointer.hover-color-white')
+        )
+    )
+    ActionChains(browser).move_to_element(bars_select).perform()
+
+    bars_btn = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, f'iconicon_ktv_{type}')
+        )
+    )
+    bars_btn.click()
+
+    click_place = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'self-tv_tool-header')
+        )
+    )
+    ActionChains(browser).move_to_element_with_offset(
+        click_place, randint(100, 600), 30
+    ).context_click().move_by_offset(
+        50, 250
+    ).click().perform()
+
+    scale = min(max(scale, 0), 10)
+    mas = [Keys.UP for _ in range(scale)]
+    ActionChains(browser).key_down(Keys.CONTROL).send_keys(*mas).perform()
+
+    go_away = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.CLASS_NAME, 'by-footer-derivatives__bg')
+        )
+    )
+    ActionChains(browser).move_to_element(
+        go_away
+    ).perform()
+
+    sleep(2)
+    table = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located(
+            (By.ID, "tv_chart_container")
+        )
+    )
+
+    file_path = '_calc_images/table.png'
+    table.screenshot(file_path)
+    browser.close()
+
+    return file_path
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -158,9 +303,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = db.get_calculation(stat_id)
-            print(calc_info)
+
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 text,
                 kb_main(user_id, is_valid, calc_info),
                 media
@@ -176,7 +321,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 msg_calculate_delete(user_id, text),
                 kb_calculate_delete(user_id, stat_id),
                 media
@@ -199,7 +344,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 msg_calculate_change(user_id, text),
                 kb_calculate_change(user_id, stat_id),
                 media
@@ -219,7 +364,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             calc_info = db.get_calculation(stat_id)
 
             edit_message(
-                bot, call.message, prev_type, # type: ignore
+                bot, call.message, prev_type,  # type: ignore
                 text,
                 kb_main(user_id, is_valid, calc_info),
                 media
@@ -318,6 +463,195 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             'calc_media': media,
             'calc_del_mes_id': new_mes.id,
         })
+
+    if type == 'send_to_channels':
+        stat = db.get_calculation(stat_id)
+        if stat is None:
+            return
+
+        new_mes = bot.send_message(
+            chat_id, 'Генерация изображения...',
+        )
+
+        try:
+            raise Exception('time')
+            file_path = createScreen(
+                (stat.tool or '').replace('/', '').upper(),
+                '1h', 'candles', 6
+            )
+        except Exception as e:
+            print(e)
+            file_path = None
+
+        text = msg_channel_calculation(stat)
+
+        if file_path is None:
+            bot.edit_message_text(
+                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+            )
+
+            main_mes = bot.send_message(
+                chat_id, text,
+                reply_markup=kb_confirm_channel_post(
+                    stat_id
+                )
+            )
+        else:
+            bot.delete_message(new_mes.chat.id, new_mes.id)
+
+            with open(file_path, 'rb') as photo:
+                main_mes = bot.send_photo(
+                    chat_id,
+                    photo, text,
+                    reply_markup=kb_confirm_channel_post(
+                        stat_id
+                    )
+                )
+            os.remove(file_path)
+
+        photo_str = None
+        if main_mes.photo is not None and len(main_mes.photo) > 0:
+            photo_str = main_mes.photo[-1].file_id
+
+        liteDb.addSendCalc(stat_id, None, photo_str)
+        bot.edit_message_reply_markup(
+            chat_id, mes_id,
+            reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
+        )
+
+    if type == 'stc+send':
+        send_data = liteDb.getSendCalc(stat_id)
+        stat = db.get_calculation(stat_id)
+        if send_data is None or stat is None:
+            return
+
+        photo = send_data[2]
+
+        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID, EN_CHANNEL_ID)):
+            lang = 'ru' if i == 0 else 'en'
+
+            text = msg_channel_calculation(stat, lang)\
+                + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+            kb = kb_channel_url(
+                lang, stat_id, bot.get_me().username
+            )
+
+            if photo is None:
+                bot.send_message(
+                    CHANNEL_ID, text,
+                    reply_markup=kb
+                )
+            else:
+                bot.send_photo(
+                    CHANNEL_ID,
+                    photo, text,
+                    reply_markup=kb
+                )
+
+        bot.delete_message(chat_id, mes_id)
+        bot.send_message(chat_id, 'Отправлено')
+        liteDb.sendSendCalc(stat_id)
+
+    if type == 'stc+rescreen':
+        send_data = liteDb.getSendCalc(stat_id)
+        stat = db.get_calculation(stat_id)
+        if stat is None or send_data is None:
+            return
+
+        new_mes = bot.send_message(
+            chat_id, 'Генерация изображения...',
+        )
+
+        try:
+            file_path = createScreen(
+                (stat.tool or '').replace('/', '').upper(),
+                '1h', 'candles', 6
+            )
+        except Exception as e:
+            print(e)
+            file_path = None
+
+        text = msg_channel_calculation(stat) \
+            + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+
+        if file_path is None:
+            bot.edit_message_text(
+                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+            )
+
+            main_mes = bot.send_message(
+                chat_id, text,
+                reply_markup=kb_confirm_channel_post(
+                    stat_id
+                )
+            )
+        else:
+            bot.delete_message(new_mes.chat.id, new_mes.id)
+
+            with open(file_path, 'rb') as photo:
+                main_mes = bot.send_photo(
+                    chat_id, photo, text,
+                    reply_markup=kb_confirm_channel_post(
+                        stat_id
+                    )
+                )
+            os.remove(file_path)
+
+        photo_str = None
+        if main_mes.photo is not None and len(main_mes.photo) > 0:
+            photo_str = main_mes.photo[-1].file_id
+
+        liteDb.addSendCalc(stat_id, send_data[1], photo_str)
+        bot.delete_message(chat_id, mes_id)
+
+    if type == 'stc+text':
+        bot.delete_message(chat_id, mes_id)
+        new_mes = bot.send_message(
+            chat_id, '👉 Введите <b>доп текст</b>:',
+        )
+
+        bot.set_state(user_id, StatsState.send_add_text, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes.id, 'stat_id': stat_id
+            }
+        )
+
+    if type == 'stc+photo':
+        bot.delete_message(chat_id, mes_id)
+        new_mes = bot.send_message(
+            chat_id, '👉 Отправьте <b>новое фото</b>:',
+        )
+
+        bot.set_state(user_id, StatsState.send_add_photo, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes.id, 'stat_id': stat_id
+            }
+        )
+
+    if type == 'stc-photo':
+        send_data = liteDb.getSendCalc(stat_id)
+        if send_data is None:
+            return
+
+        liteDb.addSendCalc(
+            stat_id, send_data[1], None
+        )
+        bot.delete_message(chat_id, mes_id)
+        send_confirm_calc_send(bot, call.message, stat_id, True)
+
+    if type == 'stc-text':
+        send_data = liteDb.getSendCalc(stat_id)
+        if send_data is None:
+            return
+
+        liteDb.addSendCalc(
+            stat_id, None, send_data[2]
+        )
+        bot.delete_message(chat_id, mes_id)
+        send_confirm_calc_send(bot, call.message, stat_id, True)
 
     bot.answer_callback_query(call.id)
 

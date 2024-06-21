@@ -8,3 +8,6 @@ class StatsState(StatesGroup):
     freeze = State()
 
     add_image = State()
+
+    send_add_text = State()
+    send_add_photo = State()

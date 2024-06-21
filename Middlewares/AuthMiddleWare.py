@@ -72,8 +72,10 @@ class AuthMiddleWare(BaseMiddleware):
                 lang = user_lang if (user_lang in LANGUAGES) else 'en'
                 db.set_user_lang(new_user.id, lang)
 
+                refer_user = db.get_user_by_id(ref_id or -1)
+
                 # Уведомление о регистрации
-                notifier.send_user_is_registered(new_user, user_lang, num)
+                notifier.send_user_is_registered(new_user, user_lang, num, refer_user)
             else:
                 logger.error(
                     f'Ошибка регистрации пользователя tg_id = {user_id} {username}'

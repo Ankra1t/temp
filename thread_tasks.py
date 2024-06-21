@@ -4,7 +4,7 @@ import time
 import threading
 
 from Classes.BlockTGBotSender import BlockTGBotSender, send_message_by_type
-from Classes import pay_guard
+from Classes import pay_guard, coinmarketService
 
 from common.dt import get_datetime_now
 from messages.users import end_paid_subscribe_msg, end_trial_subscribe_msg
@@ -92,8 +92,20 @@ def _check_infinite_tasks(bot: TeleBot):
         # _check_tariff()
         time.sleep(sleep_time_check)
 
+def _check_exchanges():
+    sleep_time_check = 60 * 60 * 12
+    while True:
+        try:
+            coinmarketService.get()
+        except:
+            pass
+        time.sleep(sleep_time_check)
+
 
 def run_thread(bot: TeleBot):
     threading.Thread(
         target=_check_infinite_tasks, args=(bot,), name='check_unfinit_tasks'
     ).start()
+    # threading.Thread(
+    #     target=_check_exchanges, name='_check_exchanges'
+    # ).start()

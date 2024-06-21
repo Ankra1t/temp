@@ -5,7 +5,8 @@ from .pages import (
     send_main, send_settings, send_manual_page,
     send_summury_profit_settings, send_stats, send_user_deposit,
     send_tariffs_list_item, send_user_tariffs, send_calculation,
-    send_freeze
+    send_freeze, send_exchange_settings, send_confirm_calc_send,
+    create_and_send_calc, send_maker_or_taker, send_stop_settings
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 
@@ -16,13 +17,14 @@ from .main.handler import registration as _reg_main
 from .main.keyboards import kb_main, cancel_btn, kb_after_first_settings
 
 from .calculate.handler import registration as _reg_calculate
-from .calculate.keyboards import kb_pair, kb_tool, kb_price, kb_calc_cancel
+from .calculate.keyboards import kb_pair, kb_tool, kb_price, kb_calc_cancel, kb_calc_direct
 
 from .stats.handler import registration as _reg_stats
 from .stats.keyboards import (
     kb_stats, kb_calc_result, kb_freeze_calc,
     kb_deal_result, kb_deal_profit_minus, kb_deal_profit_cancel,
-    kb_calculate_delete, kb_calculate_change, kb_calc_image
+    kb_calculate_delete, kb_calculate_change, kb_calc_image,
+    kb_confirm_channel_post
 )
 
 from .settings.handler import registration as _reg_settings
@@ -32,7 +34,8 @@ from .settings.keyboards import (
     kb_change_market, kb_splitting_last, kb_take_profit,
     kb_summury_profit, kb_summury_profit_type, kb_splitting,
     kb_trading_style, kb_change_deposit, kb_deposit_cancel,
-    kb_trading_type
+    kb_trading_type, kb_enter_exchange, kb_choose_exchange_level,
+    kb_change_fee, kb_choose_stop_type
 )
 
 from .tariff.handler import registration as _reg_user_tariff

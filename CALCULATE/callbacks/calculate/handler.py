@@ -1,6 +1,9 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks.calculate.keyboards import kb_calc_cancel
+from CALCULATE.common.messages import msg_enter_max_bar
+from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
 from common.utils import set_state_data
@@ -9,7 +12,7 @@ from models import ForexInfo, UnfinishedCalculation
 
 from .filter import calculate_factory, CalculateCallbackFilter
 from ..utils import choose_calculate_step
-from ..pages import send_main, send_settings
+from ..pages import create_and_send_calc, send_main, send_settings
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -20,7 +23,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-    logger.info(f'callback "calculate_factory" user_tg_id={user_id} type={type}')
+    logger.info(
+        f'callback "calculate_factory" user_tg_id={user_id} type={type}')
 
     if type == 'go_main':
         send_main(call.message, bot, user_id)
@@ -134,6 +138,25 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             data['updated_risk'] = value
 
         choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+
+    if type == 'calc_atr':
+        bot.edit_message_text(
+            msg_enter_max_bar(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_calc_cancel(user_id)
+        )
+        bot.set_state(user_id, CalculateState.max_bar, chat_id)
+
+    if 'direct+' in type:
+        _, action = type.split('+')
+
+        with bot.retrieve_data(user_id, chat_id) as data:
+            atr = data.get('atr', 0)
+            open_price = data.get('open_price', 0)
+
+        atr *= -1 if action == 'long' else 1
+
+        create_and_send_calc(bot, call.message, user_id, open_price + atr)
 
     bot.answer_callback_query(call.id)
 

@@ -30,7 +30,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk_update=False):
+def kb_settings(user_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
@@ -42,11 +42,10 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
             'reset': 'Сброс',
             'deposit': 'Депозит',
             'summury_profit': 'Деление профита',
-            'calc_output': 'Вывод расчета: ' + ('текстом' if cur_calc_output == 'photo' else 'картинкой'),
+            'dop': 'Дополнительно',
 
-            'on': 'Вкл.',
-            'off': 'Выкл.',
-            'is_risk_update': 'изменение риска'
+            'exchange': 'Биржа',
+            'stop': 'Стоп',
         },
         'en': {
             'base': 'Base values',
@@ -57,12 +56,39 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
             'reset': 'Reset',
             'deposit': 'Deposit',
             'summury_profit': 'Profit division',
-            'calc_output': 'Calc output: ' + ('in text' if cur_calc_output == 'photo' else 'in image'),
+            'dop': 'Extra',
 
-            'on': 'On',
-            'off': 'Off',
-            'is_risk_update': 'risk update'
-        }
+            'exchange': 'Exchange',
+            'stop': 'Stop loss',
+        },
+        'uz': {
+            'base': 'Asosiy qiymatlar',
+            'lang': 'Tillar',
+            'market': 'Bozor',
+            'style': 'Savdo uslubi',
+            'trading_type': 'Savdo turi',
+            'reset': 'Qayta o\'rnatish',
+            'deposit': 'Depozit',
+            'summury_profit': 'Foyda taqsimoti',
+            'dop': 'Bundan tashqari',
+
+            'exchange': 'Almashish',
+            'stop': 'Stop loss',
+        },
+        'tr': {
+            'base': 'Temel değerler',
+            'lang': 'Dil',
+            'market': 'Pazar',
+            'style': 'Ticaret tarzı',
+            'trading_type': 'Ticaret türü',
+            'reset': 'Sıfırla',
+            'deposit': 'Depozito',
+            'summury_profit': 'Kâr bölümü',
+            'dop': 'Ek',
+
+            'exchange': 'Borsa',
+            'stop': 'Stop loss',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -81,21 +107,22 @@ def kb_settings(user_id: int, cur_calc_output: Literal['text', 'photo'], is_risk
     )
 
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
-    btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
+    btn_exchange = getButton('📈 ' + texts[lang]['exchange'], 'exchange')
+    btn_dop = getButton(texts[lang]['dop'], 'dop')
+    btn_stop = getButton(texts[lang]['stop'], 'stop_settings')
+
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    btn_risk_update = getButton(
-        f'{texts[lang]["off" if is_risk_update else "on"]} {texts[lang]["is_risk_update"]}',
-        'set_risk_update'
+    keyboard.add(
+        btn_market, btn_exchange,
+        btn_deposit_update, btn_base,
+        btn_summury_profit, btn_style,
+        btn_trading_type, btn_lang,
+        btn_reset, btn_dop,
+
+        btn_stop, btn_back,
     )
 
-    keyboard.add(btn_market, btn_deposit_update)
-    keyboard.add(btn_base, btn_summury_profit)
-    keyboard.add(btn_style, btn_trading_type)
-    keyboard.add(btn_lang, btn_reset)
-    keyboard.add(btn_output)
-    keyboard.add(btn_risk_update)
-    keyboard.add(btn_back)
     return keyboard
 
 
@@ -111,7 +138,17 @@ def kb_change_base(user_id: int):
             'risk': 'Risk percent',
             'day_risk': 'Daily risk',
             'round_count': 'Rounding',
-        }
+        },
+        'uz': {
+            'risk': 'Xavf foizi',
+            'day_risk': 'Kuniga xavf',
+            'round_count': 'Yaxlitlash',
+        },
+        'tr': {
+            'risk': 'Risk yüzdesi',
+            'day_risk': 'Günlük risk',
+            'round_count': 'Yuvarlama',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -151,6 +188,18 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
             'currency': 'Change currency',
             'update_on': 'Update on',
             'update_off': 'Update off',
+        },
+        'uz': {
+            'change': 'Depozitni o\'zgartirish',
+            'currency': 'Valyutani almashtirish',
+            'update_on': 'Yangilashni yoqing',
+            'update_off': 'Yangilash o\'chirilgan',
+        },
+        'tr': {
+            'change': 'Depozitoyu değiştir',
+            'currency': 'Para birimini değiştir',
+            'update_on': 'Güncellemeyi aç',
+            'update_off': 'Güncellemeyi kapat',
         },
     }
 
@@ -243,11 +292,27 @@ def kb_choose_lang(user_id: int, is_first=False):
         'ru': {
             'ru': 'Русский',
             'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
         },
         'en': {
             'ru': 'Russian',
             'en': 'English',
-        }
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'uz': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
+        'tr': {
+            'ru': 'Russian',
+            'en': 'English',
+            'uz': 'Uzbek',
+            'tr': 'Turkish',
+        },
     }
 
     first = 'first' if is_first else ''
@@ -256,8 +321,10 @@ def kb_choose_lang(user_id: int, is_first=False):
 
     btn1 = getButton(f'🇷🇺 {texts[lang]["ru"]}', f'{first}_choose_lang_ru')
     btn2 = getButton(f'🇺🇸 {texts[lang]["en"]}', f'{first}_choose_lang_en')
+    btn3 = getButton(f'🇺🇿 {texts[lang]["uz"]}', f'{first}_choose_lang_uz')
+    btn4 = getButton(f'🇹🇷 {texts[lang]["tr"]}', f'{first}_choose_lang_tr')
 
-    keyboard.add(btn1, btn2)
+    keyboard.add(btn1, btn2, btn3, btn4)
     if not is_first:
         keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
 
@@ -274,7 +341,15 @@ def kb_settings_confirm(user_id: int, action: str):
         'en': {
             'yes': 'Yes',
             'no': 'No',
-        }
+        },
+        'uz': {
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+        },
+        'tr': {
+            'yes': 'Evet',
+            'no': 'HAYIR',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -295,7 +370,13 @@ def kb_summury_profit(user_id: int):
         },
         'en': {
             'change': 'Change',
-        }
+        },
+        'uz': {
+            'change': 'O\'zgartirish',
+        },
+        'tr': {
+            'change': 'Değiştir',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -323,7 +404,15 @@ def kb_summury_profit_type(user_id: int):
         'en': {
             'default': 'Simple',
             'splitting': 'Splitting',
-        }
+        },
+        'uz': {
+            'default': 'Oddiy',
+            'splitting': 'Ajratish',
+        },
+        'tr': {
+            'default': 'Basit',
+            'splitting': 'Ayrılma',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -354,7 +443,13 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
         },
         'en': {
             'save': 'Save',
-        }
+        },
+        'uz': {
+            'save': 'Saqlash',
+        },
+        'tr': {
+            'save': 'Kaydet',
+        },
     }
 
     # Максимальный тейк-профит
@@ -417,7 +512,15 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
         'en': {
             'last': 'Remains',
             'save': 'Save',
-        }
+        },
+        'uz': {
+            'last': 'Qolgan',
+            'save': 'Saqlash',
+        },
+        'tr': {
+            'last': 'Kalan',
+            'save': 'Kaydet',
+        },
     }
 
     # Максимальный тейк-профит
@@ -540,7 +643,15 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
         'en': {
             'off_settings': 'Off',
             'off': 'Skip',
-        }
+        },
+        'uz': {
+            'off_settings': 'Yoqish; ishga tushirish',
+            'off': 'Oʻtkazib yuborish',
+        },
+        'tr': {
+            'off_settings': 'Kapat',
+            'off': 'Atla',
+        },
     }
 
     buttons = []
@@ -592,6 +703,14 @@ def kb_trading_type(user_id: int):
             'margin': 'Margin',
             'spot': 'Spot',
         },
+        'uz': {
+            'margin': 'Marjinal',
+            'spot': 'Spot',
+        },
+        'tr': {
+            'margin': 'Marjinal',
+            'spot': 'Spot',
+        },
     }
 
     btn_margin = getButton(texts[lang]['margin'],
@@ -612,10 +731,227 @@ def kb_first_calc_info(user_id: int):
     texts = {
         'ru': 'Настроить свой калькулятор',
         'en': 'Set up your calculator',
+        'uz': 'Kalkulyatoringizni sozlang',
+        'tr': 'Hesap makinenizi özelleştirin',
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton(f'⚙️ {texts[lang]}', 'set_first_settings'),
     )
+    return keyboard
+
+
+def kb_exchange(user_id: int, is_exchange: bool = False):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'set_exchange': 'Установить биржу',
+            'change_exchange': 'Изменить биржу',
+            'change_fee': 'Изменить комиссию',
+            'off': 'Отключение',
+        },
+        'en': {
+            'set_exchange': 'Set exchange',
+            'change_exchange': 'Change exchange',
+            'change_fee': 'Change the fee',
+            'off': 'Off',
+        },
+        'uz': {
+            'set_exchange': 'Almashinuvni o\'rnating',
+            'change_exchange': 'O\'zgartirish almashinuvi',
+            'change_fee': 'Komissiyani o\'zgartirish',
+            'off': 'Yoqish; ishga tushirish',
+        },
+        'tr': {
+            'set_exchange': 'Borsayı ayarla',
+            'change_exchange': 'borsayı değiştir',
+            'change_fee': 'Komisyonu değiştir',
+            'off': 'Kapat',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    if is_exchange:
+        keyboard.add(
+            getButton(texts[lang]['change_exchange'], 'set_exchange'),
+            getButton(texts[lang]['change_fee'], 'set_fee'),
+        )
+        keyboard.add(
+            # getButton(f'⭕️ {texts[lang]["off"]}', 'off_exchange'),
+            getButton(back_txt(lang), 'go_settings')
+        )
+    else:
+        keyboard.add(
+            getButton(texts[lang]['set_exchange'], 'set_exchange'),
+        )
+        keyboard.add(getButton(back_txt(lang), 'go_settings'))
+
+    return keyboard
+
+
+def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: float):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'maker': 'Мейкер',
+            'taker': 'Тейкер',
+        },
+        'en': {
+            'maker': 'Maker',
+            'taker': 'Taker',
+        },
+        'uz': {
+            'maker': 'Maker',
+            'taker': 'Taker',
+        },
+        'tr': {
+            'maker': 'Yapıcı',
+            'taker': 'Alıcı',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    keyboard.add(
+        getButton(texts[lang]['maker'], f'set_ex_fee++{name}++{maker_fee}'),
+        getButton(texts[lang]['taker'], f'set_ex_fee++{name}++{taker_fee}'),
+        getButton(cancel_txt(lang), 'exchange')
+    )
+
+    return keyboard
+
+
+def kb_enter_exchange(user_id: int, values: list[str] = [], is_first=False):
+    lang = get_lang(user_id)
+
+    if len(values) == 0:
+        values = ['Bybit', 'Binance', 'OKX', 'KuCoin']
+
+    buttons = []
+    for el in values:
+        buttons.append(getButton(el, f'set_exchange++{el}'))
+    buttons.append(
+        getButton(back_txt(lang), 'go_settings' if is_first else 'exchange')
+    )
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+def kb_choose_exchange_level(user_id: int, exchange: str, values: list[str]):
+    lang = get_lang(user_id)
+
+    buttons = []
+    for el in values:
+        buttons.append(getButton(el, f'set_ex_lvl++{exchange}++{el}'))
+    buttons.append(getButton(back_txt(lang), 'exchange'))
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(*buttons)
+    return keyboard
+
+
+def kb_change_fee(user_id: int):
+    lang = get_lang(user_id)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'calc_output': 'Вывод расчета: ' + ('текстом 📝' if output == 'photo' else 'картинкой 🖼'),
+
+            'on': '✅ Вкл.',
+            'off': '⭕️ Выкл.',
+            'is_risk_update': 'изменение риска',
+        },
+        'en': {
+            'calc_output': 'Calc output: ' + ('in text 📝' if output == 'photo' else 'in image 🖼'),
+            'dop': 'Extra',
+
+            'on': '✅ On',
+            'off': '⭕️ Off',
+            'is_risk_update': 'risk update',
+        },
+        'uz': {
+            'calc_output': 'Hisoblash xulosasi: ' + ('matnni bilan 📝' if output == 'photo' else 'rasm bilan  🖼'),
+            'dop': 'Bundan tashqari',
+
+            'on': '✅ Yoqish',
+            'off': '⭕️ O\'chirish',
+            'is_risk_update': 'xavfni yangilash',
+        },
+        'tr': {
+            'calc_output': 'Hesaplamanın çıktısı: ' + ('metinle 📝' if output == 'photo' else 'resimle 🖼'),
+            'dop': 'Ek',
+
+            'on': '✅ Dahil etmek',
+            'off': '⭕️ Kapamak',
+            'is_risk_update': 'risk güncellemesi',
+        },
+    }
+
+    btn_output = getButton(texts[lang]['calc_output'], 'calc_output')
+    btn_risk_update = getButton(
+        f'{texts[lang]["off" if risk_upd else "on"]} {texts[lang]["is_risk_update"]}',
+        'set_risk_update'
+    )
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(btn_output)
+    keyboard.add(btn_risk_update)
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_choose_stop_type(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'simple': 'Простой',
+            'atr': 'ATR',
+            'atr_percent': '% от ATR',
+        },
+        'en': {
+            'simple': 'Simple',
+            'atr': 'ATR',
+            'atr_percent': '% of ATR',
+        },
+        'uz': {
+            'simple': 'Oddiy',
+            'atr': 'ATR',
+            'atr_percent': '% ATR',
+        },
+        'tr': {
+            'simple': 'Basit',
+            'atr': 'ATR',
+            'atr_percent': 'ATR %',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton(texts[lang]['simple'], 'set_stop+default'),
+        getButton(texts[lang]['atr'], 'set_stop+atr'),
+        getButton(texts[lang]['atr_percent'], 'set_stop+atr_percent'),
+    )
+    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+    return keyboard
+
+
+def kb_stop_type_cancel(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(getButton(cancel_txt(lang), 'stop_settings'))
     return keyboard

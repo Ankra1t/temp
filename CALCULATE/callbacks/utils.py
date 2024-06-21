@@ -8,13 +8,14 @@ from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
-from .calculate.keyboards import kb_calc_cancel, kb_pair, kb_price, kb_tool
+from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency
 
 from CALCULATE.common.messages import (
-    msg_calculate_test, msg_enter_currency, msg_enter_deposit,
-    msg_enter_open_price, msg_enter_pair, msg_enter_pair_price, msg_enter_risk_percent,
-    msg_enter_stop_loss, msg_enter_tool, msg_welcome
+    msg_enter_atr, msg_enter_currency, msg_enter_deposit,
+    msg_enter_open_price, msg_enter_pair,
+    msg_enter_pair_price, msg_enter_risk_percent,
+    msg_enter_stop_loss, msg_enter_tool,
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 
@@ -29,6 +30,7 @@ names = {
         'style': 'Стиль',
         'op': 'Цена входа',
         'sl': 'Стоп-лосс',
+        'atr': 'ATR',
     },
     'en': {
         'dep': 'Deposit',
@@ -38,7 +40,30 @@ names = {
         'tool': 'Tool',
         'style': 'Style',
         'op': 'Open price',
-        'sl': 'Stop-loss',
+        'sl': 'Stop loss',
+        'atr': 'ATR',
+    },
+    'uz': {
+        'dep': 'Depozit',
+        'risk': 'Xavf',
+        'currency': 'Valyuta',
+        'pair': 'Juftlik',
+        'tool': 'Asbob',
+        'style': 'Uslubi',
+        'op': 'Ochiq narx',
+        'sl': 'Stop loss',
+        'atr': 'ATR',
+    },
+    'tr': {
+        'dep': 'Depozito',
+        'risk': 'Risk',
+        'currency': 'Para birimi',
+        'pair': 'Çift',
+        'tool': 'Enstrüman',
+        'style': 'Tarzı',
+        'op': 'açılış fiyatını',
+        'sl': 'Stop loss',
+        'atr': 'ATR',
     },
 }
 
@@ -68,6 +93,7 @@ def choose_calculate_step(
         risk = data.get('risk')
         updated_risk = data.get('updated_risk')
         is_try = data.get('is_try', False)
+        stop_type = data.get('stop_type', 'default')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -133,7 +159,7 @@ def choose_calculate_step(
         state = CalculateState.risk_percent
 
     elif open_price is None:
-        text += msg_enter_open_price(user_id)
+        text += msg_enter_open_price(user_id, is_try)
         edit_to = names[lang]['op']
         state = CalculateState.open_price
 
@@ -143,17 +169,18 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     else:
-        text += msg_enter_stop_loss(user_id)
-        edit_to = names[lang]['sl']
-        state = CalculateState.stop_loss
+        if 'atr' in stop_type:
+            text += msg_enter_atr(user_id)
+            edit_to = names[lang]['atr']
+            state = CalculateState.stop_atr
+            keyboard = kb_calc_atr(user_id)
+        else:
+            text += msg_enter_stop_loss(user_id, is_try)
+            edit_to = names[lang]['sl']
+            state = CalculateState.stop_loss
 
     if is_try:
         keyboard = None
-        text = msg_calculate_test(bot, user_id, chat_id)
-        if open_price is None:
-            bot.send_message(
-                chat_id, msg_welcome(user_id)
-            )
 
     bot.set_state(user_id, state, chat_id)
 
@@ -192,6 +219,7 @@ def choose_first_calculate_step(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
 
+    stop_type = liteDb.getUserStop(user_id)
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)
 
@@ -238,14 +266,14 @@ def choose_first_calculate_step(
     set_state_data(
         bot, user_id, chat_id, {
             'calc_type': type,
+            'stop_type': stop_type or '',
 
             'trading_style': style,
             'trading_type': trading_type,
-            'deposit': deposit if not is_try else 5000,
+            'deposit': deposit,
             'currency': currency,
-            'risk': risk if not is_try else [1, True],
+            'risk': risk,
             'is_try': is_try,
-            'tool': 'BTC/USDT' if is_try else None
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

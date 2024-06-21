@@ -34,7 +34,7 @@ class Notifier():
     def send_notification(self, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         self._send(self.bot, type, text, media_id)
 
-    def send_user_is_registered(self, new_user: UserInfo, user_lang: str, num: int):
+    def send_user_is_registered(self, new_user: UserInfo, user_lang: str, num: int, refer_user: UserInfo | None = None):
         message = f'<b>{num})</b> '
         if new_user.tg_username != '-':
             message += f'@{new_user.tg_username}'
@@ -43,5 +43,9 @@ class Notifier():
 
         message = f'{message} ({getLangByCode(user_lang)})'
         message += f'\n{get_str_by_datetime(new_user.registration_dt)}'
+
+        if refer_user is not None:
+            refer_name = f'@{refer_user.tg_username}' if refer_user.tg_username != '' and refer_user.tg_username != '-' else refer_user.tg_id
+            message += f'\nПришел от: {refer_user.id} | {refer_name}'
 
         self._send(self.bot_users, 'text', message)

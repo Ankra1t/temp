@@ -39,7 +39,19 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
             'prev': 'Back',
             'buy_yoo': 'yooKassa',
             'buy_cb': 'CryptoBot',
-        }
+        },
+        'uz': {
+            'next': 'Oldinga',
+            'prev': 'Orqaga',
+            'buy_yoo': 'yooKassa',
+            'buy_cb': 'CryptoBot',
+        },
+        'tr': {
+            'next': 'İleri',
+            'prev': 'Geri',
+            'buy_yoo': 'yooKassa',
+            'buy_cb': 'CryptoBot',
+        },
     }
 
     if count > 1:
@@ -83,7 +95,9 @@ def kb_bill(user_id: int, url: str):
 
     texts = {
         'ru': 'Оплатить',
-        'en': 'Pay'
+        'en': 'Pay',
+        'uz': 'To\'lash',
+        'tr': 'Ödemek',
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -110,7 +124,17 @@ def kb_choose_products(user_id: int):
             'signals': 'Recommendations',
             'calc': 'Calculator',
             'pro': 'PRO'
-        }
+        },
+        'uz': {
+            'signals': 'Tavsiyalar',
+            'calc': 'Kalkulyator',
+            'pro': 'PRO'
+        },
+        'tr': {
+            'signals': 'Öneriler',
+            'calc': 'Hesap makinesi',
+            'pro': 'PRO'
+        },
     }
 
     btn_signal = getButton(

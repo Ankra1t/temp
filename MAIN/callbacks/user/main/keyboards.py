@@ -21,33 +21,53 @@ def kb_user_main(user_id: int, new_user=False):
             'buy': 'Купить',
             'calc': 'Калькулятор',
             'account': 'Личный кабинет',
-            'support': 'Тех. поддержка',
             'site': 'Войти на сайт',
+            'channel': 'Канал',
         },
         'en': {
             'try': 'Try the calculation',
             'buy': 'Buy',
             'calc': 'Calculator',
             'account': 'Profile',
-            'support': 'Support',
             'site': 'Go to the website',
-        }
+            'channel': 'Сhannel',
+        },
+        'uz': {
+            'try': 'Hisoblashni sinab ko\'ring',
+            'buy': 'Sotib olish',
+            'calc': 'Kalkulyator',
+            'account': 'Shaxsiy kabinet',
+            'site': 'Saytga kiring',
+            'channel': 'Rohanna',
+        },
+        'tr': {
+            'try': 'Hesaplamayı deneyin',
+            'buy': 'Satın al',
+            'calc': 'Hesap makinesi',
+            'account': 'Kişisel Hesap',
+            'site': 'Siteye giriş yap',
+            'channel': 'kanal',
+        },
     }
 
     # btn1 = getButton("Рекомендации", 'signals')
     # btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
     btn_try = getButton(f"✏️ {texts[lang]['try']}", 'try')
-    btn_support = getButton(f"{texts[lang]['support']}", 'support')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
     btn_account = getButton(f"{texts[lang]['account']}", 'account')
     # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
+    news_link = 'my_investors' if lang == 'ru' else 'my_traders'
+    btn_channel = InlineKeyboardButton(
+        texts[lang]['channel'], f'https://t.me/{news_link}'
+    )
+
     if new_user:
         keyboard.add(btn_try)
     else:
         keyboard.add(btn_calc)
-        keyboard.add(btn_support, btn_account)
+        keyboard.add(btn_channel, btn_account)
 
     return keyboard
 
@@ -72,7 +92,13 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
         },
         'en': {
             'site': 'Go to the website',
-        }
+        },
+        'uz': {
+            'site': 'Saytga kiring',
+        },
+        'tr': {
+            'site': 'Siteye giriş yap',
+        },
     }
 
     btn_link = InlineKeyboardButton(
@@ -90,32 +116,3 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
     keyboard.add(*buttons)
     return keyboard
 
-
-def kb_support(user_id: int, link: str):
-    link = link.replace('@', '')
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'operator': 'Оператор',
-            'news': 'Новости',
-        },
-        'en': {
-            'operator': 'Support',
-            'news': 'News',
-        },
-    }
-
-    news_link = 'profmarkets' if lang == 'ru' else 'promarketsen'
-    btn_news = InlineKeyboardButton(
-        texts[lang]['news'], f'https://t.me/{news_link}'
-    )
-
-    btn_link = InlineKeyboardButton(
-        texts[lang]['operator'], f'https://t.me/{link}'
-    )
-    btn_back = getButton(back_txt(lang), 'main')
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_link, btn_news, btn_back)
-    return keyboard

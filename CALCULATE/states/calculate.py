@@ -10,8 +10,12 @@ class CalculateState(StatesGroup):
     risk_percent = State()
     open_price = State()
     stop_loss = State()
+    stop_atr = State()
 
     tool = State()
+
+    max_bar = State()
+    min_bar = State()
 
 
 class ForexCalcState(StatesGroup):

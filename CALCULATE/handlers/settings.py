@@ -1,3 +1,4 @@
+import difflib
 import re
 from telebot import TeleBot
 from telebot.types import Message
@@ -6,16 +7,20 @@ from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from Classes import currencyService
 from db import db, BASE_VALUE_TYPE
+from data.data import liteDb
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 
 from CALCULATE.callbacks import (
     kb_base_cancel, kb_splitting, kb_trading_style,
     send_settings, send_user_deposit, kb_deposit_cancel,
-    kb_after_first_settings,
+    kb_after_first_settings, kb_enter_exchange, send_exchange_settings,
+    kb_change_fee, kb_choose_exchange_level, send_maker_or_taker,
+    send_stop_settings
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_currency_error, msg_digit_error, msg_enter_day_risk, msg_enter_deposit, msg_enter_first_risk,
+    msg_choose_exchange_level, msg_currency_error, msg_digit_error, msg_enter_day_risk,
+    msg_enter_deposit, msg_enter_exchange_not_found, msg_enter_first_risk,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style,
     msg_after_first_settings, msg_splitting_error,
     msg_success_base_set, msg_success_edit, msg_text_error
@@ -309,12 +314,109 @@ def handle_first_risk(message: Message, bot: TeleBot):
         return
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    db.set_user_base(user_db_id, 'risk', value)
+    db.set_user_base(user_db_id, 'base_risk', value)
+    db.set_user_risk_is_percent(user_db_id, True)
+
+    data = db.get_calc_user_settings(user_db_id, 'crypto')
+    dep = 0
+    if data is not None:
+        dep = data.deposit or dep
 
     bot.send_message(
-        chat_id, msg_after_first_settings(user_id),
+        chat_id, msg_after_first_settings(user_id, dep, value),
         reply_markup=kb_after_first_settings(user_id)
     )
+
+
+def handle_exchange(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    value = text_accept(message)
+    if value is None:
+        new_mes = bot.send_message(
+            chat_id, msg_text_error(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    exchanges = liteDb.getExchanges()
+    names = [el.name.lower() for el in exchanges]
+
+    if value.lower() not in names:
+        difflist = difflib.get_close_matches(value.lower(), names)
+        difflist = difflist[:3]
+
+        original_names: list[str] = []
+        for el in difflist:
+            indexAtList = names.index(el)
+            original_names.append(exchanges[indexAtList].name)
+
+        new_mes = bot.send_message(
+            chat_id, msg_enter_exchange_not_found(user_id, len(difflist) != 0),
+            reply_markup=kb_enter_exchange(user_id, original_names)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    indexAtList = names.index(value.lower())
+    exchange = exchanges[indexAtList]
+
+    if len(exchange.fees) != 0:
+        new_mes = bot.send_message(
+            chat_id, msg_choose_exchange_level(user_id, exchange.fees),
+            reply_markup=kb_choose_exchange_level(
+                user_id, exchange.name, [fee[0] for fee in exchange.fees]
+            )
+        )
+        return
+
+    send_maker_or_taker(bot, message, user_id, (
+        exchange.name,
+        exchange.maker_fee,
+        exchange.taker_fee
+    ), True)
+
+
+def handle_fee(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_change_fee(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    usersExchange = liteDb.getUserExchange(user_id)
+
+    name = ''
+    if usersExchange is not None:
+        name = usersExchange[0]
+
+    liteDb.setUserExchange(user_id, (name or '', value))
+    send_exchange_settings(bot, message, user_id, True)
+
+
+def handle_atr_percent(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    message.text = (message.text or '').replace('%', '')
+
+    value = digit_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_digit_error(user_id)
+        )
+        return
+
+    liteDb.setUserStop(user_id, f'atr_percent+{value}')
+    send_stop_settings(bot, message, user_id, True)
+
 
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
@@ -336,3 +438,8 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_first_deposit, state=FirstCalcState.deposit)
     reg_mes(handle_first_risk, state=FirstCalcState.risk)
+
+    reg_mes(handle_exchange, state=SettingsState.exchange)
+    reg_mes(handle_fee, state=SettingsState.fee)
+
+    reg_mes(handle_atr_percent, state=SettingsState.atr_percent)

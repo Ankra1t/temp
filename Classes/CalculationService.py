@@ -1,6 +1,7 @@
 from common.utils import get_decimal_count, get_lang, get_print_float
 from common.dt import get_datetime_now
 
+from data.data import liteDb
 from db import LANGUAGES_TYPE, Database
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
 
@@ -131,7 +132,8 @@ class CalculationService():
 
         day_risk = user_settings.day_risk
         deposit = user_settings.deposit
-        currency = user_settings.currency or ('USDT' if market == 'crypto' else 'USD')
+        currency = user_settings.currency or (
+            'USDT' if market == 'crypto' else 'USD')
 
         if day_risk[1] and deposit is None:
             return False
@@ -224,7 +226,14 @@ class CalculationService():
         return count_bet, value_bet, spot_rate
 
     def get_result(self, calc: Calculation):
+        exchange_fee = liteDb.getCalc(calc.id)
+        fee_rate = exchange_fee[1] if exchange_fee is not None else 0
+        fee_rate /= 100
+
         count_bet, value_bet, _ = self.get_count_value_bet(calc)
+
+        fee = value_bet * fee_rate
+        value_bet += fee
 
         tp_values: list[float] = []
         profit_values: list[float] = []
@@ -267,7 +276,7 @@ class CalculationService():
                         f'{calc.currency}/{calc.forex_info.pair[1]}', 1
                     )
 
-            profit_values.append(profit_i)
+            profit_values.append(profit_i - 2 * fee)
 
         return CalculationResult(
             count_bet=count_bet,
@@ -277,6 +286,9 @@ class CalculationService():
             profit_rate_values=profit_rate_values,
             profit_values=profit_values,
             tp_values=tp_values,
+
+            exchange=exchange_fee[0] if exchange_fee is not None else None,
+            fee=fee or None,
         )
 
     def html_calculation(
@@ -320,9 +332,9 @@ class CalculationService():
                 'dep': 'Deposit' if not is_saved else 'Final deposit',
                 'risk': 'Risk',
                 'open': 'Price',
-                'sl': 'Stop',
+                'sl': 'Stop loss',
 
-                'conclusion': 'Take-profit',
+                'conclusion': 'Take profit',
                 'profit': 'Profit',
                 'buy': 'Buy' if not is_saved else 'Bought',
                 'sum': 'Sum',
@@ -330,18 +342,70 @@ class CalculationService():
                 'trading_type': 'Trading type',
 
                 'coin': 'coins',
-                'paper': 'papers',
+                'paper': 'shares',
                 'lot': 'lots',
 
                 'margin': 'margin',
                 'spot': 'spot',
 
-                'takes': 'Take-profits',
-                'stops': 'Stop-losses',
+                'takes': 'Take profits',
+                'stops': 'Stop losses',
 
                 'long': 'long',
                 'short': 'short',
-            }
+            },
+            'uz': {
+                'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
+                'risk': 'Xavf',
+                'open': 'Narx',
+                'sl': 'Stop loss',
+
+                'conclusion': 'Daromad',
+                'profit': 'Foyda',
+                'buy': 'Sotib olmoq' if not is_saved else 'Sotib olingan',
+                'sum': 'So\'m',
+                'style': 'Savdo uslubi',
+                'trading_type': 'Savdo turi',
+
+                'coin': 'tangalar',
+                'paper': 'ulushlar',
+                'lot': 'juda ko\'p',
+
+                'margin': 'margin',
+                'spot': 'spot',
+
+                'takes': 'Qabul qilish',
+                'stops': 'To\'xtash-yo\'qotishlar',
+
+                'long': 'long',
+                'short': 'short',
+            },
+            'tr': {
+                'dep': 'Depozito' if not is_saved else 'Son depozito',
+                'risk': 'Risk',
+                'open': 'Fiyat',
+                'sl': 'Stop loss',
+
+                'conclusion': 'Kar almak',
+                'profit': 'Kâr',
+                'buy': 'Satın almak' if not is_saved else 'Satın alınmış',
+                'sum': 'Meblağ',
+                'style': 'Ticaret tarzı',
+                'trading_type': 'Ticaret türü',
+
+                'coin': 'madeni para',
+                'paper': 'hisse senetleri',
+                'lot': 'çok',
+
+                'margin': 'margin',
+                'spot': 'spot',
+
+                'takes': 'Karmaşa',
+                'stops': 'Durma',
+
+                'long': 'long',
+                'short': 'short',
+            },
         }
 
         if calc.market == 'crypto':
@@ -425,11 +489,17 @@ class CalculationService():
                 </div>
             """
 
+        market = ''
+        if calc.market == 'crypto':
+            market = 'Крипто' if lang == 'ru' else 'Crypto'
+        else:
+            market = market_translates[lang][calc.market]
+
         return (f"""
 <header class="header">
     <div class="header_name">
-        <div class="title {long_short}">{tool}</div>
-        <div class="market">- {market_translates[lang][calc.market]}</div>
+        <div class="title {long_short}">{tool.replace('/USDT', '').upper()}</div>
+        <div class="market">- {market}</div>
     </div>
 </header>
 <div class="content major">
@@ -454,12 +524,15 @@ class CalculationService():
     </div>
     {profit_info}
 </div>
-""",
-f"""#{tool.replace("/", "").upper()} {saved_mes}- {texts[lang][long_short]}
+""", f"""#{tool.replace("/USDT", "").upper()} {saved_mes}- {texts[lang][long_short]}
 
 <b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}
 <b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}
 
 <b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}
-{trading_style}"""
-)
+{trading_style}""")
+
+# Моя биржа
+# Шорт = мейкер
+# Лонг = тейкер
+# При изменении депозита сразу давать возможность вводить

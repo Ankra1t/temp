@@ -5,7 +5,8 @@ from CALCULATE.common.messages import market_translates
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
-from db import db
+from data.data import liteDb
+from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE
 
 from .filter import stats_factory
@@ -56,6 +57,10 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
 def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     lang = get_lang(user_id)
 
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    isAdmin = db.get_worker_role(user_db_id)
+    isSended = liteDb.getSendCalc(stat_id) is not None
+
     texts = {
         'ru': {
             'save': 'Сохранить в статистику',
@@ -68,7 +73,19 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
             'del': 'Delete',
             'change': 'Change',
             'img': 'Attach image',
-        }
+        },
+        'uz': {
+            'save': 'Hisobni saqlash',
+            'del': 'O\'chirish',
+            'change': 'O\'zgartirish',
+            'img': 'Rasmni qo\'shish',
+        },
+        'tr': {
+            'save': 'Hesaplamayı kaydet',
+            'del': 'Silmek',
+            'change': 'Değiştir',
+            'img': 'Resim ekle',
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -90,6 +107,11 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
         btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
         keyboard.add(btn_save)
 
+    if isAdmin and not isSended:
+        keyboard.add(
+            getButton('Выложить в каналах', 'send_to_channels', stat_id)
+        )
+
     return keyboard
 
 
@@ -99,7 +121,9 @@ def kb_freeze_calc(user_id: int):
 
     hours = {
         'ru': 'ч',
-        'en': 'h'
+        'en': 'h',
+        'uz': 'c',
+        'tr': 's',
     }
 
     btn_3 = getButton(f'3 {hours[lang]}', 'time+3')
@@ -124,9 +148,17 @@ def kb_deal_result(user_id: int, stat_id: int):
             'sum': 'Иная сумма',
         },
         'en': {
-            'minus': 'Stop-loss',
+            'minus': 'Stop loss',
             'sum': 'Other amount',
-        }
+        },
+        'uz': {
+            'minus': 'Yo\'qotishni to\'xtating',
+            'sum': 'Boshqa miqdor',
+        },
+        'tr': {
+            'minus': 'Stop loss',
+            'sum': 'Boshqa miqdor',
+        },
     }
 
     row_width = 3
@@ -187,6 +219,14 @@ def kb_calculate_delete(user_id: int, stat_id: int):
             'yes': 'Yes',
             'no': 'No',
         },
+        'uz': {
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+        },
+        'tr': {
+            'yes': 'Evet',
+            'no': 'HAYIR',
+        },
     }
 
     btn_yes = getButton(f'✅ {texts[lang]["yes"]}', 'delete_calc_yes', stat_id)
@@ -209,9 +249,21 @@ def kb_calculate_change(user_id: int, stat_id: int):
         },
         'en': {
             'open_price': 'Open price',
-            'stop_loss': 'Stop-loss',
+            'stop_loss': 'Stop loss',
             'tool': 'Tool',
             'style': 'Style',
+        },
+        'uz': {
+            'open_price': 'Ochiq narx',
+            'stop_loss': 'Stop loss',
+            'tool': 'Asbob',
+            'style': 'Uslubi',
+        },
+        'tr': {
+            'open_price': 'açılış fiyatını',
+            'stop_loss': 'Stop loss',
+            'tool': 'Enstrüman',
+            'style': 'Tarzı',
         },
     }
 
@@ -237,4 +289,51 @@ def kb_calc_image(user_id: int, stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_confirm_channel_post(stat_id: int):
+    send_data = liteDb.getSendCalc(stat_id)
+
+    send = getButton('Отправить', f'stc+send', stat_id)
+    rescreen = getButton('Повтор скрина', f'stc+rescreen', stat_id)
+
+    is_text = False
+    is_photo = False
+    if send_data is not None:
+        is_text = send_data[1] is not None
+        is_photo = send_data[2] is not None
+
+    if is_text:
+        add_text = getButton('Убрать текст', 'stc-text', stat_id)
+    else:
+        add_text = getButton('Доп текст', 'stc+text', stat_id)
+
+    if is_photo:
+        add_photo = getButton('Убрать фото', 'stc-photo', stat_id)
+    else:
+        add_photo = getButton('Своё фото', 'stc+photo', stat_id)
+
+    cancel = getButton(cancel_txt('ru'), 'go_main')
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        send, rescreen,
+        # add_text,
+        add_photo, cancel,
+    )
+    return keyboard
+
+
+def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
+    texts = {
+        'ru': 'Рассчитать для себя',
+        'en': 'Calculate for you',
+    }
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton(
+            texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'),
+    )
     return keyboard

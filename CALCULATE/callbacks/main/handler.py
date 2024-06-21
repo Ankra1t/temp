@@ -6,9 +6,9 @@ from common.utils import delete_message
 from db import db
 
 from ..stats.keyboards import kb_calc_result
-from .filter import main_factory, MainCallbackFilter
 from ..utils import choose_first_calculate_step
 from ..pages import send_settings, send_main, send_stats, send_tariffs_list_item
+from .filter import main_factory, MainCallbackFilter
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -45,6 +45,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         choose_first_calculate_step(
             bot, user_id, call.message, market, False, '_continue' in type
+        )
+
+    if type == 'first_try':
+        bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
+        choose_first_calculate_step(
+            bot, user_id, call.message, 'crypto', is_edit=True, is_try=True
         )
 
     if type == 'settings':

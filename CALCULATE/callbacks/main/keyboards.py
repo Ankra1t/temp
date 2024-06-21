@@ -29,19 +29,37 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'calc': 'Новый расчёт',
+            'calc': 'Сделать расчёт',
             'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
             'buy': 'Купить',
-            'stats': 'Статистика',
+            'stats': 'Ваша статистика',
+            'link': 'Обновления',
         },
         'en': {
-            'calc': 'New calculation',
+            'calc': 'Make a calculation',
             'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
             'buy': 'Buy',
-            'stats': 'Stats',
-        }
+            'stats': 'Your stats',
+            'link': 'Updates',
+        },
+        'uz': {
+            'calc': 'Hisoblash',
+            'calc_continue': 'Hisoblashni davom eting',
+            'settings': 'Sozlamalar',
+            'buy': 'Sotib olish',
+            'stats': 'Sizning stastitikangiz',
+            'link': 'Yangilanishlar',
+        },
+        'tr': {
+            'calc': 'Hesaplama',
+            'calc_continue': 'Hesaplamaya devam et',
+            'settings': 'Ayarlar',
+            'buy': 'Satın al',
+            'stats': 'Sizin istatistik',
+            'link': 'Yenilemeler',
+        },
     }
 
     stat_id = -1
@@ -75,8 +93,13 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     if stat is None:
         btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
         btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
+
+        link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+        btn_link = InlineKeyboardButton(texts[lang]['link'], f'https://t.me/{link}')
+
         buttons.append(btn_stats)
-        buttons.append(btn_buy)
+        buttons.append(btn_link)
+        # buttons.append(btn_buy)
     else:
         kb = kb_calc_result(user_id, stat_id, saved)
         buttons_rows = kb.keyboard
@@ -93,18 +116,26 @@ def kb_after_first_settings(user_id: int):
 
     texts = {
         'ru': {
-            'calc': 'Новый расчет',
+            'calc': 'Сделать расчёт',
             'settings': 'Настройки',
         },
         'en': {
-            'calc': 'New calculation',
+            'calc': 'Make a calculation',
             'settings': 'Settings',
+        },
+        'uz': {
+            'calc': 'Hisoblash',
+            'settings': 'Sozlamalar',
+        },
+        'tr': {
+            'calc': 'Hesaplama',
+            'settings': 'Ayarlar',
         },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('⌨️ ' + texts[lang]['calc'], 'calc'),
+        getButton('⌨️ ' + texts[lang]['calc'], 'first_try'),
         getButton('⚙️ ' + texts[lang]['settings'], 'settings'),
     )
     return keyboard

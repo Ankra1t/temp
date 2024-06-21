@@ -25,7 +25,19 @@ def kb_manual(user_id: int, num_page: int, max_page: int):
             'next': 'Next',
             'start': 'To start',
             'end': 'To end'
-        }
+        },
+        'uz': {
+            'prev': 'Orqaga',
+            'next': 'Oldinga',
+            'start': 'Boshiga',
+            'end': 'Oxirida'
+        },
+        'tr': {
+            'prev': 'Geri',
+            'next': 'İleri',
+            'start': 'Başa',
+            'end': 'Sonuna'
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=3)

@@ -43,12 +43,12 @@ def kb_tool(user_id: int, prev_tools: list[str]):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     buttons = []
-    for i, el in enumerate(prev_tools):
+    for el in prev_tools:
         if el == '':
             continue
 
-        buttons.append(getButton(el, f'tool++{el}'))
-        if len(buttons) == 2:
+        buttons.append(getButton(el.replace('/USDT', ''), f'tool++{el}'))
+        if len(buttons) == 3:
             break
 
     btn_settings = get_settings_from_calc_button()
@@ -65,11 +65,17 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
 
     texts = {
         'ru': {
-            'risk': 'риска'
+            'risk': 'риска',
         },
         'en': {
             'risk': 'of risk'
-        }
+        },
+        'uz': {
+            'risk': 'xavf'
+        },
+        'tr': {
+            'risk': 'risk'
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=3)
@@ -99,5 +105,39 @@ def kb_calc_cancel(user_id: int):
         getButton(back_txt(lang), 'calc_back'),
         get_settings_from_calc_button(),
         getButton(cancel_txt(lang), 'go_main')
+    )
+    return keyboard
+
+
+def kb_calc_atr(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Быстро рассчитать стоп',
+        'en': 'Quickly calculate the feet',
+        'uz': 'Oyoqlarni tezda hisoblang',
+        'tr': 'Ayakları hızlı bir şekilde hesaplayın',
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton(f'⚡️ {texts[lang]}', 'calc_atr')
+    )
+    keyboard.add(
+        getButton(back_txt(lang), 'calc_back'),
+        get_settings_from_calc_button(),
+        getButton(cancel_txt(lang), 'go_main')
+    )
+    return keyboard
+
+
+def kb_calc_direct(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('Long', 'direct+long'),
+        getButton('Short', 'direct+short'),
+        getButton(cancel_txt(lang), 'calc_back'),
     )
     return keyboard
