@@ -7,7 +7,7 @@ from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from Classes import calcService
-from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo
+from models import MARKETS_TYPE, Calculation, CalculatorStats, ForexInfo
 
 
 POINT = '•'

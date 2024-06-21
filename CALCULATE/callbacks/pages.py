@@ -504,9 +504,9 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         db.minus_calculator_uses_count(user_db_id)
         db.delete_unfinished_calc_by_user(user_db_id)
 
-        db.set_user_base(user_db_id, 'base_risk', risk[0])
+        db.set_user_base(user_db_id, 'risk', risk[0])
         db.set_user_risk_is_percent(user_db_id, risk[1])
-        db.set_user_base(user_db_id, 'base_deposit', deposit)
+        db.set_user_base(user_db_id, 'deposit', deposit)
         db.set_user_currency(user_db_id, currency)
     else:
         liteDb.setFirstTry(user_id)
