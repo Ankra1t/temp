@@ -22,7 +22,7 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_change_base, kb_change_currency, kb_change_fee, kb_change_market, kb_choose_exchange_level,
-    kb_choose_lang, kb_base_cancel, kb_choose_stop_type, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
+    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_first_calc_info, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )

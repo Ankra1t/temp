@@ -217,10 +217,11 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
     else:
         keyboard.add(btn_change, btn_on)
 
-    if market == 'crypto':
-        keyboard.add(btn_back)
-    else:
-        keyboard.add(btn_currency, btn_back)
+    # if market == 'crypto':
+    #     keyboard.add(btn_back)
+    # else:
+    #     keyboard.add(btn_currency, btn_back)
+    keyboard.add(btn_currency, btn_back)
 
     return keyboard
 
