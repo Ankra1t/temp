@@ -111,7 +111,7 @@ class GuardPaymentAccess():
             return False
 
         # Проверять есть ли платная подписка или остаток использований калькулятора
-        if valid_use:
+        if True:
             return True
 
         return False

@@ -45,7 +45,7 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
 
     if is_valid_use:
-        text = msg_main(user_id, uses_count, is_rus)
+        text = msg_main(user_id, uses_count, True)
     elif freeze_dt is not None:
         text = msg_main_freeze(user_id, freeze_dt)
     else:

@@ -1416,8 +1416,8 @@ class Database:
         """Установить значения для автозаполения пользователя"""
         market = self.get_user_current_market(user_id)
 
-        if market == 'crypto' and value != 'USDT':
-            return False
+        # if market == 'crypto' and value != 'USDT':
+        #     return False
 
         query = 'UPDATE "CalcSettings" SET currency = %s WHERE "userId" = %s AND market = %s'
         params = (value, user_id, market)

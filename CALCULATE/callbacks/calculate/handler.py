@@ -6,7 +6,7 @@ from CALCULATE.common.messages import msg_enter_max_bar
 from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
-from common.utils import set_state_data
+from common.utils import get_decimal_count, set_state_data
 from Classes import currencyService
 from models import ForexInfo, UnfinishedCalculation
 
@@ -152,11 +152,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         with bot.retrieve_data(user_id, chat_id) as data:
             atr = data.get('atr', 0)
-            open_price = data.get('open_price', 0)
+            op: float = data.get('open_price', 0)
 
         atr *= -1 if action == 'long' else 1
 
-        create_and_send_calc(bot, call.message, user_id, open_price + atr)
+        round_c = get_decimal_count(op)
+        stop_loss = round(op + atr, round_c)
+
+        create_and_send_calc(bot, call.message, user_id, stop_loss)
 
     bot.answer_callback_query(call.id)
 
