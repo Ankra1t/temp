@@ -12,7 +12,7 @@ from Classes import text_editor
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset,
+    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_enter_atr_percent,
     msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_fee,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
@@ -516,7 +516,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if new_stop_type == 'atr_percent':
             bot.edit_message_text(
-                'Введите % от ATR', chat_id, mes_id,
+                msg_enter_atr_percent(user_id), chat_id, mes_id,
                 reply_markup=kb_stop_type_cancel(user_id)
             )
             bot.set_state(user_id, SettingsState.atr_percent, chat_id)

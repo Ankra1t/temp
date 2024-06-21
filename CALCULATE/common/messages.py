@@ -892,6 +892,49 @@ def msg_freeze_calc(user_id: int, risk_value: str):
 """
 
 
+def msg_stop_page(user_id: int, stop_type: str | None):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': "Выберите тип стоп лосса",
+            'value': "Текущий",
+
+            'default': "Обычный",
+        },
+        'en': {
+            'main': "Choose the type of stop loss",
+            'value': "Current",
+
+            'default': "Default",
+        },
+        'uz': {
+            'main': "To'xtash yo'qolish turini tanlang",
+            'value': "Hozirgi",
+
+            'default': "Oddiy",
+        },
+        'tr': {
+            'main': "Durdurma kaybı türünü seçin",
+            'value': "Akım",
+
+            'default': "Sıradan",
+        },
+    }
+
+    if stop_type is None:
+        stop_show = '-'
+    elif stop_type == 'default':
+        stop_show = texts[lang]['default']
+    elif stop_type == 'atr':
+        stop_show = 'ATR'
+    else:
+        _, percent = stop_type.split('+')
+        stop_show = f'{percent}% of ATR'
+
+    return f"""{texts[lang]['main']}
+{texts[lang]['value']}: {stop_show}"""
+
 # Первые сообщения
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
@@ -1701,6 +1744,19 @@ def msg_calculate_change(user_id: int, prev_message: str):
 
 
 # Ввод данных
+def msg_enter_atr_percent(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Введите % от ATR',
+        'en': 'Enter % of atr',
+        'uz': 'ATR ning% ni kiriting',
+        'tr': "ATR'nin % 'in girin",
+    }
+
+    return f'👉 {texts[lang]}:'
+
+
 def msg_enter_save_calc(user_id: int):
     lang = get_lang(user_id)
 

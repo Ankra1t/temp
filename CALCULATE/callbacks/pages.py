@@ -13,7 +13,7 @@ from CALCULATE.common.messages import (
     msg_calculation, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
-    msg_stats_page, msg_summury_profit_settings
+    msg_stats_page, msg_stop_page, msg_summury_profit_settings
 )
 
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
@@ -522,17 +522,7 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
 
     stop_type = liteDb.getUserStop(user_id)
 
-    if stop_type is None:
-        stop_show = '-'
-    elif stop_type == 'default':
-        stop_show = 'Default'
-    elif stop_type == 'atr':
-        stop_show = 'ATR'
-    else:
-        _, percent = stop_type.split('+')
-        stop_show = f'{percent}% of ATR'
-
-    mes = f'Выберите тип стоп лосса\nТекущий: {stop_show}'
+    mes = msg_stop_page(user_id, stop_type)
     kb = kb_choose_stop_type(user_id)
 
     if is_first:
