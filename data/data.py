@@ -509,4 +509,3 @@ CREATE TABLE IF NOT EXISTS TonStorage (
 
 
 liteDb = Data()
-liteDb.createUsersTable()
