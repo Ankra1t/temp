@@ -1,3 +1,4 @@
+import traceback
 from typing import Literal
 import json
 import requests
@@ -24,10 +25,11 @@ def registration(user_id: int, username: str = '', referral_id: int | None = Non
         )
 
         logger.info(
-            f'/auth/tg_register [id={user_id}, username={username}] {response.status_code} {response.json()}'
+            f'/auth/tg_register [id={user_id}, username={username}] {response.status_code}'
         )
     except Exception as e:
         logger.error(f'/auth/tg_register {e}')
+        print(traceback.print_exc())
         return False
 
     return response.status_code >= 200 and response.status_code < 300
@@ -38,19 +40,20 @@ def get_site_code(user_id: int) -> str | Literal[False]:
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     data: dict[str, str | int] = {
-        'user_id': user_db_id,
-        'tg_api_auth_token': access_token,
+        'id': user_db_id,
     }
 
     try:
         response = requests.post(
-            f'{API_URL}/auth/site_code',
-            json.dumps(data).encode(), headers=HEADERS
+            f'{API_URL}/tg/auth/site_code',
+            json.dumps(data).encode(), headers=HEADERS | {'tg-api-key': access_token}
         )
 
         result = response.json()
+        print(result)
         return result.get('code', False)
-    except:
+    except Exception as e:
+        logger.error(f'/auth/get_site_code {e}')
         return False
 
 
@@ -75,6 +78,7 @@ def change_password(id: int, password: str):
         logger.error(
             f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
         )
+        print(e)
         return False
 
     return response.status_code == 200

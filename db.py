@@ -919,18 +919,16 @@ class Database:
             return False
 
     def create_tg_user_settings(self, id: int, market: MARKETS_TYPE):
-        query = 'INSERT INTO "CalcSettings" ("userId", market, currency) VALUES (%s, %s, %s)'
-
         currency = None
         if market == 'crypto':
             query = (
-                'INSERT INTO tgcalc_user_settings '
-                '(user_id, market, base_currency, base_deposit, base_risk, '
-                'risk_is_percent) VALUES (%s, %s, %s, %s, %s, %s)'
+                'INSERT INTO "CalcSettings" '
+                '("userId", market, currency, deposit, risk, '
+                '"isRiskPercent") VALUES (%s, %s, %s, %s, %s, %s)'
             )
             params = id, market, 'USDT', 5000, 1, True
         else:
-            query = 'INSERT INTO tgcalc_user_settings (user_id, market) VALUES (%s, %s)'
+            query = 'INSERT INTO "CalcSettings" ("userId", market) VALUES (%s, %s)'
             params = id, market
 
         self.curs.execute(query, params)
