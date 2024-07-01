@@ -23,12 +23,13 @@ class Data:
                     pages_count INTEGER NOT NULL DEFAULT(0),
                     exchange STRING,
                     fee FLOAT,
-                    stop STRING
+                    stop STRING,
+                    style_change BOLLEAN NOT NULL DEFAULT(FALSE)
                 );
 			''')
             self.curs.execute('''
-                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee)
-                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee
+                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop)
+                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop
                 FROM Users;
 			''')
             self.curs.execute('''
@@ -221,7 +222,35 @@ class Data:
             print(e)
             return False
 
+    def getStyleChange(self, tgId: int) -> bool:
+        self.addUser(tgId)
+        try:
+            data = self.curs.execute(
+                "SELECT style_change FROM Users WHERE id = ?",
+                (tgId,)
+            ).fetchone()
+
+            if data is None:
+                return False
+
+            return data[0] == 1
+        except Exception as e:
+            print(e)
+            return False
+
+    def switchStyleChange(self, tgId: int):
+        prev_value = self.getRiskUpdate(tgId)
+        try:
+            self.curs.execute(
+                'UPDATE Users SET style_change = ? WHERE id = ?',
+                (not prev_value, tgId)
+            )
+            self.connection.commit()
+        except Exception as e:
+            print(e)
+
     # FEES
+
     def createFeeTable(self):
         try:
             self.curs.execute("""

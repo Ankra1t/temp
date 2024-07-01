@@ -470,7 +470,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         new_mes = bot.send_message(
-            chat_id, 'Генерация изображения...',
+            chat_id, '⏳ Генерация изображения...',
         )
 
         try:
@@ -487,7 +487,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         if file_path is None:
             bot.edit_message_text(
-                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+                '❗️ Ошибка генерации фото', new_mes.chat.id, new_mes.id,
             )
 
             main_mes = bot.send_message(
@@ -550,7 +550,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
 
         bot.delete_message(chat_id, mes_id)
-        bot.send_message(chat_id, 'Отправлено')
+        bot.send_message(chat_id, '✅ Отправлено')
+        send_main(call.message, bot, user_id, True)
         liteDb.sendSendCalc(stat_id)
 
     if type == 'stc+rescreen':

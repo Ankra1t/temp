@@ -14,7 +14,7 @@ class Notifier():
     def __init__(self, bot: TeleBot, bot_users: TeleBot) -> None:
         self.bot = bot
         self.bot_users = bot_users
-        self.users = (156045434, 774944610)
+        self.users = (156045434, 7159306363)
 
     def _send_by_type(self, bot: TeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         try:
