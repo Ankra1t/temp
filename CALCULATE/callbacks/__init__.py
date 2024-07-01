@@ -6,7 +6,8 @@ from .pages import (
     send_summury_profit_settings, send_stats, send_user_deposit,
     send_tariffs_list_item, send_user_tariffs, send_calculation,
     send_freeze, send_exchange_settings, send_confirm_calc_send,
-    create_and_send_calc, send_maker_or_taker, send_stop_settings
+    create_and_send_calc, send_maker_or_taker, send_stop_settings,
+    send_trading_style_settings
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 
@@ -35,7 +36,7 @@ from .settings.keyboards import (
     kb_summury_profit, kb_summury_profit_type, kb_splitting,
     kb_trading_style, kb_change_deposit, kb_deposit_cancel,
     kb_trading_type, kb_enter_exchange, kb_choose_exchange_level,
-    kb_change_fee, kb_choose_stop_type
+    kb_change_fee, kb_choose_stop_type, kb_change_style_settings
 )
 
 from .tariff.handler import registration as _reg_user_tariff

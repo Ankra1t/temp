@@ -619,7 +619,7 @@ def kb_splitting_last(user_id: int):
 def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
-            text, f'style_{type}',
+            text, f'set_style_{type}',
             trading_style=style
         )
 
@@ -790,6 +790,44 @@ def kb_exchange(user_id: int, is_exchange: bool = False):
         )
         keyboard.add(getButton(back_txt(lang), 'go_settings'))
 
+    return keyboard
+
+
+def kb_change_style_settings(user_id: int, is_style_change: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'set_style': 'Изменить стиль',
+            'on': 'Включить изменение',
+            'off': 'Выключить изменение',
+        },
+        'en': {
+            'set_style': 'Change style',
+            'on': 'Turn on the change',
+            'off': 'Turn off the change',
+        },
+        'uz': {
+            'set_style': "O'zgartirish uslubi",
+            'on': "O'zgarishni yoqing",
+            'off': "O'zgarishlarni o'chiring",
+        },
+        'tr': {
+            'set_style': 'Değişim Stili',
+            'on': 'Değişikliği aç',
+            'off': 'Değişikliği kapat',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(texts[lang]['set_style'], 'set_style'),
+        getButton(
+            texts[lang]['off' if is_style_change else 'on'],
+            'switch_style_change'
+        ),
+        getButton(back_txt(lang), 'go_settings')
+    )
     return keyboard
 
 

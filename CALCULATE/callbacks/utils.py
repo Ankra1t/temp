@@ -9,13 +9,13 @@ from models import MARKETS_TYPE, ForexInfo
 
 from .pages import send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_pair, kb_price, kb_tool
-from .settings.keyboards import kb_change_currency
+from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
     msg_enter_atr, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair,
     msg_enter_pair_price, msg_enter_risk_percent,
-    msg_enter_stop_loss, msg_enter_tool,
+    msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
 )
 from CALCULATE.states import CalculateState, ForexCalcState
 
@@ -97,6 +97,7 @@ def choose_calculate_step(
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
+    is_style_change = liteDb.getStyleChange(user_id) and trading_style is None
 
     # text = msg_calculate(bot, user_id, chat_id, is_try)
     text = ''
@@ -142,11 +143,11 @@ def choose_calculate_step(
         state = ForexCalcState.pair_price
         set_state_data(bot, user_id, chat_id, {'current_pair': pair})
 
-    # elif trading_style is None:
-    #     text += msg_enter_trading_style(user_id)
-    #     edit_to = names[lang]['style']
-    #     state = CalculateState.trading_style
-    #     keyboard = kb_trading_style(user_id, 'calc')
+    elif is_style_change:
+        text += msg_enter_trading_style(user_id)
+        edit_to = names[lang]['style']
+        state = CalculateState.trading_style
+        keyboard = kb_trading_style(user_id, 'calc')
 
     elif deposit is None:
         text += msg_enter_deposit(user_id)
@@ -230,6 +231,10 @@ def choose_first_calculate_step(
         currency = u_base.currency
         risk = u_base.risk
         trading_type = u_base.trading_type
+
+    is_style_change = liteDb.getStyleChange(user_id)
+    if is_style_change:
+        style = None
 
     prev_values = {}
     if unfinished_calc is not None and is_continue:

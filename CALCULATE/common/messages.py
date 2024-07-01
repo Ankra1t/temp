@@ -414,6 +414,47 @@ def msg_deposit(user_id: int):
 """
 
 
+def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Настройка стиля торговли',
+            'style': 'Текущее значение',
+            'update': 'Изменение во время расчёта',
+            'on': 'включено',
+            'off': 'выключено',
+        },
+        'en': {
+            'main': 'Setting up the style of trade',
+            'style': 'present value',
+            'update': 'Change during calculation',
+            'on': 'turned on',
+            'off': 'turned off',
+        },
+        'uz': {
+            'main': 'Savdo uslubini yaratish',
+            'style': 'Hozirgi qiymat',
+            'update': "Hisoblash paytida o'zgarish",
+            'on': 'kiritilgan',
+            'off': "o'chirilgan",
+        },
+        'tr': {
+            'main': 'Ticaret tarzını kurmak',
+            'style': 'bugünkü değeri',
+            'update': 'Hesaplama Sırasında Değiş',
+            'on': 'dahil',
+            'off': 'kapalı',
+        },
+    }
+
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{POINT} {texts[lang]['style']}: <b>{style}</b>
+{POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if style_update_on else texts[lang]['off']}</b>
+"""
+
+
 def msg_settings_change_base(user_id: int):
     lang = get_lang(user_id)
 

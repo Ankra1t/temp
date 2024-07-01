@@ -239,7 +239,7 @@ class Data:
             return False
 
     def switchStyleChange(self, tgId: int):
-        prev_value = self.getRiskUpdate(tgId)
+        prev_value = self.getStyleChange(tgId)
         try:
             self.curs.execute(
                 'UPDATE Users SET style_change = ? WHERE id = ?',

@@ -10,7 +10,7 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
+    msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
     msg_stats_page, msg_stop_page, msg_summury_profit_settings
@@ -22,7 +22,7 @@ from models import MARKETS_TYPE, Calculation
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import (
-    kb_change_deposit, kb_choose_stop_type, kb_dop_settings, kb_exchange,
+    kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
 from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
@@ -119,6 +119,33 @@ def send_exchange_settings(bot: TeleBot, message: Message, user_id: int, is_firs
 
     msg = msg_exchange(user_id, exchange)
     markup = kb_exchange(user_id, exchange is not None)
+
+    if is_first:
+        bot.send_message(
+            chat_id, msg,
+            reply_markup=markup
+        )
+    else:
+        edit_message(bot, message, 'text', msg, markup)
+
+
+def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
+
+    style = '-'
+    if u_base is not None:
+        style = u_base.trading_style or style
+
+    is_style_change = liteDb.getStyleChange(user_id)
+
+    msg = msg_change_style_settings(user_id, style, is_style_change)
+    markup = kb_change_style_settings(user_id, is_style_change)
 
     if is_first:
         bot.send_message(

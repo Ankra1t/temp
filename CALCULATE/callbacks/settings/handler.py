@@ -28,7 +28,7 @@ from .keyboards import (
 )
 from ..pages import (
     send_calculation, send_dop_settings, send_exchange_settings, send_main,
-    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings,
+    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
     send_user_deposit
 )
 
@@ -83,7 +83,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.set_state(user_id, SettingsState.round_count, chat_id)
 
-    if 'style' in type:
+    if type == 'trading_style':
+        send_trading_style_settings(bot, call.message, user_id)
+
+    if 'set_style' in type:
         if trading_value == '':
             bot.set_state(user_id, SettingsState.trading_style, chat_id)
             bot.edit_message_text(
@@ -120,7 +123,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     }
                 )
                 choose_calculate_step(
-                    bot, user_id, chat_id, mes_id, True, last_value='trading_style')
+                    bot, user_id, chat_id, mes_id, True, last_value='trading_style'
+                )
 
             else:
                 db.set_user_trading_style(user_db_id, value)
@@ -134,7 +138,11 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         msg_success_edit(user_id), chat_id, mes_id
                     )
 
-                send_settings(bot, call.message, user_id, True)
+                send_trading_style_settings(bot, call.message, user_id)
+
+    if type == 'switch_style_change':
+        liteDb.switchStyleChange(user_id)
+        send_trading_style_settings(bot, call.message, user_id)
 
     if 'set_currency' in type:
         if type == 'set_currency':
