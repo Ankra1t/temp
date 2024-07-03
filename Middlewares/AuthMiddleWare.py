@@ -64,7 +64,6 @@ class AuthMiddleWare(BaseMiddleware):
             new_user = db.get_user_by_tg_id(user_id)
 
             if new_user is not None and is_registered:
-                db.create_tg_user_tables(new_user.id)
                 num = len(db.get_today_users())
 
                 # Проверка языка
@@ -83,11 +82,6 @@ class AuthMiddleWare(BaseMiddleware):
 
             data['has_registered_now'] = True
             user_role = 0
-        else:
-            # Если нет таблицы связанной с ботом, то создаем
-            is_tg_tables = db.check_tg_user_tables(user_db_id)
-            if not is_tg_tables:
-                db.create_tg_user_tables(user_db_id)
 
         data['user_role'] = user_role
 
