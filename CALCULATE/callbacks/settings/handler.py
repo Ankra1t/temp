@@ -221,19 +221,23 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = text_editor.get_text(user_id, 'settings_market')
             media_id = text_editor.get_media_id(user_id, 'settings_market')
 
+            market = db.get_user_current_market(user_db_id)
+
+            kb = kb_change_market(user_id, market)
+
             if lang == 'ru' and media_id != '':
                 delete_message(bot, chat_id, mes_id)
 
                 bot.send_animation(
                     chat_id, media_id or 'CgACAgIAAxkBAAIBK2aFbYeuDAM1Re96gn3ps4JUeVy3AAJaSQACYZzRSaXZeP8tB3j8NQQ',
                     caption=text,
-                    reply_markup=kb_change_market(user_id)
+                    reply_markup=kb
                 )
             else:
                 bot.edit_message_text(
                     msg_settings_change_market(user_id),
                     chat_id, mes_id,
-                    reply_markup=kb_change_market(user_id)
+                    reply_markup=kb
                 )
         else:
             market: Any = type_list[1]

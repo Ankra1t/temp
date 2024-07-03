@@ -325,7 +325,7 @@ def kb_confirm_channel_post(stat_id: int):
     return keyboard
 
 
-def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str, votes: tuple[int, int]):
+def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
     texts = {
         'ru': 'Рассчитать для себя',
         'en': 'Calculate for you',
@@ -333,8 +333,6 @@ def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str, votes: tup
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton(f'Up ({votes[0]})', f'vote_up_{lang}', stat_id),
-        getButton(f'Down ({votes[1]})', f'vote_down_{lang}', stat_id),
         InlineKeyboardButton(
             texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'
         ),

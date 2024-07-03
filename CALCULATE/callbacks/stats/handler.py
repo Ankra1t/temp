@@ -527,7 +527,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data[2]
 
-        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID, EN_CHANNEL_ID)):
+        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID,)):
             lang = 'ru' if i == 0 else 'en'
 
             text = msg_channel_calculation(stat, lang)\
@@ -536,21 +536,33 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             votes = liteDb.getVotes(stat_id)
             kb = kb_channel_url(
                 lang, stat_id, bot.get_me().username,
-                votes
             )
 
             if photo is None:
-                mes = bot.send_message(
+                bot.send_message(
                     CHANNEL_ID, text,
                     reply_markup=kb
                 )
-                print(mes.id)
             else:
                 bot.send_photo(
                     CHANNEL_ID,
                     photo, text,
                     reply_markup=kb
                 )
+
+            q = f'{(stat.tool or "").replace("/USDT", "") or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+
+            if lang == 'ru':
+                first = 'В рост'
+                second = 'На падение'
+            else:
+                first = 'Long'
+                second = 'Short'
+
+            sleep(2)
+            bot.send_poll(
+                CHANNEL_ID, q, [first, second], True
+            )
 
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, '✅ Отправлено')
@@ -673,9 +685,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_reply_markup(
             chat_id, mes_id,
-            reply_markup= kb_channel_url(
+            reply_markup=kb_channel_url(
                 lang, stat_id, bot.get_me().username,
-                votes
             )
         )
 
