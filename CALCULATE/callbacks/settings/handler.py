@@ -156,11 +156,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             _, currency = type.split('+')
 
             if 'welcome' in type:
-                db.set_user_currency(user_db_id, currency.upper())
-                bot.set_state(user_id, SettingsState.deposit, chat_id)
-                bot.edit_message_text(
-                    msg_enter_deposit(user_id), chat_id, mes_id
-                )
+                bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+                bot.send_message(chat_id, msg_enter_deposit(user_id))
             else:
                 if 'calc' in type:
                     set_state_data(bot, user_id, chat_id, {
@@ -225,7 +222,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 delete_message(bot, chat_id, mes_id)
 
                 bot.send_animation(
-                    chat_id, media_id,
+                    chat_id, media_id or 'CgACAgIAAxkBAAIBK2aFbYeuDAM1Re96gn3ps4JUeVy3AAJaSQACYZzRSaXZeP8tB3j8NQQ',
                     caption=text,
                     reply_markup=kb_change_market(user_id)
                 )
@@ -237,8 +234,43 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
         else:
             market: Any = type_list[1]
+            try:
+                action = type_list[2]
+            except:
+                action = ''
+
             db.set_calculator_user_market(user_db_id, market)
-            send_settings(bot, call.message, user_id)
+
+            if action == 'first':
+                db.create_tg_user_settings(user_db_id, market)
+
+                if market == 'RF':
+                    currency = 'RUB'
+                elif market == 'USA':
+                    currency = 'USD'
+                elif market == 'crypto':
+                    currency = 'USDT'
+                else:
+                    currency = ''
+
+                if currency == '':
+                    bot.edit_message_text(
+                        msg_enter_currency(user_id), chat_id, mes_id,
+                        reply_markup=kb_change_currency(user_id, 'welcome')
+                    )
+                    bot.set_state(user_id, SettingsState.currency, chat_id)
+                    set_state_data(
+                        bot, user_id, chat_id,
+                        {'action': 'welcome'}
+                    )
+                else:
+                    db.set_user_currency(user_db_id, currency)
+                    bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+                    bot.edit_message_text(
+                        msg_enter_deposit(user_id), chat_id, mes_id
+                    )
+            else:
+                send_settings(bot, call.message, user_id)
 
     if 'welcome_confirm' in type:
         if 'no' in type:
@@ -430,11 +462,9 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'set_first_settings':
         bot.set_state(user_id, FirstCalcState.deposit, chat_id)
-        bot.edit_message_reply_markup(
-            chat_id, mes_id, reply_markup=None
-        )
-        bot.send_message(
-            chat_id, msg_enter_deposit(user_id),
+        bot.edit_message_text(
+            msg_enter_deposit(user_id), chat_id, mes_id,
+            reply_markup=kb_change_market(user_id, 'first')
         )
 
     if type == 'set_risk_update':

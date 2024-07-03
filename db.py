@@ -931,8 +931,13 @@ class Database:
             query = 'INSERT INTO "CalcSettings" ("userId", market) VALUES (%s, %s)'
             params = id, market
 
-        self.curs.execute(query, params)
-        self.connection.commit()
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return
 
     def create_tg_user_tables(self, id: int):
         if id == 0:

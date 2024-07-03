@@ -616,7 +616,7 @@ def msg_summury_profit_settings(user_id: int):
 
     info_result = ''
 
-    if split_values is not None and len(split_values)!=0:
+    if split_values is not None and len(split_values) != 0:
         on_off = "on"
 
         for i, el in enumerate(tp_ratio):
@@ -949,25 +949,25 @@ def msg_stop_page(user_id: int, stop_type: str | None):
 
     texts = {
         'ru': {
-            'main': "Выберите тип стоп лосса",
+            'main': "Выберите вид риска",
             'value': "Текущий",
 
             'default': "Обычный",
         },
         'en': {
-            'main': "Choose the type of stop loss",
+            'main': "Choose the type of risk",
             'value': "Current",
 
             'default': "Default",
         },
         'uz': {
-            'main': "To'xtash yo'qolish turini tanlang",
+            'main': "Xavf turini tanlang",
             'value': "Hozirgi",
 
             'default': "Oddiy",
         },
         'tr': {
-            'main': "Durdurma kaybı türünü seçin",
+            'main': "Bir tür risk seçin",
             'value': "Akım",
 
             'default': "Sıradan",
@@ -988,37 +988,19 @@ def msg_stop_page(user_id: int, stop_type: str | None):
 {texts[lang]['value']}: {stop_show}"""
 
 # Первые сообщения
+
+
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        return f"""<b>Поздравляем!!! 🥳</b>
-<b>Теперь мы </b><a href="https://t.me/profmarkets">вместе</a>
-
-<b>Риски в сделках</b> - вот, что нужно контролировать трейдеру.
-
-Настройте калькулятор ниже и получайте мгновенные расчеты."""
+        return f"""Используйте калькулятор для точных расчетов входа/выхода из сделок"""
     elif lang == 'uz':
-        return f"""<b>Tabriklaymiz!!! 🥳</b>
-<b>Endi biz </b><a href="https://t.me/profmarkets">birgal</a>
-
-<b>Tranzaktsiyalardagi xavflar</b> treyder nazorat qilishi kerak bo'lgan narsadir.
-
-Quyidagi kalkulyatorni sozlang va tezkor hisob-kitoblarni oling."""
+        return f"""Tranzaktsiyalardan kirish/chiqish uchun aniq hisoblash uchun kalkulyatordan foydalaning"""
     elif lang == 'tr':
-        return """<b>Tebrikler!!! 🥳</b>
-<b>Artık </b> birlikteyiz
-
-<b>İşlemlerdeki riskler</b> bir yatırımcının kontrol etmesi gereken şeydir.
-
-Aşağıdaki hesap makinesini kurun ve anında hesaplamalar yapın."""
+        return """İşlemlerden doğru giriş/çıkış hesaplamaları için bir hesap makinesi kullanın"""
     else:
-        return """<b>Congratulation!!! 🥳</b>
-<b>Now we are</b><a href="https://t.me/promarketsen">together</a>
-
-<b>Trade risk</b> is what any trader needs ещ control.
-
-Set up the calculator below and get instant calculations."""
+        return """Use a calculator for accurate calculations of entry/exit from transactions"""
 
     if lang == 'ru':
         return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
@@ -1070,36 +1052,34 @@ It also calculates the nearest take profit where the profit is fixed.
 <b>Try it now.</b>"""
 
 
-def msg_after_first_settings(user_id: int, dep: float, percent: float):
+def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MARKETS_TYPE):
     lang = get_lang(user_id)
 
     texts = {
         'ru': {
-            'main': 'Вы указали',
+            'market': 'Рынок',
             'dep': 'Депозит',
             'risk': 'Риск на сделку'
         },
         'en': {
-            'main': 'You have entered',
+            'market': 'Market',
             'dep': 'Deposit',
             'risk': 'Trade risk'
         },
         'uz': {
-            'main': 'Siz ko\'rsatdingiz',
+            'market': 'Bozor',
             'dep': 'Depozit',
             'risk': 'Savdo xavfi'
         },
         'tr': {
-            'main': 'Siz belirttiniz',
+            'market': 'Pazar',
             'dep': 'Depozito',
             'risk': 'Ticaret riski'
         },
     }
 
-    return f"""{texts[lang]['main']}
-
-<b>{texts[lang]['dep']}</b>: {dep} USDT
-<b>{texts[lang]['risk']}</b>: {percent} %"""
+    return f"""<b>{texts[lang]['market']}</b>: {market_translates[lang][market]}
+<b>{texts[lang]['dep']}</b>: {dep} {currency}"""
 
 
 def msg_success_base_set(user_id: int):
@@ -1628,11 +1608,21 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
-            conclusion += f' <code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            if tp_val == 0:
+                if lang == 'ru':
+                    conclusion += f'Тейк-профит ({tp_ratio} {texts[lang]["to"]} 1) не может быть рассчитан'
+                elif lang == 'uz':
+                    conclusion += f'Foyda oling ({tp_ratio} {texts[lang]["to"]} 1) hisoblab bo\'lmaydi'
+                elif lang == 'tr':
+                    conclusion += f'Fayda ({tp_ratio} {texts[lang]["to"]} 1) sayılmaz'
+                elif lang == 'en':
+                    conclusion += f'Take profit ({tp_ratio} {texts[lang]["to"]} 1) cannot be calculated'
+            else:
+                conclusion += f' <code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} | {get_print_float(p_val, round_count)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
-            if calc_result.profit_rate_values is not None:
-                rate = calc_result.profit_rate_values[i]
-                conclusion += f' -- (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) {get_print_float(rate * 100, round_count)}%'
+                if calc_result.profit_rate_values is not None:
+                    rate = calc_result.profit_rate_values[i]
+                    conclusion += f' -- (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) {get_print_float(rate * 100, round_count)}%'
 
             if i != calc_result.tp_count - 1:
                 conclusion += '\n'
@@ -1651,7 +1641,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
-        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}',
+        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"({get_print_float(calc.risk_value / calc.deposit, 4)}%)" if is_try else ""}',
         fee_text,
         trading_style_type
     ))
@@ -2075,7 +2065,7 @@ def msg_enter_tool(user_id: int, market: MARKETS_TYPE = 'crypto'):
 
     texts = {
         'ru': {
-            'main': 'Введите Ваш <b>инструмент</b>',
+            'main': 'Напишите Ваш <b>инструмент</b>',
             'crypto': '<i>(например BTC или DOGE)</i>',
             'RF': '<i>(например GAZP или SBER)</i>',
             'USA': '<i>(например MCD или AMZN)</i>',
@@ -2124,8 +2114,8 @@ def msg_enter_deposit(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Какой <b>размер депозита</b> для торговли',
-        'en': 'What is the <b>deposit size</b> for trading',
+        'ru': 'Ваш <b>размер депозита</b> для торговли',
+        'en': 'Your <b>deposit size</b> for trading',
         'uz': 'Depozit miqdorini kiriting',
         'tr': 'Yatırılan depozito tutarını girin',
     }
@@ -2147,33 +2137,6 @@ def msg_enter_risk_percent(user_id: int):
 
 {get_risk_annotation(lang)}
 """
-
-
-def msg_enter_first_risk(user_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'main': 'Введите <b>% риска</b> на сделку',
-            'info': '<i>Чаще всего трейдеры рискуют не более <b>1%</b> от депозита на <u>каждую</u> сделку</i>'
-        },
-        'en': {
-            'main': 'Enter the <b>% of risk</b> per trade',
-            'info': '<i>Most often, traders risk no more than <b>1%</b> of their deposit on <u>each</u> trade</i>'
-        },
-        'uz': {
-            'main': 'Savdo uchun <b>Xavf foizi</b>',
-            'info': '<i>Ko\'pincha, savdogarlar <b>1%</b> dan oshiq bo\'lishi mumkin savdosi</i>'
-        },
-        'tr': {
-            'main': 'Ticaret başına% <b>Risk yüzdesi</b> girin',
-            'info': '<i>Çoğu zaman, tüccarlar, her biriticaretine yatırmalarının <b>%1</b>\'dan fazla risk almaz</i>'
-        },
-    }
-
-    return f"""👉 {texts[lang]['main']}
-
-{texts[lang]['info']}"""
 
 
 def msg_enter_day_risk(user_id: int):
@@ -2294,41 +2257,26 @@ def msg_enter_open_price(user_id: int, is_try=False):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Введите <b>цену открытия</b> сделки',
+        'ru': 'По какой цене <b>будете</b> покупать',
         'en': 'Enter the <b>opening price</b> of the deal',
         'uz': 'Savdoning ochilish narxini tanlang',
         'tr': 'İşlem açılış fiyatını girin',
     }
-    info = {
-        'ru': '(по какой цене будете покупать?)',
-        'en': '(at what price will you buy?)',
-        'uz': '(Qaysi narxda sotib olasiz?)',
-        'tr': '(Hangi fiyata satın alacaksınız?)',
-    }
 
-    return f"""👉 {texts[lang]}:
-{"" if not is_try else f"<i>{info[lang]}</i>"}"""
+    return f"""👉 {texts[lang]}:"""
 
 
 def msg_enter_stop_loss(user_id: int, is_try=False):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        text = 'Введите цену <b>стоп-лосса</b>:'
-        if is_try:
-            text += '\n<i>(по какой цене будете фиксировать убыток?)</i>'
+        text = 'По какой цене будете <b>фиксировать</b> убыток:'
     elif lang == 'uz':
         text = 'Stop loss narxini tanlang:'
-        if is_try:
-            text += '\n<i>(Siz zaryadni qanday narxda tuzatasiz?)</i>'
     elif lang == 'tr':
         text = 'Stop loss fiyatını girin:'
-        if is_try:
-            text += '\n<i>(Kaybı hangi fiyata gidereceksiniz?)</i>'
     else:
         text = 'Enter the <b>stop loss</b> price'
-        if is_try:
-            text += '\n<i>(at what price will you fix the loss?)</i>'
 
     return f'👉 {text}'
 

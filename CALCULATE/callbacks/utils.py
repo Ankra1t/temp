@@ -103,7 +103,6 @@ def choose_calculate_step(
     text = ''
     keyboard = kb_calc_cancel(user_id)
 
-
     if currency is None:
         text += msg_enter_currency(user_id)
         edit_to = names[lang]['currency']
@@ -121,7 +120,11 @@ def choose_calculate_step(
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
-        last_tools = db.get_last_tools(user_db_id, calc_type)
+        if is_try:
+            last_tools = ['BTC', 'ETH', 'TON']
+        else:
+            last_tools = db.get_last_tools(user_db_id, calc_type)
+
         keyboard = kb_tool(user_id, last_tools)
 
     elif (
@@ -179,9 +182,6 @@ def choose_calculate_step(
             text += msg_enter_stop_loss(user_id, is_try)
             edit_to = names[lang]['sl']
             state = CalculateState.stop_loss
-
-    if is_try:
-        keyboard = None
 
     bot.set_state(user_id, state, chat_id)
 
@@ -274,7 +274,7 @@ def choose_first_calculate_step(
             'stop_type': stop_type or '',
 
             'trading_style': style,
-            'trading_type': trading_type,
+            'trading_type': trading_type if not is_try else 'from_deposit',
             'deposit': deposit,
             'currency': currency,
             'risk': risk,

@@ -533,8 +533,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             text = msg_channel_calculation(stat, lang)\
                 + (f'\n{send_data[1]}' if send_data[1] is not None else '')
 
+            votes = liteDb.getVotes(stat_id)
             kb = kb_channel_url(
-                lang, stat_id, bot.get_me().username
+                lang, stat_id, bot.get_me().username,
+                votes
             )
 
             if photo is None:
@@ -654,6 +656,28 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
+
+    if 'vote_up' in type or 'vote_down' in type:
+        isUp = 'vote_up' in type
+        lang = 'en' if '_en' in type else 'ru'
+
+        is_voted = liteDb.isUserVoted(user_id, stat_id)
+        liteDb.delVote(user_id, stat_id)
+
+        if (is_voted == 'up' and isUp) or (is_voted == 'down' and not isUp):
+            pass
+        else:
+            liteDb.userVote(user_id, stat_id, isUp)
+
+        votes = liteDb.getVotes(stat_id)
+
+        bot.edit_message_reply_markup(
+            chat_id, mes_id,
+            reply_markup= kb_channel_url(
+                lang, stat_id, bot.get_me().username,
+                votes
+            )
+        )
 
     bot.answer_callback_query(call.id)
 

@@ -51,6 +51,8 @@ def kb_tool(user_id: int, prev_tools: list[str]):
         if len(buttons) == 3:
             break
 
+    print(buttons)
+
     btn_settings = get_settings_from_calc_button()
     btn_cancel = getButton(cancel_txt(lang), 'go_main')
 

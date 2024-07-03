@@ -45,7 +45,7 @@ def kb_settings(user_id: int):
             'dop': 'Дополнительно',
 
             'exchange': 'Биржа',
-            'stop': 'Стоп',
+            'stop': 'Вид риска',
         },
         'en': {
             'base': 'Base values',
@@ -59,7 +59,7 @@ def kb_settings(user_id: int):
             'dop': 'Extra',
 
             'exchange': 'Exchange',
-            'stop': 'Stop loss',
+            'stop': 'Type of risk',
         },
         'uz': {
             'base': 'Asosiy qiymatlar',
@@ -70,10 +70,10 @@ def kb_settings(user_id: int):
             'reset': 'Qayta o\'rnatish',
             'deposit': 'Depozit',
             'summury_profit': 'Foyda taqsimoti',
-            'dop': 'Bundan tashqari',
+            'dop': 'Вид риска',
 
             'exchange': 'Almashish',
-            'stop': 'Stop loss',
+            'stop': 'Xavf turi',
         },
         'tr': {
             'base': 'Temel değerler',
@@ -87,7 +87,7 @@ def kb_settings(user_id: int):
             'dop': 'Ek',
 
             'exchange': 'Borsa',
-            'stop': 'Stop loss',
+            'stop': 'Risk türü',
         },
     }
 
@@ -263,7 +263,7 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     return keyboard
 
 
-def kb_change_market(user_id: int):
+def kb_change_market(user_id: int, action: str = '', current: MARKETS_TYPE | None = None):
     lang = get_lang(user_id)
 
     row_width = 2
@@ -272,17 +272,23 @@ def kb_change_market(user_id: int):
     buttons: list[InlineKeyboardButton] = []
 
     markets_list: tuple[MARKETS_TYPE, ...] = (
-        'crypto', 'forex', 'RF', 'USA')  # 'paper', 'future',
+        'crypto', 'forex', 'RF', 'USA'
+    )  # 'paper', 'future',
     for i, el in enumerate(markets_list):
-        btn = getButton(market_translates[lang][el], f'market_{el}')
+        cur_show = '✅ ' if current == el else ''
+
+        btn = getButton(
+            cur_show + market_translates[lang][el],
+            f'market_{el}{""if action == "" else f"_{action}"}'
+        )
         buttons.append(btn)
 
         if len(buttons) == row_width or (i + 1 == len(markets_list) and len(buttons) != 0):
             keyboard.add(*buttons)
             buttons = []
 
-    btn_back = getButton(cancel_txt(lang), 'go_settings')
-    keyboard.add(btn_back)
+    if action != 'first':
+        keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
 
     return keyboard
 
