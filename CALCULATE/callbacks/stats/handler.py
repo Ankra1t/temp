@@ -527,7 +527,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data[2]
 
-        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID,)):
+        channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
+        for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
             text = msg_channel_calculation(stat, lang)\
@@ -551,7 +552,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
 
         sleep(10)
-        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID,)):
+        for i, CHANNEL_ID in enumerate(channels):
             q = f'{stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
 
             if lang == 'ru':
