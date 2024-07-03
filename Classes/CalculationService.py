@@ -2,15 +2,15 @@ from common.utils import get_decimal_count, get_lang, get_print_float
 from common.dt import get_datetime_now
 
 from data.data import liteDb
-from db import LANGUAGES_TYPE, Database
+from db import Database
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
 
 from .CurrencyService import CurrencyService
 
 
-market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
+market_translates = {
     'ru': {
-        'crypto': 'Криптовалюта',
+        'crypto': 'Криптовалюты',
         'paper': 'Акции',
         'forex': 'Форекс',
         'RF': 'РФ',
@@ -22,7 +22,45 @@ market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
         'forex': 'Forex',
         'RF': 'RF',
         'USA': 'USA',
-    }
+    },
+    'uz': {
+        'crypto': 'Cryptocurrency',
+        'paper': 'Stocks',
+        'forex': 'Forex',
+        'RF': 'RF',
+        'USA': 'USA',
+    },
+    'tr': {
+        'crypto': 'Cryptocurrency',
+        'paper': 'Stocks',
+        'forex': 'Forex',
+        'RF': 'RF',
+        'USA': 'USA',
+    },
+}
+
+
+trading_type_translates = {
+    'ru': {
+        'margin': 'маржинальный',
+        'spot': 'спотовый',
+        'from_deposit': 'от депозита',
+    },
+    'en': {
+        'margin': 'margin',
+        'spot': 'spot',
+        'from_deposit': 'from the deposit',
+    },
+    'uz': {
+        'margin': 'marjasi',
+        'spot': 'sple',
+        'from_deposit': 'omonatdan',
+    },
+    'tr': {
+        'margin': 'marj',
+        'spot': 'spot',
+        'from_deposit': 'depozitodan',
+    },
 }
 
 
@@ -319,9 +357,6 @@ class CalculationService():
                 'paper': 'акций',
                 'lot': 'лота',
 
-                'margin': 'маржинальный',
-                'spot': 'спотовый',
-
                 'takes': 'Тейки',
                 'stops': 'Стопы',
 
@@ -344,9 +379,6 @@ class CalculationService():
                 'coin': 'coins',
                 'paper': 'shares',
                 'lot': 'lots',
-
-                'margin': 'margin',
-                'spot': 'spot',
 
                 'takes': 'Take profits',
                 'stops': 'Stop losses',
@@ -371,9 +403,6 @@ class CalculationService():
                 'paper': 'ulushlar',
                 'lot': 'juda ko\'p',
 
-                'margin': 'margin',
-                'spot': 'spot',
-
                 'takes': 'Qabul qilish',
                 'stops': 'To\'xtash-yo\'qotishlar',
 
@@ -396,9 +425,6 @@ class CalculationService():
                 'coin': 'madeni para',
                 'paper': 'hisse senetleri',
                 'lot': 'çok',
-
-                'margin': 'margin',
-                'spot': 'spot',
 
                 'takes': 'Karmaşa',
                 'stops': 'Durma',
@@ -529,7 +555,7 @@ class CalculationService():
 <b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}
 <b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}
 
-<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}
+<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.trading_type]}
 {trading_style}""")
 
 # Моя биржа

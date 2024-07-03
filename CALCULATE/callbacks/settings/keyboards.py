@@ -3,7 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
-from CALCULATE.common.messages import market_translates
+from CALCULATE.common.messages import market_translates, trading_type_translates
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
@@ -695,34 +695,22 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
 def kb_trading_type(user_id: int):
     lang = get_lang(user_id)
 
-    texts = {
-        'ru': {
-            'margin': 'Маржинальный',
-            'spot': 'Спотовый',
-        },
-        'en': {
-            'margin': 'Margin',
-            'spot': 'Spot',
-        },
-        'uz': {
-            'margin': 'Marjinal',
-            'spot': 'Spot',
-        },
-        'tr': {
-            'margin': 'Marjinal',
-            'spot': 'Spot',
-        },
-    }
-
-    btn_margin = getButton(texts[lang]['margin'],
-                           'trading_type', trading_style='margin')
-    btn_spot = getButton(texts[lang]['spot'],
-                         'trading_type', trading_style='spot')
+    btn_margin = getButton(
+        trading_type_translates[lang]['margin'].capitalize(),
+        'trading_type', trading_style='margin'
+    )
+    btn_spot = getButton(
+        trading_type_translates[lang]['spot'].capitalize(),
+        'trading_type', trading_style='spot'
+    )
+    btn_from_dep = getButton(
+        trading_type_translates[lang]['from_deposit'].capitalize(),
+        'trading_type', trading_style='from_deposit'
+    )
     btn_back = getButton(back_txt(lang), 'go_settings')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_margin, btn_spot)
-    keyboard.add(btn_back)
+    keyboard.add(btn_margin, btn_spot, btn_from_dep, btn_back)
     return keyboard
 
 

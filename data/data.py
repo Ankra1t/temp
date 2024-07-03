@@ -250,7 +250,6 @@ class Data:
             print(e)
 
     # FEES
-
     def createFeeTable(self):
         try:
             self.curs.execute("""

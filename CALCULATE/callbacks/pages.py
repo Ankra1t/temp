@@ -466,7 +466,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         trading_style = data.get('trading_style')
         trading_type = data.get('trading_type', 'margin')
 
-        open_price = data.get('open_price') or 0
+        open_price: float = data.get('open_price') or 0
         forex = data.get('forex')
         tool = data.get('tool')
         updated_risk = data.get('updated_risk') or 1.
@@ -499,9 +499,13 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
     if u_base is None:
         return
 
-    risk_value = risk[0]
-    if risk[1]:
-        risk_value *= deposit * 0.01
+    if trading_type == 'from_deposit':
+        count_bet = deposit / open_price
+        risk_value = count_bet * abs(open_price - stop_loss)
+    else:
+        risk_value = risk[0]
+        if risk[1]:
+            risk_value *= deposit * 0.01
 
     calc_info = Calculation(
         user_id=user_db_id,

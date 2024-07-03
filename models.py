@@ -3,7 +3,7 @@ from typing import Literal, Union, Optional
 from datetime import datetime
 
 
-TRADING_TYPE = Literal['margin', 'spot']
+TRADING_TYPE = Literal['margin', 'spot', 'from_deposit']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']

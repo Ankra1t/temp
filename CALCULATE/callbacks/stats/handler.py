@@ -538,10 +538,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
 
             if photo is None:
-                bot.send_message(
+                mes = bot.send_message(
                     CHANNEL_ID, text,
                     reply_markup=kb
                 )
+                print(mes.id)
             else:
                 bot.send_photo(
                     CHANNEL_ID,

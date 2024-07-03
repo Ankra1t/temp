@@ -41,12 +41,16 @@ def send_start_by_user(
         else:
             deposit = u_base.deposit
 
-        if u_base is None or u_base.risk is None:
-            risk = 100
+        if calc.trading_type == 'from_deposit':
+            count_bet = deposit / calc.open_price
+            risk = count_bet * abs(calc.open_price - calc.stop_loss)
         else:
-            risk = u_base.risk[0]
-            if u_base.risk[1]:
-                risk *= deposit * 0.01
+            if u_base is None or u_base.risk is None:
+                risk = 100
+            else:
+                risk = u_base.risk[0]
+                if u_base.risk[1]:
+                    risk *= deposit * 0.01
 
         new_calc = Calculation(
             id=-1,

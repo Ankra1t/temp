@@ -53,6 +53,29 @@ trading_styles_translates = {
     'торговля на high/low': 'high/low trading',
 }
 
+trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
+    'ru': {
+        'margin': 'маржинальный',
+        'spot': 'спотовый',
+        'from_deposit': 'от депозита',
+    },
+    'en': {
+        'margin': 'margin',
+        'spot': 'spot',
+        'from_deposit': 'from the deposit',
+    },
+    'uz': {
+        'margin': 'marjasi',
+        'spot': 'sple',
+        'from_deposit': 'omonatdan',
+    },
+    'tr': {
+        'margin': 'marj',
+        'spot': 'spot',
+        'from_deposit': 'depozitodan',
+    },
+}
+
 
 def get_risk_annotation(lang: LANGUAGES_TYPE):
     texts = {
@@ -242,9 +265,6 @@ def msg_settings(user_id: int, is_risk_update=False):
             'on': 'Включено',
             'off': 'Выключено',
 
-            'margin': 'маржинальный',
-            'spot': 'спотовый',
-
             'output': 'Вывод расчета',
             'by_text': 'текстом',
             'by_image': 'картинкой',
@@ -264,9 +284,6 @@ def msg_settings(user_id: int, is_risk_update=False):
             'market': 'Market',
             'on': 'On',
             'off': 'Off',
-
-            'margin': 'margin',
-            'spot': 'spot',
 
             'output': 'Calc output',
             'by_text': 'in text',
@@ -288,9 +305,6 @@ def msg_settings(user_id: int, is_risk_update=False):
             'on': 'Haqida',
             'off': 'Yopiq',
 
-            'margin': 'margin',
-            'spot': 'spot',
-
             'output': 'Hisoblash chiqishi',
             'by_text': 'matnda',
             'by_image': 'rasmda',
@@ -310,9 +324,6 @@ def msg_settings(user_id: int, is_risk_update=False):
             'market': 'Pazar',
             'on': 'Üzerinde',
             'off': 'Kapalı',
-
-            'margin': 'margin',
-            'spot': 'spot',
 
             'output': 'Hesaplama çıktısı',
             'by_text': 'metinde',
@@ -352,7 +363,7 @@ def msg_settings(user_id: int, is_risk_update=False):
 {POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
 
 {POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
-{POINT} {texts[lang]["trading_type"]}: <b>{texts[lang][u_base.trading_type]}</b>
+{POINT} {texts[lang]["trading_type"]}: <b>{trading_type_translates[lang][u_base.trading_type]}</b>
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
@@ -1360,7 +1371,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
         deposit: float | None = data.get('deposit')
         risk: tuple[float, bool] | None = data.get('risk')
         currency: str | None = data.get('currency')
-        trading_type: str = data.get('trading_type', 'margin')
+        trading_type: TRADING_TYPE = data.get('trading_type', 'margin')
 
     risk_value = risk[0] if (risk is not None) else None
     if (risk is not None) and risk[1] and (deposit is not None):
@@ -1383,8 +1394,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
             'pair': 'Валютная пара',
 
             'trading_type': 'Тип торговли',
-            'margin': 'маржинальный',
-            'spot': 'спотовый',
         },
         'en': {
             'ticker': 'Ticker',
@@ -1394,8 +1403,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
             'pair': 'Currency pair',
 
             'trading_type': 'Trading type',
-            'margin': 'margin',
-            'spot': 'spot',
         },
         'uz': {
             'ticker': 'Ticker',
@@ -1405,8 +1412,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
             'pair': 'Valyuta juftligi',
 
             'trading_type': 'Savdo turi',
-            'margin': 'margin',
-            'spot': 'spot',
         },
         'en': {
             'ticker': 'Ticker',
@@ -1416,8 +1421,6 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
             'pair': 'Para çifti',
 
             'trading_type': 'Ticaret türü',
-            'margin': 'margin',
-            'spot': 'spot',
         },
     }
 
@@ -1445,7 +1448,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
                 ))
 
     if not is_try:
-        text += f'\n<b>{point[lang]["trading_type"]}</b>: {point[lang][trading_type]}\n'
+        text += f'\n<b>{point[lang]["trading_type"]}</b>: {trading_type_translates[lang][trading_type]}\n'
 
     text += '\n'
     return text
@@ -1475,9 +1478,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'акций',
             'lot': 'лота',
 
-            'margin': 'маржинальный',
-            'spot': 'спотовый',
-
             'takes': 'Тейки',
             'stops': 'Стопы',
 
@@ -1501,9 +1501,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'coin': 'coins',
             'paper': 'shares',
             'lot': 'lots',
-
-            'margin': 'margin',
-            'spot': 'spot',
 
             'takes': 'Take profits',
             'stops': 'Stop losses',
@@ -1529,9 +1526,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'ulushlar',
             'lot': 'juda ko\'p',
 
-            'margin': 'margin',
-            'spot': 'spot',
-
             'takes': 'Qabul qilish',
             'stops': 'To\'xtash-yo\'qotishlar',
 
@@ -1555,9 +1549,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'coin': 'madeni para',
             'paper': 'hisse senetleri',
             'lot': 'çok',
-
-            'margin': 'margin',
-            'spot': 'spot',
 
             'takes': 'Karmaşa',
             'stops': 'Durma',
@@ -1599,7 +1590,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     trading_style_type = ''
     if not is_try:
-        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {texts[lang][calc.trading_type]}\n'
+        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.trading_type]}\n'
         if calc.trading_style is not None:
             trading_style_type += f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
 
@@ -2007,24 +1998,28 @@ def msg_enter_trading_type(user_id: int):
             'main': 'Типы торговли',
             'm': '<b>Маржинальный</b>: расчеты будут производиться, включая кредитные плечи',
             's': '<b>Спотовый</b>: расчеты производятся, исходя из фиксированного депозита',
+            'fd': '<b>От депозита</b>: расчеты производятся на весь депозит, не учитывая Ваш риск',
             'enter': 'Выберите тип'
         },
         'en': {
             'main': 'Trading types',
             'm': '<b>Margin</b>: calculations will be made  based on leverage',
             's': '<b>Spot</b>: calculations will be made based on a fixed deposit',
+            'fd': '<b>From the deposit</b>: calculations are made for the entire deposit, not taking into account your risk',
             'enter': 'Select type'
         },
         'uz': {
             'main': 'Savdo turlari',
             'm': '<b>Marjasi</b>: hisob-kitoblar qo\'shimcha narsalarga asoslanadi',
             's': '<b>Sple</b>: hisob-kitoblar belgilangan omonat asosida amalga oshiriladi',
+            'fd': '<b>Omonatdan</b>: hisob-kitoblar butun depozit uchun amalga oshiriladi, sizning xavfingizni hisobga olmagan holda',
             'enter': 'Turi-ni tanlang'
         },
         'tr': {
             'main': 'Ticaret Türleri',
             'm': '<b>Marj</b>: Hesaplamalar kaldıraç üzerine yapılacaktır.',
             's': '<b>Spot</b>: Hesaplamalar sabit bir depozitoya göre yapılacaktır.',
+            'fd': '<b>Depozitodan</b>: riskinizi dikkate almayan tüm depozito için hesaplamalar yapılır',
             'enter': 'Türü seçin'
         },
     }

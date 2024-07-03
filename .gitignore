@@ -15,6 +15,7 @@ data/data.db
 
 _tg.py
 *.session
+*.session_journal
 
 pyrightconfig.json
 4p_bot.db
