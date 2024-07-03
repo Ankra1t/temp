@@ -553,7 +553,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         sleep(10)
         for i, CHANNEL_ID in enumerate(channels):
-            q = f'{stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+            q = f'👇 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
 
             if lang == 'ru':
                 first = 'В рост'
