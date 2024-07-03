@@ -13,6 +13,9 @@ _index.py
 _test.py
 data/data.db
 
+_tg.py
+*.session
+
 pyrightconfig.json
 4p_bot.db
 
