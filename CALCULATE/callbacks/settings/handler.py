@@ -156,8 +156,11 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             _, currency = type.split('+')
 
             if 'welcome' in type:
+                db.set_user_currency(user_db_id, currency.upper())
                 bot.set_state(user_id, FirstCalcState.deposit, chat_id)
-                bot.send_message(chat_id, msg_enter_deposit(user_id))
+                bot.edit_message_text(
+                    msg_enter_deposit(user_id), chat_id, mes_id
+                )
             else:
                 if 'calc' in type:
                     set_state_data(bot, user_id, chat_id, {
