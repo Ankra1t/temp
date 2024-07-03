@@ -99,6 +99,7 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_manual, commands=['manual'])
     reg_mes(_calc, commands=['calc'])
+    reg_mes(_calc, commands=['calculator'])
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
