@@ -64,6 +64,7 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_start, commands=['start'])
     reg_mes(_start, commands=['calc'])
+    reg_mes(_start, commands=['calculator'])
 
     reg_mes(_faq, commands=['faq'])
     reg_mes(_about_us, commands=['about_us'])

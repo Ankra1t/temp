@@ -34,7 +34,6 @@ def kb_settings(user_id: int):
     lang = get_lang(user_id)
     texts = {
         'ru': {
-            'base': 'Базовые значения',
             'lang': 'Язык',
             'market': 'Рынок',
             'style': 'Стиль торговли',
@@ -48,7 +47,6 @@ def kb_settings(user_id: int):
             'stop': 'Вид риска',
         },
         'en': {
-            'base': 'Base values',
             'lang': 'Language',
             'market': 'Market',
             'style': 'Trading style',
@@ -62,7 +60,6 @@ def kb_settings(user_id: int):
             'stop': 'Type of risk',
         },
         'uz': {
-            'base': 'Asosiy qiymatlar',
             'lang': 'Tillar',
             'market': 'Bozor',
             'style': 'Savdo uslubi',
@@ -70,13 +67,12 @@ def kb_settings(user_id: int):
             'reset': 'Qayta o\'rnatish',
             'deposit': 'Depozit',
             'summury_profit': 'Foyda taqsimoti',
-            'dop': 'Вид риска',
+            'dop': 'Bundan tashqari',
 
             'exchange': 'Almashish',
             'stop': 'Xavf turi',
         },
         'tr': {
-            'base': 'Temel değerler',
             'lang': 'Dil',
             'market': 'Pazar',
             'style': 'Ticaret tarzı',
@@ -93,7 +89,6 @@ def kb_settings(user_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_base = getButton('📊 ' + texts[lang]["base"], 'go_change_base')
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
     btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
@@ -113,14 +108,14 @@ def kb_settings(user_id: int):
 
     btn_back = getButton(back_txt(lang), 'go_main')
 
+    keyboard.add(btn_market)
     keyboard.add(
-        btn_market, btn_exchange,
-        btn_deposit_update, btn_base,
-        btn_summury_profit, btn_style,
-        btn_trading_type, btn_lang,
-        btn_reset, btn_dop,
+        btn_deposit_update, btn_exchange,
+        btn_trading_type, btn_style,
+        btn_summury_profit, btn_stop,
+        btn_lang, btn_dop,
 
-        btn_stop, btn_back,
+        btn_reset, btn_back,
     )
 
     return keyboard
@@ -203,6 +198,33 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
         },
     }
 
+    base = {
+        'ru': {
+            'risk': 'Процент риска',
+            'day_risk': 'Риск на день',
+            'round_count': 'Округление',
+        },
+        'en': {
+            'risk': 'Risk percent',
+            'day_risk': 'Daily risk',
+            'round_count': 'Rounding',
+        },
+        'uz': {
+            'risk': 'Xavf foizi',
+            'day_risk': 'Kuniga xavf',
+            'round_count': 'Yaxlitlash',
+        },
+        'tr': {
+            'risk': 'Risk yüzdesi',
+            'day_risk': 'Günlük risk',
+            'round_count': 'Yuvarlama',
+        },
+    }
+
+    btn_risk = getButton(base[lang]['risk'], 'set_risk_percent')
+    btn_day_risk = getButton(base[lang]['day_risk'], 'set_day_risk')
+    btn_round_count = getButton(base[lang]['round_count'], 'set_round_count')
+
     btn_change = getButton(texts[lang]['change'], 'set_deposit')
     btn_currency = getButton(texts[lang]['currency'], 'set_currency')
     btn_on = getButton(f'✅ {texts[lang]["update_on"]}', 'deposit_update_on')
@@ -221,7 +243,11 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
     #     keyboard.add(btn_back)
     # else:
     #     keyboard.add(btn_currency, btn_back)
-    keyboard.add(btn_currency, btn_back)
+    keyboard.add(
+        btn_currency, btn_risk,
+        btn_day_risk, btn_round_count,
+        btn_back
+    )
 
     return keyboard
 
@@ -230,7 +256,7 @@ def kb_base_cancel(user_id: int):
     lang = get_lang(user_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn = getButton(cancel_txt(lang), 'go_change_base')
+    btn = getButton(cancel_txt(lang), 'deposit_update')
 
     keyboard.add(btn)
     return keyboard
@@ -241,6 +267,11 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
 
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
+
+    keyboard.add(
+        getButton('USDT', f'set_currency_{type}+{"USDT"}'),
+        getButton('USDC', f'set_currency_{type}+{"USDC"}')
+    )
 
     currency_list = ['USD', 'GBP', 'EUR', 'RUB', 'CNY', 'JPY']
     buttons: list[InlineKeyboardButton] = []

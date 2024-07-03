@@ -81,10 +81,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         else:
             bot.delete_state(user_id, chat_id)
             bot.send_message(chat_id, msg_success_edit(user_id))
-            if type == 'deposit':
-                send_user_deposit(bot, message, user_id, True)
-            else:
-                send_settings(bot, message, user_id, True)
+            send_user_deposit(bot, message, user_id, True)
 
     return r_func
 
@@ -207,7 +204,7 @@ def handle_day_risk(message: Message, bot: TeleBot):
 
     db.set_user_day_risk(user_db_id, value, is_percent)
     bot.send_message(chat_id, msg_success_edit(user_id))
-    send_settings(bot, message, user_id, True)
+    send_user_deposit(bot, message, user_id, True)
 
 
 def handle_round_count(message: Message, bot: TeleBot):
@@ -242,7 +239,7 @@ def handle_round_count(message: Message, bot: TeleBot):
 
     db.set_user_round_count(user_db_id, value)
     bot.send_message(chat_id, msg_success_edit(user_id))
-    send_settings(bot, message, user_id, True)
+    send_user_deposit(bot, message, user_id, True)
 
 
 def handle_trading_style(message: Message, bot: TeleBot):

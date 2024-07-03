@@ -6,12 +6,14 @@ from Classes import text_editor
 from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
+from data.data import liteDb
 from Classes import calcService
 from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo
 
 
 POINT = '•'
 TAB = '   '
+ENTER = '\n'
 
 
 market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
@@ -379,41 +381,63 @@ def msg_deposit(user_id: int):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
 
+    stop = liteDb.getUserStop(user_id)
+
+    if stop is None:
+        stop_show = '-'
+    elif stop == 'default':
+        stop_show = '-'
+    elif stop == 'atr':
+        stop_show = 'ATR'
+    else:
+        _, percent = stop.split('+')
+        stop_show = f'{percent}% of ATR'
+
     is_update = False
     deposit = '-'
     currency = 'USD'
+    round_count = '-'
     if u_base is not None:
         deposit = get_print_float(u_base.deposit or 0.) or deposit
         currency = u_base.currency or currency
         is_update = u_base.is_updating_deposit
+        round_count = u_base.round_count or round_count
 
     texts = {
         'ru': {
             'main': 'Настройка депозита',
             'dep': 'Текущий депозит',
-            'update': 'Обновление после сохранения расчета',
+            'update': 'Обновление депозита',
             'on': 'включено',
+            'round_count': 'Округление',
+            'stop': 'Вид риска',
             'off': 'выключено',
         },
         'en': {
             'main': 'Deposit setup',
             'dep': 'Current deposit',
-            'update': 'Update after saving calculation',
+            'update': 'Updating the deposit',
             'on': 'on',
+            'round_count': 'Rounding',
+            'stop': 'Type of risk',
             'off': 'off',
         },
         'uz': {
             'main': 'Depozit sozlamalari',
             'dep': 'Joriy depozit',
-            'update': 'Hisoblash saqlanganidan keyin yangilash',
+            'update': 'Omonatni yangilash',
             'on': 'yoqilgan',
+            'round_count': 'Yaxlitlash',
+            'stop': 'Xavf turi',
             'off': 'o\'chirilgan',
         },
         'tr': {
             'main': 'Depozito ayarları',
             'dep': 'Vadeli mevduat',
-            'update': 'Hesaplamayı kaydettikten sonra güncelleme',
+            'update': 'Depozitoyu güncellemek',
             'on': 'etkin',
+            'round_count': 'Yuvarlama',
+            'stop': 'Risk türü',
             'off': 'kapalı',
         },
     }
@@ -421,6 +445,8 @@ def msg_deposit(user_id: int):
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
 {POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
+{POINT} {texts[lang]['round_count']}: <b>{round_count}</b>
+{POINT} {texts[lang]['stop']}: <b>{stop_show}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
 """
 
@@ -1641,7 +1667,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
-        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"({get_print_float(calc.risk_value / calc.deposit, 4)}%)" if is_try else ""}',
+        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>Риск в процентах</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 4)}%" if is_try else ""}',
         fee_text,
         trading_style_type
     ))
