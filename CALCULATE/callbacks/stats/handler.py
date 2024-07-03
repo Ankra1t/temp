@@ -550,7 +550,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     reply_markup=kb
                 )
 
-            q = f'{(stat.tool or "").replace("/USDT", "") or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+        sleep(10)
+        for i, CHANNEL_ID in enumerate((RU_CHANNEL_ID,)):
+            q = f'{stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
 
             if lang == 'ru':
                 first = 'В рост'
@@ -559,7 +561,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 first = 'Long'
                 second = 'Short'
 
-            sleep(2)
             bot.send_poll(
                 CHANNEL_ID, q, [first, second], True
             )
