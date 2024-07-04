@@ -44,22 +44,18 @@ trading_type_translates = {
     'ru': {
         'margin': 'маржинальный',
         'spot': 'спотовый',
-        'from_deposit': 'от депозита',
     },
     'en': {
         'margin': 'margin',
         'spot': 'spot',
-        'from_deposit': 'from the deposit',
     },
     'uz': {
         'margin': 'marjasi',
         'spot': 'sple',
-        'from_deposit': 'omonatdan',
     },
     'tr': {
         'margin': 'marj',
         'spot': 'spot',
-        'from_deposit': 'depozitodan',
     },
 }
 

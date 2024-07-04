@@ -224,6 +224,7 @@ def choose_first_calculate_step(
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
     db.delete_unfinished_calc_by_user(user_db_id)
 
+    is_from_deposit = False
     style = deposit = risk = currency = trading_type = None
     if u_base is not None:
         style = u_base.trading_style
@@ -231,6 +232,7 @@ def choose_first_calculate_step(
         currency = u_base.currency
         risk = u_base.risk
         trading_type = u_base.trading_type
+        is_from_deposit = u_base.is_from_deposit
 
     is_style_change = liteDb.getStyleChange(user_id)
     if is_style_change:
@@ -274,11 +276,12 @@ def choose_first_calculate_step(
             'stop_type': stop_type or '',
 
             'trading_style': style,
-            'trading_type': trading_type if not is_try else 'from_deposit',
+            'trading_type': trading_type,
             'deposit': deposit,
             'currency': currency,
             'risk': risk,
             'is_try': is_try,
+            'is_from_deposit': is_from_deposit if not is_try else True
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)

@@ -41,7 +41,7 @@ def send_start_by_user(
         else:
             deposit = u_base.deposit
 
-        if calc.trading_type == 'from_deposit':
+        if u_base is not None and u_base.is_from_deposit:
             count_bet = deposit / calc.open_price
             risk = count_bet * abs(calc.open_price - calc.stop_loss)
         else:
@@ -54,7 +54,7 @@ def send_start_by_user(
 
         new_calc = Calculation(
             id=-1,
-            user_id=user_id,
+            user_id=user_db_id,
             currency=calc.currency,
             deposit=deposit,
             risk_value=risk,
@@ -66,7 +66,8 @@ def send_start_by_user(
             round_count=(u_base.round_count or 5) if u_base is not None else 5,
             tool=calc.tool,
             tp_ratio=calc.tp_ratio,
-            split_values=calc.split_values
+            split_values=calc.split_values,
+            is_from_deposit=u_base.is_from_deposit if u_base is not None else False
         )
 
         new_id = db.add_calculation(new_calc)

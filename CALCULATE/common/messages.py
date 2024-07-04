@@ -59,24 +59,31 @@ trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
     'ru': {
         'margin': 'маржинальный',
         'spot': 'спотовый',
-        'from_deposit': 'от депозита',
     },
     'en': {
         'margin': 'margin',
         'spot': 'spot',
-        'from_deposit': 'from the deposit',
     },
     'uz': {
         'margin': 'marjasi',
         'spot': 'sple',
-        'from_deposit': 'omonatdan',
     },
     'tr': {
         'margin': 'marj',
         'spot': 'spot',
-        'from_deposit': 'depozitodan',
     },
 }
+
+
+def txt_current_value(lang: LANGUAGES_TYPE):
+    if lang == 'ru':
+        return 'Текущее значение'
+    elif lang == 'uz':
+        return 'Hozirgi qiymat'
+    elif lang == 'tr':
+        return 'Mevcut değeri'
+    else:
+        return 'Current value'
 
 
 def get_risk_annotation(lang: LANGUAGES_TYPE):
@@ -401,7 +408,7 @@ def msg_deposit(user_id: int):
         deposit = get_print_float(u_base.deposit or 0.) or deposit
         currency = u_base.currency or currency
         is_update = u_base.is_updating_deposit
-        round_count = u_base.round_count or round_count
+        round_count = u_base.round_count if u_base.round_count is not None else round_count
 
     texts = {
         'ru': {
@@ -457,28 +464,25 @@ def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
     texts = {
         'ru': {
             'main': 'Настройка стиля торговли',
-            'style': 'Текущее значение',
             'update': 'Изменение во время расчёта',
             'on': 'включено',
             'off': 'выключено',
         },
         'en': {
             'main': 'Setting up the style of trade',
-            'style': 'present value',
+            '': 'present value',
             'update': 'Change during calculation',
             'on': 'turned on',
             'off': 'turned off',
         },
         'uz': {
             'main': 'Savdo uslubini yaratish',
-            'style': 'Hozirgi qiymat',
             'update': "Hisoblash paytida o'zgarish",
             'on': 'kiritilgan',
             'off': "o'chirilgan",
         },
         'tr': {
             'main': 'Ticaret tarzını kurmak',
-            'style': 'bugünkü değeri',
             'update': 'Hesaplama Sırasında Değiş',
             'on': 'dahil',
             'off': 'kapalı',
@@ -487,7 +491,7 @@ def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
 
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
-{POINT} {texts[lang]['style']}: <b>{style}</b>
+{POINT} {txt_current_value(lang)}: <b>{style}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if style_update_on else texts[lang]['off']}</b>
 """
 
@@ -549,7 +553,6 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'ru': {
             'main': 'Дополнительные настройки',
             'output': 'Здесь вы можете настроить тип вывод расчёта',
-            'current': 'Текущее значение',
             'text': 'текст',
             'photo': 'картинка',
             'risk': 'А также функцию изменения риска в момент расчёта',
@@ -559,7 +562,6 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'en': {
             'main': 'Extra settings',
             'output': 'Here you can set up the type of calculation output',
-            'current': 'Current value',
             'text': 'text',
             'photo': 'image',
             'risk': 'As well as the function of risk change at the moment of calculation',
@@ -569,7 +571,6 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'uz': {
             'main': 'Qo\'shimcha Sozlamalar',
             'output': 'Bu yerda siz hisoblash chiqishi turini o\'rnatishingiz mumkin',
-            'current': 'Joriy qiymat',
             'text': 'matn',
             'photo': 'rasm',
             'risk': 'Shuningdek, hisoblash paytida xavf o\'zgarishi funktsiyasi',
@@ -579,7 +580,6 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
         'tr': {
             'main': 'Ekstra ayarlar',
             'output': 'Burada hesaplama çıktısının türünü ayarlayabilirsiniz',
-            'current': 'Geçerli değer',
             'text': 'metin',
             'photo': 'görüntü',
             'risk': 'Hesaplama anında risk değişiminin işlevi kadar',
@@ -591,7 +591,7 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
 {texts[lang]['output']}
-{texts[lang]['current']}: <b>{texts[lang][output]}</b>
+{txt_current_value(lang)}: <b>{texts[lang][output]}</b>
 
 {texts[lang]['risk']}
 {texts[lang]['current']}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
@@ -970,7 +970,7 @@ def msg_freeze_calc(user_id: int, risk_value: str):
 """
 
 
-def msg_stop_page(user_id: int, stop_type: str | None):
+def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
     lang = get_lang(user_id)
 
     texts = {
@@ -978,29 +978,35 @@ def msg_stop_page(user_id: int, stop_type: str | None):
             'main': "Выберите вид риска",
             'value': "Текущий",
 
+            'fd': "от депозита",
             'default': "Обычный",
         },
         'en': {
             'main': "Choose the type of risk",
             'value': "Current",
 
+            'fd': "from the deposit",
             'default': "Default",
         },
         'uz': {
             'main': "Xavf turini tanlang",
             'value': "Hozirgi",
 
+            'fd': "Omonatdan",
             'default': "Oddiy",
         },
         'tr': {
             'main': "Bir tür risk seçin",
             'value': "Akım",
 
+            'fd': "depozitodan",
             'default': "Sıradan",
         },
     }
 
-    if stop_type is None:
+    if is_update_deposit:
+        stop_show = texts[lang]['fd']
+    elif stop_type is None:
         stop_show = '-'
     elif stop_type == 'default':
         stop_show = texts[lang]['default']
@@ -1011,7 +1017,7 @@ def msg_stop_page(user_id: int, stop_type: str | None):
         stop_show = f'{percent}% of ATR'
 
     return f"""{texts[lang]['main']}
-{texts[lang]['value']}: {stop_show}"""
+{texts[lang]['value']}: <b>{stop_show}</b>"""
 
 # Первые сообщения
 
@@ -2136,7 +2142,7 @@ def msg_enter_pair_price(user_id: int, pair: str):
     return f'👉 {texts[lang]} <b>{pair}</b>'
 
 
-def msg_enter_deposit(user_id: int):
+def msg_enter_deposit(user_id: int, current: str|None=None):
     lang = get_lang(user_id)
 
     texts = {
@@ -2146,7 +2152,11 @@ def msg_enter_deposit(user_id: int):
         'tr': 'Yatırılan depozito tutarını girin',
     }
 
-    return f'👉 {texts[lang]}?'
+    current_value = ''
+    if current is not None and current != '':
+        current_value = f'\n<b>{txt_current_value(lang)}</b>:' + current
+
+    return f'👉 {texts[lang]}?' + current_value
 
 
 def msg_enter_risk_percent(user_id: int):
@@ -2249,7 +2259,7 @@ def msg_enter_round_count(user_id: int):
     }
 
     return f"""👉 {texts[lang]['main']}
-{texts[lang]['max']}
+{texts[lang]['max']} (0.00001)
 """
 
 

@@ -3,7 +3,7 @@ from typing import Literal, Union, Optional
 from datetime import datetime
 
 
-TRADING_TYPE = Literal['margin', 'spot', 'from_deposit']
+TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
@@ -243,6 +243,7 @@ class UserCalcSettings(BaseModel):
     day_risk: tuple[float, bool] | None
     is_updating_deposit: bool
     trading_type: TRADING_TYPE
+    is_from_deposit: bool
 
 
 class ForexInfo(BaseModel):
@@ -261,6 +262,7 @@ class Calculation(BaseModel):
 
     market: MARKETS_TYPE
     trading_type: TRADING_TYPE
+    is_from_deposit: bool
     trading_style: str | None
     round_count: int | None = None
 

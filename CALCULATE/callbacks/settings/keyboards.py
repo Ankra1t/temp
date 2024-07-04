@@ -25,7 +25,7 @@ def getButton(
             type=type,
             sum_type=summury_type,
             tp=take_profit or '',
-            count=add_count or '',
+            count=add_count if add_count is not None else '',
             style=trading_style or '',
         ))
 
@@ -39,7 +39,7 @@ def kb_settings(user_id: int):
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
             'reset': 'Сброс',
-            'deposit': 'Депозит',
+            'deposit': 'Настроить торговлю',
             'summury_profit': 'Деление профита',
             'dop': 'Дополнительно',
 
@@ -52,7 +52,7 @@ def kb_settings(user_id: int):
             'style': 'Trading style',
             'trading_type': 'Trading type',
             'reset': 'Reset',
-            'deposit': 'Deposit',
+            'deposit': 'Configure trading',
             'summury_profit': 'Profit division',
             'dop': 'Extra',
 
@@ -65,7 +65,7 @@ def kb_settings(user_id: int):
             'style': 'Savdo uslubi',
             'trading_type': 'Savdo turi',
             'reset': 'Qayta o\'rnatish',
-            'deposit': 'Depozit',
+            'deposit': 'Savdolarni sozlash',
             'summury_profit': 'Foyda taqsimoti',
             'dop': 'Bundan tashqari',
 
@@ -78,7 +78,7 @@ def kb_settings(user_id: int):
             'style': 'Ticaret tarzı',
             'trading_type': 'Ticaret türü',
             'reset': 'Sıfırla',
-            'deposit': 'Depozito',
+            'deposit': 'Ticareti yapılandırın',
             'summury_profit': 'Kâr bölümü',
             'dop': 'Ek',
 
@@ -95,10 +95,7 @@ def kb_settings(user_id: int):
     btn_trading_type = getButton(
         '🔧 ' + texts[lang]["trading_type"], 'trading_type')
     btn_deposit_update = getButton(
-        '📐 ' + texts[lang]["deposit"], 'deposit_update')
-
-    btn_summury_profit = getButton(
-        '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
+        '📐 ' + texts[lang]["deposit"], 'deposit_update'
     )
 
     btn_reset = getButton('🛑 ' + texts[lang]["reset"], 'reset')
@@ -108,11 +105,11 @@ def kb_settings(user_id: int):
 
     btn_back = getButton(back_txt(lang), 'go_main')
 
-    keyboard.add(btn_market)
+    keyboard.add(btn_deposit_update)
     keyboard.add(
-        btn_deposit_update, btn_exchange,
+        btn_market, btn_exchange,
         btn_trading_type, btn_style,
-        btn_summury_profit, btn_stop,
+        btn_stop,
         btn_lang, btn_dop,
 
         btn_reset, btn_back,
@@ -177,24 +174,28 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
             'currency': 'Изменить валюту',
             'update_on': 'Вкл. обновление',
             'update_off': 'Выкл. обновление',
+            'summury_profit': 'Деление профита',
         },
         'en': {
             'change': 'Change deposit',
             'currency': 'Change currency',
             'update_on': 'Update on',
             'update_off': 'Update off',
+            'summury_profit': 'Profit division',
         },
         'uz': {
             'change': 'Depozitni o\'zgartirish',
             'currency': 'Valyutani almashtirish',
             'update_on': 'Yangilashni yoqing',
             'update_off': 'Yangilash o\'chirilgan',
+            'summury_profit': 'Foyda taqsimoti',
         },
         'tr': {
             'change': 'Depozitoyu değiştir',
             'currency': 'Para birimini değiştir',
             'update_on': 'Güncellemeyi aç',
             'update_off': 'Güncellemeyi kapat',
+            'summury_profit': 'Kâr bölümü',
         },
     }
 
@@ -225,6 +226,10 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
     btn_day_risk = getButton(base[lang]['day_risk'], 'set_day_risk')
     btn_round_count = getButton(base[lang]['round_count'], 'set_round_count')
 
+    btn_summury_profit = getButton(
+        '📲 ' + texts[lang]["summury_profit"], 'summury_profit'
+    )
+
     btn_change = getButton(texts[lang]['change'], 'set_deposit')
     btn_currency = getButton(texts[lang]['currency'], 'set_currency')
     btn_on = getButton(f'✅ {texts[lang]["update_on"]}', 'deposit_update_on')
@@ -246,6 +251,7 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
     keyboard.add(
         btn_currency, btn_risk,
         btn_day_risk, btn_round_count,
+        btn_summury_profit,
         btn_back
     )
 
@@ -321,6 +327,23 @@ def kb_change_market(user_id: int, action: str = '', current: MARKETS_TYPE | Non
     if action != 'first':
         keyboard.add(getButton(cancel_txt(lang), 'go_settings'))
 
+    return keyboard
+
+
+def kb_round_count(user_id: int, current=-1):
+    lang = get_lang(user_id)
+
+    buttons = []
+    for el in range(6):
+        is_current = ''
+        if el == current:
+            is_current = '✅ '
+
+        buttons.append(getButton(f'{is_current}{el}', f'set_round_count', add_count=el))
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(*buttons)
+    keyboard.add(getButton(back_txt(lang), 'deposit_update'))
     return keyboard
 
 
@@ -422,7 +445,7 @@ def kb_summury_profit(user_id: int):
     btn_change = getButton(
         f"✏️ {texts[lang]['change']}", 'change_summury_profit'
     )
-    btn_back = getButton(back_txt(lang), 'go_settings')
+    btn_back = getButton(back_txt(lang), 'deposit_update')
 
     keyboard.add(btn_change, btn_back)
     return keyboard
@@ -740,14 +763,14 @@ def kb_trading_type(user_id: int):
         trading_type_translates[lang]['spot'].capitalize(),
         'trading_type', trading_style='spot'
     )
-    btn_from_dep = getButton(
-        trading_type_translates[lang]['from_deposit'].capitalize(),
-        'trading_type', trading_style='from_deposit'
-    )
+    # btn_from_dep = getButton(
+    #     trading_type_translates[lang]['from_deposit'].capitalize(),
+    #     'trading_type', trading_style='from_deposit'
+    # )
     btn_back = getButton(back_txt(lang), 'go_settings')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_margin, btn_spot, btn_from_dep, btn_back)
+    keyboard.add(btn_margin, btn_spot, btn_back)
     return keyboard
 
 
@@ -977,7 +1000,7 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     return keyboard
 
 
-def kb_choose_stop_type(user_id: int):
+def kb_choose_stop_type(user_id: int, cur_fd: bool):
     lang = get_lang(user_id)
 
     texts = {
@@ -985,21 +1008,25 @@ def kb_choose_stop_type(user_id: int):
             'simple': 'Простой',
             'atr': 'ATR',
             'atr_percent': '% от ATR',
+            'from_deposit': f"{'Выключить' if cur_fd else 'Включить'} торговлю от депозита",
         },
         'en': {
             'simple': 'Simple',
             'atr': 'ATR',
             'atr_percent': '% of ATR',
+            'from_deposit': f"{'Off' if cur_fd else 'On'} trading from a deposit",
         },
         'uz': {
             'simple': 'Oddiy',
             'atr': 'ATR',
             'atr_percent': '% ATR',
+            'from_deposit': ('O\'chiring' if cur_fd else 'yoqish') + f" omonatdan savdo",
         },
         'tr': {
             'simple': 'Basit',
             'atr': 'ATR',
             'atr_percent': 'ATR %',
+            'from_deposit': f"{'Kapatmak' if cur_fd else 'Aç'} depozitodan ticaret",
         },
     }
 
@@ -1009,6 +1036,7 @@ def kb_choose_stop_type(user_id: int):
         getButton(texts[lang]['atr'], 'set_stop+atr'),
         getButton(texts[lang]['atr_percent'], 'set_stop+atr_percent'),
     )
+    keyboard.add(getButton(texts[lang]['from_deposit'], 'change_fr_dp'))
     keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
 

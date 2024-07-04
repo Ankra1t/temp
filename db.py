@@ -1358,7 +1358,8 @@ class Database:
             round_count=data.get('roundCount'),
             day_risk=day_risk,
             is_updating_deposit=data.get('isUpdatingDeposit'),
-            trading_type=data.get('tradingType')
+            trading_type=data.get('tradingType'),
+            is_from_deposit=data.get('isFromDeposit')
         )
 
     def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
@@ -1390,7 +1391,8 @@ class Database:
             data = self.curs.fetchone()
             if is_create and data is None:
                 self.create_tg_user_settings(user_id, market)
-                return self.get_calc_user_settings(user_id)
+                self.curs.execute(query, params)
+                data = self.curs.fetchone()
 
             return self._data_to_user_calc(data) if data is not None else None
         except Exception as e:
@@ -1683,6 +1685,21 @@ class Database:
             self.connection.rollback()
             return False
 
+    def set_user_from_deposit(self, user_id: int, value: bool):
+        market = self.get_user_current_market(user_id)
+
+        query = 'UPDATE "CalcSettings" SET "isFromDeposit" = %s WHERE "userId" = %s AND market = %s'
+        params = value, user_id, market
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
     # Calc Stats
     def _data_to_calculations(self, data: DictRow):
         pair = data.get('pair')
@@ -1697,7 +1714,7 @@ class Database:
                 price=pair_price,
                 cross_prices=json.loads(cross_prices)
             )
-        
+
         split_values = data.get('splitValues')
         if split_values is not None and len(split_values) == 0:
             split_values = None
@@ -1721,6 +1738,7 @@ class Database:
             forex_info=forex,
             tool=data.get('tool'),
             trading_type=data.get('tradingType'),
+            is_from_deposit=data.get('isFromDeposit'),
         )
 
     def add_calculation(self, value: Calculation):

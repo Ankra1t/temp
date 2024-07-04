@@ -62,9 +62,6 @@ class AuthMiddleWare(BaseMiddleware):
             # Регистрация, пробный период, добавление таблиц бота
             is_registered = registration(user_id, username, ref_id)
             new_user = db.get_user_by_tg_id(user_id)
-            
-            print(new_user)
-            print(is_registered)
 
             if new_user is not None and is_registered:
                 num = len(db.get_today_users())

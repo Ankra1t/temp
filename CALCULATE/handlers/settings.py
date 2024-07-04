@@ -3,10 +3,8 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.main.keyboards import kb_after_first_settings
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
-from Classes import currencyService
 from db import db, BASE_VALUE_TYPE
 from data.data import liteDb
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
@@ -16,7 +14,7 @@ from CALCULATE.callbacks import (
     send_settings, send_user_deposit, kb_deposit_cancel,
     kb_enter_exchange, send_exchange_settings,
     kb_change_fee, kb_choose_exchange_level, send_maker_or_taker,
-    send_stop_settings
+    send_stop_settings, kb_after_first_settings, kb_round_count
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -215,8 +213,14 @@ def handle_round_count(message: Message, bot: TeleBot):
 
     value = digit_accept(message, int)
 
+    u_base = db.get_calc_user_settings(user_db_id)
+
+    current_value = -1
+    if u_base is not None:
+        current_value = u_base.round_count or current_value
+
     enter_mes = msg_enter_round_count(user_id)
-    keyboard = kb_base_cancel(user_id)
+    keyboard = kb_round_count(user_id, current_value)
 
     if value is None:
         bot.send_message(

@@ -72,7 +72,6 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     bot.delete_state(user_id, chat_id)
     liteDb.addPagesCount(user_id)
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
     is_risk_update = liteDb.getRiskUpdate(user_id)
 
     msg = msg_settings(user_id, is_risk_update)
@@ -470,6 +469,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         forex = data.get('forex')
         tool = data.get('tool')
         updated_risk = data.get('updated_risk') or 1.
+        is_from_deposit = data.get('is_from_deposit') or False
 
         is_try = data.get('is_try', False)
 
@@ -499,7 +499,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
     if u_base is None:
         return
 
-    if trading_type == 'from_deposit':
+    if is_from_deposit:
         count_bet = deposit / open_price
         risk_value = count_bet * abs(open_price - stop_loss)
     else:
@@ -522,6 +522,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         tool=tool or None,
         forex_info=forex,
         trading_type=trading_type,
+        is_from_deposit=is_from_deposit
     )
 
     if not is_try:
@@ -553,8 +554,15 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
 
     stop_type = liteDb.getUserStop(user_id)
 
-    mes = msg_stop_page(user_id, stop_type)
-    kb = kb_choose_stop_type(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
+
+    current_fd = False
+    if u_base is not None:
+        current_fd = u_base.is_from_deposit
+
+    mes = msg_stop_page(user_id, stop_type, current_fd)
+    kb = kb_choose_stop_type(user_id, current_fd)
 
     if is_first:
         bot.send_message(
