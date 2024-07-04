@@ -2,6 +2,7 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
+from MAIN.start import start_with_calc
 from config_logger import logger
 from Classes import currencyService
 from db import db
@@ -361,10 +362,27 @@ def handle_stop_loss(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        action = data.get('action', '')
+        stat_id = data.get('stat_id', '')
+        open_price = data.get('open_price', '')
+
+    if stop_loss == open_price:
+        new_mes = bot.send_message(
+            chat_id, msg_sl_op_equal_error(user_id),
+            reply_markup=kb_calc_cancel(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
     logger.info(
         f'callback "handle_stop_loss" user_tg_id={user_id} value={stop_loss}'
     )
-    create_and_send_calc(bot, message, user_id, stop_loss)
+
+    if action == 'send_calc':
+        start_with_calc(bot, message, user_id, stat_id, stop_loss)
+    else:
+        create_and_send_calc(bot, message, user_id, stop_loss)
 
 
 def handle_stop_atr(message: Message, bot: TeleBot):

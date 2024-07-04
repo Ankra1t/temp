@@ -55,6 +55,15 @@ def get_ton_manifest():
         "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
     })
 
+@app.route(base_url + '/vote_timeout', methods=['GET'])
+def vote_timeout():
+    return jsonify({
+        # "url": f"https://t.me/{bot.get_me().username}",
+        "url": "https://github.com/XaBbl4/pytonconnect",
+        "name": "Calc",
+        "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
+    })
+
 
 if PROD:
     from waitress import serve

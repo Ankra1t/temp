@@ -96,7 +96,7 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     )
     btn_change = getButton(
         f'✏️ {texts[lang]["change"]}',
-        'change_calc', stat_id
+        'ch_c', stat_id
     )
     keyboard.add(btn_delete, btn_change)
 
@@ -268,12 +268,12 @@ def kb_calculate_change(user_id: int, stat_id: int):
     }
 
     btn_op = getButton(texts[lang]["open_price"],
-                       'change_calc+open_price', stat_id)
+                       'ch_c+open_price', stat_id)
     btn_sl = getButton(texts[lang]["stop_loss"],
-                       'change_calc+stop_loss', stat_id)
-    btn_tool = getButton(texts[lang]["tool"], 'change_calc+tool', stat_id)
-    btn_style = getButton(texts[lang]["style"], 'change_calc+style', stat_id)
-    btn_back = getButton(back_txt(lang), 'change_calc+back', stat_id)
+                       'ch_c+stop_loss', stat_id)
+    btn_tool = getButton(texts[lang]["tool"], 'ch_c+tool', stat_id)
+    btn_style = getButton(texts[lang]["style"], 'ch_c+style', stat_id)
+    btn_back = getButton(back_txt(lang), 'ch_c+back', stat_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_op, btn_sl)
@@ -300,9 +300,11 @@ def kb_confirm_channel_post(stat_id: int):
 
     is_text = False
     is_photo = False
+    without_stop = False
     if send_data is not None:
-        is_text = send_data[1] is not None
-        is_photo = send_data[2] is not None
+        is_text = send_data.text is not None
+        is_photo = send_data.photo is not None
+        without_stop = send_data.without_stop
 
     if is_text:
         add_text = getButton('Убрать текст', 'stc-text', stat_id)
@@ -314,13 +316,20 @@ def kb_confirm_channel_post(stat_id: int):
     else:
         add_photo = getButton('Своё фото', 'stc+photo', stat_id)
 
+    if without_stop:
+        add_photo = getButton('Вернуть стоп', 'stc+stop', stat_id)
+    else:
+        add_photo = getButton('Убрать стоп', 'stc+stop', stat_id)
+
+    btn_style = getButton('Стиль', 'ch_c+style_stc', stat_id)
+    add_time = getButton('Период', 'stc+time', stat_id)
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        send, rescreen,
-        # add_text,
-        add_photo, cancel,
+        send, #rescreen,
+        add_text, add_photo,
+        add_time, btn_style, cancel,
     )
     return keyboard
 
@@ -336,5 +345,15 @@ def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
         InlineKeyboardButton(
             texts[lang], url=f'https://t.me/{bot_name}?start=calc_{stat_id}'
         ),
+    )
+    return keyboard
+
+
+def kb_send_calc_time(stat_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        getButton('Среднесрочная', f'stc+time=avg', stat_id),
+        getButton('Внутридневная', f'stc+time=day', stat_id),
+        getButton('Убрать', f'stc+time=none', stat_id),
     )
     return keyboard

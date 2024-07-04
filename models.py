@@ -314,3 +314,12 @@ class Exchange(BaseModel):
     maker_fee: float
     taker_fee: float
     fees: list[tuple[str, float, float]]
+
+class SendCalc(BaseModel):
+    id: int
+    text: str | None
+    photo: str | None
+    send: bool
+    without_stop: bool
+    trading_style: str | None
+    time: str | None

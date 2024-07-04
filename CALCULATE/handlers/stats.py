@@ -175,8 +175,8 @@ def handle_send_text(message: Message, bot: TeleBot):
     if send_data is None:
         return
 
-    liteDb.addSendCalc(
-        stat_id, new_text, send_data[2]
+    liteDb.updateValueSendCalc(
+        stat_id, 'text', new_text
     )
 
     send_confirm_calc_send(bot, message, stat_id, True)
@@ -204,8 +204,8 @@ def handle_send_photo(message: Message, bot: TeleBot):
     if send_data is None:
         return
 
-    liteDb.addSendCalc(
-        stat_id, send_data[1], new_photo.file_id
+    liteDb.updateValueSendCalc(
+        stat_id, 'photo', new_photo.file_id
     )
 
     send_confirm_calc_send(bot, message, stat_id, True)

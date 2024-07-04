@@ -1679,7 +1679,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru'):
+def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False):
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1690,6 +1690,7 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
             'conclusion': 'Тейк-профит',
             'style': 'Стиль торговли',
 
+            'direct': 'Направление',
             'to': 'к',
         },
         'en': {
@@ -1699,6 +1700,7 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
             'conclusion': 'Take profit',
             'style': 'Trading style',
 
+            'direct': 'Direction',
             'to': 'to',
         }
     }
@@ -1732,7 +1734,7 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
         else:
             result = calc.trading_style
 
-        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
+        trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -1742,27 +1744,34 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru')
         round_count
     )
 
-    conclusion = ''
-    for i in range(calc_result.tp_count):
-        tp_ratio = calc.tp_ratio[i]
-        tp_val = calc_result.tp_values[i]
+    profit_result = ''
+    if not without_stop:
+        conclusion = ''
+        for i in range(calc_result.tp_count):
+            tp_ratio = calc.tp_ratio[i]
+            tp_val = calc_result.tp_values[i]
 
-        conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
-        if i != calc_result.tp_count - 1:
-            conclusion += '\n'
+            if i != calc_result.tp_count - 1:
+                conclusion += '\n'
 
-    profit_result = f"""<b>{texts[lang]['conclusion']}</b>:
+        profit_result = f"""\n\n<b>{texts[lang]['conclusion']}</b>:
 {conclusion}"""
 
+    direction = ''
+    if not without_stop:
+        direction = f' ({long_short})'
+
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b> ({long_short}) - <b>{market_translates[lang][calc.market]}</b>',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{direction} - <b>{market_translates[lang][calc.market]}</b>',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}',
-        '',
-        profit_result,
-        '',
+        (
+            (f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}' + profit_result)
+            if not without_stop
+            else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
+        ),
         trading_style_type
     ))
 
@@ -2142,7 +2151,7 @@ def msg_enter_pair_price(user_id: int, pair: str):
     return f'👉 {texts[lang]} <b>{pair}</b>'
 
 
-def msg_enter_deposit(user_id: int, current: str|None=None):
+def msg_enter_deposit(user_id: int, current: str | None = None):
     lang = get_lang(user_id)
 
     texts = {

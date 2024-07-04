@@ -430,24 +430,31 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     if stat is None or send_data is None:
         return
 
-    photo = send_data[2]
-    text = msg_channel_calculation(stat)\
-        + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+    photo = send_data.photo
+    text = msg_channel_calculation(stat, 'ru', send_data.without_stop)\
+        + (f'\n{send_data.text}' if send_data.text is not None else '')
 
     kb = kb_confirm_channel_post(
         stat_id
     )
 
-    if photo is None:
-        bot.send_message(
-            chat_id, text,
-            reply_markup=kb
-        )
+    if is_first:
+        if photo is None:
+            bot.send_message(
+                chat_id, text,
+                reply_markup=kb
+            )
+        else:
+            bot.send_photo(
+                chat_id,
+                photo, text,
+                reply_markup=kb
+            )
     else:
-        bot.send_photo(
-            chat_id,
-            photo, text,
-            reply_markup=kb
+        edit_message(
+            bot,
+            message, 'text' if photo is None else 'photo',
+            text, kb, photo
         )
 
 

@@ -27,7 +27,7 @@ from .keyboards import (
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
 from ..pages import (
-    send_calculation, send_dop_settings, send_exchange_settings, send_main,
+    send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
     send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
     send_user_deposit
 )
@@ -103,7 +103,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'trading_style':
         send_trading_style_settings(bot, call.message, user_id)
 
-    if 'set_style' in type:
+    if 'ss_' in type:
         if trading_value == '':
             bot.set_state(user_id, SettingsState.trading_style, chat_id)
             bot.edit_message_text(
@@ -128,7 +128,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     db.change_calculation_style(stat_id, value)
                     calc_info.trading_style = value
 
-                send_calculation(bot, call.message, user_id, calc_info, True)
+                if '+stc' in type:
+                    send_confirm_calc_send(bot, call.message, stat_id)
+                else:
+                    send_calculation(bot, call.message, user_id, calc_info, True)
                 bot.delete_state(user_id, chat_id)
 
             elif 'calc' in type:

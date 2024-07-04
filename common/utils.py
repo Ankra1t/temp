@@ -53,6 +53,8 @@ def edit_message(
     chat_id = message.chat.id
     mes_id = message.id
 
+    new_mes_id = mes_id
+
     if message.content_type == 'text' and type == 'text':
         bot.edit_message_text(
             text, chat_id, mes_id, reply_markup=markup
@@ -66,23 +68,28 @@ def edit_message(
     else:
         delete_message(bot, chat_id, mes_id)
         if type == 'text':
-            bot.send_message(chat_id, text, reply_markup=markup)
+            new_mes = bot.send_message(chat_id, text, reply_markup=markup)
+            new_mes_id = new_mes.id
         elif type == 'video':
-            bot.send_video(
+            new_mes = bot.send_video(
                 chat_id, media,
                 caption=text,
                 reply_markup=markup
             )
+            new_mes_id = new_mes.id
         elif type == 'animation':
             bot.send_animation(
                 chat_id, media, caption=text,
                 reply_markup=markup
             )
         elif type == 'photo':
-            bot.send_photo(
+            new_mes = bot.send_photo(
                 chat_id, media, text,
                 reply_markup=markup
             )
+            new_mes_id = new_mes.id
+
+    return new_mes_id
 
 
 def delete_message(

@@ -41,7 +41,7 @@ from ..settings.keyboards import kb_trading_style
 from .keyboards import (
     kb_calc_image, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_stats,
+    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
@@ -193,7 +193,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         f'callback "settings_factory" user_tg_id={user_id} type={type} ({stats_market} {stat_id})'
     )
 
-    if 'time' in type:
+    if 'time+' in type:
         _, time = type.split('+')
         date = get_datetime_now() + timedelta(hours=int(time))
 
@@ -327,7 +327,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 media
             )
 
-    if 'change_calc' in type:
+    if 'ch_c' in type:
         type_arr = type.split('+')
         kind = ''
         if len(type_arr) == 2:
@@ -418,11 +418,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     'del_mes_id': call.message.id
                 }
             )
-        elif kind == 'style':
+        elif 'style' in kind:
+            stc = '+stc' if '_stc' in type else ''
             edit_message(
                 bot, call.message, 'text',
                 msg_enter_trading_style(user_id),
-                kb_trading_style(user_id, 'ch_calc')
+                kb_trading_style(user_id, 'ch_calc' + stc)
             )
             bot.set_state(user_id, CalculateState.trading_style, chat_id)
             set_state_data(
@@ -469,9 +470,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if stat is None:
             return
 
-        new_mes = bot.send_message(
-            chat_id, '⏳ Генерация изображения...',
-        )
+        # new_mes = bot.send_message(
+        #     chat_id, '⏳ Генерация изображения...',
+        # )
 
         try:
             raise Exception('time')
@@ -486,9 +487,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         text = msg_channel_calculation(stat)
 
         if file_path is None:
-            bot.edit_message_text(
-                '❗️ Ошибка генерации фото', new_mes.chat.id, new_mes.id,
-            )
+            # bot.edit_message_text(
+            #     '❗️ Ошибка генерации фото', new_mes.chat.id, new_mes.id,
+            # )
 
             main_mes = bot.send_message(
                 chat_id, text,
@@ -513,7 +514,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if main_mes.photo is not None and len(main_mes.photo) > 0:
             photo_str = main_mes.photo[-1].file_id
 
-        liteDb.addSendCalc(stat_id, None, photo_str)
+        liteDb.addSendCalc(stat_id)
         bot.edit_message_reply_markup(
             chat_id, mes_id,
             reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
@@ -525,16 +526,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if send_data is None or stat is None:
             return
 
-        photo = send_data[2]
+        photo = send_data.photo
 
         channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
-            text = msg_channel_calculation(stat, lang)\
-                + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+            text = msg_channel_calculation(stat, lang, send_data.without_stop)
+            if lang == 'ru':
+                description_text = send_data.text
+                text += f'\n{description_text}' if description_text is not None else ''
 
-            votes = liteDb.getVotes(stat_id)
+            # votes = liteDb.getVotes(stat_id)
             kb = kb_channel_url(
                 lang, stat_id, bot.get_me().username,
             )
@@ -554,7 +557,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         sleep(10)
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
-            q = f'👇 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+            q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
 
             if lang == 'ru':
                 first = 'В рост'
@@ -591,8 +594,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             print(e)
             file_path = None
 
-        text = msg_channel_calculation(stat) \
-            + (f'\n{send_data[1]}' if send_data[1] is not None else '')
+        text = msg_channel_calculation(stat, 'ru', send_data.without_stop) \
+            + (f'\n{send_data.text}' if send_data.text is not None else '')
 
         if file_path is None:
             bot.edit_message_text(
@@ -621,42 +624,60 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if main_mes.photo is not None and len(main_mes.photo) > 0:
             photo_str = main_mes.photo[-1].file_id
 
-        liteDb.addSendCalc(stat_id, send_data[1], photo_str)
+        liteDb.updateValueSendCalc(stat_id, 'photo', photo_str)
         bot.delete_message(chat_id, mes_id)
 
     if type == 'stc+text':
-        bot.delete_message(chat_id, mes_id)
-        new_mes = bot.send_message(
-            chat_id, '👉 Введите <b>доп текст</b>:',
+        new_mes_id = edit_message(
+            bot, call.message, 'text',
+            '👉 Введите <b>доп текст</b>:',
         )
 
         bot.set_state(user_id, StatsState.send_add_text, chat_id)
         set_state_data(
             bot, user_id, chat_id, {
-                'del_mes_id': new_mes.id, 'stat_id': stat_id
+                'del_mes_id': new_mes_id, 'stat_id': stat_id
             }
         )
 
     if type == 'stc+photo':
-        bot.delete_message(chat_id, mes_id)
-        new_mes = bot.send_message(
-            chat_id, '👉 Отправьте <b>новое фото</b>:',
+        new_mes_id = edit_message(
+            bot, call.message, 'text',
+            '👉 Отправьте <b>новое фото</b>:',
         )
 
         bot.set_state(user_id, StatsState.send_add_photo, chat_id)
         set_state_data(
             bot, user_id, chat_id, {
-                'del_mes_id': new_mes.id, 'stat_id': stat_id
+                'del_mes_id': new_mes_id, 'stat_id': stat_id
             }
         )
+
+    if type == 'stc+time':
+        edit_message(
+            bot, call.message, 'text',
+            '👉 Выберите тип период:',
+            kb_send_calc_time(stat_id)
+        )
+
+    if 'stc+time=' in type:
+        _, value = type.split('=')
+        value = None if value == 'none' else value
+
+        liteDb.updateValueSendCalc(stat_id, 'time', value)
+        send_confirm_calc_send(bot, call.message, stat_id)
+
+    if type == 'stc+stop':
+        liteDb.updateWithoutStopSendCalc(stat_id)
+        send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc-photo':
         send_data = liteDb.getSendCalc(stat_id)
         if send_data is None:
             return
 
-        liteDb.addSendCalc(
-            stat_id, send_data[1], None
+        liteDb.updateValueSendCalc(
+            stat_id, 'photo', None
         )
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
@@ -666,8 +687,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if send_data is None:
             return
 
-        liteDb.addSendCalc(
-            stat_id, None, send_data[2]
+        liteDb.updateValueSendCalc(
+            stat_id, 'text', None
         )
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)

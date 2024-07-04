@@ -29,7 +29,6 @@ def registration(user_id: int, username: str = '', referral_id: int | None = Non
         )
     except Exception as e:
         logger.error(f'/auth/tg_register {e}')
-        print(traceback.print_exc())
         return False
 
     return response.status_code >= 200 and response.status_code < 300
@@ -50,7 +49,6 @@ def get_site_code(user_id: int) -> str | Literal[False]:
         )
 
         result = response.json()
-        print(result)
         return result.get('code', False)
     except Exception as e:
         logger.error(f'/auth/get_site_code {e}')
@@ -78,7 +76,6 @@ def change_password(id: int, password: str):
         logger.error(
             f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
         )
-        print(e)
         return False
 
     return response.status_code == 200
