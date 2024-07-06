@@ -79,7 +79,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             else:
                 tools[tool or ''] = 1
 
-            if stat.trading_style in styles.keys():
+            if stat.trading_style is None:
+                pass
+            elif stat.trading_style in styles.keys():
                 styles[stat.trading_style] += 1
             else:
                 styles[stat.trading_style] = 1
