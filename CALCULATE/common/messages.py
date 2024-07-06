@@ -1679,7 +1679,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False):
+def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False, time: str = ''):
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1692,6 +1692,10 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
 
             'direct': 'Направление',
             'to': 'к',
+
+            'deal': 'Сделка',
+            'avg': 'Среднесрочная',
+            'day': 'Внутридневная',
         },
         'en': {
             'open': 'Price',
@@ -1702,6 +1706,10 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
 
             'direct': 'Direction',
             'to': 'to',
+
+            'deal': 'Trade',
+            'avg': 'Medium-term',
+            'day': 'Intraday',
         }
     }
 
@@ -1735,6 +1743,8 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
             result = calc.trading_style
 
         trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
+        if time != '':
+            trading_style_type += f'<b>{texts[lang]["deal"]}</b>: {texts[lang][time]}\n'
 
     # Округление
     round_count = calc.round_count or 5

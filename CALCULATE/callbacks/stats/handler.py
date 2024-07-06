@@ -16,6 +16,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+from AuthRoles import vote_timeout
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
@@ -41,10 +42,13 @@ from ..settings.keyboards import kb_trading_style
 from .keyboards import (
     kb_calc_image, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
+    kb_deal_profit_minus, kb_deal_result, kb_send_calc_stop, kb_send_calc_time, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+
+loading_vote_message_ids: dict[int, tuple[int, int]] = {}
+channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
 
 
 def createScreen(
@@ -470,55 +474,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if stat is None:
             return
 
-        # new_mes = bot.send_message(
-        #     chat_id, '⏳ Генерация изображения...',
+        liteDb.addSendCalc(stat_id)
+
+        # bot.send_message(
+        #     chat_id, '👉 Выберите тип периода',
+        #     reply_markup=kb_send_calc_time(stat_id)
         # )
 
-        try:
-            raise Exception('time')
-            file_path = createScreen(
-                (stat.tool or '').replace('/', '').upper(),
-                '1h', 'candles', 6
-            )
-        except Exception as e:
-            print(e)
-            file_path = None
-
-        text = msg_channel_calculation(stat)
-
-        if file_path is None:
-            # bot.edit_message_text(
-            #     '❗️ Ошибка генерации фото', new_mes.chat.id, new_mes.id,
-            # )
-
-            main_mes = bot.send_message(
-                chat_id, text,
-                reply_markup=kb_confirm_channel_post(
-                    stat_id
-                )
-            )
-        else:
-            bot.delete_message(new_mes.chat.id, new_mes.id)
-
-            with open(file_path, 'rb') as photo:
-                main_mes = bot.send_photo(
-                    chat_id,
-                    photo, text,
-                    reply_markup=kb_confirm_channel_post(
-                        stat_id
-                    )
-                )
-            os.remove(file_path)
-
-        photo_str = None
-        if main_mes.photo is not None and len(main_mes.photo) > 0:
-            photo_str = main_mes.photo[-1].file_id
-
-        liteDb.addSendCalc(stat_id)
-        bot.edit_message_reply_markup(
-            chat_id, mes_id,
-            reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
-        )
+        # bot.edit_message_reply_markup(
+        #     chat_id, mes_id,
+        #     reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
+        # )
+        send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+send':
         send_data = liteDb.getSendCalc(stat_id)
@@ -528,11 +495,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data.photo
 
-        channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
-            text = msg_channel_calculation(stat, lang, send_data.without_stop)
+            text = msg_channel_calculation(
+                stat, lang, send_data.without_stop, send_data.time or '')
             if lang == 'ru':
                 description_text = send_data.text
                 text += f'\n{description_text}' if description_text is not None else ''
@@ -554,21 +521,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     reply_markup=kb
                 )
 
-        sleep(10)
-        for i, CHANNEL_ID in enumerate(channels):
-            lang = 'ru' if i == 0 else 'en'
-            q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
-
-            if lang == 'ru':
-                first = 'В рост'
-                second = 'На падение'
-            else:
-                first = 'Long'
-                second = 'Short'
-
-            bot.send_poll(
-                CHANNEL_ID, q, [first, second], True
+        if send_data.is_vote:
+            seconds = vote_timeout(stat_id)
+            new_mes = bot.send_message(
+                chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
             )
+            loading_vote_message_ids[stat_id] = (chat_id, new_mes.id)
 
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, '✅ Отправлено')
@@ -594,7 +552,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             print(e)
             file_path = None
 
-        text = msg_channel_calculation(stat, 'ru', send_data.without_stop) \
+        text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '') \
             + (f'\n{send_data.text}' if send_data.text is not None else '')
 
         if file_path is None:
@@ -656,7 +614,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'stc+time':
         edit_message(
             bot, call.message, 'text',
-            '👉 Выберите тип период:',
+            '👉 Выберите тип периода:',
             kb_send_calc_time(stat_id)
         )
 
@@ -665,10 +623,39 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         value = None if value == 'none' else value
 
         liteDb.updateValueSendCalc(stat_id, 'time', value)
-        send_confirm_calc_send(bot, call.message, stat_id)
+
+        if 'fstc' in type:
+            bot.edit_message_text(
+                'Вывести стоп?', chat_id, mes_id,
+                reply_markup=kb_send_calc_stop(1)
+            )
+        else:
+            send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+stop':
         liteDb.updateWithoutStopSendCalc(stat_id)
+        send_confirm_calc_send(bot, call.message, stat_id)
+
+    if 'fstc+stop' in type:
+        _, action = type.split('=')
+
+        if action == 'no':
+            liteDb.updateWithoutStopSendCalc(stat_id)
+
+        bot.edit_message_text(
+            msg_enter_trading_style(user_id), chat_id, mes_id,
+            reply_markup=kb_trading_style(user_id, 'ch_calc+fstc')
+        )
+        bot.set_state(user_id, CalculateState.trading_style, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'stat_id': stat_id,
+                'del_mes_id': call.message.id
+            }
+        )
+
+    if type == 'stc+vote':
+        liteDb.updateVoteSendCalc(stat_id)
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc-photo':
@@ -693,6 +680,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
+    if 'fstc-text' in type:
+        bot.edit_message_text(
+            'Введите описание',chat_id, mes_id,
+        )
+        bot.set_state(user_id, StatsState.send_add_text, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': new_mes_id, 'stat_id': stat_id
+            }
+        )
+
     if 'vote_up' in type or 'vote_down' in type:
         isUp = 'vote_up' in type
         lang = 'en' if '_en' in type else 'ru'
@@ -715,6 +713,34 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     bot.answer_callback_query(call.id)
+
+
+def send_vote(bot: TeleBot, stat_id: int):
+    stat = db.get_calculation(stat_id)
+    if stat is None:
+        return
+
+    for i, CHANNEL_ID in enumerate(channels):
+        lang = 'ru' if i == 0 else 'en'
+        q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+
+        if lang == 'ru':
+            first = 'В рост'
+            second = 'На падение'
+        else:
+            first = 'Long'
+            second = 'Short'
+
+        bot.send_poll(
+            CHANNEL_ID, q, [first, second], True
+        )
+
+    if stat_id in loading_vote_message_ids:
+        cur_chat_id, cur_mes_id = loading_vote_message_ids[stat_id]
+        bot.edit_message_text(
+            '✅ Опрос отправлен', cur_chat_id, cur_mes_id
+        )
+        loading_vote_message_ids.pop(stat_id)
 
 
 def registration(bot: TeleBot):

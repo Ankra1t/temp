@@ -55,6 +55,21 @@ def get_site_code(user_id: int) -> str | Literal[False]:
         return False
 
 
+def vote_timeout(stat_id: int):
+    access_token = db.get_access_token() or ''
+
+    try:
+        res = requests.get(
+            f'{API_URL}/tg/vote_timeout?stat_id={stat_id}',
+            headers=HEADERS | {'tg-api-key': access_token}
+        )
+
+        return res.json()
+    except Exception as e:
+        logger.error(f'/auth/get_site_code {e}')
+        return False
+
+
 def change_password(id: int, password: str):
     access_token = db.get_access_token() or ''
 

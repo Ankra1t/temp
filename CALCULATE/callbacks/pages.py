@@ -431,8 +431,10 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
         return
 
     photo = send_data.photo
-    text = msg_channel_calculation(stat, 'ru', send_data.without_stop)\
-        + (f'\n{send_data.text}' if send_data.text is not None else '')
+    text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '')\
+        + (f'\n{send_data.text}\n' if send_data.text is not None else '')
+
+    text += '\nОпрос: ' + ('✅' if send_data.is_vote else '❌')
 
     kb = kb_confirm_channel_post(
         stat_id

@@ -676,7 +676,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', 'ch_calc+fstc', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'ss_{type}',
@@ -739,12 +739,13 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
             'go_main'
         )
         keyboard.add(btn_back, btn_settings, btn_cancel)
-    elif type == 'ch_calc' or type == 'ch_calc+stc':
+    elif type == 'ch_calc' or type == 'ch_calc+stc' or type == 'ch_calc+fstc':
         btn_cancel = getThisButton(
             cancel_txt(lang),
             '**cancel**'
         )
-        keyboard.add(btn_cancel)
+        if type != 'ch_calc+fstc':
+            keyboard.add(btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         keyboard.add(btn_cancel)

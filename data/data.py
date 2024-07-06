@@ -448,7 +448,8 @@ CREATE TABLE IF NOT EXISTS TonStorage (
                     send BOOLEAN DEFAULT(FALSE),
                     withoutStop BOOLEAN DEFAULT(FALSE),
                     tradingStyle STRING,
-                    time STRING
+                    time STRING,
+                    isVote BOOLEAN DEFAULT(TRUE)
                 );
             ''')
             self.curs.execute('''
@@ -515,6 +516,23 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             print(e)
             return False
 
+    def updateVoteSendCalc(self, id: int):
+        current = self.getSendCalc(id)
+        if current is None:
+            return
+
+        try:
+            self.curs.execute(
+                f'UPDATE SendCalcs SET isVote = ? WHERE id = ?',
+                (not current.is_vote, id)
+            )
+
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
     def sendSendCalc(self, id: int):
         try:
             self.curs.execute(
@@ -555,11 +573,34 @@ CREATE TABLE IF NOT EXISTS TonStorage (
                 send=data[3] == 1,
                 without_stop=data[4] == 1,
                 trading_style=data[5],
-                time=data[6]
+                time=data[6],
+                is_vote=data[7] == 1
             )
         except Exception as e:
             print(e)
             return None
+
+    def getAllSendCalcs(self):
+        try:
+            data = self.curs.execute(
+                'SELECT * FROM SendCalcs',
+            ).fetchall()
+
+            return [
+                SendCalc(
+                    id=el[0],
+                    text=el[1],
+                    photo=el[2],
+                    send=el[3] == 1,
+                    without_stop=el[4] == 1,
+                    trading_style=el[5],
+                    time=el[6],
+                    is_vote=el[7] == 1
+                ) for el in data
+            ]
+        except Exception as e:
+            print(e)
+            return []
 
     def delSendCalc(self, id: int):
         try:
@@ -638,7 +679,6 @@ WHERE stat_id = ?""", (True, False, stat_id,)
             return 'up' if data[0] == 1 else 'down'
         except:
             return None
-
 
 
 liteDb = Data()

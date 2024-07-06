@@ -307,6 +307,7 @@ class UnfinishedCalculation(BaseModel):
     is_risk_percent: Optional[bool] = None
     update_risk_rate: Optional[float] = None
 
+
 class Exchange(BaseModel):
     id: int
     name: str
@@ -314,6 +315,7 @@ class Exchange(BaseModel):
     maker_fee: float
     taker_fee: float
     fees: list[tuple[str, float, float]]
+
 
 class SendCalc(BaseModel):
     id: int
@@ -323,3 +325,4 @@ class SendCalc(BaseModel):
     without_stop: bool
     trading_style: str | None
     time: str | None
+    is_vote: bool

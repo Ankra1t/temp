@@ -19,9 +19,18 @@ def kb_admin_main():
     btn_params = getButton("Параметры", 'params')
     btn_tariffs = getButton("Тарифы", 'tariffs')
     btn_site_code = getButton("Войти на сайт", 'site_code')
+    btn_channel_stats = getButton("Статистика в каналы", 'ch_stats')
 
     keyboard.add(btn_users, btn_workers)
     keyboard.add(btn_posts, btn_payments)
     keyboard.add(btn_params, btn_tariffs)
+    keyboard.add(btn_channel_stats)
     keyboard.add(btn_site_code)
+    return keyboard
+
+def kb_channel_stat():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    btn_channel_stats = getButton("Отправить", 'ch_stats_send')
+    btn_cancel = getButton("Отмена", 'back')
+    keyboard.add(btn_channel_stats, btn_cancel)
     return keyboard

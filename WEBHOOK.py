@@ -1,7 +1,8 @@
 import telebot
 import flask
-from flask import jsonify, request, send_file
+from flask import jsonify, request, send_file, Response
 
+from CALCULATE.callbacks.stats.handler import send_vote
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
@@ -9,6 +10,7 @@ from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_por
 from config_logger import logger
 
 from MAIN.initialize import bot
+from db import db
 from thread_tasks import run_thread
 
 
@@ -57,13 +59,18 @@ def get_ton_manifest():
 
 @app.route(base_url + '/vote_timeout', methods=['GET'])
 def vote_timeout():
-    return jsonify({
-        # "url": f"https://t.me/{bot.get_me().username}",
-        "url": "https://github.com/XaBbl4/pytonconnect",
-        "name": "Calc",
-        "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
-    })
+    access_token = db.get_access_token()
+    api_key = request.headers.get('tg-api-key')
 
+    if access_token is None or api_key is None or access_token != api_key:
+        return Response(status=400)
+
+    stat_id = request.args.get('stat_id')
+    if stat_id is None or not stat_id.isnumeric():
+        return Response(status=400)
+
+    send_vote(bot, int(stat_id))
+    return Response(status=200)
 
 if PROD:
     from waitress import serve

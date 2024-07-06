@@ -1,6 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from CALCULATE.callbacks.stats.keyboards import kb_send_calc_text
 from CALCULATE.callbacks.utils import choose_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
@@ -130,6 +131,11 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 if '+stc' in type:
                     send_confirm_calc_send(bot, call.message, stat_id)
+                elif '+fstc' in type:
+                    bot.edit_message_text(
+                        'Добавить описание?', chat_id, mes_id,
+                        reply_markup=kb_send_calc_text(stat_id)
+                    )
                 else:
                     send_calculation(bot, call.message, user_id, calc_info, True)
                 bot.delete_state(user_id, chat_id)

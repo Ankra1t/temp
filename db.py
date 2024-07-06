@@ -1917,9 +1917,13 @@ class Database:
             self.connection.rollback()
             return []
 
-    def get_calculation(self, id: int):
+    def get_calculation(self, id: int, weeks=False):
         query = 'SELECT * FROM "Calculation" WHERE id = %s'
         params = id,
+
+        if weeks:
+            query += ' AND "createdAt" > %s AND "createdAt" < %s'
+            params = (*params, datetime.now() - timedelta(7), datetime.now())
 
         try:
             self.curs.execute(query, params)
@@ -2104,7 +2108,7 @@ class Database:
             return None
 
     # Auth
-    def get_access_token(self):
+    def get_access_token(self) -> str | None:
         query = 'SELECT value FROM "AccessOption" WHERE name = %s'
         params = ('tg-api-key',)
 

@@ -295,31 +295,35 @@ def kb_calc_image(user_id: int, stat_id: int):
 def kb_confirm_channel_post(stat_id: int):
     send_data = liteDb.getSendCalc(stat_id)
 
-    send = getButton('Отправить', f'stc+send', stat_id)
+    send = getButton('Отправить ➡️', f'stc+send', stat_id)
     rescreen = getButton('Повтор скрина', f'stc+rescreen', stat_id)
 
-    is_text = False
-    is_photo = False
-    without_stop = False
+    is_text = is_photo = is_vote = without_stop = False
     if send_data is not None:
         is_text = send_data.text is not None
         is_photo = send_data.photo is not None
         without_stop = send_data.without_stop
+        is_vote = send_data.is_vote
 
     if is_text:
-        add_text = getButton('Убрать текст', 'stc-text', stat_id)
+        add_text = getButton('❌ Убрать описание', 'stc-text', stat_id)
     else:
-        add_text = getButton('Доп текст', 'stc+text', stat_id)
+        add_text = getButton('📝 Описание', 'stc+text', stat_id)
 
     if is_photo:
-        add_photo = getButton('Убрать фото', 'stc-photo', stat_id)
+        add_photo = getButton('❌ Убрать скрин', 'stc-photo', stat_id)
     else:
-        add_photo = getButton('Своё фото', 'stc+photo', stat_id)
+        add_photo = getButton('🖼 Скрин', 'stc+photo', stat_id)
 
     if without_stop:
-        add_photo = getButton('Вернуть стоп', 'stc+stop', stat_id)
+        add_stop = getButton('Вернуть стоп', 'stc+stop', stat_id)
     else:
-        add_photo = getButton('Убрать стоп', 'stc+stop', stat_id)
+        add_stop = getButton('Убрать стоп', 'stc+stop', stat_id)
+
+    if is_vote:
+        btn_vote = getButton('Убрать опрос', 'stc+vote', stat_id)
+    else:
+        btn_vote = getButton('Добавить опрос', 'stc+vote', stat_id)
 
     btn_style = getButton('Стиль', 'ch_c+style_stc', stat_id)
     add_time = getButton('Период', 'stc+time', stat_id)
@@ -327,9 +331,11 @@ def kb_confirm_channel_post(stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        send, #rescreen,
-        add_text, add_photo,
-        add_time, btn_style, cancel,
+        add_photo, send,  # rescreen,
+        add_text, add_stop,
+        add_time, btn_style,
+
+        btn_vote, cancel,
     )
     return keyboard
 
@@ -349,11 +355,30 @@ def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
     return keyboard
 
 
-def kb_send_calc_time(stat_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=1)
+def kb_send_calc_time(stat_id: int, is_first=False):
+    first = 'f' if is_first else ''
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('Среднесрочная', f'stc+time=avg', stat_id),
-        getButton('Внутридневная', f'stc+time=day', stat_id),
-        getButton('Убрать', f'stc+time=none', stat_id),
+        getButton('Среднесрочная', f'{first}stc+time=avg', stat_id),
+        getButton('Внутридневная', f'{first}stc+time=day', stat_id),
+        getButton('' if is_first else 'Убрать',
+                  f'{first}stc+time=none', stat_id),
     )
     return keyboard
+
+
+def kb_send_calc_stop(stat_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('Нет', 'fstc+stop=no', stat_id),
+        getButton('Да', 'fstc+stop=yes', stat_id),
+    )
+
+
+def kb_send_calc_text(stat_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('Нет', 'fstc+text=no', stat_id),
+        getButton('Да', 'fstc+text=yes', stat_id),
+    )
