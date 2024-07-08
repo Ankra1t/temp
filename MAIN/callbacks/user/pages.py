@@ -12,13 +12,13 @@ from data.data import liteDb
 
 from config_logger import logger
 
-from MAIN.common.messages import default_menu, msg_site_login, msg_user_account, msg_user_params
+from MAIN.common.messages import default_menu, msg_referral, msg_site_login, msg_user_account, msg_user_params
 from messages.education import termins
 from messages.users import msg_start
 
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
-from .account.keyboards import kb_user_account, kb_user_params
+from .account.keyboards import kb_user_account, kb_user_params, kb_user_referral
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
@@ -146,6 +146,25 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
             send_site_code(bot, new_message, user_id, False, False, code)
 
         Timer(3, get_default).start()
+
+
+def send_referral(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    referals_count = len(db.get_user_referals(user_db_id))
+
+    text = msg_referral(user_id, referals_count, bot.get_me().username)
+    kb = kb_user_referral(user_id, referals_count)
+
+    if is_first:
+        bot.send_message(chat_id, text, reply_markup=kb)
+    else:
+        bot.edit_message_text(
+            text, chat_id, mes_id,
+            reply_markup=kb
+        )
 
 
 def send_user_params(bot: TeleBot, message: Message, user_id: int, is_first=False):

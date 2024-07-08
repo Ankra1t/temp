@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.utils import send_calc_start
+from MAIN.callbacks.user.pages import send_referral
 from db import db
 
 from CALCULATE.callbacks import send_manual_page, send_settings
@@ -86,6 +87,10 @@ def _calc_start(message: Message, bot: TeleBot):
     send_calc_start(bot, message, message.from_user.id)
 
 
+def _referral(message: Message, bot: TeleBot):
+    send_referral(bot, message, message.from_user.id, True)
+
+
 def _test(message: Message, bot: TeleBot):
     print(message.chat.id)
     pass
@@ -111,6 +116,8 @@ def commands_registration(bot: TeleBot):
     reg_mes(_settings, commands=['settings'])
     reg_mes(_calc_start, commands=['calc'])
     reg_mes(_calc_start, commands=['calculator'])
+
+    reg_mes(_referral, commands=['referral'])
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])

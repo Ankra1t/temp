@@ -12,7 +12,7 @@ from .keyboards import (
     kb_user_referral, kb_user_referral_list, kb_params_choose_lang, kb_wallet_connect, kb_wallets
 )
 from .filter import user_account_factory, UserAccountCallbackFilter
-from ..pages import send_user_account, send_user_main, send_user_params
+from ..pages import send_referral, send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
 from MAIN.common.messages import msg_enter_nickname, msg_referral, msg_referral_list, msg_user_purchases
@@ -60,15 +60,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.delete_state(user_id, mes_id)
 
     if type == 'referral':
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        referals_count = len(db.get_user_referals(user_db_id))
-
-        text = msg_referral(user_id, referals_count, bot.get_me().username)
-
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=kb_user_referral(user_id, referals_count)
-        )
+        send_referral(bot, call.message, user_id)
 
     if type == 'referral_list':
         user_db_id = db.get_user_id_by_tg_id(user_id)

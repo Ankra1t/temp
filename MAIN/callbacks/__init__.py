@@ -11,7 +11,8 @@ from .admin.pages import (
 )
 from .user.pages import (
     send_user_education, send_user_main, send_user_terms,
-    send_user_account, send_site_code, send_user_params
+    send_user_account, send_site_code, send_user_params,
+    send_referral
 )
 
 from .common.livepost.handler import registration as _reg_livepost
