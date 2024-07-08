@@ -40,9 +40,9 @@ from models import MARKETS_TYPE
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
-    kb_calc_image, kb_calc_result, kb_calculate_change,
+    kb_calc_image, kb_calculate_change,
     kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_send_calc_stop, kb_send_calc_time, kb_stats,
+    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
@@ -475,16 +475,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         liteDb.addSendCalc(stat_id)
-
-        # bot.send_message(
-        #     chat_id, '👉 Выберите тип периода',
-        #     reply_markup=kb_send_calc_time(stat_id)
-        # )
-
-        # bot.edit_message_reply_markup(
-        #     chat_id, mes_id,
-        #     reply_markup=kb_calc_result(user_id, stat_id, stat.in_stat)
-        # )
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+send':
@@ -624,35 +614,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         liteDb.updateValueSendCalc(stat_id, 'time', value)
 
-        if 'fstc' in type:
-            bot.edit_message_text(
-                'Вывести стоп?', chat_id, mes_id,
-                reply_markup=kb_send_calc_stop(1)
-            )
-        else:
-            send_confirm_calc_send(bot, call.message, stat_id)
+        send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+stop':
         liteDb.updateWithoutStopSendCalc(stat_id)
         send_confirm_calc_send(bot, call.message, stat_id)
-
-    if 'fstc+stop' in type:
-        _, action = type.split('=')
-
-        if action == 'no':
-            liteDb.updateWithoutStopSendCalc(stat_id)
-
-        bot.edit_message_text(
-            msg_enter_trading_style(user_id), chat_id, mes_id,
-            reply_markup=kb_trading_style(user_id, 'ch_calc+fstc')
-        )
-        bot.set_state(user_id, CalculateState.trading_style, chat_id)
-        set_state_data(
-            bot, user_id, chat_id, {
-                'stat_id': stat_id,
-                'del_mes_id': call.message.id
-            }
-        )
 
     if type == 'stc+vote':
         liteDb.updateVoteSendCalc(stat_id)
@@ -679,17 +645,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
-
-    if 'fstc-text' in type:
-        bot.edit_message_text(
-            'Введите описание',chat_id, mes_id,
-        )
-        bot.set_state(user_id, StatsState.send_add_text, chat_id)
-        set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': new_mes_id, 'stat_id': stat_id
-            }
-        )
 
     if 'vote_up' in type or 'vote_down' in type:
         isUp = 'vote_up' in type
@@ -748,4 +703,5 @@ def registration(bot: TeleBot):
     bot.register_callback_query_handler(
         _main_callback_handler,
         lambda _: True, pass_bot=True,
-        main=stats_factory.filter())
+        main=stats_factory.filter()
+    )

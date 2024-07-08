@@ -594,7 +594,7 @@ def msg_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: b
 {txt_current_value(lang)}: <b>{texts[lang][output]}</b>
 
 {texts[lang]['risk']}
-{texts[lang]['current']}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
+{txt_current_value(lang)}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
 
 
 def msg_summury_profit_settings(user_id: int):
@@ -2176,6 +2176,19 @@ def msg_enter_deposit(user_id: int, current: str | None = None):
         current_value = f'\n<b>{txt_current_value(lang)}</b>:' + current
 
     return f'👉 {texts[lang]}?' + current_value
+
+
+def msg_enter_market(user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        return "👉 Выберите <b>рынок</b> торговли"
+    elif lang == 'uz':
+        return "👉 <b>Bozor</b> savdo-sotiqni tanlang"
+    elif lang == 'tr':
+        return "👉 <b>Pazar</b> ticareti seçin"
+    else:
+        return "👉 Select trading <b>market</b>"
 
 
 def msg_enter_risk_percent(user_id: int):

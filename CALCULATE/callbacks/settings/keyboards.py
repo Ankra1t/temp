@@ -676,7 +676,7 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', 'ch_calc+fstc', ''] = ''):
+def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'ss_{type}',
@@ -739,13 +739,12 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
             'go_main'
         )
         keyboard.add(btn_back, btn_settings, btn_cancel)
-    elif type == 'ch_calc' or type == 'ch_calc+stc' or type == 'ch_calc+fstc':
+    elif type == 'ch_calc' or type == 'ch_calc+stc':
         btn_cancel = getThisButton(
             cancel_txt(lang),
             '**cancel**'
         )
-        if type != 'ch_calc+fstc':
-            keyboard.add(btn_cancel)
+        keyboard.add(btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
         keyboard.add(btn_cancel)
@@ -1001,7 +1000,7 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     return keyboard
 
 
-def kb_choose_stop_type(user_id: int, cur_fd: bool):
+def kb_choose_stop_type(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -1009,25 +1008,25 @@ def kb_choose_stop_type(user_id: int, cur_fd: bool):
             'simple': 'Простой',
             'atr': 'ATR',
             'atr_percent': '% от ATR',
-            'from_deposit': f"{'Выключить' if cur_fd else 'Включить'} торговлю от депозита",
+            'from_deposit': f"Торговля от депозита",
         },
         'en': {
             'simple': 'Simple',
             'atr': 'ATR',
             'atr_percent': '% of ATR',
-            'from_deposit': f"{'Off' if cur_fd else 'On'} trading from a deposit",
+            'from_deposit': f"Trading from a deposit",
         },
         'uz': {
             'simple': 'Oddiy',
             'atr': 'ATR',
             'atr_percent': '% ATR',
-            'from_deposit': ('O\'chiring' if cur_fd else 'yoqish') + f" omonatdan savdo",
+            'from_deposit': "Omonatdan savdo",
         },
         'tr': {
             'simple': 'Basit',
             'atr': 'ATR',
             'atr_percent': 'ATR %',
-            'from_deposit': f"{'Kapatmak' if cur_fd else 'Aç'} depozitodan ticaret",
+            'from_deposit': f"Depozitodan ticaret",
         },
     }
 

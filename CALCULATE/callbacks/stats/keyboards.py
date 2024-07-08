@@ -366,19 +366,3 @@ def kb_send_calc_time(stat_id: int, is_first=False):
                   f'{first}stc+time=none', stat_id),
     )
     return keyboard
-
-
-def kb_send_calc_stop(stat_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        getButton('Нет', 'fstc+stop=no', stat_id),
-        getButton('Да', 'fstc+stop=yes', stat_id),
-    )
-
-
-def kb_send_calc_text(stat_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        getButton('Нет', 'fstc+text=no', stat_id),
-        getButton('Да', 'fstc+text=yes', stat_id),
-    )

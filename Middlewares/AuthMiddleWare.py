@@ -26,7 +26,7 @@ class AuthMiddleWare(BaseMiddleware):
     def pre_process(self, message: types.Message, data):
         user_id = message.from_user.id
         chat_id = message.chat.id
-        username = message.from_user.username or '-'
+        username = message.from_user.username
 
         if self.bot.get_state(user_id, chat_id) is not None:
             with self.bot.retrieve_data(user_id, chat_id) as state_data:
