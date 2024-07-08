@@ -34,7 +34,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'settings': 'Настройки',
             'buy': 'Купить',
             'stats': 'Ваша статистика',
-            'link': 'Обновления',
+            'link': 'Сигналы',
         },
         'en': {
             'calc': 'Make a calculation' if not is_try else 'New calculation',
@@ -42,7 +42,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'settings': 'Settings',
             'buy': 'Buy',
             'stats': 'Your stats',
-            'link': 'Updates',
+            'link': 'Signals',
         },
         'uz': {
             'calc': 'Hisoblash',
@@ -50,7 +50,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'settings': 'Sozlamalar',
             'buy': 'Sotib olish',
             'stats': 'Sizning stastitikangiz',
-            'link': 'Yangilanishlar',
+            'link': 'Signallar',
         },
         'tr': {
             'calc': 'Hesaplama',
@@ -58,7 +58,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'settings': 'Ayarlar',
             'buy': 'Satın al',
             'stats': 'Sizin istatistik',
-            'link': 'Yenilemeler',
+            'link': 'Sinyaller',
         },
     }
 
@@ -95,7 +95,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
             btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
-            link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+            link = 'my_investors' if lang == 'ru' else '+386iRxc4XKszMDIy'
             btn_link = InlineKeyboardButton(texts[lang]['link'], f'https://t.me/{link}')
 
             buttons.append(btn_stats)
