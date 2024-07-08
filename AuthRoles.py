@@ -62,7 +62,7 @@ def vote_timeout(stat_id: int):
             f'{API_URL}/tg/vote_timeout?stat_id={stat_id}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
-
+        print(res.json())
         return res.json()
     except Exception as e:
         logger.error(f'/auth/get_site_code {e}')

@@ -6,7 +6,7 @@ from common.utils import delete_message
 from db import db
 
 from ..stats.keyboards import kb_calc_result
-from ..utils import choose_first_calculate_step
+from ..utils import send_calc_start
 from ..pages import send_settings, send_main, send_stats, send_tariffs_list_item
 from .filter import main_factory, MainCallbackFilter
 
@@ -40,18 +40,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
-        u_base = db.get_calc_user_settings(user_db_id)
-        market = u_base.market if (u_base is not None) else 'crypto'
-
-        choose_first_calculate_step(
-            bot, user_id, call.message, market, False, '_continue' in type
-        )
+        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type)
 
     if type == 'first_try':
-        bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
-        choose_first_calculate_step(
-            bot, user_id, call.message, 'crypto', is_edit=True, is_try=True
-        )
+        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type, is_edit=True, is_try=True)
 
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)

@@ -285,3 +285,13 @@ def choose_first_calculate_step(
         } | prev_values
     )
     choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)
+
+
+def send_calc_start(bot: TeleBot, message: Message, user_id: int, is_continue=False, is_try=False, is_edit=False):
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
+    market = u_base.market if (u_base is not None) else 'crypto'
+
+    choose_first_calculate_step(
+        bot, user_id, message, market, is_edit, is_continue, is_try
+    )

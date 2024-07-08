@@ -1,9 +1,10 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.utils import send_calc_start
 from db import db
 
-from CALCULATE.callbacks import send_manual_page
+from CALCULATE.callbacks import send_manual_page, send_settings
 from CALCULATE.commands import _start as _calc
 from CALCULATE.common.messages import msg_support
 from MAIN.start import send_start_by_user
@@ -77,6 +78,14 @@ def _site(message: Message, bot: TeleBot):
     send_site_code(bot, message, message.from_user.id, True)
 
 
+def _settings(message: Message, bot: TeleBot):
+    send_settings(bot, message, message.from_user.id, True)
+
+
+def _calc_start(message: Message, bot: TeleBot):
+    send_calc_start(bot, message, message.from_user.id)
+
+
 def _test(message: Message, bot: TeleBot):
     print(message.chat.id)
     pass
@@ -89,7 +98,6 @@ def commands_registration(bot: TeleBot):
     reg_mes(_teststart, commands=['teststart'])
 
     reg_mes(_start, commands=['start'])
-    reg_mes(_start, commands=['signals'])
 
     reg_mes(_faq, commands=['faq'])
     reg_mes(_about_us, commands=['about_us'])
@@ -98,8 +106,11 @@ def commands_registration(bot: TeleBot):
     reg_mes(_support, commands=['team'])
 
     reg_mes(_manual, commands=['manual'])
-    reg_mes(_calc, commands=['calc'])
-    reg_mes(_calc, commands=['calculator'])
+
+    reg_mes(_calc, commands=['menu'])
+    reg_mes(_settings, commands=['settings'])
+    reg_mes(_calc_start, commands=['calc'])
+    reg_mes(_calc_start, commands=['calculator'])
     # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
