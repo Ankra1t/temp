@@ -1181,7 +1181,7 @@ class Database:
     def get_user_calc_output(self, id: int) -> Literal['text', 'photo']:
         query = 'SELECT "calcOutput" FROM \"BotSettings\" WHERE "userId" = %s'
         params = id,
-
+        print('DDDDDDDDDDBBBBBBBBBBB')
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
