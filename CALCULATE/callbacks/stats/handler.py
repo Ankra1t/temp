@@ -510,17 +510,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     reply_markup=kb
                 )
 
+        bot.delete_message(chat_id, mes_id)
+        bot.send_message(chat_id, '✅ Отправлено')
+        send_main(call.message, bot, user_id, True)
+        liteDb.sendSendCalc(stat_id)
+
         if send_data.is_vote:
             seconds = vote_timeout(stat_id)
             new_mes = bot.send_message(
                 chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
             )
             loading_vote_message_ids[stat_id] = (chat_id, new_mes.id)
-
-        bot.delete_message(chat_id, mes_id)
-        bot.send_message(chat_id, '✅ Отправлено')
-        send_main(call.message, bot, user_id, True)
-        liteDb.sendSendCalc(stat_id)
 
     if type == 'stc+rescreen':
         send_data = liteDb.getSendCalc(stat_id)
@@ -689,6 +689,8 @@ def send_vote(bot: TeleBot, stat_id: int):
             CHANNEL_ID, q, [first, second], True
         )
 
+    print(stat_id in loading_vote_message_ids)
+    print(loading_vote_message_ids)
     if stat_id in loading_vote_message_ids:
         cur_chat_id, cur_mes_id = loading_vote_message_ids[stat_id]
         bot.edit_message_text(

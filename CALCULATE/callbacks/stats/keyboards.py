@@ -331,11 +331,11 @@ def kb_confirm_channel_post(stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        add_photo, send,  # rescreen,
-        add_text, add_stop,
+        add_photo, add_text, # rescreen,
+        btn_vote, add_stop,
         add_time, btn_style,
 
-        btn_vote, cancel,
+        cancel, send,
     )
     return keyboard
 

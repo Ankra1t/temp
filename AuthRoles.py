@@ -65,7 +65,7 @@ def vote_timeout(stat_id: int):
         print(res.json())
         return res.json()
     except Exception as e:
-        logger.error(f'/auth/get_site_code {e}')
+        logger.error(f'/auth/vote_timeout {e}')
         return False
 
 
