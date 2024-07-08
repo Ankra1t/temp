@@ -1026,13 +1026,53 @@ def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        return f"""Используйте калькулятор для точных расчетов входа/выхода из сделок"""
+        return f"""👉<b>Трейдинг</b> = математика
+
+А математика требует точные расчеты.
+
+Для этого создан калькулятор, который рассчитывает заранее:
+
+- объем покупки для покупки
+- точные цены фиксации прибыли
+- статистику
+
+Попробуйте прямо сейчас."""
     elif lang == 'uz':
-        return f"""Tranzaktsiyalardan kirish/chiqish uchun aniq hisoblash uchun kalkulyatordan foydalaning"""
+        return f"""👉<b>Savdo</b> = matematika
+
+Va matematika aniq hisob-kitoblarni talab qiladi.
+
+Buning uchun oldindan hisoblab chiqilgan kalkulyator yaratiladi:
+
+- Xarid qilish uchun sotib olish
+- foydani aniqlashning aniq narxlari
+- Statistika
+
+Hozir sinab ko'ring."""
     elif lang == 'tr':
-        return """İşlemlerden doğru giriş/çıkış hesaplamaları için bir hesap makinesi kullanın"""
+        return """👉<b>Ticaret</b> = matematik
+
+Ve matematik doğru hesaplamalar gerektirir.
+
+Bunun için, önceden hesaplayan bir hesap makinesi oluşturulur:
+
+- Satın Alma Satın Alma
+- Kâr tespitinin kesin fiyatları
+- İstatistik
+
+Hemen dene."""
     else:
-        return """Use a calculator for accurate calculations of entry/exit from transactions"""
+        return """👉<b>Trading</b> = mathematics
+
+And mathematics requires accurate calculations.
+
+For this, a calculator is created, which calculates in advance:
+
+- purchase for purchase
+- exact prices of profit fixation
+- Statistics
+
+Try it right now."""
 
     if lang == 'ru':
         return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
@@ -2334,8 +2374,36 @@ def msg_enter_open_price(user_id: int, is_try=False):
     return f"""👉 {texts[lang]}:"""
 
 
-def msg_enter_stop_loss(user_id: int, is_try=False):
+def msg_enter_stop_loss(user_id: int, is_try=False, send_stat: Calculation | None=None):
     lang = get_lang(user_id)
+
+    dop = ''
+    if send_stat is not None:
+        short_long = 'long'
+        if send_stat.open_price < send_stat.stop_loss:
+            short_long = 'short'
+
+        if lang == 'ru':
+            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Цена: {send_stat.open_price} USDT
+Направление: {short_long}"""
+        elif lang == 'uz':
+            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Narx: {send_stat.open_price} USDT
+Yo'nalish: {short_long}"""
+        elif lang == 'tr':
+            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Fiyat: {send_stat.open_price} USDT
+Yön: {short_long}"""
+        else:
+            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Price: {send_stat.open_price} USDT
+Direction: {short_long}"""
+        dop += '\n\n'
 
     if lang == 'ru':
         text = 'По какой цене будете <b>фиксировать</b> убыток:'
@@ -2346,7 +2414,7 @@ def msg_enter_stop_loss(user_id: int, is_try=False):
     else:
         text = 'Enter the <b>stop loss</b> price'
 
-    return f'👉 {text}'
+    return f'{dop}👉 {text}'
 
 
 def msg_enter_atr(user_id: int):

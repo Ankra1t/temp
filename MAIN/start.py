@@ -32,7 +32,7 @@ def send_start_by_user(
 
         if send_data.without_stop:
             bot.send_message(
-                chat_id, msg_enter_stop_loss(user_id),
+                chat_id, msg_enter_stop_loss(user_id, send_stat=calc),
             )
             bot.set_state(user_id, CalculateState.stop_loss, chat_id)
             set_state_data(

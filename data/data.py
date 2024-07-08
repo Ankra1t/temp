@@ -2,7 +2,7 @@ import json
 import sqlite3
 from typing import Literal
 
-from models import Exchange, SendCalc
+from models import MARKETS_TYPE, Exchange, SendCalc
 
 
 class Data:
@@ -25,12 +25,13 @@ class Data:
                     exchange STRING,
                     fee FLOAT,
                     stop STRING,
-                    style_change BOLLEAN NOT NULL DEFAULT(FALSE)
+                    style_change BOLLEAN NOT NULL DEFAULT(FALSE),
+                    first_market STRING
                 );
 			''')
             self.curs.execute('''
-                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop)
-                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop
+                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change)
+                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change
                 FROM Users;
 			''')
             self.curs.execute('''
@@ -249,6 +250,19 @@ class Data:
             self.connection.commit()
         except Exception as e:
             print(e)
+
+    def setUserFirstMarket(self, tgId: int, market: MARKETS_TYPE):
+        self.addUser(tgId)
+        try:
+            self.curs.execute(
+                'UPDATE Users SET first_market = ? WHERE id = ?', (market, tgId)
+            )
+            self.connection.commit()
+
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     # FEES
     def createFeeTable(self):
@@ -682,3 +696,4 @@ WHERE stat_id = ?""", (True, False, stat_id,)
 
 
 liteDb = Data()
+liteDb.createUsersTable()

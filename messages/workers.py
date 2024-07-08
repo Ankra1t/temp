@@ -1,3 +1,6 @@
+from db import LANGUAGES_TYPE
+
+
 def admin_main_msg(
         count_all: int,
         count_with_sub: int,
@@ -6,7 +9,8 @@ def admin_main_msg(
         count_today_users: int,
         count_first_tries: int,
         count_first_lang: int,
-        count_refs: int
+        count_refs: int,
+        lang_counts: dict[LANGUAGES_TYPE, int]
 ):
     return f"""🏠 <b><u>Главная</u></b>
 
@@ -17,6 +21,10 @@ def admin_main_msg(
 
 Зарегестрировались сегодня: {count_today_users}
 Из них выбрали язык: {count_first_lang}
+    Русский: {lang_counts['ru']}
+    Английский: {lang_counts['en']}
+    Узбекский: {lang_counts['uz']}
+    Турецкий: {lang_counts['tr']}
 Из них провели тестовый расчёт: {count_first_tries}
 
 Количество администраторов: {count_admins}
@@ -24,13 +32,19 @@ def admin_main_msg(
 """
 
 
-def admin_users_msg(count_all: int, count_with_sub: int, count_blocked: int):
+def admin_users_msg(count_all: int, count_with_sub: int, count_blocked: int, lang_counts:dict[LANGUAGES_TYPE, int]):
     return f"""👨 <b><u>Пользователи</u></b>
 
-В базе: {count_all}
+Всего: {count_all}
+
 Заблокировали бота: {count_blocked}
 Платных: {count_with_sub}
 Бесплатных: {int(count_all) - int(count_with_sub)}
+
+Русский: {lang_counts['ru']}
+Английский: {lang_counts['en']}
+Узбекский: {lang_counts['uz']}
+Турецкий: {lang_counts['tr']}
 """
 
 

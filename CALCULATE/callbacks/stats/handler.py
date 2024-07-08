@@ -512,7 +512,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, '✅ Отправлено')
-        send_main(call.message, bot, user_id, True)
         liteDb.sendSendCalc(stat_id)
 
         if send_data.is_vote:
@@ -521,6 +520,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
             )
             loading_vote_message_ids[stat_id] = (chat_id, new_mes.id)
+
+        send_main(call.message, bot, user_id, True)
 
     if type == 'stc+rescreen':
         send_data = liteDb.getSendCalc(stat_id)

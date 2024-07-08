@@ -270,6 +270,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             if action == 'first':
                 db.create_tg_user_settings(user_db_id, market)
+                liteDb.setUserFirstMarket(user_id, market)
 
                 if market == 'RF':
                     currency = 'RUB'
@@ -606,11 +607,11 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
             bot.set_state(user_id, SettingsState.atr_percent, chat_id)
         else:
-            stop_type = liteDb.getUserStop(user_id)
-
-            if stop_type != new_stop_type:
-                liteDb.setUserStop(user_id, new_stop_type)
+            liteDb.setUserStop(user_id, new_stop_type)
+            try:
                 send_stop_settings(bot, call.message, user_id)
+            except:
+                pass
 
     if type == 'stop_settings':
         send_stop_settings(bot, call.message, user_id)

@@ -4,8 +4,8 @@ from telebot.types import Message, InputMediaPhoto
 
 from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
-from common.utils import delete_message, get_print_float
-from db import db
+from common.utils import delete_message, get_lang, get_print_float
+from db import LANGUAGES_TYPE, db
 from data.data import liteDb
 from Classes import base_statis
 
@@ -43,6 +43,16 @@ def send_admin_main(
 
     todays_users = db.get_today_users()
 
+    lang_counts: dict[LANGUAGES_TYPE, int] = {
+        'ru': 0,
+        'en': 0,
+        'uz': 0,
+        'tr': 0
+    }
+    for el in todays_users:
+        lang = get_lang(el.get('tgId', -1))
+        lang_counts[lang] += 1
+
     users = db.get_all_users()
     count_refs = 0
     for u in users:
@@ -50,16 +60,16 @@ def send_admin_main(
 
     count_first_tries = count_first_lang = 0
     for el in todays_users:
-        if liteDb.getFirstTryUser(el.get('id_telegram', -1)) == 1:
+        if liteDb.getFirstTryUser(el.get('tgId', -1)) == 1:
             count_first_tries += 1
-        if liteDb.getFirstLang(el.get('id_telegram', -1)) == 1:
+        if liteDb.getFirstLang(el.get('tgId', -1)) == 1:
             count_first_lang += 1
 
     keyboard = kb_admin_main()
     text = admin_main_msg(
         count_all, count_with_sub, count_blocked,
         count_admins, len(todays_users), count_first_tries,
-        count_first_lang, count_refs
+        count_first_lang, count_refs, lang_counts
     )
 
     if is_first:
@@ -85,12 +95,23 @@ def send_admin_users(
 
     bot.delete_state(user_id, chat_id)
 
-    count_all = db.get_users_count()
+    users = db.get_all_users()
+    count_all = len(users)
+
+    lang_counts: dict[LANGUAGES_TYPE, int] = {
+        'ru': 0,
+        'en': 0,
+        'uz': 0,
+        'tr': 0
+    }
+    for el in users:
+        lang = get_lang(el.tg_id)
+        lang_counts[lang] += 1
 
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    text = admin_users_msg(count_all, count_with_sub, count_blocked)
+    text = admin_users_msg(count_all, count_with_sub, count_blocked, lang_counts)
     keyboard = kb_admin_users()
 
     if is_first:

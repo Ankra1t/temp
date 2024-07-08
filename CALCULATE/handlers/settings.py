@@ -399,8 +399,16 @@ def handle_atr_percent(message: Message, bot: TeleBot):
         )
         return
 
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    db.set_user_from_deposit(user_db_id, False)
+
     liteDb.setUserStop(user_id, f'atr_percent+{value}')
-    send_stop_settings(bot, message, user_id, True)
+    try:
+        send_stop_settings(bot, message, user_id, True)
+    except:
+        pass
 
 
 def registration(bot: TeleBot):
