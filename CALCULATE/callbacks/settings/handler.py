@@ -481,6 +481,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'calc_output':
         cur_calc_output = db.get_user_calc_output(user_db_id)
+        print(cur_calc_output)
         db.set_user_calc_output(
             user_db_id,
             'text' if cur_calc_output == 'photo' else 'photo'
