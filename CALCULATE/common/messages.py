@@ -1713,7 +1713,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
-        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>Риск в процентах</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 4)}%" if is_try else ""}',
+        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>Риск в процентах</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 1)}%" if is_try else ""}',
         fee_text,
         trading_style_type
     ))
