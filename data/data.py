@@ -698,7 +698,7 @@ WHERE stat_id = ?""", (True, False, stat_id,)
     # SendSettings
     def createSendSettings(self):
         try:
-            self.curs.execute("""DROP TABLE SendSettings""")
+            # self.curs.execute("""DROP TABLE SendSettings""")
             self.curs.execute("""CREATE TABLE IF NOT EXISTS SendSettings (
                     name STRING NOT NULL,
                     value STRING
