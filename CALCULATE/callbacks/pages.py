@@ -2,6 +2,7 @@ import os
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
+from AuthRoles import get_ticker_info
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, set_state_data
 from db import db
@@ -430,8 +431,32 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     if stat is None or send_data is None:
         return
 
+    info = get_ticker_info(stat.tool or '')
+    print(info)
+
+    # turnover: number;
+    # buyRatio: any;
+    # sellRatio: any;
+
+    info_show = ''
+    if info:
+        oborot = ''
+        turnover = info.get('turnover')
+        if turnover // (10 ** 9) > 0:
+            oborot = f'{round(turnover // (10**9), 0)}B USDT'
+        elif turnover // (10 ** 6) > 0:
+            oborot = f'{round(turnover // (10**6), 0)}M USDT'
+        else:
+            oborot = f'{round(turnover, 0)} USDT'
+
+        info_show = f"""
+Сейчас покупают/продают: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
+Оборот за 24ч: <b>{oborot}</b>
+"""
+
     photo = send_data.photo
     text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '')\
+        + (info_show)  \
         + (f'\n{send_data.text}\n' if send_data.text is not None else '')
 
     text += '\nОпрос: ' + ('✅' if send_data.is_vote else '❌')

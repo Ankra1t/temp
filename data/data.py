@@ -255,7 +255,8 @@ class Data:
         self.addUser(tgId)
         try:
             self.curs.execute(
-                'UPDATE Users SET first_market = ? WHERE id = ?', (market, tgId)
+                'UPDATE Users SET first_market = ? WHERE id = ?', (
+                    market, tgId)
             )
             self.connection.commit()
 
@@ -694,5 +695,63 @@ WHERE stat_id = ?""", (True, False, stat_id,)
         except:
             return None
 
+    # SendSettings
+    def createSendSettings(self):
+        try:
+            self.curs.execute("""DROP TABLE SendSettings""")
+            self.curs.execute("""CREATE TABLE IF NOT EXISTS SendSettings (
+                    name STRING NOT NULL,
+                    value STRING
+                );
+            """)
+            self.curs.execute("""
+                INSERT INTO SendSettings (name, value) VALUES (?, ?)
+            """, ('withoutStop', 'True')
+            )
+            self.curs.execute("""
+                INSERT INTO SendSettings (name, value) VALUES (?, ?)
+            """, ('isVote', 'False')
+            )
+            self.curs.execute("""
+                INSERT INTO SendSettings (name, value) VALUES (?, ?)
+            """, ('time', 'day')
+            )
+            self.curs.execute("""
+                INSERT INTO SendSettings (name, value) VALUES (?, ?)
+            """, ('style', '')
+            )
+
+            self.connection.commit()
+        except Exception as e:
+            print(e)
+
+    def updateSendSettings(self, name: str, value: str | None):
+        try:
+            self.curs.execute("""
+                UPDATE SendSettings SET value = ? WHERE name = ?;
+            """, (value, name)
+            )
+            self.connection.commit()
+
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def getSendSettings(self, name: str)-> str | None:
+        try:
+            data = self.curs.execute("""
+                SELECT value FROM SendSettings WHERE name = ?;
+            """, (name,)
+            ).fetchone()
+
+            if data is None:
+                return
+
+            return data[0]
+        except Exception as e:
+            print(e)
+            return
 
 liteDb = Data()
+liteDb.createSendSettings()

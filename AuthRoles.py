@@ -69,6 +69,21 @@ def vote_timeout(stat_id: int):
         return False
 
 
+def get_ticker_info(ticker: str):
+    access_token = db.get_access_token() or ''
+
+    try:
+        res = requests.get(
+            f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
+            headers=HEADERS | {'tg-api-key': access_token}
+        )
+        print(res.json())
+        return res.json()
+    except Exception as e:
+        logger.error(f'/auth/vote_timeout {e}')
+        return False
+
+
 def change_password(id: int, password: str):
     access_token = db.get_access_token() or ''
 

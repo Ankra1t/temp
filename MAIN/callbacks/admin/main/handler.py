@@ -1,18 +1,19 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from MAIN.callbacks.admin.main.keyboards import kb_channel_stat
+from MAIN.callbacks.admin.main.keyboards import kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
 from MAIN.callbacks.user.pages import send_site_code
+from common.utils import edit_message
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from data.data import liteDb
 from db import db
 from models import Calculation
-from CALCULATE.common.messages import trading_styles_translates
+from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_translates
 from Classes import text_editor
 
 from .filter import admin_main_factory, AdminMainCallbackFilter
 from ..pages import (
-    send_admin_main, send_admin_users, send_admin_fut_posts, send_admin_workers,
+    send_admin_main, send_admin_send_settings, send_admin_users, send_admin_fut_posts, send_admin_workers,
     send_admin_params, send_admin_payment, send_admin_tariffs
 )
 
@@ -159,6 +160,51 @@ More often: <b>{result}</b>"""
             bot.send_message(
                 CHANNEL_ID, text
             )
+
+    if type == 'send_settings':
+        send_admin_send_settings(bot, call.message, user_id)
+
+    if type == 'ss_stop':
+        current = liteDb.getSendSettings('withoutStop')
+        liteDb.updateSendSettings('withoutStop', f'{current != "True"}')
+        send_admin_send_settings(bot, call.message, user_id)
+
+    if type == 'ss_vote':
+        current = liteDb.getSendSettings('isVote')
+        liteDb.updateSendSettings('isVote', f'{current != "True"}')
+        send_admin_send_settings(bot, call.message, user_id)
+
+    if type == 'ss_time':
+        edit_message(
+            bot, call.message, 'text',
+            '👉 Выберите тип периода:',
+            kb_send_settings_calc_time()
+        )
+
+    if 'ss_time=' in type:
+        time = type.split('=')[1]
+        if time == 'none':
+            time = None
+
+        liteDb.updateSendSettings('time', time)
+        send_admin_send_settings(bot, call.message, user_id)
+
+    if type == 'ss_style':
+        bot.edit_message_text(
+            msg_enter_trading_style(user_id),
+            chat_id, mes_id,
+            reply_markup=kb_send_settings_trading_style()
+        )
+
+    if 'ss_style=' in type:
+        _, trading_value = type.split('=')
+        value = trading_value.lower()
+        if value == '**off**':
+            value = None
+
+        liteDb.updateSendSettings('style', value)
+        send_admin_send_settings(bot, call.message, user_id)
+
 
     bot.answer_callback_query(call.id)
 

@@ -157,6 +157,20 @@ def msg_uses_count(user_id: int, count: int):
     return f'{text[lang]["uses"]}: <b>{count}</b>'
 
 
+def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None):
+    text_time = {
+        'avg': 'Среднесрочная',
+        'day': 'Внутридневная',
+    }
+
+    return f"""<u><b>Настройка отправки</b></u>
+
+Отправка стопа: {'Да' if stop else 'Нет'}
+Отправка опроса: {'Да' if vote else 'Нет'}
+Базовый стиль: {style or '-'}
+Базовый период: {text_time[time] if time is not None else '-'}"""
+
+
 def msg_main(user_id: int, uses_count: int, is_rus=False):
     lang = get_lang(user_id)
 
@@ -608,6 +622,7 @@ def msg_summury_profit_settings(user_id: int):
     texts = {
         'ru': {
             'name': 'Настройки',
+            'info': 'Деление тейк-профита позволяет выходить из сделки частями, заранее зная цену, объем для фиксации',
             'subname': 'Деление профита',
             'take_profit': 'Ваш тейк-профит',
             'split': 'Разделение',
@@ -616,6 +631,7 @@ def msg_summury_profit_settings(user_id: int):
         },
         'en': {
             'name': 'Settings',
+            'info': 'The division of the take profit allows you to leave the transaction in parts, knowing in advance the price, the volume for fixation',
             'subname': 'Profit division',
             'take_profit': 'Your take profit',
             'split': 'Splitting',
@@ -624,6 +640,7 @@ def msg_summury_profit_settings(user_id: int):
         },
         'uz': {
             'name': 'Sozlamalari',
+            'info': "Formni olishning bo'linishi sizga bitimni qismlarga, fiksatov uchun hajmini bilish, narxni bilish, narxni bilish, narxni ajratish va",
             'subname': 'Daromad taqsimoti',
             'take_profit': 'Sizning daromadingiz',
             'split': 'Ajratish',
@@ -632,6 +649,7 @@ def msg_summury_profit_settings(user_id: int):
         },
         'tr': {
             'name': 'Ayarlar',
+            'info': 'Kâr Alma Bölümü, fiyatı önceden bilerek işlemi parçalar halinde bırakmanıza izin verir, tespit hacmi',
             'subname': 'Kâr paylaşımı',
             'take_profit': 'Take profitiniz',
             'split': 'Bölme',
@@ -665,6 +683,8 @@ def msg_summury_profit_settings(user_id: int):
 
     return f"""
 ⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>
+
+{texts[lang]['info']}
 
 {texts[lang]["split"]}: <b>{texts[lang][on_off]}</b>
 {info_result}
@@ -2374,7 +2394,7 @@ def msg_enter_open_price(user_id: int, is_try=False):
     return f"""👉 {texts[lang]}:"""
 
 
-def msg_enter_stop_loss(user_id: int, is_try=False, send_stat: Calculation | None=None):
+def msg_enter_stop_loss(user_id: int, is_try=False, send_stat: Calculation | None = None):
     lang = get_lang(user_id)
 
     dop = ''

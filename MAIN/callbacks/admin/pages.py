@@ -2,7 +2,7 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from CALCULATE.common.messages import POINT
+from CALCULATE.common.messages import POINT, msg_admin_send_settings
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
@@ -15,7 +15,7 @@ from messages.statistics import admin_main_statistics
 from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
 from models import Post
 
-from .main.keyboards import kb_admin_main
+from .main.keyboards import kb_admin_main, kb_send_settings
 from .tariffs.keyboards import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
 from .users.keyboards import kb_admin_client_info, kb_admin_users
 from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
@@ -111,7 +111,8 @@ def send_admin_users(
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    text = admin_users_msg(count_all, count_with_sub, count_blocked, lang_counts)
+    text = admin_users_msg(count_all, count_with_sub,
+                           count_blocked, lang_counts)
     keyboard = kb_admin_users()
 
     if is_first:
@@ -538,3 +539,34 @@ def send_admin_tariffs_list_item(
         else:
             delete_message(bot, chat_id, mes_id)
             send()
+
+
+def send_admin_send_settings(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+
+    bot.delete_state(user_id, chat_id)
+
+    withoutStop = liteDb.getSendSettings('withoutStop')
+    isVote = liteDb.getSendSettings('isVote')
+    tradingStyle = liteDb.getSendSettings('style')
+    time = liteDb.getSendSettings('time')
+
+    print(tradingStyle)
+
+    msg = msg_admin_send_settings(
+        withoutStop == 'False', isVote == 'True', tradingStyle, time
+    )
+    kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
+
+    if is_first:
+        bot.send_message(chat_id, msg, reply_markup=kb)
+    else:
+        bot.edit_message_text(
+            msg, chat_id, message.id,
+            reply_markup=kb
+        )

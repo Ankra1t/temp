@@ -473,8 +473,28 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if stat is None:
             return
 
+        withoutStop = liteDb.getSendSettings('withoutStop')
+        style = liteDb.getSendSettings('style')
+        isVote = liteDb.getSendSettings('isVote')
+        time = liteDb.getSendSettings('time')
+
         liteDb.addSendCalc(stat_id)
-        send_confirm_calc_send(bot, call.message, stat_id)
+
+        if withoutStop == 'True':
+            liteDb.updateWithoutStopSendCalc(stat_id)
+        if isVote == 'False':
+            liteDb.updateVoteSendCalc(stat_id)
+        if style:
+            db.change_calculation_style(stat_id, style)
+            liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
+        if time:
+            liteDb.updateValueSendCalc(stat_id, 'time', time)
+
+        bot.edit_message_reply_markup(
+            chat_id, mes_id,
+            reply_markup=kb_main(user_id, True, stat)
+        )
+        send_confirm_calc_send(bot, call.message, stat_id, True)
 
     if type == 'stc+send':
         send_data = liteDb.getSendCalc(stat_id)
