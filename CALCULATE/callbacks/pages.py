@@ -432,14 +432,13 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
         return
 
     info = get_ticker_info(stat.tool or '')
-    print(info)
 
     # turnover: number;
     # buyRatio: any;
     # sellRatio: any;
 
     info_show = ''
-    if info:
+    if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
         oborot = ''
         turnover = info.get('turnover')
         if turnover // (10 ** 9) > 0:

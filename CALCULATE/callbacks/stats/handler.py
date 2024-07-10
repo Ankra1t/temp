@@ -15,7 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
-from AuthRoles import vote_timeout
+from AuthRoles import get_ticker_info, vote_timeout
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
@@ -507,8 +507,38 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
+            info = get_ticker_info(stat.tool or '')
+
+            # turnover: number;
+            # buyRatio: any;
+            # sellRatio: any;
+
+            info_show = ''
+            if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
+                oborot = ''
+                turnover = info.get('turnover')
+                if turnover // (10 ** 9) > 0:
+                    oborot = f'{round(turnover // (10**9), 0)}B USDT'
+                elif turnover // (10 ** 6) > 0:
+                    oborot = f'{round(turnover // (10**6), 0)}M USDT'
+                else:
+                    oborot = f'{round(turnover, 0)} USDT'
+
+                if lang == 'ru':
+                    now_point = 'Сейчас покупают/продают'
+                    oborot_point = 'Оборот за 24ч'
+                else:
+                    now_point = 'Now buy/sell'
+                    oborot_point = 'Turnover in 24 hours'
+
+                info_show = f"""
+{now_point}: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
+{oborot_point}: <b>{oborot}</b>
+"""
+
             text = msg_channel_calculation(
-                stat, lang, send_data.without_stop, send_data.time or '')
+                stat, lang, send_data.without_stop, send_data.time or ''
+            ) + info_show
             if lang == 'ru':
                 description_text = send_data.text
                 text += f'\n{description_text}' if description_text is not None else ''
