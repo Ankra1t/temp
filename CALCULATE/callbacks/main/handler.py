@@ -40,7 +40,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
-        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type)
+        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type, is_channel_calc='ch_calc' in type)
 
     if type == 'first_try':
         send_calc_start(bot, call.message, user_id, is_continue='_continue' in type, is_edit=True, is_try=True)

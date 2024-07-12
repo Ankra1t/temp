@@ -449,7 +449,8 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
             oborot = f'{round(turnover, 0)} USDT'
 
         info_show = f"""
-Сейчас покупают/продают: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
+Сейчас покупают/продают:
+    <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
 Оборот за 24ч: <b>{oborot}</b>
 """
 
@@ -484,7 +485,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
         )
 
 
-def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float):
+def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float, is_send=True):
     chat_id = message.chat.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
@@ -558,6 +559,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         is_from_deposit=is_from_deposit
     )
 
+    new_id = None
     if not is_try:
         new_id = db.add_calculation(calc_info)
         calc_info.id = new_id
@@ -576,9 +578,11 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
     else:
         liteDb.setFirstTry(user_id)
 
-    send_calculation(bot, message, user_id, calc_info, True, is_try)
+    if is_send:
+        send_calculation(bot, message, user_id, calc_info, True, is_try)
 
     bot.delete_state(user_id, chat_id)
+    return new_id
 
 
 def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):

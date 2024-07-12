@@ -1,13 +1,15 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from AuthRoles import get_ticker_atr
+from CALCULATE.callbacks.main.keyboards import kb_main
 from Classes import pay_guard
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
-from .pages import send_main
+from .pages import create_and_send_calc, send_confirm_calc_send, send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
@@ -71,11 +73,13 @@ names = {
 def choose_calculate_step(
     bot: TeleBot,
     user_id: int,
-    chat_id: int,
-    mes_id: int,
+    message: Message,
     is_edit=False,
     last_value: str | None = None,
 ):
+    chat_id = message.chat.id
+    mes_id = message.id
+
     with bot.retrieve_data(user_id, chat_id) as data:
         if last_value is not None:
             if data.get('last_values') is None:
@@ -94,6 +98,7 @@ def choose_calculate_step(
         updated_risk = data.get('updated_risk')
         is_try = data.get('is_try', False)
         stop_type = data.get('stop_type', 'default')
+        stop_loss = data.get('stop_loss')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -172,12 +177,43 @@ def choose_calculate_step(
             op_value = round(forex.price, 5)
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
+    elif stop_loss == -1:
+        stat_id = create_and_send_calc(bot, message, user_id, stop_loss, False)
+        if not stat_id:
+            return
+
+        stat = db.get_calculation(stat_id)
+        if stat is None:
+            return
+
+        withoutStop = liteDb.getSendSettings('withoutStop')
+        style = liteDb.getSendSettings('style')
+        isVote = liteDb.getSendSettings('isVote')
+        time = liteDb.getSendSettings('time')
+
+        liteDb.addSendCalc(stat_id)
+
+        if withoutStop == 'True' or stat.stop_loss == -1:
+            liteDb.updateWithoutStopSendCalc(stat_id)
+        if isVote == 'False':
+            liteDb.updateVoteSendCalc(stat_id)
+        if style:
+            db.change_calculation_style(stat_id, style)
+            liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
+        if time:
+            liteDb.updateValueSendCalc(stat_id, 'time', time)
+
+        send_confirm_calc_send(bot, message, stat_id, True)
+        bot.delete_state(user_id, chat_id)
+        return
     else:
         if 'atr' in stop_type:
             text += msg_enter_atr(user_id)
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr
-            keyboard = kb_calc_atr(user_id)
+
+            value = get_ticker_atr(tool) or None
+            keyboard = kb_calc_atr(user_id, value)
         else:
             text += msg_enter_stop_loss(user_id, is_try)
             edit_to = names[lang]['sl']
@@ -212,7 +248,8 @@ def choose_first_calculate_step(
     type: MARKETS_TYPE,
     is_edit=False,
     is_continue=False,
-    is_try=False
+    is_try=False,
+    is_channel_calc=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -281,17 +318,18 @@ def choose_first_calculate_step(
             'currency': currency,
             'risk': risk,
             'is_try': is_try,
-            'is_from_deposit': is_from_deposit if not is_try else True
+            'is_from_deposit': is_from_deposit if not is_try else True,
+            'stop_loss': -1 if is_channel_calc else None
         } | prev_values
     )
-    choose_calculate_step(bot, user_id, chat_id, mes_id, is_edit)
+    choose_calculate_step(bot, user_id, message, is_edit)
 
 
-def send_calc_start(bot: TeleBot, message: Message, user_id: int, is_continue=False, is_try=False, is_edit=False):
+def send_calc_start(bot: TeleBot, message: Message, user_id: int, is_continue=False, is_try=False, is_edit=False, is_channel_calc=False):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
     market = u_base.market if (u_base is not None) else 'crypto'
 
     choose_first_calculate_step(
-        bot, user_id, message, market, is_edit, is_continue, is_try
+        bot, user_id, message, market, is_edit, is_continue, is_try, is_channel_calc
     )

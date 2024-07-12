@@ -7,7 +7,7 @@ DT_PRINT_TYPE = Literal['date', 'time', 'datetime']
 
 
 def get_datetime_now():
-    return datetime.now(tz=None)
+    return datetime.now(tz=timezone.utc)
 
 def get_str_by_datetime(dt: datetime, type: DT_PRINT_TYPE = 'datetime') -> str:
     """

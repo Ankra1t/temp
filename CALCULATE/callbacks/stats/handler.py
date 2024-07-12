@@ -480,7 +480,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         liteDb.addSendCalc(stat_id)
 
-        if withoutStop == 'True':
+        if withoutStop == 'True' or stat.stop_loss == -1:
             liteDb.updateWithoutStopSendCalc(stat_id)
         if isVote == 'False':
             liteDb.updateVoteSendCalc(stat_id)
@@ -667,6 +667,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+stop':
+        stat = db.get_calculation(stat_id)
+        if stat is None or stat.stop_loss == -1:
+            return
+
         liteDb.updateWithoutStopSendCalc(stat_id)
         send_confirm_calc_send(bot, call.message, stat_id)
 

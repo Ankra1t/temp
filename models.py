@@ -150,7 +150,7 @@ class Purchase:
 class UserInfo(BaseModel):
     id: int
     tg_id: int
-    tg_username: str
+    tg_username: Optional[str]
     nickname: Optional[str]
     refer_id: Optional[int]
     refer_sum: int

@@ -3,6 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from common.keyboard import cancel_txt
 from common.utils import get_lang
 from models import Calculation
+from db import db
 
 from ..stats.keyboards import kb_calc_result
 from .filter import main_factory
@@ -27,6 +28,10 @@ def cancel_btn(user_id: int):
 
 def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_try=False):
     lang = get_lang(user_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    isAdmin = db.get_worker_role(user_db_id)
+
     texts = {
         'ru': {
             'calc': 'Сделать расчёт' if not is_try else 'Новый расчёт',
@@ -83,6 +88,11 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'calc', saved, stat_id,
         )
         buttons.append(btn_calc)
+
+    if isAdmin:
+        buttons.append(
+            getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
+        )
 
     btn_settings = getButton(
         '⚙️ ' + texts[lang]['settings'], 'settings', saved, stat_id=stat_id

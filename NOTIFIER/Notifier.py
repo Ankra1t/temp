@@ -36,7 +36,7 @@ class Notifier():
 
     def send_user_is_registered(self, new_user: UserInfo, user_lang: str, num: int, refer_user: UserInfo | None = None):
         message = f'<b>{num})</b> '
-        if new_user.tg_username != '-':
+        if  new_user.tg_username is not None and new_user.tg_username != '-':
             message += f'@{new_user.tg_username}'
         else:
             message += f'tg ID: <b>{new_user.tg_id}</b>'

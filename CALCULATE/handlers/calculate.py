@@ -60,7 +60,7 @@ def handle_tool(message: Message, bot: TeleBot):
 
     if stat_id is None:
         set_state_data(bot, user_id, chat_id, {'tool': tool})
-        choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='tool')
+        choose_calculate_step(bot, user_id, message, last_value='tool')
     else:
         db.change_calculation_tool(stat_id, tool)
 
@@ -132,8 +132,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     if stat_id is None:
         set_state_data(bot, user_id, chat_id, {'forex': forex})
         choose_calculate_step(
-            bot, user_id, chat_id,
-            mes_id, last_value='forex'
+            bot, user_id, message, last_value='forex'
         )
     else:
         db.change_calculation_forex(stat_id, forex)
@@ -170,8 +169,7 @@ def handle_forex_pair_price(message: Message, bot: TeleBot):
 
     set_state_data(bot, user_id, chat_id, {'forex': forex})
     choose_calculate_step(
-        bot, user_id, chat_id,
-        mes_id, last_value='forex'
+        bot, user_id, message, last_value='forex'
     )
 
 
@@ -203,7 +201,7 @@ def handle_currency(message: Message, bot: TeleBot):
         return
 
     set_state_data(bot, user_id, chat_id, {'currency': value.upper()})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='currency')
+    choose_calculate_step(bot, user_id, message, last_value='currency')
 
 
 def handle_deposit(message: Message, bot: TeleBot):
@@ -225,7 +223,7 @@ def handle_deposit(message: Message, bot: TeleBot):
     logger.info(f'callback "handle_tool" user_tg_id={user_id} value={value}')
 
     set_state_data(bot, user_id, chat_id, {'deposit': value})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='deposit')
+    choose_calculate_step(bot, user_id, message, last_value='deposit')
 
 
 def handle_risk_percent(message: Message, bot: TeleBot):
@@ -260,7 +258,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     return
 
     set_state_data(bot, user_id, chat_id, {'risk': [value, is_percent]})
-    choose_calculate_step(bot, user_id, chat_id, mes_id, last_value='risk')
+    choose_calculate_step(bot, user_id, message, last_value='risk')
 
 
 def handle_trading_style(message: Message, bot: TeleBot):
@@ -291,7 +289,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     if stat_id is None:
         set_state_data(bot, user_id, chat_id, {'trading_style': value})
         choose_calculate_step(
-            bot, user_id, chat_id, mes_id,
+            bot, user_id, message,
             last_value='trading_style'
         )
     else:
@@ -329,8 +327,7 @@ def handle_open_price(message: Message, bot: TeleBot):
     if stat_id is None:
         set_state_data(bot, user_id, chat_id, {'open_price': value})
         choose_calculate_step(
-            bot, user_id, chat_id,
-            mes_id, last_value='open_price'
+            bot, user_id, message, last_value='open_price'
         )
     else:
         calc_info = db.get_calculation(stat_id)

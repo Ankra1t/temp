@@ -3,6 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
+from db import db
 
 from .filter import calculate_factory
 
@@ -109,7 +110,7 @@ def kb_calc_cancel(user_id: int):
     return keyboard
 
 
-def kb_calc_atr(user_id: int):
+def kb_calc_atr(user_id: int, avg_atr: float | None = None):
     lang = get_lang(user_id)
 
     texts = {
@@ -123,6 +124,15 @@ def kb_calc_atr(user_id: int):
     keyboard.add(
         getButton(f'⚡️ {texts[lang]}', 'calc_atr')
     )
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    isAdmin = db.get_worker_role(user_db_id)
+
+    if isAdmin and avg_atr is not None:
+        keyboard.add(
+            getButton(f'Средний = {round(avg_atr, 2)}', f'calc_atr+')
+        )
+
     keyboard.add(
         getButton(back_txt(lang), 'calc_back'),
         get_settings_from_calc_button(),

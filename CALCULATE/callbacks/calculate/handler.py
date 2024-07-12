@@ -1,12 +1,13 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.calculate.keyboards import kb_calc_cancel
-from CALCULATE.common.messages import msg_enter_max_bar
+from AuthRoles import get_ticker_atr
+from CALCULATE.callbacks.calculate.keyboards import kb_calc_cancel, kb_calc_direct
+from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
 from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
-from common.utils import get_decimal_count, set_state_data
+from common.utils import delete_message, get_decimal_count, set_state_data
 from Classes import currencyService
 from models import ForexInfo, UnfinishedCalculation
 
@@ -36,7 +37,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 value = data['last_values'].pop()
                 data[value] = None
 
-        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+        choose_calculate_step(bot, user_id, call.message, True)
 
     if type == 'go_settings':
         send_settings(bot, call.message, user_id)
@@ -107,8 +108,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             'forex': forex,
         })
         choose_calculate_step(
-            bot, user_id, chat_id,
-            mes_id, True, last_value='forex'
+            bot, user_id, call.message,
+            True, last_value='forex'
         )
 
     if 'tool' in type:
@@ -116,8 +117,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         set_state_data(bot, user_id, chat_id, {'tool': tool})
         choose_calculate_step(
-            bot, user_id, chat_id,
-            mes_id, True, last_value='tool'
+            bot, user_id, call.message,
+            True, last_value='tool'
         )
 
     if 'open_price' in type:
@@ -128,7 +129,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 'open_price': float(open_price_val)}
         )
         choose_calculate_step(
-            bot, user_id, chat_id, mes_id,
+            bot, user_id, call.message,
             True, last_value='open_price'
         )
 
@@ -137,7 +138,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             data['updated_risk'] = value
 
-        choose_calculate_step(bot, user_id, chat_id, mes_id, True)
+        choose_calculate_step(bot, user_id, call.message, True)
 
     if type == 'calc_atr':
         bot.edit_message_text(
@@ -146,6 +147,29 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_calc_cancel(user_id)
         )
         bot.set_state(user_id, CalculateState.max_bar, chat_id)
+
+    if type == 'calc_atr+':
+        with bot.retrieve_data(user_id, chat_id) as data:
+            cur_tool: str = data.get('tool', '')
+            stop_type: str = data.get('stop_type', '')
+
+        value = get_ticker_atr(cur_tool)
+
+        bot.edit_message_text(
+            msg_choose_direct(user_id), chat_id, mes_id,
+            reply_markup=kb_calc_direct(user_id)
+        )
+
+        rate = 1
+        if 'atr_percent' in stop_type:
+            _, percent = stop_type.split('+')
+            rate = float(percent) * 0.01
+
+        set_state_data(
+            bot, user_id, chat_id, {
+                'atr': abs(value) * abs(rate)
+            }
+        )
 
     if 'direct+' in type:
         _, action = type.split('+')
@@ -159,6 +183,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         round_c = get_decimal_count(op)
         stop_loss = round(op + atr, round_c)
 
+        bot.delete_message(chat_id, mes_id)
         create_and_send_calc(bot, call.message, user_id, stop_loss)
 
     bot.answer_callback_query(call.id)
