@@ -542,10 +542,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     oborot = f'{round(turnover, 0)} USDT'
 
                 if lang == 'ru':
-                    now_point = 'Сейчас покупают/продают'
+                    now_point = 'Покупают/продают'
                     oborot_point = 'Оборот за 24ч'
                 else:
-                    now_point = 'Now buy/sell'
+                    now_point = 'Buy/sell'
                     oborot_point = 'Turnover in 24 hours'
 
                 info_show = f"""

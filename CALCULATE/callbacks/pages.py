@@ -449,8 +449,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
             oborot = f'{round(turnover, 0)} USDT'
 
         info_show = f"""
-Сейчас покупают/продают:
-    <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
+Покупают/продают: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
 Оборот за 24ч: <b>{oborot}</b>
 """
 
