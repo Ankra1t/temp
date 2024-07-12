@@ -154,6 +154,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             stop_type: str = data.get('stop_type', '')
 
         value = get_ticker_atr(cur_tool)
+        if not value:
+            return
 
         bot.edit_message_text(
             msg_choose_direct(user_id), chat_id, mes_id,

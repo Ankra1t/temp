@@ -91,8 +91,8 @@ def get_ticker_atr(ticker: str):
             f'{API_URL}/tg/getAvgAtr/{ticker.replace("/", "").upper()}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
-        print(res.json())
-        return res.json()
+        if res.status_code == 200:
+            return res.json()
     except Exception as e:
         logger.error(f'/get_ticker_atr {e}')
         return False

@@ -1834,14 +1834,15 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
         count_show = f'{count}. '
 
     return '\n'.join((
-        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b> - {long_short.capitalize()} ',
+        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b>',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
             (f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}' + profit_result)
             if not without_stop
-            else ''
-        ),
+            else f''
+        ) + f'\n<b>{texts[lang]["direct"]}</b>: {long_short}',
+        '',
         trading_style_type
     ))
 
