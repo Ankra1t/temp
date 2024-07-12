@@ -1739,7 +1739,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False, time: str = ''):
+def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False, time: str = '', count=-1):
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1802,7 +1802,7 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
         else:
             result = calc.trading_style
 
-        trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
+        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
         if time != '':
             trading_style_type += f'<b>{texts[lang]["deal"]}</b>: {texts[lang][time]}\n'
 
@@ -1829,18 +1829,18 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
         profit_result = f"""\n\n<b>{texts[lang]['conclusion']}</b>:
 {conclusion}"""
 
-    direction = ''
-    if not without_stop:
-        direction = f' ({long_short})'
+    count_show = ''
+    if count != -1:
+        count_show = f'{count}. '
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{direction} - <b>{market_translates[lang][calc.market]}</b>',
+        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b> - {long_short.capitalize()} ',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
             (f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}' + profit_result)
             if not without_stop
-            else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
+            else ''
         ),
         trading_style_type
     ))

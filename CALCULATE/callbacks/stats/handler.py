@@ -1,4 +1,5 @@
 from datetime import timedelta
+import datetime
 import os
 from random import randint
 from time import sleep
@@ -504,6 +505,22 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data.photo
 
+        now = get_datetime_now() + timedelta(hours=3)
+        start = datetime.datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) - timedelta(hours=3)
+        end = datetime.datetime(
+            now.year, now.month, now.day, 0, 0, 0, 0
+        ) + timedelta(days=1) - timedelta(hours=3)
+
+        count_show = 1
+        send_datas = liteDb.getAllSendCalcs()
+        for el in send_datas:
+            s = db.get_calculation(el.id)
+
+            if s is not None and s.created_at is not None and s.created_at > start and s.created_at < end:
+                count_show += 1
+
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
@@ -537,7 +554,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 """
 
             text = msg_channel_calculation(
-                stat, lang, send_data.without_stop, send_data.time or ''
+                stat, lang, send_data.without_stop, send_data.time or '', count_show
             ) + info_show
             if lang == 'ru':
                 description_text = send_data.text

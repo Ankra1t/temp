@@ -595,7 +595,7 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             print(e)
             return None
 
-    def getAllSendCalcs(self):
+    def getAllSendCalcs(self) -> list[SendCalc]:
         try:
             data = self.curs.execute(
                 'SELECT * FROM SendCalcs',

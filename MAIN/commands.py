@@ -86,6 +86,15 @@ def _settings(message: Message, bot: TeleBot):
 def _calc_start(message: Message, bot: TeleBot):
     send_calc_start(bot, message, message.from_user.id)
 
+def _channel_calc(message: Message, bot: TeleBot):
+    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
+    isAdmin = db.get_worker_role(user_db_id)
+
+    if not isAdmin:
+        return
+
+    send_calc_start(bot, message, message.from_user.id, is_channel_calc=True)
+
 
 def _referral(message: Message, bot: TeleBot):
     send_referral(bot, message, message.from_user.id, True)
@@ -116,6 +125,7 @@ def commands_registration(bot: TeleBot):
     reg_mes(_settings, commands=['settings'])
     reg_mes(_calc_start, commands=['calc'])
     reg_mes(_calc_start, commands=['calculator'])
+    reg_mes(_channel_calc, commands=['channel_calc'])
 
     reg_mes(_referral, commands=['referral'])
     # reg_mes(_site, commands=['site'])

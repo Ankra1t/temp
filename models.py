@@ -277,6 +277,8 @@ class Calculation(BaseModel):
     forex_info: ForexInfo | None = None
     tool: Optional[str] = None
 
+    created_at: Optional[datetime] = None
+
 
 class CalculationResult(BaseModel):
     count_bet: float

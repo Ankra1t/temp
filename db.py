@@ -1739,6 +1739,7 @@ class Database:
             tool=data.get('tool'),
             trading_type=data.get('tradingType'),
             is_from_deposit=data.get('isFromDeposit'),
+            created_at=data.get('createdAt')
         )
 
     def add_calculation(self, value: Calculation):
