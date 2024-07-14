@@ -434,17 +434,20 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     info = get_ticker_info(stat.tool or '')
 
     # turnover: number;
-    # buyRatio: any;
-    # sellRatio: any;
+    # buyRatio: number;
+    # sellRatio: number;
+    # price24hPcnt: number;
 
+    rate24h: float | None = None
     info_show = ''
     if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
+        rate24h = info.get('price24hPcnt')
         oborot = ''
         turnover = info.get('turnover')
         if turnover // (10 ** 9) > 0:
-            oborot = f'{round(turnover // (10**9), 0)}B USDT'
+            oborot = f'{round(turnover / (10**9), 1)}B USDT'
         elif turnover // (10 ** 6) > 0:
-            oborot = f'{round(turnover // (10**6), 0)}M USDT'
+            oborot = f'{round(turnover / (10**6), 1)}M USDT'
         else:
             oborot = f'{round(turnover, 0)} USDT'
 
@@ -454,7 +457,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 """
 
     photo = send_data.photo
-    text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '')\
+    text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '', rate24h=rate24h)\
         + (info_show)  \
         + (f'\n{send_data.text}\n' if send_data.text is not None else '')
 

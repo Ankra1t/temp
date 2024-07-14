@@ -1739,7 +1739,14 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru', without_stop=False, time: str = '', count=-1):
+def msg_channel_calculation(
+    calc: Calculation,
+    lang: Literal['ru', 'en'] = 'ru',
+    without_stop=False,
+    time: str = '',
+    count=-1,
+    rate24h: float | None = None
+):
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1833,15 +1840,23 @@ def msg_channel_calculation(calc: Calculation, lang: Literal['ru', 'en'] = 'ru',
     if count != -1:
         count_show = f'{count}. '
 
+    percent24h = ''
+    if rate24h is not None:
+        percent = round(rate24h * 100, 2)
+        percent24h = f' ({"+" if percent > 0 else ""}{percent}%)'
+
     return '\n'.join((
-        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b>',
+        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{percent24h}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
-            (f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}' + profit_result)
+            (
+                f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}'
+                + f'\n<b>{texts[lang]["direct"]}</b>: {long_short}' + profit_result
+            )
             if not without_stop
-            else f''
-        ) + f'\n<b>{texts[lang]["direct"]}</b>: {long_short}',
+            else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
+        ),
         '',
         trading_style_type
     ))

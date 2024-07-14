@@ -513,7 +513,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             now.year, now.month, now.day, 0, 0, 0, 0
         ) + timedelta(days=1) - timedelta(hours=3)
 
-        count_show = 1
+        count_show = 0
         send_datas = liteDb.getAllSendCalcs()
         for el in send_datas:
             s = db.get_calculation(el.id)
@@ -527,17 +527,20 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             info = get_ticker_info(stat.tool or '')
 
             # turnover: number;
-            # buyRatio: any;
-            # sellRatio: any;
+            # buyRatio: number;
+            # sellRatio: number;
+            # price24hPcnt: number;
 
+            rate24h: float | None = None
             info_show = ''
             if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
+                rate24h = info.get('price24hPcnt')
                 oborot = ''
                 turnover = info.get('turnover')
                 if turnover // (10 ** 9) > 0:
-                    oborot = f'{round(turnover // (10**9), 0)}B USDT'
+                    oborot = f'{round(turnover / (10**9), 1)}B USDT'
                 elif turnover // (10 ** 6) > 0:
-                    oborot = f'{round(turnover // (10**6), 0)}M USDT'
+                    oborot = f'{round(turnover / (10**6), 1)}M USDT'
                 else:
                     oborot = f'{round(turnover, 0)} USDT'
 
@@ -554,7 +557,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 """
 
             text = msg_channel_calculation(
-                stat, lang, send_data.without_stop, send_data.time or '', count_show
+                stat, lang, send_data.without_stop, send_data.time or '', count_show, rate24h=rate24h
             ) + info_show
             if lang == 'ru':
                 description_text = send_data.text

@@ -131,7 +131,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if '+stc' in type:
                     send_confirm_calc_send(bot, call.message, stat_id)
                 else:
-                    send_calculation(bot, call.message, user_id, calc_info, True)
+                    send_calculation(bot, call.message,
+                                     user_id, calc_info, True)
                 bot.delete_state(user_id, chat_id)
 
             elif 'calc' in type:
@@ -183,10 +184,14 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             else:
                 if 'calc' in type:
-                    set_state_data(bot, user_id, chat_id, {
-                                   'currency': currency.upper()})
+                    set_state_data(
+                        bot, user_id, chat_id, {
+                            'currency': currency.upper()
+                        }
+                    )
                     choose_calculate_step(
-                        bot, user_id, call.message, True, last_value='currency')
+                        bot, user_id, call.message, True, last_value='currency'
+                    )
                 else:
                     db.set_user_currency(user_db_id, currency.upper())
                     bot.edit_message_text(
