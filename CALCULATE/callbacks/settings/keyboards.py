@@ -1067,7 +1067,7 @@ def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
             'auto': 'Auto calculation' + (' ✅' if atr_settings[0] else ''),
             'self': 'Manual calculation' + (' ✅' if not atr_settings[0] else '')
         },
-        'en': {
+        'uz': {
             'change': 'Barlarni almashtirish',
             'auto': 'Avtomatik hisoblash' + (' ✅' if atr_settings[0] else ''),
             'self': 'Qo\'lda hisoblash' + (' ✅' if not atr_settings[0] else '')
