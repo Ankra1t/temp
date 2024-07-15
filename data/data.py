@@ -785,4 +785,3 @@ WHERE stat_id = ?""", (True, False, stat_id,)
 
 
 liteDb = Data()
-liteDb.createUsersTable()

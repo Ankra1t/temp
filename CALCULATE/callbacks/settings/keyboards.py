@@ -1061,8 +1061,22 @@ def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
             'change': 'Изменить бары',
             'auto': 'Авто расчёт' + (' ✅' if atr_settings[0] else ''),
             'self': 'Ручной расчёт' + (' ✅' if not atr_settings[0] else '')
-
-        }
+        },
+        'en': {
+            'change': 'Change bars',
+            'auto': 'Auto calculation' + (' ✅' if atr_settings[0] else ''),
+            'self': 'Manual calculation' + (' ✅' if not atr_settings[0] else '')
+        },
+        'en': {
+            'change': 'Barlarni almashtirish',
+            'auto': 'Avtomatik hisoblash' + (' ✅' if atr_settings[0] else ''),
+            'self': 'Qo\'lda hisoblash' + (' ✅' if not atr_settings[0] else '')
+        },
+        'tr': {
+            'change': 'Çubukları Değiştir',
+            'auto': 'Otomatik hesaplama' + (' ✅' if atr_settings[0] else ''),
+            'self': 'Manuel hesaplama' + (' ✅' if not atr_settings[0] else '')
+        },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
