@@ -371,7 +371,10 @@ def send_calculation(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
 
-    kb = kb_main(user_id, is_access, calc, is_try=is_try)
+    if is_try:
+        kb = None
+    else:
+        kb = kb_main(user_id, is_access, calc, is_first=is_try)
 
     if calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)

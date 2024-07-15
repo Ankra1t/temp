@@ -69,6 +69,21 @@ def vote_timeout(stat_id: int):
         return False
 
 
+def first_timeout(user_id: int):
+    access_token = db.get_access_token() or ''
+
+    try:
+        res = requests.get(
+            f'{API_URL}/tg/first_timeout?user_id={user_id}',
+            headers=HEADERS | {'tg-api-key': access_token}
+        )
+        print(res.json())
+        return res.json()
+    except Exception as e:
+        logger.error(f'/auth/first_timeout {e}')
+        return False
+
+
 def get_ticker_info(ticker: str):
     access_token = db.get_access_token() or ''
 

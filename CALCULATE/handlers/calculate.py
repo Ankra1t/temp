@@ -401,6 +401,7 @@ def handle_stop_atr(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stop_type = data.get('stop_type', 'default')
+        action = data.get('action', '')
 
     rate = 1
     if 'atr_percent' in stop_type:
@@ -409,7 +410,7 @@ def handle_stop_atr(message: Message, bot: TeleBot):
 
     new_mes = bot.send_message(
         chat_id, msg_choose_direct(user_id),
-        reply_markup=kb_calc_direct(user_id)
+        reply_markup=kb_calc_direct(user_id, action == 'send_calc')
     )
 
     set_state_data(
@@ -461,6 +462,7 @@ def handle_min_bar(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         max_bar = data.get('max_bar', 0)
         stop_type = data.get('stop_type', 'default')
+        action = data.get('action', '')
 
     rate = 1
     if 'atr_percent' in stop_type:
@@ -469,7 +471,7 @@ def handle_min_bar(message: Message, bot: TeleBot):
 
     new_mes = bot.send_message(
         chat_id, msg_choose_direct(user_id),
-        reply_markup=kb_calc_direct(user_id)
+        reply_markup=kb_calc_direct(user_id, action == 'send_calc')
     )
 
     set_state_data(

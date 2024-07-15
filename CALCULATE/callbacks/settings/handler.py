@@ -1,6 +1,7 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+from CALCULATE.callbacks.main.keyboards import kb_first_calc
 from CALCULATE.callbacks.utils import choose_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
@@ -22,7 +23,7 @@ from CALCULATE.common.messages import (
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_atr_bars, kb_atr_bars_count, kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
-    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_first_calc_info, kb_round_count, kb_settings_confirm,
+    kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_round_count, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
@@ -212,7 +213,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                     bot.edit_message_text(
                         msg_welcome(user_id), chat_id, mes_id,
-                        reply_markup=kb_first_calc_info(user_id),
+                        reply_markup=kb_first_calc(user_id),
                         disable_web_page_preview=True
                     )
                 else:
@@ -304,6 +305,12 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     )
             else:
                 send_settings(bot, call.message, user_id)
+
+    if type == 'first_dep':
+        bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+        bot.edit_message_text(
+            msg_enter_deposit(user_id), chat_id, mes_id
+        )
 
     if 'welcome_confirm' in type:
         if 'no' in type:

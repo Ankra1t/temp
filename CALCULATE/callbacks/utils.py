@@ -1,14 +1,14 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from AuthRoles import get_ticker_atr
+from AuthRoles import first_timeout, get_ticker_atr
 from Classes import pay_guard
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
-from .pages import send_main
+from .pages import create_and_send_calc, send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
@@ -212,9 +212,15 @@ def choose_calculate_step(
 
             keyboard = kb_calc_atr(user_id, value)
         else:
-            text += msg_enter_stop_loss(user_id, is_try)
-            edit_to = names[lang]['sl']
-            state = CalculateState.stop_loss
+            if stop_loss is None:
+                text += msg_enter_stop_loss(user_id, is_try)
+                edit_to = names[lang]['sl']
+                state = CalculateState.stop_loss
+            else:
+                bot.delete_message(chat_id, mes_id)
+                create_and_send_calc(bot, message, user_id, stop_loss)
+                first_timeout(user_id)
+                return
 
     bot.set_state(user_id, state, chat_id)
 
@@ -306,17 +312,20 @@ def choose_first_calculate_step(
 
     set_state_data(
         bot, user_id, chat_id, {
-            'calc_type': type,
-            'stop_type': stop_type or '',
+            'tool': None if not is_try else 'BTC/USDT',
+            'open_price': None if not is_try else 62000,
+            'stop_loss': (-1 if is_channel_calc else None) if not is_try else 61800,
+
+            'calc_type': type if not is_try else 'crypto',
+            'stop_type': (stop_type or '') if not is_try else 'default',
 
             'trading_style': style,
             'trading_type': trading_type,
-            'deposit': deposit,
-            'currency': currency,
-            'risk': risk,
+            'deposit': deposit if not is_try else 10000,
+            'currency': currency if not is_try else 'USDT',
+            'risk': risk if not is_try else (1, True),
             'is_try': is_try,
-            'is_from_deposit': is_from_deposit if not is_try else True,
-            'stop_loss': -1 if is_channel_calc else None
+            'is_from_deposit': is_from_deposit,
         } | prev_values
     )
     choose_calculate_step(bot, user_id, message, is_edit)

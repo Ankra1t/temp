@@ -1,14 +1,15 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.common.messages import msg_enter_stop_loss
+from AuthRoles import get_ticker_atr
+from CALCULATE.common.messages import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 from CALCULATE.states.calculate import CalculateState
 from common.utils import set_state_data
 from data.data import liteDb
 from db import db
 from MAIN.common.utils import send_in_development
 
-from CALCULATE.callbacks import send_calculation
+from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
 
@@ -27,20 +28,58 @@ def send_start_by_user(
         _, id = message.text.split('_')
         send_data = liteDb.getSendCalc(int(id))
         calc = db.get_calculation(int(id))
-        if send_data is None or calc is None:
+
+        user_db_id = db.get_user_id_by_tg_id(user_id)
+        u_base = db.get_calc_user_settings(user_db_id)
+        if send_data is None or calc is None or u_base is None:
             return
 
         if send_data.without_stop:
-            bot.send_message(
-                chat_id, msg_enter_stop_loss(user_id, send_stat=calc),
-            )
-            bot.set_state(user_id, CalculateState.stop_loss, chat_id)
+            stop_type = liteDb.getUserStop(user_id) or ''
+
+            if 'atr' in stop_type:
+                atr_settings = liteDb.getUserAtrSettings(user_id)
+                period, count = atr_settings[1].split('+')
+
+                ticker_val = get_ticker_atr(calc.tool or '', period, int(count)) or None
+
+                if atr_settings[0] and ticker_val is not None:
+                    rate = 1
+                    if 'atr_percent' in stop_type:
+                        _, percent = stop_type.split('+')
+                        rate = float(percent) * 0.01
+
+                    set_state_data(
+                        bot, user_id, chat_id, {
+                            'atr': abs(ticker_val) * abs(rate)
+                        }
+                    )
+                    bot.send_message(
+                        chat_id, msg_choose_direct(user_id, ticker_val),
+                        reply_markup=kb_calc_direct(user_id, True)
+                    )
+                    return
+
+                bot.send_message(
+                    chat_id, msg_enter_atr(user_id, calc),
+                    reply_markup=kb_calc_atr(user_id, ticker_val)
+                )
+                bot.set_state(user_id, CalculateState.stop_atr, chat_id)
+            else:
+                bot.send_message(
+                    chat_id, msg_enter_stop_loss(user_id, send_stat=calc),
+                )
+                bot.set_state(user_id, CalculateState.stop_loss, chat_id)
+
             set_state_data(
                 bot, user_id, chat_id,
                 {
                     'action': 'send_calc',
                     'stat_id': id,
                     'open_price': calc.open_price,
+                    'tool': calc.tool,
+                    'deposit': u_base.deposit,
+                    'risk': u_base.risk
                 }
             )
         else:

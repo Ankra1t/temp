@@ -2,19 +2,20 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from AuthRoles import get_ticker_atr
-from CALCULATE.callbacks.calculate.keyboards import kb_calc_cancel, kb_calc_direct
+from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
+from ..settings.keyboards import kb_first_dep
 from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
 from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
 from data.data import liteDb
-from common.utils import get_decimal_count, set_state_data
+from common.utils import get_decimal_count, get_lang, set_state_data
 from Classes import currencyService
-from models import ForexInfo, UnfinishedCalculation
+from models import Calculation, ForexInfo, UnfinishedCalculation
 
 from .filter import calculate_factory, CalculateCallbackFilter
 from ..utils import choose_calculate_step
-from ..pages import create_and_send_calc, send_confirm_calc_send, send_main, send_settings
+from ..pages import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -183,6 +184,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         with bot.retrieve_data(user_id, chat_id) as data:
             atr = data.get('atr', 0)
             stop_loss = data.get('stop_loss')
+            stat_id = data.get('stat_id')
             op: float = data.get('open_price', 0)
 
         if stop_loss == -1:
@@ -224,9 +226,80 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             stop_loss = round(op + atr, round_c)
 
             bot.delete_message(chat_id, mes_id)
-            create_and_send_calc(bot, call.message, user_id, stop_loss)
+
+            if 'f_direct' in type:
+                bot.delete_state(user_id, chat_id)
+
+                calc = db.get_calculation(int(stat_id))
+                if calc is None:
+                    return
+
+                stop_loss = stop_loss if stop_loss is not None else calc.stop_loss
+
+                user_db_id = db.get_user_id_by_tg_id(user_id)
+                u_base = db.get_calc_user_settings(user_db_id, calc.market)
+
+                deposit = risk_val = None
+                if u_base is None or u_base.deposit is None:
+                    deposit = 10000
+                else:
+                    deposit = u_base.deposit
+
+                if u_base is not None and u_base.is_from_deposit:
+                    count_bet = deposit / calc.open_price
+                    risk_val = count_bet * abs(calc.open_price - stop_loss)
+                else:
+                    if u_base is None or u_base.risk is None:
+                        risk_val = 100
+                    else:
+                        risk_val = u_base.risk[0]
+                        if u_base.risk[1]:
+                            risk_val *= deposit * 0.01
+
+                new_calc = Calculation(
+                    id=-1,
+                    user_id=user_db_id,
+                    currency=calc.currency,
+                    deposit=deposit,
+                    risk_value=risk_val,
+                    market=calc.market,
+                    open_price=calc.open_price,
+                    stop_loss=stop_loss,
+                    trading_style=calc.trading_style,
+                    trading_type=calc.trading_type,
+                    round_count=(u_base.round_count or 5) if u_base is not None else 5,
+                    tool=calc.tool,
+                    tp_ratio=calc.tp_ratio,
+                    split_values=calc.split_values,
+                    is_from_deposit=u_base.is_from_deposit if u_base is not None else False
+                )
+
+                new_id = db.add_calculation(new_calc)
+                new_calc.id = new_id or -1
+
+                send_calculation(bot, call.message, user_id, new_calc, True)
+            else:
+                create_and_send_calc(bot, call.message, user_id, stop_loss)
 
     bot.answer_callback_query(call.id)
+
+
+def send_after_first_try(bot: TeleBot, user_id: int):
+    lang = get_lang(user_id)
+
+    if lang == 'ru':
+        msg = 'Настройте свой калькулятор, выбрав <b>депозит</b>, <b>процент риска</b>, а все остальное будет рассчитывать система <u>автоматически</u>'
+    elif lang == 'uz':
+        msg = 'Kalkulyatoringizni <b>depozit</b>, <b>Xavfli</b>, va qolgan barcha narsalar <u>avtomatik</u> ravishda tizimini hisoblab chiqing'
+    elif lang == 'tr':
+        msg = 'Hesap makinenizi bir <b>depozitosu seçerek ayarlayın</b>, <b>risk yüzdesi</b> ve diğer her şey sistemi <u>otomatik</u> olarak hesaplayacak'
+    else:
+        msg = 'Set your calculator by choosing a <b>deposit</b>, <b>the percentage of risk</b>, and everything else will calculate the system <u>automatically</u>'
+
+    bot.send_message(
+        user_id, msg,
+        reply_markup=kb_first_dep(user_id)
+    )
 
 
 def registration(bot: TeleBot):

@@ -26,7 +26,7 @@ def cancel_btn(user_id: int):
     return getButton(cancel_txt(lang), 'go_main')
 
 
-def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_try=False):
+def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -34,7 +34,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
 
     texts = {
         'ru': {
-            'calc': 'Сделать расчёт' if not is_try else 'Новый расчёт',
+            'calc': 'Сделать расчёт',
             'calc_continue': 'Продолжить расчёт',
             'settings': 'Настройки',
             'buy': 'Купить',
@@ -42,7 +42,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'link': 'Сигналы',
         },
         'en': {
-            'calc': 'Make a calculation' if not is_try else 'New calculation',
+            'calc': 'Make a calculation',
             'calc_continue': 'Сontinue calculation',
             'settings': 'Settings',
             'buy': 'Buy',
@@ -100,7 +100,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     buttons.append(btn_settings)
 
 
-    if not is_try:
+    if not is_first:
         if stat is None:
             btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
             btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
@@ -122,26 +122,26 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     return keyboard
 
 
-def kb_after_first_settings(user_id: int):
+def kb_first_calc(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
         'ru': {
-            'calc': 'Сделать первый расчет',
+            'calc': 'Рассчитать',
         },
         'en': {
-            'calc': 'Make a first calculation',
+            'calc': 'Calculate',
         },
         'uz': {
-            'calc': 'Birinchi hisoblashni amalga oshiring',
+            'calc': 'Hisoblamoq',
         },
         'tr': {
-            'calc': 'İlk hesaplamayı yap',
+            'calc': 'Hesaplamak',
         },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('⌨️ ' + texts[lang]['calc'], 'first_try'),
+        getButton('⌨️ ' + texts[lang]['calc'] + '!', 'first_try'),
     )
     return keyboard

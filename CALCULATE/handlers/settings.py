@@ -3,7 +3,6 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_atr_settings
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from db import db, BASE_VALUE_TYPE
@@ -15,7 +14,8 @@ from CALCULATE.callbacks import (
     send_settings, send_user_deposit, kb_deposit_cancel,
     kb_enter_exchange, send_exchange_settings,
     kb_change_fee, kb_choose_exchange_level, send_maker_or_taker,
-    send_stop_settings, kb_after_first_settings, kb_round_count
+    send_stop_settings, kb_round_count, kb_main,
+    send_atr_settings
 )
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -301,15 +301,43 @@ def handle_first_deposit(message: Message, bot: TeleBot):
     db.set_user_base(user_db_id, 'risk', 1)
     db.set_user_risk_is_percent(user_db_id, True)
 
-    u_base = db.get_calc_user_settings(user_db_id)
+    bot.send_message(
+        chat_id, msg_enter_risk_percent(
+            user_id, True
+        ),
+    )
+    bot.set_state(user_id, FirstCalcState.risk, chat_id)
+
+
+def handle_first_risk(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    message.text = (message.text or '').replace('%', '')
+
+    value = digit_accept(message)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_digit_error(user_id)
+        )
+        return
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+
+    db.set_user_base(user_db_id, 'risk', value)
+    db.set_user_risk_is_percent(user_db_id, True)
+
+    u_base = db.get_calc_user_settings(user_db_id, 'crypto')
     if u_base is None:
         return
 
     bot.send_message(
         chat_id, msg_after_first_settings(
-            user_id, u_base.deposit or 0, u_base.currency or '', u_base.market
+            user_id, u_base.deposit or 0,
+            'USDT', u_base.market,
+            (u_base.risk or (1, True))[0]
         ),
-        reply_markup=kb_after_first_settings(user_id)
+        reply_markup=kb_main(user_id, is_first=True)
     )
 
 
@@ -452,6 +480,7 @@ def registration(bot: TeleBot):
     reg_mes(handle_splitting, state=SettingsState.splitting)
 
     reg_mes(handle_first_deposit, state=FirstCalcState.deposit)
+    reg_mes(handle_first_risk, state=FirstCalcState.risk)
 
     reg_mes(handle_exchange, state=SettingsState.exchange)
     reg_mes(handle_fee, state=SettingsState.fee)

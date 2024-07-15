@@ -141,13 +141,21 @@ def kb_calc_atr(user_id: int, avg_atr: float | None = None):
     return keyboard
 
 
-def kb_calc_direct(user_id: int):
+def kb_calc_direct(user_id: int, start_calc=False):
     lang = get_lang(user_id)
+
+    start_calc_show = ''
+    if start_calc:
+        start_calc_show = 'f'
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('Long', 'direct+long'),
-        getButton('Short', 'direct+short'),
-        getButton(cancel_txt(lang), 'calc_back'),
+        getButton('Long', f'{start_calc_show}_direct+long'),
+        getButton('Short', f'{start_calc_show}_direct+short'),
     )
+    if start_calc:
+        keyboard.add(
+            getButton(cancel_txt(lang), 'calc_back'),
+        )
+
     return keyboard

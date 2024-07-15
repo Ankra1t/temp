@@ -481,6 +481,20 @@ def msg_deposit(user_id: int):
         is_update = u_base.is_updating_deposit
         round_count = u_base.round_count if u_base.round_count is not None else round_count
 
+    info = {
+        'ru': 'Настройте калькулятор для максимально удобного использования, начиная от депозита, заканчивая округлениями цифр и деление профита для частичного выхода из сделки(ок)',
+        'en': 'Personalize the calculator for highest ease of use, from deposit to rounding figures and dividing the profit for partial exit from the trade(s).',
+        'uz': "Kalkulyatorni omonatdan boshlab, raqamlarning yaxlitlanishi va qisman bitimdan qisman bo'linish bilan tugash bilan tugaydigan kalkulyatorni sozlang",
+        'tr': 'Hesap makinesini, depozitten başlayarak, sayıların yuvarlanması ve işlemden kısmi çıkış için kârın bölünmesi ile biten en uygun kullanım için yapılandırın (OK)',
+    }
+
+    info_upd = {
+        'ru': "При сохранении статистики по каждой сделке, депозит может автоматически изменяться (при вкл функции), рассчитывая новые сделки, исходя из действующего депозита",
+        'en': "When saving statistics for each trade, the deposit can automatically change (when the function is on), calculating new trades based on the current deposit",
+        'uz': "Har bir bitim bo'yicha statistikani saqlab turganda, omonat avtomatik ravishda joriy omonat asosida yangi operatsiyalarni hisoblash, yangi operatsiyalarni hisoblashi mumkin",
+        'tr': "Her işlemle ilgili istatistikleri korurken, depozito otomatik olarak değişebilir (bir işlevin bir işleviyle), mevcut depozitoya dayalı yeni işlemleri hesaplayabilir",
+    }
+
     texts = {
         'ru': {
             'main': 'Настройка депозита',
@@ -522,15 +536,34 @@ def msg_deposit(user_id: int):
 
     return f"""<b><u>{texts[lang]['main']}</u></b>
 
+{info[lang]}
+
 {POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
 {POINT} {texts[lang]['round_count']}: <b>{round_count}</b>
 {POINT} {texts[lang]['stop']}: <b>{stop_show}</b>
+
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
+{info_upd[lang]}
 """
 
 
 def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
     lang = get_lang(user_id)
+
+    info = {
+        'ru': """Трейдеры имеют разные <b>стили торговли</b>, выбери самый частый и подходящий, а мы будем учитывать это в статистике
+
+Во время расчетов, также, можно <b>изменять</b> на другой стиль, некоторые трейдеры могут отторговывать сразу несколько стратегий (для этого выберите "вкл/выкл изменения)""",
+        'en': """Traders have different trading styles. Choose the most frequent and appropriate one, and we will consider it in the statistics
+
+During calculations, you can also change your trading style. Some traders can practice several strategies at once (select "on/off the change" for this).""",
+        'uz': """Savdogarlar turli xil savdo uslublariga ega.Eng tez-tez va mosni tanlang va biz buni statistikada ko'rib chiqamiz
+
+Hisob-kitoblar paytida siz savdo uslubingizni ham o'zgartirishingiz mumkin.Ba'zi savdogarlar bir vaqtning o'zida bir nechta strategiyani mashq qilishlari mumkin ("O'zgarishni yoqish / o'chirish" ni tanlang).""",
+        'tr': """Tüccarların farklı ticaret stilleri vardır.En sık ve uygun olanı seçin ve bunu istatistiklerde ele alacağız
+
+Hesaplamalar sırasında ticaret stilinizi de değiştirebilirsiniz.Bazı tüccarlar aynı anda çeşitli stratejiler uygulayabilirler (bunun için "Aç/Kapalı Değişiklik" i seçin).""",
+    }
 
     texts = {
         'ru': {
@@ -561,6 +594,8 @@ def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
     }
 
     return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{info[lang]}
 
 {POINT} {txt_current_value(lang)}: <b>{style}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if style_update_on else texts[lang]['off']}</b>
@@ -751,6 +786,13 @@ def msg_summury_profit_settings(user_id: int):
 def msg_exchange(user_id: int, exchange: tuple[str, float] | None = None):
     lang = get_lang(user_id)
 
+    info = {
+        'ru': '<b>Учитывайте</b> комиссии с бирж при расчете сделок, заранее понимая, какая сумма с каждой сделки будет вычитаться и точнее управляйте риск-менеджментом',
+        'en': '<b>Consider</b> exchange fees when calculating trades, aware in advance which amount will be deducted from each trade, and perform risk management more carefully.',
+        'uz': "Bitimlarni hisoblashda operatsiyalarni hisoblashda, har bir operatsiyaning qancha miqdorini pasaytirish va xavflarni boshqarishning qaysi miqdorini aniqlab olishini va aniqroq nazoratni tushunishni ko'rib chiqing",
+        'tr': 'İşlemleri hesaplarken, her işlemden hangi miktarın düşüleceğini anlama ve risk yönetimini daha doğru bir şekilde kontrol ederken borsalardan gelen komisyonları düşünün'
+    }
+
     texts = {
         'ru': {
             'main': 'Настройки биржи',
@@ -779,7 +821,9 @@ def msg_exchange(user_id: int, exchange: tuple[str, float] | None = None):
         current = f"""\n\n{texts[lang]["now"]}: <b>{exchange[0]}</b>
 {texts[lang]["fee"]}: <b>{exchange[1] or 0}</b>"""
 
-    return f"""<b><u>{texts[lang]['main']}</u></b>{current}"""
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{info[lang]}{current}"""
 
 
 def msg_maker_or_taker(user_id: int, maker_fee: float, taker_fee: float):
@@ -1187,53 +1231,41 @@ def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
-        return f"""👉<b>Трейдинг</b> = математика
+        return f"""Как работает калькулятор:
 
-А математика требует точные расчеты.
+<b>Мой баланс</b>: 10 000 USDT
 
-Для этого создан калькулятор, который рассчитывает заранее:
+<b>Инструмент</b>: Биткоин
+<b>Цена</b>: 62000 USDT
 
-- объем покупки для покупки
-- точные цены фиксации прибыли
-- статистику
-
-Попробуйте прямо сейчас."""
+Сколько монет нужно купить на <b>10 000</b> USDT?"""
     elif lang == 'uz':
-        return f"""👉<b>Savdo</b> = matematika
+        return f"""Kalkulyator qanday ishlaydi:
 
-Va matematika aniq hisob-kitoblarni talab qiladi.
+<b>Mening balansim</b>: 10 000 USDT
 
-Buning uchun oldindan hisoblab chiqilgan kalkulyator yaratiladi:
+<b>Asbob</b>: Bitcoin
+<b>Narx</b>: 62000 USDT
 
-- Xarid qilish uchun sotib olish
-- foydani aniqlashning aniq narxlari
-- Statistika
-
-Hozir sinab ko'ring."""
+Siz sotib olishingiz kerak bo'lgan juda ko'p tanga <b>10 000</b> USDT?"""
     elif lang == 'tr':
-        return """👉<b>Ticaret</b> = matematik
+        return """Hesap Makinesi Nasıl Çalışır?:
 
-Ve matematik doğru hesaplamalar gerektirir.
+<b>Benim dengem</b>: 10 000 USDT
 
-Bunun için, önceden hesaplayan bir hesap makinesi oluşturulur:
+<b>Enstrüman</b>: Bitcoin
+<b>Fiyat</b>: 62000 USDT
 
-- Satın Alma Satın Alma
-- Kâr tespitinin kesin fiyatları
-- İstatistik
-
-Hemen dene."""
+Kaç para satın almanız gerekiyor <b>10 000</b> USDT?"""
     else:
-        return """👉<b>Trading</b> = mathematics
+        return """How the calculator works:
 
-And mathematics requires accurate calculations.
+<b>My balance</b>: 10 000 USDT
 
-For this, a calculator is created, which calculates in advance:
+<b>Instrument</b>: Bitcoin
+<b>Price</b>: 62000 USDT
 
-- purchase for purchase
-- exact prices of profit fixation
-- Statistics
-
-Try it right now."""
+How many coins you need to buy for <b>10 000</b> USDT?"""
 
     if lang == 'ru':
         return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
@@ -1285,7 +1317,7 @@ It also calculates the nearest take profit where the profit is fixed.
 <b>Try it now.</b>"""
 
 
-def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MARKETS_TYPE):
+def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MARKETS_TYPE, risk: float):
     lang = get_lang(user_id)
 
     texts = {
@@ -1312,7 +1344,8 @@ def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MA
     }
 
     return f"""<b>{texts[lang]['market']}</b>: {market_translates[lang][market]}
-<b>{texts[lang]['dep']}</b>: {dep} {currency}"""
+<b>{texts[lang]['dep']}</b>: {dep} {currency}
+<b>{texts[lang]['risk']}</b>: {risk}%"""
 
 
 def msg_success_base_set(user_id: int):
@@ -1696,7 +1729,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'to': 'к',
 
-            'fee': 'Комиссия биржи'
+            'fee': 'Комиссия биржи',
+            'risk_percent': 'Риск в процентах',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -1720,7 +1754,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'to': 'to',
 
-            'fee': 'Exchange fee'
+            'fee': 'Exchange fee',
+            'risk_percent': 'Risk in percent',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -1744,7 +1779,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'to': 'ga',
 
-            'fee': 'BIRJA BERISH'
+            'fee': 'BIRJA BERISH',
+            'risk_percent': 'Xavf foiz',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -1768,7 +1804,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'to': 'ile',
 
-            'fee': 'Borsa ücreti'
+            'fee': 'Borsa ücreti',
+            'risk_percent': 'Yüzde risk',
         },
     }
 
@@ -1874,7 +1911,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
-        f'<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>Риск в процентах</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 1)}%" if is_try else ""}',
+        f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 1)}%" if is_try else ""}""",
         fee_text,
         trading_style_type
     ))
@@ -2398,6 +2435,13 @@ def msg_enter_deposit(user_id: int, current: str | None = None):
 def msg_enter_market(user_id: int):
     lang = get_lang(user_id)
 
+    info = {
+        'ru': '<b>Выбирая</b> один из рынков, расчеты, функционал, статистика сделок - меняются.\n\nДля каждого рынка можете настроить свой <b>функционал</b> управления.',
+        'en': 'Choosing one of the markets, the calculations, functionality, and statistics of deals change accordingly.\n\nFor each market, you can customize specific management options.',
+        'uz': "Birja, hisob-kitoblar, funktsionallik, bitimlar statistikasidan birini tanlash o'zgarmoqda.\n\nHar bir bozor uchun siz o'zingizni boshqaruv funktsiyasini sozlashingiz mumkin.",
+        'tr': 'Piyasalardan birini seçmek, hesaplamalar, işlevsellik, işlem istatistikleri değişiyor.\n\nHer pazar için kontrol işlevinizi yapılandırabilirsiniz.',
+    }
+
     if lang == 'ru':
         return "👉 Выберите <b>рынок</b> торговли"
     elif lang == 'uz':
@@ -2405,11 +2449,30 @@ def msg_enter_market(user_id: int):
     elif lang == 'tr':
         return "👉 <b>Pazar</b> ticareti seçin"
     else:
-        return "👉 Select trading <b>market</b>"
+        return "👉 Select trading <b>market</b>" + f'\n\n{info[lang]}'
 
 
-def msg_enter_risk_percent(user_id: int):
+def msg_enter_risk_percent(user_id: int, is_first=False):
     lang = get_lang(user_id)
+
+    info = {
+        'ru': """Трейдер заранее знает о убытках.
+Выберите <b>% или сумму риска</b> на каждую сделку, система возьмет на себя расчеты.
+
+<i>например, при депозите 10 000 USD и риске в 1%, потери на каждую сделку будут 100 USD</i>""",
+        'en': """The trader is aware of losses in advance.
+Select the % or amount of risk for each trade, the system will take care of the calculations.
+
+For example, with a deposit of 10 000 USD and a risk of 1%, the loss per trade will be 100 USD.""",
+        'uz': """Savdogar oldindan yo'qotishlardan xabardor.
+Har bir savdo uchun% yoki miqdorini tanlang, tizim hisob-kitoblarga g'amxo'rlik qiladi.
+
+Masalan, 10 000 AQSh dollari va 1% xavfi bilan 1% xavfi bilan, har bir savdot uchun yo'qotish 100 AQSh dollarini tashkil etadi.""",
+        'tr': """Tüccar önceden kayıpların farkındadır.
+Her ticaret için risk % veya risk miktarını seçin, sistem hesaplamalarla ilgilenecektir.
+
+Örneğin, 10.000 USD ve%1 riski ile ticaret başına zarar 100 USD olacaktır.""",
+    }
 
     texts = {
         'ru': 'Введите <b>риск</b> на сделку',
@@ -2418,9 +2481,20 @@ def msg_enter_risk_percent(user_id: int):
         'tr': 'İşlem başına <b>riski</b> girin',
     }
 
-    return f"""👉 {texts[lang]}
+    dop = ''
+    if is_first:
+        if lang == 'ru':
+            dop = '<i>(проф трейдеры рискуют на каждую сделку не более 1% от депозита)</i>'
+        elif lang == 'en':
+            dop = '<i>(Professor traders risk for each transaction no more than 1% of the deposit)</i>'
+        elif lang == 'uz':
+            dop = '<i>(Har bir savdo uchun xavfni 1% dan oshirib bo\'lmaydi)</i>'
+        elif lang == 'tr':
+            dop = '<i>(Her işlem için risk %1\'den fazla olamaz)</i>'
 
-{get_risk_annotation(lang)}
+    return f"""👉 {texts[lang]}
+{dop}
+{'' if is_first else f'{info[lang]}{ENTER}{ENTER}{get_risk_annotation(lang)}'}
 """
 
 
@@ -2488,6 +2562,13 @@ def msg_enter_trading_style(user_id: int):
 def msg_enter_round_count(user_id: int):
     lang = get_lang(user_id)
 
+    info = {
+        'ru': 'Округляйте вывод данных для удобства расчетов (если это требуется)',
+        'en': 'Round the data output for convenient calculations (if required)',
+        'uz': "Hisob-kitoblarga qulaylik yaratish uchun ma'lumotlar ishlab chiqarishni joriy qiling (agar kerak bo'lsa)",
+        'tr': 'Hesaplamaların rahatlığı için verilerin çıktısını destekleyin (gerekirse)',
+    }
+
     texts = {
         'ru': {
             'main': 'Введите <b>количество знаков</b> после запятой',
@@ -2507,7 +2588,9 @@ def msg_enter_round_count(user_id: int):
         },
     }
 
-    return f"""👉 {texts[lang]['main']}
+    return f"""{info[lang]}
+
+👉 {texts[lang]['main']}
 {texts[lang]['max']} (0.00001)
 """
 
@@ -2551,36 +2634,44 @@ def msg_enter_open_price(user_id: int, is_try=False):
     return f"""👉 {texts[lang]}:"""
 
 
+def txt_send_data(lang: LANGUAGES_TYPE, send_stat: Calculation):
+    dop = ''
+
+    short_long = 'long'
+    if send_stat.open_price < send_stat.stop_loss:
+        short_long = 'short'
+
+    if lang == 'ru':
+        dop = f"""#{(send_stat.tool or '').replace('/USDT', '')} - {market_translates[lang][send_stat.market]}
+
+Цена: {send_stat.open_price} USDT
+Направление: {short_long}"""
+    elif lang == 'uz':
+        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Narx: {send_stat.open_price} USDT
+Yo'nalish: {short_long}"""
+    elif lang == 'tr':
+        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Fiyat: {send_stat.open_price} USDT
+Yön: {short_long}"""
+    else:
+        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+
+Price: {send_stat.open_price} USDT
+Direction: {short_long}"""
+    dop += '\n\n'
+
+    return dop
+
+
 def msg_enter_stop_loss(user_id: int, is_try=False, send_stat: Calculation | None = None):
     lang = get_lang(user_id)
 
     dop = ''
-    if send_stat is not None:
-        short_long = 'long'
-        if send_stat.open_price < send_stat.stop_loss:
-            short_long = 'short'
-
-        if lang == 'ru':
-            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
-
-Цена: {send_stat.open_price} USDT
-Направление: {short_long}"""
-        elif lang == 'uz':
-            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
-
-Narx: {send_stat.open_price} USDT
-Yo'nalish: {short_long}"""
-        elif lang == 'tr':
-            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
-
-Fiyat: {send_stat.open_price} USDT
-Yön: {short_long}"""
-        else:
-            dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
-
-Price: {send_stat.open_price} USDT
-Direction: {short_long}"""
-        dop += '\n\n'
+    if send_stat:
+        dop = txt_send_data(lang, send_stat)
 
     if lang == 'ru':
         text = 'По какой цене будете <b>фиксировать</b> убыток:'
@@ -2594,8 +2685,12 @@ Direction: {short_long}"""
     return f'{dop}👉 {text}'
 
 
-def msg_enter_atr(user_id: int):
+def msg_enter_atr(user_id: int, send_stat: Calculation | None = None):
     lang = get_lang(user_id)
+
+    dop = ''
+    if send_stat:
+        dop = txt_send_data(lang, send_stat)
 
     texts = {
         'ru': "Введите цену ATR",
@@ -2604,7 +2699,7 @@ def msg_enter_atr(user_id: int):
         'tr': "ATR'nin fiyatını girin",
     }
 
-    return f'👉 {texts[lang]}'
+    return f'{dop}👉 {texts[lang]}'
 
 
 def msg_enter_max_bar(user_id: int):

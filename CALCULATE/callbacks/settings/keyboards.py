@@ -1106,3 +1106,20 @@ def kb_atr_bars_count(user_id: int):
         getButton(cancel_txt(lang), 'atr_settings')
     )
     return keyboard
+
+
+def kb_first_dep(user_id: int):
+    lang = get_lang(user_id)
+
+    text = {
+        'ru': 'Настроить',
+        'en': 'Settings',
+        'uz': 'Sozlamoq',
+        'tr': 'Ayarlamak',
+    }
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        getButton('⚙️ ' + text[lang], 'first_dep')
+    )
+    return keyboard

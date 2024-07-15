@@ -22,3 +22,4 @@ class SettingsState(StatesGroup):
 
 class FirstCalcState(StatesGroup):
     deposit = State()
+    risk = State()

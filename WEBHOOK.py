@@ -2,6 +2,7 @@ import telebot
 import flask
 from flask import jsonify, request, send_file, Response
 
+from CALCULATE.callbacks.calculate.handler import send_after_first_try
 from CALCULATE.callbacks.stats.handler import send_vote
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
@@ -70,6 +71,21 @@ def vote_timeout():
         return Response(status=400)
 
     send_vote(bot, int(stat_id))
+    return Response(status=200)
+
+@app.route(base_url + '/first_timeout', methods=['GET'])
+def first_timeout():
+    access_token = db.get_access_token()
+    api_key = request.headers.get('tg-api-key')
+
+    if access_token is None or api_key is None or access_token != api_key:
+        return Response(status=400)
+
+    user_id = request.args.get('user_id')
+    if user_id is None or not user_id.isnumeric():
+        return Response(status=400)
+
+    send_after_first_try(bot, int(user_id))
     return Response(status=200)
 
 if PROD:
