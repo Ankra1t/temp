@@ -422,7 +422,7 @@ def handle_atr_bars_count(message: Message, bot: TeleBot):
         )
         return
 
-    value = min(max(value, 0), 20)
+    value = min(max(value, 2), 20)
 
     bot.delete_state(user_id, chat_id)
 

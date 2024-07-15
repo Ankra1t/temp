@@ -513,7 +513,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             now.year, now.month, now.day, 0, 0, 0, 0
         ) + timedelta(days=1) - timedelta(hours=3)
 
-        count_show = 0
+        count_show = 1
         send_datas = liteDb.getAllSendCalcs()
         for el in send_datas:
             if not el.send:
@@ -751,23 +751,36 @@ def send_vote(bot: TeleBot, stat_id: int):
     if stat is None:
         return
 
+    rand = randint(1, 3)
     for i, CHANNEL_ID in enumerate(channels):
         lang = 'ru' if i == 0 else 'en'
-        q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
 
-        if lang == 'ru':
-            first = 'В рост'
-            second = 'На падение'
+        if rand == 1:
+            q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+
+            if lang == 'ru':
+                ans = ['В рост', 'На падение']
+            else:
+                ans = ['Long', 'Short']
+        elif rand == 2:
+            if lang == 'ru':
+                q = '👆 Войдете в сделку?'
+                ans = ['Да', 'Нет', 'Подумаю']
+            else:
+                q = '👆 Will be in deal?'
+                ans = ['Yes', 'No', 'Thinking']
         else:
-            first = 'Long'
-            second = 'Short'
+            if lang == 'ru':
+                q = '👆 Нравится график?'
+                ans = ['Да', 'Нет']
+            else:
+                q = '👆 Do you like grafic?'
+                ans = ['Yes', 'No']
 
         bot.send_poll(
-            CHANNEL_ID, q, [first, second], True
+            CHANNEL_ID, q, ans, True
         )
 
-    print(stat_id in loading_vote_message_ids)
-    print(loading_vote_message_ids)
     if stat_id in loading_vote_message_ids:
         cur_chat_id, cur_mes_id = loading_vote_message_ids[stat_id]
         bot.edit_message_text(

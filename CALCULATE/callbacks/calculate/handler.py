@@ -8,13 +8,13 @@ from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
 from data.data import liteDb
-from common.utils import delete_message, get_decimal_count, set_state_data
+from common.utils import get_decimal_count, set_state_data
 from Classes import currencyService
 from models import ForexInfo, UnfinishedCalculation
 
 from .filter import calculate_factory, CalculateCallbackFilter
 from ..utils import choose_calculate_step
-from ..pages import create_and_send_calc, send_main, send_settings
+from ..pages import create_and_send_calc, send_confirm_calc_send, send_main, send_settings
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -182,15 +182,49 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         with bot.retrieve_data(user_id, chat_id) as data:
             atr = data.get('atr', 0)
+            stop_loss = data.get('stop_loss')
             op: float = data.get('open_price', 0)
 
-        atr *= -1 if action == 'long' else 1
+        if stop_loss == -1:
+            stat_id = create_and_send_calc(
+                bot, call.message, user_id,
+                stop_loss if action == 'long' else op + 1,
+                False
+            )
+            if not stat_id:
+                return
 
-        round_c = get_decimal_count(op)
-        stop_loss = round(op + atr, round_c)
+            stat = db.get_calculation(stat_id)
+            if stat is None:
+                return
 
-        bot.delete_message(chat_id, mes_id)
-        create_and_send_calc(bot, call.message, user_id, stop_loss)
+            withoutStop = liteDb.getSendSettings('withoutStop')
+            style = liteDb.getSendSettings('style')
+            isVote = liteDb.getSendSettings('isVote')
+            time = liteDb.getSendSettings('time')
+
+            liteDb.addSendCalc(stat_id)
+
+            if withoutStop == 'True' or stat.stop_loss == -1:
+                liteDb.updateWithoutStopSendCalc(stat_id)
+            if isVote == 'False':
+                liteDb.updateVoteSendCalc(stat_id)
+            if style:
+                db.change_calculation_style(stat_id, style)
+                liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
+            if time:
+                liteDb.updateValueSendCalc(stat_id, 'time', time)
+
+            send_confirm_calc_send(bot, call.message, stat_id)
+            bot.delete_state(user_id, chat_id)
+        else:
+            atr *= -1 if action == 'long' else 1
+
+            round_c = get_decimal_count(op)
+            stop_loss = round(op + atr, round_c)
+
+            bot.delete_message(chat_id, mes_id)
+            create_and_send_calc(bot, call.message, user_id, stop_loss)
 
     bot.answer_callback_query(call.id)
 

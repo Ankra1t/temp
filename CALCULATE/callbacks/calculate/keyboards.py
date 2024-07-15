@@ -114,10 +114,10 @@ def kb_calc_atr(user_id: int, avg_atr: float | None = None):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Быстро рассчитать стоп',
-        'en': 'Quickly calculate the feet',
-        'uz': 'Oyoqlarni tezda hisoblang',
-        'tr': 'Ayakları hızlı bir şekilde hesaplayın',
+        'ru': 'Быстро рассчитать ATR',
+        'en': 'Quickly calculate ATR',
+        'uz': 'Tez hisoblang ATR',
+        'tr': 'Hızla hesaplayın ATR',
     }
 
     keyboard = InlineKeyboardMarkup(row_width=3)

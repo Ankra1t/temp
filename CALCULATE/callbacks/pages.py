@@ -600,11 +600,10 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
     if u_base is not None:
         current_fd = u_base.is_from_deposit
 
-    mes = msg_stop_page(user_id, stop_type, current_fd)
-    kb = kb_choose_stop_type(
-        user_id,
-        'atr' in (stop_type or '') and not current_fd
-    )
+    atr_settings = liteDb.getUserAtrSettings(user_id)
+
+    mes = msg_stop_page(user_id, atr_settings, stop_type, current_fd)
+    kb = kb_choose_stop_type(user_id)
 
     if is_first:
         bot.send_message(

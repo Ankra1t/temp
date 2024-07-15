@@ -2,14 +2,13 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from AuthRoles import get_ticker_atr
-from CALCULATE.callbacks.main.keyboards import kb_main
 from Classes import pay_guard
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
-from .pages import create_and_send_calc, send_confirm_calc_send, send_main
+from .pages import send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
@@ -178,33 +177,10 @@ def choose_calculate_step(
 
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     elif stop_loss == -1:
-        stat_id = create_and_send_calc(bot, message, user_id, stop_loss, False)
-        if not stat_id:
-            return
-
-        stat = db.get_calculation(stat_id)
-        if stat is None:
-            return
-
-        withoutStop = liteDb.getSendSettings('withoutStop')
-        style = liteDb.getSendSettings('style')
-        isVote = liteDb.getSendSettings('isVote')
-        time = liteDb.getSendSettings('time')
-
-        liteDb.addSendCalc(stat_id)
-
-        if withoutStop == 'True' or stat.stop_loss == -1:
-            liteDb.updateWithoutStopSendCalc(stat_id)
-        if isVote == 'False':
-            liteDb.updateVoteSendCalc(stat_id)
-        if style:
-            db.change_calculation_style(stat_id, style)
-            liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
-        if time:
-            liteDb.updateValueSendCalc(stat_id, 'time', time)
-
-        send_confirm_calc_send(bot, message, stat_id, True)
-        bot.delete_state(user_id, chat_id)
+        bot.send_message(
+            chat_id, msg_choose_direct(user_id),
+            reply_markup=kb_calc_direct(user_id)
+        )
         return
     else:
         if 'atr' in stop_type:
@@ -229,7 +205,7 @@ def choose_calculate_step(
                     }
                 )
                 bot.send_message(
-                    chat_id, msg_choose_direct(user_id),
+                    chat_id, msg_choose_direct(user_id, value),
                     reply_markup=kb_calc_direct(user_id)
                 )
                 return

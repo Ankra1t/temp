@@ -613,10 +613,14 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.set_state(user_id, SettingsState.atr_percent, chat_id)
         else:
             liteDb.setUserStop(user_id, new_stop_type)
-            try:
-                send_stop_settings(bot, call.message, user_id)
-            except:
-                pass
+
+            if new_stop_type == 'atr':
+                send_atr_settings(bot, call.message, user_id)
+            else:
+                try:
+                    send_stop_settings(bot, call.message, user_id)
+                except:
+                    pass
 
     if type == 'stop_settings':
         send_stop_settings(bot, call.message, user_id)
@@ -635,8 +639,22 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'atr_auto':
         atr_settings = liteDb.getUserAtrSettings(user_id)
+        if atr_settings[0]:
+            return
+
         liteDb.setUserAtrSettings(
-            user_id, (not atr_settings[0], atr_settings[1]))
+            user_id, (not atr_settings[0], atr_settings[1])
+        )
+        send_atr_settings(bot, call.message, user_id)
+
+    if type == 'atr_self':
+        atr_settings = liteDb.getUserAtrSettings(user_id)
+        if not atr_settings[0]:
+            return
+
+        liteDb.setUserAtrSettings(
+            user_id, (not atr_settings[0], atr_settings[1])
+        )
         send_atr_settings(bot, call.message, user_id)
 
     if type == 'atr_bars':

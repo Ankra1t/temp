@@ -75,6 +75,63 @@ trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
 }
 
 
+def txt_atr_bars(lang: LANGUAGES_TYPE, value: str):
+    try:
+        period, count = value.split('+')
+    except:
+        return ''
+
+    period_show = ''
+    if period == '15m':
+        if lang == 'ru':
+            period_show = f'15-минутных баров'
+        elif lang == 'en':
+            period_show = f'15-minute bars'
+        elif lang == 'uz':
+            period_show = f'15 daqiqa barlari'
+        else:
+            period_show = f'15 dakikalık barlar'
+    elif period == '1h':
+        if lang == 'ru':
+            period_show = f'часовых баров'
+        elif lang == 'en':
+            period_show = f'hourly bars'
+        elif lang == 'uz':
+            period_show = f'saatcha barlari'
+        else:
+            period_show = f'saatlik barlar'
+    elif period == '4h':
+        if lang == 'ru':
+            period_show = f'4-часовых баров'
+        elif lang == 'en':
+            period_show = f'4-hour bars'
+        elif lang == 'uz':
+            period_show = f'4 saatcha barlari'
+        else:
+            period_show = f'4 saatlik barlar'
+    elif period == '1d':
+        if lang == 'ru':
+            period_show = f'дневных баров'
+        elif lang == 'en':
+            period_show = f'daily bars'
+        elif lang == 'uz':
+            period_show = f'kunlik barlari'
+        else:
+            period_show = f'günlük barlar'
+
+    if period_show == '':
+        return ''
+
+    if lang == 'ru':
+        return f'средний atr крайних <b>{count} {period_show}</b>'
+    elif lang == 'en':
+        return f'average atr of the last <b>{count} {period_show}</b>'
+    elif lang == 'uz':
+        return f'oxirgi ARR <b>{count} {period_show}</b>'
+    else:
+        return f'geçmiş <b>{count} {period_show}</b> ortalaması'
+
+
 def txt_current_value(lang: LANGUAGES_TYPE):
     if lang == 'ru':
         return 'Текущее значение'
@@ -990,7 +1047,12 @@ def msg_freeze_calc(user_id: int, risk_value: str):
 """
 
 
-def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
+def msg_stop_page(
+    user_id: int,
+    atr_settings: tuple[bool, str],
+    stop_type: str | None,
+    is_update_deposit=False,
+):
     lang = get_lang(user_id)
 
     texts = {
@@ -1000,6 +1062,13 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
 
             'fd': "от депозита",
             'default': "Обычный",
+
+            'auto': 'автоматический',
+            'self': 'ручной',
+
+            'atr_auto': "Расчёт",
+            'last': "последние",
+            'pieces': "последние",
         },
         'en': {
             'main': "Choose the type of risk",
@@ -1007,6 +1076,12 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
 
             'fd': "from the deposit",
             'default': "Default",
+
+            'auto': 'automatic',
+            'self': 'manual',
+
+            'atr_auto': "Calculation",
+            'last': "last",
         },
         'uz': {
             'main': "Xavf turini tanlang",
@@ -1014,6 +1089,12 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
 
             'fd': "Omonatdan",
             'default': "Oddiy",
+
+            'auto': 'avtomatik',
+            'self': 'qo\'llanma',
+
+            'atr_auto': "Hisoblash",
+            'last': "ikkinchisi",
         },
         'tr': {
             'main': "Bir tür risk seçin",
@@ -1021,9 +1102,16 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
 
             'fd': "depozitodan",
             'default': "Sıradan",
+
+            'auto': 'otomatik',
+            'self': 'manuel',
+
+            'atr_auto': "Hesaplama",
+            'last': "İkincisi",
         },
     }
 
+    atr_info = ''
     if is_update_deposit:
         stop_show = texts[lang]['fd']
     elif stop_type is None:
@@ -1032,12 +1120,17 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
         stop_show = texts[lang]['default']
     elif stop_type == 'atr':
         stop_show = 'ATR'
+
+        atr_info = f'{texts[lang]["atr_auto"]}: <b>{texts[lang]["auto" if atr_settings[0] else "self"]}</b>'
+        atr_info += f'\n({txt_atr_bars(lang, atr_settings[1])})'
     else:
         _, percent = stop_type.split('+')
         stop_show = f'{percent}% of ATR'
 
-    return f"""{texts[lang]['main']}
-{texts[lang]['value']}: <b>{stop_show}</b>"""
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{texts[lang]['value']}: <b>{stop_show}</b>
+""" + atr_info
 
 
 def msg_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
@@ -1045,44 +1138,47 @@ def msg_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
 
     texts = {
         'ru': {
-            'main': 'Установка',
-            'auto': 'Автоматическая',
-            'self': 'Ручная',
+            'main': 'Настройка ATR',
+            'calc': 'Расчёт',
+            'auto': 'автоматический',
+            'self': 'ручой',
             'auto_atr': 'Бары',
             'avg': 'среднее'
         },
         'en': {
-            'main': 'Installation',
-            'auto': 'Automatic',
-            'self': 'Manual',
+            'main': 'ATR setup',
+            'calc': 'Calculation',
+            'auto': 'automatic',
+            'self': 'manual',
             'auto_atr': 'Bars',
             'avg': 'average'
         },
         'uz': {
-            'main': 'O\'rnatish',
-            'auto': 'Avtomatik',
-            'self': 'Qo\'llanma',
+            'main': 'ATR sozlamalari',
+            'calc': 'Hisoblash',
+            'auto': 'avtomatik',
+            'self': 'qo\'llanma',
             'auto_atr': 'Ayiq',
             'avg': 'o\'rtacha'
         },
         'tr': {
-            'main': 'Kurulum',
-            'auto': 'Otomatik',
-            'self': 'Manuel',
+            'main': 'ATR kurulumu',
+            'calc': 'Hesaplama',
+            'auto': 'otomatik',
+            'self': 'manuel',
             'auto_atr': 'Ayı',
             'avg': 'ortalama'
         },
     }
 
-
     bars = ''
     if atr_settings[1] != '':
         period, count = atr_settings[1].split('+')
-        bars = f'Бары: {period} (последние {count} шт)'
+        bars = f'{texts[lang]["auto_atr"]}: {period} ({texts[lang]["avg"]} {count})'
 
-    return f"""<u><b>Настройка ATR</b></u>
+    return f"""<u><b>{texts[lang]["main"]}</b></u>
 
-Расчёт ATR: {'автоматический' if atr_settings[0] else 'ручной'}
+{texts[lang]['calc']}: {texts[lang]['auto'] if atr_settings[0] else texts[lang]['self']}
 """ + bars
 
 
@@ -2537,8 +2633,10 @@ def msg_enter_min_bar(user_id: int):
     return f'👉 {texts[lang]}'
 
 
-def msg_choose_direct(user_id: int):
+def msg_choose_direct(user_id: int, value: float | None = None):
     lang = get_lang(user_id)
+
+    atr_settings = liteDb.getUserAtrSettings(user_id)
 
     texts = {
         'ru': "Выберите направление",
@@ -2547,7 +2645,11 @@ def msg_choose_direct(user_id: int):
         'tr': "Yönü seçin",
     }
 
-    return f'👇 {texts[lang]}'
+    avg_atr = ''
+    if value is not None:
+        avg_atr = f'{txt_atr_bars(lang, atr_settings[1]).capitalize()} = <b>{round(value, 2)}</b>\n'
+
+    return f'{avg_atr}👇 {texts[lang]}'
 
 
 def msg_enter_profit_minus(user_id: int):

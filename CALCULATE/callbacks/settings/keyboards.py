@@ -1001,7 +1001,7 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     return keyboard
 
 
-def kb_choose_stop_type(user_id: int, is_atr=False):
+def kb_choose_stop_type(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
@@ -1010,28 +1010,24 @@ def kb_choose_stop_type(user_id: int, is_atr=False):
             'atr': 'ATR',
             'atr_percent': '% от ATR',
             'from_deposit': "Торговля от депозита",
-            'atr_settings': "Настройка ATR",
         },
         'en': {
             'simple': 'Simple',
             'atr': 'ATR',
             'atr_percent': '% of ATR',
             'from_deposit': "Trading from a deposit",
-            'atr_settings': "ATR settings",
         },
         'uz': {
             'simple': 'Oddiy',
             'atr': 'ATR',
             'atr_percent': '% ATR',
             'from_deposit': "Omonatdan savdo",
-            'atr_settings': "ATR sozlash",
         },
         'tr': {
             'simple': 'Basit',
             'atr': 'ATR',
             'atr_percent': 'ATR %',
             'from_deposit': "Depozitodan ticaret",
-            'atr_settings': "ATR ayarlar",
         },
     }
 
@@ -1044,8 +1040,6 @@ def kb_choose_stop_type(user_id: int, is_atr=False):
     keyboard.add(getButton(texts[lang]['from_deposit'], 'change_fr_dp'))
 
     buttons = []
-    if is_atr:
-        buttons.append(getButton(texts[lang]['atr_settings'], 'atr_settings'))
     buttons.append(getButton(back_txt(lang), 'go_settings'))
     keyboard.add(*buttons)
     return keyboard
@@ -1062,13 +1056,28 @@ def kb_stop_type_cancel(user_id: int):
 def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
     lang = get_lang(user_id)
 
+    texts = {
+        'ru': {
+            'change': 'Изменить бары',
+            'auto': 'Авто расчёт' + (' ✅' if atr_settings[0] else ''),
+            'self': 'Ручной расчёт' + (' ✅' if not atr_settings[0] else '')
+
+        }
+    }
+
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton(
-            'Авто расчёт' if not atr_settings[0] else 'Ручной расчёт', 'atr_auto')
+            texts[lang]['auto'],
+            'atr_auto'
+        ),
+        getButton(
+            texts[lang]['self'],
+            'atr_self'
+        ),
     )
     keyboard.add(getButton('Изменить бары', 'atr_bars'))
-    keyboard.add(getButton('Назад', 'go_settings'))
+    keyboard.add(getButton(back_txt(lang), 'stop_settings'))
     return keyboard
 
 

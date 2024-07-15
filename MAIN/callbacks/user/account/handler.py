@@ -9,13 +9,13 @@ from db import LANGUAGES, db
 
 from .keyboards import (
     kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,
-    kb_user_referral, kb_user_referral_list, kb_params_choose_lang, kb_wallet_connect, kb_wallets
+    kb_user_referral_list, kb_params_choose_lang, kb_wallet_connect, kb_wallets
 )
 from .filter import user_account_factory, UserAccountCallbackFilter
 from ..pages import send_referral, send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
-from MAIN.common.messages import msg_enter_nickname, msg_referral, msg_referral_list, msg_user_purchases
+from MAIN.common.messages import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
 from CALCULATE.common.messages import msg_choose_lang, msg_support
 
