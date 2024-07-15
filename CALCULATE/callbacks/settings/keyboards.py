@@ -1090,7 +1090,7 @@ def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
             'atr_self'
         ),
     )
-    keyboard.add(getButton('Изменить бары', 'atr_bars'))
+    keyboard.add(getButton(texts[lang]['change'], 'atr_bars'))
     keyboard.add(getButton(back_txt(lang), 'stop_settings'))
     return keyboard
 
