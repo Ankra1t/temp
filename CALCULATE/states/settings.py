@@ -18,5 +18,7 @@ class SettingsState(StatesGroup):
 
     atr_percent = State()
 
+    atr_bars_count = State()
+
 class FirstCalcState(StatesGroup):
     deposit = State()

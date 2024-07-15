@@ -516,6 +516,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         count_show = 0
         send_datas = liteDb.getAllSendCalcs()
         for el in send_datas:
+            if not el.send:
+                continue
             s = db.get_calculation(el.id)
 
             if s is not None and s.created_at is not None and s.created_at > start and s.created_at < end:

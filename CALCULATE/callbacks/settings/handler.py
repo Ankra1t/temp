@@ -21,13 +21,13 @@ from CALCULATE.common.messages import (
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
-    kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
+    kb_atr_bars, kb_atr_bars_count, kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
     kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_first_calc_info, kb_round_count, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
 from ..pages import (
-    send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
+    send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
     send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
     send_user_deposit
 )
@@ -630,7 +630,46 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         db.set_user_from_deposit(user_db_id, not curr)
         send_stop_settings(bot, call.message, user_id)
 
-    bot.answer_callback_query(call.id)
+    if type == 'atr_settings':
+        send_atr_settings(bot, call.message, user_id)
+
+    if type == 'atr_auto':
+        atr_settings = liteDb.getUserAtrSettings(user_id)
+        liteDb.setUserAtrSettings(
+            user_id, (not atr_settings[0], atr_settings[1]))
+        send_atr_settings(bot, call.message, user_id)
+
+    if type == 'atr_bars':
+        bot.edit_message_text(
+            'Выберите период баров', chat_id, mes_id,
+            reply_markup=kb_atr_bars(user_id)
+        )
+
+    if 'set_atr_bars+' in type:
+        _, period = type.split('+')
+        atr_settings = liteDb.getUserAtrSettings(user_id)
+        bars = atr_settings[1].split('+')
+
+        liteDb.setUserAtrSettings(
+            user_id, (atr_settings[0], f'{period}+{bars[1]}')
+        )
+
+        bot.edit_message_text(
+            'Выберите <b>количество</b> последних баров <u>либо введите</u> своё значение', chat_id, mes_id,
+            reply_markup=kb_atr_bars_count(user_id)
+        )
+        bot.set_state(user_id, SettingsState.atr_bars_count, chat_id)
+
+    if 'set_atr_count+' in type:
+        _, count = type.split('+')
+
+        atr_settings = liteDb.getUserAtrSettings(user_id)
+        bars = atr_settings[1].split('+')
+        liteDb.setUserAtrSettings(user_id, (atr_settings[0], f'{bars[0]}+{count}'))
+
+        send_atr_settings(bot, call.message, user_id)
+
+        bot.answer_callback_query(call.id)
 
 
 def registration(bot: TeleBot):

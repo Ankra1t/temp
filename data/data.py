@@ -26,13 +26,16 @@ class Data:
                     fee FLOAT,
                     stop STRING,
                     style_change BOLLEAN NOT NULL DEFAULT(FALSE),
-                    first_market STRING
+                    first_market STRING,
+                    is_auto_atr BOOLEAN NOT NULL DEFAULT(FALSE),
+                    atr_bars STRING NOT NULL DEFAULT('1h+5')
                 );
 			''')
             self.curs.execute('''
-                INSERT INTO NewTemp (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change)
-                SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change
-                FROM Users;
+                INSERT INTO NewTemp
+ (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change)
+ SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change
+ FROM Users;
 			''')
             self.curs.execute('''
                 DROP TABLE Users;
@@ -255,11 +258,38 @@ class Data:
         self.addUser(tgId)
         try:
             self.curs.execute(
-                'UPDATE Users SET first_market = ? WHERE id = ?', (
-                    market, tgId)
+                'UPDATE Users SET first_market = ? WHERE id = ?', 
+                (market, tgId)
             )
             self.connection.commit()
 
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def getUserAtrSettings(self, tgId: int) -> tuple[bool, str]:
+        default = (False, '')
+        try:
+            data = self.curs.execute(
+                'SELECT is_auto_atr, atr_bars FROM Users WHERE id = ?', (tgId,)
+            ).fetchone()
+            if data is None:
+                return default
+
+            return (data[0], data[1])
+        except Exception as e:
+            print(e)
+            return default
+
+    def setUserAtrSettings(self, tgId: int, value: tuple[bool, str]):
+        self.addUser(tgId)
+        try:
+            self.curs.execute(
+                'UPDATE Users SET is_auto_atr = ?, atr_bars = ? WHERE id = ?',
+                (*value, tgId)
+            )
+            self.connection.commit()
             return True
         except Exception as e:
             print(e)
@@ -738,7 +768,7 @@ WHERE stat_id = ?""", (True, False, stat_id,)
             print(e)
             return False
 
-    def getSendSettings(self, name: str)-> str | None:
+    def getSendSettings(self, name: str) -> str | None:
         try:
             data = self.curs.execute("""
                 SELECT value FROM SendSettings WHERE name = ?;
@@ -753,5 +783,6 @@ WHERE stat_id = ?""", (True, False, stat_id,)
             print(e)
             return
 
+
 liteDb = Data()
-liteDb.createSendSettings()
+liteDb.createUsersTable()

@@ -1039,9 +1039,54 @@ def msg_stop_page(user_id: int, stop_type: str | None, is_update_deposit=False):
     return f"""{texts[lang]['main']}
 {texts[lang]['value']}: <b>{stop_show}</b>"""
 
+
+def msg_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Установка',
+            'auto': 'Автоматическая',
+            'self': 'Ручная',
+            'auto_atr': 'Бары',
+            'avg': 'среднее'
+        },
+        'en': {
+            'main': 'Installation',
+            'auto': 'Automatic',
+            'self': 'Manual',
+            'auto_atr': 'Bars',
+            'avg': 'average'
+        },
+        'uz': {
+            'main': 'O\'rnatish',
+            'auto': 'Avtomatik',
+            'self': 'Qo\'llanma',
+            'auto_atr': 'Ayiq',
+            'avg': 'o\'rtacha'
+        },
+        'tr': {
+            'main': 'Kurulum',
+            'auto': 'Otomatik',
+            'self': 'Manuel',
+            'auto_atr': 'Ayı',
+            'avg': 'ortalama'
+        },
+    }
+
+
+    bars = ''
+    if atr_settings[1] != '':
+        period, count = atr_settings[1].split('+')
+        bars = f'Бары: {period} (последние {count} шт)'
+
+    return f"""<u><b>Настройка ATR</b></u>
+
+Расчёт ATR: {'автоматический' if atr_settings[0] else 'ручной'}
+""" + bars
+
+
 # Первые сообщения
-
-
 def msg_welcome(user_id: int):
     lang = get_lang(user_id)
 

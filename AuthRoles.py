@@ -83,12 +83,16 @@ def get_ticker_info(ticker: str):
         return False
 
 
-def get_ticker_atr(ticker: str):
+def get_ticker_atr(ticker: str, period: str, count: int):
     access_token = db.get_access_token() or ''
 
     try:
         res = requests.get(
             f'{API_URL}/tg/getAvgAtr/{ticker.replace("/", "").upper()}',
+            {
+                'period': period,
+                'count': count
+            },
             headers=HEADERS | {'tg-api-key': access_token}
         )
         print(res.json())

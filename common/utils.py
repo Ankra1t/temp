@@ -25,7 +25,7 @@ def digit_accept(message: Message, type: type[T] = float):
         if '.' not in value and value.startswith('0'):
             value = '0.' + value[1:]
 
-        return type(value)
+        return type(float(value))
 
 
 def text_accept(message: Message):

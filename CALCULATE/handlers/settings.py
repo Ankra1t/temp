@@ -3,6 +3,7 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.pages import send_atr_settings
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
 from db import db, BASE_VALUE_TYPE
@@ -304,7 +305,6 @@ def handle_first_deposit(message: Message, bot: TeleBot):
     if u_base is None:
         return
 
-
     bot.send_message(
         chat_id, msg_after_first_settings(
             user_id, u_base.deposit or 0, u_base.currency or '', u_base.market
@@ -411,6 +411,28 @@ def handle_atr_percent(message: Message, bot: TeleBot):
         pass
 
 
+def handle_atr_bars_count(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    value = digit_accept(message, int)
+    if value is None:
+        bot.send_message(
+            chat_id, msg_digit_error(user_id)
+        )
+        return
+
+    value = min(max(value, 0), 20)
+
+    bot.delete_state(user_id, chat_id)
+
+    atr_settings = liteDb.getUserAtrSettings(user_id)
+    bars = atr_settings[1].split('+')
+    liteDb.setUserAtrSettings(user_id, (atr_settings[0], f'{bars[0]}+{value}'))
+
+    send_atr_settings(bot, message, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -435,3 +457,5 @@ def registration(bot: TeleBot):
     reg_mes(handle_fee, state=SettingsState.fee)
 
     reg_mes(handle_atr_percent, state=SettingsState.atr_percent)
+
+    reg_mes(handle_atr_bars_count, state=SettingsState.atr_bars_count)

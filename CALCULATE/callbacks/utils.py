@@ -10,11 +10,11 @@ from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 
 from .pages import create_and_send_calc, send_confirm_calc_send, send_main
-from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_pair, kb_price, kb_tool
+from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from CALCULATE.common.messages import (
-    msg_enter_atr, msg_enter_currency, msg_enter_deposit,
+    msg_choose_direct, msg_enter_atr, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair,
     msg_enter_pair_price, msg_enter_risk_percent,
     msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
@@ -212,7 +212,28 @@ def choose_calculate_step(
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr
 
-            value = get_ticker_atr(tool) or None
+            atr_settings = liteDb.getUserAtrSettings(user_id)
+            period, count = atr_settings[1].split('+')
+
+            value = get_ticker_atr(tool, period, int(count)) or None
+
+            if atr_settings[0] and value is not None:
+                rate = 1
+                if 'atr_percent' in stop_type:
+                    _, percent = stop_type.split('+')
+                    rate = float(percent) * 0.01
+
+                set_state_data(
+                    bot, user_id, chat_id, {
+                        'atr': abs(value) * abs(rate)
+                    }
+                )
+                bot.send_message(
+                    chat_id, msg_choose_direct(user_id),
+                    reply_markup=kb_calc_direct(user_id)
+                )
+                return
+
             keyboard = kb_calc_atr(user_id, value)
         else:
             text += msg_enter_stop_loss(user_id, is_try)

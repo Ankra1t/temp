@@ -11,7 +11,7 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
+    msg_atr_settings, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
     msg_stats_page, msg_stop_page, msg_summury_profit_settings
@@ -23,7 +23,7 @@ from models import MARKETS_TYPE, Calculation
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
 from .settings.keyboards import (
-    kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
+    kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
 from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
@@ -601,7 +601,30 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
         current_fd = u_base.is_from_deposit
 
     mes = msg_stop_page(user_id, stop_type, current_fd)
-    kb = kb_choose_stop_type(user_id)
+    kb = kb_choose_stop_type(
+        user_id,
+        'atr' in (stop_type or '') and not current_fd
+    )
+
+    if is_first:
+        bot.send_message(
+            chat_id, mes,
+            reply_markup=kb
+        )
+    else:
+        bot.edit_message_text(
+            mes, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+
+def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    atr_settings = liteDb.getUserAtrSettings(user_id)
+    mes = msg_atr_settings(user_id, atr_settings)
+    kb = kb_atr_settings(user_id, atr_settings)
 
     if is_first:
         bot.send_message(

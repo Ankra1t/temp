@@ -7,6 +7,7 @@ from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
 from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
+from data.data import liteDb
 from common.utils import delete_message, get_decimal_count, set_state_data
 from Classes import currencyService
 from models import ForexInfo, UnfinishedCalculation
@@ -153,7 +154,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             cur_tool: str = data.get('tool', '')
             stop_type: str = data.get('stop_type', '')
 
-        value = get_ticker_atr(cur_tool)
+        atr_settings = liteDb.getUserAtrSettings(user_id)
+        period, count = atr_settings[1].split('+')
+
+        value = get_ticker_atr(cur_tool, period, int(count))
         if not value:
             return
 

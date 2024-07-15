@@ -339,7 +339,8 @@ def kb_round_count(user_id: int, current=-1):
         if el == current:
             is_current = '✅ '
 
-        buttons.append(getButton(f'{is_current}{el}', f'set_round_count', add_count=el))
+        buttons.append(getButton(f'{is_current}{el}',
+                       f'set_round_count', add_count=el))
 
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(*buttons)
@@ -1000,7 +1001,7 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     return keyboard
 
 
-def kb_choose_stop_type(user_id: int):
+def kb_choose_stop_type(user_id: int, is_atr=False):
     lang = get_lang(user_id)
 
     texts = {
@@ -1008,25 +1009,29 @@ def kb_choose_stop_type(user_id: int):
             'simple': 'Простой',
             'atr': 'ATR',
             'atr_percent': '% от ATR',
-            'from_deposit': f"Торговля от депозита",
+            'from_deposit': "Торговля от депозита",
+            'atr_settings': "Настройка ATR",
         },
         'en': {
             'simple': 'Simple',
             'atr': 'ATR',
             'atr_percent': '% of ATR',
-            'from_deposit': f"Trading from a deposit",
+            'from_deposit': "Trading from a deposit",
+            'atr_settings': "ATR settings",
         },
         'uz': {
             'simple': 'Oddiy',
             'atr': 'ATR',
             'atr_percent': '% ATR',
             'from_deposit': "Omonatdan savdo",
+            'atr_settings': "ATR sozlash",
         },
         'tr': {
             'simple': 'Basit',
             'atr': 'ATR',
             'atr_percent': 'ATR %',
-            'from_deposit': f"Depozitodan ticaret",
+            'from_deposit': "Depozitodan ticaret",
+            'atr_settings': "ATR ayarlar",
         },
     }
 
@@ -1037,7 +1042,12 @@ def kb_choose_stop_type(user_id: int):
         getButton(texts[lang]['atr_percent'], 'set_stop+atr_percent'),
     )
     keyboard.add(getButton(texts[lang]['from_deposit'], 'change_fr_dp'))
-    keyboard.add(getButton(back_txt(lang), 'go_settings'))
+
+    buttons = []
+    if is_atr:
+        buttons.append(getButton(texts[lang]['atr_settings'], 'atr_settings'))
+    buttons.append(getButton(back_txt(lang), 'go_settings'))
+    keyboard.add(*buttons)
     return keyboard
 
 
@@ -1046,4 +1056,44 @@ def kb_stop_type_cancel(user_id: int):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(cancel_txt(lang), 'stop_settings'))
+    return keyboard
+
+
+def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(
+            'Авто расчёт' if not atr_settings[0] else 'Ручной расчёт', 'atr_auto')
+    )
+    keyboard.add(getButton('Изменить бары', 'atr_bars'))
+    keyboard.add(getButton('Назад', 'go_settings'))
+    return keyboard
+
+
+def kb_atr_bars(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=4)
+    keyboard.add(
+        getButton('15m', 'set_atr_bars+15m'),
+        getButton('1h', 'set_atr_bars+1h'),
+        getButton('4h', 'set_atr_bars+4h'),
+        getButton('1d', 'set_atr_bars+1d'),
+        getButton(cancel_txt(lang), 'atr_settings')
+    )
+    return keyboard
+
+
+def kb_atr_bars_count(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton('1', 'set_atr_count+1'),
+        getButton('5', 'set_atr_count+5'),
+        getButton('10', 'set_atr_count+10'),
+        getButton(cancel_txt(lang), 'atr_settings')
+    )
     return keyboard
