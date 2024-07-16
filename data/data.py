@@ -658,6 +658,8 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             print(e)
             return False
 
+    
+
     # Votings
     def createVotings(self):
         try:

@@ -3,7 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
-from CALCULATE.common.messages import market_translates, trading_type_translates
+from CALCULATE.common.messages import market_translates, trading_type_translates, txt_trading_style
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
@@ -718,7 +718,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
 
     buttons = []
     for key in styles.keys():
-        buttons.append(getThisButton(key, styles[key]))
+        buttons.append(getThisButton(txt_trading_style(lang, key) or '', styles[key]))
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []

@@ -53,6 +53,11 @@ trading_styles_translates = {
     'ложные пробои': 'fakeout',
     'скользящие средние': 'moving average',
     'торговля на high/low': 'high/low trading',
+    'Пробой': 'Breakout',
+    'Отбой': 'Bounce',
+    'Ложные': 'Fakeout',
+    'Скользящие': 'Moving average',
+    'high/low': 'high/low',
 }
 
 trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
@@ -73,6 +78,28 @@ trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
         'spot': 'spot',
     },
 }
+
+
+def txt_trading_style(lang: LANGUAGES_TYPE, trading_style: str | None):
+    if trading_style is None:
+        return
+
+    if lang != 'ru':
+        result = trading_styles_translates.get(trading_style)
+
+        if result is None:
+            try:
+                result = str(
+                    text_editor.translator.translate(
+                        trading_style, 'en', 'ru'
+                    ).text
+                )
+            except:
+                result = trading_style
+    else:
+        result = trading_style
+
+    return result
 
 
 def txt_atr_bars(lang: LANGUAGES_TYPE, value: str):
@@ -442,7 +469,7 @@ def msg_settings(user_id: int, is_risk_update=False):
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
 {POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
 
-{POINT} {texts[lang]["trading_style"]}: <b>{u_base.trading_style or '-'}</b>
+{POINT} {texts[lang]["trading_style"]}: <b>{txt_trading_style(lang, u_base.trading_style) or '-'}</b>
 {POINT} {texts[lang]["trading_type"]}: <b>{trading_type_translates[lang][u_base.trading_type]}</b>
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 
@@ -597,7 +624,7 @@ Hesaplamalar sırasında ticaret stilinizi de değiştirebilirsiniz.Bazı tücca
 
 {info[lang]}
 
-{POINT} {txt_current_value(lang)}: <b>{style}</b>
+{POINT} {txt_current_value(lang)}: <b>{txt_trading_style(lang, style) or '-'}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if style_update_on else texts[lang]['off']}</b>
 """
 
@@ -1841,8 +1868,10 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     trading_style_type = ''
     if not is_try:
         trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.trading_type]}\n'
-        if calc.trading_style is not None:
-            trading_style_type += f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+
+        t_style = txt_trading_style(lang, calc.trading_style)
+        if t_style is not None:
+            trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -1971,23 +2000,9 @@ def msg_channel_calculation(
         tool = ''.join(calc.forex_info.pair)
 
     trading_style_type = ''
-    if calc.trading_style is not None:
-        if lang != 'ru':
-            result = trading_styles_translates.get(calc.trading_style)
-
-            if result is None:
-                try:
-                    result = str(
-                        text_editor.translator.translate(
-                            calc.trading_style, 'en', 'ru'
-                        ).text
-                    )
-                except:
-                    result = calc.trading_style
-        else:
-            result = calc.trading_style
-
-        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {result.capitalize()}\n'
+    t_style = txt_trading_style(lang, calc.trading_style)
+    if t_style is not None:
+        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}\n'
         if time != '':
             trading_style_type += f'<b>{texts[lang]["deal"]}</b>: {texts[lang][time]}\n'
 
