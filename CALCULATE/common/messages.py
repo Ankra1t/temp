@@ -2071,6 +2071,32 @@ def msg_calculate_change(user_id: int, prev_message: str):
 
 
 # Ввод данных
+def msg_enter_bars(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Выберите период баров',
+        'en': 'Choose the bar interval',
+        'uz': 'Barni tanlang',
+        'tr': 'Çubuk aralığını seçin',
+    }
+
+    return f'👉 {texts[lang]}'
+
+
+def msg_enter_bars_count(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Выберите <b>количество</b> последних баров <u>либо введите</u> своё значение',
+        'en': 'Choose the <b>amount</b> of the latest bars <u>or enter</u> your own',
+        'uz': 'So\'nggi barlar sonini tanlang yoki sizning qiymatingizni kiriting',
+        'tr': 'Son çubuk sayısını seçin veya değerinizi girin',
+    }
+
+    return f'👉 {texts[lang]}'
+
+
 def msg_enter_atr_percent(user_id: int):
     lang = get_lang(user_id)
 
@@ -2740,9 +2766,16 @@ def msg_choose_direct(user_id: int, value: float | None = None):
         'tr': "Yönü seçin",
     }
 
+    atr_info = {
+        'ru': 'Средний ATR <b>5 баров</b>',
+        'en': 'Middle ATR <b>5 bars</b>',
+        'uz': 'O\'rta ARR <b>5 bar</b>',
+        'tr': 'MiOrta ATR <b>5 çubukları</b>'
+    }
+
     avg_atr = ''
     if value is not None:
-        avg_atr = f'{txt_atr_bars(lang, atr_settings[1]).capitalize()} = <b>{round(value, 2)}</b>\n'
+        avg_atr = f'{atr_info[lang]} = <b>{round(value, 5)} USDT</b>\n\n'
 
     return f'{avg_atr}👇 {texts[lang]}'
 

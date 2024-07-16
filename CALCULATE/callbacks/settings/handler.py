@@ -13,7 +13,7 @@ from Classes import text_editor
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
-    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_enter_atr_percent,
+    msg_choose_exchange_level, msg_choose_lang, msg_confirm_reset, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count,
     msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_market,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
@@ -666,7 +666,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'atr_bars':
         bot.edit_message_text(
-            'Выберите период баров', chat_id, mes_id,
+            msg_enter_bars(user_id), chat_id, mes_id,
             reply_markup=kb_atr_bars(user_id)
         )
 
@@ -680,7 +680,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
         bot.edit_message_text(
-            'Выберите <b>количество</b> последних баров <u>либо введите</u> своё значение', chat_id, mes_id,
+            msg_enter_bars_count(user_id), chat_id, mes_id,
             reply_markup=kb_atr_bars_count(user_id)
         )
         bot.set_state(user_id, SettingsState.atr_bars_count, chat_id)

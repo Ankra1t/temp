@@ -130,7 +130,7 @@ def kb_calc_atr(user_id: int, avg_atr: float | None = None):
 
     if isAdmin and avg_atr is not None:
         keyboard.add(
-            getButton(f'Средний = {round(avg_atr, 2)}', f'calc_atr+')
+            getButton(f'Средний = {round(avg_atr, 5)}', f'calc_atr+')
         )
 
     keyboard.add(

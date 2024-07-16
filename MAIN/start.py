@@ -41,6 +41,8 @@ def send_start_by_user(
                 atr_settings = liteDb.getUserAtrSettings(user_id)
                 period, count = atr_settings[1].split('+')
 
+                bot.set_state(user_id, CalculateState.stop_atr, chat_id)
+
                 ticker_val = get_ticker_atr(calc.tool or '', period, int(count)) or None
 
                 if atr_settings[0] and ticker_val is not None:
@@ -58,13 +60,11 @@ def send_start_by_user(
                         chat_id, msg_choose_direct(user_id, ticker_val),
                         reply_markup=kb_calc_direct(user_id, True)
                     )
-                    return
-
-                bot.send_message(
-                    chat_id, msg_enter_atr(user_id, calc),
-                    reply_markup=kb_calc_atr(user_id, ticker_val)
-                )
-                bot.set_state(user_id, CalculateState.stop_atr, chat_id)
+                else:
+                    bot.send_message(
+                        chat_id, msg_enter_atr(user_id, calc),
+                        reply_markup=kb_calc_atr(user_id, ticker_val)
+                    )
             else:
                 bot.send_message(
                     chat_id, msg_enter_stop_loss(user_id, send_stat=calc),
