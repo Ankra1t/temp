@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks.stats.handler import send_week_stats
 from config_logger import logger
 from common.utils import delete_message
 from db import db
@@ -58,6 +59,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_tariffs_list_item(
             bot, call.message, user_id, 'calc', 0, is_rus=is_rus
         )
+
+    if type == 'week_stat':
+        send_week_stats(bot)
 
     bot.answer_callback_query(call.id)
 

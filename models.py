@@ -323,8 +323,8 @@ class SendCalc(BaseModel):
     id: int
     text: str | None
     photo: str | None
-    send: bool
-    without_stop: bool
-    trading_style: str | None
+    sent: bool
+    withoutStop: bool
+    tradingStyle: str | None
     time: str | None
-    is_vote: bool
+    isVote: bool

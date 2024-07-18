@@ -475,155 +475,6 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             pass
 
     # Sended Calc
-    def createSendCalcTable(self):
-        try:
-            # self.curs.execute("""
-            #     CREATE TABLE IF NOT EXISTS SendCalcs (
-            #         id INTEGER PRIMARY KEY,
-            #         text STRING,
-            #         photo STRING,
-            #         send BOOLEAN DEFAULT(FALSE)
-            #     );
-            # """)
-            self.curs.execute('''
-                CREATE TABLE IF NOT EXISTS NewTemp (
-                    id INTEGER PRIMARY KEY,
-                    text STRING,
-                    photo STRING,
-                    send BOOLEAN DEFAULT(FALSE),
-                    withoutStop BOOLEAN DEFAULT(FALSE),
-                    tradingStyle STRING,
-                    time STRING,
-                    isVote BOOLEAN DEFAULT(TRUE)
-                );
-            ''')
-            self.curs.execute('''
-                INSERT INTO NewTemp (id, text, photo, send)
-                SELECT id, text, photo, send
-                FROM SendCalcs;
-            ''')
-            self.curs.execute('''
-                DROP TABLE SendCalcs;
-            ''')
-            self.curs.execute('''
-                ALTER TABLE NewTemp RENAME TO SendCalcs;
-            ''')
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def addSendCalc(self, id: int):
-        try:
-            data = self.curs.execute(
-                'SELECT * FROM SendCalcs WHERE id = ?',
-                (id,)
-            ).fetchone()
-
-            if data is None:
-                self.curs.execute(
-                    'INSERT INTO SendCalcs (id) VALUES (?)',
-                    (id,)
-                )
-
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def updateValueSendCalc(self, id: int, type: Literal['text', 'photo', 'tradingStyle', 'time'], value: str | None = None):
-        try:
-            self.curs.execute(
-                f'UPDATE SendCalcs SET {type} = ? WHERE id = ?',
-                (value, id)
-            )
-
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def updateWithoutStopSendCalc(self, id: int):
-        current = self.getSendCalc(id)
-        if current is None:
-            return
-
-        try:
-            self.curs.execute(
-                f'UPDATE SendCalcs SET withoutStop = ? WHERE id = ?',
-                (not current.without_stop, id)
-            )
-
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def updateVoteSendCalc(self, id: int):
-        current = self.getSendCalc(id)
-        if current is None:
-            return
-
-        try:
-            self.curs.execute(
-                f'UPDATE SendCalcs SET isVote = ? WHERE id = ?',
-                (not current.is_vote, id)
-            )
-
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def sendSendCalc(self, id: int):
-        try:
-            self.curs.execute(
-                'UPDATE SendCalcs SET send = ? WHERE id = ?',
-                (True, id)
-            )
-            self.connection.commit()
-            return False
-        except Exception as e:
-            print(e)
-            return False
-
-    def checkSendCalc(self, id: int):
-        try:
-            data = self.curs.execute(
-                'SELECT send FROM SendCalcs WHERE id = ?', (id,)
-            ).fetchone()
-            if data is None:
-                return False
-
-            return data[0] == 1
-        except Exception as e:
-            print(e)
-            return False
-
-    def getSendCalc(self, id: int):
-        try:
-            data = self.curs.execute(
-                'SELECT * FROM SendCalcs WHERE id = ?', (id,)
-            ).fetchone()
-            if data is None:
-                return None
-
-            return SendCalc(
-                id=data[0],
-                text=data[1],
-                photo=data[2],
-                send=data[3] == 1,
-                without_stop=data[4] == 1,
-                trading_style=data[5],
-                time=data[6],
-                is_vote=data[7] == 1
-            )
-        except Exception as e:
-            print(e)
-            return None
 
     def getAllSendCalcs(self) -> list[SendCalc]:
         try:
@@ -636,29 +487,17 @@ CREATE TABLE IF NOT EXISTS TonStorage (
                     id=el[0],
                     text=el[1],
                     photo=el[2],
-                    send=el[3] == 1,
-                    without_stop=el[4] == 1,
-                    trading_style=el[5],
+                    sent=el[3] == 1,
+                    withoutStop=el[4] == 1,
+                    tradingStyle=el[5],
                     time=el[6],
-                    is_vote=el[7] == 1
+                    isVote=el[7] == 1
                 ) for el in data
             ]
         except Exception as e:
             print(e)
             return []
 
-    def delSendCalc(self, id: int):
-        try:
-            self.curs.execute(
-                'DELETE FROM SendCalcs WHERE id = ?', (id,)
-            )
-
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    
 
     # Votings
     def createVotings(self):

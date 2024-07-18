@@ -10,6 +10,7 @@ from db import db
 from models import Calculation
 from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_translates
 from Classes import text_editor
+from services import channel_calc
 
 from .filter import admin_main_factory, AdminMainCallbackFilter
 from ..pages import (
@@ -51,7 +52,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         send_admin_main(bot, call.message, user_id)
 
     if 'ch_stats' in type:
-        send_datas = liteDb.getAllSendCalcs()
+        send_datas = channel_calc.getSent() or []
 
         stats: list[Calculation] = []
         count_short = 0

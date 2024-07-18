@@ -93,6 +93,9 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
         buttons.append(
             getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
         )
+        # buttons.append(
+        #     getButton('Обновить недельюную статистику', 'week_stat', saved, stat_id)
+        # )
 
     btn_settings = getButton(
         '⚙️ ' + texts[lang]['settings'], 'settings', saved, stat_id=stat_id

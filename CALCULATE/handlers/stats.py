@@ -19,6 +19,7 @@ from CALCULATE.callbacks import (
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
 )
+from services import channel_calc
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -171,13 +172,11 @@ def handle_send_text(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = liteDb.getSendCalc(stat_id)
+    send_data = channel_calc.getByCalc(stat_id)
     if send_data is None:
         return
 
-    liteDb.updateValueSendCalc(
-        stat_id, 'text', new_text
-    )
+    channel_calc.update(send_data.id, text=new_text)
 
     send_confirm_calc_send(bot, message, stat_id, True)
 
@@ -200,13 +199,11 @@ def handle_send_photo(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = liteDb.getSendCalc(stat_id)
+    send_data = channel_calc.getByCalc(stat_id)
     if send_data is None:
         return
 
-    liteDb.updateValueSendCalc(
-        stat_id, 'photo', new_photo.file_id
-    )
+    channel_calc.update(send_data.id, photo=new_photo.file_id)
 
     send_confirm_calc_send(bot, message, stat_id, True)
 

@@ -3,7 +3,7 @@ import flask
 from flask import jsonify, request, send_file, Response
 
 from CALCULATE.callbacks.calculate.handler import send_after_first_try
-from CALCULATE.callbacks.stats.handler import send_vote
+from CALCULATE.callbacks.stats.handler import send_vote, send_week_stats
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
@@ -86,6 +86,18 @@ def first_timeout():
         return Response(status=400)
 
     send_after_first_try(bot, int(user_id))
+    return Response(status=200)
+
+@app.route(base_url + '/stats_post', methods=['POST'])
+def stats_post():
+    access_token = db.get_access_token()
+    api_key = request.headers.get('tg-api-key')
+
+    if access_token is None or api_key is None or access_token != api_key:
+        return Response(status=400)
+
+    send_week_stats(bot, True)
+
     return Response(status=200)
 
 if PROD:

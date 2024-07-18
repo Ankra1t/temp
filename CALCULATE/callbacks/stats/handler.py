@@ -28,7 +28,7 @@ from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
-    msg_calculate_change, msg_calculate_delete,
+    POINT, msg_calculate_change, msg_calculate_delete,
     msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_image,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
@@ -36,6 +36,7 @@ from CALCULATE.common.messages import (
 )
 from CALCULATE.states import StatsState
 from models import MARKETS_TYPE
+from services import channel_calc
 
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
@@ -259,6 +260,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 send_calculation(bot, call.message, user_id, calc_info)
 
                 if not is_cancel:
+                    send_week_stats(bot)
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
 
@@ -479,17 +481,19 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         isVote = liteDb.getSendSettings('isVote')
         time = liteDb.getSendSettings('time')
 
-        liteDb.addSendCalc(stat_id)
+        send_data = channel_calc.create(stat_id)
+        if send_data is None:
+            return
 
         if withoutStop == 'True' or stat.stop_loss == -1:
-            liteDb.updateWithoutStopSendCalc(stat_id)
+            channel_calc.update(send_data.id, withoutStop=True)
         if isVote == 'False':
-            liteDb.updateVoteSendCalc(stat_id)
+            channel_calc.update(send_data.id, isVote=False)
         if style:
             db.change_calculation_style(stat_id, style)
-            liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
+            channel_calc.update(send_data.id, tradingStyle=style)
         if time:
-            liteDb.updateValueSendCalc(stat_id, 'time', time)
+            channel_calc.update(send_data.id, time=time)
 
         bot.edit_message_reply_markup(
             chat_id, mes_id,
@@ -498,7 +502,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
     if type == 'stc+send':
-        send_data = liteDb.getSendCalc(stat_id)
+        send_data = channel_calc.getByCalc(stat_id)
         stat = db.get_calculation(stat_id)
         if send_data is None or stat is None:
             return
@@ -513,15 +517,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             now.year, now.month, now.day, 0, 0, 0, 0
         ) + timedelta(days=1) - timedelta(hours=3)
 
-        count_show = 1
-        send_datas = liteDb.getAllSendCalcs()
-        for el in send_datas:
-            if not el.send:
-                continue
-            s = db.get_calculation(el.id)
-
-            if s is not None and s.created_at is not None and s.created_at > start and s.created_at < end:
-                count_show += 1
+        sent_today = len(channel_calc.getSentToday() or [])
 
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
@@ -559,13 +555,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 """
 
             text = msg_channel_calculation(
-                stat, lang, send_data.without_stop, send_data.time or '', count_show, rate24h=rate24h
+                stat, lang, send_data.withoutStop, send_data.time or '', sent_today + 1, rate24h=rate24h
             ) + info_show
             if lang == 'ru':
                 description_text = send_data.text
                 text += f'\n{description_text}' if description_text is not None else ''
 
-            # votes = liteDb.getVotes(stat_id)
             kb = kb_channel_url(
                 lang, stat_id, bot.get_me().username,
             )
@@ -584,9 +579,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, '✅ Отправлено')
-        liteDb.sendSendCalc(stat_id)
+        channel_calc.update(send_data.id, sent=True)
+        send_week_stats(bot)
 
-        if send_data.is_vote:
+        if send_data.isVote:
             seconds = vote_timeout(stat_id)
             new_mes = bot.send_message(
                 chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
@@ -596,7 +592,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_main(call.message, bot, user_id, True)
 
     if type == 'stc+rescreen':
-        send_data = liteDb.getSendCalc(stat_id)
+        send_data = channel_calc.getByCalc(stat_id)
         stat = db.get_calculation(stat_id)
         if stat is None or send_data is None:
             return
@@ -614,7 +610,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             print(e)
             file_path = None
 
-        text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '') \
+        text = msg_channel_calculation(stat, 'ru', send_data.withoutStop, send_data.time or '') \
             + (f'\n{send_data.text}' if send_data.text is not None else '')
 
         if file_path is None:
@@ -644,7 +640,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if main_mes.photo is not None and len(main_mes.photo) > 0:
             photo_str = main_mes.photo[-1].file_id
 
-        liteDb.updateValueSendCalc(stat_id, 'photo', photo_str)
+        channel_calc.update(send_data.id, photo=photo_str)
         bot.delete_message(chat_id, mes_id)
 
     if type == 'stc+text':
@@ -681,44 +677,49 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if 'stc+time=' in type:
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is None:
+            return
+
         _, value = type.split('=')
         value = None if value == 'none' else value
 
-        liteDb.updateValueSendCalc(stat_id, 'time', value)
-
+        channel_calc.update(send_data.id, time=value)
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+stop':
         stat = db.get_calculation(stat_id)
-        if stat is None or stat.stop_loss == -1:
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is None or stat is None or stat.stop_loss == -1:
             return
 
-        liteDb.updateWithoutStopSendCalc(stat_id)
+        channel_calc.update(
+            send_data.id, withoutStop=not send_data.withoutStop)
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+vote':
-        liteDb.updateVoteSendCalc(stat_id)
-        send_confirm_calc_send(bot, call.message, stat_id)
-
-    if type == 'stc-photo':
-        send_data = liteDb.getSendCalc(stat_id)
+        send_data = channel_calc.getByCalc(stat_id)
         if send_data is None:
             return
 
-        liteDb.updateValueSendCalc(
-            stat_id, 'photo', None
-        )
+        channel_calc.update(send_data.id, isVote=not send_data.isVote)
+        send_confirm_calc_send(bot, call.message, stat_id)
+
+    if type == 'stc-photo':
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is None:
+            return
+
+        channel_calc.update(send_data.id, photo=None)
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
     if type == 'stc-text':
-        send_data = liteDb.getSendCalc(stat_id)
+        send_data = channel_calc.getByCalc(stat_id)
         if send_data is None:
             return
 
-        liteDb.updateValueSendCalc(
-            stat_id, 'text', None
-        )
+        channel_calc.update(send_data.id, text=None)
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
@@ -787,6 +788,82 @@ def send_vote(bot: TeleBot, stat_id: int):
             '✅ Опрос отправлен', cur_chat_id, cur_mes_id
         )
         loading_vote_message_ids.pop(stat_id)
+
+
+def send_week_stats(bot: TeleBot, is_new_week=False):
+    if is_new_week:
+        mes_ids: list[int] = []
+
+        for i, CHANNEL_ID in enumerate(channels):
+            lang = 'ru' if i == 0 else 'en'
+
+            if lang == 'ru':
+                msg = '⚡️ <b><u>Лист сделок на эту неделю</u></b>'
+            else:
+                msg = '⚡️ <b><u>Transactions for this week</u></b>'
+
+            mes = bot.send_message(
+                CHANNEL_ID, msg,
+            )
+            bot.pin_chat_message(CHANNEL_ID, mes.id)
+            mes_ids.append(mes.id)
+
+        channel_calc.createWeekStat(list(channels), mes_ids)
+
+    data = channel_calc.getWeekStat()
+    if data is None:
+        return
+
+    ch_mes: dict = data.get('messages')
+    chIds: list[str] = ch_mes.get('chIds', [])
+    mesIds: list[str] = ch_mes.get('mesIds', [])
+
+    values: list[dict] = data.get('values')
+    print(values)
+
+    for i, CHANNEL_ID in enumerate(chIds):
+        lang = 'ru' if i == 0 else 'en'
+
+        msg = ''
+        if lang == 'ru':
+            msg += '⚡️ <b><u>Лист сделок на эту неделю</u></b>'
+        else:
+            msg += '⚡️ <b><u>Transactions for this week</u></b>'
+
+        for valueDate in values:
+            msg += f'\n\n<b>{valueDate.get("date")}</b>'
+            tp_count = 0
+            sl_count = 0
+            success_count = 0
+            for value in valueDate.get('calcs', []):
+                valueCount = value.get('valueCount')
+
+                tp_sl = ''
+                if valueCount is None:
+                    tp_sl = 'deal'
+                elif valueCount > 0:
+                    tp_sl = f'{valueCount} take profit'
+                    tp_count += valueCount
+                    success_count += 1
+                else:
+                    tp_sl = f'{abs(valueCount)} stop'
+                    sl_count += abs(valueCount)
+
+                msg += f'\n{POINT} {value.get("tool")} - {tp_sl}'
+            if lang == 'ru':
+                msg += f'\n<b>Итог</b>:'
+            else:
+                msg += f'\n<b>Result</b>:'
+            msg += f' {tp_count} take profit & {sl_count} stop'
+            if lang == 'ru':
+                msg += f'\n<b>Успешных сделок</b>:'
+            else:
+                msg += f'\n<b>Success deals</b>:'
+            msg += f' {tp_count} take profit & {sl_count} stop'
+
+        bot.edit_message_text(
+            msg, CHANNEL_ID, int(mesIds[i])
+        )
 
 
 def registration(bot: TeleBot):

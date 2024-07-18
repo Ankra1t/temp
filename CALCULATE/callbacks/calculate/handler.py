@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from AuthRoles import get_ticker_atr
+from services import channel_calc
 from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
 from ..settings.keyboards import kb_first_dep
 from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
@@ -205,17 +206,19 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             isVote = liteDb.getSendSettings('isVote')
             time = liteDb.getSendSettings('time')
 
-            liteDb.addSendCalc(stat_id)
+            send_data = channel_calc.create(stat_id)
+            if send_data is None:
+                return
 
             if withoutStop == 'True' or stat.stop_loss == -1:
-                liteDb.updateWithoutStopSendCalc(stat_id)
+                channel_calc.update(send_data.id, withoutStop=True)
             if isVote == 'False':
-                liteDb.updateVoteSendCalc(stat_id)
+                channel_calc.update(send_data.id, isVote=False)
             if style:
                 db.change_calculation_style(stat_id, style)
-                liteDb.updateValueSendCalc(stat_id, 'tradingStyle', style)
+                channel_calc.update(send_data.id, tradingStyle=style)
             if time:
-                liteDb.updateValueSendCalc(stat_id, 'time', time)
+                channel_calc.update(send_data.id, time=time)
 
             send_confirm_calc_send(bot, call.message, stat_id)
             bot.delete_state(user_id, chat_id)

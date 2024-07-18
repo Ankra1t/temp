@@ -19,6 +19,7 @@ from CALCULATE.common.messages import (
 
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from models import MARKETS_TYPE, Calculation
+from services import channel_calc
 
 from .manual.keyboards import kb_manual
 from .main.keyboards import kb_main
@@ -430,7 +431,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     mes_id = message.id
 
     stat = db.get_calculation(stat_id)
-    send_data = liteDb.getSendCalc(stat_id)
+    send_data = channel_calc.getByCalc(stat_id)
     if stat is None or send_data is None:
         return
 
@@ -460,11 +461,11 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 """
 
     photo = send_data.photo
-    text = msg_channel_calculation(stat, 'ru', send_data.without_stop, send_data.time or '', rate24h=rate24h)\
+    text = msg_channel_calculation(stat, 'ru', send_data.withoutStop, send_data.time or '', rate24h=rate24h)\
         + (info_show)  \
         + (f'\n{send_data.text}\n' if send_data.text is not None else '')
 
-    text += '\nОпрос: ' + ('✅' if send_data.is_vote else '❌')
+    text += '\nОпрос: ' + ('✅' if send_data.isVote else '❌')
 
     kb = kb_confirm_channel_post(
         stat_id
@@ -502,7 +503,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         risk: tuple[float, bool] = data.get('risk') or (1., False)
         currency = data.get('currency', 'USD')
         trading_style = data.get('trading_style')
-        trading_type = data.get('trading_type', 'margin')
+        trading_type = data.get('trading_type') or 'margin'
 
         open_price: float = data.get('open_price') or 0
         forex = data.get('forex')

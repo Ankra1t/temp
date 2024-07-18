@@ -8,6 +8,7 @@ from common.utils import get_lang
 from data.data import liteDb
 from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE
+from services import channel_calc
 
 from .filter import stats_factory
 
@@ -59,7 +60,7 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     isAdmin = db.get_worker_role(user_db_id)
-    isSended = liteDb.getSendCalc(stat_id) is not None
+    isSended = channel_calc.getByCalc(stat_id) is not None
 
     texts = {
         'ru': {
@@ -293,7 +294,7 @@ def kb_calc_image(user_id: int, stat_id: int):
 
 
 def kb_confirm_channel_post(stat_id: int):
-    send_data = liteDb.getSendCalc(stat_id)
+    send_data = channel_calc.getByCalc(stat_id)
 
     send = getButton('Отправить ➡️', f'stc+send', stat_id)
     rescreen = getButton('Повтор скрина', f'stc+rescreen', stat_id)
@@ -302,8 +303,8 @@ def kb_confirm_channel_post(stat_id: int):
     if send_data is not None:
         is_text = send_data.text is not None
         is_photo = send_data.photo is not None
-        without_stop = send_data.without_stop
-        is_vote = send_data.is_vote
+        without_stop = send_data.withoutStop
+        is_vote = send_data.isVote
 
     if is_text:
         add_text = getButton('❌ Убрать описание', 'stc-text', stat_id)

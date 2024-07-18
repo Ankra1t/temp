@@ -12,6 +12,7 @@ from MAIN.common.utils import send_in_development
 from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
+from services import channel_calc
 
 
 def send_start_by_user(
@@ -26,7 +27,7 @@ def send_start_by_user(
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
-        send_data = liteDb.getSendCalc(int(id))
+        send_data = channel_calc.getByCalc(int(id))
         calc = db.get_calculation(int(id))
 
         user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -34,7 +35,7 @@ def send_start_by_user(
         if send_data is None or calc is None or u_base is None:
             return
 
-        if send_data.without_stop:
+        if send_data.withoutStop:
             stop_type = liteDb.getUserStop(user_id) or ''
 
             if 'atr' in stop_type:
