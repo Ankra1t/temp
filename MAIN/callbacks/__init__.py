@@ -7,12 +7,11 @@ from .admin.pages import (
     send_admin_workers_admin, send_admin_workers_support,
     send_admin_main, send_admin_users, send_admin_payment,
     send_admin_fut_posts, send_admin_params, send_admin_tariffs_list_item,
-    send_admin_tariffs,
+    send_admin_tariffs
 )
 from .user.pages import (
     send_user_education, send_user_main, send_user_terms,
     send_user_account, send_site_code, send_user_params,
-    send_referral
 )
 
 from .common.livepost.handler import registration as _reg_livepost

@@ -1,5 +1,4 @@
 from datetime import timedelta
-import datetime
 import os
 from random import randint
 from time import sleep
@@ -17,6 +16,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
 from AuthRoles import get_ticker_info, vote_timeout
+from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
@@ -26,9 +26,9 @@ from data.data import liteDb
 from config_global import EN_CHANNEL_ID, PROD, RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
-from db import db
+from db import LANGUAGES_TYPE, db
 from CALCULATE.common.messages import (
-    POINT, msg_calculate_change, msg_calculate_delete,
+    msg_calculate_change, msg_calculate_delete,
     msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_image,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
@@ -41,7 +41,7 @@ from services import channel_calc
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
-    kb_calc_image, kb_calculate_change,
+    kb_calc_image, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
@@ -244,7 +244,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     rate = float(profit.replace('loss', ''))
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     calcService.set_profit(
-                        stat_id, -calc_info.risk_value * rate * spot_rate)
+                        stat_id, -calc_info.risk_value * rate * spot_rate
+                    )
                 elif profit != 'cancel':
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     profit_result = calc_info.risk_value * \
@@ -260,7 +261,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 send_calculation(bot, call.message, user_id, calc_info)
 
                 if not is_cancel:
-                    send_week_stats(bot)
+                    send_data = channel_calc.getByCalc(stat_id)
+                    if send_data is not None:
+                        channel_calc.update(send_data.id, status='FINISH')
+                        send_week_stats(bot)
+                        edit_channel_post(bot, stat_id)
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
 
@@ -497,7 +502,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_reply_markup(
             chat_id, mes_id,
-            reply_markup=kb_main(user_id, True, stat)
+            reply_markup=kb_calc_result(
+                user_id, stat_id
+            )
         )
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
@@ -509,77 +516,62 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         photo = send_data.photo
 
-        now = get_datetime_now() + timedelta(hours=3)
-        start = datetime.datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) - timedelta(hours=3)
-        end = datetime.datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) + timedelta(days=1) - timedelta(hours=3)
-
         sent_today = len(channel_calc.getSentToday() or [])
 
+        mesIds: list[int] = []
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
-            info = get_ticker_info(stat.tool or '')
+            tickerInfo = get_ticker_info(stat.tool or '')
 
-            # turnover: number;
-            # buyRatio: number;
-            # sellRatio: number;
-            # price24hPcnt: number;
-
-            rate24h: float | None = None
-            info_show = ''
-            if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
-                rate24h = info.get('price24hPcnt')
-                oborot = ''
-                turnover = info.get('turnover')
-                if turnover // (10 ** 9) > 0:
-                    oborot = f'{round(turnover / (10**9), 1)}B USDT'
-                elif turnover // (10 ** 6) > 0:
-                    oborot = f'{round(turnover / (10**6), 1)}M USDT'
-                else:
-                    oborot = f'{round(turnover, 0)} USDT'
-
-                if lang == 'ru':
-                    now_point = 'Покупают/продают'
-                    oborot_point = 'Оборот за 24ч'
-                else:
-                    now_point = 'Buy/sell'
-                    oborot_point = 'Turnover in 24 hours'
-
-                info_show = f"""
-{now_point}: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
-{oborot_point}: <b>{oborot}</b>
-"""
+            weekStat = channel_calc.getWeekStat()
+            link = ''
+            if weekStat:
+                messages = weekStat.get('messages')
+                try:
+                    weekMesId = messages.get('mesIds', [])[i]
+                    link = f'https://t.me/c/{str(CHANNEL_ID).replace("-100", "")}/{weekMesId}'
+                except:
+                    pass
 
             text = msg_channel_calculation(
-                stat, lang, send_data.withoutStop, send_data.time or '', sent_today + 1, rate24h=rate24h
-            ) + info_show
-            if lang == 'ru':
-                description_text = send_data.text
-                text += f'\n{description_text}' if description_text is not None else ''
+                stat, lang, send_data.withoutStop, send_data.time or '', sent_today + 1,
+                tickerInfo=tickerInfo or None,
+                description=send_data.text if lang == 'ru' else None,
+                week_stat_link=link
+            )
 
             kb = kb_channel_url(
                 lang, stat_id, bot.get_me().username,
             )
 
             if photo is None:
-                bot.send_message(
+                new_mes = bot.send_message(
                     CHANNEL_ID, text,
                     reply_markup=kb
                 )
             else:
-                bot.send_photo(
+                new_mes = bot.send_photo(
                     CHANNEL_ID,
                     photo, text,
                     reply_markup=kb
                 )
 
+            mesIds.append(new_mes.id)
+
         bot.delete_message(chat_id, mes_id)
         bot.send_message(chat_id, '✅ Отправлено')
-        channel_calc.update(send_data.id, sent=True)
+
+        channel_calc.update(
+            send_data.id,
+            sent=True,
+            messages={
+                'chIds': [str(el) for el in channels],
+                'mesIds': [str(el) for el in mesIds],
+                'langs': ['ru', 'en'],
+            }
+        )
+
         send_week_stats(bot)
 
         if send_data.isVote:
@@ -610,8 +602,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             print(e)
             file_path = None
 
-        text = msg_channel_calculation(stat, 'ru', send_data.withoutStop, send_data.time or '') \
-            + (f'\n{send_data.text}' if send_data.text is not None else '')
+        text = msg_channel_calculation(
+            stat, 'ru', send_data.withoutStop, send_data.time or '',
+            description=send_data.text
+        )
 
         if file_path is None:
             bot.edit_message_text(
@@ -744,6 +738,58 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             )
         )
 
+    if type == 'result_cancel':
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is not None:
+            channel_calc.update(
+                send_data.id, status='CANCEL'
+            )
+
+        calc = db.get_calculation(stat_id)
+        if calc is None:
+            return
+
+        delete_message(bot, chat_id, mes_id)
+        send_calculation(bot, call.message, user_id, calc, True)
+
+    if type == 'result_deal':
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is not None:
+            channel_calc.update(send_data.id, status='DEAL')
+
+        send_week_stats(bot)
+        edit_channel_post(bot, stat_id)
+        type = 'results'
+
+        calc = db.get_calculation(stat_id)
+        if calc is None:
+            return
+
+        delete_message(bot, chat_id, mes_id)
+        send_calculation(bot, call.message, user_id, calc, True)
+
+    if type == 'result_take':
+        calc = db.get_calculation(stat_id)
+        if calc is None:
+            return
+
+        bot.edit_message_reply_markup(
+            chat_id, mes_id, reply_markup=kb_channel_calc_result_take(
+                calc.tp_ratio, stat_id, -1
+            )
+        )
+
+    if type == 'result_stop':
+        calc = db.get_calculation(stat_id)
+        if calc is None:
+            return
+
+        bot.edit_message_reply_markup(
+            chat_id, mes_id, reply_markup=kb_channel_calc_result_stop(
+                stat_id, -1
+            )
+        )
+
     bot.answer_callback_query(call.id)
 
 
@@ -791,16 +837,52 @@ def send_vote(bot: TeleBot, stat_id: int):
 
 
 def send_week_stats(bot: TeleBot, is_new_week=False):
+    texts = {
+        'ru': {
+            'title': '⚡️ <b>Результаты на эту неделю</b>',
+
+            'title2': '⚡️ Результаты',
+            'from': 'с',
+            'to': 'по',
+
+            'stop': 'Стоп',
+            'count to': 'к',
+            'deal': 'В сделке',
+            'tp': 'тейков',
+            'sl': 'стопов',
+            'prices': 'Купил/Продал',
+            'result': 'Итог',
+            'long': 'Лонг',
+            'short': 'Шорт',
+            'success': 'Успешных сделок',
+        },
+        'en': {
+            'title': '⚡️ <b>Results for this week</b>',
+
+            'title2': '⚡️ Results',
+            'from': 'from',
+            'to': 'to',
+
+            'stop': 'Stop',
+            'count to': 'to',
+            'deal': 'In deal',
+            'tp': 'takes',
+            'sl': 'stops',
+            'prices': 'Bought/Sold',
+            'result': 'Result',
+            'long': 'Long',
+            'short': 'Short',
+            'success': 'Success deals',
+        },
+    }
+
     if is_new_week:
         mes_ids: list[int] = []
 
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
-            if lang == 'ru':
-                msg = '⚡️ <b><u>Лист сделок на эту неделю</u></b>'
-            else:
-                msg = '⚡️ <b><u>Transactions for this week</u></b>'
+            msg = texts[lang]["title"]
 
             mes = bot.send_message(
                 CHANNEL_ID, msg,
@@ -808,7 +890,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
             bot.pin_chat_message(CHANNEL_ID, mes.id)
             mes_ids.append(mes.id)
 
-        channel_calc.createWeekStat(list(channels), mes_ids)
+        channel_calc.createWeekStat(list(channels), mes_ids, ['ru', 'en'])
 
     data = channel_calc.getWeekStat()
     if data is None:
@@ -817,53 +899,160 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
     ch_mes: dict = data.get('messages')
     chIds: list[str] = ch_mes.get('chIds', [])
     mesIds: list[str] = ch_mes.get('mesIds', [])
+    langs: list[LANGUAGES_TYPE] = ch_mes.get('langs', [])
+
+    startDate = data.get('startDate')
+    endDate = data.get('endDate')
 
     values: list[dict] = data.get('values')
-    print(values)
 
     for i, CHANNEL_ID in enumerate(chIds):
-        lang = 'ru' if i == 0 else 'en'
+        lang = langs[i]
 
-        msg = ''
-        if lang == 'ru':
-            msg += '⚡️ <b><u>Лист сделок на эту неделю</u></b>'
-        else:
-            msg += '⚡️ <b><u>Transactions for this week</u></b>'
+        msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
 
-        for valueDate in values:
-            msg += f'\n\n<b>{valueDate.get("date")}</b>'
-            tp_count = 0
-            sl_count = 0
+        tp_count = 0
+        sl_count = 0
+
+        long_count = 0
+        short_count = 0
+
+        all_success_count = 0
+        all_fail_count = 0
+
+        for valueDate_i, valueDate in enumerate(values):
+            msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>'
+
             success_count = 0
-            for value in valueDate.get('calcs', []):
+            fail_count = 0
+            for value_i, value in enumerate(valueDate.get('calcs', [])):
                 valueCount = value.get('valueCount')
+                openPrice = value.get('openPrice')
+                closePrice = value.get('closePrice')
+
+                calc_messages = value.get('messages')
+
+                mesId = None
+                if calc_messages is not None:
+                    calc_chIds: list[str] = calc_messages.get('chIds', [])
+                    calc_mesIds: list[str] = calc_messages.get('mesIds', [])
+                    try:
+                        mes_i = calc_chIds.index(CHANNEL_ID)
+                        mesId = calc_mesIds[mes_i]
+                    except:
+                        pass
 
                 tp_sl = ''
                 if valueCount is None:
-                    tp_sl = 'deal'
+                    tp_sl = texts[lang]['deal']
                 elif valueCount > 0:
-                    tp_sl = f'{valueCount} take profit'
+                    tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
                     tp_count += valueCount
                     success_count += 1
+
+                    if closePrice > openPrice:
+                        long_count += 1
+                    else:
+                        short_count += 1
                 else:
-                    tp_sl = f'{abs(valueCount)} stop'
+                    tp_sl = texts[lang]["stop"]
                     sl_count += abs(valueCount)
+                    fail_count += 1
 
-                msg += f'\n{POINT} {value.get("tool")} - {tp_sl}'
-            if lang == 'ru':
-                msg += f'\n<b>Итог</b>:'
-            else:
-                msg += f'\n<b>Result</b>:'
-            msg += f' {tp_count} take profit & {sl_count} stop'
-            if lang == 'ru':
-                msg += f'\n<b>Успешных сделок</b>:'
-            else:
-                msg += f'\n<b>Success deals</b>:'
-            msg += f' {tp_count} take profit & {sl_count} stop'
+                    if closePrice > openPrice:
+                        short_count += 1
+                    else:
+                        long_count += 1
 
-        bot.edit_message_text(
-            msg, CHANNEL_ID, int(mesIds[i])
+                if value_i == 0:
+                    msg += '\n'
+
+                link_start = f'<a href="https://t.me/c/{CHANNEL_ID.replace("-100", "")}/{mesId}">' if mesId is not None else ''
+                link_end = '</a>' if mesId is not None else ''
+
+                msg += f'\n{value_i + 1}. {link_start}<b>{(value.get("tool") or "-").replace("/USDT", "")}</b>{link_end} - {tp_sl}'
+
+            if success_count != 0 or fail_count != 0:
+                msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+
+            all_success_count += success_count
+            all_fail_count += fail_count
+
+        msg += f'\n_________________________________'
+
+        tp_sl_result = round(tp_count - sl_count, 1)
+
+        tp_sl_show = ''
+        if tp_sl_result > 0:
+            tp_sl_show = f'{texts[lang]["tp"]}'
+        else:
+            tp_sl_show = f'{texts[lang]["sl"]}'
+
+        if tp_count == 0 and sl_count == 0:
+            if lang == 'ru':
+                msg += f'\n\nОжидаются ближайшие сделки'
+            else:
+                msg += f'\n\nUpcoming deals are expected'
+
+        if tp_count != 0 or sl_count != 0:
+            msg += f'\n\n<b>{texts[lang]["result"]}</b>: {tp_sl_result} {tp_sl_show}\n'
+
+        if long_count != 0 or short_count != 0:
+            if long_count != 0:
+                msg += f'<b>{texts[lang]["long"]}</b>: {long_count}'
+            if long_count != 0 and short_count != 0:
+                msg += ' / '
+            if short_count != 0:
+                msg += f'<b>{texts[lang]["short"]}</b>: {short_count}'
+
+        if all_success_count != 0 or all_fail_count != 0:
+            msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
+
+        try:
+            bot.edit_message_text(
+                msg, CHANNEL_ID, int(mesIds[i])
+            )
+        except:
+            pass
+
+
+def edit_channel_post(bot: TeleBot, calc_id: int):
+    calc = db.get_calculation(calc_id)
+    send_data = channel_calc.getByCalc(calc_id)
+    messages = channel_calc.getSentMessagesByCalc(calc_id)
+    if messages is None or calc is None or send_data is None:
+        return
+
+    for i, el in enumerate(messages.chIds):
+        link = ''
+        if messages.messages and (send_data.status == 'DEAL' or send_data.status == 'FINISH'):
+            try:
+                weekMesId = messages.messages.get('mesIds', [])[i]
+                link = f'https://t.me/c/{el.replace("-100", "")}/{weekMesId}'
+            except:
+                pass
+
+        lang = messages.langs[i]
+
+        msg = msg_channel_calculation(
+            calc, messages.langs[i], True, send_data.time or '',
+            messages.mesNum or -1, None, send_data.text, link,
+            send_data.status == 'DEAL', messages.date
         )
+        kb = kb_channel_url(
+            lang, calc_id, bot.get_me().username,
+        )
+
+        if send_data.photo is None:
+            bot.edit_message_text(
+                msg, el, int(messages.mesIds[i]),
+                reply_markup=kb
+            )
+        else:
+            bot.edit_message_caption(
+                msg, el, int(messages.mesIds[i]),
+                reply_markup=kb
+            )
 
 
 def registration(bot: TeleBot):

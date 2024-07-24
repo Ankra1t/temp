@@ -319,12 +319,30 @@ class Exchange(BaseModel):
     fees: list[tuple[str, float, float]]
 
 
+class TickerInfo(BaseModel):
+    turnover: Optional[float]
+    buyRatio: Optional[float]
+    sellRatio: Optional[float]
+    price24hPcnt: Optional[float]
+
+
+class SentMessages(BaseModel):
+    chIds: list[str]
+    mesIds: list[str]
+    langs: list[Literal['ru', 'en']]
+    mesNum: Optional[int] = None
+    messages: Optional[dict] = None
+    date: str
+
+
 class SendCalc(BaseModel):
     id: int
-    text: str | None
-    photo: str | None
+    calcId: Optional[int] = None
+    text: Optional[str]
+    photo: Optional[str]
     sent: bool
     withoutStop: bool
-    tradingStyle: str | None
-    time: str | None
+    tradingStyle: Optional[str]
+    time: Optional[str]
     isVote: bool
+    status: Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']

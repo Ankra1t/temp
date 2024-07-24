@@ -2,7 +2,7 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks import kb_choose_lang
+from CALCULATE.callbacks.settings.keyboards import kb_choose_lang
 from CALCULATE.common.messages import msg_choose_lang
 from Classes import text_editor
 from AuthRoles import get_site_code

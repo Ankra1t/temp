@@ -6,6 +6,7 @@ from db import db
 from config_logger import logger
 from config_global import API_URL
 from common.vars import HEADERS
+from models import TickerInfo
 
 
 def registration(user_id: int, username: str = '', referral_id: int | None = None):
@@ -92,7 +93,7 @@ def get_ticker_info(ticker: str):
             f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
-        return res.json()
+        return TickerInfo(**res.json())
     except Exception as e:
         logger.error(f'/get_ticker_info {e}')
         return False

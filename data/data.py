@@ -1,6 +1,5 @@
 import json
 import sqlite3
-from typing import Literal
 
 from models import MARKETS_TYPE, Exchange, SendCalc
 
@@ -475,7 +474,6 @@ CREATE TABLE IF NOT EXISTS TonStorage (
             pass
 
     # Sended Calc
-
     def getAllSendCalcs(self) -> list[SendCalc]:
         try:
             data = self.curs.execute(
@@ -491,7 +489,8 @@ CREATE TABLE IF NOT EXISTS TonStorage (
                     withoutStop=el[4] == 1,
                     tradingStyle=el[5],
                     time=el[6],
-                    isVote=el[7] == 1
+                    isVote=el[7] == 1,
+                    status='WAIT'
                 ) for el in data
             ]
         except Exception as e:

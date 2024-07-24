@@ -1,15 +1,15 @@
+from typing import Callable
 from telebot import TeleBot
-from telebot.types import Message, InlineKeyboardButton
+from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from common.dt import get_str_by_datetime
 
 from data.data import liteDb
 from db import LANGUAGES_TYPE, db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
-from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from models import Post, UserInfo
 
 
-def get_post_from_message(bot: TeleBot, message: Message):
+def get_post_from_message(bot: TeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):
     chat_id = message.chat.id
 
     mes_type = message.content_type

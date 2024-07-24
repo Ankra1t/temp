@@ -5,7 +5,6 @@ from CALCULATE.common.messages import market_translates
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
-from data.data import liteDb
 from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE
 from services import channel_calc
@@ -60,7 +59,7 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     isAdmin = db.get_worker_role(user_db_id)
-    isSended = channel_calc.getByCalc(stat_id) is not None
+    send_data = channel_calc.getByCalc(stat_id)
 
     texts = {
         'ru': {
@@ -105,10 +104,31 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
         btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
         keyboard.add(btn_add_img)
     else:
-        btn_save = getButton(f'✅ {texts[lang]["save"]}', 'profit+', stat_id)
-        keyboard.add(btn_save)
+        if isAdmin:
+            if send_data is not None and (send_data.status == 'WAIT' or send_data.status == 'DEAL'):
+                if send_data.status != 'DEAL':
+                    btn_deal = getButton(
+                        'В сделке', 'result_deal', stat_id=stat_id
+                    )
+                    btn_cancel = getButton(
+                        'Отмена сделки', 'result_cancel', stat_id=stat_id
+                    )
+                    keyboard.add(
+                        btn_cancel, btn_deal,
+                    )
 
-    if isAdmin and not isSended:
+                btn_take = getButton('Тейк', 'result_take', stat_id=stat_id)
+                btn_stop = getButton('Стоп', 'result_stop', stat_id=stat_id)
+                keyboard.add(
+                    btn_stop, btn_take
+                )
+        else:
+            btn_save = getButton(
+                f'✅ {texts[lang]["save"]}', 'profit+', stat_id
+            )
+            keyboard.add(btn_save)
+
+    if isAdmin and send_data is None:
         keyboard.add(
             getButton('Выложить в каналах', 'send_to_channels', stat_id)
         )
@@ -332,7 +352,7 @@ def kb_confirm_channel_post(stat_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        add_photo, add_text, # rescreen,
+        add_photo, add_text,  # rescreen,
         btn_vote, add_stop,
         add_time, btn_style,
 

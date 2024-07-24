@@ -3,9 +3,9 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.stats.handler import edit_channel_post, send_week_stats
 from config_logger import logger
 from Classes import calcService
-from data.data import liteDb
 from db import db
 from common.utils import delete_message, digit_accept, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
@@ -44,6 +44,11 @@ def handle_loss(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is not None:
+        channel_calc.update(send_data.id, status='FINISH')
+        send_week_stats(bot)
+        edit_channel_post(bot, stat_id)
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -70,6 +75,11 @@ def handle_sum(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is not None:
+        channel_calc.update(send_data.id, status='FINISH')
+        send_week_stats(bot)
+        edit_channel_post(bot, stat_id)
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 

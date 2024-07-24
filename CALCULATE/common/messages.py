@@ -8,7 +8,7 @@ from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb
 from Classes import calcService
-from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo
+from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
 
 
 POINT = '•'
@@ -1952,8 +1952,15 @@ def msg_channel_calculation(
     without_stop=False,
     time: str = '',
     count=-1,
-    rate24h: float | None = None
+    tickerInfo: TickerInfo | None = None,
+    description: str | None = None,
+    week_stat_link: str | None = None,
+    in_deal=False,
+    date: str | None = None
 ):
+    if calc.profit:
+        return msg_channel_calc_result(calc, lang, time, count, description, week_stat_link, date)
+
     calc_result = calcService.get_result(calc)
 
     texts = {
@@ -1962,28 +1969,40 @@ def msg_channel_calculation(
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
-            'style': 'Стиль торговли',
+            'style': '<b>С</b>тиль торговли',
 
             'direct': 'Направление',
             'to': 'к',
 
-            'deal': 'Сделка',
+            'deal': '<b>С</b>делка',
             'avg': 'Среднесрочная',
             'day': 'Внутридневная',
+
+            'buy/sell': '<b>П</b>окупают/продают',
+            'change24': '<b>И</b>зменение за 24ч',
+            'turnover24': '<b>О</b>борот за 24ч',
+
+            'in deal': '(В сделке)',
         },
         'en': {
             'open': 'Price',
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
-            'style': 'Trading style',
+            'style': '<b>T</b>rading style',
 
             'direct': 'Direction',
             'to': 'to',
 
-            'deal': 'Trade',
+            'deal': '<b>T</b>rade',
             'avg': 'Medium-term',
             'day': 'Intraday',
+
+            'buy/sell': '<b>B</b>uy/sell',
+            'change24': '<b>C</b>hange in 24h',
+            'turnover24': '<b>T</b>urnover in 24h',
+
+            'in deal': '(In deal)',
         }
     }
 
@@ -2002,9 +2021,9 @@ def msg_channel_calculation(
     trading_style_type = ''
     t_style = txt_trading_style(lang, calc.trading_style)
     if t_style is not None:
-        trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}\n'
-        if time != '':
-            trading_style_type += f'<b>{texts[lang]["deal"]}</b>: {texts[lang][time]}\n'
+        trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
+    if time != '':
+        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}\n'
 
     # Округление
     round_count = calc.round_count or 5
@@ -2033,13 +2052,41 @@ def msg_channel_calculation(
     if count != -1:
         count_show = f'{count}. '
 
-    percent24h = ''
-    if rate24h is not None:
-        percent = round(rate24h * 100, 2)
-        percent24h = f' ({"+" if percent > 0 else ""}{percent}%)'
+    rate24h: float | None = None
+
+    info_show = ''
+    if tickerInfo:
+        info_show += '\n'
+
+        buyRatio = tickerInfo.buyRatio
+        sellRatio = tickerInfo.sellRatio
+        if buyRatio is not None and sellRatio is not None:
+            info_show += f'{texts[lang]["buy/sell"]}: <b>{round(buyRatio * 100, 1)}%</b> / <b>{round(sellRatio * 100, 1)}%</b>'
+
+        rate24h = tickerInfo.price24hPcnt
+        if rate24h is not None:
+            percent = round(rate24h * 100, 2)
+            info_show += f'\n{texts[lang]["change24"]}: <b>{"+" if percent > 0 else ""}{percent}%</b>'
+
+        turnover = tickerInfo.turnover
+        if turnover is not None:
+            oborot = ''
+            if turnover // (10 ** 9) > 0:
+                oborot = f'{round(turnover / (10**9), 1)}B USDT'
+            elif turnover // (10 ** 6) > 0:
+                oborot = f'{round(turnover / (10**6), 1)}M USDT'
+            else:
+                oborot = f'{round(turnover, 0)} USDT'
+
+            info_show += f'\n{texts[lang]["turnover24"]}: <b>{oborot}</b>'
+
+    def link(value: str):
+        if week_stat_link is not None:
+            return f'<a href="{week_stat_link}">{value}</a>'
+        return value
 
     return '\n'.join((
-        f'{count_show}#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{percent24h}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang]["in deal"] if in_deal else ""}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
@@ -2050,9 +2097,110 @@ def msg_channel_calculation(
             if not without_stop
             else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
         ),
-        '',
+        info_show,
         trading_style_type
-    ))
+    )) + (f'\n{description}' if description else '')
+
+
+def msg_channel_calc_result(
+    calc: Calculation,
+    lang: LANGUAGES_TYPE,
+    time='',
+    count=-1,
+    description: str | None = None,
+    week_stat_link: str | None = None,
+    date: str | None = None,
+):
+    if calc.profit is None:
+        return ''
+
+    texts = {
+        'ru': {
+            'open': '<b>Цена</b> покупки',
+            'close': '<b>Цена</b> продажи',
+
+            'tp': 'Тейк профит',
+            'sl': 'Получил стоп лосс',
+
+            'style': '<b>С</b>тиль торговли',
+            'deal': '<b>С</b>делка',
+
+            'to': 'к',
+
+            'avg': 'Среднесрочная',
+            'day': 'Внутридневная',
+
+            'short': 'шорт',
+            'long': 'лонг',
+
+            'date': 'Дата',
+            'end': 'Сделка завершена',
+        },
+        'en': {
+            'open': '<b>Purchase</b> price',
+            'close': '<b>Selling</b> price',
+
+            'tp': 'Take profit',
+            'sl': 'Got stop loss',
+
+            'style': '<b>T</b>rading style',
+            'deal': '<b>T</b>rade',
+
+            'to': 'to',
+
+            'avg': 'Medium-term',
+            'day': 'Intraday',
+
+            'short': 'short',
+            'long': 'long',
+
+            'date': 'Date',
+            'end': 'Deal completed',
+        }
+    }
+
+    take_or_stop = 'take' if calc.profit > 0 else 'stop'
+
+    short_long = 'long'
+    if calc.open_price < calc.stop_loss:
+        short_long = 'short'
+
+    tp_sl_count = (calc.profit / calc.risk_value)
+    close_price = calc.open_price + \
+        (calc.open_price - calc.stop_loss) * \
+        tp_sl_count
+
+    count_show = ''
+    if count != -1:
+        count_show = f'{count}. '
+
+    if take_or_stop == 'take':
+        result = f'{texts[lang]["tp"]} ({get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1)'
+    else:
+        result = f'{texts[lang]["sl"]}'
+
+    trading_style_type = '\n'
+    t_style = txt_trading_style(lang, calc.trading_style)
+    if t_style is not None:
+        trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
+    if time != '':
+        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}\n'
+
+    def link(value: str):
+        if week_stat_link is not None:
+            return f'<a href="{week_stat_link}">{value}</a>'
+        return value
+
+    return f"""{count_show}<b>{link(calc.tool or '-').replace('/USDT', '')}</b> ({texts[lang]["end"]})
+
+👉 {result}
+
+<b>{texts[lang]["date"]}</b>: {date}
+{texts[lang]["open"]}: {get_print_float(calc.open_price, calc.round_count)} USDT
+{texts[lang]["close"]}: {get_print_float(close_price, calc.round_count)} USDT
+<b>{texts[lang]["deal"]}</b>: {texts[lang][short_long]}
+
+{trading_style_type}""" + (f'\n{description}' if description else '')
 
 
 def msg_calculate_delete(user_id: int, prev_message: str):

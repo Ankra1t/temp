@@ -7,7 +7,8 @@ from .pages import (
     send_tariffs_list_item, send_user_tariffs, send_calculation,
     send_freeze, send_exchange_settings, send_confirm_calc_send,
     create_and_send_calc, send_maker_or_taker, send_stop_settings,
-    send_trading_style_settings, send_atr_settings
+    send_trading_style_settings, send_atr_settings, send_admin_send_settings,
+    send_channel_post, send_dop_settings
 )
 from .utils import choose_calculate_step, choose_first_calculate_step
 
@@ -45,6 +46,11 @@ from .tariff.keyboards import (
     kb_tariff_list, kb_choose_products, kb_user_tariff_back, kb_bill
 )
 
+from .channel_post.handler import registration as _res_channel_post
+from .channel_post.keyboards import (
+    kb_channel_post, kb_channel_stat, kb_send_settings,
+    kb_send_settings_calc_time, kb_send_settings_trading_style
+)
 
 def callbacks_registration(bot: _TB):
     _reg_manual(bot)
@@ -52,5 +58,6 @@ def callbacks_registration(bot: _TB):
     _reg_calculate(bot)
     _reg_settings(bot)
     _reg_stats(bot)
+    _res_channel_post(bot)
 
     _reg_user_tariff(bot)

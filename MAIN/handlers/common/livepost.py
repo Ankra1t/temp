@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from common.utils import set_state_data
 from MAIN.callbacks import kb_livepost_type
 from MAIN.common.utils import get_post_from_message
@@ -22,7 +23,7 @@ def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    post = get_post_from_message(bot, message)
+    post = get_post_from_message(bot, message, kb_posts_back)
 
     if post is None:
         return

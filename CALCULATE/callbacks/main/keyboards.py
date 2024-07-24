@@ -89,12 +89,9 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
         )
         buttons.append(btn_calc)
 
-    if isAdmin:
-        buttons.append(
-            getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
-        )
+    # if isAdmin:
         # buttons.append(
-        #     getButton('Обновить недельюную статистику', 'week_stat', saved, stat_id)
+        #     getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
         # )
 
     btn_settings = getButton(
@@ -102,24 +99,40 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     )
     buttons.append(btn_settings)
 
-
     if not is_first:
         if stat is None:
             btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
             btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
             link = 'my_investors' if lang == 'ru' else '+386iRxc4XKszMDIy'
-            btn_link = InlineKeyboardButton(texts[lang]['link'], f'https://t.me/{link}')
+            btn_link = InlineKeyboardButton(
+                texts[lang]['link'], f'https://t.me/{link}'
+            )
 
             buttons.append(btn_stats)
             buttons.append(btn_link)
             # buttons.append(btn_buy)
+            if isAdmin:
+                buttons.append(
+                    getButton(
+                        'Посты в каналы',
+                        'channel_post'
+                    )
+                )
         else:
             kb = kb_calc_result(user_id, stat_id, saved)
             buttons_rows = kb.keyboard
 
             for row in buttons_rows:
                 keyboard.add(*row, row_width=kb.row_width)
+
+    if user_id == 156045434:
+        buttons.append(
+            getButton(
+                'Обновить недельюную статистику',
+                'week_stat', saved, stat_id
+            )
+        )
 
     keyboard.add(*buttons)
     return keyboard

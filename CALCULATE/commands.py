@@ -3,9 +3,9 @@ from telebot.types import Message
 
 from db import db
 
-from CALCULATE.common.messages import msg_support
+# from CALCULATE.common.messages import msg_support
 from CALCULATE.callbacks import send_manual_page, send_main
-from MAIN.callbacks import kb_support
+# from MAIN.callbacks import kb_support
 
 
 def _start(message: Message, bot: TeleBot, data: dict):
@@ -41,17 +41,17 @@ def _about_us(message: Message, bot: TeleBot):
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
-def _support(message: Message, bot: TeleBot):
-    user_id = message.from_user.id
+# def _support(message: Message, bot: TeleBot):
+#     user_id = message.from_user.id
 
-    sup = db.get_support_name()
-    msg = msg_support(user_id)
+#     sup = db.get_support_name()
+#     msg = msg_support(user_id)
 
-    bot.send_message(
-        message.chat.id, msg,
-        reply_markup=kb_support(user_id, sup)
-    )
-    bot.delete_state(message.from_user.id, message.chat.id)
+#     bot.send_message(
+#         message.chat.id, msg,
+#         reply_markup=kb_support(user_id, sup)
+#     )
+#     bot.delete_state(message.from_user.id, message.chat.id)
 
 
 def _manual(message: Message, bot: TeleBot):
@@ -69,7 +69,7 @@ def commands_registration(bot: TeleBot):
     reg_mes(_faq, commands=['faq'])
     reg_mes(_about_us, commands=['about_us'])
 
-    reg_mes(_support, commands=['support'])
-    reg_mes(_support, commands=['team'])
+    # reg_mes(_support, commands=['support'])
+    # reg_mes(_support, commands=['team'])
 
     reg_mes(_manual, commands=['manual'])

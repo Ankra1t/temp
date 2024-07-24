@@ -11,7 +11,7 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_atr_settings, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
+    msg_admin_send_settings, msg_atr_settings, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
     msg_stats_page, msg_stop_page, msg_summury_profit_settings
@@ -29,6 +29,7 @@ from .settings.keyboards import (
 )
 from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
+from .channel_post.keyboards import kb_send_settings, kb_channel_post
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
@@ -437,35 +438,14 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 
     info = get_ticker_info(stat.tool or '')
 
-    # turnover: number;
-    # buyRatio: number;
-    # sellRatio: number;
-    # price24hPcnt: number;
-
-    rate24h: float | None = None
-    info_show = ''
-    if info and info.get('turnover') and info.get('buyRatio') and info.get('sellRatio'):
-        rate24h = info.get('price24hPcnt')
-        oborot = ''
-        turnover = info.get('turnover')
-        if turnover // (10 ** 9) > 0:
-            oborot = f'{round(turnover / (10**9), 1)}B USDT'
-        elif turnover // (10 ** 6) > 0:
-            oborot = f'{round(turnover / (10**6), 1)}M USDT'
-        else:
-            oborot = f'{round(turnover, 0)} USDT'
-
-        info_show = f"""
-Покупают/продают: <b>{round(info.get("buyRatio") * 100, 1)}%</b> / <b>{round(info.get("sellRatio") * 100, 1)}%</b>
-Оборот за 24ч: <b>{oborot}</b>
-"""
-
     photo = send_data.photo
-    text = msg_channel_calculation(stat, 'ru', send_data.withoutStop, send_data.time or '', rate24h=rate24h)\
-        + (info_show)  \
-        + (f'\n{send_data.text}\n' if send_data.text is not None else '')
+    text = msg_channel_calculation(
+        stat, 'ru', send_data.withoutStop, send_data.time or '',
+        tickerInfo=info or None,
+        description=send_data.text
+    )
 
-    text += '\nОпрос: ' + ('✅' if send_data.isVote else '❌')
+    text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
 
     kb = kb_confirm_channel_post(
         stat_id
@@ -637,5 +617,56 @@ def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     else:
         bot.edit_message_text(
             mes, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+
+def send_admin_send_settings(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+
+    bot.delete_state(user_id, chat_id)
+
+    withoutStop = liteDb.getSendSettings('withoutStop')
+    isVote = liteDb.getSendSettings('isVote')
+    tradingStyle = liteDb.getSendSettings('style')
+    time = liteDb.getSendSettings('time')
+
+    msg = msg_admin_send_settings(
+        withoutStop == 'False', isVote == 'True', tradingStyle, time
+    )
+    kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
+
+    if is_first:
+        bot.send_message(chat_id, msg, reply_markup=kb)
+    else:
+        bot.edit_message_text(
+            msg, chat_id, message.id,
+            reply_markup=kb
+        )
+
+
+def send_channel_post(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+
+    bot.delete_state(user_id, chat_id)
+
+    msg = '<b><u>Отправка сообщений в канал</u></b>'
+    kb = kb_channel_post()
+
+    if is_first:
+        bot.send_message(chat_id, msg, reply_markup=kb)
+    else:
+        bot.edit_message_text(
+            msg, chat_id, message.id,
             reply_markup=kb
         )

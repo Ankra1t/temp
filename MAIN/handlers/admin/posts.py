@@ -167,7 +167,7 @@ def handle_new_post_content(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    post = get_post_from_message(bot, message)
+    post = get_post_from_message(bot, message, kb_posts_back)
 
     if post is None:
         bot.send_message(
