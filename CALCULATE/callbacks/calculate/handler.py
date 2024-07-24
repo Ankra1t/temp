@@ -225,7 +225,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             atr *= -1 if action == 'long' else 1
 
-            round_c = get_decimal_count(op)
+            round_c = max(5, get_decimal_count(op))
             stop_loss = round(op + atr, round_c)
 
             bot.delete_message(chat_id, mes_id)

@@ -387,3 +387,11 @@ def kb_send_calc_time(stat_id: int, is_first=False):
                   f'{first}stc+time=none', stat_id),
     )
     return keyboard
+
+
+def kb_send_back(stat_id: int):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        getButton(cancel_txt(), 'stc+back', stat_id)
+    )
+    return keyboard

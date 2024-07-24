@@ -1955,11 +1955,14 @@ def msg_channel_calculation(
     tickerInfo: TickerInfo | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
-    in_deal=False,
-    date: str | None = None
+    status: Literal['DEAL', 'CANCEL', 'WAIT', 'FINISH'] = 'WAIT',
+    date: str | None = None,
+    try_link: str = '',
 ):
-    if calc.profit:
-        return msg_channel_calc_result(calc, lang, time, count, description, week_stat_link, date)
+    if calc.profit or status == 'FINISH':
+        return msg_channel_calc_result(
+            calc, lang, time, count, description, week_stat_link, date, try_link
+        )
 
     calc_result = calcService.get_result(calc)
 
@@ -1982,7 +1985,9 @@ def msg_channel_calculation(
             'change24': '<b>И</b>зменение за 24ч',
             'turnover24': '<b>О</b>борот за 24ч',
 
-            'in deal': '(В сделке)',
+            'DEAL': '(В сделке)',
+            'CANCEL': '(Отменён)',
+            'try': 'Рассчитать для себя',
         },
         'en': {
             'open': 'Price',
@@ -2002,7 +2007,9 @@ def msg_channel_calculation(
             'change24': '<b>C</b>hange in 24h',
             'turnover24': '<b>T</b>urnover in 24h',
 
-            'in deal': '(In deal)',
+            'DEAL': '(In deal)',
+            'CANCEL': '(Cancel)',
+            'try': 'Calculate for you',
         }
     }
 
@@ -2020,10 +2027,12 @@ def msg_channel_calculation(
 
     trading_style_type = ''
     t_style = txt_trading_style(lang, calc.trading_style)
+    if t_style is not None or time != '':
+        trading_style_type += '\n'
     if t_style is not None:
         trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
     if time != '':
-        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}\n'
+        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}'
 
     # Округление
     round_count = calc.round_count or 5
@@ -2056,7 +2065,7 @@ def msg_channel_calculation(
 
     info_show = ''
     if tickerInfo:
-        info_show += '\n'
+        info_show += '\n\n'
 
         buyRatio = tickerInfo.buyRatio
         sellRatio = tickerInfo.sellRatio
@@ -2086,7 +2095,7 @@ def msg_channel_calculation(
         return value
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang]["in deal"] if in_deal else ""}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang][status] if status != "WAIT" else ""}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
@@ -2097,9 +2106,10 @@ def msg_channel_calculation(
             if not without_stop
             else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
         ),
-        info_show,
-        trading_style_type
-    )) + (f'\n{description}' if description else '')
+    )) + info_show \
+        + trading_style_type \
+        + (f'\n\n{description}' if description else '') \
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
 
 
 def msg_channel_calc_result(
@@ -2110,6 +2120,7 @@ def msg_channel_calc_result(
     description: str | None = None,
     week_stat_link: str | None = None,
     date: str | None = None,
+    try_link='',
 ):
     if calc.profit is None:
         return ''
@@ -2135,6 +2146,7 @@ def msg_channel_calc_result(
 
             'date': 'Дата',
             'end': 'Сделка завершена',
+            'try': 'Рассчитать для себя',
         },
         'en': {
             'open': '<b>Purchase</b> price',
@@ -2156,6 +2168,7 @@ def msg_channel_calc_result(
 
             'date': 'Date',
             'end': 'Deal completed',
+            'try': 'Calculate for you',
         }
     }
 
@@ -2179,8 +2192,10 @@ def msg_channel_calc_result(
     else:
         result = f'{texts[lang]["sl"]}'
 
-    trading_style_type = '\n'
+    trading_style_type = ''
     t_style = txt_trading_style(lang, calc.trading_style)
+    if t_style is not None or time != '':
+        trading_style_type += '\n'
     if t_style is not None:
         trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
     if time != '':
@@ -2199,8 +2214,8 @@ def msg_channel_calc_result(
 {texts[lang]["open"]}: {get_print_float(calc.open_price, calc.round_count)} USDT
 {texts[lang]["close"]}: {get_print_float(close_price, calc.round_count)} USDT
 <b>{texts[lang]["deal"]}</b>: {texts[lang][short_long]}
-
-{trading_style_type}""" + (f'\n{description}' if description else '')
+{trading_style_type}""" + (f'\n{description}\n' if description else '') \
+        + (f'\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
 
 
 def msg_calculate_delete(user_id: int, prev_message: str):
@@ -2814,7 +2829,7 @@ def msg_enter_open_price(user_id: int, is_try=False):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'По какой цене <b>будете</b> покупать',
+        'ru': 'По какой цене <b>войдёте</b> в сделку',
         'en': 'Enter the <b>opening price</b> of the deal',
         'uz': 'Savdoning ochilish narxini tanlang',
         'tr': 'İşlem açılış fiyatını girin',
@@ -2917,10 +2932,11 @@ def msg_enter_min_bar(user_id: int):
     return f'👉 {texts[lang]}'
 
 
-def msg_choose_direct(user_id: int, value: float | None = None):
+def msg_choose_direct(user_id: int, value: float | None = None, day_value: float | None = None):
     lang = get_lang(user_id)
 
     atr_settings = liteDb.getUserAtrSettings(user_id)
+    period, count = atr_settings[1].split('+')
 
     texts = {
         'ru': "Выберите направление",
@@ -2930,15 +2946,27 @@ def msg_choose_direct(user_id: int, value: float | None = None):
     }
 
     atr_info = {
-        'ru': 'Средний ATR <b>5 баров</b>',
-        'en': 'Middle ATR <b>5 bars</b>',
-        'uz': 'O\'rta ARR <b>5 bar</b>',
-        'tr': 'MiOrta ATR <b>5 çubukları</b>'
+        'ru': f'Ср. ATR <b>{count} баров</b> ({period.upper()})',
+        'en': f'Avg ATR <b>{count} bars</b> ({period.upper()})',
+        'uz': f'O\'rta ATR <b>{count} bar</b> ({period.upper()})',
+        'tr': f'MiOrta ATR <b>{count} çubukları</b> ({period.upper()})'
+    }
+
+    day_atr_info = {
+        'ru': 'Ср. ATR 5 дней',
+        'en': 'Avg ATR 5 days',
+        'uz': "O'rta ATR 5 kun",
+        'tr': 'MiOrta ATR 5 gün'
     }
 
     avg_atr = ''
     if value is not None:
-        avg_atr = f'{atr_info[lang]} = <b>{round(value, 5)} USDT</b>\n\n'
+        avg_atr = f'{atr_info[lang]} ~ <b>{get_print_float(value, 5)} USDT</b>\n\n'
+        if day_value is not None and period != '1d':
+            avg_atr += f'{day_atr_info[lang]} ~ {get_print_float(day_value, 5)} USDT'
+
+            stop_show = 'Стоп' if lang == 'ru' else 'Stop'
+            avg_atr += f'\n{stop_show} ~ {get_print_float(value / (day_value or 1) * 100, 1)}% \n\n'
 
     return f'{avg_atr}👇 {texts[lang]}'
 

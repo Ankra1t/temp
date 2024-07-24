@@ -42,8 +42,8 @@ from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
     kb_calc_image, kb_calc_result, kb_calculate_change,
-    kb_calculate_delete, kb_channel_url, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
+    kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
+    kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
 from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
@@ -538,23 +538,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 stat, lang, send_data.withoutStop, send_data.time or '', sent_today + 1,
                 tickerInfo=tickerInfo or None,
                 description=send_data.text if lang == 'ru' else None,
-                week_stat_link=link
-            )
-
-            kb = kb_channel_url(
-                lang, stat_id, bot.get_me().username,
+                week_stat_link=link,
+                try_link=f'https://t.me/{bot.get_me().username}?start=calc_{stat_id}'
             )
 
             if photo is None:
                 new_mes = bot.send_message(
                     CHANNEL_ID, text,
-                    reply_markup=kb
                 )
             else:
                 new_mes = bot.send_photo(
                     CHANNEL_ID,
                     photo, text,
-                    reply_markup=kb
                 )
 
             mesIds.append(new_mes.id)
@@ -641,6 +636,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         new_mes_id = edit_message(
             bot, call.message, 'text',
             '👉 Введите <b>доп текст</b>:',
+            kb_send_back(stat_id)
         )
 
         bot.set_state(user_id, StatsState.send_add_text, chat_id)
@@ -654,6 +650,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         new_mes_id = edit_message(
             bot, call.message, 'text',
             '👉 Отправьте <b>новое фото</b>:',
+            kb_send_back(stat_id)
         )
 
         bot.set_state(user_id, StatsState.send_add_photo, chat_id)
@@ -717,26 +714,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.delete_message(chat_id, mes_id)
         send_confirm_calc_send(bot, call.message, stat_id, True)
 
-    if 'vote_up' in type or 'vote_down' in type:
-        isUp = 'vote_up' in type
-        lang = 'en' if '_en' in type else 'ru'
-
-        is_voted = liteDb.isUserVoted(user_id, stat_id)
-        liteDb.delVote(user_id, stat_id)
-
-        if (is_voted == 'up' and isUp) or (is_voted == 'down' and not isUp):
-            pass
-        else:
-            liteDb.userVote(user_id, stat_id, isUp)
-
-        votes = liteDb.getVotes(stat_id)
-
-        bot.edit_message_reply_markup(
-            chat_id, mes_id,
-            reply_markup=kb_channel_url(
-                lang, stat_id, bot.get_me().username,
-            )
-        )
+    if type == 'stc+back':
+        send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'result_cancel':
         send_data = channel_calc.getByCalc(stat_id)
@@ -744,6 +723,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             channel_calc.update(
                 send_data.id, status='CANCEL'
             )
+
+        send_week_stats(bot)
+        edit_channel_post(bot, stat_id)
 
         calc = db.get_calculation(stat_id)
         if calc is None:
@@ -759,7 +741,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         send_week_stats(bot)
         edit_channel_post(bot, stat_id)
-        type = 'results'
 
         calc = db.get_calculation(stat_id)
         if calc is None:
@@ -995,7 +976,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
                 msg += f'\n\nUpcoming deals are expected'
 
         if tp_count != 0 or sl_count != 0:
-            msg += f'\n\n<b>{texts[lang]["result"]}</b>: {tp_sl_result} {tp_sl_show}\n'
+            msg += f'\n\n<b>{texts[lang]["result"]}</b>: {abs(tp_sl_result)} {tp_sl_show}\n'
 
         if long_count != 0 or short_count != 0:
             if long_count != 0:
@@ -1025,33 +1006,27 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
 
     for i, el in enumerate(messages.chIds):
         link = ''
-        if messages.messages and (send_data.status == 'DEAL' or send_data.status == 'FINISH'):
+        if messages.messages: #  and (send_data.status == 'DEAL' or send_data.status == 'FINISH')
             try:
                 weekMesId = messages.messages.get('mesIds', [])[i]
                 link = f'https://t.me/c/{el.replace("-100", "")}/{weekMesId}'
             except:
                 pass
 
-        lang = messages.langs[i]
-
         msg = msg_channel_calculation(
             calc, messages.langs[i], True, send_data.time or '',
             messages.mesNum or -1, None, send_data.text, link,
-            send_data.status == 'DEAL', messages.date
-        )
-        kb = kb_channel_url(
-            lang, calc_id, bot.get_me().username,
+            send_data.status, messages.date,
+            try_link=f'https://t.me/{bot.get_me().username}?start=calc_{calc_id}'
         )
 
         if send_data.photo is None:
             bot.edit_message_text(
                 msg, el, int(messages.mesIds[i]),
-                reply_markup=kb
             )
         else:
             bot.edit_message_caption(
                 msg, el, int(messages.mesIds[i]),
-                reply_markup=kb
             )
 
 

@@ -207,6 +207,8 @@ More often: <b>{result}</b>"""
                 send_data.id, status='CANCEL'
             )
 
+        send_week_stats(bot)
+        edit_channel_post(bot, stat_id)
         type = 'results'
         page = 0
 
@@ -218,6 +220,7 @@ More often: <b>{result}</b>"""
         send_week_stats(bot)
         edit_channel_post(bot, stat_id)
         type = 'results'
+        page = 0
 
     if 'stop+' in type or 'take+' in type:
         calc = db.get_calculation(stat_id)
