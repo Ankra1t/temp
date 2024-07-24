@@ -363,8 +363,8 @@ def kb_confirm_channel_post(stat_id: int):
 
 def kb_channel_url(lang: LANGUAGES_TYPE, stat_id: int, bot_name: str):
     texts = {
-        'ru': 'Рассчитать для себя',
-        'en': 'Calculate for you',
+        'ru': 'Рассчитать',
+        'en': 'Calculate',
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)

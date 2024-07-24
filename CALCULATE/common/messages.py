@@ -1987,7 +1987,7 @@ def msg_channel_calculation(
 
             'DEAL': '(В сделке)',
             'CANCEL': '(Отменён)',
-            'try': 'Рассчитать для себя',
+            'try': 'Рассчитать',
         },
         'en': {
             'open': 'Price',
@@ -2009,7 +2009,7 @@ def msg_channel_calculation(
 
             'DEAL': '(In deal)',
             'CANCEL': '(Cancel)',
-            'try': 'Calculate for you',
+            'try': 'Calculate',
         }
     }
 
@@ -2146,7 +2146,7 @@ def msg_channel_calc_result(
 
             'date': 'Дата',
             'end': 'Сделка завершена',
-            'try': 'Рассчитать для себя',
+            'try': 'Рассчитать',
         },
         'en': {
             'open': '<b>Purchase</b> price',
@@ -2168,7 +2168,7 @@ def msg_channel_calc_result(
 
             'date': 'Date',
             'end': 'Deal completed',
-            'try': 'Calculate for you',
+            'try': 'Calculate',
         }
     }
 
@@ -2932,7 +2932,7 @@ def msg_enter_min_bar(user_id: int):
     return f'👉 {texts[lang]}'
 
 
-def msg_choose_direct(user_id: int, value: float | None = None, day_value: float | None = None):
+def msg_choose_direct(user_id: int, value: float | None = None):
     lang = get_lang(user_id)
 
     atr_settings = liteDb.getUserAtrSettings(user_id)
@@ -2946,27 +2946,15 @@ def msg_choose_direct(user_id: int, value: float | None = None, day_value: float
     }
 
     atr_info = {
-        'ru': f'Ср. ATR <b>{count} баров</b> ({period.upper()})',
-        'en': f'Avg ATR <b>{count} bars</b> ({period.upper()})',
-        'uz': f'O\'rta ATR <b>{count} bar</b> ({period.upper()})',
-        'tr': f'MiOrta ATR <b>{count} çubukları</b> ({period.upper()})'
-    }
-
-    day_atr_info = {
-        'ru': 'Ср. ATR 5 дней',
-        'en': 'Avg ATR 5 days',
-        'uz': "O'rta ATR 5 kun",
-        'tr': 'MiOrta ATR 5 gün'
+        'ru': f'ATR <b>{count} баров</b> ({period.upper()})',
+        'en': f'ATR <b>{count} bars</b> ({period.upper()})',
+        'uz': f'ATR <b>{count} bar</b> ({period.upper()})',
+        'tr': f'ATR <b>{count} çubukları</b> ({period.upper()})'
     }
 
     avg_atr = ''
     if value is not None:
         avg_atr = f'{atr_info[lang]} ~ <b>{get_print_float(value, 5)} USDT</b>\n\n'
-        if day_value is not None and period != '1d':
-            avg_atr += f'{day_atr_info[lang]} ~ {get_print_float(day_value, 5)} USDT'
-
-            stop_show = 'Стоп' if lang == 'ru' else 'Stop'
-            avg_atr += f'\n{stop_show} ~ {get_print_float(value / (day_value or 1) * 100, 1)}% \n\n'
 
     return f'{avg_atr}👇 {texts[lang]}'
 

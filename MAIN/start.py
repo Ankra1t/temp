@@ -52,15 +52,13 @@ def send_start_by_user(
                         _, percent = stop_type.split('+')
                         rate = float(percent) * 0.01
 
-                    ticker_day_val = get_ticker_atr(calc.tool or '', '1d', 5) or None
-
                     set_state_data(
                         bot, user_id, chat_id, {
                             'atr': abs(ticker_val) * abs(rate)
                         }
                     )
                     bot.send_message(
-                        chat_id, msg_choose_direct(user_id, ticker_val, ticker_day_val),
+                        chat_id, msg_choose_direct(user_id, ticker_val),
                         reply_markup=kb_calc_direct(user_id, True)
                     )
                 else:

@@ -199,15 +199,13 @@ def choose_calculate_step(
                     _, percent = stop_type.split('+')
                     rate = float(percent) * 0.01
 
-                day_value = get_ticker_atr(tool or '', '1d', 5) or None
-
                 set_state_data(
                     bot, user_id, chat_id, {
                         'atr': abs(value) * abs(rate)
                     }
                 )
                 bot.send_message(
-                    chat_id, msg_choose_direct(user_id, value, day_value),
+                    chat_id, msg_choose_direct(user_id, value),
                     reply_markup=kb_calc_direct(user_id)
                 )
                 return
