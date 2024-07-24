@@ -153,9 +153,9 @@ def kb_calc_direct(user_id: int, start_calc=False):
         getButton('Long', f'{start_calc_show}_direct+long'),
         getButton('Short', f'{start_calc_show}_direct+short'),
     )
-    if start_calc:
+    if not start_calc:
         keyboard.add(
-            getButton(cancel_txt(lang), 'calc_back'),
+            getButton(back_txt(lang), 'calc_back'),
         )
 
     return keyboard
