@@ -955,7 +955,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
                     else:
                         short_count += 1
                 else:
-                    tp_sl = f'{valueCount} {texts[lang]["stop"]}'
+                    tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
                     sl_count += abs(valueCount)
                     fail_count += 1
 
