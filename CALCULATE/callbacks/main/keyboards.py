@@ -111,14 +111,6 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
 
             buttons.append(btn_stats)
             buttons.append(btn_link)
-            # buttons.append(btn_buy)
-            if isAdmin:
-                buttons.append(
-                    getButton(
-                        'Посты в каналы',
-                        'channel_post'
-                    )
-                )
         else:
             kb = kb_calc_result(user_id, stat_id, saved)
             buttons_rows = kb.keyboard

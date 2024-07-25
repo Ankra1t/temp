@@ -12,9 +12,11 @@ from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_tr
 from Classes import text_editor, calcService
 from services import channel_calc
 
-from .keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post, kb_channel_post_back, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
+from .keyboards import kb_channel_post, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
 from .filter import ChannelPostCallbackFilter, channel_post_factory
 from ..pages import (
+    send_admin_channel_calc_item,
+    send_admin_channel_calc_list,
     send_admin_send_settings,
     send_calculation
 )
@@ -23,7 +25,7 @@ from ..pages import (
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     data = channel_post_factory.parse(call.data)
     type = data.get('type', '')
-    page = int(data.get('page', 0))
+    is_calc = int(data.get('is_calc', 0))
     stat_id = int(data.get('stat_id', 0))
 
     user_id = call.from_user.id
@@ -210,7 +212,6 @@ More often: <b>{result}</b>"""
         send_week_stats(bot)
         edit_channel_post(bot, stat_id)
         type = 'results'
-        page = 0
 
     if type == 'result_deal':
         send_data = channel_calc.getByCalc(stat_id)
@@ -219,8 +220,7 @@ More often: <b>{result}</b>"""
 
         send_week_stats(bot)
         edit_channel_post(bot, stat_id)
-        type = 'results'
-        page = 0
+        type = 'result'
 
     if 'stop+' in type or 'take+' in type:
         calc = db.get_calculation(stat_id)
@@ -245,9 +245,8 @@ More often: <b>{result}</b>"""
         send_week_stats(bot)
         edit_channel_post(bot, stat_id)
 
-        if page != -1:
+        if is_calc == 0:
             type = 'results'
-            page = 0
         else:
             calc = db.get_calculation(stat_id)
             if calc is None:
@@ -255,54 +254,12 @@ More often: <b>{result}</b>"""
             delete_message(bot, chat_id, mes_id)
             send_calculation(bot, call.message, user_id, calc, True)
 
-    if type == 'results' or type == 'result_take' or type == 'result_stop':
-        inWaitSends = channel_calc.getInWait() or []
+    if type == 'results':
+        send_admin_channel_calc_list(bot, call.message, user_id)
 
-        if len(inWaitSends) == 0:
-            bot.edit_message_text(
-                '👉 Нет расчётов, требующих дествий',
-                chat_id, mes_id,
-                reply_markup=kb_channel_post_back()
-            )
-
-        send_data = inWaitSends[page]
-        calc = db.get_calculation(send_data.calcId or -1)
-        if calc is None:
-            return
-
-        messages = channel_calc.getSentMessagesByCalc(calc.id)
-        if messages is not None:
-            link = ''
-            if messages.messages:
-                try:
-                    weekChId = messages.chIds[0]
-                    weekMesId = messages.mesIds[0]
-                    link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
-                except:
-                    pass
-
-        if type == 'result_take':
-            kb = kb_channel_calc_result_take(
-                calc.tp_ratio, stat_id, page
-            )
-        elif type == 'result_stop':
-            kb = kb_channel_calc_result_stop(
-                stat_id, page
-            )
-        else:
-            kb = kb_channel_calc_result(
-                page, len(inWaitSends), calc.id,
-                send_data.status == 'DEAL'
-            )
-
-        bot.edit_message_text(
-            f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
-
-Цена входа: {calc.open_price} USDT
-Стоп-лосс: {calc.stop_loss} USDT""",
-            chat_id, mes_id,
-            reply_markup=kb
-        )
+    if type == 'result' or type == 'result_take' or type == 'result_stop':
+        mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
+        send_admin_channel_calc_item(bot, call.message, user_id, stat_id, mes_type)
 
     if type == 'calc':
         calc = db.get_calculation(stat_id)

@@ -5,11 +5,11 @@ from common.keyboard import back_txt
 from .filter import channel_post_factory
 
 
-def getButton(text: str, type: str, page: int = 0, stat_id: int = 0):
+def getButton(text: str, type: str, stat_id: int = 0, is_calc=False):
     return InlineKeyboardButton(
         text, None,
         channel_post_factory.new(
-            type=type, page=page, stat_id=stat_id
+            type=type, stat_id=stat_id, is_calc=1 if is_calc else 0
         )
     )
 
@@ -19,7 +19,7 @@ def kb_channel_post():
 
     btn_results = getButton("Результаты", 'results')
     btn_channel_stats = getButton("Статистика", 'ch_stats')
-    btn_send_settings = getButton("Настройки", 'send_settings')
+    btn_send_settings = getButton("Настройки отправки", 'send_settings')
     btn_menu = getButton("На главную", 'main')
 
     keyboard.add(btn_results)
@@ -40,9 +40,13 @@ def kb_send_settings(stop: bool, vote: bool):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_stop = getButton(
-        "Включить стоп" if not stop else 'Выключить стоп', 'ss_stop')
+        "Включить стоп" if not stop else 'Выключить стоп',
+        'ss_stop'
+    )
     btn_vote = getButton(
-        "Включить опрос" if not vote else 'Выключить опрос', 'ss_vote')
+        "Включить опрос" if not vote else 'Выключить опрос',
+        'ss_vote'
+    )
     btn_style = getButton("Изменить стиль", 'ss_style')
     btn_time = getButton("Изменить период", 'ss_time')
     btn_back = getButton(back_txt('ru'), 'back')
@@ -100,69 +104,52 @@ def kb_send_settings_trading_style():
 
 
 def kb_channel_calc_result(
-    current_page: int,
-    page_count: int,
     stat_id: int,
     in_deal: bool,
+    is_calc=False
 ):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
-    if page_count > 1:
-        if current_page == 0:
-            btn_prev = getButton('В конец', 'results', page_count - 1)
-        else:
-            btn_prev = getButton('Назад', 'results', current_page - 1)
+    btn_tp = getButton('Тейк', 'result_take', stat_id, is_calc)
+    btn_sl = getButton('Стоп', 'result_stop', stat_id, is_calc)
+    keyboard.add(btn_tp, btn_sl)
 
-        if current_page == page_count - 1:
-            btn_next = getButton('В начало', 'results', 0)
-        else:
-            btn_next = getButton('Вперед', 'results', current_page + 1)
-
-        btn_counter = getButton(f'{current_page + 1}/{page_count}', 'counter++')
-
-        keyboard.add(btn_prev, btn_counter, btn_next)
-
-    if in_deal:
-        btn_tp = getButton('Тейк', 'result_take', current_page, stat_id)
-        btn_sl = getButton('Стоп', 'result_stop', current_page, stat_id)
-        keyboard.add(btn_tp, btn_sl)
-    else:
-        btn_deal = getButton('В сделке', 'result_deal', current_page, stat_id)
+    if not in_deal:
+        btn_deal = getButton('В сделке', 'result_deal', stat_id, is_calc)
         btn_cancel = getButton(
-            'Отмена сделки', 'result_cancel', current_page, stat_id
+            'Отмена сделки', 'result_cancel', stat_id, is_calc
         )
         keyboard.add(btn_cancel, btn_deal)
 
     keyboard.add(
         getButton(
-            back_txt('ru'), 'back',
-            current_page, stat_id
+            back_txt('ru'), 'results', stat_id, is_calc
         )
     )
 
     return keyboard
 
 
-def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, page: int):
+def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=False):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     buttons = []
     for i, el in enumerate(tp_values):
-        btn = getButton(f'x{el}', f'take+{el}', page, stat_id)
+        btn = getButton(f'x{el}', f'take+{el}', stat_id, is_calc)
         buttons.append(btn)
         if len(buttons) == row_width or (i == len(tp_values) - 1 and len(buttons) != 0):
             keyboard.add(*buttons)
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'results' if page != -1 else 'calc', page, stat_id)
+        getButton(back_txt('ru'), 'calc' if is_calc else 'result', stat_id, is_calc)
     )
 
     return keyboard
 
 
-def kb_channel_calc_result_stop(stat_id: int, page: int):
+def kb_channel_calc_result_stop(stat_id: int, is_calc=False):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -170,14 +157,14 @@ def kb_channel_calc_result_stop(stat_id: int, page: int):
 
     buttons = []
     for i, el in enumerate(sl_count):
-        btn = getButton(f'x{el}', f'stop+{el}', page, stat_id)
+        btn = getButton(f'x{el}', f'stop+{el}', stat_id, is_calc)
         buttons.append(btn)
         if len(buttons) == row_width or (i == len(sl_count) - 1 and len(buttons) != 0):
             keyboard.add(*buttons)
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'results' if page != -1 else 'calc', page, stat_id)
+        getButton(back_txt('ru'), 'calc' if is_calc else 'result', stat_id, is_calc)
     )
 
     return keyboard
@@ -186,6 +173,6 @@ def kb_channel_calc_result_stop(stat_id: int, page: int):
 def kb_channel_post_back():
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        getButton(back_txt('ru'), 'back')
+        getButton(back_txt('ru'), 'main')
     )
     return keyboard

@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result, kb_channel_post_back
-from CALCULATE.callbacks.pages import send_channel_post
+from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel_post
 from CALCULATE.callbacks.utils import send_calc_start
 from MAIN.callbacks.user.pages import send_referral
 from db import db
@@ -109,46 +109,7 @@ def _channel_post(message: Message, bot: TeleBot):
 
 
 def _results(message: Message, bot: TeleBot):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    inWaitSends = channel_calc.getInWait() or []
-
-    if len(inWaitSends) == 0:
-        bot.edit_message_text(
-            '👉 Нет расчётов, требующих дествий',
-            chat_id, mes_id,
-            reply_markup=kb_channel_post_back()
-        )
-
-    send_data = inWaitSends[0]
-    calc = db.get_calculation(send_data.calcId or -1)
-    if calc is None:
-        return
-
-    messages = channel_calc.getSentMessagesByCalc(calc.id)
-    if messages is not None:
-        link = ''
-        if messages.messages:
-            try:
-                weekChId = messages.chIds[0]
-                weekMesId = messages.mesIds[0]
-                link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
-            except:
-                pass
-
-    kb = kb_channel_calc_result(
-        0, len(inWaitSends), calc.id,
-        send_data.status == 'DEAL'
-    )
-
-    bot.send_message(
-        chat_id, f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
-
-Цена входа: {calc.open_price} USDT
-Стоп-лосс: {calc.stop_loss} USDT""",
-        reply_markup=kb
-    )
+    send_admin_channel_calc_list(bot, message, message.from_user.id, True)
 
 
 def _test(message: Message, bot: TeleBot):
@@ -179,10 +140,10 @@ def commands_registration(bot: TeleBot):
     reg_mes(_channel_calc, commands=['channel_calc'])
 
     reg_mes(_channel_post, commands=['channels'])
-    reg_mes(_results, commands=['r'])
+    reg_mes(_results, commands=['d'])
 
     reg_mes(_referral, commands=['referral'])
-    # reg_mes(_site, commands=['site'])
 
     reg_mes(_test, commands=['test11'])
+
     bot.register_channel_post_handler(_test, pass_bot=True)

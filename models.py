@@ -337,7 +337,7 @@ class SentMessages(BaseModel):
 
 class SendCalc(BaseModel):
     id: int
-    calcId: Optional[int] = None
+    calcId: int
     text: Optional[str]
     photo: Optional[str]
     sent: bool
@@ -346,3 +346,4 @@ class SendCalc(BaseModel):
     time: Optional[str]
     isVote: bool
     status: Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
+    createdAt: str

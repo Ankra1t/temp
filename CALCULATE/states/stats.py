@@ -11,3 +11,6 @@ class StatsState(StatesGroup):
 
     send_add_text = State()
     send_add_photo = State()
+
+class ChannelCalcState(StatesGroup):
+    close_price = State()

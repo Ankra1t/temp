@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks.pages import send_admin_send_settings
 from MAIN.callbacks.user.pages import send_site_code
 
 from .filter import admin_main_factory, AdminMainCallbackFilter
@@ -41,6 +42,9 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'back':
         send_admin_main(bot, call.message, user_id)
+
+    if type == 'send_settings':
+        send_admin_send_settings(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

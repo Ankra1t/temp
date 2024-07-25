@@ -1,14 +1,35 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.pages import send_admin_channel_calc_item
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
-from common.utils import set_state_data
+from common.utils import delete_message, set_state_data
 from MAIN.callbacks import kb_livepost_type
 from MAIN.common.utils import get_post_from_message
 from MAIN.states import AdminPostsState
 
 
 def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
+    mes_id = message.id
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    if message.content_type == 'text' and message.text is not None:
+        text = message.text
+
+        if text.startswith('/') and bot.get_state(user_id, chat_id) == 'admin_calc_id':
+            delete_message(bot, chat_id, mes_id)
+
+            text = text.replace('/', '')
+            if not text.isdigit():
+                return
+
+            calc_id = int(text)
+            send_admin_channel_calc_item(bot, message, user_id, calc_id, is_first=True)
+
+            return
+
+    # livepost
     user_role = data.get('user_role', 0)
     if user_role != 1 and user_role != 2:
         return
@@ -19,9 +40,6 @@ def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
             print(message.animation.file_id)
     except:
         pass
-
-    chat_id = message.chat.id
-    user_id = message.from_user.id
 
     post = get_post_from_message(bot, message, kb_posts_back)
 

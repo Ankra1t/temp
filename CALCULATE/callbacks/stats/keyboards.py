@@ -101,8 +101,9 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
     keyboard.add(btn_delete, btn_change)
 
     if is_saved:
-        btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
-        keyboard.add(btn_add_img)
+        if not isAdmin:
+            btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
+            keyboard.add(btn_add_img)
     else:
         if isAdmin:
             if send_data is not None and (send_data.status == 'WAIT' or send_data.status == 'DEAL'):

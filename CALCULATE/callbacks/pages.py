@@ -1,10 +1,13 @@
+from datetime import datetime
 import os
+from typing import Literal
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
 from AuthRoles import get_ticker_info
+from CALCULATE.states.stats import ChannelCalcState
 from MAIN.common.messages import msg_user_tariff
-from common.utils import delete_message, edit_message, get_lang, set_state_data
+from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
 from db import db
 from data.data import liteDb
 
@@ -29,7 +32,7 @@ from .settings.keyboards import (
 )
 from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
-from .channel_post.keyboards import kb_send_settings, kb_channel_post
+from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_send_settings, kb_channel_post
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
@@ -670,3 +673,131 @@ def send_channel_post(
             msg, chat_id, message.id,
             reply_markup=kb
         )
+
+
+def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    inWaitSends = channel_calc.getInWait() or []
+
+    if len(inWaitSends) == 0:
+        mes = '👉 Нет расчётов, требующих дествий'
+        kb = kb_channel_post_back()
+
+        if is_first:
+            bot.send_message(
+                chat_id, mes, reply_markup=kb
+            )
+        else:
+            bot.edit_message_text(
+                mes, chat_id, mes_id,
+                reply_markup=kb
+            )
+
+        return
+
+    msg = '<b><u>Отправленные расчёты</u></b>'
+    msg += '\n👇 Нажмите на номер для действий'
+    for send_data in inWaitSends:
+        calc = db.get_calculation(send_data.calcId)
+        if calc is None:
+            continue
+
+        msg += f'\n\n/{send_data.calcId} <b>{(calc.tool or "").replace("/USDT", "")}</b>'
+        msg += f' ({datetime.fromisoformat(send_data.createdAt.replace("Z", "")).strftime("%d.%m %H:%M")})'
+        msg += f'\nВход/Стоп: <b>{get_print_float(calc.open_price)} / {get_print_float(calc.stop_loss)}</b>'
+
+    del_mes_id = mes_id
+
+    kb = kb_channel_post_back()
+    if is_first:
+        new_mes = bot.send_message(
+            chat_id, msg, reply_markup=kb
+        )
+        del_mes_id = new_mes.id
+    else:
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+    bot.set_state(user_id, 'admin_calc_id', chat_id)
+    set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id})
+
+
+def send_admin_channel_calc_item(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    calc_id: int,
+    type: Literal['take', 'stop', ''] = '',
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    send_data = channel_calc.getByCalc(calc_id)
+    calc = db.get_calculation(calc_id)
+    if calc is None:
+        return
+
+    if send_data is None or (send_data.status != 'WAIT' and send_data.status != 'DEAL') or calc is None:
+        msg = 'Расчёт не найден или не требует действий'
+        if is_first:
+            bot.send_message(
+                chat_id, msg,
+            )
+        else:
+            bot.edit_message_text(
+                msg, chat_id, mes_id
+            )
+        return
+
+    messages = channel_calc.getSentMessagesByCalc(calc.id)
+    if messages is not None:
+        link = ''
+        try:
+            weekChId = messages.chIds[0]
+            weekMesId = messages.mesIds[0]
+            link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
+        except Exception as e:
+            print(e)
+
+    msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
+
+Цена входа: {calc.open_price} USDT
+Стоп-лосс: {calc.stop_loss} USDT"""
+
+    info = '\n\n<i>Либо введите <b>цену закрытия</b></i>'
+    is_state = True
+    if type == 'take':
+        kb = kb_channel_calc_result_take(calc.tp_ratio, calc_id)
+    elif type == 'stop':
+        kb = kb_channel_calc_result_stop(calc_id)
+    else:
+        kb = kb_channel_calc_result(
+            calc.id, send_data.status == 'DEAL'
+        )
+        is_state = False
+        info = ''
+
+    msg += info
+
+    del_mes_id = mes_id
+    if is_first:
+        new_mes = bot.send_message(
+            chat_id, msg, reply_markup=kb
+        )
+        del_mes_id = new_mes.id
+    else:
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+    if is_state:
+        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id, 'stat_id': calc_id})

@@ -2106,9 +2106,9 @@ def msg_channel_calculation(
             if not without_stop
             else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
         ),
-    )) + info_show \
+    )) + (f'\n\n{description}' if description else '') \
+        + info_show \
         + trading_style_type \
-        + (f'\n\n{description}' if description else '') \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
 
 

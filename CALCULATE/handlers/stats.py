@@ -3,7 +3,9 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.pages import send_admin_channel_calc_list
 from CALCULATE.callbacks.stats.handler import edit_channel_post, send_week_stats
+from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
 from Classes import calcService
 from db import db
@@ -218,6 +220,53 @@ def handle_send_photo(message: Message, bot: TeleBot):
     send_confirm_calc_send(bot, message, stat_id, True)
 
 
+def handle_channel_close_price(message: Message, bot: TeleBot):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
+        is_calc = data.get('is_calc')
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(0),
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    calc = db.get_calculation(stat_id)
+    if calc is None:
+        return
+
+    result = 'stop'
+    if (calc.open_price > calc.stop_loss and calc.open_price < value) or (calc.open_price < calc.stop_loss and calc.open_price > value):
+        result = 'take'
+
+    rate = abs(value - calc.open_price) / abs(calc.open_price - calc.stop_loss)
+
+    # _, _, spot_rate = get_count_value_bet(calc)
+    spot_rate = 1
+    calcService.set_profit(
+        stat_id,
+        (-1 if result == 'stop' else 1) *
+        calc.risk_value * rate * spot_rate
+    )
+
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is None:
+        return
+    channel_calc.update(send_data.id, status='FINISH')
+    send_week_stats(bot)
+    edit_channel_post(bot, stat_id)
+
+    if is_calc:
+        send_calculation(bot, message, user_id, calc, True)
+    else:
+        send_admin_channel_calc_list(bot, message, user_id, True)
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -229,3 +278,5 @@ def registration(bot: TeleBot):
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
     reg_mes(handle_send_photo, state=StatsState.send_add_photo)
+
+    reg_mes(handle_channel_close_price, state=ChannelCalcState.close_price)

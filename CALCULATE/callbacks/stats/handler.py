@@ -18,6 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from AuthRoles import get_ticker_info, vote_timeout
 from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
+from CALCULATE.states.stats import ChannelCalcState
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
@@ -756,8 +757,16 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_reply_markup(
             chat_id, mes_id, reply_markup=kb_channel_calc_result_take(
-                calc.tp_ratio, stat_id, -1
+                calc.tp_ratio, stat_id, True
             )
+        )
+        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': mes_id,
+                'stat_id': stat_id,
+                'is_calc': True
+            }
         )
 
     if type == 'result_stop':
@@ -767,8 +776,16 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_reply_markup(
             chat_id, mes_id, reply_markup=kb_channel_calc_result_stop(
-                stat_id, -1
+                stat_id, True
             )
+        )
+        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': mes_id,
+                'stat_id': stat_id,
+                'is_calc': True
+            }
         )
 
     bot.answer_callback_query(call.id)
@@ -1006,7 +1023,8 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
 
     for i, el in enumerate(messages.chIds):
         link = ''
-        if messages.messages: #  and (send_data.status == 'DEAL' or send_data.status == 'FINISH')
+        # and (send_data.status == 'DEAL' or send_data.status == 'FINISH')
+        if messages.messages:
             try:
                 weekMesId = messages.messages.get('mesIds', [])[i]
                 link = f'https://t.me/c/{el.replace("-100", "")}/{weekMesId}'
