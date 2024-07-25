@@ -105,10 +105,20 @@ def _referral(message: Message, bot: TeleBot):
 
 
 def _channel_post(message: Message, bot: TeleBot):
+    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
+    admin = db.get_worker_role(user_db_id)
+    if admin is None:
+        return
+
     send_channel_post(bot, message, message.from_user.id, True)
 
 
 def _results(message: Message, bot: TeleBot):
+    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
+    admin = db.get_worker_role(user_db_id)
+    if admin is None:
+        return
+
     send_admin_channel_calc_list(bot, message, message.from_user.id, True)
 
 

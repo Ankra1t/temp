@@ -769,14 +769,16 @@ def send_admin_channel_calc_item(
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
 Цена входа: {calc.open_price} USDT
-Стоп-лосс: {calc.stop_loss} USDT"""
+Стоп-лосс: {calc.stop_loss} USDT
+Риск: {calc.risk_value} USDT"""
 
-    info = '\n\n<i>Либо введите <b>цену закрытия</b></i>'
     is_state = True
     if type == 'take':
         kb = kb_channel_calc_result_take(calc.tp_ratio, calc_id)
+        info = '\n\n<i>Либо введите <b>прибыль</b></i> со сделки'
     elif type == 'stop':
         kb = kb_channel_calc_result_stop(calc_id)
+        info = '\n\n<i>Либо введите <b>убыток</b></i> со сделки'
     else:
         kb = kb_channel_calc_result(
             calc.id, send_data.status == 'DEAL'
@@ -799,5 +801,5 @@ def send_admin_channel_calc_item(
         )
 
     if is_state:
-        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id, 'stat_id': calc_id})
+        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type})

@@ -760,12 +760,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 calc.tp_ratio, stat_id, True
             )
         )
-        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
+        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
         set_state_data(
             bot, user_id, chat_id, {
                 'del_mes_id': mes_id,
                 'stat_id': stat_id,
-                'is_calc': True
+                'is_calc': True,
+                'type': 'take'
             }
         )
 
@@ -779,12 +780,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 stat_id, True
             )
         )
-        bot.set_state(user_id, ChannelCalcState.close_price, chat_id)
+        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
         set_state_data(
             bot, user_id, chat_id, {
                 'del_mes_id': mes_id,
                 'stat_id': stat_id,
-                'is_calc': True
+                'is_calc': True,
+                'type': 'stop'
             }
         )
 
