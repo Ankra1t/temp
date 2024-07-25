@@ -845,7 +845,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
             'from': 'с',
             'to': 'по',
 
-            'stop': 'Стоп',
+            'stop': 'стоп',
             'count to': 'к',
             'deal': 'В сделке',
             'tp': 'тейков',
@@ -863,7 +863,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
             'from': 'from',
             'to': 'to',
 
-            'stop': 'Stop',
+            'stop': 'stop',
             'count to': 'to',
             'deal': 'In deal',
             'tp': 'takes',
@@ -955,7 +955,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
                     else:
                         short_count += 1
                 else:
-                    tp_sl = texts[lang]["stop"]
+                    tp_sl = f'{valueCount} {texts[lang]["stop"]}'
                     sl_count += abs(valueCount)
                     fail_count += 1
 
