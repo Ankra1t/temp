@@ -1987,6 +1987,7 @@ def msg_channel_calculation(
 
             'DEAL': '(В сделке)',
             'CANCEL': '(Отменён)',
+            'WAIT': '(В ожидании)',
             'try': 'Рассчитать',
         },
         'en': {
@@ -2009,6 +2010,7 @@ def msg_channel_calculation(
 
             'DEAL': '(In deal)',
             'CANCEL': '(Cancel)',
+            'WAIT': '(Waiting)',
             'try': 'Calculate',
         }
     }
@@ -2095,7 +2097,7 @@ def msg_channel_calculation(
         return value
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang][status] if status != "WAIT" else ""}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
         (
