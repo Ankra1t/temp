@@ -96,7 +96,7 @@ def stats_post():
     if access_token is None or api_key is None or access_token != api_key:
         return Response(status=400)
 
-    send_week_stats(bot, True)
+    send_week_stats(bot, is_new_week=True)
 
     return Response(status=200)
 

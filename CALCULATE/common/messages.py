@@ -8,7 +8,7 @@ from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb
 from Classes import calcService
-from models import MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
+from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
 
 
 POINT = '•'
@@ -1955,7 +1955,7 @@ def msg_channel_calculation(
     tickerInfo: TickerInfo | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
-    status: Literal['DEAL', 'CANCEL', 'WAIT', 'FINISH'] = 'WAIT',
+    status: CHANNEL_STATUS_TYPE = 'WAIT',
     date: str | None = None,
     try_link: str = '',
 ):

@@ -104,6 +104,9 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
             btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
+            if isAdmin:
+                btn_stats = getButton('Расчёты канaла', 'channels')
+
             link = 'my_investors' if lang == 'ru' else '+386iRxc4XKszMDIy'
             btn_link = InlineKeyboardButton(
                 texts[lang]['link'], f'https://t.me/{link}'

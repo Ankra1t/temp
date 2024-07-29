@@ -8,7 +8,7 @@ from db import db
 
 from ..stats.keyboards import kb_calc_result
 from ..utils import send_calc_start
-from ..pages import send_channel_post, send_settings, send_main, send_stats, send_tariffs_list_item
+from ..pages import send_admin_channel_calc_list, send_channel_post, send_settings, send_main, send_stats, send_tariffs_list_item
 from .filter import main_factory, MainCallbackFilter
 
 
@@ -63,6 +63,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'week_stat':
         send_week_stats(bot)
         send_week_stats(bot, 652)
+
+    if type == 'channels':
+        send_admin_channel_calc_list(bot, call.message, user_id)
 
     if type == 'channel_post':
         send_channel_post(bot, call.message, user_id)

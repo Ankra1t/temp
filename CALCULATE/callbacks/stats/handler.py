@@ -36,7 +36,7 @@ from CALCULATE.common.messages import (
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.states import StatsState
-from models import MARKETS_TYPE
+from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE
 from services import channel_calc
 
 from ..main.keyboards import kb_main
@@ -844,14 +844,19 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
             'stop': 'стоп',
             'count to': 'к',
-            'deal': 'В сделке',
+
+            'DEAL': 'В сделке',
+            'CANCEL': 'Отменён',
+
             'tp': 'тейков',
             'sl': 'стопов',
             'prices': 'Купил/Продал',
-            'result': 'Итог',
+            'result': 'Итого за неделю',
             'long': 'Лонг',
             'short': 'Шорт',
-            'success': 'Успешных сделок',
+            'success': 'Процент успешных сделок',
+
+            'breakeven': 'безубыток',
         },
         'en': {
             'title': '⚡️ <b>Results for this week</b>',
@@ -862,14 +867,19 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
             'stop': 'stop',
             'count to': 'to',
+
             'deal': 'In deal',
+            'CANCEL': 'Cancel',
+
             'tp': 'takes',
             'sl': 'stops',
             'prices': 'Bought/Sold',
-            'result': 'Result',
+            'result': 'Total for the week',
             'long': 'Long',
             'short': 'Short',
-            'success': 'Success deals',
+            'success': 'Success deals percent',
+
+            'breakeven': 'breakeven',
         },
     }
 
@@ -908,8 +918,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
         msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
 
-        tp_count = 0
-        sl_count = 0
+        all_tp_count = 0
+        all_sl_count = 0
 
         long_count = 0
         short_count = 0
@@ -917,12 +927,22 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
         all_success_count = 0
         all_fail_count = 0
 
+        tool_counts: dict[str, int] = {}
+
         for valueDate_i, valueDate in enumerate(values):
-            msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>'
+            date_msg = ''
+
+            tp_count = 0
+            sl_count = 0
 
             success_count = 0
             fail_count = 0
+
             for value_i, value in enumerate(valueDate.get('calcs', [])):
+                status: CHANNEL_STATUS_TYPE = value.get('status', 'WAIT')
+                if status == 'WAIT':
+                    continue
+
                 valueCount = value.get('valueCount')
                 openPrice = value.get('openPrice')
                 closePrice = value.get('closePrice')
@@ -941,7 +961,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
                 tp_sl = ''
                 if valueCount is None:
-                    tp_sl = texts[lang]['deal']
+                    tp_sl = texts[lang][status]
                 elif valueCount > 0:
                     tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
                     tp_count += valueCount
@@ -962,22 +982,50 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                         long_count += 1
 
                 if value_i == 0:
-                    msg += '\n'
+                    date_msg += '\n'
 
                 link_start = f'<a href="https://t.me/c/{CHANNEL_ID.replace("-100", "")}/{mesId}">' if mesId is not None else ''
                 link_end = '</a>' if mesId is not None else ''
 
-                msg += f'\n{value_i + 1}. {link_start}<b>{(value.get("tool") or "-").replace("/USDT", "")}</b>{link_end} - {tp_sl}'
+                tool = value.get("tool")
+                tool_num = ''
+                if tool not in tool_counts:
+                    tool_counts[tool] = 1
+                else:
+                    tool_counts[tool] += 1
+                    tool_num = f'({tool_counts[tool]})'
+
+                date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
+
+            tp_sl_result = round(tp_count - sl_count, 1)
+            tp_sl_show = ''
+            if tp_sl_result > 0:
+                tp_sl_show = f'{texts[lang]["tp"]}'
+            else:
+                tp_sl_show = f'{texts[lang]["sl"]}'
+
+            tp_sl_msg = ''
+            if tp_count != 0 or sl_count != 0:
+                if tp_sl_result == 0:
+                    tp_sl_msg = f'{texts[lang]["breakeven"]}'
+                else:
+                    tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+                tp_sl_msg = f' ({tp_sl_msg})'
+
+            msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
+            msg += f'{date_msg}'
 
             if success_count != 0 or fail_count != 0:
                 msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
 
             all_success_count += success_count
             all_fail_count += fail_count
+            all_tp_count += tp_count
+            all_sl_count += sl_count
 
         msg += f'\n_________________________________'
 
-        tp_sl_result = round(tp_count - sl_count, 1)
+        tp_sl_result = round(all_tp_count - all_sl_count, 1)
 
         tp_sl_show = ''
         if tp_sl_result > 0:
@@ -985,14 +1033,19 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
         else:
             tp_sl_show = f'{texts[lang]["sl"]}'
 
-        if tp_count == 0 and sl_count == 0:
+        if all_tp_count == 0 and all_sl_count == 0:
             if lang == 'ru':
                 msg += f'\n\nОжидаются ближайшие сделки'
             else:
                 msg += f'\n\nUpcoming deals are expected'
 
-        if tp_count != 0 or sl_count != 0:
-            msg += f'\n\n<b>{texts[lang]["result"]}</b>: {abs(tp_sl_result)} {tp_sl_show}\n'
+        if all_tp_count != 0 or all_sl_count != 0:
+            msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
+            if tp_sl_result == 0:
+                msg += f'{texts[lang]["breakeven"]}'
+            else:
+                msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+            msg += '\n'
 
         if long_count != 0 or short_count != 0:
             if long_count != 0:

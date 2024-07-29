@@ -681,6 +681,23 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
 
     inWaitSends = channel_calc.getInWait() or []
 
+    weekStat = channel_calc.getWeekStat()
+    stats_link = ''
+    if weekStat is not None:
+        stats_link = 'Ссылки на статистику:'
+        messages = weekStat.get('messages')
+        chIds = messages.get('chIds')
+        mesIds = messages.get('mesIds')
+        langs = messages.get('langs')
+        link = ''
+        for i in range(2):
+            try:
+                link = f'https://t.me/c/{chIds[i].replace("-100", "")}/{mesIds[i]}'
+            except:
+                pass
+
+            stats_link += f'   <a href="{link}">{langs[i]}</a>'
+
     if len(inWaitSends) == 0:
         mes = '👉 Нет расчётов, требующих дествий'
         kb = kb_channel_post_back()
@@ -698,6 +715,8 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
         return
 
     msg = '<b><u>Отправленные расчёты</u></b>'
+    if stats_link != '':
+        msg += f'\n{stats_link}'
     msg += '\n👇 Нажмите на номер для действий'
     for send_data in inWaitSends:
         calc = db.get_calculation(send_data.calcId)

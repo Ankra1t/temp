@@ -7,6 +7,7 @@ TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
+CHANNEL_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
 
 class Invoice(BaseModel):
@@ -348,5 +349,5 @@ class SendCalc(BaseModel):
     tradingStyle: Optional[str]
     time: Optional[str]
     isVote: bool
-    status: Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
+    status: CHANNEL_STATUS_TYPE
     createdAt: str
