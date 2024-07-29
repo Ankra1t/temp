@@ -127,7 +127,7 @@ def getWeekStat(calcId: int | None = None):
 
     res = session.get(
         f'{API_URL}/channelCalc/weekStat',
-        params=json.dumps(data).encode()
+        params=data
     )
 
     if not check_response(res):
