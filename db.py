@@ -849,7 +849,7 @@ class Database:
         return UserInfo(
             id=data.get('id'),
             tg_id=data.get('tgId'),
-            tg_username=data.get('tgUsername') or '',
+            tg_username=data.get('tgUsername'),
             refer_id=data.get('referId'),
             ban=data.get('ban') or False,
             registration_dt=data.get('createdAt') or datetime(2012, 12, 12),

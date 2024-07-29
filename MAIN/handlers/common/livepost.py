@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
+from AuthRoles import check_registrate
 from CALCULATE.callbacks.pages import send_admin_channel_calc_item
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from common.utils import delete_message, set_state_data
@@ -9,7 +10,7 @@ from MAIN.common.utils import get_post_from_message
 from MAIN.states import AdminPostsState
 
 
-def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
+def handle_livepost(message: Message, bot: TeleBot):
     mes_id = message.id
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -30,7 +31,7 @@ def handle_livepost(message: Message, bot: TeleBot, data: dict[str, str]):
             return
 
     # livepost
-    user_role = data.get('user_role', 0)
+    user_role = check_registrate(user_id)
     if user_role != 1 and user_role != 2:
         return
 

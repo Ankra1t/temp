@@ -2,7 +2,7 @@ import json
 from config_global import API_URL
 from db import LANGUAGES_TYPE
 from .base_config import session_decorator, session, check_response
-from models import SendCalc, SentMessages
+from models import SendCalc, CalcSentMessages
 
 
 @session_decorator
@@ -35,7 +35,7 @@ def getSentMessagesByCalc(calcId: int):
     data = res.json()
     if data is None:
         return
-    return SentMessages(**data)
+    return CalcSentMessages(**data)
 
 
 @session_decorator

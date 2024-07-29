@@ -1,22 +1,16 @@
 from telebot import types, TeleBot
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
-from telebot.util import extract_arguments
 
-from NOTIFIER import notifier
+from common.utils import delete_message
 
-from config_logger import logger
-from common.utils import delete_message, is_digit
-
-from db import db, LANGUAGES
-from AuthRoles import check_registrate, registration
+from db import db
+from AuthRoles import check_registrate
 
 
 class AuthMiddleWare(BaseMiddleware):
     """Класс защитник авторизации"""
 
-    def __init__(self, bot: TeleBot, limit=2) -> None:
-        self.last_time = {}
-        self.limit = limit
+    def __init__(self, bot: TeleBot) -> None:
         self.update_types = ['message', 'edited_message']
         self.bot = bot
 
@@ -54,49 +48,4 @@ class AuthMiddleWare(BaseMiddleware):
 
         user_role = check_registrate(user_id)
 
-        if user_role is None:
-            # Проверяем реферальный id
-            ref_id = extract_arguments(message.text or '')
-            ref_id = int(ref_id) if ref_id is not None and is_digit(ref_id) else None
 
-            # Регистрация, пробный период, добавление таблиц бота
-            is_registered = registration(user_id, username, ref_id)
-            new_user = db.get_user_by_tg_id(user_id)
-
-            if new_user is not None and is_registered:
-                num = len(db.get_today_users())
-
-                # Проверка языка
-                user_lang = message.from_user.language_code.lower()
-                lang = user_lang if (user_lang in LANGUAGES) else 'en'
-                db.set_user_lang(new_user.id, lang)
-
-                refer_user = db.get_user_by_id(ref_id or -1)
-
-                # Уведомление о регистрации
-                notifier.send_user_is_registered(new_user, user_lang, num, refer_user)
-            else:
-                logger.error(
-                    f'Ошибка регистрации пользователя tg_id = {user_id} {username}'
-                )
-
-            data['has_registered_now'] = True
-            user_role = 0
-
-        data['user_role'] = user_role
-
-        # Защита от флуда отключена
-        # if message.from_user.id not in self.last_time:
-        #   User is not in a dict, so lets add and cancel this function
-        # self.last_time[message.from_user.id] = message.date
-        # return
-        # if message.date - self.last_time[message.from_user.id] < self.limit:
-        #     User is flooding
-        # self.bot.send_message(message.chat.id, 'You are making request too often')
-        # logger.info(f'Пользователь флудит (быстро отправляет одни и те же сообщения) message.from_user.id')
-        #
-        # return CancelUpdate()
-        # self.last_time[message.from_user.id] = message.date
-
-        # return SkipHandler() -> this will skip handler
-        # return CancelUpdate() -> this will cancel update

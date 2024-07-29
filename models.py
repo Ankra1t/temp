@@ -330,6 +330,9 @@ class SentMessages(BaseModel):
     chIds: list[str]
     mesIds: list[str]
     langs: list[Literal['ru', 'en']]
+
+
+class CalcSentMessages(SentMessages):
     mesNum: Optional[int] = None
     messages: Optional[dict] = None
     date: str

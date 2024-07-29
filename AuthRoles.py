@@ -9,31 +9,6 @@ from common.vars import HEADERS
 from models import TickerInfo
 
 
-def registration(user_id: int, username: str = '', referral_id: int | None = None):
-    access_token = db.get_access_token() or ''
-
-    data: dict[str, str | int | None] = {
-        'tgId': user_id,
-        'tg_api_auth_token': access_token,
-        'tgUsername': username,
-    }
-
-    try:
-        response = requests.post(
-            f'{API_URL}/tg/auth/registration',
-            json.dumps(data).encode(), headers=HEADERS | {'tg-api-key': access_token}
-        )
-
-        logger.info(
-            f'/auth/tg_register [id={user_id}, username={username}] {response.status_code}'
-        )
-    except Exception as e:
-        logger.error(f'/auth/tg_register {e}')
-        return False
-
-    return response.status_code >= 200 and response.status_code < 300
-
-
 def get_site_code(user_id: int) -> str | Literal[False]:
     access_token = db.get_access_token() or ''
     user_db_id = db.get_user_id_by_tg_id(user_id)

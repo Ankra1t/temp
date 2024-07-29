@@ -766,11 +766,18 @@ def send_admin_channel_calc_item(
         except Exception as e:
             print(e)
 
+    calc_result = calcService.get_result(calc)
+    take_info = ''
+    for i in range(calc_result.tp_count):
+        take_info += f'\n <b>({calc.tp_ratio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
+
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
-Цена входа: {calc.open_price} USDT
-Стоп-лосс: {calc.stop_loss} USDT
-Риск: {calc.risk_value} USDT"""
+<b>Цена входа</b>: {get_print_float(calc.open_price, 5)} USDT
+<b>Стоп-лосс</b>: {get_print_float(calc.stop_loss, 5)} USDT
+<b>Риск</b>: {get_print_float(calc.risk_value, 5)} USDT
+
+<b>Тейки:</b>{take_info}"""
 
     is_state = True
     if type == 'take':
@@ -802,4 +809,5 @@ def send_admin_channel_calc_item(
 
     if is_state:
         bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type})
+        set_state_data(bot, user_id, chat_id, {
+                       'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type})

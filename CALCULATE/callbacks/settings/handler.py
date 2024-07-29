@@ -5,6 +5,7 @@ from CALCULATE.callbacks.main.keyboards import kb_first_calc
 from CALCULATE.callbacks.utils import choose_calculate_step
 
 from CALCULATE.states.settings import FirstCalcState
+from NOTIFIER import notifier
 from config_logger import logger
 from db import db, LANGUAGES
 from data.data import liteDb
@@ -19,6 +20,7 @@ from CALCULATE.common.messages import (
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
     msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
 )
+from services import auth
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
@@ -216,6 +218,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                         reply_markup=kb_first_calc(user_id),
                         disable_web_page_preview=True
                     )
+
+                    sent_messages = auth.getUserNotificationMessages(
+                        user_db_id
+                    )
+
+                    if sent_messages:
+                        notifier.change_user_choosed_lang(user_db_id, lang, sent_messages)
                 else:
                     send_settings(bot, call.message, user_id)
 
@@ -690,7 +699,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         atr_settings = liteDb.getUserAtrSettings(user_id)
         bars = atr_settings[1].split('+')
-        liteDb.setUserAtrSettings(user_id, (atr_settings[0], f'{bars[0]}+{count}'))
+        liteDb.setUserAtrSettings(
+            user_id, (atr_settings[0], f'{bars[0]}+{count}'))
 
         send_atr_settings(bot, call.message, user_id)
 

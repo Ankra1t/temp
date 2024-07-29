@@ -220,7 +220,7 @@ def handle_deposit(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_tool" user_tg_id={user_id} value={value}')
+    logger.info(f'callback "handle_deposit" user_tg_id={user_id} value={value}')
 
     set_state_data(bot, user_id, chat_id, {'deposit': value})
     choose_calculate_step(bot, user_id, message, last_value='deposit')

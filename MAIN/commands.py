@@ -1,38 +1,77 @@
 from telebot import TeleBot
 from telebot.types import Message
+from telebot.util import extract_arguments
 
-from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result, kb_channel_post_back
+from config_logger import logger
+from AuthRoles import check_registrate
 from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel_post
 from CALCULATE.callbacks.utils import send_calc_start
 from MAIN.callbacks.user.pages import send_referral
-from db import db
+from NOTIFIER import notifier
+from common.utils import is_digit
+from db import LANGUAGES, db
 
 from CALCULATE.callbacks import send_manual_page, send_settings
 from CALCULATE.commands import _start as _calc
 from CALCULATE.common.messages import msg_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code, kb_support
-from services import channel_calc
-
-# from PIL import Image, ImageDraw, ImageFont
-# from io import BytesIO
-# import textwrap
+from services import auth
 
 
-def _start(message: Message, bot: TeleBot, data: dict):
+def _start(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    user_role: int = data.get('user_role') or 0
-    has_registered_now: bool = data.get('has_registered_now') or False
+    user_role = check_registrate(user_id)
+    is_registered = False
+
+    if user_role is None:
+        # Проверяем реферальный id
+        mes_args = extract_arguments(message.text or '')
+
+        ref_id = None
+        if mes_args is not None and is_digit(mes_args):
+            ref_id = int(mes_args)
+
+        username = message.from_user.username
+
+        is_registered = auth.registration(user_id, username, ref_id)
+        new_user = db.get_user_by_tg_id(user_id)
+
+        if new_user is not None and is_registered == True:
+            logger.info(
+                f'/auth/tg_register [tg_id={user_id} @{username}]'
+            )
+
+            num = len(db.get_today_users())
+
+            # Проверка языка
+            user_lang = (message.from_user.language_code or 'en').lower()
+            lang = user_lang if (user_lang in LANGUAGES) else 'en'
+            db.set_user_lang(new_user.id, lang)
+
+            # Уведомление о регистрации
+            sentMessages = notifier.send_user_is_registered(
+                new_user.id, user_lang, num
+            )
+
+            if sentMessages:
+                auth.addUserNotificationMessages(new_user.id, sentMessages)
+
+            is_registered = True
+        else:
+            logger.error(
+                f'Ошибка регистрации пользователя tg_id={user_id} @{username}'
+            )
 
     send_start_by_user(
         bot, message, user_id,
-        user_role, has_registered_now,
+        user_role or 0, is_registered or False,
     )
 
 
-def _teststart(message: Message, bot: TeleBot, data: dict):
+def _teststart(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -123,7 +162,6 @@ def _results(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
-    print(message.chat.id)
     pass
 
 

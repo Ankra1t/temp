@@ -303,6 +303,7 @@ def choose_first_calculate_step(
         send_main(message, bot, user_id, True)
         return
 
+    bot.delete_state(user_id, chat_id)
     if type == 'forex':
         bot.set_state(user_id, ForexCalcState.pair, chat_id)
     else:

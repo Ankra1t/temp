@@ -190,6 +190,7 @@ def handle_send_text(message: Message, bot: TeleBot):
 
     channel_calc.update(send_data.id, text=new_text)
 
+    bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
 
 
@@ -217,6 +218,7 @@ def handle_send_photo(message: Message, bot: TeleBot):
 
     channel_calc.update(send_data.id, photo=new_photo.file_id)
 
+    bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
 
 
@@ -248,6 +250,8 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
     channel_calc.update(send_data.id, status='FINISH')
     send_week_stats(bot)
     edit_channel_post(bot, stat_id)
+
+    bot.delete_state(user_id, chat_id)
 
     if is_calc:
         send_calculation(bot, message, user_id, calc, True)
