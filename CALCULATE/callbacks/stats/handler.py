@@ -900,6 +900,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
         channel_calc.createWeekStat(list(channels), mes_ids, ['ru', 'en'])
 
     data = channel_calc.getWeekStat(calcId)
+    print(data)
     if data is None:
         return
 
