@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from CALCULATE.callbacks.pages import send_main
-from CALCULATE.callbacks.stats.handler import edit_channel_post, send_week_stats
+from CALCULATE.callbacks.stats.handler import edit_channel_post
 from common.utils import delete_message, edit_message
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from data.data import liteDb
@@ -209,7 +209,6 @@ More often: <b>{result}</b>"""
                 send_data.id, status='CANCEL'
             )
 
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
         type = 'results'
 
@@ -218,7 +217,6 @@ More often: <b>{result}</b>"""
         if send_data is not None:
             channel_calc.update(send_data.id, status='DEAL')
 
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
         type = 'result'
 
@@ -242,7 +240,6 @@ More often: <b>{result}</b>"""
         if send_data is None:
             return
         channel_calc.update(send_data.id, status='FINISH')
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
 
         if is_calc == 0:

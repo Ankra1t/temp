@@ -265,7 +265,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     send_data = channel_calc.getByCalc(stat_id)
                     if send_data is not None:
                         channel_calc.update(send_data.id, status='FINISH')
-                        send_week_stats(bot)
                         edit_channel_post(bot, stat_id)
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
@@ -725,7 +724,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 send_data.id, status='CANCEL'
             )
 
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
 
         calc = db.get_calculation(stat_id)
@@ -740,7 +738,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if send_data is not None:
             channel_calc.update(send_data.id, status='DEAL')
 
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
 
         calc = db.get_calculation(stat_id)
@@ -836,7 +833,7 @@ def send_vote(bot: TeleBot, stat_id: int):
         loading_vote_message_ids.pop(stat_id)
 
 
-def send_week_stats(bot: TeleBot, is_new_week=False):
+def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
     texts = {
         'ru': {
             'title': '⚡️ <b>Результаты на эту неделю</b>',
@@ -892,7 +889,7 @@ def send_week_stats(bot: TeleBot, is_new_week=False):
 
         channel_calc.createWeekStat(list(channels), mes_ids, ['ru', 'en'])
 
-    data = channel_calc.getWeekStat()
+    data = channel_calc.getWeekStat(calcId)
     if data is None:
         return
 
@@ -1040,14 +1037,19 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
             try_link=f'https://t.me/{bot.get_me().username}?start=calc_{calc_id}'
         )
 
-        if send_data.photo is None:
-            bot.edit_message_text(
-                msg, el, int(messages.mesIds[i]),
-            )
-        else:
-            bot.edit_message_caption(
-                msg, el, int(messages.mesIds[i]),
-            )
+        try:
+            if send_data.photo is None:
+                bot.edit_message_text(
+                    msg, el, int(messages.mesIds[i]),
+                )
+            else:
+                bot.edit_message_caption(
+                    msg, el, int(messages.mesIds[i]),
+                )
+        except Exception as e:
+            print(e)
+
+    send_week_stats(bot, calc_id)
 
 
 def registration(bot: TeleBot):

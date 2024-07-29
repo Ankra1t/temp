@@ -118,9 +118,16 @@ def createWeekStat(channels: list[int], messages: list[int], langs: list[LANGUAG
 
 
 @session_decorator
-def getWeekStat():
+def getWeekStat(calcId: int | None = None):
+    data = None
+    if calcId:
+        data = {
+            'calcId': calcId
+        }
+
     res = session.get(
         f'{API_URL}/channelCalc/weekStat',
+        params=json.dumps(data).encode()
     )
 
     if not check_response(res):

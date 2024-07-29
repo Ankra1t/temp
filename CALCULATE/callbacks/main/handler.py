@@ -62,6 +62,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'week_stat':
         send_week_stats(bot)
+        send_week_stats(bot, 652)
 
     if type == 'channel_post':
         send_channel_post(bot, call.message, user_id)

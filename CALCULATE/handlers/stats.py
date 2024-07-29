@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.pages import send_admin_channel_calc_list
-from CALCULATE.callbacks.stats.handler import edit_channel_post, send_week_stats
+from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
 from Classes import calcService
@@ -49,7 +49,6 @@ def handle_loss(message: Message, bot: TeleBot):
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         channel_calc.update(send_data.id, status='FINISH')
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
@@ -80,7 +79,6 @@ def handle_sum(message: Message, bot: TeleBot):
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         channel_calc.update(send_data.id, status='FINISH')
-        send_week_stats(bot)
         edit_channel_post(bot, stat_id)
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
@@ -248,7 +246,6 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
     if send_data is None:
         return
     channel_calc.update(send_data.id, status='FINISH')
-    send_week_stats(bot)
     edit_channel_post(bot, stat_id)
 
     bot.delete_state(user_id, chat_id)

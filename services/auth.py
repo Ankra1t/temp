@@ -1,6 +1,6 @@
 import json
 from config_global import API_URL
-from models import SendCalc, SentMessages
+from models import SentMessages
 from services.base_config import check_response, session_decorator, session
 
 
