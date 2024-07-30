@@ -94,6 +94,22 @@ def get_ticker_atr(ticker: str, period: str, count: int):
         return False
 
 
+def get_ticker_delivery_fee(ticker: str):
+    access_token = db.get_access_token() or ''
+
+    try:
+        res = requests.get(
+            f'{API_URL}/tg/{ticker.replace("/", "").upper()}/deliveryFee',
+            headers=HEADERS | {'tg-api-key': access_token}
+        )
+        # print(res.json())
+        # if res.status_code == 200:
+        #     return res.json()
+    except Exception as e:
+        logger.error(f'/get_ticker_delivery_fee {e}')
+        return False
+
+
 def change_password(id: int, password: str):
     access_token = db.get_access_token() or ''
 

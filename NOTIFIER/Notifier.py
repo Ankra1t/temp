@@ -105,6 +105,8 @@ class Notifier():
         message = self._get_user_mes(new_user, lang, num, refer_user)
         message += f'\n❌ Заблокировал бота'
 
+        del self.users_info[userId]
+
         for i in range(len(sent_messages.chIds)):
             try:
                 self.bot_users.edit_message_text(
@@ -129,6 +131,8 @@ class Notifier():
 
         message = self._get_user_mes(new_user, lang, num, refer_user)
         message += f'\nВыбранный язык: ({getLangByCode(user_lang)})'
+
+        del self.users_info[userId]
 
         for i in range(len(sent_messages.chIds)):
             try:

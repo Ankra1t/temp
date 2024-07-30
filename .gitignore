@@ -11,6 +11,7 @@ ngrok.exe
 config_global.py
 _index.py
 _test.py
+_logs.log
 data/data.db
 
 _tg.py

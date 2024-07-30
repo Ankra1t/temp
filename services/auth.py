@@ -5,7 +5,7 @@ from services.base_config import check_response, session_decorator, session
 
 
 @session_decorator
-def registration(userId: int, username: str = '', referId: int | None = None):
+def registration(userId: int, username: str | None = None, referId: int | None = None):
     data = {
         'tgId': userId,
         'tgUsername': username,
