@@ -333,6 +333,11 @@ class SentMessages(BaseModel):
     langs: list[Literal['ru', 'en']]
 
 
+class UserNotification(SentMessages):
+    firstLang: str
+    num: int
+
+
 class CalcSentMessages(SentMessages):
     mesNum: Optional[int] = None
     messages: Optional[dict] = None

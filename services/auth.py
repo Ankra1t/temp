@@ -1,6 +1,6 @@
 import json
 from config_global import API_URL
-from models import SentMessages
+from models import SentMessages, UserNotification
 from services.base_config import check_response, session_decorator, session
 
 
@@ -24,11 +24,13 @@ def registration(userId: int, username: str | None = None, referId: int | None =
 
 
 @session_decorator
-def addUserNotificationMessages(userId: int, value: SentMessages):
+def addUserNotificationMessages(userId: int, value: SentMessages, lang: str, num: int):
     data = {
         'chIds': value.chIds,
         'mesIds': value.mesIds,
         'langs': value.langs,
+        'firstLang': lang,
+        'num': num,
     }
 
     res = session.post(
@@ -39,7 +41,7 @@ def addUserNotificationMessages(userId: int, value: SentMessages):
     if not check_response(res):
         return
 
-    return SentMessages(**res.json())
+    return UserNotification(**res.json())
 
 
 @session_decorator
@@ -49,4 +51,4 @@ def getUserNotificationMessages(userId: int):
     if not check_response(res):
         return
 
-    return SentMessages(**res.json())
+    return UserNotification(**res.json())

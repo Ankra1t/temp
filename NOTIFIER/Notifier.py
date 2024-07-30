@@ -7,7 +7,7 @@ from common.dt import get_str_by_datetime
 from common.lang import getLangByCode
 from config_logger import logger
 from db import LANGUAGES_TYPE, db
-from models import SentMessages, UserInfo
+from models import SentMessages, UserInfo, UserNotification
 
 
 MESSAGE_TYPE = Literal['text', 'photo', 'video']
@@ -18,7 +18,6 @@ class Notifier():
         self.bot = bot
         self.bot_users = bot_users
         self.users = (156045434, 7159306363)
-        self.users_info: dict[int, tuple[str, int]] = {}
 
     def _send_by_type(self, bot: TeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         mes: Message | None = None
@@ -82,30 +81,22 @@ class Notifier():
 
         refer_user = db.get_user_by_id(new_user.refer_id or -1)
 
-        self.users_info[userId] = (user_lang, num)
-
         return self._send(
             self.bot_users, 'text',
             self._get_user_mes(new_user, user_lang, num, refer_user)
         )
 
-    def change_user_blocked(self, userId: int, sent_messages: SentMessages):
+    def change_user_blocked(self, userId: int, sent_messages: UserNotification):
         new_user = db.get_user_by_id(userId)
         if new_user is None:
             return
 
         refer_user = db.get_user_by_id(new_user.refer_id or -1)
 
-        users_info = self.users_info.get(userId)
-        if users_info is None:
-            return
-
-        lang, num = users_info
-
-        message = self._get_user_mes(new_user, lang, num, refer_user)
+        message = self._get_user_mes(
+            new_user, sent_messages.firstLang, sent_messages.num, refer_user
+        )
         message += f'\n❌ Заблокировал бота'
-
-        del self.users_info[userId]
 
         for i in range(len(sent_messages.chIds)):
             try:
@@ -116,23 +107,15 @@ class Notifier():
             except:
                 pass
 
-    def change_user_choosed_lang(self, userId: int, lang: LANGUAGES_TYPE, sent_messages: SentMessages):
+    def change_user_choosed_lang(self, userId: int, lang: LANGUAGES_TYPE, sent_messages: UserNotification):
         new_user = db.get_user_by_id(userId)
         if new_user is None:
             return
 
         refer_user = db.get_user_by_id(new_user.refer_id or -1)
 
-        users_info = self.users_info.get(userId)
-        if users_info is None:
-            return
-
-        user_lang, num = users_info
-
-        message = self._get_user_mes(new_user, lang, num, refer_user)
-        message += f'\nВыбранный язык: ({getLangByCode(user_lang)})'
-
-        del self.users_info[userId]
+        message = self._get_user_mes(new_user, sent_messages.firstLang, sent_messages.num, refer_user)
+        message += f'\nВыбранный язык: ({getLangByCode(lang)})'
 
         for i in range(len(sent_messages.chIds)):
             try:

@@ -57,7 +57,9 @@ def _start(message: Message, bot: TeleBot):
             )
 
             if sentMessages:
-                auth.addUserNotificationMessages(new_user.id, sentMessages)
+                auth.addUserNotificationMessages(
+                    new_user.id, sentMessages, user_lang, num
+                )
 
             is_registered = True
         else:
