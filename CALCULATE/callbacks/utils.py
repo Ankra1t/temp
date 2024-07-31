@@ -219,7 +219,6 @@ def choose_calculate_step(
             else:
                 bot.delete_message(chat_id, mes_id)
                 create_and_send_calc(bot, message, user_id, stop_loss)
-                first_timeout(user_id)
                 return
 
     bot.set_state(user_id, state, chat_id)

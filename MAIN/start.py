@@ -1,3 +1,4 @@
+from xmlrpc.client import boolean
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -35,7 +36,7 @@ def send_start_by_user(
         if send_data is None or calc is None or u_base is None:
             return
 
-        if send_data.withoutStop:
+        if send_data.withoutStop and not has_registered_now:
             stop_type = liteDb.getUserStop(user_id) or ''
 
             if 'atr' in stop_type:
@@ -44,7 +45,8 @@ def send_start_by_user(
 
                 bot.set_state(user_id, CalculateState.stop_atr, chat_id)
 
-                ticker_val = get_ticker_atr(calc.tool or '', period, int(count)) or None
+                ticker_val = get_ticker_atr(
+                    calc.tool or '', period, int(count)) or None
 
                 if atr_settings[0] and ticker_val is not None:
                     rate = 1
@@ -84,7 +86,7 @@ def send_start_by_user(
                 }
             )
         else:
-            start_with_calc(bot, message, user_id, int(id))
+            start_with_calc(bot, message, user_id, int(id), is_try=has_registered_now)
 
     elif user_role == 0:
         send_user_main(bot, message, user_id, True, has_registered_now)
@@ -102,7 +104,14 @@ def send_start_by_user(
         send_in_development(bot, message)
 
 
-def start_with_calc(bot: TeleBot, message: Message, user_id: int, stat_id: int, stop_loss: float | None = None):
+def start_with_calc(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    stat_id: int,
+    stop_loss: float | None = None,
+    is_try=False
+):
     chat_id = message.chat.id
 
     bot.delete_state(user_id, chat_id)
@@ -118,7 +127,7 @@ def start_with_calc(bot: TeleBot, message: Message, user_id: int, stat_id: int, 
 
     deposit = risk = None
     if u_base is None or u_base.deposit is None:
-        deposit = 10000
+        deposit = 1000
     else:
         deposit = u_base.deposit
 
@@ -127,7 +136,7 @@ def start_with_calc(bot: TeleBot, message: Message, user_id: int, stat_id: int, 
         risk = count_bet * abs(calc.open_price - stop_loss)
     else:
         if u_base is None or u_base.risk is None:
-            risk = 100
+            risk = 10
         else:
             risk = u_base.risk[0]
             if u_base.risk[1]:
@@ -153,5 +162,4 @@ def start_with_calc(bot: TeleBot, message: Message, user_id: int, stat_id: int, 
 
     new_id = db.add_calculation(new_calc)
     new_calc.id = new_id or -1
-
-    send_calculation(bot, message, user_id, new_calc, True)
+    send_calculation(bot, message, user_id, new_calc, True, is_try=is_try)

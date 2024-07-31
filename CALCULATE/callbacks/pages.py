@@ -4,7 +4,7 @@ from typing import Literal
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
-from AuthRoles import get_ticker_info
+from AuthRoles import first_timeout, get_ticker_info
 from CALCULATE.states.stats import ChannelCalcState
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
@@ -401,6 +401,9 @@ def send_calculation(
                 reply_markup=kb,
             )
         os.remove(file_path)
+
+    if is_try:
+        first_timeout(user_id)
 
 
 def send_freeze(
