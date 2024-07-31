@@ -16,15 +16,16 @@ from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
     msg_admin_send_settings, msg_atr_settings, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
-    msg_no_uses, msg_settings, msg_manual, msg_sl_op_equal_error,
-    msg_stats_page, msg_stop_page, msg_summury_profit_settings
+    msg_no_uses, msg_settings, msg_sl_op_equal_error,
+    msg_stats_page, msg_stop_page, msg_summury_profit_settings, msg_manuals
 )
 
+from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
-from models import MARKETS_TYPE, Calculation
+from models import MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import channel_calc
 
-from .manual.keyboards import kb_manual
+from .manual.keyboards import kb_manual, kb_manuals
 from .main.keyboards import kb_main
 from .settings.keyboards import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
@@ -214,9 +215,9 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
 
     bot.delete_state(user_id, chat_id)
 
-    text = msg_manual[page - 1]
+    text = msg_manuals[page - 1]
     photo = open(f'src/img/info_calc/{page}.jpg', 'rb')
-    keyboard = kb_manual(user_id, page, len(msg_manual))
+    keyboard = kb_manuals(user_id, page, len(msg_manuals))
 
     if is_first:
         bot.send_photo(
@@ -833,3 +834,50 @@ def send_admin_channel_calc_item(
         bot.set_state(user_id, ChannelCalcState.loss, chat_id)
         set_state_data(bot, user_id, chat_id, {
                        'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type})
+
+
+def send_manual(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    type: MANUAL_TYPE = 'calc',
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    msg = msg_manual(user_id, type)
+    kb = kb_manual(user_id, type)
+
+    text = db.get_text_by_name(type)
+    photo = None
+    if text is not None:
+        lang = get_lang(user_id)
+        if lang == 'ru':
+            photo = text.media_id
+        else:
+            photo = text.media_id_en
+
+    if is_first:
+        if photo is None:
+            bot.send_photo(
+                chat_id, photo, msg,
+                reply_markup=kb
+            )
+        else:
+            bot.send_message(
+                chat_id, msg,
+                reply_markup=kb
+            )
+    else:
+        if photo is None:
+            message_type = 'text'
+        else:
+            message_type = 'photo'
+
+        edit_message(
+            bot, message, message_type,
+            msg, kb, photo
+        )

@@ -13,7 +13,7 @@ from .pages import (
 from .utils import choose_calculate_step, choose_first_calculate_step
 
 from .manual.handler import registration as _reg_manual
-from .manual.keyboards import kb_manual
+from .manual.keyboards import kb_manuals
 
 from .main.handler import registration as _reg_main
 from .main.keyboards import kb_main, cancel_btn, kb_first_calc

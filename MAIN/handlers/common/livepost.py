@@ -39,6 +39,8 @@ def handle_livepost(message: Message, bot: TeleBot):
         print(message.html_text)
         if message.animation:
             print(message.animation.file_id)
+        if message.photo:
+            print(message.photo[-1].file_id)
     except:
         pass
 

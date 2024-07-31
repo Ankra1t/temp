@@ -848,6 +848,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             'DEAL': 'В сделке',
             'CANCEL': 'Отменён',
 
+            'canceled': 'Отменённые',
+
             'tp': 'тейков',
             'sl': 'стопов',
             'prices': 'Купил/Продал',
@@ -868,8 +870,10 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             'stop': 'stop',
             'count to': 'to',
 
-            'deal': 'In deal',
+            'DEAL': 'In deal',
             'CANCEL': 'Cancel',
+
+            'canceled': 'Cancelled',
 
             'tp': 'takes',
             'sl': 'stops',
@@ -938,6 +942,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             success_count = 0
             fail_count = 0
 
+            canceled = ''
+
             for value_i, value in enumerate(valueDate.get('calcs', [])):
                 status: CHANNEL_STATUS_TYPE = value.get('status', 'WAIT')
                 if status == 'WAIT':
@@ -962,11 +968,12 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                 tp_sl = ''
                 if valueCount is None:
                     tp_sl = texts[lang][status]
+                elif valueCount == 0:
+                    tp_sl = texts[lang]['breakeven']
                 elif valueCount > 0:
                     tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
                     tp_count += valueCount
                     success_count += 1
-
                     if closePrice > openPrice:
                         long_count += 1
                     else:
@@ -995,7 +1002,12 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                     tool_counts[tool] += 1
                     tool_num = f'({tool_counts[tool]})'
 
-                date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
+                if status == 'CANCEL':
+                    if canceled != '':
+                        canceled += ', '
+                    canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                else:
+                    date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
 
             tp_sl_result = round(tp_count - sl_count, 1)
             tp_sl_show = ''
@@ -1014,6 +1026,9 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
             msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
             msg += f'{date_msg}'
+
+            if canceled != '':
+                msg += f'\n\n{texts[lang]["canceled"]}: {canceled}'
 
             if success_count != 0 or fail_count != 0:
                 msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'

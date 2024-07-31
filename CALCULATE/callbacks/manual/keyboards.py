@@ -1,11 +1,26 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from common.keyboard import back_txt
 from common.utils import get_lang
+from db import LANGUAGES_TYPE
+from models import MANUAL_TYPE
 
 from .filter import manual_factory
 
 
-def kb_manual(user_id: int, num_page: int, max_page: int):
+def getButton(
+    text: str,
+    type: str,
+):
+    return InlineKeyboardButton(
+        text, None,
+        callback_data=manual_factory.new(
+            type=type,
+            page=0
+        ))
+
+
+def kb_manuals(user_id: int, num_page: int, max_page: int):
     def getButton(text: str, type: str):
         return InlineKeyboardButton(
             text, None,
@@ -54,5 +69,52 @@ def kb_manual(user_id: int, num_page: int, max_page: int):
         keyboard.add(btn_prev, counter, btn_start)
     else:
         keyboard.add(btn_prev, counter, btn_next)
+
+    return keyboard
+
+
+def kb_manual(user_id: int, current_type: MANUAL_TYPE):
+    row_width = 2
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=row_width)
+
+    texts: dict[LANGUAGES_TYPE, dict[MANUAL_TYPE, str]] = {
+        'ru': {
+            'calc': 'Калькулятор',
+            'settings': 'Функционал',
+            'exchange': 'Биржа',
+            'trading_type': 'Тип торговли',
+            'trading_style': 'Стиль торговли',
+        },
+        'en': {
+            'calc': 'Calculator',
+            'settings': 'Settings',
+            'exchange': 'Exchange',
+            'trading_type': 'Trading type',
+            'trading_style': 'Trading style',
+        },
+    }
+
+    list_types: list[MANUAL_TYPE] = [
+        'calc', 'settings',
+        'exchange', 'trading_type',
+        'trading_style',
+    ]
+
+    buttons = []
+    for i, el in enumerate(list_types):
+        if el != current_type:
+            buttons.append(
+                getButton(texts[lang][el], f'manual+{el}')
+            )
+
+        if len(buttons) == row_width or (i + 1 == len(list_types) and len(buttons) != 0):
+            keyboard.add(*buttons)
+            buttons = []
+
+    keyboard.add(
+        getButton(back_txt(lang), 'main')
+    )
 
     return keyboard

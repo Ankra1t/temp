@@ -122,6 +122,7 @@ def kb_channel_calc_result(
         keyboard.add(btn_cancel, btn_deal)
 
     keyboard.add(
+        getButton('Безубыток', 'take+0', stat_id, is_calc),
         getButton(
             back_txt('ru'), 'results', stat_id, is_calc
         )
@@ -143,7 +144,8 @@ def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=Fals
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'calc' if is_calc else 'result', stat_id, is_calc)
+        getButton(back_txt('ru'), 'calc' if is_calc else 'result',
+                  stat_id, is_calc)
     )
 
     return keyboard
@@ -164,7 +166,8 @@ def kb_channel_calc_result_stop(stat_id: int, is_calc=False):
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'calc' if is_calc else 'result', stat_id, is_calc)
+        getButton(back_txt('ru'), 'calc' if is_calc else 'result',
+                  stat_id, is_calc)
     )
 
     return keyboard

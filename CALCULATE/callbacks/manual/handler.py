@@ -1,10 +1,11 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.common.messages import msg_manual
+from CALCULATE.common.messages import msg_manuals
+from models import MANUAL_TYPE
 
 from .filter import manual_factory, ManualCallbackFilter
-from ..pages import send_manual_page
+from ..pages import send_main, send_manual
 
 
 def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -12,17 +13,29 @@ def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
     type = callback_data['type']
     page = int(callback_data['page'])
 
+    user_id = call.from_user.id
+    chat_id = call.message.chat.id
+    mes_id = call.message.id
+
+    if type == 'main':
+        send_main(call.message, bot, user_id)
+
+    if 'manual' in type:
+        type_arr = type.split('+')
+        manual_type: MANUAL_TYPE = 'calc'
+        if len(type_arr) == 2:
+            manual_type = type_arr[1] # type: ignore
+
+        send_manual(bot, call.message, user_id, manual_type)
+
     if type == 'prev':
         page -= 1
-    if type == 'next':
+    elif type == 'next':
         page += 1
-    if type == 'start':
+    elif type == 'start':
         page = 1
-    if type == 'end':
-        page = len(msg_manual)
-
-    if type != 'counter':
-        send_manual_page(call.message, bot, page, call.from_user.id)
+    elif type == 'end':
+        page = len(msg_manuals)
 
     bot.answer_callback_query(call.id)
 

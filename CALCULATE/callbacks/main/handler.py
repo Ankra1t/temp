@@ -9,7 +9,7 @@ from db import db
 
 from ..stats.keyboards import kb_calc_result
 from ..utils import send_calc_start
-from ..pages import send_admin_channel_calc_list, send_channel_post, send_settings, send_main, send_stats, send_tariffs_list_item
+from ..pages import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item
 from .filter import main_factory, MainCallbackFilter
 
 
@@ -74,44 +74,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_channel_post(bot, call.message, user_id)
 
     if type == 'info':
-        bot.edit_message_text("""<b>Для чего калькулятор? </b>
-
-Если Вы когда-нибудь слышали слово "риск-менеджмент", то это именно тот самый инструмент, позволяющий управлять капиталом.
-
-Калькулятор для расчета ваших <b>убытков</b> <b>и</b> <b>прибыли</b>.
-
- Работает элементарно.
-
-Вписываете свой депозит, сумму или процент от капитала, который готовы "потерять" в сделке, а <b>калькулятор</b> высчитывает <b>количество</b> монет/акций/лотов (в зависимости от рынка) для покупки.
-
-<b>Вот пример. </b>
-
-У меня есть баланс в 10 000 долларов.
-
-<b>1 условие: </b>
-
-Я хочу купить Биткоин по цене 66 000 долларов.
-
-<b>2 условие: </b>
-
-Моя цена стоп-лосс пусть будет 65850 (вот так я решил, что ниже этой цены упасть не дам)
-
-<b>3 условие: </b>
-
-Я готов от <b>10 000 USDT</b> депозита зафиксировать убыток в <b>100 USDT</b> (стоп-лосс)
-
-Вопрос, сколько нужно купить монет, чтобы в убыточном случае депозит остался в размере 9900 USDT?
-
-<b>4 условие: </b>
-
-Ввожу данные в калькулятор и идет автоматически расчет, где мне нужно по цене 66 000 купить 0.7909 монет, а при цене 65873.56 выставить свой стоп-лосс (и тогда потеря суммы будет не более 100 USDT)
-
-А при цене <b>66379.32</b> прибыль со сделки уже составит <b>+300</b> <b>USDT </b>
-
-Итог: вот как работают профессионалы, от сделки до сделки.
-Трейдинг - это не казино, а расчеты и системный подход.
-
-Информация дополняется.""", chat_id, mes_id, reply_markup=kb_menu_back(user_id))
+        send_manual(bot, call.message, user_id)
 
     bot.answer_callback_query(call.id)
 

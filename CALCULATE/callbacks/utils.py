@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from AuthRoles import first_timeout, get_ticker_atr
+from AuthRoles import get_ticker_atr
 from Classes import pay_guard
 from data.data import liteDb
 from db import db

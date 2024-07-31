@@ -9,6 +9,8 @@ PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CHANNEL_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
+MANUAL_TYPE = Literal['settings', 'exchange', 'trading_type', 'trading_style', 'calc']
+
 
 class Invoice(BaseModel):
     """Структура чека"""

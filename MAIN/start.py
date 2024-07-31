@@ -1,4 +1,3 @@
-from xmlrpc.client import boolean
 from telebot import TeleBot
 from telebot.types import Message
 
