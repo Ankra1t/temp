@@ -40,6 +40,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'buy': 'Купить',
             'stats': 'Ваша статистика',
             'link': 'Сигналы',
+            'info': 'Инструкция',
         },
         'en': {
             'calc': 'Make a calculation',
@@ -48,6 +49,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'buy': 'Buy',
             'stats': 'Your stats',
             'link': 'Signals',
+            'info': 'Manual',
         },
         'uz': {
             'calc': 'Hisoblash',
@@ -56,6 +58,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'buy': 'Sotib olish',
             'stats': 'Sizning stastitikangiz',
             'link': 'Signallar',
+            'info': 'Qo\'llanma',
         },
         'tr': {
             'calc': 'Hesaplama',
@@ -64,6 +67,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'buy': 'Satın al',
             'stats': 'Sizin istatistik',
             'link': 'Sinyaller',
+            'info': 'Manuel',
         },
     }
 
@@ -112,7 +116,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
                 texts[lang]['link'], f'https://t.me/{link}'
             )
 
-            btn_info = getButton('Инструкция', 'info')
+            btn_info = getButton(texts[lang]['info'], 'info')
 
             buttons.append(btn_stats)
             buttons.append(btn_link)

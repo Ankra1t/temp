@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.main.keyboards import kb_menu_back
 from CALCULATE.callbacks.stats.handler import send_week_stats
 from config_logger import logger
 from common.utils import delete_message

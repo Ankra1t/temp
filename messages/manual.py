@@ -87,9 +87,7 @@ The information is being supplemented."""
 
     elif type == 'settings':
         if lang == 'ru':
-            return """""Настроить торговлю"
-
-<b>1. Изменить торговлю</b>
+            return """<b>1. Изменить торговлю</b>
 
 Впишите депозит, изменяйте, а система подстроится.
 
@@ -119,9 +117,7 @@ The information is being supplemented."""
 
 Из сделки можно выйти  3-4-5 или более к 1 или выходить <b>"частями"</b>, потому как прибыльные сделки можно  держать и более, разбив на <b>"части"</b>"""
         else:
-            return """Configure trading
-
-<b>1. Change deposit</b>
+            return """<b>1. Change deposit</b>
 Enter the deposit, change it and the system will adjust to your value.
 
 <b>2. Enable deposit update</b>

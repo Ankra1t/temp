@@ -73,7 +73,7 @@ def kb_manuals(user_id: int, num_page: int, max_page: int):
     return keyboard
 
 
-def kb_manual(user_id: int, current_type: MANUAL_TYPE):
+def kb_manual(user_id: int):
     row_width = 2
     lang = get_lang(user_id)
 
@@ -103,18 +103,15 @@ def kb_manual(user_id: int, current_type: MANUAL_TYPE):
     ]
 
     buttons = []
-    for i, el in enumerate(list_types):
-        if el != current_type:
-            buttons.append(
-                getButton(texts[lang][el], f'manual+{el}')
-            )
+    for el in list_types:
+        buttons.append(
+            getButton(texts[lang][el], f'manual+{el}')
+        )
 
-        if len(buttons) == row_width or (i + 1 == len(list_types) and len(buttons) != 0):
-            keyboard.add(*buttons)
-            buttons = []
-
-    keyboard.add(
+    buttons.append(
         getButton(back_txt(lang), 'main')
     )
+
+    keyboard.add(*buttons)
 
     return keyboard

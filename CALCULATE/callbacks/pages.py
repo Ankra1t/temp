@@ -849,7 +849,7 @@ def send_manual(
     bot.delete_state(user_id, chat_id)
 
     msg = msg_manual(user_id, type)
-    kb = kb_manual(user_id, type)
+    kb = kb_manual(user_id)
 
     text = db.get_text_by_name(type)
     photo = None
