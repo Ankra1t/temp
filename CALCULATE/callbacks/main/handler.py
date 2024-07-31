@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from CALCULATE.callbacks.main.keyboards import kb_menu_back
 from CALCULATE.callbacks.stats.handler import send_week_stats
 from config_logger import logger
 from common.utils import delete_message
@@ -41,10 +42,12 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
-        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type, is_channel_calc='ch_calc' in type)
+        send_calc_start(bot, call.message, user_id,
+                        is_continue='_continue' in type, is_channel_calc='ch_calc' in type)
 
     if type == 'first_try':
-        send_calc_start(bot, call.message, user_id, is_continue='_continue' in type, is_edit=True, is_try=True)
+        send_calc_start(bot, call.message, user_id,
+                        is_continue='_continue' in type, is_edit=True, is_try=True)
 
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)
@@ -69,6 +72,46 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'channel_post':
         send_channel_post(bot, call.message, user_id)
+
+    if type == 'info':
+        bot.edit_message_text("""<b>Для чего калькулятор? </b>
+
+Если Вы когда-нибудь слышали слово "риск-менеджмент", то это именно тот самый инструмент, позволяющий управлять капиталом.
+
+Калькулятор для расчета ваших <b>убытков</b> <b>и</b> <b>прибыли</b>.
+
+ Работает элементарно.
+
+Вписываете свой депозит, сумму или процент от капитала, который готовы "потерять" в сделке, а <b>калькулятор</b> высчитывает <b>количество</b> монет/акций/лотов (в зависимости от рынка) для покупки.
+
+<b>Вот пример. </b>
+
+У меня есть баланс в 10 000 долларов.
+
+<b>1 условие: </b>
+
+Я хочу купить Биткоин по цене 66 000 долларов.
+
+<b>2 условие: </b>
+
+Моя цена стоп-лосс пусть будет 65850 (вот так я решил, что ниже этой цены упасть не дам)
+
+<b>3 условие: </b>
+
+Я готов от <b>10 000 USDT</b> депозита зафиксировать убыток в <b>100 USDT</b> (стоп-лосс)
+
+Вопрос, сколько нужно купить монет, чтобы в убыточном случае депозит остался в размере 9900 USDT?
+
+<b>4 условие: </b>
+
+Ввожу данные в калькулятор и идет автоматически расчет, где мне нужно по цене 66 000 купить 0.7909 монет, а при цене 65873.56 выставить свой стоп-лосс (и тогда потеря суммы будет не более 100 USDT)
+
+А при цене <b>66379.32</b> прибыль со сделки уже составит <b>+300</b> <b>USDT </b>
+
+Итог: вот как работают профессионалы, от сделки до сделки.
+Трейдинг - это не казино, а расчеты и системный подход.
+
+Информация дополняется.""", chat_id, mes_id, reply_markup=kb_menu_back(user_id))
 
     bot.answer_callback_query(call.id)
 

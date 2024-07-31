@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from common.keyboard import cancel_txt
+from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 from models import Calculation
 from db import db
@@ -112,8 +112,11 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
                 texts[lang]['link'], f'https://t.me/{link}'
             )
 
+            btn_info = getButton('Инструкция', 'info')
+
             buttons.append(btn_stats)
             buttons.append(btn_link)
+            buttons.append(btn_info)
         else:
             kb = kb_calc_result(user_id, stat_id, saved)
             buttons_rows = kb.keyboard
@@ -154,5 +157,15 @@ def kb_first_calc(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton('⌨️ ' + texts[lang]['calc'] + '!', 'first_try'),
+    )
+    return keyboard
+
+
+def kb_menu_back(user_id: int):
+    lang = get_lang(user_id)
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(back_txt(lang), 'go_main'),
     )
     return keyboard
