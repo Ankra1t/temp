@@ -23,7 +23,7 @@ from CALCULATE.common.messages import (
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from models import MANUAL_TYPE, MARKETS_TYPE, Calculation
-from services import channel_calc
+from services import calculation, channel_calc
 
 from .manual.keyboards import kb_manual, kb_manuals
 from .main.keyboards import kb_main
@@ -438,7 +438,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     chat_id = message.chat.id
     mes_id = message.id
 
-    stat = db.get_calculation(stat_id)
+    stat = calculation.get(stat_id)
     send_data = channel_calc.getByCalc(stat_id)
     if stat is None or send_data is None:
         return
@@ -501,17 +501,17 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         is_try = data.get('is_try', False)
 
     if stat_id is not None:
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
-        if calc_info.open_price == stop_loss:
+        if calc_info.openPrice == stop_loss:
             new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
             set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
         db.change_calculation_stop_loss(stat_id, stop_loss)
-        calc_info.stop_loss = stop_loss
+        calc_info.stopLoss = stop_loss
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
@@ -535,21 +535,21 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
             risk_value *= deposit * 0.01
 
     calc_info = Calculation(
-        user_id=user_db_id,
+        userId=user_db_id,
         deposit=deposit,
-        risk_value=risk_value * updated_risk,
-        open_price=open_price,
-        stop_loss=stop_loss,
-        round_count=u_base.round_count,
+        riskValue=risk_value * updated_risk,
+        openPrice=open_price,
+        stopLoss=stop_loss,
+        roundCount=u_base.round_count,
         currency=currency,
         market=calc_type,
-        tp_ratio=u_base.tp_ratio,
-        split_values=u_base.split_values,
-        trading_style=trading_style or None,
+        tpRatio=u_base.tp_ratio,
+        splitValues=u_base.split_values,
+        tradingStyle=trading_style or None,
         tool=tool or None,
-        forex_info=forex,
-        trading_type=trading_type,
-        is_from_deposit=is_from_deposit
+        forexInfo=forex,
+        tradingType=trading_type,
+        isFromDeposit=is_from_deposit
     )
 
     new_id = None
@@ -723,13 +723,13 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
         msg += f'\n{stats_link}'
     msg += '\n👇 Нажмите на номер для действий'
     for send_data in inWaitSends:
-        calc = db.get_calculation(send_data.calcId)
+        calc = calculation.get(send_data.calcId)
         if calc is None:
             continue
 
         msg += f'\n\n/{send_data.calcId} <b>{(calc.tool or "").replace("/USDT", "")}</b>'
         msg += f' ({datetime.fromisoformat(send_data.createdAt.replace("Z", "")).strftime("%d.%m %H:%M")})'
-        msg += f'\nВход/Стоп: <b>{get_print_float(calc.open_price)} / {get_print_float(calc.stop_loss)}</b>'
+        msg += f'\nВход/Стоп: <b>{get_print_float(calc.openPrice)} / {get_print_float(calc.stopLoss)}</b>'
 
     del_mes_id = mes_id
 
@@ -763,7 +763,7 @@ def send_admin_channel_calc_item(
     bot.delete_state(user_id, chat_id)
 
     send_data = channel_calc.getByCalc(calc_id)
-    calc = db.get_calculation(calc_id)
+    calc = calculation.get(calc_id)
     if calc is None:
         return
 
@@ -792,19 +792,19 @@ def send_admin_channel_calc_item(
     calc_result = calcService.get_result(calc)
     take_info = ''
     for i in range(calc_result.tp_count):
-        take_info += f'\n <b>({calc.tp_ratio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
+        take_info += f'\n <b>({calc.tpRatio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
-<b>Цена входа</b>: {get_print_float(calc.open_price, 5)} USDT
-<b>Стоп-лосс</b>: {get_print_float(calc.stop_loss, 5)} USDT
-<b>Риск</b>: {get_print_float(calc.risk_value, 5)} USDT
+<b>Цена входа</b>: {get_print_float(calc.openPrice, 5)} USDT
+<b>Стоп-лосс</b>: {get_print_float(calc.stopLoss, 5)} USDT
+<b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT
 
 <b>Тейки:</b>{take_info}"""
 
     is_state = True
     if type == 'take':
-        kb = kb_channel_calc_result_take(calc.tp_ratio, calc_id)
+        kb = kb_channel_calc_result_take(calc.tpRatio, calc_id)
         info = '\n\n<i>Либо введите <b>прибыль</b></i> со сделки'
     elif type == 'stop':
         kb = kb_channel_calc_result_stop(calc_id)

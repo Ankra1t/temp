@@ -9,7 +9,8 @@ PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CHANNEL_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
-MANUAL_TYPE = Literal['settings', 'exchange', 'trading_type', 'trading_style', 'calc']
+MANUAL_TYPE = Literal['settings', 'exchange',
+                      'trading_type', 'trading_style', 'calc']
 
 
 class Invoice(BaseModel):
@@ -257,30 +258,32 @@ class ForexInfo(BaseModel):
 
 class Calculation(BaseModel):
     id: int = 0
-    user_id: int
+    userId: int
 
     profit: float | None = None
-    in_stat: bool = False
-    stat_dt: datetime | None = None
+    inStat: bool = False
+    statDt: datetime | None = None
 
     market: MARKETS_TYPE
-    trading_type: TRADING_TYPE
-    is_from_deposit: bool
-    trading_style: str | None
-    round_count: int | None = None
+    tradingType: TRADING_TYPE
+    isFromDeposit: bool
+    tradingStyle: str | None
+    roundCount: int | None = None
 
     currency: str
     deposit: float
-    risk_value: float
-    open_price: float
-    stop_loss: float
-    tp_ratio: list[int]
-    split_values: list[float] | None
+    riskValue: float
+    openPrice: float
+    stopLoss: float
+    tpRatio: list[int]
+    splitValues: list[float] | None
 
-    forex_info: ForexInfo | None = None
+    forexInfo: ForexInfo | None = None
     tool: Optional[str] = None
 
-    created_at: Optional[datetime] = None
+    canceled: bool = False
+
+    createdAt: Optional[datetime] = None
 
 
 class CalculationResult(BaseModel):

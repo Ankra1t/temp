@@ -7,7 +7,7 @@ from common.utils import get_lang
 
 from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE
-from services import channel_calc
+from services import calculation, channel_calc
 
 from .filter import stats_factory
 
@@ -186,7 +186,7 @@ def kb_deal_result(user_id: int, stat_id: int):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    calc_info = db.get_calculation(stat_id)
+    calc_info = calculation.get(stat_id)
     tp: list[int] = getattr(calc_info, 'tp_ratio', [])
 
     buttons = []

@@ -37,7 +37,7 @@ from CALCULATE.common.messages import (
 )
 from CALCULATE.states import StatsState
 from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE
-from services import channel_calc
+from services import calculation, channel_calc
 
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
@@ -228,7 +228,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             is_cancel = False
 
-            calc_info = db.get_calculation(stat_id)
+            calc_info = calculation.get(stat_id)
             if calc_info is None:
                 return
 
@@ -245,17 +245,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     rate = float(profit.replace('loss', ''))
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     calcService.set_profit(
-                        stat_id, -calc_info.risk_value * rate * spot_rate
+                        stat_id, -calc_info.riskValue * rate * spot_rate
                     )
                 elif profit != 'cancel':
                     _, _, spot_rate = get_count_value_bet(calc_info)
-                    profit_result = calc_info.risk_value * \
+                    profit_result = calc_info.riskValue * \
                         int(profit) * spot_rate
                     calcService.set_profit(stat_id, profit_result)
                 else:
                     is_cancel = True
 
-                calc_info = db.get_calculation(stat_id)
+                calc_info = calculation.get(stat_id)
                 if calc_info is None:
                     return
 
@@ -313,7 +313,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
-            calc_info = db.get_calculation(stat_id)
+            calc_info = calculation.get(stat_id)
 
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
@@ -372,7 +372,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
-            calc_info = db.get_calculation(stat_id)
+            calc_info = calculation.get(stat_id)
 
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
@@ -407,11 +407,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 }
             )
         elif kind == 'tool':
-            stat = db.get_calculation(stat_id)
+            stat = calculation.get(stat_id)
             if stat is None:
                 return
 
-            if stat.forex_info is not None:
+            if stat.forexInfo is not None:
                 state = ForexCalcState.pair
                 msg = msg_enter_pair(user_id)
             else:
@@ -477,7 +477,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         })
 
     if type == 'send_to_channels':
-        stat = db.get_calculation(stat_id)
+        stat = calculation.get(stat_id)
         if stat is None:
             return
 
@@ -490,7 +490,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if send_data is None:
             return
 
-        if withoutStop == 'True' or stat.stop_loss == -1:
+        if withoutStop == 'True' or stat.stopLoss == -1:
             channel_calc.update(send_data.id, withoutStop=True)
         if isVote == 'False':
             channel_calc.update(send_data.id, isVote=False)
@@ -510,7 +510,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'stc+send':
         send_data = channel_calc.getByCalc(stat_id)
-        stat = db.get_calculation(stat_id)
+        stat = calculation.get(stat_id)
         if send_data is None or stat is None:
             return
 
@@ -580,7 +580,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'stc+rescreen':
         send_data = channel_calc.getByCalc(stat_id)
-        stat = db.get_calculation(stat_id)
+        stat = calculation.get(stat_id)
         if stat is None or send_data is None:
             return
 
@@ -679,9 +679,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_confirm_calc_send(bot, call.message, stat_id)
 
     if type == 'stc+stop':
-        stat = db.get_calculation(stat_id)
+        stat = calculation.get(stat_id)
         send_data = channel_calc.getByCalc(stat_id)
-        if send_data is None or stat is None or stat.stop_loss == -1:
+        if send_data is None or stat is None or stat.stopLoss == -1:
             return
 
         channel_calc.update(
@@ -726,7 +726,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         edit_channel_post(bot, stat_id)
 
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 
@@ -740,7 +740,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         edit_channel_post(bot, stat_id)
 
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 
@@ -748,13 +748,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_calculation(bot, call.message, user_id, calc, True)
 
     if type == 'result_take':
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 
         bot.edit_message_reply_markup(
             chat_id, mes_id, reply_markup=kb_channel_calc_result_take(
-                calc.tp_ratio, stat_id, True
+                calc.tpRatio, stat_id, True
             )
         )
         bot.set_state(user_id, ChannelCalcState.loss, chat_id)
@@ -768,7 +768,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         )
 
     if type == 'result_stop':
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 
@@ -791,7 +791,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
 
 def send_vote(bot: TeleBot, stat_id: int):
-    stat = db.get_calculation(stat_id)
+    stat = calculation.get(stat_id)
     if stat is None:
         return
 
@@ -800,7 +800,7 @@ def send_vote(bot: TeleBot, stat_id: int):
         lang = 'ru' if i == 0 else 'en'
 
         if rand == 1:
-            q = f'👆 {stat.tool or "" or (stat.forex_info.pair if stat.forex_info is not None else "")}'
+            q = f'👆 {stat.tool or "" or (stat.forexInfo.pair if stat.forexInfo is not None else "")}'
 
             if lang == 'ru':
                 ans = ['В рост', 'На падение']
@@ -1082,7 +1082,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
 
 def edit_channel_post(bot: TeleBot, calc_id: int):
-    calc = db.get_calculation(calc_id)
+    calc = calculation.get(calc_id)
     send_data = channel_calc.getByCalc(calc_id)
     messages = channel_calc.getSentMessagesByCalc(calc_id)
     if messages is None or calc is None or send_data is None:

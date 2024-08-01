@@ -21,7 +21,7 @@ from CALCULATE.callbacks import (
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
 )
-from services import channel_calc
+from services import calculation, channel_calc
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -42,7 +42,7 @@ def handle_loss(message: Message, bot: TeleBot):
     logger.info(f'callback "handle_loss" user_tg_id={user_id} value={value}')
 
     calcService.set_profit(stat_id, -abs(value))
-    calc_info = db.get_calculation(stat_id)
+    calc_info = calculation.get(stat_id)
     if calc_info is None:
         return
 
@@ -72,7 +72,7 @@ def handle_sum(message: Message, bot: TeleBot):
     logger.info(f'callback "handle_sum" user_tg_id={user_id} value={value}')
 
     calcService.set_profit(stat_id, value)
-    calc_info = db.get_calculation(stat_id)
+    calc_info = calculation.get(stat_id)
     if calc_info is None:
         return
 
@@ -238,7 +238,7 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
         return
 
     calcService.set_profit(stat_id, abs(value) * (-1 if type == 'stop' else 1))
-    calc = db.get_calculation(stat_id)
+    calc = calculation.get(stat_id)
     if calc is None:
         return
 

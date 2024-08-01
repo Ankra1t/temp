@@ -1721,25 +1721,26 @@ class Database:
 
         return Calculation(
             id=data.get('id'),
-            user_id=data.get('userId'),
+            userId=data.get('userId'),
             profit=data.get('profit'),
-            in_stat=data.get('inStat'),
-            stat_dt=data.get('statDt'),
+            inStat=data.get('inStat'),
+            statDt=data.get('statDt'),
             deposit=data.get('deposit'),
-            risk_value=data.get('riskValue'),
-            open_price=data.get('openPrice'),
-            stop_loss=data.get('stopLoss'),
-            round_count=data.get('roundCount'),
+            riskValue=data.get('riskValue'),
+            openPrice=data.get('openPrice'),
+            stopLoss=data.get('stopLoss'),
+            roundCount=data.get('roundCount'),
             currency=data.get('currency'),
-            trading_style=data.get('tradingStyle'),
+            tradingStyle=data.get('tradingStyle'),
             market=data.get('market'),
-            tp_ratio=data.get('tpRatio'),
-            split_values=split_values,
-            forex_info=forex,
+            tpRatio=data.get('tpRatio'),
+            splitValues=split_values,
+            forexInfo=forex,
             tool=data.get('tool'),
-            trading_type=data.get('tradingType'),
-            is_from_deposit=data.get('isFromDeposit'),
-            created_at=data.get('createdAt')
+            tradingType=data.get('tradingType'),
+            isFromDeposit=data.get('isFromDeposit'),
+            createdAt=data.get('createdAt'),
+            canceled=data.get('canceled') or False
         )
 
     def add_calculation(self, value: Calculation):
@@ -1750,16 +1751,16 @@ class Database:
         )
 
         pair_price = pair = cross_prices = None
-        if value.forex_info is not None:
-            pair_price = value.forex_info.price
-            pair = '/'.join(value.forex_info.pair)
-            cross_prices = json.dumps(value.forex_info.cross_prices)
+        if value.forexInfo is not None:
+            pair_price = value.forexInfo.price
+            pair = '/'.join(value.forexInfo.pair)
+            cross_prices = json.dumps(value.forexInfo.cross_prices)
 
         params = (
-            value.user_id, value.deposit, value.risk_value, value.open_price, value.stop_loss,
-            value.round_count, value.currency, value.trading_style, value.market,
-            value.tp_ratio, value.split_values, pair, pair_price, cross_prices, value.tool,
-            value.trading_type
+            value.userId, value.deposit, value.riskValue, value.openPrice, value.stopLoss,
+            value.roundCount, value.currency, value.tradingStyle, value.market,
+            value.tpRatio, value.splitValues, pair, pair_price, cross_prices, value.tool,
+            value.tradingType
         )
 
         try:
@@ -1869,6 +1870,19 @@ class Database:
 
     def set_calculation_in_stat(self, id: int, value: bool):
         query = 'UPDATE "Calculation" SET "inStat" = %s, "statDt" = %s WHERE id = %s'
+        params = (value, get_datetime_now(), id)
+
+        try:
+            self.curs.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self._log_error(e)
+            self.connection.rollback()
+            return False
+
+    def set_calculation_canceled(self, id: int, value: bool):
+        query = 'UPDATE "Calculation" SET "canceled" = %s, "statDt" = %s WHERE id = %s'
         params = (value, get_datetime_now(), id)
 
         try:

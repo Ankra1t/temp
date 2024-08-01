@@ -21,6 +21,7 @@ from CALCULATE.common.messages import (
     msg_digit_error, msg_enter_trading_style, msg_pair_error,
     msg_sl_op_equal_error, msg_text_error,
 )
+from services import calculation
 
 
 def handle_tool(message: Message, bot: TeleBot):
@@ -64,7 +65,7 @@ def handle_tool(message: Message, bot: TeleBot):
     else:
         db.change_calculation_tool(stat_id, tool)
 
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
@@ -137,7 +138,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     else:
         db.change_calculation_forex(stat_id, forex)
 
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
@@ -293,12 +294,12 @@ def handle_trading_style(message: Message, bot: TeleBot):
             last_value='trading_style'
         )
     else:
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
         db.change_calculation_style(stat_id, value)
-        calc_info.trading_style = value
+        calc_info.tradingStyle = value
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
@@ -330,17 +331,17 @@ def handle_open_price(message: Message, bot: TeleBot):
             bot, user_id, message, last_value='open_price'
         )
     else:
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
-        if calc_info.stop_loss == value:
+        if calc_info.stopLoss == value:
             new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
             set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
         db.change_calculation_open_price(stat_id, value)
-        calc_info.open_price = value
+        calc_info.openPrice = value
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)

@@ -10,7 +10,7 @@ from db import db
 from models import Calculation
 from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_translates
 from Classes import text_editor, calcService
-from services import channel_calc
+from services import calculation, channel_calc
 
 from .keyboards import kb_channel_post, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
 from .filter import ChannelPostCallbackFilter, channel_post_factory
@@ -62,14 +62,14 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             if stat is None:
                 continue
 
-            if stat.open_price > stat.stop_loss:
+            if stat.openPrice > stat.stopLoss:
                 count_long += 1
             else:
                 count_short += 1
 
             tool = stat.tool
-            if stat.forex_info is not None:
-                tool = '/'.join(stat.forex_info.pair)
+            if stat.forexInfo is not None:
+                tool = '/'.join(stat.forexInfo.pair)
 
             tool = (tool or '').replace('/USDT', '')
 
@@ -79,12 +79,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 else:
                     tools[tool or ''] = 1
 
-            if stat.trading_style is None or stat.trading_style == '':
+            if stat.tradingStyle is None or stat.tradingStyle == '':
                 pass
-            elif stat.trading_style in styles.keys():
-                styles[stat.trading_style] += 1
+            elif stat.tradingStyle in styles.keys():
+                styles[stat.tradingStyle] += 1
             else:
-                styles[stat.trading_style] = 1
+                styles[stat.tradingStyle] = 1
 
             stats.append(stat)
 
@@ -221,7 +221,7 @@ More often: <b>{result}</b>"""
         type = 'result'
 
     if 'stop+' in type or 'take+' in type:
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 
@@ -233,7 +233,7 @@ More often: <b>{result}</b>"""
         calcService.set_profit(
             stat_id,
             (-1 if 'stop+' in type else 1) *
-            calc.risk_value * value * spot_rate
+            calc.riskValue * value * spot_rate
         )
 
         send_data = channel_calc.getByCalc(stat_id)
@@ -245,7 +245,7 @@ More often: <b>{result}</b>"""
         if is_calc == 0:
             type = 'results'
         else:
-            calc = db.get_calculation(stat_id)
+            calc = calculation.get(stat_id)
             if calc is None:
                 return
             delete_message(bot, chat_id, mes_id)
@@ -259,7 +259,7 @@ More often: <b>{result}</b>"""
         send_admin_channel_calc_item(bot, call.message, user_id, stat_id, mes_type)
 
     if type == 'calc':
-        calc = db.get_calculation(stat_id)
+        calc = calculation.get(stat_id)
         if calc is None:
             return
 

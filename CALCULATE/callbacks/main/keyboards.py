@@ -75,7 +75,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     saved = False
     if stat is not None:
         stat_id = stat.id or stat_id
-        saved = stat.in_stat
+        saved = stat.inStat
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     buttons = []
