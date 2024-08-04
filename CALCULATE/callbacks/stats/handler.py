@@ -944,9 +944,6 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
             canceled = ''
 
-            print(valueDate.get("date"))
-            print(valueDate.get("calcs"))
-
             for value_i, value in enumerate(valueDate.get('calcs', [])):
                 status: CHANNEL_STATUS_TYPE = value.get('status', 'WAIT')
                 if status == 'WAIT':
