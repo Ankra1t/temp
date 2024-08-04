@@ -281,9 +281,11 @@ class Calculation(BaseModel):
     forexInfo: ForexInfo | None = None
     tool: Optional[str] = None
 
-    canceled: bool = False
+    status: CHANNEL_STATUS_TYPE = 'WAIT'
+    description: Optional[str] = None
+    photo: Optional[str] = None
 
-    createdAt: Optional[datetime] = None
+    createdAt: Optional[str] = None
 
 
 class CalculationResult(BaseModel):

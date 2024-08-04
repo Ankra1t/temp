@@ -88,9 +88,9 @@ class CalculationService():
                 (user_settings.deposit or 0.) + (calc_info.profit or 0.)
             )
 
-    def get_stats(self, tg_id: int, market: MARKETS_TYPE):
+    def get_stats(self, tg_id: int, market: MARKETS_TYPE | None = None):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)
-        user_market_base = self.db.get_calc_user_settings(user_db_id, market)
+        user_market_base = self.db.get_calc_user_settings(user_db_id, 'forex')
 
         base_currency = 'USDT' if market == 'crypto' else 'USD'
         if user_market_base is not None:
@@ -104,6 +104,7 @@ class CalculationService():
             user_db_id, True,
             market=market
         )
+        canceled_stats = ''
 
         tp_count = 0
         sl_count = 0

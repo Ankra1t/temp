@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_admin_channel_calc_list
+from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_stats
 from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
@@ -46,10 +46,15 @@ def handle_loss(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
+    calculation.update(
+        stat_id, status='FINISH'
+    )
+
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
+
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -80,6 +85,9 @@ def handle_sum(message: Message, bot: TeleBot):
     if send_data is not None:
         channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
+    calculation.update(
+        stat_id, status='FINISH'
+    )
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -242,18 +250,23 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
     if calc is None:
         return
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-    channel_calc.update(send_data.id, status='FINISH')
-    edit_channel_post(bot, stat_id)
+    calculation.update(
+        stat_id, status='FINISH'
+    )
 
     bot.delete_state(user_id, chat_id)
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is not None:
+        channel_calc.update(send_data.id, status='FINISH')
+        edit_channel_post(bot, stat_id)
 
-    if is_calc:
-        send_calculation(bot, message, user_id, calc, True)
+        if is_calc:
+            send_calculation(bot, message, user_id, calc, True)
+        else:
+            send_admin_channel_calc_list(bot, message, user_id, True)
     else:
-        send_admin_channel_calc_list(bot, message, user_id, True)
+        send_stats(bot, message, user_id, True)
+
 
 
 def registration(bot: TeleBot):

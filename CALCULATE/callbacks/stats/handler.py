@@ -47,7 +47,7 @@ from .keyboards import (
     kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
 )
 from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+from ..pages import send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
 loading_vote_message_ids: dict[int, tuple[int, int]] = {}
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
@@ -186,8 +186,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     callback_data = stats_factory.parse(call.data)
     type = callback_data.get('type', '')
     stat_id = int(callback_data.get('stat_id', 0))
+    page = int(callback_data.get('p', 0))
     stats_market: MARKETS_TYPE = callback_data.get(
-        'stats_market', 'crypto'
+        'sm', 'crypto'
     )  # type: ignore
 
     user_id = call.from_user.id
@@ -266,6 +267,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     if send_data is not None:
                         channel_calc.update(send_data.id, status='FINISH')
                         edit_channel_post(bot, stat_id)
+                    calculation.update(
+                        stat_id, status='FINISH'
+                    )
                     send_freeze(bot, call.message, user_id,
                                 calc_info.market, True)
 
@@ -723,6 +727,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             channel_calc.update(
                 send_data.id, status='CANCEL'
             )
+        calculation.update(
+            stat_id, status='CANCEL'
+        )
 
         edit_channel_post(bot, stat_id)
 
@@ -737,6 +744,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
             channel_calc.update(send_data.id, status='DEAL')
+        calculation.update(
+            stat_id, status='DEAL'
+        )
 
         edit_channel_post(bot, stat_id)
 
@@ -786,6 +796,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 'type': 'stop'
             }
         )
+
+    if 'list+' in type:
+        _, list_type = type.split('+')
+        send_calc_list(bot, call.message, user_id, list_type, page)
 
     bot.answer_callback_query(call.id)
 

@@ -12,13 +12,14 @@ from services import calculation, channel_calc
 from .filter import stats_factory
 
 
-def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'crypto'):
+def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'crypto', page=0):
     return InlineKeyboardButton(
         text, None,
         stats_factory.new(
             type=type,
             stat_id=stat_id,
-            stats_market=stats_market,
+            sm=stats_market,
+            p=page,
         )
     )
 
@@ -51,6 +52,112 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
         btn_back = getButton(back_txt(lang), 'go_stats')
 
     keyboard.add(btn_back)
+    return keyboard
+
+
+def kb_stats_page(user_id: int):
+    lang = get_lang(user_id)
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    texts = {
+        'ru': {
+            'list': 'Список',
+            'list_wait': 'Список в ожидании',
+            'list_done': 'Список выполненных',
+            'list_canceled': 'Список отмененных',
+        },
+        'en': {
+            'list': 'List',
+            'list_wait': 'List in wait',
+            'list_done': 'List done',
+            'list_canceled': 'List canceled',
+        },
+        'uz': {
+            'list': 'Roʻyxat',
+            'list_wait': 'Kutilayotgan roʻyxat',
+            'list_done': 'Bajarilgan roʻyxat',
+            'list_canceled': 'Bekor qilingan roʻyxat',
+        },
+        'tr': {
+            'list': 'Liste',
+            'list_wait': 'Bekleyen liste',
+            'list_done': 'Tamamlanan liste',
+            'list_canceled': 'İptal edilen liste',
+        },
+    }
+
+    keyboard.add(
+        getButton(texts[lang]['list_wait'], 'list+wait'),
+        getButton(texts[lang]['list_done'], 'list+done'),
+        # getButton(texts[lang]['list_canceled'], 'list+canceled'),
+        getButton(back_txt(lang), 'go_main'),
+    )
+
+    return keyboard
+
+
+def kb_calc_list(user_id: int, page: int, count: int, list_type: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'start': 'В начало',
+            'end': 'В конец',
+            'next': 'Далее',
+            'back': 'Назад',
+        },
+        'en': {
+            'start': 'To the beginning',
+            'end': 'To the end',
+            'next': 'Next',
+            'back': 'Back',
+        },
+        'uz': {
+            'start': 'Boshiga',
+            'end': 'Oxiriga',
+            'next': 'Keyingi',
+            'back': 'Orqaga',
+        },
+        'tr': {
+            'start': 'Başa',
+            'end': 'Sona',
+            'next': 'Sonraki',
+            'back': 'Geri',
+        },
+    }
+
+    buttons = []
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    if count > 1:
+        btn_start = getButton(texts[lang]['start'],
+                              f'list+{list_type}', page=0)
+        btn_end = getButton(texts[lang]['end'],
+                            f'list+{list_type}', page=count - 1)
+        btn_next = getButton(texts[lang]['next'],
+                             f'list+{list_type}', page=page + 1)
+        btn_back = getButton(texts[lang]['back'],
+                             f'list+{list_type}', page=page - 1)
+
+        counter = getButton(f'{page + 1}/{count}', 'counter')
+
+        if page == 0:
+            buttons.append(btn_end)
+        else:
+            buttons.append(btn_back)
+
+        buttons.append(counter)
+
+        if page + 1 == count:
+            buttons.append(btn_start)
+        else:
+            buttons.append(btn_next)
+
+    keyboard.add(
+        *buttons,
+        getButton(back_txt(lang), 'go_stats')
+    )
     return keyboard
 
 
@@ -102,7 +209,8 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     if is_saved:
         if not isAdmin:
-            btn_add_img = getButton(f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
+            btn_add_img = getButton(
+                f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
             keyboard.add(btn_add_img)
     else:
         if isAdmin:
@@ -187,7 +295,7 @@ def kb_deal_result(user_id: int, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     calc_info = calculation.get(stat_id)
-    tp: list[int] = getattr(calc_info, 'tp_ratio', [])
+    tp: list[int] = getattr(calc_info, 'tpRatio', [])
 
     buttons = []
     for i, el in enumerate(tp):

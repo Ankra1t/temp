@@ -106,7 +106,8 @@ def kb_send_settings_trading_style():
 def kb_channel_calc_result(
     stat_id: int,
     in_deal: bool,
-    is_calc=False
+    is_calc=False,
+    is_user=False,
 ):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
@@ -124,14 +125,14 @@ def kb_channel_calc_result(
     keyboard.add(
         getButton('Безубыток', 'take+0', stat_id, is_calc),
         getButton(
-            back_txt('ru'), 'results', stat_id, is_calc
+            back_txt('ru'), 'results' if not is_user else 'go_stats', stat_id, is_calc
         )
     )
 
     return keyboard
 
 
-def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=False):
+def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=False, is_user=False):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -144,14 +145,16 @@ def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=Fals
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'calc' if is_calc else 'result',
-                  stat_id, is_calc)
+        getButton(
+            back_txt('ru'),
+            'calc' if is_calc else 'go_stats' if is_user else 'result', stat_id, is_calc
+        )
     )
 
     return keyboard
 
 
-def kb_channel_calc_result_stop(stat_id: int, is_calc=False):
+def kb_channel_calc_result_stop(stat_id: int, is_calc=False, is_user=False):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -166,8 +169,11 @@ def kb_channel_calc_result_stop(stat_id: int, is_calc=False):
             buttons = []
 
     keyboard.add(
-        getButton(back_txt('ru'), 'calc' if is_calc else 'result',
-                  stat_id, is_calc)
+        getButton(
+            back_txt('ru'),
+            'calc' if is_calc else 'go_stats' if is_user else 'result',
+            stat_id, is_calc
+        )
     )
 
     return keyboard
