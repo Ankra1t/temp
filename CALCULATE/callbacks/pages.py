@@ -23,8 +23,9 @@ from CALCULATE.common.messages import (
 
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
-from models import CHANNEL_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
+from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import calculation, channel_calc
+from CALCULATE.common.messages import status_transaltes
 
 from .manual.keyboards import kb_manual, kb_manuals
 from .main.keyboards import kb_main
@@ -281,10 +282,6 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
             'stop': 'стоп',
             'count to': 'к',
 
-            'WAIT': 'В ожидании',
-            'DEAL': 'В сделке',
-            'CANCEL': 'Отменён',
-
             'canceled': 'Отменённые',
 
             'tp': 'тейков',
@@ -306,10 +303,6 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
             'stop': 'stop',
             'count to': 'to',
-
-            'WAIT': 'In wait',
-            'DEAL': 'In deal',
-            'CANCEL': 'Cancel',
 
             'canceled': 'Cancelled',
 
@@ -350,7 +343,7 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
         canceled = ''
 
         for value_i, value in enumerate(valueDate.get('calcs', [])):
-            status: CHANNEL_STATUS_TYPE = value.get('status', 'WAIT')
+            status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
 
             valueCount = value.get('valueCount')
             openPrice = value.get('openPrice')
@@ -358,7 +351,7 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
             tp_sl = ''
             if valueCount is None:
-                tp_sl = texts[lang][status]
+                tp_sl = status_transaltes[lang][status]
             elif valueCount == 0:
                 tp_sl = texts[lang]['breakeven']
             elif valueCount > 0:
@@ -644,7 +637,7 @@ def send_calculation(
             if is_first:
                 bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
             else:
-                edit_message(bot, message, 'text', text, kb, calc.photo)
+                edit_message(bot, message, 'photo', text, kb, calc.photo)
 
     else:
         file_path, caption = hti.create_calculation_image(

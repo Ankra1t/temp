@@ -36,8 +36,9 @@ from CALCULATE.common.messages import (
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.states import StatsState
-from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE
+from models import CALC_STATUS_TYPE, MARKETS_TYPE
 from services import calculation, channel_calc
+from CALCULATE.common.messages import status_transaltes
 
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
@@ -873,9 +874,6 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             'stop': 'стоп',
             'count to': 'к',
 
-            'DEAL': 'В сделке',
-            'CANCEL': 'Отменён',
-
             'canceled': 'Отменённые',
 
             'tp': 'тейков',
@@ -897,9 +895,6 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
             'stop': 'stop',
             'count to': 'to',
-
-            'DEAL': 'In deal',
-            'CANCEL': 'Cancel',
 
             'canceled': 'Cancelled',
 
@@ -973,7 +968,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             canceled = ''
 
             for value_i, value in enumerate(valueDate.get('calcs', [])):
-                status: CHANNEL_STATUS_TYPE = value.get('status', 'WAIT')
+                status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
                 if status == 'WAIT':
                     continue
 
@@ -995,7 +990,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
                 tp_sl = ''
                 if valueCount is None:
-                    tp_sl = texts[lang][status]
+                    tp_sl = status_transaltes[lang][status]
                 elif valueCount == 0:
                     tp_sl = texts[lang]['breakeven']
                 elif valueCount > 0:

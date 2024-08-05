@@ -7,7 +7,7 @@ TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
-CHANNEL_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
+CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
 MANUAL_TYPE = Literal['settings', 'exchange',
                       'trading_type', 'trading_style', 'calc']
@@ -281,7 +281,7 @@ class Calculation(BaseModel):
     forexInfo: ForexInfo | None = None
     tool: Optional[str] = None
 
-    status: CHANNEL_STATUS_TYPE = 'WAIT'
+    status: CALC_STATUS_TYPE = 'WAIT'
     description: Optional[str] = None
     photo: Optional[str] = None
 

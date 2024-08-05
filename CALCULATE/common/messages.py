@@ -8,7 +8,7 @@ from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb
 from Classes import calcService
-from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
 
 
 POINT = '•'
@@ -76,6 +76,29 @@ trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
     'tr': {
         'margin': 'marj',
         'spot': 'spot',
+    },
+}
+
+status_transaltes: dict[LANGUAGES_TYPE, dict[CALC_STATUS_TYPE, str]] = {
+    'ru': {
+        'WAIT': 'В ожидании',
+        'DEAL': 'В сделке',
+        'CANCEL': 'Отменён',
+    },
+    'en': {
+        'WAIT': 'In wait',
+        'DEAL': 'In deal',
+        'CANCEL': 'Cancel',
+    },
+    'uz': {
+        'WAIT': 'Kutish paytida',
+        'DEAL': 'Bitim',
+        'CANCEL': 'Bekor qilmoq',
+    },
+    'tr': {
+        'WAIT': 'Beklemede',
+        'DEAL': 'Anlaşma içinde',
+        'CANCEL': 'İptal etmek',
     },
 }
 
@@ -1934,7 +1957,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         demo_show = ' - demo '
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}({long_short}) ',
         attention,
         f'<b>{texts[lang]["buy"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
@@ -1959,7 +1982,7 @@ def msg_channel_calculation(
     tickerInfo: TickerInfo | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
-    status: CHANNEL_STATUS_TYPE = 'WAIT',
+    status: CALC_STATUS_TYPE = 'WAIT',
     date: str | None = None,
     try_link: str = '',
 ):
