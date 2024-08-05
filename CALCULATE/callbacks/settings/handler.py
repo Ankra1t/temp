@@ -20,7 +20,7 @@ from CALCULATE.common.messages import (
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
     msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
 )
-from services import auth
+from services import auth, calculation
 
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
@@ -123,13 +123,13 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 with bot.retrieve_data(user_id, chat_id) as data:
                     stat_id = data.get('stat_id')
 
-                calc_info = db.get_calculation(stat_id)
+                calc_info = calculation.get(stat_id)
                 if calc_info is None:
                     return
 
                 if value != '**cancel**':
                     db.change_calculation_style(stat_id, value)
-                    calc_info.trading_style = value
+                    calc_info.tradingStyle = value
 
                 if '+stc' in type:
                     send_confirm_calc_send(bot, call.message, stat_id)

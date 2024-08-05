@@ -4,6 +4,7 @@ from common.dt import get_datetime_now
 from data.data import liteDb
 from db import Database
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
+from services import calculation
 
 from .CurrencyService import CurrencyService
 
@@ -71,25 +72,25 @@ class CalculationService():
         self.db.set_calculation_in_stat(calc_id, True)
 
         # Находим данный расчет по статистике
-        calc_info = self.db.get_calculation(calc_id)
+        calc_info = calculation.get(calc_id)
         if calc_info is None:
             return
 
         # Проверка настроек пользователя
         # Если не выставлен риск на день, то ничего не делаем
         user_settings = self.db.get_calc_user_settings(
-            calc_info.user_id, calc_info.market
+            calc_info.userId, calc_info.market
         )
 
         if user_settings and user_settings.is_updating_deposit:
             self.db.set_user_base(
-                calc_info.user_id, 'deposit',
+                calc_info.userId, 'deposit',
                 (user_settings.deposit or 0.) + (calc_info.profit or 0.)
             )
 
-    def get_stats(self, tg_id: int, market: MARKETS_TYPE):
+    def get_stats(self, tg_id: int, market: MARKETS_TYPE | None = None):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)
-        user_market_base = self.db.get_calc_user_settings(user_db_id, market)
+        user_market_base = self.db.get_calc_user_settings(user_db_id, 'forex')
 
         base_currency = 'USDT' if market == 'crypto' else 'USD'
         if user_market_base is not None:
@@ -103,6 +104,7 @@ class CalculationService():
             user_db_id, True,
             market=market
         )
+        canceled_stats = ''
 
         tp_count = 0
         sl_count = 0
@@ -128,9 +130,9 @@ class CalculationService():
             stat_profit = stat.profit or 0
 
             if stat_profit > 0:
-                tp_count += round(stat_profit / stat.risk_value, 1)
+                tp_count += round(stat_profit / stat.riskValue, 1)
             if stat_profit < 0:
-                sl_count += round(abs(stat_profit) / stat.risk_value, 1)
+                sl_count += round(abs(stat_profit) / stat.riskValue, 1)
 
             rate = 1.
             if currencies_price:
@@ -186,10 +188,10 @@ class CalculationService():
 
         # Считаем профит за день
         for calc in user_calculations:
-            if not calc.in_stat or calc.stat_dt is None:
+            if not calc.inStat or calc.statDt is None:
                 continue
 
-            if calc.stat_dt.date() == today:
+            if calc.statDt.date() == today:
                 today_profit += calc.profit or 0
 
         # Если профит положительный и меньше риска на день, отправляем предупреждение
@@ -228,30 +230,30 @@ class CalculationService():
     def get_count_value_bet(self, calc: Calculation, lot=pow(10, 5)):
         spot_rate = 1.
 
-        diff_op_sl = calc.open_price - calc.stop_loss
+        diff_op_sl = calc.openPrice - calc.stopLoss
 
-        if calc.market == 'forex' and calc.forex_info is not None:
-            value_bet = calc.risk_value / abs(diff_op_sl)
+        if calc.market == 'forex' and calc.forexInfo is not None:
+            value_bet = calc.riskValue / abs(diff_op_sl)
             count_bet = value_bet / lot
 
-            if calc.currency == calc.forex_info.pair[1]:
-                value_bet *= calc.open_price
-            elif calc.currency == calc.forex_info.pair[0]:
-                count_bet *= calc.stop_loss
+            if calc.currency == calc.forexInfo.pair[1]:
+                value_bet *= calc.openPrice
+            elif calc.currency == calc.forexInfo.pair[0]:
+                count_bet *= calc.stopLoss
                 value_bet = count_bet * lot
             else:
-                prices = calc.forex_info.cross_prices
+                prices = calc.forexInfo.cross_prices
 
-                BASExxx = f'{calc.currency}/{calc.forex_info.pair[1]}'
-                yyyBASE = f'{calc.forex_info.pair[0]}/{calc.currency}'
+                BASExxx = f'{calc.currency}/{calc.forexInfo.pair[1]}'
+                yyyBASE = f'{calc.forexInfo.pair[0]}/{calc.currency}'
 
                 count_bet *= prices.get(BASExxx, 1)
                 value_bet = count_bet * lot * prices.get(yyyBASE, 1)
         else:
-            count_bet = calc.risk_value / abs(diff_op_sl)
-            value_bet = count_bet * calc.open_price
+            count_bet = calc.riskValue / abs(diff_op_sl)
+            value_bet = count_bet * calc.openPrice
 
-        if calc.trading_type == 'spot' and value_bet > calc.deposit:
+        if calc.tradingType == 'spot' and value_bet > calc.deposit:
             spot_rate = calc.deposit / value_bet
 
             count_bet *= spot_rate
@@ -273,41 +275,41 @@ class CalculationService():
         profit_values: list[float] = []
         profit_rate_values: list[float] | None = None
 
-        tp_count = len(calc.tp_ratio)
+        tp_count = len(calc.tpRatio)
 
         is_splitting = (
-            calc.split_values is not None and
-            len(calc.split_values) != 0 and
-            len(calc.split_values) == tp_count
+            calc.splitValues is not None and
+            len(calc.splitValues) != 0 and
+            len(calc.splitValues) == tp_count
         )
 
         if is_splitting:
             profit_rate_values = []
 
         for i in range(tp_count):
-            tp_ratio_i = calc.tp_ratio[i]
+            tp_ratio_i = calc.tpRatio[i]
 
-            diff_op_sl = calc.open_price - calc.stop_loss
+            diff_op_sl = calc.openPrice - calc.stopLoss
             tp_i = max(
-                calc.open_price + diff_op_sl * tp_ratio_i,
+                calc.openPrice + diff_op_sl * tp_ratio_i,
                 0
             )
             tp_values.append(tp_i)
 
             profit_rate_i = 1
             if is_splitting:
-                profit_rate_i = calc.split_values[i] * 0.01  # type: ignore
+                profit_rate_i = calc.splitValues[i] * 0.01  # type: ignore
                 profit_rate_values.append(profit_rate_i)  # type: ignore
 
-            profit_i = abs(calc.open_price - tp_i) * count_bet * profit_rate_i
+            profit_i = abs(calc.openPrice - tp_i) * count_bet * profit_rate_i
 
-            if calc.market == 'forex' and calc.forex_info is not None:
+            if calc.market == 'forex' and calc.forexInfo is not None:
                 profit_i *= pow(10, 5)
-                if calc.forex_info.pair[0] == calc.currency:
-                    profit_i /= calc.stop_loss
-                elif calc.forex_info.pair[1] != calc.currency:
-                    profit_i /= calc.forex_info.cross_prices.get(
-                        f'{calc.currency}/{calc.forex_info.pair[1]}', 1
+                if calc.forexInfo.pair[0] == calc.currency:
+                    profit_i /= calc.stopLoss
+                elif calc.forexInfo.pair[1] != calc.currency:
+                    profit_i /= calc.forexInfo.cross_prices.get(
+                        f'{calc.currency}/{calc.forexInfo.pair[1]}', 1
                     )
 
             profit_values.append(profit_i - 2 * fee)
@@ -332,7 +334,7 @@ class CalculationService():
     ):
         lang = get_lang(user_id)
 
-        is_saved = calc.in_stat
+        is_saved = calc.inStat
         calc_result = self.get_result(calc)
 
         texts = {
@@ -437,7 +439,7 @@ class CalculationService():
         else:
             tool_name = texts[lang]["paper"]
 
-        if calc.open_price > calc.stop_loss:
+        if calc.openPrice > calc.stopLoss:
             long_short = 'long'
         else:
             long_short = 'short'
@@ -446,19 +448,19 @@ class CalculationService():
         trading_currency = calc.currency
 
         tool = calc.tool or ''
-        if calc.forex_info is not None and calc.market == 'forex':
-            trading_currency = calc.forex_info.pair[1]
-            tool = ''.join(calc.forex_info.pair)
+        if calc.forexInfo is not None and calc.market == 'forex':
+            trading_currency = calc.forexInfo.pair[1]
+            tool = ''.join(calc.forexInfo.pair)
 
         trading_style = ''
-        if calc.trading_style is not None:
-            trading_style = f'<b>{texts[lang]["style"]}</b>: {calc.trading_style.capitalize()}\n'
+        if calc.tradingStyle is not None:
+            trading_style = f'<b>{texts[lang]["style"]}</b>: {calc.tradingStyle.capitalize()}\n'
 
         # Округление
-        round_count = calc.round_count or 5
+        round_count = calc.roundCount or 5
         price_round_count = max(
-            get_decimal_count(calc.open_price),
-            get_decimal_count(calc.stop_loss),
+            get_decimal_count(calc.openPrice),
+            get_decimal_count(calc.stopLoss),
             round_count
         )
 
@@ -488,8 +490,8 @@ class CalculationService():
             saved_mes = ''
             p_show = ''
             conclusion = ''
-            for i in range(len(calc.tp_ratio)):
-                tp_ratio = calc.tp_ratio[i]
+            for i in range(len(calc.tpRatio)):
+                tp_ratio = calc.tpRatio[i]
                 tp_val = calc_result.tp_values[i]
                 p_val = calc_result.profit_values[i]
 
@@ -538,20 +540,20 @@ class CalculationService():
 <div class="content">
     <div class="block">
         <div class="name">{texts[lang]['open']}:</div>
-        <div class="value">{get_print_float(calc.open_price, round_count)} {trading_currency}</div>
+        <div class="value">{get_print_float(calc.openPrice, round_count)} {trading_currency}</div>
     </div>
     <div class="block">
         <div class="name">{texts[lang]['sl']}:</div>
-        <div class="value">{get_print_float(calc.stop_loss, round_count)} {trading_currency}</div>
+        <div class="value">{get_print_float(calc.stopLoss, round_count)} {trading_currency}</div>
     </div>
     {profit_info}
 </div>
 """, f"""#{tool.replace("/USDT", "").upper()} {saved_mes}- {texts[lang][long_short]}
 
 <b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}
-<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency}
+<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency}
 
-<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.trading_type]}
+<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.tradingType]}
 {trading_style}""")
 
 # Моя биржа

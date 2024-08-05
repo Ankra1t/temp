@@ -2,7 +2,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from AuthRoles import get_ticker_atr
-from services import channel_calc
+from services import calculation, channel_calc
 from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
 from ..settings.keyboards import kb_first_dep
 from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
@@ -197,7 +197,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             if not stat_id:
                 return
 
-            stat = db.get_calculation(stat_id)
+            stat = calculation.get(stat_id)
             if stat is None:
                 return
 
@@ -210,7 +210,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             if send_data is None:
                 return
 
-            if withoutStop == 'True' or stat.stop_loss == -1:
+            if withoutStop == 'True' or stat.stopLoss == -1:
                 channel_calc.update(send_data.id, withoutStop=True)
             if isVote == 'False':
                 channel_calc.update(send_data.id, isVote=False)
@@ -233,11 +233,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             if 'f_direct' in type:
                 bot.delete_state(user_id, chat_id)
 
-                calc = db.get_calculation(int(stat_id))
+                calc = calculation.get(int(stat_id))
                 if calc is None:
                     return
 
-                stop_loss = stop_loss if stop_loss is not None else calc.stop_loss
+                stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
                 user_db_id = db.get_user_id_by_tg_id(user_id)
                 u_base = db.get_calc_user_settings(user_db_id, calc.market)
@@ -249,8 +249,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     deposit = u_base.deposit
 
                 if u_base is not None and u_base.is_from_deposit:
-                    count_bet = deposit / calc.open_price
-                    risk_val = count_bet * abs(calc.open_price - stop_loss)
+                    count_bet = deposit / calc.openPrice
+                    risk_val = count_bet * abs(calc.openPrice - stop_loss)
                 else:
                     if u_base is None or u_base.risk is None:
                         risk_val = 100
@@ -261,20 +261,20 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 new_calc = Calculation(
                     id=-1,
-                    user_id=user_db_id,
+                    userId=user_db_id,
                     currency=calc.currency,
                     deposit=deposit,
-                    risk_value=risk_val,
+                    riskValue=risk_val,
                     market=calc.market,
-                    open_price=calc.open_price,
-                    stop_loss=stop_loss,
-                    trading_style=calc.trading_style,
-                    trading_type=calc.trading_type,
-                    round_count=(u_base.round_count or 5) if u_base is not None else 5,
+                    openPrice=calc.openPrice,
+                    stopLoss=stop_loss,
+                    tradingStyle=calc.tradingStyle,
+                    tradingType=calc.tradingType,
+                    roundCount=(u_base.round_count or 5) if u_base is not None else 5,
                     tool=calc.tool,
-                    tp_ratio=calc.tp_ratio,
-                    split_values=calc.split_values,
-                    is_from_deposit=u_base.is_from_deposit if u_base is not None else False
+                    tpRatio=calc.tpRatio,
+                    splitValues=calc.splitValues,
+                    isFromDeposit=u_base.is_from_deposit if u_base is not None else False
                 )
 
                 new_id = db.add_calculation(new_calc)
