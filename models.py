@@ -354,12 +354,9 @@ class CalcSentMessages(SentMessages):
 class SendCalc(BaseModel):
     id: int
     calcId: int
-    text: Optional[str]
-    photo: Optional[str]
     sent: bool
     withoutStop: bool
     tradingStyle: Optional[str]
     time: Optional[str]
     isVote: bool
-    status: CHANNEL_STATUS_TYPE
     createdAt: str

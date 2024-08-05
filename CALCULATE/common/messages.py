@@ -3,7 +3,7 @@ from telebot import TeleBot
 from datetime import datetime
 
 from Classes import text_editor
-from common.dt import get_datetime_now, get_str_by_datetime
+from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb

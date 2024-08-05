@@ -6,7 +6,7 @@ from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
 from db import LANGUAGES_TYPE, db
-from models import MARKETS_TYPE
+from models import MARKETS_TYPE, Calculation
 from services import calculation, channel_calc
 
 from .filter import stats_factory
@@ -161,12 +161,12 @@ def kb_calc_list(user_id: int, page: int, count: int, list_type: str):
     return keyboard
 
 
-def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
+def kb_calc_result(user_id: int, calc: Calculation):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     isAdmin = db.get_worker_role(user_db_id)
-    send_data = channel_calc.getByCalc(stat_id)
+    send_data = channel_calc.getByCalc(calc.id)
 
     texts = {
         'ru': {
@@ -199,47 +199,43 @@ def kb_calc_result(user_id: int, stat_id: int, is_saved=False):
 
     btn_delete = getButton(
         f'❌ {texts[lang]["del"]}',
-        'delete_calc', stat_id
+        'delete_calc', calc.id
     )
     btn_change = getButton(
         f'✏️ {texts[lang]["change"]}',
-        'ch_c', stat_id
+        'ch_c', calc.id
     )
     keyboard.add(btn_delete, btn_change)
 
-    if is_saved:
+    if calc.inStat:
         if not isAdmin:
             btn_add_img = getButton(
-                f'🖼 {texts[lang]["img"]}', 'add_img', stat_id)
+                f'🖼 {texts[lang]["img"]}', 'add_img', calc.id
+            )
             keyboard.add(btn_add_img)
     else:
-        if isAdmin:
-            if send_data is not None and (send_data.status == 'WAIT' or send_data.status == 'DEAL'):
-                if send_data.status != 'DEAL':
-                    btn_deal = getButton(
-                        'В сделке', 'result_deal', stat_id=stat_id
-                    )
-                    btn_cancel = getButton(
-                        'Отмена сделки', 'result_cancel', stat_id=stat_id
-                    )
-                    keyboard.add(
-                        btn_cancel, btn_deal,
-                    )
-
-                btn_take = getButton('Тейк', 'result_take', stat_id=stat_id)
-                btn_stop = getButton('Стоп', 'result_stop', stat_id=stat_id)
-                keyboard.add(
-                    btn_stop, btn_take
+        if (calc.status == 'WAIT' or calc.status == 'DEAL'):
+            if calc.status != 'DEAL':
+                btn_deal = getButton(
+                    'В сделке', 'result_deal', stat_id=calc.id
                 )
-        else:
-            btn_save = getButton(
-                f'✅ {texts[lang]["save"]}', 'profit+', stat_id
+                btn_cancel = getButton(
+                    'Отмена сделки', 'result_cancel', stat_id=calc.id
+                )
+                keyboard.add(
+                    btn_cancel, btn_deal,
+                )
+
+            btn_take = getButton('Тейк', 'result_take', stat_id=calc.id)
+            btn_stop = getButton('Стоп', 'result_stop', stat_id=calc.id)
+            keyboard.add(
+                btn_stop, btn_take
             )
-            keyboard.add(btn_save)
+
 
     if isAdmin and send_data is None:
         keyboard.add(
-            getButton('Выложить в каналах', 'send_to_channels', stat_id)
+            getButton('Выложить в каналах', 'send_to_channels', calc.id)
         )
 
     return keyboard
@@ -422,41 +418,42 @@ def kb_calc_image(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_confirm_channel_post(stat_id: int):
-    send_data = channel_calc.getByCalc(stat_id)
+def kb_confirm_channel_post(calc_id: int):
+    send_data = channel_calc.getByCalc(calc_id)
+    calc = calculation.get(calc_id)
 
-    send = getButton('Отправить ➡️', f'stc+send', stat_id)
-    rescreen = getButton('Повтор скрина', f'stc+rescreen', stat_id)
+    send = getButton('Отправить ➡️', f'stc+send', calc_id)
+    rescreen = getButton('Повтор скрина', f'stc+rescreen', calc_id)
 
     is_text = is_photo = is_vote = without_stop = False
-    if send_data is not None:
-        is_text = send_data.text is not None
-        is_photo = send_data.photo is not None
+    if send_data is not None and calc is not None:
+        is_text = calc.description is not None
+        is_photo = calc.photo is not None
         without_stop = send_data.withoutStop
         is_vote = send_data.isVote
 
     if is_text:
-        add_text = getButton('❌ Убрать описание', 'stc-text', stat_id)
+        add_text = getButton('❌ Убрать описание', 'stc-text', calc_id)
     else:
-        add_text = getButton('📝 Описание', 'stc+text', stat_id)
+        add_text = getButton('📝 Описание', 'stc+text', calc_id)
 
     if is_photo:
-        add_photo = getButton('❌ Убрать скрин', 'stc-photo', stat_id)
+        add_photo = getButton('❌ Убрать скрин', 'stc-photo', calc_id)
     else:
-        add_photo = getButton('🖼 Скрин', 'stc+photo', stat_id)
+        add_photo = getButton('🖼 Скрин', 'stc+photo', calc_id)
 
     if without_stop:
-        add_stop = getButton('Вернуть стоп', 'stc+stop', stat_id)
+        add_stop = getButton('Вернуть стоп', 'stc+stop', calc_id)
     else:
-        add_stop = getButton('Убрать стоп', 'stc+stop', stat_id)
+        add_stop = getButton('Убрать стоп', 'stc+stop', calc_id)
 
     if is_vote:
-        btn_vote = getButton('Убрать опрос', 'stc+vote', stat_id)
+        btn_vote = getButton('Убрать опрос', 'stc+vote', calc_id)
     else:
-        btn_vote = getButton('Добавить опрос', 'stc+vote', stat_id)
+        btn_vote = getButton('Добавить опрос', 'stc+vote', calc_id)
 
-    btn_style = getButton('Стиль', 'ch_c+style_stc', stat_id)
-    add_time = getButton('Период', 'stc+time', stat_id)
+    btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
+    add_time = getButton('Период', 'stc+time', calc_id)
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
     keyboard = InlineKeyboardMarkup(row_width=2)

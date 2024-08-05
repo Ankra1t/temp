@@ -52,7 +52,6 @@ def handle_loss(message: Message, bot: TeleBot):
 
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
 
     send_calculation(bot, message, user_id, calc_info, True)
@@ -81,13 +80,14 @@ def handle_sum(message: Message, bot: TeleBot):
     if calc_info is None:
         return
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is not None:
-        channel_calc.update(send_data.id, status='FINISH')
-        edit_channel_post(bot, stat_id)
     calculation.update(
         stat_id, status='FINISH'
     )
+
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is not None:
+        edit_channel_post(bot, stat_id)
+
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -157,8 +157,12 @@ def handle_calc_image(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'calc_del_mes_id': new_mes.id})
         return
 
+    calc = calculation.get(stat_id)
+    if calc is None:
+        return
+
     calc_text = '\n'.join(calc_text.split('\n')[:-1])
-    kb = kb_calc_result(user_id, stat_id, True)
+    kb = kb_calc_result(user_id, calc)
 
     if calc_media is not None:
         bot.edit_message_caption(
@@ -190,11 +194,7 @@ def handle_send_text(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-
-    channel_calc.update(send_data.id, text=new_text)
+    calculation.update(stat_id, description=new_text)
 
     bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
@@ -218,11 +218,7 @@ def handle_send_photo(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-
-    channel_calc.update(send_data.id, photo=new_photo.file_id)
+    calculation.update(stat_id, photo=new_photo.file_id)
 
     bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
@@ -257,7 +253,6 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
 
         if is_calc:
@@ -266,7 +261,6 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
             send_admin_channel_calc_list(bot, message, user_id, True)
     else:
         send_stats(bot, message, user_id, True)
-
 
 
 def registration(bot: TeleBot):

@@ -211,10 +211,6 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            channel_calc.update(
-                send_data.id, status='CANCEL'
-            )
-
             edit_channel_post(bot, stat_id)
             type = 'results'
         else:
@@ -227,8 +223,6 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            channel_calc.update(send_data.id, status='DEAL')
-
             edit_channel_post(bot, stat_id)
             type = 'result'
         else:
@@ -256,19 +250,20 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            channel_calc.update(send_data.id, status='FINISH')
             edit_channel_post(bot, stat_id)
 
             if is_calc == 0:
                 type = 'results'
-            else:
-                calc = calculation.get(stat_id)
-                if calc is None:
-                    return
-                delete_message(bot, chat_id, mes_id)
-                send_calculation(bot, call.message, user_id, calc, True)
         else:
-            send_stats(bot, call.message, user_id)
+            if is_calc == 0:
+                send_stats(bot, call.message, user_id)
+
+        if is_calc == 1:
+            calc = calculation.get(stat_id)
+            if calc is None:
+                return
+            delete_message(bot, chat_id, mes_id)
+            send_calculation(bot, call.message, user_id, calc, True)
 
     if type == 'results':
         send_admin_channel_calc_list(bot, call.message, user_id)

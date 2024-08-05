@@ -9,7 +9,7 @@ from AuthRoles import first_timeout, get_ticker_info
 from CALCULATE.states.stats import ChannelCalcState
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
-from db import LANGUAGES_TYPE, db
+from db import db
 from data.data import liteDb
 
 from Classes import pay_guard, calcService, hti
@@ -18,7 +18,7 @@ from CALCULATE.common.messages import (
     msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_sl_op_equal_error,
-    msg_stats_page, msg_stop_page, msg_summury_profit_settings, msg_manuals
+    msg_stop_page, msg_summury_profit_settings, msg_manuals
 )
 
 from messages.manual import msg_manual
@@ -32,7 +32,7 @@ from .settings.keyboards import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
-from .stats.keyboards import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats, kb_stats_page
+from .stats.keyboards import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_send_settings, kb_channel_post
 
@@ -690,11 +690,11 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 
     info = get_ticker_info(stat.tool or '')
 
-    photo = send_data.photo
+    photo = stat.photo
     text = msg_channel_calculation(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
         tickerInfo=info or None,
-        description=send_data.text
+        description=stat.description
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
@@ -1012,7 +1012,7 @@ def send_admin_channel_calc_item(
     if calc is None:
         return
 
-    if send_data is None or (send_data.status != 'WAIT' and send_data.status != 'DEAL') or calc is None:
+    if send_data is None or (calc.status != 'WAIT' and calc.status != 'DEAL') or calc is None:
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
             bot.send_message(
@@ -1056,7 +1056,7 @@ def send_admin_channel_calc_item(
         info = '\n\n<i>Либо введите <b>убыток</b></i> со сделки'
     else:
         kb = kb_channel_calc_result(
-            calc.id, send_data.status == 'DEAL',
+            calc.id, calc.status == 'DEAL',
         )
         is_state = False
         info = ''
