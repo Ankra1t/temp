@@ -395,7 +395,8 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
                     canceled += ', '
                 canceled += f'/{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>'
             else:
-                date_msg += f'\n/{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
+                slash = '/' if (status == 'WAIT' or status == 'DEAL') else ''
+                date_msg += f'\n{slash}{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
 
         tp_sl_result = round(tp_count - sl_count, 1)
         tp_sl_show = ''
@@ -498,6 +499,8 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
         calc_list = calculation.getByUserFinish(user_db_id)
     if calc_list is None:
         return
+
+    calc_list.reverse()
 
     pages = ceil(len(calc_list) / N)
 
@@ -627,13 +630,22 @@ def send_calculation(
     else:
         kb = kb_main(user_id, is_access, calc, is_first=is_try)
 
-    if calc_output == 'text' or is_try:
+    if True or calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)
+        if calc.description is not None:
+            text += '\n\n' + calc.description
 
-        if is_first:
-            bot.send_message(chat_id, text, reply_markup=kb)
+        if calc.photo is None:
+            if is_first:
+                bot.send_message(chat_id, text, reply_markup=kb)
+            else:
+                edit_message(bot, message, 'text', text, kb)
         else:
-            edit_message(bot, message, 'text', text, kb)
+            if is_first:
+                bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
+            else:
+                edit_message(bot, message, 'text', text, kb, calc.photo)
+
     else:
         file_path, caption = hti.create_calculation_image(
             user_id, calc
@@ -1100,7 +1112,7 @@ def send_calc_stat_item(
     if calc is None:
         return
 
-    if calc is None or (calc.status != 'DEAL' and calc.status != 'WAIT'):
+    if calc is None or (calc.status == 'FINISH'):
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
             bot.send_message(

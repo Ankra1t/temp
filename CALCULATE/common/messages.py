@@ -1,6 +1,6 @@
 from typing import Literal
 from telebot import TeleBot
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from Classes import text_editor
 from common.dt import get_str_by_datetime
@@ -2231,22 +2231,26 @@ def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
         'ru': {
             'main': 'Список незавершенных сделок' if type != 'done' else 'Список завершенных сделок',
             'info': 'Нажмите на номер для действий',
-            'price': 'Вход/Стоп',
+            'price': 'Вход/Стоп' if type != 'done' else 'Цена Входа/Закрытия',
+            'result': 'Результат'
         },
         'en': {
             'main': 'List of pending calculations',
             'info': 'Click on the number to take action',
-            'price': 'Open/Stop',
+            'price': 'Open/Stop' if type != 'done' else 'Input/Closing price',
+            'result': 'Result'
         },
         'uz': {
             'main': 'Kutilayotgan hisob-kitoblar ro\'yxati',
             'info': 'Harakatni olish uchun raqamni bosing',
-            'price': 'Ochiq/To\'xtash',
+            'price': 'Ochiq/To\'xtash' if type != 'done' else 'Kirish/yopilish narxi',
+            'result': 'Natija'
         },
         'tr': {
             'main': 'Bekleyen hesaplamaların listesi',
             'info': 'Harekete geçmek için numarayı tıklayın',
-            'price': 'Aç/Stop',
+            'price': 'Aç/Stop' if type != 'done' else 'Giriş/Kapanış Fiyatı',
+            'result': 'Sonuç'
         },
     }
 
@@ -2260,12 +2264,22 @@ def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
         msg += f'\n👇 {texts[lang]["info"]}'
 
     for el in calcs:
-        slash = '/' if not el.inStat or (not el.inStat and (el.status ==
-                                         'WAIT' or el.status == 'DEAL')) else ''
+        slash = '/' if not el.inStat or (
+            not el.inStat and (el.status == 'WAIT' or el.status == 'DEAL')
+        ) else ''
 
         msg += f'\n\n{slash}{el.id} <b>{(el.tool or "").replace("/USDT", "")}</b>'
-        msg += f' ({datetime.fromisoformat((el.createdAt or "").replace("Z", "")).strftime("%d.%m %H:%M")})'
-        msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(el.stopLoss)}</b>'
+        msg += f' ({(datetime.fromisoformat((el.createdAt or "").replace("Z", "")) + timedelta(hours=3)).strftime("%d.%m %H:%M")})'
+
+        if type == 'done':
+            tp_sl_count = ((el.profit or 0) / el.riskValue)
+            close_price = el.openPrice + \
+                (el.openPrice - el.stopLoss) * \
+                tp_sl_count
+            msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(close_price)}</b>'
+            msg += f'\n{texts[lang]["result"]}: <b>{get_print_float(el.profit or 0)}</b>'
+        else:
+            msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(el.stopLoss)}</b>'
 
     return msg
 
@@ -2353,14 +2367,14 @@ def msg_enter_save_calc(user_id: int):
     return texts[lang]
 
 
-def msg_enter_calc_image(user_id: int):
+def msg_enter_calc_img_text(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Загрузите свой скриншот сделки и он останется в чате навсегда',
-        'en': 'Upload your screenshot of the deal and it will stay in the chat',
-        'uz': 'Bitimning skrinshotini yuklang va u suhbatda qoladi',
-        'tr': 'Anlaşmanın ekran görüntüsünüzü yükleyin ve sohbette kalacaktır',
+        'ru': 'Отправьте картинку и описание (или что-то одно)',
+        'en': 'Send a picture and description (or one of them)',
+        'uz': 'Rasm va tavsifni (yoki bitta narsani) yuboring',
+        'tr': 'Bir resim ve açıklama gönderin (veya bir şey)',
     }
 
     return f'👉 {texts[lang]}'

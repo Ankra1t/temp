@@ -30,7 +30,7 @@ from Classes import calcService, pay_guard
 from db import LANGUAGES_TYPE, db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
-    msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_image,
+    msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_img_text,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
@@ -42,7 +42,7 @@ from services import calculation, channel_calc
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_trading_style
 from .keyboards import (
-    kb_calc_image, kb_calc_result, kb_calculate_change,
+    kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
 )
@@ -298,6 +298,20 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             reply_markup=kb_stats(user_id, 'market')
         )
 
+    if type == 'back_calc':
+        calc = calculation.get(calc_id)
+        if calc is not None:
+            send_calculation(bot, call.message, user_id, calc)
+
+    if type == 'result_calc':
+        calc = calculation.get(calc_id)
+        if calc is not None:
+            is_access = pay_guard.valid_use_calc(user_id, bot)
+            bot.edit_message_reply_markup(
+                chat_id, mes_id,
+                reply_markup=kb_calc_result(user_id, calc, True)
+            )
+
     if 'delete_calc' in type:
         if '_yes' in type:
             if db.delete_calculation(calc_id):
@@ -449,7 +463,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 }
             )
 
-    if type == 'add_img':
+    if type == 'remove_img_text':
+        calc = calculation.update(calc_id, photo=None, description=None)
+        if calc is None:
+            return
+        send_calculation(bot, call.message, user_id, calc)
+
+    if type == 'add_img_text':
         prev_type = call.message.content_type
 
         if prev_type == 'text':
@@ -457,28 +477,28 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             text = call.message.html_caption or 'err\n'
 
-        text += f'\n\n{msg_enter_calc_image(user_id)}'
+        text += f'\n\n{msg_enter_calc_img_text(user_id)}'
         media = call.message.photo[-1].file_id if call.message.photo else None
 
         delete_message(bot, chat_id, mes_id)
         if prev_type == 'text':
             new_mes = bot.send_message(
                 chat_id, text,
-                reply_markup=kb_calc_image(user_id, calc_id)
+                reply_markup=kb_calc_image_text(user_id, calc_id)
             )
         else:
             new_mes = bot.send_photo(
                 chat_id, media, text,
-                reply_markup=kb_calc_image(user_id, calc_id)
+                reply_markup=kb_calc_image_text(user_id, calc_id)
             )
 
-        bot.set_state(user_id, StatsState.add_image, chat_id)
+        bot.set_state(user_id, StatsState.add_image_text, chat_id)
 
         set_state_data(bot, user_id, chat_id, {
             'stat_id': calc_id,
             'calc_text': text,
             'calc_media': media,
-            'calc_del_mes_id': new_mes.id,
+            'del_mes_id': new_mes.id,
         })
 
     if type == 'send_to_channels':

@@ -9,6 +9,7 @@ from db import LANGUAGES_TYPE, db
 from models import MARKETS_TYPE, Calculation
 from services import calculation, channel_calc
 
+from ..channel_post.keyboards import getButton as getChannelButton
 from .filter import stats_factory
 
 
@@ -161,7 +162,7 @@ def kb_calc_list(user_id: int, page: int, count: int, list_type: str):
     return keyboard
 
 
-def kb_calc_result(user_id: int, calc: Calculation):
+def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
     lang = get_lang(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -173,70 +174,114 @@ def kb_calc_result(user_id: int, calc: Calculation):
             'save': 'Сохранить в статистику',
             'del': 'Удалить',
             'change': 'Изменить',
-            'img': 'Прикрепить фото',
+            'img': 'Картинка и описание',
+            'result': 'Результат',
+
+            'deal': 'В сделке',
+            'cancel_deal': 'Отмена сделки',
+            'take': 'Тейк',
+            'stop': 'Стоп',
+            'breakeven': 'Безубыток',
         },
         'en': {
             'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
-            'img': 'Attach image',
+            'img': 'Picture and description',
+            'result': 'Result',
+
+            'deal': 'In deal',
+            'cancel_deal': 'Cancel deal',
+            'take': 'Take',
+            'stop': 'Stop',
+            'breakeven': 'Breakeven'
         },
         'uz': {
             'save': 'Hisobni saqlash',
             'del': 'O\'chirish',
             'change': 'O\'zgartirish',
-            'img': 'Rasmni qo\'shish',
+            'img': 'Rasm va tavsif',
+            'result': 'Natija',
+
+            'deal': 'Sudada',
+            'cancel_deal': 'Sudani bekor qilish',
+            'take': 'Olish',
+            'stop': 'Toʻxtatish',
+            'breakeven': 'Tenglash'
         },
         'tr': {
             'save': 'Hesaplamayı kaydet',
             'del': 'Silmek',
             'change': 'Değiştir',
-            'img': 'Resim ekle',
+            'img': 'Resim ve açıklama',
+            'result': 'Sonuç',
+
+            'deal': 'Anlaşmada',
+            'cancel_deal': 'Anlaşmayı iptal et',
+            'take': 'Al',
+            'stop': 'Durdur',
+            'breakeven': 'Kâr-zarar noktası'
         },
     }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_delete = getButton(
-        f'❌ {texts[lang]["del"]}',
-        'delete_calc', calc.id
-    )
-    btn_change = getButton(
-        f'✏️ {texts[lang]["change"]}',
-        'ch_c', calc.id
-    )
-    keyboard.add(btn_delete, btn_change)
-
-    if calc.inStat:
-        if not isAdmin:
-            btn_add_img = getButton(
-                f'🖼 {texts[lang]["img"]}', 'add_img', calc.id
-            )
-            keyboard.add(btn_add_img)
-    else:
-        if (calc.status == 'WAIT' or calc.status == 'DEAL'):
+    if isResult:
+        if calc.status == 'WAIT' or calc.status == 'DEAL':
             if calc.status != 'DEAL':
                 btn_deal = getButton(
-                    'В сделке', 'result_deal', stat_id=calc.id
+                    texts[lang]['deal'], 'result_deal', stat_id=calc.id
                 )
                 btn_cancel = getButton(
-                    'Отмена сделки', 'result_cancel', stat_id=calc.id
+                    texts[lang]['cancel_deal'], 'result_cancel', stat_id=calc.id
                 )
+
                 keyboard.add(
                     btn_cancel, btn_deal,
                 )
 
-            btn_take = getButton('Тейк', 'result_take', stat_id=calc.id)
-            btn_stop = getButton('Стоп', 'result_stop', stat_id=calc.id)
+            btn_take = getButton(
+                texts[lang]['take'], 'result_take', stat_id=calc.id
+            )
+            btn_stop = getButton(
+                texts[lang]['stop'], 'result_stop', stat_id=calc.id
+            )
             keyboard.add(
                 btn_stop, btn_take
             )
-
-
-    if isAdmin and send_data is None:
         keyboard.add(
-            getButton('Выложить в каналах', 'send_to_channels', calc.id)
+            getChannelButton(
+                texts[lang]['breakeven'],
+                'take+0', calc.id, True
+            ),
+            getButton(back_txt(lang), 'back_calc', calc.id)
         )
+    else:
+        btn_delete = getButton(
+            f'❌ {texts[lang]["del"]}',
+            'delete_calc', calc.id
+        )
+        btn_change = getButton(
+            f'✏️ {texts[lang]["change"]}',
+            'ch_c', calc.id
+        )
+        btn_add_img = getButton(
+            f'🖼 {texts[lang]["img"]}', 'add_img_text', calc.id
+        )
+        keyboard.add(btn_add_img)
+        keyboard.add(btn_delete, btn_change)
+
+        if not calc.inStat:
+            keyboard.add(
+                getButton(
+                    '⚡️ ' + texts[lang]['result'],
+                    'result_calc', calc.id
+                )
+            )
+        if isAdmin and send_data is None:
+            keyboard.add(
+                getButton('Выложить в каналах', 'send_to_channels', calc.id)
+            )
 
     return keyboard
 
@@ -408,13 +453,39 @@ def kb_calculate_change(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_calc_image(user_id: int, stat_id: int):
+def kb_calc_image_text(user_id: int, stat_id: int):
     lang = get_lang(user_id)
 
-    btn_back = getButton(back_txt(lang), 'profit+cancel', stat_id)
+    calc = calculation.get(stat_id)
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    isReset = False
+    if calc is not None and (calc.photo is not None or calc.description is not None):
+        isReset = True
+
+    texts = {
+        'ru': {
+            'reset': 'Убрать картинку и описание',
+        },
+        'en': {
+            'reset': 'Remove picture and description',
+        },
+        'uz': {
+            'reset': 'Rasm va tavsifni olib tashlash',
+        },
+        'tr': {
+            'reset': 'Resim ve açıklamayı kaldır',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+
+    if isReset:
+        btn_reset = getButton(texts[lang]['reset'], 'remove_img_text', stat_id)
+        keyboard.add(btn_reset)
+
+    btn_back = getButton(back_txt(lang), 'back_calc', stat_id)
     keyboard.add(btn_back)
+
     return keyboard
 
 

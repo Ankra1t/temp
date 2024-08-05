@@ -25,7 +25,7 @@ from .stats.handler import registration as _reg_stats
 from .stats.keyboards import (
     kb_stats, kb_calc_result, kb_freeze_calc,
     kb_deal_result, kb_deal_profit_minus, kb_deal_profit_cancel,
-    kb_calculate_delete, kb_calculate_change, kb_calc_image,
+    kb_calculate_delete, kb_calculate_change, kb_calc_image_text,
     kb_confirm_channel_post
 )
 

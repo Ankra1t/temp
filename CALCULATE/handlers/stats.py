@@ -14,7 +14,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
-    kb_deal_profit_minus, kb_calc_image,
+    kb_deal_profit_minus, kb_calc_image_text,
     send_main, send_calculation, send_freeze,
     kb_calc_result, send_confirm_calc_send
 )
@@ -138,45 +138,47 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
 
 
-def handle_calc_image(message: Message, bot: TeleBot):
+def handle_calc_image_text(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_text = data.get('calc_text', 'J')
         calc_media = data.get('calc_media')
-        calc_del_mes_id = data.get('calc_del_mes_id', 0)
         stat_id = data.get('stat_id', 0)
 
-    if message.content_type != 'photo':
-        delete_message(bot, chat_id, calc_del_mes_id)
+    delete_message(bot, chat_id, message.id)
+
+    if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = bot.send_message(
             chat_id, calc_text,
-            reply_markup=kb_calc_image(user_id, stat_id)
+            reply_markup=kb_calc_image_text(user_id, stat_id)
         )
-        set_state_data(bot, user_id, chat_id, {'calc_del_mes_id': new_mes.id})
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
+
+    text = message.html_caption or message.html_text
+    photo = None
+    if message.photo is not None:
+        photo = message.photo[0].file_id
+
+    data = {}
+    if photo:
+        data['photo'] = photo
+    if text:
+        data['description'] = text
+
+    calculation.update(
+        stat_id,
+        **data
+    )
 
     calc = calculation.get(stat_id)
     if calc is None:
         return
 
-    calc_text = '\n'.join(calc_text.split('\n')[:-1])
-    kb = kb_calc_result(user_id, calc)
-
-    if calc_media is not None:
-        bot.edit_message_caption(
-            calc_text, chat_id, calc_del_mes_id,
-            reply_markup=kb
-        )
-    else:
-        bot.edit_message_caption(
-            calc_text, chat_id, calc_del_mes_id,
-            reply_markup=kb
-        )
-
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True)
+    send_calculation(bot, message, user_id, calc, True)
 
 
 def handle_send_text(message: Message, bot: TeleBot):
@@ -260,7 +262,10 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
         else:
             send_admin_channel_calc_list(bot, message, user_id, True)
     else:
-        send_stats(bot, message, user_id, True)
+        if is_calc:
+            send_calculation(bot, message, user_id, calc, True)
+        else:
+            send_stats(bot, message, user_id, True)
 
 
 def registration(bot: TeleBot):
@@ -270,7 +275,7 @@ def registration(bot: TeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
-    reg_mes(handle_calc_image, state=StatsState.add_image)
+    reg_mes(handle_calc_image_text, state=StatsState.add_image_text)
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
     reg_mes(handle_send_photo, state=StatsState.send_add_photo)
