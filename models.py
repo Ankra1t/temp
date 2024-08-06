@@ -284,6 +284,8 @@ class Calculation(BaseModel):
     status: CALC_STATUS_TYPE = 'WAIT'
     description: Optional[str] = None
     photo: Optional[str] = None
+    comment: Optional[str] = None
+    openedList: bool = False
 
     createdAt: Optional[str] = None
 

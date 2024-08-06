@@ -137,7 +137,10 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             buttons_rows = kb.keyboard
 
             for row in buttons_rows:
-                keyboard.add(*row, row_width=kb.row_width)
+                keyboard.add(
+                    *row,
+                    row_width=kb.row_width
+                )
 
     keyboard.add(*buttons)
     return keyboard

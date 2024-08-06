@@ -28,6 +28,7 @@ def session_decorator(func):
 
 def check_response(res: requests.Response):
     if res.status_code < 200 or res.status_code > 299:
+        print(res.status_code)
         print(res.json())
         return False
     return True

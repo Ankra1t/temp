@@ -256,11 +256,12 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = text_accept(message)
 
     if value is None:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id,
             msg_text_error(user_id) + '\n' + msg_enter_trading_style(user_id),
             reply_markup=kb_base_cancel(user_id)
         )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(

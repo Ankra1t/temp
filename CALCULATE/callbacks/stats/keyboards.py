@@ -62,35 +62,36 @@ def kb_stats_page(user_id: int):
 
     texts = {
         'ru': {
-            'list': 'Список',
-            'list_wait': 'Список в ожидании',
-            'list_done': 'Список выполненных',
-            'list_canceled': 'Список отмененных',
+            'list_wait': 'В ожидании',
+            'list_deal': 'В сделке',
+            'list_done': 'Завершенные',
+            'list_canceled': 'Отмененные',
         },
         'en': {
-            'list': 'List',
-            'list_wait': 'List in wait',
-            'list_done': 'List done',
-            'list_canceled': 'List canceled',
+            'list_wait': 'In wait',
+            'list_deal': 'In deal',
+            'list_done': 'Completed',
+            'list_canceled': 'Сanceled',
         },
         'uz': {
-            'list': 'Roʻyxat',
-            'list_wait': 'Kutilayotgan roʻyxat',
-            'list_done': 'Bajarilgan roʻyxat',
-            'list_canceled': 'Bekor qilingan roʻyxat',
+            'list_wait': 'Kutish jarayonida',
+            'list_deal': 'Bitimda',
+            'list_done': 'Tugallangan',
+            'list_canceled': 'Bekor qilindi',
         },
         'tr': {
-            'list': 'Liste',
-            'list_wait': 'Bekleyen liste',
-            'list_done': 'Tamamlanan liste',
-            'list_canceled': 'İptal edilen liste',
+            'list_wait': 'Askıda olması',
+            'list_deal': 'Anlaşmada',
+            'list_done': 'Tamamlanmış',
+            'list_canceled': 'İptal edildi',
         },
     }
 
     keyboard.add(
+        getButton(texts[lang]['list_deal'], 'list+deal'),
         getButton(texts[lang]['list_wait'], 'list+wait'),
         getButton(texts[lang]['list_done'], 'list+done'),
-        # getButton(texts[lang]['list_canceled'], 'list+canceled'),
+        getButton(texts[lang]['list_canceled'], 'list+canceled'),
         getButton(back_txt(lang), 'go_main'),
     )
 
@@ -175,7 +176,10 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'del': 'Удалить',
             'change': 'Изменить',
             'img': 'Описание',
+            'comment': 'Комментарий',
             'result': 'Результат',
+
+            'calc_stats': 'Сделки',
 
             'deal': 'В сделке',
             'cancel_deal': 'Отмена сделки',
@@ -188,7 +192,10 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'del': 'Delete',
             'change': 'Change',
             'img': 'Description',
+            'comment': 'Сomment',
             'result': 'Result',
+
+            'calc_stats': 'Deals',
 
             'deal': 'In deal',
             'cancel_deal': 'Cancel deal',
@@ -201,7 +208,10 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'del': 'O\'chirish',
             'change': 'O\'zgartirish',
             'img': 'Tavsif',
+            'comment': 'Sanktsiya',
             'result': 'Natija',
+
+            'calc_stats': 'Bitimlar',
 
             'deal': 'Sudada',
             'cancel_deal': 'Sudani bekor qilish',
@@ -214,7 +224,10 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'del': 'Silmek',
             'change': 'Değiştir',
             'img': 'Açıklama',
+            'comment': 'Comment',
             'result': 'Sonuç',
+
+            'calc_stats': 'Fırsatlar',
 
             'deal': 'Anlaşmada',
             'cancel_deal': 'Anlaşmayı iptal et',
@@ -224,52 +237,54 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
         },
     }
 
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
 
     if isResult:
+        buttons = []
         if calc.status == 'WAIT' or calc.status == 'DEAL':
             if calc.status != 'DEAL':
-                btn_deal = getButton(
-                    texts[lang]['deal'], 'result_deal', stat_id=calc.id
-                )
-                btn_cancel = getButton(
+                buttons.append(getButton(
                     texts[lang]['cancel_deal'], 'result_cancel', stat_id=calc.id
-                )
+                ))
+                buttons.append(getButton(
+                    texts[lang]['deal'], 'result_deal', stat_id=calc.id
+                ))
 
-                keyboard.add(
-                    btn_cancel, btn_deal,
-                )
-
-            btn_take = getButton(
-                texts[lang]['take'], 'result_take', stat_id=calc.id
-            )
-            btn_stop = getButton(
+            buttons.append(getButton(
                 texts[lang]['stop'], 'result_stop', stat_id=calc.id
+            ))
+            buttons.append(getButton(
+                texts[lang]['take'], 'result_take', stat_id=calc.id
+            ))
+            buttons.append(
+                getChannelButton(
+                    texts[lang]['breakeven'],
+                    'take+0', calc.id, True
+                )
             )
-            keyboard.add(
-                btn_stop, btn_take
-            )
-        keyboard.add(
-            getChannelButton(
-                texts[lang]['breakeven'],
-                'take+0', calc.id, True
-            ),
-            getButton(back_txt(lang), 'back_calc', calc.id)
-        )
+        buttons.append(getButton(back_txt(lang), 'back_calc', calc.id))
+        keyboard.add(*buttons)
     else:
         buttons = []
 
-        buttons.append(getButton(
-            f'🖼 {texts[lang]["img"]}', 'add_img_text', calc.id
-        ))
+        if not (calc.status == 'FINISH' and calc.comment is not None):
+            buttons.append(
+                getButton(
+                    f'🖼 {texts[lang]["img" if calc.status != "FINISH" else "comment"]}',
+                    'add_img_text', calc.id
+                )
+            )
 
-        if not calc.inStat:
+        if calc.status == 'WAIT' or calc.status == 'DEAL':
             buttons.append(
                 getButton(
                     '⚡️ ' + texts[lang]['result'],
                     'result_calc', calc.id
                 )
             )
+
+        keyboard.add(*buttons)
+        buttons = []
 
         buttons.append(getButton(
             f'❌',
@@ -279,8 +294,19 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             f'✏️',
             'ch_c', calc.id
         ))
+        buttons.append(getButton(
+            '📊 ' + texts[lang]['calc_stats'],
+            'go_stats', calc.id
+        ))
 
         keyboard.add(*buttons)
+
+        if calc.openedList:
+            buttons.append(
+                getButton(
+                    '', ''
+                )
+            )
 
         if isAdmin and send_data is None:
             keyboard.add(
@@ -457,13 +483,11 @@ def kb_calculate_change(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_calc_image_text(user_id: int, stat_id: int):
+def kb_calc_image_text(user_id: int, calc: Calculation):
     lang = get_lang(user_id)
 
-    calc = calculation.get(stat_id)
-
     isReset = False
-    if calc is not None and (calc.photo is not None or calc.description is not None):
+    if calc.status != 'FINISH' and (calc.photo is not None or calc.description is not None):
         isReset = True
 
     texts = {
@@ -484,10 +508,10 @@ def kb_calc_image_text(user_id: int, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     if isReset:
-        btn_reset = getButton(texts[lang]['reset'], 'remove_img_text', stat_id)
+        btn_reset = getButton(texts[lang]['reset'], 'remove_img_text', calc.id)
         keyboard.add(btn_reset)
 
-    btn_back = getButton(back_txt(lang), 'back_calc', stat_id)
+    btn_back = getButton(back_txt(lang), 'back_calc', calc.id)
     keyboard.add(btn_back)
 
     return keyboard

@@ -1791,6 +1791,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'risk_percent': 'Риск в процентах',
 
             'description': 'Описание',
+            'comment': 'Комментарий',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -1821,6 +1822,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'risk_percent': 'Risk in percent',
 
             'description': 'Description',
+            'comment': 'Сomment',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -1851,6 +1853,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'risk_percent': 'Xavf foiz',
 
             'description': 'Tavsif',
+            'comment': 'Sanktsiya',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -1881,6 +1884,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'risk_percent': 'Yüzde risk',
 
             'description': 'Tanım',
+            'comment': 'Comment',
         },
     }
 
@@ -1972,7 +1976,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         profit_result = f"""<b>{texts[lang]['conclusion']} | {texts[lang]["profit"]}</b>:
 {conclusion}"""
 
-    demo_show = ' '
+    demo_show = ''
     if is_try:
         demo_show = ' - demo '
 
@@ -1984,8 +1988,12 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     if calc.description is not None:
         decription = f'<b>{texts[lang]["description"]}</b>: {calc.description}\n'
 
+    comment = ''
+    if calc.comment is not None:
+        comment = f'<b>{texts[lang]["comment"]}</b>: {calc.comment}\n'
+
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}{status} ',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}{status}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
@@ -1997,7 +2005,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
         fee_text + trading_style_type,
-        decription
+        decription + comment
     ))
 
 
@@ -2280,46 +2288,64 @@ def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
 
     texts = {
         'ru': {
-            'main': 'Список незавершенных сделок' if type != 'done' else 'Список завершенных сделок',
+            'deal': 'Список в сделке',
+            'done': 'Список завершенных сделок',
+            'canceled': 'Список отмененных сделок',
+            'wait': 'Список ожидающих сделок',
             'info': 'Нажмите на номер для действий',
-            'price': 'Вход/Стоп' if type != 'done' else 'Цена Входа/Закрытия',
+            'price': 'Вход/Стоп' if type != 'done' else 'Цена входа/закрытия',
             'result': 'Результат'
         },
         'en': {
-            'main': 'List of pending calculations',
+            'deal': 'List in the transaction',
+            'done': 'List of completed transactions',
+            'canceled': 'List of canceled transactions',
+            'wait': 'List of waiting transactions',
             'info': 'Click on the number to take action',
             'price': 'Open/Stop' if type != 'done' else 'Input/Closing price',
             'result': 'Result'
         },
         'uz': {
-            'main': 'Kutilayotgan hisob-kitoblar ro\'yxati',
+            'deal': 'Bitimdagi ro\'yxat',
+            'done': 'To\'ldirilgan bitimlar ro\'yxati',
+            'canceled': 'Bekor qilingan bitimlar ro\'yxati',
+            'wait': 'Kutish bitimlarining ro\'yxati',
             'info': 'Harakatni olish uchun raqamni bosing',
             'price': 'Ochiq/To\'xtash' if type != 'done' else 'Kirish/yopilish narxi',
             'result': 'Natija'
         },
         'tr': {
-            'main': 'Bekleyen hesaplamaların listesi',
+            'deal': 'İşlemdeki liste',
+            'done': 'Tamamlanan işlemlerin listesi',
+            'canceled': 'İptal edilen işlemlerin listesi',
+            'wait': 'Bekleme işlemlerinin listesi',
             'info': 'Harekete geçmek için numarayı tıklayın',
             'price': 'Aç/Stop' if type != 'done' else 'Giriş/Kapanış Fiyatı',
             'result': 'Sonuç'
         },
     }
 
-    msg = f'{texts[lang]["main"]}'
+    msg = texts[lang][type]
 
     if len(calcs) == 0:
         msg += '\n👉 Нет расчётов, требующих дествий'
         return msg
 
-    if type != 'done':
-        msg += f'\n👇 {texts[lang]["info"]}'
+    tools = {}
 
     for el in calcs:
-        slash = '/' if not el.inStat or (
-            not el.inStat and (el.status == 'WAIT' or el.status == 'DEAL')
-        ) else ''
+        tool = (el.tool or "").replace("/USDT", "")
 
-        msg += f'\n\n{slash}{el.id} <b>{(el.tool or "").replace("/USDT", "")}</b>'
+        if tool in tools:
+            tools[tool] += 1
+        else:
+            tools[tool] = 1
+
+        count = ''
+        if tools[tool] > 1:
+            count = f'_{tools[tool]}'
+
+        msg += f'\n\n/<b>{tool}{count}</b>'
         msg += f' ({(datetime.fromisoformat((el.createdAt or "").replace("Z", "")) + timedelta(hours=3)).strftime("%d.%m %H:%M")})'
 
         if type == 'done':
@@ -2328,7 +2354,7 @@ def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
                 (el.openPrice - el.stopLoss) * \
                 tp_sl_count
             msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(close_price)}</b>'
-            msg += f'\n{texts[lang]["result"]}: <b>{get_print_float(el.profit or 0)}</b>'
+            msg += f'\n{texts[lang]["result"]}: <b>{get_print_float(el.profit or 0)} {el.currency}</b>'
         else:
             msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(el.stopLoss)}</b>'
 
@@ -2418,17 +2444,47 @@ def msg_enter_save_calc(user_id: int):
     return texts[lang]
 
 
-def msg_enter_calc_img_text(user_id: int):
+def msg_enter_calc_img_text(user_id: int, calc: Calculation):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Отправьте картинку и описание (или что-то одно)',
-        'en': 'Send a picture and description (or one of them)',
-        'uz': 'Rasm va tavsifni (yoki bitta narsani) yuboring',
-        'tr': 'Bir resim ve açıklama gönderin (veya bir şey)',
+        'ru': {
+            'main': 'Опишите сделку и прикрепите картинку',
+            'change': 'Отправьте новое описание и картинку для <u>изменения</u>',
+            'comment': 'Напишите комментарий и добавьте график',
+            'info': 'При отправке фото с комментарием предыдующая картинка будет утерена',
+        },
+        'en': {
+            'main': 'Describe the deal and knead the picture',
+            'change': 'Send a new description and picture for <u>changes</u>',
+            'comment': 'Write a comment and add a schedule',
+            'info': 'When sending a photo with a comment, the previous picture will be lost',
+        },
+        'uz': {
+            'main': 'Shartni tasvirlab bering va rasmni yo',
+            'change': '<u>O\'zgarishlari</u> uchun yangi tavsif va rasmni yuboring',
+            'comment': 'Izoh yozing va jadval qo\'shing',
+            'info': "Fotosuratni sharh bilan yuborishda oldingi rasm yo'qoladi",
+        },
+        'tr': {
+            'main': 'Anlaşmayı tanımlayın ve resmi yoğur',
+            'change': '<u>Değişiklikleri</u> için yeni bir açıklama ve resim gönderin',
+            'comment': 'Bir yorum yazın ve bir program ekleyin',
+            'info': 'Yorumla bir fotoğraf gönderirken, önceki resim kaybolacak',
+        },
     }
 
-    return f'👉 {texts[lang]}'
+    text = ''
+    info = ''
+    if calc.status == 'FINISH':
+        text = texts[lang]['comment']
+        info = f'\n<i>{texts[lang]["info"]}</i>'
+    elif (calc.photo is None and calc.description is None):
+        text = texts[lang]['main']
+    else:
+        text = texts[lang]['change']
+
+    return f'👉 {text}' + info
 
 
 def msg_enter_take_profit(user_id: int, tp_ratio: list[int]):

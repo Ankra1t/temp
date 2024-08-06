@@ -134,8 +134,10 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if '+stc' in type:
                     send_confirm_calc_send(bot, call.message, stat_id)
                 else:
-                    send_calculation(bot, call.message,
-                                     user_id, calc_info, True)
+                    send_calculation(
+                        bot, call.message,
+                        user_id, calc_info
+                    )
                 bot.delete_state(user_id, chat_id)
 
             elif 'calc' in type:
@@ -224,7 +226,8 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     )
 
                     if sent_messages:
-                        notifier.change_user_choosed_lang(user_db_id, lang, sent_messages)
+                        notifier.change_user_choosed_lang(
+                            user_db_id, lang, sent_messages)
                 else:
                     send_settings(bot, call.message, user_id)
 

@@ -2,12 +2,14 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from AuthRoles import check_registrate
-from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_calc_stat_item
+from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_calc_stat_item, send_calculation
 from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from common.utils import delete_message, set_state_data
 from MAIN.callbacks import kb_livepost_type
 from MAIN.common.utils import get_post_from_message
 from MAIN.states import AdminPostsState
+from services import calculation
+from db import db
 
 
 def handle_livepost(message: Message, bot: TeleBot):
@@ -32,16 +34,59 @@ def handle_livepost(message: Message, bot: TeleBot):
 
             return
 
-        if text.startswith('/') and bot.get_state(user_id, chat_id) == 'user_calc_id':
+        type = str(bot.get_state(user_id, chat_id))
+
+        if text.startswith('/') and 'user_calc_id' in type:
             delete_message(bot, chat_id, mes_id)
 
             text = text.replace('/', '')
-            if not text.isdigit():
+
+            if '_' in text:
+                tool, count = text.split('_')
+            else:
+                tool, count = text, 1
+
+            res_id = 0
+
+            user_db_id = db.get_user_id_by_tg_id(user_id)
+            if 'live' in type:
+                data = calculation.getWeekStats(user_db_id)
+                if not data:
+                    return
+                num = 0
+
+                for item in data:
+                    calcs = item.get('calcs', [])
+                    for calc in calcs:
+                        if tool == calc.get('tool').replace('/USDT', ''):
+                            num += 1
+                        if num == int(count):
+                            res_id = calc.get('id')
+                            break
+                    if res_id != 0:
+                        break
+            else:
+                list_type = type.split(' ')[1]
+                data = calculation.getByUserList(
+                    user_db_id, list_type)  # type: ignore
+                if data is None:
+                    return
+
+                num = 0
+
+                for el in data:
+                    if (el.tool or "").replace('/USDT', '') == tool:
+                        num += 1
+                        if num == int(count):
+                            res_id = el.id
+                            break
+
+            calc_id = int(res_id)
+            calc = calculation.get(calc_id)
+            if calc is None:
                 return
 
-            calc_id = int(text)
-            send_calc_stat_item(bot, message, user_id, calc_id, is_first=True)
-
+            send_calculation(bot, message, user_id, calc, is_first=True, is_list=True)
             return
 
     # livepost

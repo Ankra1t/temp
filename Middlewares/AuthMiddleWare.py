@@ -28,7 +28,6 @@ class AuthMiddleWare(BaseMiddleware):
                 edit_mes = state_data.get('edit_mes')
                 state_data['del_mes_id'] = None
                 state_data['edit_mes'] = None
-
                 if del_mes_id is not None:
                     if edit_mes is None:
                         delete_message(self.bot, chat_id, del_mes_id)

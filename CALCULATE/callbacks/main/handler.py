@@ -30,7 +30,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
     )
 
-    if 'calc' in type or type == 'settings':
+    if 'calc' in type or type == 'settings' or type == 'calc_stats':
         calc = calculation.get(stat_id)
         if calc is not None:
             bot.edit_message_reply_markup(

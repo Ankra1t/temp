@@ -144,7 +144,6 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
 
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_text = data.get('calc_text', 'J')
-        calc_media = data.get('calc_media')
         stat_id = data.get('stat_id', 0)
 
     delete_message(bot, chat_id, message.id)
@@ -163,17 +162,24 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
         photo = message.photo[0].file_id
 
     data = {}
+
+    calc = calculation.get(stat_id)
+    if calc is None:
+        return
+
     if photo:
         data['photo'] = photo
-    if text:
-        data['description'] = text
 
-    calculation.update(
+    if text:
+        if calc.status == 'FINISH':
+            data['comment'] = text
+        else:
+            data['description'] = text
+
+    calc = calculation.update(
         stat_id,
         **data
     )
-
-    calc = calculation.get(stat_id)
     if calc is None:
         return
 

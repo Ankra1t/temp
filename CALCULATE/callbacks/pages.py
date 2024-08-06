@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import ceil
 import os
 from typing import Literal
@@ -320,14 +320,8 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     msg = f"<b>{texts[lang]['title']}</b>"
 
-    all_tp_count = 0
-    all_sl_count = 0
-
     long_count = 0
     short_count = 0
-
-    all_success_count = 0
-    all_fail_count = 0
 
     tool_counts: dict[str, int] = {}
 
@@ -381,15 +375,15 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
                 tool_counts[tool] = 1
             else:
                 tool_counts[tool] += 1
-                tool_num = f'({tool_counts[tool]})'
+                tool_num = f'_{tool_counts[tool]}'
 
             if status == 'CANCEL':
                 if canceled != '':
                     canceled += ', '
-                canceled += f'/{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>'
+                canceled += f'/<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>'
             else:
-                slash = '/' if (status == 'WAIT' or status == 'DEAL') else ''
-                date_msg += f'\n{slash}{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
+                date = f' ({(datetime.fromisoformat((value.get("createdAt") or "").replace("Z", "")) + timedelta(hours=3)).strftime("%H:%M")})'
+                date_msg += f'\n{date} /<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
 
         tp_sl_result = round(tp_count - sl_count, 1)
         tp_sl_show = ''
@@ -415,46 +409,6 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
         if success_count != 0 or fail_count != 0:
             msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
 
-        all_success_count += success_count
-        all_fail_count += fail_count
-        all_tp_count += tp_count
-        all_sl_count += sl_count
-
-    msg += f'\n_________________________________'
-
-    tp_sl_result = round(all_tp_count - all_sl_count, 1)
-
-    tp_sl_show = ''
-    if tp_sl_result > 0:
-        tp_sl_show = f'{texts[lang]["tp"]}'
-    else:
-        tp_sl_show = f'{texts[lang]["sl"]}'
-
-    if all_tp_count == 0 and all_sl_count == 0:
-        if lang == 'ru':
-            msg += f'\n\nОжидаются ближайшие сделки'
-        else:
-            msg += f'\n\nUpcoming deals are expected'
-
-    if all_tp_count != 0 or all_sl_count != 0:
-        msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
-        if tp_sl_result == 0:
-            msg += f'{texts[lang]["breakeven"]}'
-        else:
-            msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
-        msg += '\n'
-
-    if long_count != 0 or short_count != 0:
-        if long_count != 0:
-            msg += f'<b>{texts[lang]["long"]}</b>: {long_count}'
-        if long_count != 0 and short_count != 0:
-            msg += ' / '
-        if short_count != 0:
-            msg += f'<b>{texts[lang]["short"]}</b>: {short_count}'
-
-    if all_success_count != 0 or all_fail_count != 0:
-        msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
-
     text = msg
     # text = msg_stats_page(user_id, len(calcs))
     kb = kb_stats_page(user_id)
@@ -467,12 +421,11 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
         )
         new_mes_id = new_mes.id
     else:
-        bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=kb
+        edit_message(
+            bot, message, 'text', text, kb
         )
 
-    bot.set_state(user_id, 'user_calc_id', chat_id)
+    bot.set_state(user_id, 'user_calc_id live', chat_id)
     set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
@@ -486,10 +439,18 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    if list_type == 'wait':
-        calc_list = calculation.getByUserInWait(user_db_id)
+    calc_list = None
+    if list_type == 'deal':
+        calc_list = calculation.getByUserList(user_db_id, list_type)
+    elif list_type == 'canceled':
+        calc_list = calculation.getByUserList(user_db_id, list_type)
+    elif list_type == 'wait':
+        calc_list = calculation.getByUserList(user_db_id, list_type)
+    elif list_type == 'done':
+        calc_list = calculation.getByUserList(user_db_id, list_type)
     else:
-        calc_list = calculation.getByUserFinish(user_db_id)
+        return
+
     if calc_list is None:
         return
 
@@ -515,7 +476,7 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
             reply_markup=kb
         )
 
-    bot.set_state(user_id, 'user_calc_id', chat_id)
+    bot.set_state(user_id, f'user_calc_id {list_type}', chat_id)
     set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
@@ -606,7 +567,8 @@ def send_calculation(
     user_id: int,
     calc: Calculation,
     is_first=False,
-    is_try=False
+    is_try=False,
+    is_list=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -618,10 +580,16 @@ def send_calculation(
     user_db_id = db.get_user_id_by_tg_id(user_id)
     calc_output = db.get_user_calc_output(user_db_id)
 
+    if is_list:
+        calculation.update(calc.id, openedList=True)
+
     if is_try:
         kb = None
     else:
-        kb = kb_main(user_id, is_access, calc, is_first=is_try)
+        kb = kb_main(
+            user_id, is_access, calc,
+            is_first=is_try
+        )
 
     if True or calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)

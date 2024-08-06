@@ -198,7 +198,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     logger.info(
-        f'callback "settings_factory" user_tg_id={user_id} type={type} ({stats_market} {calc_id})'
+        f'callback "stats_factory" user_tg_id={user_id} type={type} ({stats_market} {calc_id})'
     )
 
     if 'time+' in type:
@@ -288,7 +288,17 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_main(call.message, bot, user_id)
 
     if type == 'go_stats':
-        send_stats(bot, call.message, user_id)
+        calc = calculation.get(calc_id)
+        if calc is None:
+            return
+
+        if not calc.openedList:
+            bot.edit_message_reply_markup(
+                chat_id, mes_id,
+                reply_markup=kb_calc_result(user_id, calc)
+            )
+
+        send_stats(bot, call.message, user_id, not calc.openedList)
 
     if type == 'stats_market':
         stats = calcService.get_stats(user_id, stats_market)
@@ -334,7 +344,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = calculation.get(calc_id)
-
+            print(calc_info)
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
@@ -471,35 +481,21 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_calculation(bot, call.message, user_id, calc)
 
     if type == 'add_img_text':
-        prev_type = call.message.content_type
+        calc = calculation.get(calc_id)
+        if calc is None:
+            return
 
-        if prev_type == 'text':
-            text = call.message.html_text or 'err\n'
-        else:
-            text = call.message.html_caption or 'err\n'
+        text = msg_enter_calc_img_text(user_id, calc)
+        kb = kb_calc_image_text(user_id, calc)
 
-        text += f'\n\n{msg_enter_calc_img_text(user_id)}'
-        media = call.message.photo[-1].file_id if call.message.photo else None
-
-        delete_message(bot, chat_id, mes_id)
-        if prev_type == 'text':
-            new_mes = bot.send_message(
-                chat_id, text,
-                reply_markup=kb_calc_image_text(user_id, calc_id)
-            )
-        else:
-            new_mes = bot.send_photo(
-                chat_id, media, text,
-                reply_markup=kb_calc_image_text(user_id, calc_id)
-            )
+        new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
         bot.set_state(user_id, StatsState.add_image_text, chat_id)
 
         set_state_data(bot, user_id, chat_id, {
             'stat_id': calc_id,
             'calc_text': text,
-            'calc_media': media,
-            'del_mes_id': new_mes.id,
+            'del_mes_id': new_mes_id,
         })
 
     if type == 'send_to_channels':
@@ -815,6 +811,9 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'list+' in type:
         _, list_type = type.split('+')
         send_calc_list(bot, call.message, user_id, list_type, page)
+
+    if 'calc_next':
+        pass
 
     bot.answer_callback_query(call.id)
 
