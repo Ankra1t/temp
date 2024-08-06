@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 import os
 from typing import Literal
 from telebot.types import Message, InputMediaPhoto
@@ -14,16 +15,17 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_admin_send_settings, msg_atr_settings, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
+    msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_sl_op_equal_error,
-    msg_stats_page, msg_stop_page, msg_summury_profit_settings, msg_manuals
+    msg_stop_page, msg_summury_profit_settings, msg_manuals
 )
 
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
-from models import MANUAL_TYPE, MARKETS_TYPE, Calculation
-from services import channel_calc
+from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
+from services import calculation, channel_calc
+from CALCULATE.common.messages import status_transaltes
 
 from .manual.keyboards import kb_manual, kb_manuals
 from .main.keyboards import kb_main
@@ -31,7 +33,7 @@ from .settings.keyboards import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
-from .stats.keyboards import kb_confirm_channel_post, kb_freeze_calc, kb_stats
+from .stats.keyboards import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_send_settings, kb_channel_post
 
@@ -254,6 +256,9 @@ def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, i
 
 
 def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    lang = get_lang(user_id)
+    lang = 'en' if lang != 'ru' else 'ru'
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -261,21 +266,257 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
     liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    calcs = db.get_calculations_by_user(user_db_id)
 
-    text = msg_stats_page(user_id, len(calcs))
-    kb = kb_stats(user_id)
+    values = calculation.getWeekStats(user_db_id)
+    if values is None:
+        return
 
+    texts = {
+        'ru': {
+            'title': '⚡️ <b>Результаты на эту неделю</b>',
+
+            'title2': '⚡️ Результаты',
+            'from': 'с',
+            'to': 'по',
+
+            'stop': 'стоп',
+            'count to': 'к',
+
+            'canceled': 'Отменённые',
+
+            'tp': 'тейков',
+            'sl': 'стопов',
+            'prices': 'Купил/Продал',
+            'result': 'Итого за неделю',
+            'long': 'Лонг',
+            'short': 'Шорт',
+            'success': 'Процент успешных сделок',
+
+            'breakeven': 'безубыток',
+        },
+        'en': {
+            'title': '⚡️ <b>Results for this week</b>',
+
+            'title2': '⚡️ Results',
+            'from': 'from',
+            'to': 'to',
+
+            'stop': 'stop',
+            'count to': 'to',
+
+            'canceled': 'Cancelled',
+
+            'tp': 'takes',
+            'sl': 'stops',
+            'prices': 'Bought/Sold',
+            'result': 'Total for the week',
+            'long': 'Long',
+            'short': 'Short',
+            'success': 'Success deals percent',
+
+            'breakeven': 'breakeven',
+        },
+    }
+
+    msg = f"<b>{texts[lang]['title']}</b>"
+
+    all_tp_count = 0
+    all_sl_count = 0
+
+    long_count = 0
+    short_count = 0
+
+    all_success_count = 0
+    all_fail_count = 0
+
+    tool_counts: dict[str, int] = {}
+
+    for valueDate_i, valueDate in enumerate(values):
+        date_msg = ''
+
+        tp_count = 0
+        sl_count = 0
+
+        success_count = 0
+        fail_count = 0
+
+        canceled = ''
+
+        for value_i, value in enumerate(valueDate.get('calcs', [])):
+            status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
+
+            valueCount = value.get('valueCount')
+            openPrice = value.get('openPrice')
+            closePrice = value.get('closePrice')
+
+            tp_sl = ''
+            if valueCount is None:
+                tp_sl = status_transaltes[lang][status]
+            elif valueCount == 0:
+                tp_sl = texts[lang]['breakeven']
+            elif valueCount > 0:
+                tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
+                tp_count += valueCount
+                success_count += 1
+                if closePrice > openPrice:
+                    long_count += 1
+                else:
+                    short_count += 1
+            else:
+                tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
+                sl_count += abs(valueCount)
+                fail_count += 1
+
+                if closePrice > openPrice:
+                    short_count += 1
+                else:
+                    long_count += 1
+
+            if value_i == 0:
+                date_msg += '\n'
+
+            tool = value.get("tool")
+            tool_num = ''
+            if tool not in tool_counts:
+                tool_counts[tool] = 1
+            else:
+                tool_counts[tool] += 1
+                tool_num = f'({tool_counts[tool]})'
+
+            if status == 'CANCEL':
+                if canceled != '':
+                    canceled += ', '
+                canceled += f'/{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>'
+            else:
+                slash = '/' if (status == 'WAIT' or status == 'DEAL') else ''
+                date_msg += f'\n{slash}{value.get("id")}. <b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
+
+        tp_sl_result = round(tp_count - sl_count, 1)
+        tp_sl_show = ''
+        if tp_sl_result > 0:
+            tp_sl_show = f'{texts[lang]["tp"]}'
+        else:
+            tp_sl_show = f'{texts[lang]["sl"]}'
+
+        tp_sl_msg = ''
+        if tp_count != 0 or sl_count != 0:
+            if tp_sl_result == 0:
+                tp_sl_msg = f'{texts[lang]["breakeven"]}'
+            else:
+                tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+            tp_sl_msg = f' ({tp_sl_msg})'
+
+        msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
+        msg += f'{date_msg}'
+
+        if canceled != '':
+            msg += f'\n\n{texts[lang]["canceled"]}: {canceled}'
+
+        if success_count != 0 or fail_count != 0:
+            msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+
+        all_success_count += success_count
+        all_fail_count += fail_count
+        all_tp_count += tp_count
+        all_sl_count += sl_count
+
+    msg += f'\n_________________________________'
+
+    tp_sl_result = round(all_tp_count - all_sl_count, 1)
+
+    tp_sl_show = ''
+    if tp_sl_result > 0:
+        tp_sl_show = f'{texts[lang]["tp"]}'
+    else:
+        tp_sl_show = f'{texts[lang]["sl"]}'
+
+    if all_tp_count == 0 and all_sl_count == 0:
+        if lang == 'ru':
+            msg += f'\n\nОжидаются ближайшие сделки'
+        else:
+            msg += f'\n\nUpcoming deals are expected'
+
+    if all_tp_count != 0 or all_sl_count != 0:
+        msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
+        if tp_sl_result == 0:
+            msg += f'{texts[lang]["breakeven"]}'
+        else:
+            msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+        msg += '\n'
+
+    if long_count != 0 or short_count != 0:
+        if long_count != 0:
+            msg += f'<b>{texts[lang]["long"]}</b>: {long_count}'
+        if long_count != 0 and short_count != 0:
+            msg += ' / '
+        if short_count != 0:
+            msg += f'<b>{texts[lang]["short"]}</b>: {short_count}'
+
+    if all_success_count != 0 or all_fail_count != 0:
+        msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
+
+    text = msg
+    # text = msg_stats_page(user_id, len(calcs))
+    kb = kb_stats_page(user_id)
+
+    new_mes_id = mes_id
     if is_first:
-        bot.send_message(
+        new_mes = bot.send_message(
             chat_id, text,
             reply_markup=kb
         )
+        new_mes_id = new_mes.id
     else:
         bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=kb
         )
+
+    bot.set_state(user_id, 'user_calc_id', chat_id)
+    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
+
+
+def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str, page=0, is_first=False):
+    N = 10
+
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+
+    if list_type == 'wait':
+        calc_list = calculation.getByUserInWait(user_db_id)
+    else:
+        calc_list = calculation.getByUserFinish(user_db_id)
+    if calc_list is None:
+        return
+
+    calc_list.reverse()
+
+    pages = ceil(len(calc_list) / N)
+
+    calc_list = calc_list[page * N: (page + 1) * N]
+
+    msg = msg_calc_list(user_id, calc_list, list_type)
+    kb = kb_calc_list(user_id, page, pages, list_type)
+
+    new_mes_id = mes_id
+    if is_first:
+        new_mes = bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
+        new_mes_id = new_mes.id
+    else:
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+    bot.set_state(user_id, 'user_calc_id', chat_id)
+    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
 def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
@@ -382,13 +623,20 @@ def send_calculation(
     else:
         kb = kb_main(user_id, is_access, calc, is_first=is_try)
 
-    if calc_output == 'text' or is_try:
+    if True or calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)
 
-        if is_first:
-            bot.send_message(chat_id, text, reply_markup=kb)
+        if calc.photo is None:
+            if is_first:
+                bot.send_message(chat_id, text, reply_markup=kb)
+            else:
+                edit_message(bot, message, 'text', text, kb)
         else:
-            edit_message(bot, message, 'text', text, kb)
+            if is_first:
+                bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
+            else:
+                edit_message(bot, message, 'photo', text, kb, calc.photo)
+
     else:
         file_path, caption = hti.create_calculation_image(
             user_id, calc
@@ -438,18 +686,18 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     chat_id = message.chat.id
     mes_id = message.id
 
-    stat = db.get_calculation(stat_id)
+    stat = calculation.get(stat_id)
     send_data = channel_calc.getByCalc(stat_id)
     if stat is None or send_data is None:
         return
 
     info = get_ticker_info(stat.tool or '')
 
-    photo = send_data.photo
+    photo = stat.photo
     text = msg_channel_calculation(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
         tickerInfo=info or None,
-        description=send_data.text
+        description=stat.description
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
@@ -501,17 +749,17 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         is_try = data.get('is_try', False)
 
     if stat_id is not None:
-        calc_info = db.get_calculation(stat_id)
+        calc_info = calculation.get(stat_id)
         if calc_info is None:
             return
 
-        if calc_info.open_price == stop_loss:
+        if calc_info.openPrice == stop_loss:
             new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
             set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
         db.change_calculation_stop_loss(stat_id, stop_loss)
-        calc_info.stop_loss = stop_loss
+        calc_info.stopLoss = stop_loss
 
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
@@ -535,21 +783,21 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
             risk_value *= deposit * 0.01
 
     calc_info = Calculation(
-        user_id=user_db_id,
+        userId=user_db_id,
         deposit=deposit,
-        risk_value=risk_value * updated_risk,
-        open_price=open_price,
-        stop_loss=stop_loss,
-        round_count=u_base.round_count,
+        riskValue=risk_value * updated_risk,
+        openPrice=open_price,
+        stopLoss=stop_loss,
+        roundCount=u_base.round_count,
         currency=currency,
         market=calc_type,
-        tp_ratio=u_base.tp_ratio,
-        split_values=u_base.split_values,
-        trading_style=trading_style or None,
+        tpRatio=u_base.tp_ratio,
+        splitValues=u_base.split_values,
+        tradingStyle=trading_style or None,
         tool=tool or None,
-        forex_info=forex,
-        trading_type=trading_type,
-        is_from_deposit=is_from_deposit
+        forexInfo=forex,
+        tradingType=trading_type,
+        isFromDeposit=is_from_deposit
     )
 
     new_id = None
@@ -723,13 +971,13 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
         msg += f'\n{stats_link}'
     msg += '\n👇 Нажмите на номер для действий'
     for send_data in inWaitSends:
-        calc = db.get_calculation(send_data.calcId)
+        calc = calculation.get(send_data.calcId)
         if calc is None:
             continue
 
         msg += f'\n\n/{send_data.calcId} <b>{(calc.tool or "").replace("/USDT", "")}</b>'
         msg += f' ({datetime.fromisoformat(send_data.createdAt.replace("Z", "")).strftime("%d.%m %H:%M")})'
-        msg += f'\nВход/Стоп: <b>{get_print_float(calc.open_price)} / {get_print_float(calc.stop_loss)}</b>'
+        msg += f'\nВход/Стоп: <b>{get_print_float(calc.openPrice)} / {get_print_float(calc.stopLoss)}</b>'
 
     del_mes_id = mes_id
 
@@ -745,7 +993,7 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
             reply_markup=kb
         )
 
-    bot.set_state(user_id, 'admin_calc_id', chat_id)
+    bot.set_state(user_id, 'handle_calc_id', chat_id)
     set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id})
 
 
@@ -763,11 +1011,11 @@ def send_admin_channel_calc_item(
     bot.delete_state(user_id, chat_id)
 
     send_data = channel_calc.getByCalc(calc_id)
-    calc = db.get_calculation(calc_id)
+    calc = calculation.get(calc_id)
     if calc is None:
         return
 
-    if send_data is None or (send_data.status != 'WAIT' and send_data.status != 'DEAL') or calc is None:
+    if send_data is None or (calc.status != 'WAIT' and calc.status != 'DEAL') or calc is None:
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
             bot.send_message(
@@ -779,9 +1027,9 @@ def send_admin_channel_calc_item(
             )
         return
 
+    link = ''
     messages = channel_calc.getSentMessagesByCalc(calc.id)
     if messages is not None:
-        link = ''
         try:
             weekChId = messages.chIds[0]
             weekMesId = messages.mesIds[0]
@@ -792,26 +1040,26 @@ def send_admin_channel_calc_item(
     calc_result = calcService.get_result(calc)
     take_info = ''
     for i in range(calc_result.tp_count):
-        take_info += f'\n <b>({calc.tp_ratio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
+        take_info += f'\n <b>({calc.tpRatio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
-<b>Цена входа</b>: {get_print_float(calc.open_price, 5)} USDT
-<b>Стоп-лосс</b>: {get_print_float(calc.stop_loss, 5)} USDT
-<b>Риск</b>: {get_print_float(calc.risk_value, 5)} USDT
+<b>Цена входа</b>: {get_print_float(calc.openPrice, 5)} USDT
+<b>Стоп-лосс</b>: {get_print_float(calc.stopLoss, 5)} USDT
+<b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT
 
 <b>Тейки:</b>{take_info}"""
 
     is_state = True
     if type == 'take':
-        kb = kb_channel_calc_result_take(calc.tp_ratio, calc_id)
+        kb = kb_channel_calc_result_take(calc.tpRatio, calc_id)
         info = '\n\n<i>Либо введите <b>прибыль</b></i> со сделки'
     elif type == 'stop':
         kb = kb_channel_calc_result_stop(calc_id)
         info = '\n\n<i>Либо введите <b>убыток</b></i> со сделки'
     else:
         kb = kb_channel_calc_result(
-            calc.id, send_data.status == 'DEAL'
+            calc.id, calc.status == 'DEAL',
         )
         is_state = False
         info = ''
@@ -832,8 +1080,90 @@ def send_admin_channel_calc_item(
 
     if is_state:
         bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        set_state_data(bot, user_id, chat_id, {
-                       'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type})
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
+            })
+
+
+def send_calc_stat_item(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    calc_id: int,
+    type: Literal['take', 'stop', ''] = '',
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    calc = calculation.get(calc_id)
+    if calc is None:
+        return
+
+    if calc is None or (calc.status == 'FINISH'):
+        msg = 'Расчёт не найден или не требует действий'
+        if is_first:
+            bot.send_message(
+                chat_id, msg,
+            )
+        else:
+            bot.edit_message_text(
+                msg, chat_id, mes_id
+            )
+        return
+
+    calc_result = calcService.get_result(calc)
+    take_info = ''
+    for i in range(calc_result.tp_count):
+        take_info += f'\n <b>({calc.tpRatio[i]} к 1)</b>: <code>{get_print_float(calc_result.tp_values[i], 5)}</code> USDT'
+
+    msg = f"""<b>#{(calc.tool or '').replace('/USDT', '')}</b>
+
+<b>Цена входа</b>: <code>{get_print_float(calc.openPrice, 5)}</code> USDT
+<b>Стоп-лосс</b>: <code>{get_print_float(calc.stopLoss, 5)}</code> USDT
+<b>Риск</b>: <code>{get_print_float(calc.riskValue, 5)}</code> USDT
+
+<b>Тейки:</b>{take_info}"""
+
+    is_state = True
+    if type == 'take':
+        kb = kb_channel_calc_result_take(calc.tpRatio, calc_id, is_user=True)
+        info = '\n\n<i>Либо введите <b>прибыль</b></i> со сделки'
+    elif type == 'stop':
+        kb = kb_channel_calc_result_stop(calc_id, is_user=True)
+        info = '\n\n<i>Либо введите <b>убыток</b></i> со сделки'
+    else:
+        kb = kb_channel_calc_result(
+            calc.id, calc.status == 'DEAL',
+            is_user=True
+        )
+        is_state = False
+        info = ''
+
+    msg += info
+
+    del_mes_id = mes_id
+    if is_first:
+        new_mes = bot.send_message(
+            chat_id, msg, reply_markup=kb
+        )
+        del_mes_id = new_mes.id
+    else:
+        bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb
+        )
+
+    if is_state:
+        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
+        set_state_data(
+            bot, user_id, chat_id, {
+                'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
+            }
+        )
 
 
 def send_manual(

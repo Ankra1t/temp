@@ -75,7 +75,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     saved = False
     if stat is not None:
         stat_id = stat.id or stat_id
-        saved = stat.in_stat
+        saved = stat.inStat
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     buttons = []
@@ -99,17 +99,18 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
         # )
 
     btn_settings = getButton(
-        '⚙️ ' + texts[lang]['settings'], 'settings', saved, stat_id=stat_id
+        '⚙️ ' + texts[lang]['settings'], 'settings', saved, stat_id
     )
     buttons.append(btn_settings)
 
     if not is_first:
         if stat is None:
             btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
-            btn_stats = getButton('📊 ' + texts[lang]['stats'], 'stats')
 
-            if isAdmin:
-                btn_stats = getButton('Расчёты канaла', 'channels')
+            btn_stats = getButton(
+                '📊 ' + texts[lang]['stats'], 'stats', saved, stat_id
+            )
+            buttons.append(btn_stats)
 
             link = 'my_investors' if lang == 'ru' else '+386iRxc4XKszMDIy'
             btn_link = InlineKeyboardButton(
@@ -118,23 +119,25 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
 
             btn_info = getButton(texts[lang]['info'], 'info')
 
-            buttons.append(btn_stats)
             buttons.append(btn_link)
+            if isAdmin:
+                btn_stats = getButton('Расчёты канaла', 'channels')
+                buttons.append(btn_stats)
             buttons.append(btn_info)
+
+            if user_id == 156045434:
+                buttons.append(
+                    getButton(
+                        'Обновить недельюную статистику',
+                        'week_stat', saved, stat_id
+                    )
+                )
         else:
-            kb = kb_calc_result(user_id, stat_id, saved)
+            kb = kb_calc_result(user_id, stat)
             buttons_rows = kb.keyboard
 
             for row in buttons_rows:
                 keyboard.add(*row, row_width=kb.row_width)
-
-    if user_id == 156045434:
-        buttons.append(
-            getButton(
-                'Обновить недельюную статистику',
-                'week_stat', saved, stat_id
-            )
-        )
 
     keyboard.add(*buttons)
     return keyboard

@@ -18,6 +18,7 @@ _tg.py
 *.session
 *.session_journal
 
+ecosystem.config.js
 pyrightconfig.json
 4p_bot.db
 

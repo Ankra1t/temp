@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_admin_channel_calc_list
+from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_stats
 from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
@@ -14,14 +14,14 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
-    kb_deal_profit_minus, kb_calc_image,
+    kb_deal_profit_minus, kb_calc_image_text,
     send_main, send_calculation, send_freeze,
     kb_calc_result, send_confirm_calc_send
 )
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen
 )
-from services import channel_calc
+from services import calculation, channel_calc
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -42,14 +42,18 @@ def handle_loss(message: Message, bot: TeleBot):
     logger.info(f'callback "handle_loss" user_tg_id={user_id} value={value}')
 
     calcService.set_profit(stat_id, -abs(value))
-    calc_info = db.get_calculation(stat_id)
+    calc_info = calculation.get(stat_id)
     if calc_info is None:
         return
 
+    calculation.update(
+        stat_id, status='FINISH'
+    )
+
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
+
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -72,14 +76,18 @@ def handle_sum(message: Message, bot: TeleBot):
     logger.info(f'callback "handle_sum" user_tg_id={user_id} value={value}')
 
     calcService.set_profit(stat_id, value)
-    calc_info = db.get_calculation(stat_id)
+    calc_info = calculation.get(stat_id)
     if calc_info is None:
         return
 
+    calculation.update(
+        stat_id, status='FINISH'
+    )
+
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        channel_calc.update(send_data.id, status='FINISH')
         edit_channel_post(bot, stat_id)
+
     send_calculation(bot, message, user_id, calc_info, True)
     send_freeze(bot, message, user_id, calc_info.market, True)
 
@@ -130,41 +138,47 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
 
 
-def handle_calc_image(message: Message, bot: TeleBot):
+def handle_calc_image_text(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_text = data.get('calc_text', 'J')
         calc_media = data.get('calc_media')
-        calc_del_mes_id = data.get('calc_del_mes_id', 0)
         stat_id = data.get('stat_id', 0)
 
-    if message.content_type != 'photo':
-        delete_message(bot, chat_id, calc_del_mes_id)
+    delete_message(bot, chat_id, message.id)
+
+    if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = bot.send_message(
             chat_id, calc_text,
-            reply_markup=kb_calc_image(user_id, stat_id)
+            reply_markup=kb_calc_image_text(user_id, stat_id)
         )
-        set_state_data(bot, user_id, chat_id, {'calc_del_mes_id': new_mes.id})
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    calc_text = '\n'.join(calc_text.split('\n')[:-1])
-    kb = kb_calc_result(user_id, stat_id, True)
+    text = message.html_caption or message.html_text
+    photo = None
+    if message.photo is not None:
+        photo = message.photo[0].file_id
 
-    if calc_media is not None:
-        bot.edit_message_caption(
-            calc_text, chat_id, calc_del_mes_id,
-            reply_markup=kb
-        )
-    else:
-        bot.edit_message_caption(
-            calc_text, chat_id, calc_del_mes_id,
-            reply_markup=kb
-        )
+    data = {}
+    if photo:
+        data['photo'] = photo
+    if text:
+        data['description'] = text
+
+    calculation.update(
+        stat_id,
+        **data
+    )
+
+    calc = calculation.get(stat_id)
+    if calc is None:
+        return
 
     bot.delete_state(user_id, chat_id)
-    send_main(message, bot, user_id, True)
+    send_calculation(bot, message, user_id, calc, True)
 
 
 def handle_send_text(message: Message, bot: TeleBot):
@@ -182,11 +196,7 @@ def handle_send_text(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-
-    channel_calc.update(send_data.id, text=new_text)
+    calculation.update(stat_id, description=new_text)
 
     bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
@@ -210,11 +220,7 @@ def handle_send_photo(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data['stat_id']
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-
-    channel_calc.update(send_data.id, photo=new_photo.file_id)
+    calculation.update(stat_id, photo=new_photo.file_id)
 
     bot.delete_state(user_id, chat_id)
     send_confirm_calc_send(bot, message, stat_id, True)
@@ -238,22 +244,28 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
         return
 
     calcService.set_profit(stat_id, abs(value) * (-1 if type == 'stop' else 1))
-    calc = db.get_calculation(stat_id)
+    calc = calculation.get(stat_id)
     if calc is None:
         return
 
-    send_data = channel_calc.getByCalc(stat_id)
-    if send_data is None:
-        return
-    channel_calc.update(send_data.id, status='FINISH')
-    edit_channel_post(bot, stat_id)
+    calculation.update(
+        stat_id, status='FINISH'
+    )
 
     bot.delete_state(user_id, chat_id)
+    send_data = channel_calc.getByCalc(stat_id)
+    if send_data is not None:
+        edit_channel_post(bot, stat_id)
 
-    if is_calc:
-        send_calculation(bot, message, user_id, calc, True)
+        if is_calc:
+            send_calculation(bot, message, user_id, calc, True)
+        else:
+            send_admin_channel_calc_list(bot, message, user_id, True)
     else:
-        send_admin_channel_calc_list(bot, message, user_id, True)
+        if is_calc:
+            send_calculation(bot, message, user_id, calc, True)
+        else:
+            send_stats(bot, message, user_id, True)
 
 
 def registration(bot: TeleBot):
@@ -263,7 +275,7 @@ def registration(bot: TeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
-    reg_mes(handle_calc_image, state=StatsState.add_image)
+    reg_mes(handle_calc_image_text, state=StatsState.add_image_text)
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
     reg_mes(handle_send_photo, state=StatsState.send_add_photo)

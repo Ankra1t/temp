@@ -85,7 +85,10 @@ def first_timeout():
     if user_id is None or not user_id.isnumeric():
         return Response(status=400)
 
-    send_after_first_try(bot, int(user_id))
+    try:
+        send_after_first_try(bot, int(user_id))
+    except:
+        return Response(status=400)
     return Response(status=200)
 
 @app.route(base_url + '/stats_post', methods=['POST'])

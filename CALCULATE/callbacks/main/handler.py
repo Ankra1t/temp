@@ -5,6 +5,7 @@ from CALCULATE.callbacks.stats.handler import send_week_stats
 from config_logger import logger
 from common.utils import delete_message
 from db import db
+from services import calculation
 
 from ..stats.keyboards import kb_calc_result
 from ..utils import send_calc_start
@@ -30,23 +31,26 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     )
 
     if 'calc' in type or type == 'settings':
-        if stat_id != -1:
+        calc = calculation.get(stat_id)
+        if calc is not None:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(
-                    user_id, stat_id, is_saved == 'True'
-                )
+                reply_markup=kb_calc_result(user_id, calc)
             )
         else:
             delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
-        send_calc_start(bot, call.message, user_id,
-                        is_continue='_continue' in type, is_channel_calc='ch_calc' in type)
+        send_calc_start(
+            bot, call.message, user_id,
+            is_continue='_continue' in type, is_channel_calc='ch_calc' in type
+        )
 
     if type == 'first_try':
-        send_calc_start(bot, call.message, user_id,
-                        is_continue='_continue' in type, is_edit=True, is_try=True)
+        send_calc_start(
+            bot, call.message, user_id,
+            is_continue='_continue' in type, is_edit=True, is_try=True
+        )
 
     if type == 'settings':
         send_settings(bot, call.message, user_id, True)

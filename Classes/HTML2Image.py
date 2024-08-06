@@ -26,9 +26,9 @@ class HTIService:
         width = 1280
         height = 1280
 
-        is_saved = calc.in_stat
+        is_saved = calc.inStat
         if not is_saved:
-            len_tp = len(calc.tp_ratio)
+            len_tp = len(calc.tpRatio)
             if len_tp > 1:
                 height += 70 * (len_tp - 1)
             if len_tp > 2:

@@ -12,7 +12,7 @@ from MAIN.common.utils import send_in_development
 from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
-from services import channel_calc
+from services import calculation, channel_calc
 
 
 def send_start_by_user(
@@ -28,7 +28,7 @@ def send_start_by_user(
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
         send_data = channel_calc.getByCalc(int(id))
-        calc = db.get_calculation(int(id))
+        calc = calculation.get(int(id))
 
         user_db_id = db.get_user_id_by_tg_id(user_id)
         u_base = db.get_calc_user_settings(user_db_id)
@@ -78,7 +78,7 @@ def send_start_by_user(
                 {
                     'action': 'send_calc',
                     'stat_id': id,
-                    'open_price': calc.open_price,
+                    'open_price': calc.openPrice,
                     'tool': calc.tool,
                     'deposit': u_base.deposit,
                     'risk': u_base.risk
@@ -115,11 +115,11 @@ def start_with_calc(
 
     bot.delete_state(user_id, chat_id)
 
-    calc = db.get_calculation(int(stat_id))
+    calc = calculation.get(int(stat_id))
     if calc is None:
         return
 
-    stop_loss = stop_loss if stop_loss is not None else calc.stop_loss
+    stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id, calc.market)
@@ -131,8 +131,8 @@ def start_with_calc(
         deposit = u_base.deposit
 
     if u_base is not None and u_base.is_from_deposit:
-        count_bet = deposit / calc.open_price
-        risk = count_bet * abs(calc.open_price - stop_loss)
+        count_bet = deposit / calc.openPrice
+        risk = count_bet * abs(calc.openPrice - stop_loss)
     else:
         if u_base is None or u_base.risk is None:
             risk = 10
@@ -143,20 +143,20 @@ def start_with_calc(
 
     new_calc = Calculation(
         id=-1,
-        user_id=user_db_id,
+        userId=user_db_id,
         currency=calc.currency,
         deposit=deposit,
-        risk_value=risk,
+        riskValue=risk,
         market=calc.market,
-        open_price=calc.open_price,
-        stop_loss=stop_loss,
-        trading_style=calc.trading_style,
-        trading_type=calc.trading_type,
-        round_count=(u_base.round_count or 5) if u_base is not None else 5,
+        openPrice=calc.openPrice,
+        stopLoss=stop_loss,
+        tradingStyle=calc.tradingStyle,
+        tradingType=calc.tradingType,
+        roundCount=(u_base.round_count or 5) if u_base is not None else 5,
         tool=calc.tool,
-        tp_ratio=calc.tp_ratio,
-        split_values=calc.split_values,
-        is_from_deposit=u_base.is_from_deposit if u_base is not None else False
+        tpRatio=calc.tpRatio,
+        splitValues=calc.splitValues,
+        isFromDeposit=u_base.is_from_deposit if u_base is not None else False
     )
 
     new_id = db.add_calculation(new_calc)

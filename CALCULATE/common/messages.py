@@ -1,6 +1,6 @@
 from typing import Literal
 from telebot import TeleBot
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from Classes import text_editor
 from common.dt import get_str_by_datetime
@@ -8,7 +8,7 @@ from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb
 from Classes import calcService
-from models import CHANNEL_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
 
 
 POINT = '•'
@@ -76,6 +76,29 @@ trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
     'tr': {
         'margin': 'marj',
         'spot': 'spot',
+    },
+}
+
+status_transaltes: dict[LANGUAGES_TYPE, dict[CALC_STATUS_TYPE, str]] = {
+    'ru': {
+        'WAIT': 'В ожидании',
+        'DEAL': 'В сделке',
+        'CANCEL': 'Отменён',
+    },
+    'en': {
+        'WAIT': 'In wait',
+        'DEAL': 'In deal',
+        'CANCEL': 'Cancel',
+    },
+    'uz': {
+        'WAIT': 'Kutish paytida',
+        'DEAL': 'Bitim',
+        'CANCEL': 'Bekor qilmoq',
+    },
+    'tr': {
+        'WAIT': 'Beklemede',
+        'DEAL': 'Anlaşma içinde',
+        'CANCEL': 'İptal etmek',
     },
 }
 
@@ -1730,8 +1753,13 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
 def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     lang = get_lang(user_id)
 
-    is_saved = calc.in_stat
+    is_saved = calc.inStat
     calc_result = calcService.get_result(calc)
+
+    if calc.openPrice > calc.stopLoss:
+        long_short = 'long'
+    else:
+        long_short = 'short'
 
     texts = {
         'ru': {
@@ -1741,9 +1769,12 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
+
             'profit': 'Прибыль' if not is_saved else 'Прибыль от сделки',
-            'buy': 'Купите' if not is_saved else 'Было куплено',
-            'sum': 'Сумма покупки',
+            'buy': 'Купите' if not is_saved else 'Купили',
+            'sell': 'Продайте' if not is_saved else 'Продали',
+
+            'sum': 'Сумма покупки' if long_short == 'long' else 'Сумма продажи',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
 
@@ -1758,6 +1789,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Комиссия биржи',
             'risk_percent': 'Риск в процентах',
+
+            'description': 'Описание',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -1766,8 +1799,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
+
             'profit': 'Profit' if not is_saved else 'Deal profit',
             'buy': 'Buy' if not is_saved else 'Bought',
+            'sell': 'Sell' if not is_saved else 'Sold',
+
             'sum': 'Sum',
             'style': 'Trading style',
             'trading_type': 'Trading type',
@@ -1783,6 +1819,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Exchange fee',
             'risk_percent': 'Risk in percent',
+
+            'description': 'Description',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -1791,8 +1829,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Foyda oling',
+
             'profit': 'Profit' if not is_saved else 'Bitim profit',
             'buy': 'Sotib oling' if not is_saved else 'Sotib oling',
+            'sell': 'Sotmoq' if not is_saved else 'Sotilgan',
+
             'sum': 'So\'m',
             'style': 'Savdo uslubi',
             'trading_type': 'Savdo turi',
@@ -1808,6 +1849,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'BIRJA BERISH',
             'risk_percent': 'Xavf foiz',
+
+            'description': 'Tavsif',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -1816,8 +1859,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
+
             'profit': 'Kâr' if not is_saved else 'Anlaşmak Kâr',
             'buy': 'Satın almak' if not is_saved else 'Satın alınmış',
+            'sell': 'Satmak' if not is_saved else 'Satılmış',
+
             'sum': 'Meblağ',
             'style': 'Ticaret tarzı',
             'trading_type': 'Ticaret türü',
@@ -1833,6 +1879,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Borsa ücreti',
             'risk_percent': 'Yüzde risk',
+
+            'description': 'Tanım',
         },
     }
 
@@ -1853,31 +1901,26 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     else:
         tool_name = texts[lang]["paper"]
 
-    if calc.open_price > calc.stop_loss:
-        long_short = 'long'
-    else:
-        long_short = 'short'
-
     # Валюта торговли
     trading_currency = calc.currency
     tool = calc.tool or ''
-    if calc.forex_info is not None and calc.market == 'forex':
-        trading_currency = calc.forex_info.pair[1]
-        tool = ''.join(calc.forex_info.pair)
+    if calc.forexInfo is not None and calc.market == 'forex':
+        trading_currency = calc.forexInfo.pair[1]
+        tool = ''.join(calc.forexInfo.pair)
 
     trading_style_type = ''
     if not is_try:
-        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.trading_type]}\n'
+        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.tradingType]}\n'
 
-        t_style = txt_trading_style(lang, calc.trading_style)
+        t_style = txt_trading_style(lang, calc.tradingStyle)
         if t_style is not None:
             trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}\n'
 
     # Округление
-    round_count = calc.round_count or 5
+    round_count = calc.roundCount or 5
     price_round_count = max(
-        get_decimal_count(calc.open_price),
-        get_decimal_count(calc.stop_loss),
+        get_decimal_count(calc.openPrice),
+        get_decimal_count(calc.stopLoss),
         round_count
     )
 
@@ -1903,7 +1946,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         p_show = ''
         conclusion = ''
         for i in range(calc_result.tp_count):
-            tp_ratio = calc.tp_ratio[i]
+            tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
             p_val = calc_result.profit_values[i]
 
@@ -1933,20 +1976,28 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     if is_try:
         demo_show = ' - demo '
 
+    status = ''
+    if calc.status != 'FINISH':
+        status = f' - {status_transaltes[lang][calc.status]}'
+
+    decription = ''
+    if calc.description is not None:
+        decription = f'<b>{texts[lang]["description"]}</b>: {calc.description}\n'
+
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}{status} ',
         attention,
-        f'<b>{texts[lang]["buy"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
+        f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
-        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
-        f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.risk_value)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.risk_value / calc.deposit * 100, 1)}%" if is_try else ""}""",
-        fee_text,
-        trading_style_type
+        f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
+        fee_text + trading_style_type,
+        decription
     ))
 
 
@@ -1959,7 +2010,7 @@ def msg_channel_calculation(
     tickerInfo: TickerInfo | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
-    status: CHANNEL_STATUS_TYPE = 'WAIT',
+    status: CALC_STATUS_TYPE = 'WAIT',
     date: str | None = None,
     try_link: str = '',
 ):
@@ -2019,7 +2070,7 @@ def msg_channel_calculation(
         }
     }
 
-    if calc.open_price > calc.stop_loss:
+    if calc.openPrice > calc.stopLoss:
         long_short = 'long'
     else:
         long_short = 'short'
@@ -2027,12 +2078,12 @@ def msg_channel_calculation(
     # Валюта торговли
     trading_currency = calc.currency
     tool = calc.tool or ''
-    if calc.forex_info is not None and calc.market == 'forex':
-        trading_currency = calc.forex_info.pair[1]
-        tool = ''.join(calc.forex_info.pair)
+    if calc.forexInfo is not None and calc.market == 'forex':
+        trading_currency = calc.forexInfo.pair[1]
+        tool = ''.join(calc.forexInfo.pair)
 
     trading_style_type = ''
-    t_style = txt_trading_style(lang, calc.trading_style)
+    t_style = txt_trading_style(lang, calc.tradingStyle)
     if t_style is not None or time != '':
         trading_style_type += '\n'
     if t_style is not None:
@@ -2041,10 +2092,10 @@ def msg_channel_calculation(
         trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}'
 
     # Округление
-    round_count = calc.round_count or 5
+    round_count = calc.roundCount or 5
     price_round_count = max(
-        get_decimal_count(calc.open_price),
-        get_decimal_count(calc.stop_loss),
+        get_decimal_count(calc.openPrice),
+        get_decimal_count(calc.stopLoss),
         round_count
     )
 
@@ -2052,7 +2103,7 @@ def msg_channel_calculation(
     if not without_stop:
         conclusion = ''
         for i in range(calc_result.tp_count):
-            tp_ratio = calc.tp_ratio[i]
+            tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
 
             conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
@@ -2103,10 +2154,10 @@ def msg_channel_calculation(
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang][status]}',
         '',
-        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.open_price, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
         (
             (
-                f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stop_loss, price_round_count)}</code> {trading_currency}'
+                f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
                 + f'\n<b>{texts[lang]["direct"]}</b>: {long_short}' + profit_result
             )
             if not without_stop
@@ -2181,12 +2232,12 @@ def msg_channel_calc_result(
     take_or_stop = 'take' if calc.profit > 0 else 'stop'
 
     short_long = 'long'
-    if calc.open_price < calc.stop_loss:
+    if calc.openPrice < calc.stopLoss:
         short_long = 'short'
 
-    tp_sl_count = (calc.profit / calc.risk_value)
-    close_price = calc.open_price + \
-        (calc.open_price - calc.stop_loss) * \
+    tp_sl_count = (calc.profit / calc.riskValue)
+    close_price = calc.openPrice + \
+        (calc.openPrice - calc.stopLoss) * \
         tp_sl_count
 
     count_show = ''
@@ -2199,7 +2250,7 @@ def msg_channel_calc_result(
         result = f'{texts[lang]["sl"]}'
 
     trading_style_type = ''
-    t_style = txt_trading_style(lang, calc.trading_style)
+    t_style = txt_trading_style(lang, calc.tradingStyle)
     if t_style is not None or time != '':
         trading_style_type += '\n'
     if t_style is not None:
@@ -2217,11 +2268,71 @@ def msg_channel_calc_result(
 👉 {result}
 
 <b>{texts[lang]["date"]}</b>: {date}
-{texts[lang]["open"]}: {get_print_float(calc.open_price, calc.round_count)} USDT
-{texts[lang]["close"]}: {get_print_float(close_price, calc.round_count)} USDT
+{texts[lang]["open"]}: {get_print_float(calc.openPrice, calc.roundCount)} USDT
+{texts[lang]["close"]}: {get_print_float(close_price, calc.roundCount)} USDT
 <b>{texts[lang]["deal"]}</b>: {texts[lang][short_long]}
 {trading_style_type}""" + (f'\n{description}\n' if description else '') \
         + (f'\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
+
+
+def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Список незавершенных сделок' if type != 'done' else 'Список завершенных сделок',
+            'info': 'Нажмите на номер для действий',
+            'price': 'Вход/Стоп' if type != 'done' else 'Цена Входа/Закрытия',
+            'result': 'Результат'
+        },
+        'en': {
+            'main': 'List of pending calculations',
+            'info': 'Click on the number to take action',
+            'price': 'Open/Stop' if type != 'done' else 'Input/Closing price',
+            'result': 'Result'
+        },
+        'uz': {
+            'main': 'Kutilayotgan hisob-kitoblar ro\'yxati',
+            'info': 'Harakatni olish uchun raqamni bosing',
+            'price': 'Ochiq/To\'xtash' if type != 'done' else 'Kirish/yopilish narxi',
+            'result': 'Natija'
+        },
+        'tr': {
+            'main': 'Bekleyen hesaplamaların listesi',
+            'info': 'Harekete geçmek için numarayı tıklayın',
+            'price': 'Aç/Stop' if type != 'done' else 'Giriş/Kapanış Fiyatı',
+            'result': 'Sonuç'
+        },
+    }
+
+    msg = f'{texts[lang]["main"]}'
+
+    if len(calcs) == 0:
+        msg += '\n👉 Нет расчётов, требующих дествий'
+        return msg
+
+    if type != 'done':
+        msg += f'\n👇 {texts[lang]["info"]}'
+
+    for el in calcs:
+        slash = '/' if not el.inStat or (
+            not el.inStat and (el.status == 'WAIT' or el.status == 'DEAL')
+        ) else ''
+
+        msg += f'\n\n{slash}{el.id} <b>{(el.tool or "").replace("/USDT", "")}</b>'
+        msg += f' ({(datetime.fromisoformat((el.createdAt or "").replace("Z", "")) + timedelta(hours=3)).strftime("%d.%m %H:%M")})'
+
+        if type == 'done':
+            tp_sl_count = ((el.profit or 0) / el.riskValue)
+            close_price = el.openPrice + \
+                (el.openPrice - el.stopLoss) * \
+                tp_sl_count
+            msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(close_price)}</b>'
+            msg += f'\n{texts[lang]["result"]}: <b>{get_print_float(el.profit or 0)}</b>'
+        else:
+            msg += f'\n{texts[lang]["price"]}: <b>{get_print_float(el.openPrice)} / {get_print_float(el.stopLoss)}</b>'
+
+    return msg
 
 
 def msg_calculate_delete(user_id: int, prev_message: str):
@@ -2307,14 +2418,14 @@ def msg_enter_save_calc(user_id: int):
     return texts[lang]
 
 
-def msg_enter_calc_image(user_id: int):
+def msg_enter_calc_img_text(user_id: int):
     lang = get_lang(user_id)
 
     texts = {
-        'ru': 'Загрузите свой скриншот сделки и он останется в чате навсегда',
-        'en': 'Upload your screenshot of the deal and it will stay in the chat',
-        'uz': 'Bitimning skrinshotini yuklang va u suhbatda qoladi',
-        'tr': 'Anlaşmanın ekran görüntüsünüzü yükleyin ve sohbette kalacaktır',
+        'ru': 'Отправьте картинку и описание (или что-то одно)',
+        'en': 'Send a picture and description (or one of them)',
+        'uz': 'Rasm va tavsifni (yoki bitta narsani) yuboring',
+        'tr': 'Bir resim ve açıklama gönderin (veya bir şey)',
     }
 
     return f'👉 {texts[lang]}'
@@ -2848,28 +2959,28 @@ def txt_send_data(lang: LANGUAGES_TYPE, send_stat: Calculation):
     dop = ''
 
     short_long = 'long'
-    if send_stat.open_price < send_stat.stop_loss:
+    if send_stat.openPrice < send_stat.stopLoss:
         short_long = 'short'
 
     if lang == 'ru':
         dop = f"""#{(send_stat.tool or '').replace('/USDT', '')} - {market_translates[lang][send_stat.market]}
 
-Цена: {send_stat.open_price} USDT
+Цена: {send_stat.openPrice} USDT
 Направление: {short_long}"""
     elif lang == 'uz':
         dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
 
-Narx: {send_stat.open_price} USDT
+Narx: {send_stat.openPrice} USDT
 Yo'nalish: {short_long}"""
     elif lang == 'tr':
         dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
 
-Fiyat: {send_stat.open_price} USDT
+Fiyat: {send_stat.openPrice} USDT
 Yön: {short_long}"""
     else:
         dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
 
-Price: {send_stat.open_price} USDT
+Price: {send_stat.openPrice} USDT
 Direction: {short_long}"""
     dop += '\n\n'
 
@@ -3076,7 +3187,7 @@ msg_manuals = ["""
 
 Каждый из них имеет свои формулы расчетов, потому будете *внимательны.*
 """,
-              """
+               """
 *2.* Вводите сумму депозита
 
 Валюта может быть любая.
@@ -3084,7 +3195,7 @@ msg_manuals = ["""
 
 Если считаете в рублях, то и объем укажет, исходя из этих данных.
 """,
-              """
+               """
 *3.* Введите сумму риска.
 
 Сумма депозита выбрана в 100 00 (пусть будет рублей)
@@ -3101,7 +3212,7 @@ msg_manuals = ["""
 
 Таким образом, математически у нас есть 100 попыток для увеличения капитала.
 """,
-              """
+               """
 *4.* Вводите исходные данные для расчета объема
 
 *а. Цена входа. *
@@ -3126,7 +3237,7 @@ msg_manuals = ["""
 
 Теперь, когда вводные данные есть, смотрим на результат:
 """,
-              """
+               """
 *5. Результаты: *
 
 Видим, как система показала нам все исходные введенные данные и высчитала объем для входа в сделку
@@ -3137,4 +3248,4 @@ msg_manuals = ["""
 
 Приятного использования.
 """
-              ]
+               ]
