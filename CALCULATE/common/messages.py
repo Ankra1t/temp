@@ -1926,12 +1926,12 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             if i != calc_result.tp_count - 1:
                 conclusion += '\n'
 
-        demo_show = ' '
-        if is_try:
-            demo_show = ' - demo '
-
         profit_result = f"""<b>{texts[lang]['conclusion']} | {texts[lang]["profit"]}</b>:
 {conclusion}"""
+
+    demo_show = ' '
+    if is_try:
+        demo_show = ' - demo '
 
     return '\n'.join((
         f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}({long_short}) {saved_mes} - <b>{market_translates[lang][calc.market]}</b>',
