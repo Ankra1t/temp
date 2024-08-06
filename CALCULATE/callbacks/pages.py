@@ -625,8 +625,6 @@ def send_calculation(
 
     if True or calc_output == 'text' or is_try:
         text = msg_calculation(user_id, calc, is_try)
-        if calc.description is not None:
-            text += '\n\n' + calc.description
 
         if calc.photo is None:
             if is_first:

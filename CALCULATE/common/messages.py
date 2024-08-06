@@ -1756,6 +1756,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     is_saved = calc.inStat
     calc_result = calcService.get_result(calc)
 
+    if calc.openPrice > calc.stopLoss:
+        long_short = 'long'
+    else:
+        long_short = 'short'
+
     texts = {
         'ru': {
             'dep': 'Депозит' if not is_saved else 'Итоговый депозит',
@@ -1764,9 +1769,12 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
+
             'profit': 'Прибыль' if not is_saved else 'Прибыль от сделки',
-            'buy': 'Купите' if not is_saved else 'Было куплено',
-            'sum': 'Сумма покупки',
+            'buy': 'Купите' if not is_saved else 'Купили',
+            'sell': 'Продайте' if not is_saved else 'Продали',
+
+            'sum': 'Сумма покупки' if long_short == 'long' else 'Сумма продажи',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
 
@@ -1781,6 +1789,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Комиссия биржи',
             'risk_percent': 'Риск в процентах',
+
+            'description': 'Описание',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -1789,8 +1799,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
+
             'profit': 'Profit' if not is_saved else 'Deal profit',
             'buy': 'Buy' if not is_saved else 'Bought',
+            'sell': 'Sell' if not is_saved else 'Sold',
+
             'sum': 'Sum',
             'style': 'Trading style',
             'trading_type': 'Trading type',
@@ -1806,6 +1819,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Exchange fee',
             'risk_percent': 'Risk in percent',
+
+            'description': 'Description',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -1814,8 +1829,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Foyda oling',
+
             'profit': 'Profit' if not is_saved else 'Bitim profit',
             'buy': 'Sotib oling' if not is_saved else 'Sotib oling',
+            'sell': 'Sotmoq' if not is_saved else 'Sotilgan',
+
             'sum': 'So\'m',
             'style': 'Savdo uslubi',
             'trading_type': 'Savdo turi',
@@ -1831,6 +1849,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'BIRJA BERISH',
             'risk_percent': 'Xavf foiz',
+
+            'description': 'Tavsif',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -1839,8 +1859,11 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
+
             'profit': 'Kâr' if not is_saved else 'Anlaşmak Kâr',
             'buy': 'Satın almak' if not is_saved else 'Satın alınmış',
+            'sell': 'Satmak' if not is_saved else 'Satılmış',
+
             'sum': 'Meblağ',
             'style': 'Ticaret tarzı',
             'trading_type': 'Ticaret türü',
@@ -1856,6 +1879,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
             'fee': 'Borsa ücreti',
             'risk_percent': 'Yüzde risk',
+
+            'description': 'Tanım',
         },
     }
 
@@ -1875,11 +1900,6 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         tool_name = texts[lang]["lot"]
     else:
         tool_name = texts[lang]["paper"]
-
-    if calc.openPrice > calc.stopLoss:
-        long_short = 'long'
-    else:
-        long_short = 'short'
 
     # Валюта торговли
     trading_currency = calc.currency
@@ -1956,10 +1976,18 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     if is_try:
         demo_show = ' - demo '
 
+    status = ''
+    if calc.status != 'FINISH':
+        status = f' - {status_transaltes[lang][calc.status]}'
+
+    decription = ''
+    if calc.description is not None:
+        decription = f'<b>{texts[lang]["description"]}</b>: {calc.description}\n'
+
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}({long_short}) ',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}{status} ',
         attention,
-        f'<b>{texts[lang]["buy"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
+        f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
         f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
@@ -1968,8 +1996,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
-        fee_text,
-        trading_style_type,
+        fee_text + trading_style_type,
+        decription
     ))
 
 

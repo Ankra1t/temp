@@ -174,7 +174,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'save': 'Сохранить в статистику',
             'del': 'Удалить',
             'change': 'Изменить',
-            'img': 'Картинка и описание',
+            'img': 'Описание',
             'result': 'Результат',
 
             'deal': 'В сделке',
@@ -187,7 +187,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
-            'img': 'Picture and description',
+            'img': 'Description',
             'result': 'Result',
 
             'deal': 'In deal',
@@ -200,7 +200,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'save': 'Hisobni saqlash',
             'del': 'O\'chirish',
             'change': 'O\'zgartirish',
-            'img': 'Rasm va tavsif',
+            'img': 'Tavsif',
             'result': 'Natija',
 
             'deal': 'Sudada',
@@ -213,7 +213,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             'save': 'Hesaplamayı kaydet',
             'del': 'Silmek',
             'change': 'Değiştir',
-            'img': 'Resim ve açıklama',
+            'img': 'Açıklama',
             'result': 'Sonuç',
 
             'deal': 'Anlaşmada',
@@ -257,27 +257,31 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
             getButton(back_txt(lang), 'back_calc', calc.id)
         )
     else:
-        btn_delete = getButton(
-            f'❌ {texts[lang]["del"]}',
-            'delete_calc', calc.id
-        )
-        btn_change = getButton(
-            f'✏️ {texts[lang]["change"]}',
-            'ch_c', calc.id
-        )
-        btn_add_img = getButton(
+        buttons = []
+
+        buttons.append(getButton(
             f'🖼 {texts[lang]["img"]}', 'add_img_text', calc.id
-        )
-        keyboard.add(btn_add_img)
-        keyboard.add(btn_delete, btn_change)
+        ))
 
         if not calc.inStat:
-            keyboard.add(
+            buttons.append(
                 getButton(
                     '⚡️ ' + texts[lang]['result'],
                     'result_calc', calc.id
                 )
             )
+
+        buttons.append(getButton(
+            f'❌',
+            'delete_calc', calc.id
+        ))
+        buttons.append(getButton(
+            f'✏️',
+            'ch_c', calc.id
+        ))
+
+        keyboard.add(*buttons)
+
         if isAdmin and send_data is None:
             keyboard.add(
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
