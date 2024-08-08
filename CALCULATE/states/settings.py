@@ -23,3 +23,6 @@ class SettingsState(StatesGroup):
 class FirstCalcState(StatesGroup):
     deposit = State()
     risk = State()
+
+class ViolationState(StatesGroup):
+    message = State()

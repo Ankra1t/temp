@@ -120,10 +120,15 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             btn_info = getButton(texts[lang]['info'], 'info')
 
             buttons.append(btn_link)
+            buttons.append(btn_info)
+
+            buttons.append(
+                getButton('Нарушения', 'violations')
+            )
+
             if isAdmin:
                 btn_stats = getButton('Расчёты канaла', 'channels')
                 buttons.append(btn_stats)
-            buttons.append(btn_info)
 
             if user_id == 156045434:
                 buttons.append(
@@ -177,5 +182,57 @@ def kb_menu_back(user_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton(back_txt(lang), 'go_main'),
+    )
+    return keyboard
+
+
+def kb_violation(user_id: int, isToday: bool):
+    lang = get_lang(user_id)
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    texts = {
+        'ru': {
+            'yes': 'Нарушил',
+            'no': 'Не нарушил',
+        },
+        'en': {
+            'yes': 'Violated',
+            'no': 'Not violated',
+        },
+        'uz': {
+            'yes': 'Buzilgan',
+            'no': 'Buzilmagan',
+        },
+        'tr': {
+            'yes': 'Yozlaşmış',
+            'no': 'Kırılmamış',
+        }
+    }
+
+    if isToday:
+        keyboard.add(
+            getButton(texts[lang]['yes'], 'violation_yes'),
+            getButton(texts[lang]['no'], 'violation_no'),
+        )
+
+    keyboard.add(
+        getButton(back_txt(lang), 'go_main')
+    )
+    return keyboard
+
+
+def kb_violation_skip(user_id: int):
+    lang = get_lang(user_id)
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    texts = {
+        'ru': 'Пропустить',
+        'en': 'Skip',
+        'uz': 'O\'tkazib yubormoq',
+        'tr': 'Atlamak',
+    }
+
+    keyboard.add(
+        getButton(texts[lang], 'violations'),
     )
     return keyboard

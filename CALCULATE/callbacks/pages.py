@@ -18,17 +18,17 @@ from CALCULATE.common.messages import (
     msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
     msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
     msg_no_uses, msg_settings, msg_sl_op_equal_error,
-    msg_stop_page, msg_summury_profit_settings, msg_manuals
+    msg_stop_page, msg_summury_profit_settings, msg_manuals, msg_violation
 )
 
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
-from services import calculation, channel_calc
+from services import calculation, channel_calc, violation
 from CALCULATE.common.messages import status_transaltes
 
 from .manual.keyboards import kb_manual, kb_manuals
-from .main.keyboards import kb_main
+from .main.keyboards import kb_main, kb_violation
 from .settings.keyboards import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
@@ -1178,4 +1178,36 @@ def send_manual(
         edit_message(
             bot, message, message_type,
             msg, kb, photo
+        )
+
+
+def send_violation(
+    bot: TeleBot,
+    message: Message,
+    user_id: int,
+    is_first=False
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    bot.delete_state(user_id, chat_id)
+
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    currentPoints = violation.getMonthPoints(user_db_id) or 0
+    isToday = violation.getToday(user_db_id) is None
+
+    msg = msg_violation(user_id, currentPoints, isToday)
+
+    kb = kb_violation(user_id, isToday)
+
+    if is_first:
+        bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
+    else:
+        bot.edit_message_text(
+            msg,
+            chat_id, mes_id,
+            reply_markup=kb
         )

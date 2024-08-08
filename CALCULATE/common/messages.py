@@ -2029,9 +2029,14 @@ def msg_channel_calculation(
 
     calc_result = calcService.get_result(calc)
 
+    if calc.openPrice > calc.stopLoss:
+        long_short = 'long'
+    else:
+        long_short = 'short'
+
     texts = {
         'ru': {
-            'open': 'Цена',
+            'open': 'Покупка' if long_short == 'long' else 'Продажа',
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
@@ -2054,7 +2059,7 @@ def msg_channel_calculation(
             'try': 'Рассчитать',
         },
         'en': {
-            'open': 'Price',
+            'open': 'Buy' if long_short == 'long' else 'Sell',
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
@@ -2077,11 +2082,6 @@ def msg_channel_calculation(
             'try': 'Calculate',
         }
     }
-
-    if calc.openPrice > calc.stopLoss:
-        long_short = 'long'
-    else:
-        long_short = 'short'
 
     # Валюта торговли
     trading_currency = calc.currency
@@ -2132,15 +2132,15 @@ def msg_channel_calculation(
     if tickerInfo:
         info_show += '\n\n'
 
-        buyRatio = tickerInfo.buyRatio
-        sellRatio = tickerInfo.sellRatio
-        if buyRatio is not None and sellRatio is not None:
-            info_show += f'{texts[lang]["buy/sell"]}: <b>{round(buyRatio * 100, 1)}%</b> / <b>{round(sellRatio * 100, 1)}%</b>'
+        # buyRatio = tickerInfo.buyRatio
+        # sellRatio = tickerInfo.sellRatio
+        # if buyRatio is not None and sellRatio is not None:
+        #     info_show += f'{texts[lang]["buy/sell"]}: <b>{round(buyRatio * 100, 1)}%</b> / <b>{round(sellRatio * 100, 1)}%</b>'
 
-        rate24h = tickerInfo.price24hPcnt
-        if rate24h is not None:
-            percent = round(rate24h * 100, 2)
-            info_show += f'\n{texts[lang]["change24"]}: <b>{"+" if percent > 0 else ""}{percent}%</b>'
+        # rate24h = tickerInfo.price24hPcnt
+        # if rate24h is not None:
+        #     percent = round(rate24h * 100, 2)
+        #     info_show += f'\n{texts[lang]["change24"]}: <b>{"+" if percent > 0 else ""}{percent}%</b>'
 
         turnover = tickerInfo.turnover
         if turnover is not None:
@@ -2152,7 +2152,7 @@ def msg_channel_calculation(
             else:
                 oborot = f'{round(turnover, 0)} USDT'
 
-            info_show += f'\n{texts[lang]["turnover24"]}: <b>{oborot}</b>'
+            info_show += f'{texts[lang]["turnover24"]}: <b>{oborot}</b>'
 
     def link(value: str):
         if week_stat_link is not None:
@@ -3233,6 +3233,63 @@ def msg_calculation_deleted(user_id: int):
     }
 
     return f'⭕️ {texts[lang]}!'
+
+
+def msg_violation(user_id: int, current: int, isToday: bool):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': {
+            'main': 'Нарушения',
+            'info': 'У вас есть возможность отметить, нарушали ли вы правила сегодня. Если вы не нарушил, отметьте это и получите 5 баллов за день. В течение месяца вы можете набрать максимум 150 баллов.',
+            'current': 'За текущий месяц',
+            'point': 'баллов',
+            'today': 'Сегодня:'
+        },
+        'en': {
+            'main': 'Violations',
+            'info': 'You have the opportunity to mark whether you broke the rules today. If you did not break the rules, mark it and get 5 points for the day. You can earn a maximum of 150 points per month.',
+            'current': 'For the current month',
+            'point': 'points',
+            'today': 'Today:'
+        },
+        'uz': {
+            'main': 'Qoidabuzarliklar',
+            'info': 'Siz bugun qoidabuzarlik qilganligingizni belgilash imkoniyatiga egasiz. Agar siz qoidabuzarlik qilmagan bo\'lsangiz, buni belgilang va kun uchun 5 ball olasiz. Oy davomida siz maksimal 150 ball to\'plashingiz mumkin.',
+            'current': 'Joriy oy uchun',
+            'point': 'ballar',
+            'today': 'Bugun:'
+        },
+        'tr': {
+            'main': 'İhlaller',
+            'info': 'Bugün kuralları ihlal edip etmediğinizi işaretleyebilirsiniz. Eğer kuralları ihlal etmediyseniz, bunu işaretleyin ve gün için 5 puan kazanın. Ay boyunca maksimum 150 puan kazanabilirsiniz.',
+            'current': 'Mevcut ay için',
+            'point': 'puan',
+            'today': 'Bugün:'
+        }
+    }
+
+    return f"""<b>{texts[lang]['main']}</b>
+
+{texts[lang]['info']}
+
+{texts[lang]['current']}: <b>{current} {texts[lang]['point']}</b>
+
+{texts[lang]['today'] if isToday else ''}
+"""
+
+
+def msg_violation_message(user_id: int):
+    lang = get_lang(user_id)
+
+    texts = {
+        'ru': 'Можете описать нарушение и прикрепть фото',
+        'en': 'You can describe the violation and attach a photo',
+        'uz': 'Siz qoidabuzarlikni tasvirlashingiz va fotosuratni biriktirishingiz mumkin',
+        'tr': 'İhlali tanımlayabilir ve bir fotoğraf ekleyebilirsiniz',
+    }
+
+    return texts[lang]
 
 
 # Инструкция к калькулятору

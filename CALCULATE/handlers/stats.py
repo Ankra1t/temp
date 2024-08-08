@@ -3,8 +3,10 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_stats
+from CALCULATE.callbacks.main.keyboards import kb_violation_skip
+from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_stats, send_violation
 from CALCULATE.callbacks.stats.handler import edit_channel_post
+from CALCULATE.states.settings import ViolationState
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
 from Classes import calcService
@@ -19,9 +21,9 @@ from CALCULATE.callbacks import (
     kb_calc_result, send_confirm_calc_send
 )
 from CALCULATE.common.messages import (
-    msg_digit_error, msg_freeze_error, msg_frozen
+    msg_digit_error, msg_freeze_error, msg_frozen, msg_text_error
 )
-from services import calculation, channel_calc
+from services import calculation, channel_calc, violation
 
 
 def handle_loss(message: Message, bot: TeleBot):
@@ -274,6 +276,38 @@ def handle_channel_calc_loss(message: Message, bot: TeleBot):
             send_stats(bot, message, user_id, True)
 
 
+def handle_violation_message(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    with bot.retrieve_data(user_id, chat_id) as data:
+        violation_id = data.get('violation_id', 0)
+
+    if message.content_type != 'photo' and message.content_type != 'text':
+        new_mes = bot.send_message(
+            chat_id, msg_text_error(user_id),
+            reply_markup=kb_violation_skip(user_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
+
+    text = message.html_caption or message.html_text
+    photo = None
+    if message.photo is not None:
+        photo = message.photo[0].file_id
+
+
+    violation.update(
+        violation_id,
+        text,
+        photo
+    )
+
+    bot.delete_state(user_id, chat_id)
+    send_violation(bot, message, user_id, True)
+
+
+
 def registration(bot: TeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -287,3 +321,4 @@ def registration(bot: TeleBot):
     reg_mes(handle_send_photo, state=StatsState.send_add_photo)
 
     reg_mes(handle_channel_calc_loss, state=ChannelCalcState.loss)
+    reg_mes(handle_violation_message, state=ViolationState.message)
