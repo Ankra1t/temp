@@ -19,6 +19,7 @@ _tg.py
 *.session_journal
 
 ecosystem.config.js
+ecosystem.config.js.save
 pyrightconfig.json
 4p_bot.db
 

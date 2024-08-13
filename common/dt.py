@@ -3,7 +3,7 @@ from typing import Literal
 from datetime import datetime, timedelta, timezone
 
 
-DT_PRINT_TYPE = Literal['date', 'time', 'datetime']
+DT_PRINT_TYPE = Literal['date', 'day.month', 'time', 'datetime']
 
 
 def get_datetime_now():
@@ -16,6 +16,7 @@ def get_str_by_datetime(dt: datetime, type: DT_PRINT_TYPE = 'datetime') -> str:
     """
     formats: dict[DT_PRINT_TYPE, str] = {
         'date': '%d.%m.%Y',
+        'day.month': '%d.%m',
         'time': '%H:%M',
         'datetime': '%d.%m.%Y %H:%M',
     }

@@ -186,37 +186,51 @@ def kb_menu_back(user_id: int):
     return keyboard
 
 
-def kb_violation(user_id: int, isToday: bool):
+def kb_violation(user_id: int, isToday: bool, canEdit: bool, is_edit: bool):
     lang = get_lang(user_id)
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=3)
 
     texts = {
         'ru': {
             'yes': 'Нарушил',
             'no': 'Не нарушил',
+            'none': 'Не торговал',
+            'edit': 'Изменить',
         },
         'en': {
             'yes': 'Violated',
             'no': 'Not violated',
+            'none': 'Not traded',
+            'edit': 'Edit',
         },
         'uz': {
             'yes': 'Buzilgan',
             'no': 'Buzilmagan',
+            'none': 'Sotilmaydi',
+            'edit': 'O\'zgarish',
         },
         'tr': {
             'yes': 'Yozlaşmış',
             'no': 'Kırılmamış',
+            'none': 'Takas edilmemiştir',
+            'edit': 'Değiştirmek',
         }
     }
 
-    if isToday:
+    if not isToday or is_edit:
+        edit = '_edit' if is_edit else ''
         keyboard.add(
-            getButton(texts[lang]['yes'], 'violation_yes'),
-            getButton(texts[lang]['no'], 'violation_no'),
+            getButton(texts[lang]['yes'], f'violation{edit}+yes'),
+            getButton(texts[lang]['no'], f'violation{edit}+no'),
+            getButton(texts[lang]['none'], f'violation{edit}+null'),
+        )
+    elif canEdit:
+        keyboard.add(
+            getButton(texts[lang]['edit'], 'violation_edit'),
         )
 
     keyboard.add(
-        getButton(back_txt(lang), 'go_main')
+        getButton(back_txt(lang), 'go_main' if not is_edit else 'violations')
     )
     return keyboard
 

@@ -304,7 +304,7 @@ def handle_violation_message(message: Message, bot: TeleBot):
     )
 
     bot.delete_state(user_id, chat_id)
-    send_violation(bot, message, user_id, True)
+    send_violation(bot, message, user_id, is_first=True)
 
 
 

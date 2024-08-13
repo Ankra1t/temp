@@ -76,6 +76,7 @@ def kb_manuals(user_id: int, num_page: int, max_page: int):
 def kb_manual(user_id: int):
     row_width = 2
     lang = get_lang(user_id)
+    lang = 'ru' if lang == 'ru' else 'en'
 
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -107,6 +108,12 @@ def kb_manual(user_id: int):
         buttons.append(
             getButton(texts[lang][el], f'manual+{el}')
         )
+
+    news_link = 'profmarkets' if lang == 'ru' else 'promarketsen'
+    btn_news = InlineKeyboardButton(
+        'Новости' if lang == 'ru' else 'News', f'https://t.me/{news_link}'
+    )
+    buttons.append(btn_news)
 
     buttons.append(
         getButton(back_txt(lang), 'main')

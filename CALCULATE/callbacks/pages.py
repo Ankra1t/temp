@@ -1175,16 +1175,20 @@ def send_manual(
         else:
             message_type = 'photo'
 
-        edit_message(
-            bot, message, message_type,
-            msg, kb, photo
-        )
+        try:
+            edit_message(
+                bot, message, message_type,
+                msg, kb, photo
+            )
+        except:
+            pass
 
 
 def send_violation(
     bot: TeleBot,
     message: Message,
     user_id: int,
+    is_edit=False,
     is_first=False
 ):
     chat_id = message.chat.id
@@ -1193,12 +1197,15 @@ def send_violation(
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-    currentPoints = violation.getMonthPoints(user_db_id) or 0
-    isToday = violation.getToday(user_db_id) is None
+    current = violation.getMonthPoints(user_db_id)
+    if current is None:
+        return
 
-    msg = msg_violation(user_id, currentPoints, isToday)
+    isToday = violation.getToday(user_db_id) is not None
 
-    kb = kb_violation(user_id, isToday)
+    msg = msg_violation(user_id, current.get('points'), isToday, current.get('result'), is_edit)
+
+    kb = kb_violation(user_id, isToday, current.get('canEdit', False), is_edit)
 
     if is_first:
         bot.send_message(

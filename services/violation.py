@@ -1,14 +1,17 @@
 import json
-from typing import Optional
+from typing import Literal, Optional
 from config_global import API_URL
 from services.base_config import session_decorator, session, check_response
 
 
 @session_decorator
 def update(
-    id: int, message: Optional[str], photo: Optional[str]
+    id: int,
+    message: Optional[str] = None,
+    photo: Optional[str] = None,
+    status: Optional[bool | Literal['null']] = None
 ):
-    if message is None and photo is None:
+    if message is None and photo is None and status is None:
         return
 
     data = {}
@@ -16,6 +19,8 @@ def update(
         data['message'] = message
     if photo is not None:
         data['photo'] = message
+    if status is not None:
+        data['status'] = status if status != 'null' else None
 
     res = session.post(
         f'{API_URL}/violation/{id}',
@@ -30,7 +35,7 @@ def update(
 
 @session_decorator
 def create(
-    userId: int, status: bool
+    userId: int, status: bool | None
 ):
     data = {
         'userId': userId,
@@ -51,7 +56,7 @@ def create(
 @session_decorator
 def getMonthPoints(
     userId: int
-) -> int | None:
+):
     res = session.get(
         f'{API_URL}/violation/monthPoints/{userId}',
     )
@@ -65,7 +70,7 @@ def getMonthPoints(
 @session_decorator
 def getToday(
     userId: int
-) -> int | None:
+):
     res = session.get(
         f'{API_URL}/violation/today/{userId}',
     )

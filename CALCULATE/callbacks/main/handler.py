@@ -2,10 +2,8 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from CALCULATE.callbacks.stats.handler import send_week_stats
-from CALCULATE.common.messages import msg_violation_message
-from CALCULATE.states.settings import ViolationState
 from config_logger import logger
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message
 from db import db
 from services import calculation, violation
 
@@ -13,7 +11,6 @@ from ..stats.keyboards import kb_calc_result
 from ..utils import send_calc_start
 from ..pages import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 from .filter import main_factory, MainCallbackFilter
-from .keyboards import kb_violation, kb_violation_skip
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -82,32 +79,44 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'info':
         send_manual(bot, call.message, user_id)
 
-
-    if type == 'violation_no':
-        violation.create(user_db_id, False)
+    if 'violation+' in type:
+        result = False if '+no' in type else True if '+yes' in type else None
+        violation.create(user_db_id, result)
         type = 'violations'
+
+    if 'violation_edit+' in type:
+        today_violation = violation.getToday(user_db_id)
+        if today_violation:
+            result = False if '+no' in type else True if '+yes' in type else 'null'
+            print(type)
+            print(result)
+            violation.update(today_violation.get('id', 0), status=result)
+            type = 'violations'
+
+    if type == 'violation_edit':
+        send_violation(bot, call.message, user_id, is_edit=True)
 
     if type == 'violations':
         send_violation(bot, call.message, user_id)
 
-    if type == 'violation_yes':
-        data = violation.create(user_db_id, True)
-        if data is not None:
-            id = data.get('id')
+    # if type == 'violation_yes':
+    #     data = violation.create(user_db_id, True)
+    #     if data is not None:
+    #         id = data.get('id')
 
-            bot.edit_message_text(
-                msg_violation_message(user_id),
-                chat_id, mes_id,
-                reply_markup=kb_violation_skip(user_id)
-            )
-            bot.set_state(user_id, ViolationState.message, chat_id)
-            set_state_data(
-                bot, user_id, chat_id,
-                {
-                    'del_mes_id': mes_id,
-                    'violation_id': id
-                }
-            )
+    #         bot.edit_message_text(
+    #             msg_violation_message(user_id),
+    #             chat_id, mes_id,
+    #             reply_markup=kb_violation_skip(user_id)
+    #         )
+    #         bot.set_state(user_id, ViolationState.message, chat_id)
+    #         set_state_data(
+    #             bot, user_id, chat_id,
+    #             {
+    #                 'del_mes_id': mes_id,
+    #                 'violation_id': id
+    #             }
+    #         )
 
     bot.answer_callback_query(call.id)
 

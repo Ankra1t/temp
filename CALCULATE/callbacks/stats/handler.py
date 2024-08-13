@@ -920,7 +920,6 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             mes = bot.send_message(
                 CHANNEL_ID, msg,
             )
-            bot.pin_chat_message(CHANNEL_ID, mes.id)
             mes_ids.append(mes.id)
 
         channel_calc.createWeekStat(list(channels), mes_ids, ['ru', 'en'])
@@ -954,6 +953,9 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
         all_fail_count = 0
 
         tool_counts: dict[str, int] = {}
+
+        msg_in_deal = ''
+        msg_dates = ''
 
         for valueDate_i, valueDate in enumerate(values):
             date_msg = ''
@@ -992,10 +994,13 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                     tp_sl = status_transaltes[lang][status]
                 elif valueCount == 0:
                     tp_sl = texts[lang]['breakeven']
+                    tp_count += 1
+                    sl_count += 1
                 elif valueCount > 0:
                     tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
                     tp_count += valueCount
                     success_count += 1
+
                     if closePrice > openPrice:
                         long_count += 1
                     else:
@@ -1024,7 +1029,9 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                     tool_counts[tool] += 1
                     tool_num = f'({tool_counts[tool]})'
 
-                if status == 'CANCEL':
+                if status == 'DEAL':
+                    msg_in_deal += f'\n{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                elif status == 'CANCEL':
                     if canceled != '':
                         canceled += ', '
                     canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
@@ -1046,20 +1053,25 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                     tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
                 tp_sl_msg = f' ({tp_sl_msg})'
 
-            msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
-            msg += f'{date_msg}'
+            if date_msg.lstrip() != '' or canceled != '':
+                msg_dates += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
+                msg_dates += f'{date_msg}'
 
-            if canceled != '':
-                msg += f'\n\n{texts[lang]["canceled"]}: {canceled}'
+                if canceled != '':
+                    msg_dates += f'\n\n{texts[lang]["canceled"]}: {canceled}'
 
-            if success_count != 0 or fail_count != 0:
-                msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+                if success_count != 0 or fail_count != 0:
+                    msg_dates += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
 
             all_success_count += success_count
             all_fail_count += fail_count
             all_tp_count += tp_count
             all_sl_count += sl_count
 
+        if msg_in_deal != '':
+            msg += '\n\n<b>В сделке:</b>'
+            msg += msg_in_deal
+        msg += msg_dates
         msg += f'\n_________________________________'
 
         tp_sl_result = round(all_tp_count - all_sl_count, 1)
@@ -1135,6 +1147,19 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
             else:
                 bot.edit_message_caption(
                     msg, el, int(messages.mesIds[i]),
+                )
+
+            def get_link(value: str):
+                if link is not None:
+                    return f'<a href="https://t.me/c/{el.replace("-100", "")}/{messages.mesIds[i]}">⚡️ {value}</a>'
+                return '⚡️ ' + value
+
+            if calc.status == 'DEAL':
+                bot.send_message(
+                    el, get_link(f'{(calc.tool or "").replace("/USDT", "")}') +
+                    (' в сделке' if messages.langs[i] == 'ru' else ' in deal') +
+                    '!!',
+                    reply_to_message_id=int(messages.mesIds[i])
                 )
         except Exception as e:
             print(e)

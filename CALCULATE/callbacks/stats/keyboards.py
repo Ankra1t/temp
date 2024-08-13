@@ -237,7 +237,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
         },
     }
 
-    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard = InlineKeyboardMarkup(row_width=2 if isResult else 3)
 
     if isResult:
         buttons = []

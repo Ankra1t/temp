@@ -3,7 +3,7 @@ from telebot import TeleBot
 from datetime import datetime, timedelta
 
 from Classes import text_editor
-from common.dt import get_str_by_datetime
+from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import LANGUAGES_TYPE, db
 from data.data import liteDb
@@ -1766,7 +1766,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Депозит' if not is_saved else 'Итоговый депозит',
             'risk': 'Риск на сделку',
             'open': 'Цена',
-            'sl': 'Стоп',
+            'stop': 'Стоп',
 
             'conclusion': 'Тейк-профит',
 
@@ -1782,8 +1782,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'акций',
             'lot': 'лота',
 
-            'takes': 'Тейки',
-            'stops': 'Стопы',
+            'sl': 'стоп лосс',
+            'breakeven': 'безубыток',
 
             'to': 'к',
 
@@ -1797,7 +1797,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Deposit' if not is_saved else 'Final deposit',
             'risk': 'Deal risk',
             'open': 'Price',
-            'sl': 'Stop loss',
+            'stop': 'Stop loss',
 
             'conclusion': 'Take profit',
 
@@ -1813,8 +1813,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'shares',
             'lot': 'lots',
 
-            'takes': 'Take profits',
-            'stops': 'Stop losses',
+            'sl': 'stop loss',
+            'breakeven': 'breakeven',
 
             'to': 'to',
 
@@ -1828,7 +1828,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
             'risk': 'Risk',
             'open': 'Narxi',
-            'sl': 'Stop loss',
+            'stop': 'Stop loss',
 
             'conclusion': 'Foyda oling',
 
@@ -1844,8 +1844,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'ulushlar',
             'lot': 'juda ko\'p',
 
-            'takes': 'Qabul qilish',
-            'stops': 'To\'xtash-yo\'qotishlar',
+            'sl': "Yo'qotishni to'xtating",
+            'breakeven': 'beziyon',
 
             'to': 'ga',
 
@@ -1859,7 +1859,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'dep': 'Depozito' if not is_saved else 'Son depozito',
             'risk': 'Risk',
             'open': 'Fiyat',
-            'sl': 'Stop loss',
+            'stop': 'Stop loss',
 
             'conclusion': 'Take profit',
 
@@ -1875,8 +1875,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             'paper': 'hisse senetleri',
             'lot': 'çok',
 
-            'takes': 'Karmaşa',
-            'stops': 'Durma',
+            'sl': 'durdurma kaybı',
+            'breakeven': 'başa baş',
 
             'to': 'ile',
 
@@ -1936,14 +1936,8 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         fee_text = f'<b>{texts[lang]["fee"]}</b>: {get_print_float(calc_result.fee, round_count)} {calc.currency}\n'
 
     if is_saved:
-        saved_mes = '#saved '
-
-        stats = calcService.get_stats(user_id, calc.market)
         profit = calc.profit or 0.
-        profit_result = f"""<b>{texts[lang]['profit']}: </b>{get_print_float(profit, round_count)} {calc.currency}
-
-<b>{texts[lang]['takes']}</b>: {stats.tp_count}
-<b>{texts[lang]['stops']}</b>: {get_print_float(stats.sl_count)}"""
+        profit_result = f"""<b>{texts[lang]['profit']}: </b>{get_print_float(profit, round_count)} {calc.currency}"""
     else:
         saved_mes = ''
 
@@ -1978,11 +1972,19 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     demo_show = ''
     if is_try:
-        demo_show = ' - demo '
+        demo_show = ' - demo'
 
-    status = ''
     if calc.status != 'FINISH':
-        status = f' - {status_transaltes[lang][calc.status]}'
+        status = f'{status_transaltes[lang][calc.status]}'
+    else:
+        tp_sl_count = (calc.profit or 0) / calc.riskValue
+
+        if tp_sl_count == 0:
+            status = f'{texts[lang]["breakeven"]}'
+        elif tp_sl_count > 0:
+            status = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1'
+        else:
+            status = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
     decription = ''
     if calc.description is not None:
@@ -1993,12 +1995,12 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         comment = f'<b>{texts[lang]["comment"]}</b>: {calc.comment}\n'
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show}{status}',
+        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show} | {status}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
@@ -2022,7 +2024,7 @@ def msg_channel_calculation(
     date: str | None = None,
     try_link: str = '',
 ):
-    if calc.profit or status == 'FINISH':
+    if calc.profit is not None or status == 'FINISH':
         return msg_channel_calc_result(
             calc, lang, time, count, description, week_stat_link, date, try_link
         )
@@ -2040,22 +2042,22 @@ def msg_channel_calculation(
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
-            'style': '<b>С</b>тиль торговли',
+            'style': '<b>С</b>тиль',
 
             'direct': 'Направление',
             'to': 'к',
 
             'deal': '<b>С</b>делка',
-            'avg': 'Среднесрочная',
-            'day': 'Внутридневная',
+            'avg': 'среднесрочный',
+            'day': 'внутри дня',
 
             'buy/sell': '<b>П</b>окупают/продают',
             'change24': '<b>И</b>зменение за 24ч',
             'turnover24': '<b>О</b>борот за 24ч',
 
-            'DEAL': '(В сделке)',
-            'CANCEL': '(Отменён)',
-            'WAIT': '(В ожидании)',
+            'DEAL': 'В сделке',
+            'CANCEL': 'Отменён',
+            'WAIT': 'В ожидании',
             'try': 'Рассчитать',
         },
         'en': {
@@ -2063,22 +2065,22 @@ def msg_channel_calculation(
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
-            'style': '<b>T</b>rading style',
+            'style': '<b>S</b>tyle',
 
             'direct': 'Direction',
             'to': 'to',
 
             'deal': '<b>T</b>rade',
-            'avg': 'Medium-term',
-            'day': 'Intraday',
+            'avg': 'medium-term',
+            'day': 'intraday',
 
             'buy/sell': '<b>B</b>uy/sell',
             'change24': '<b>C</b>hange in 24h',
             'turnover24': '<b>T</b>urnover in 24h',
 
-            'DEAL': '(In deal)',
-            'CANCEL': '(Cancel)',
-            'WAIT': '(Waiting)',
+            'DEAL': 'In deal',
+            'CANCEL': 'Cancel',
+            'WAIT': 'Waiting',
             'try': 'Calculate',
         }
     }
@@ -2090,14 +2092,12 @@ def msg_channel_calculation(
         trading_currency = calc.forexInfo.pair[1]
         tool = ''.join(calc.forexInfo.pair)
 
-    trading_style_type = ''
     t_style = txt_trading_style(lang, calc.tradingStyle)
-    if t_style is not None or time != '':
-        trading_style_type += '\n'
+    trading_style_type = ''
     if t_style is not None:
-        trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
-    if time != '':
-        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}'
+        trading_style_type += f'\n{t_style.capitalize()}'
+        if time != '':
+            trading_style_type += f' ({texts[lang][time]})'
 
     # Округление
     round_count = calc.roundCount or 5
@@ -2128,19 +2128,18 @@ def msg_channel_calculation(
 
     rate24h: float | None = None
 
-    info_show = ''
+    rate_show = ''
+    oborot_show = ''
     if tickerInfo:
-        info_show += '\n\n'
-
         # buyRatio = tickerInfo.buyRatio
         # sellRatio = tickerInfo.sellRatio
         # if buyRatio is not None and sellRatio is not None:
         #     info_show += f'{texts[lang]["buy/sell"]}: <b>{round(buyRatio * 100, 1)}%</b> / <b>{round(sellRatio * 100, 1)}%</b>'
 
-        # rate24h = tickerInfo.price24hPcnt
-        # if rate24h is not None:
-        #     percent = round(rate24h * 100, 2)
-        #     info_show += f'\n{texts[lang]["change24"]}: <b>{"+" if percent > 0 else ""}{percent}%</b>'
+        rate24h = tickerInfo.price24hPcnt
+        if rate24h is not None:
+            percent = round(rate24h * 100, 2)
+            rate_show += f' ({"+" if percent > 0 else ""}{percent}%)'
 
         turnover = tickerInfo.turnover
         if turnover is not None:
@@ -2152,7 +2151,7 @@ def msg_channel_calculation(
             else:
                 oborot = f'{round(turnover, 0)} USDT'
 
-            info_show += f'{texts[lang]["turnover24"]}: <b>{oborot}</b>'
+            oborot_show += f'\n\n{texts[lang]["turnover24"]}: <b>{oborot}</b>'
 
     def link(value: str):
         if week_stat_link is not None:
@@ -2160,19 +2159,15 @@ def msg_channel_calculation(
         return value
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{rate_show} | {texts[lang][status]}',
         '',
-        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-        (
-            (
-                f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
-                + f'\n<b>{texts[lang]["direct"]}</b>: {long_short}' + profit_result
-            )
-            if not without_stop
-            else f'<b>{texts[lang]["direct"]}</b>: {long_short}'
-        ),
-    )) + (f'\n\n{description}' if description else '') \
-        + info_show \
+        f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
+    )) + (
+        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
+        + profit_result
+    ) if not without_stop else '' \
+        + (f'\n\n{description}' if description else '') \
+        + oborot_show \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
 
@@ -2192,48 +2187,50 @@ def msg_channel_calc_result(
 
     texts = {
         'ru': {
-            'open': '<b>Цена</b> покупки',
-            'close': '<b>Цена</b> продажи',
+            'open': '<b>Цена</b> входа',
+            'close': '<b>Цена</b> выхода',
 
             'tp': 'Тейк профит',
-            'sl': 'Получил стоп лосс',
+            'sl': 'стоп лосс',
 
             'style': '<b>С</b>тиль торговли',
             'deal': '<b>С</b>делка',
 
             'to': 'к',
 
-            'avg': 'Среднесрочная',
-            'day': 'Внутридневная',
+            'avg': 'среднесрочный',
+            'day': 'внутри дня',
 
             'short': 'шорт',
             'long': 'лонг',
 
             'date': 'Дата',
-            'end': 'Сделка завершена',
             'try': 'Рассчитать',
+
+            'breakeven': 'безубыток',
         },
         'en': {
-            'open': '<b>Purchase</b> price',
-            'close': '<b>Selling</b> price',
+            'open': '<b>Open</b> price',
+            'close': '<b>Close</b> price',
 
             'tp': 'Take profit',
-            'sl': 'Got stop loss',
+            'sl': 'stop loss',
 
             'style': '<b>T</b>rading style',
             'deal': '<b>T</b>rade',
 
             'to': 'to',
 
-            'avg': 'Medium-term',
-            'day': 'Intraday',
+            'avg': 'medium-term',
+            'day': 'intraday',
 
             'short': 'short',
             'long': 'long',
 
             'date': 'Date',
-            'end': 'Deal completed',
             'try': 'Calculate',
+
+            'breakeven': 'breakeven',
         }
     }
 
@@ -2252,35 +2249,35 @@ def msg_channel_calc_result(
     if count != -1:
         count_show = f'{count}. '
 
-    if take_or_stop == 'take':
-        result = f'{texts[lang]["tp"]} ({get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1)'
+    if calc.profit == 0:
+        result = f'{texts[lang]["breakeven"]}'
+    elif take_or_stop == 'take':
+        result = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1'
     else:
-        result = f'{texts[lang]["sl"]}'
+        result = f'{(get_print_float(abs(tp_sl_count), 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
     trading_style_type = ''
     t_style = txt_trading_style(lang, calc.tradingStyle)
     if t_style is not None or time != '':
-        trading_style_type += '\n'
+        trading_style_type += '\n\n'
     if t_style is not None:
-        trading_style_type += f'{texts[lang]["style"]}: {t_style.capitalize()}\n'
-    if time != '':
-        trading_style_type += f'{texts[lang]["deal"]}: {texts[lang][time]}\n'
+        trading_style_type += f'{t_style.capitalize()}'
+        if time != '':
+            trading_style_type += f' ({texts[lang][time]})\n'
 
     def link(value: str):
         if week_stat_link is not None:
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
-    return f"""{count_show}<b>{link(calc.tool or '-').replace('/USDT', '')}</b> ({texts[lang]["end"]})
-
-👉 {result}
+    return f"""{count_show}<b>{link(calc.tool or '-').replace('/USDT', '')}</b> | {result}
 
 <b>{texts[lang]["date"]}</b>: {date}
-{texts[lang]["open"]}: {get_print_float(calc.openPrice, calc.roundCount)} USDT
-{texts[lang]["close"]}: {get_print_float(close_price, calc.roundCount)} USDT
-<b>{texts[lang]["deal"]}</b>: {texts[lang][short_long]}
-{trading_style_type}""" + (f'\n{description}\n' if description else '') \
-        + (f'\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
+{texts[lang]["open"]} ({texts[lang][short_long]}): {get_print_float(calc.openPrice)} USDT
+{texts[lang]["close"]}: {get_print_float(close_price)} USDT""" \
+        + (f'\n\n{description}' if description else '') \
+        + trading_style_type \
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
 
 
 def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):
@@ -3235,47 +3232,91 @@ def msg_calculation_deleted(user_id: int):
     return f'⭕️ {texts[lang]}!'
 
 
-def msg_violation(user_id: int, current: int, isToday: bool):
+def msg_violation(user_id: int, current: int, isToday: bool, messages: list[dict[str, str]], is_edit: bool):
     lang = get_lang(user_id)
 
     texts = {
         'ru': {
             'main': 'Нарушения',
-            'info': 'У вас есть возможность отметить, нарушали ли вы правила сегодня. Если вы не нарушил, отметьте это и получите 5 баллов за день. В течение месяца вы можете набрать максимум 150 баллов.',
+            'info': """Отмечайте, нарушали ли правила сегодня.
+Если не нарушали, получите <b>5 баллов</b> за день.
+В течение месяца Вы можете набрать до <b>150 баллов</b>.""",
+            'edit': 'Изменять статус можно <b>4 раза</b> в месяц.',
             'current': 'За текущий месяц',
             'point': 'баллов',
-            'today': 'Сегодня:'
+            'today': 'Сегодня:',
+
+            'True': 'нарушил',
+            'False': 'не нарушил',
+            'None': 'не торговал',
         },
         'en': {
             'main': 'Violations',
-            'info': 'You have the opportunity to mark whether you broke the rules today. If you did not break the rules, mark it and get 5 points for the day. You can earn a maximum of 150 points per month.',
+            'info': """Mark if the rules have violated today.
+If you are not violated, get <b>5 points</b> per day.
+Within a month you can score up to <b>150 points</b>.""",
+            'edit': 'You can change the status <b>4 times</b> per month.',
             'current': 'For the current month',
             'point': 'points',
-            'today': 'Today:'
+            'today': 'Today:',
+
+            'True': 'violated',
+            'False': 'no violate',
+            'None': 'no trade',
         },
         'uz': {
             'main': 'Qoidabuzarliklar',
             'info': 'Siz bugun qoidabuzarlik qilganligingizni belgilash imkoniyatiga egasiz. Agar siz qoidabuzarlik qilmagan bo\'lsangiz, buni belgilang va kun uchun 5 ball olasiz. Oy davomida siz maksimal 150 ball to\'plashingiz mumkin.',
+            'edit': 'Siz oyiga <b>4 marta</​​b> holatini o\'zgartirishingiz mumkin.',
             'current': 'Joriy oy uchun',
             'point': 'ballar',
-            'today': 'Bugun:'
+            'today': 'Bugun:',
+
+            'True': 'buzilgan',
+            'False': 'buzilmagan',
+            'None': 'savdo yo\'q',
         },
         'tr': {
             'main': 'İhlaller',
             'info': 'Bugün kuralları ihlal edip etmediğinizi işaretleyebilirsiniz. Eğer kuralları ihlal etmediyseniz, bunu işaretleyin ve gün için 5 puan kazanın. Ay boyunca maksimum 150 puan kazanabilirsiniz.',
+            'edit': 'Ayda <b>4 kez</b> durumunu değiştirebilirsiniz.',
             'current': 'Mevcut ay için',
             'point': 'puan',
-            'today': 'Bugün:'
+            'today': 'Bugün:',
+
+            'True': 'ihlal edilen',
+            'False': 'ihlal etmek yok',
+            'None': 'ticaret Yok',
         }
     }
 
-    return f"""<b>{texts[lang]['main']}</b>
+    months = {'ru': [
+        'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+        'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
+    ], 'en': [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]}
 
-{texts[lang]['info']}
+    mes = ''
+    for el in messages:
+        mes += f'\n<b>{el.get("date")}</b>'
+        status = str(el.get("status"))
 
-{texts[lang]['current']}: <b>{current} {texts[lang]['point']}</b>
+        points = 5 if status == 'False' else 0 if status == 'True' else 1
+        mes += f' - {texts[lang][status]} ({points})'
 
-{texts[lang]['today'] if isToday else ''}
+    current_date = get_str_by_datetime(get_datetime_now(), "day.month")
+    month = ('За' if lang == 'ru' else 'For') + ' ' + \
+        months[lang][int(current_date.split('.')[1])]
+
+    return f"""<b>{texts[lang]['main']} - {current_date}</b>""" \
+        + (f"""\n\n{texts[lang]['info']}""" if not isToday else '') \
+        + (f"""\n\n{texts[lang]['edit']}""" if is_edit else '') \
+        + f"""\n\n<b>{month}</b>: {current}/150 {texts[lang]['point']}
+{mes}
+
+{texts[lang]['today'] if not isToday else ''}
 """
 
 
