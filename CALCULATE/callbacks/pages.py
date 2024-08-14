@@ -265,9 +265,10 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     bot.delete_state(user_id, chat_id)
     liteDb.addPagesCount(user_id)
-
+    print(1)
     user_db_id = db.get_user_id_by_tg_id(user_id)
     values = calculation.getWeekStats(user_db_id)
+    print(values)
     if values is None:
         return
 
