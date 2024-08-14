@@ -30,6 +30,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     type = data.get('type', '')
     is_calc = int(data.get('is_calc', 0))
     stat_id = int(data.get('stat_id', 0))
+    page = int(data.get('page', 0))
 
     user_id = call.from_user.id
     chat_id = call.message.chat.id
@@ -267,7 +268,7 @@ More often: <b>{result}</b>"""
             send_calculation(bot, call.message, user_id, calc, True)
 
     if type == 'results':
-        send_admin_channel_calc_list(bot, call.message, user_id)
+        send_admin_channel_calc_list(bot, call.message, user_id, page=page)
 
     if type == 'result' or type == 'result_take' or type == 'result_stop':
         mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''

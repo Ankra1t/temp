@@ -289,16 +289,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'go_stats':
         calc = calculation.get(calc_id)
-        if calc is None:
-            return
-
-        if not calc.openedList:
+        if calc is not None and not calc.openedList:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
                 reply_markup=kb_calc_result(user_id, calc)
             )
 
-        send_stats(bot, call.message, user_id, not calc.openedList)
+        send_stats(bot, call.message, user_id, calc is not None and not calc.openedList)
 
     if type == 'stats_market':
         stats = calcService.get_stats(user_id, stats_market)
@@ -828,9 +825,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         _, list_type = type.split('+')
         send_calc_list(bot, call.message, user_id, list_type, page)
 
-    if 'calc_next':
-        pass
-
     bot.answer_callback_query(call.id)
 
 
@@ -1140,18 +1134,17 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
 
     new_live_mes_ids = []
 
-    for i, el in enumerate(messages.chIds):
+    for chId_i, chId in enumerate(messages.chIds):
         link = ''
-        # and (send_data.status == 'DEAL' or send_data.status == 'FINISH')
         if messages.messages:
             try:
-                weekMesId = messages.messages.get('mesIds', [])[i]
-                link = f'https://t.me/c/{el.replace("-100", "")}/{weekMesId}'
+                weekMesId = messages.messages.get('mesIds', [])[chId_i]
+                link = f'https://t.me/c/{chId.replace("-100", "")}/{weekMesId}'
             except:
                 pass
 
         msg = msg_channel_calculation(
-            calc, messages.langs[i], True, send_data.time or '',
+            calc, messages.langs[chId_i], True, send_data.time or '',
             messages.mesNum or -1, None, calc.description, link,
             calc.status, messages.date,
             try_link=f'https://t.me/{bot.get_me().username}?start=calc_{calc_id}'
@@ -1160,11 +1153,11 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
         try:
             if calc.photo is None:
                 bot.edit_message_text(
-                    msg, el, int(messages.mesIds[i]),
+                    msg, chId, int(messages.mesIds[chId_i]),
                 )
             else:
                 bot.edit_message_caption(
-                    msg, el, int(messages.mesIds[i]),
+                    msg, chId, int(messages.mesIds[chId_i]),
                 )
 
             live = channel_calc.getLiveInfo()
@@ -1189,13 +1182,13 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
                     def get_link(value: str):
                         try:
                             if link is not None:
-                                return f'<a href="https://t.me/c/{el.replace("-100", "")}/{current_messages.get("mesIds")[i]}">{value}</a>'
+                                return f'<a href="https://t.me/c/{chId.replace("-100", "")}/{current_messages.get("mesIds")[chId_i]}">{value}</a>'
                             return value
                         except:
                             return value
 
                     try:
-                        lang = current_messages.get("langs")[i]
+                        lang = current_messages.get("langs")[chId_i]
                     except:
                         lang = 'en'
 
@@ -1222,14 +1215,14 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
 
                 if calc.status == 'DEAL' or live[0] is None:
                     if live[0]:
-                        bot.delete_message(el, int(live[0].mesIds[i]))
+                        bot.delete_message(chId, int(live[0].mesIds[chId_i]))
                     new_mes = bot.send_message(
-                        el, msg,
+                        chId, msg,
                     )
                     new_live_mes_ids.append(str(new_mes.id))
                 else:
                     bot.edit_message_text(
-                        msg, el, int(live[0].mesIds[i])
+                        msg, chId, int(live[0].mesIds[chId_i])
                     )
 
         except Exception as e:

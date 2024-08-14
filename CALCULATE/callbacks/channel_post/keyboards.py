@@ -5,11 +5,11 @@ from common.keyboard import back_txt
 from .filter import channel_post_factory
 
 
-def getButton(text: str, type: str, stat_id: int = 0, is_calc=False):
+def getButton(text: str, type: str, stat_id: int = 0, is_calc=False, page=0):
     return InlineKeyboardButton(
         text, None,
         channel_post_factory.new(
-            type=type, stat_id=stat_id, is_calc=1 if is_calc else 0
+            type=type, stat_id=stat_id, is_calc=1 if is_calc else 0, page=page
         )
     )
 
@@ -126,7 +126,8 @@ def kb_channel_calc_result(
         getButton('Безубыток', 'take+0', stat_id, is_calc),
         getButton('Комментарий', 'comment', stat_id, is_calc),
         getButton(
-            back_txt('ru'), 'results' if not is_user else 'go_stats', stat_id, is_calc
+            back_txt(
+                'ru'), 'results' if not is_user else 'go_stats', stat_id, is_calc
         )
     )
 
@@ -177,6 +178,33 @@ def kb_channel_calc_result_stop(stat_id: int, is_calc=False, is_user=False):
         )
     )
 
+    return keyboard
+
+
+def kb_channel_post_list(page: int, pages_count: int):
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    buttons = []
+
+    if pages_count > 1:
+        if page == 0:
+            buttons.append(getButton('-', 'counter'))
+        else:
+            buttons.append(getButton('<<', 'results', page=page - 1))
+
+        buttons.append(
+            getButton(f'{page + 1}/{pages_count}', 'counter')
+        )
+
+        if page == pages_count - 1:
+            buttons.append(getButton('-', 'counter'))
+        else:
+            buttons.append(getButton('>>', 'results', page=page + 1))
+
+    keyboard.add(*buttons)
+    keyboard.add(
+        getButton(back_txt('ru'), 'main')
+    )
     return keyboard
 
 

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from math import ceil
+import math
 import os
 from typing import Literal
 from telebot.types import Message, InputMediaPhoto
@@ -35,7 +36,7 @@ from .settings.keyboards import (
 )
 from .stats.keyboards import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
 from .tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
-from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_send_settings, kb_channel_post
+from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_channel_post_list, kb_send_settings, kb_channel_post
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
@@ -266,7 +267,6 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
     liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
-
     values = calculation.getWeekStats(user_db_id)
     if values is None:
         return
@@ -895,7 +895,9 @@ def send_channel_post(
         )
 
 
-def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, is_first=False):
+def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, is_first=False, page=0):
+    N = 7
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -934,11 +936,14 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
 
         return
 
+    inWaitSends.reverse()
+    result_list = inWaitSends[page * N: (page + 1) * N]
+
     msg = '<b><u>Отправленные расчёты</u></b>'
     if stats_link != '':
         msg += f'\n{stats_link}'
     msg += '\n👇 Нажмите на номер для действий'
-    for send_data in inWaitSends:
+    for send_data in result_list:
         calc = calculation.get(send_data.calcId)
         if calc is None:
             continue
@@ -949,7 +954,7 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
 
     del_mes_id = mes_id
 
-    kb = kb_channel_post_back()
+    kb = kb_channel_post_list(page, math.ceil(len(inWaitSends) / N))
     if is_first:
         new_mes = bot.send_message(
             chat_id, msg, reply_markup=kb
