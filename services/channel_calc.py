@@ -2,7 +2,7 @@ import json
 from config_global import API_URL
 from db import LANGUAGES_TYPE
 from .base_config import session_decorator, session, check_response
-from models import SendCalc, CalcSentMessages
+from models import SendCalc, CalcSentMessages, SentMessages
 
 
 @session_decorator
@@ -134,3 +134,32 @@ def getWeekStat(calcId: int | None = None):
         return
 
     return res.json()
+
+
+@session_decorator
+def getLiveInfo():
+    res = session.get(
+        f'{API_URL}/channelCalc/live-info',
+    )
+
+    if not check_response(res):
+        return
+
+    res = res.json()
+    messages = res.get('messages')
+    result: list[dict] = res.get('data')
+
+    return (None if messages is None else SentMessages(**messages), result)
+
+
+@session_decorator
+def updateLiveInfo(data: SentMessages):
+    res = session.post(
+        f'{API_URL}/channelCalc/live-info',
+        data.model_dump_json().encode()
+    )
+
+    if not check_response(res):
+        return
+
+    return True

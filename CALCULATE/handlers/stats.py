@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.main.keyboards import kb_violation_skip
-from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_stats, send_violation
+from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation
 from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.settings import ViolationState
 from CALCULATE.states.stats import ChannelCalcState
@@ -147,6 +147,7 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     with bot.retrieve_data(user_id, chat_id) as data:
         calc_text = data.get('calc_text', 'J')
         stat_id = data.get('stat_id', 0)
+        type = data.get('type', '')
 
     delete_message(bot, chat_id, message.id)
 
@@ -173,8 +174,9 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
         data['photo'] = photo
 
     if text:
-        if calc.status == 'FINISH':
-            data['comment'] = text
+        if calc.status == 'FINISH' or type == 'stats':
+            now = get_datetime_now() + timedelta(hours=3)
+            data['comment'] = f'{now.strftime("%H:%M")} - ' + text
         else:
             data['description'] = text
 
@@ -186,7 +188,12 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
         return
 
     bot.delete_state(user_id, chat_id)
-    send_calculation(bot, message, user_id, calc, True)
+
+    if type != 'stats':
+        send_calculation(bot, message, user_id, calc, True)
+    else:
+        edit_channel_post(bot, stat_id)
+        send_admin_channel_calc_item(bot, message, user_id, stat_id, is_first=True)
 
 
 def handle_send_text(message: Message, bot: TeleBot):

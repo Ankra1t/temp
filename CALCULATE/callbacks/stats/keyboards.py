@@ -262,6 +262,14 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
                     'take+0', calc.id, True
                 )
             )
+
+            if send_data is not None:
+                buttons.append(
+                    getButton(
+                        f'{texts[lang]["comment"]}',
+                        'comment', calc.id
+                    )
+                )
         buttons.append(getButton(back_txt(lang), 'back_calc', calc.id))
         keyboard.add(*buttons)
     else:

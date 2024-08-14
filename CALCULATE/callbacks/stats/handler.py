@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 from random import randint
 from time import sleep
@@ -20,7 +20,7 @@ from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_st
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from CALCULATE.states.stats import ChannelCalcState
 from common.calculation import get_count_value_bet
-from common.utils import delete_message, edit_message, set_state_data
+from common.utils import delete_message, edit_message, get_print_float, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from data.data import liteDb
@@ -36,7 +36,7 @@ from CALCULATE.common.messages import (
     msg_frozen, msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.states import StatsState
-from models import CALC_STATUS_TYPE, MARKETS_TYPE
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, SentMessages
 from services import calculation, channel_calc
 from CALCULATE.common.messages import status_transaltes
 
@@ -491,10 +491,26 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
         bot.set_state(user_id, StatsState.add_image_text, chat_id)
-
         set_state_data(bot, user_id, chat_id, {
             'stat_id': calc_id,
             'calc_text': text,
+            'del_mes_id': new_mes_id,
+        })
+
+    if type == 'comment':
+        calc = calculation.get(calc_id)
+        if calc is None:
+            return
+
+        text = 'Введите комментарий:'
+        kb = kb_calc_image_text(user_id, calc)
+
+        new_mes_id = edit_message(bot, call.message, 'text', text, kb)
+
+        bot.set_state(user_id, StatsState.add_image_text, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'stat_id': calc_id,
+            'type': 'stats',
             'del_mes_id': new_mes_id,
         })
 
@@ -1122,6 +1138,8 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
     if messages is None or calc is None or send_data is None:
         return
 
+    new_live_mes_ids = []
+
     for i, el in enumerate(messages.chIds):
         link = ''
         # and (send_data.status == 'DEAL' or send_data.status == 'FINISH')
@@ -1149,20 +1167,82 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
                     msg, el, int(messages.mesIds[i]),
                 )
 
-            def get_link(value: str):
-                if link is not None:
-                    return f'<a href="https://t.me/c/{el.replace("-100", "")}/{messages.mesIds[i]}">⚡️ {value}</a>'
-                return '⚡️ ' + value
+            live = channel_calc.getLiveInfo()
+            if live and len(live[1]) > 0:
+                msg = ''
+                for calc_ in live[1]:
+                    tool: str = calc_.get('tool', '')
+                    valueCount: int = calc_.get('valueCount', 0)
+                    current_messages = calc_.get('messages', {})
 
-            if calc.status == 'DEAL':
-                bot.send_message(
-                    el, get_link(f'{(calc.tool or "").replace("/USDT", "")}') +
-                    (' в сделке' if messages.langs[i] == 'ru' else ' in deal') +
-                    '!!',
-                    reply_to_message_id=int(messages.mesIds[i])
-                )
+                    dealAt = calc_.get('dealAt')
+                    if dealAt is not None:
+                        dealAt = datetime.fromisoformat(
+                            (dealAt or "").replace("Z", "")) + timedelta(hours=3)
+                    finishAt = calc_.get('finishAt')
+                    if finishAt is not None:
+                        finishAt = datetime.fromisoformat(
+                            (finishAt or "").replace("Z", ""))
+
+                    comment: str | None = calc_.get('comment')
+
+                    def get_link(value: str):
+                        try:
+                            if link is not None:
+                                return f'<a href="https://t.me/c/{el.replace("-100", "")}/{current_messages.get("mesIds")[i]}">{value}</a>'
+                            return value
+                        except:
+                            return value
+
+                    try:
+                        lang = current_messages.get("langs")[i]
+                    except:
+                        lang = 'en'
+
+                    msg += f'\n\n<b>{get_link("⚡️ " + tool.replace("/USDT", ""))}</b>'
+
+                    if dealAt is not None:
+                        msg += f'\n{dealAt.strftime("%H:%M")} - '
+                        msg += 'в сделке' if lang == 'ru' else 'in deal'
+
+                    if lang == 'ru' and comment is not None:
+                        msg += f'\n{comment}'
+
+                    if finishAt is not None:
+                        msg += f'\n{finishAt.strftime("%H:%M")} - '
+                        msg += 'сделка закрыта' if lang == 'ru' else 'deal closed'
+
+                        tp_sl = ''
+                        if valueCount > 0:
+                            tp_sl = 'тейк' if lang == 'ru' else 'take'
+                        else:
+                            tp_sl = 'стоп' if lang == 'ru' else 'stop'
+
+                        msg += f' ({get_print_float(valueCount, 1)} {tp_sl})'
+
+                if calc.status == 'DEAL' or live[0] is None:
+                    if live[0]:
+                        bot.delete_message(el, int(live[0].mesIds[i]))
+                    new_mes = bot.send_message(
+                        el, msg,
+                    )
+                    new_live_mes_ids.append(str(new_mes.id))
+                else:
+                    bot.edit_message_text(
+                        msg, el, int(live[0].mesIds[i])
+                    )
+
         except Exception as e:
             print(e)
+
+    if len(new_live_mes_ids) == len(messages.chIds):
+        channel_calc.updateLiveInfo(
+            SentMessages(
+                chIds=messages.chIds,
+                mesIds=new_live_mes_ids,
+                langs=messages.langs
+            )
+        )
 
     send_week_stats(bot, calc_id)
 

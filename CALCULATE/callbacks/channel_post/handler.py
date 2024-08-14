@@ -3,7 +3,8 @@ from telebot.types import CallbackQuery
 
 from CALCULATE.callbacks.pages import send_main
 from CALCULATE.callbacks.stats.handler import edit_channel_post
-from common.utils import delete_message, edit_message
+from CALCULATE.states.stats import StatsState
+from common.utils import delete_message, edit_message, set_state_data
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from data.data import liteDb
 from db import db
@@ -12,7 +13,7 @@ from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_tr
 from Classes import text_editor, calcService
 from services import calculation, channel_calc
 
-from .keyboards import kb_channel_post, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
+from .keyboards import kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
 from .filter import ChannelPostCallbackFilter, channel_post_factory
 from ..pages import (
     send_admin_channel_calc_item,
@@ -280,6 +281,18 @@ More often: <b>{result}</b>"""
             send_calc_stat_item(
                 bot, call.message, user_id, stat_id, mes_type
             )
+
+    if type == 'comment':
+        edit_message(
+            bot, call.message, 'text',
+            'Введите ваш комментарий:', kb_channel_post_back_to_result()
+        )
+        bot.set_state(user_id, StatsState.add_image_text, chat_id)
+        set_state_data(bot, user_id, chat_id, {
+            'stat_id': stat_id,
+            'del_mes_id': call.message.id,
+            'type': 'stats'
+        })
 
     if type == 'calc':
         calc = calculation.get(stat_id)

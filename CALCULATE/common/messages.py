@@ -1914,11 +1914,13 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     trading_style_type = ''
     if not is_try:
-        trading_style_type = f'<b>{texts[lang]["trading_type"]}</b>: {trading_type_translates[lang][calc.tradingType]}\n'
-
         t_style = txt_trading_style(lang, calc.tradingStyle)
         if t_style is not None:
-            trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}\n'
+            trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}'
+
+            if calc.tradingType:
+                trading_style_type = f' ({trading_type_translates[lang][calc.tradingType]})'
+            trading_style_type += '\n'
 
     # Округление
     round_count = calc.roundCount or 5
@@ -1997,7 +1999,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
     return '\n'.join((
         f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show} | {status}',
         attention,
-        f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 4)}</code> {tool_name}',
+        f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
         f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
@@ -2162,10 +2164,10 @@ def msg_channel_calculation(
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{rate_show} | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-    )) + (
+    )) + ((
         f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
         + profit_result
-    ) if not without_stop else '' \
+    ) if not without_stop else '') \
         + (f'\n\n{description}' if description else '') \
         + oborot_show \
         + trading_style_type \
@@ -2254,7 +2256,7 @@ def msg_channel_calc_result(
     elif take_or_stop == 'take':
         result = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1'
     else:
-        result = f'{(get_print_float(abs(tp_sl_count), 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
+        result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
     trading_style_type = ''
     t_style = txt_trading_style(lang, calc.tradingStyle)

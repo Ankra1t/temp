@@ -109,7 +109,7 @@ def kb_channel_calc_result(
     is_calc=False,
     is_user=False,
 ):
-    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_tp = getButton('Тейк', 'result_take', stat_id, is_calc)
     btn_sl = getButton('Стоп', 'result_stop', stat_id, is_calc)
@@ -124,6 +124,7 @@ def kb_channel_calc_result(
 
     keyboard.add(
         getButton('Безубыток', 'take+0', stat_id, is_calc),
+        getButton('Комментарий', 'comment', stat_id, is_calc),
         getButton(
             back_txt('ru'), 'results' if not is_user else 'go_stats', stat_id, is_calc
         )
@@ -183,5 +184,13 @@ def kb_channel_post_back():
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         getButton(back_txt('ru'), 'main')
+    )
+    return keyboard
+
+
+def kb_channel_post_back_to_result():
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        getButton(back_txt('ru'), 'result')
     )
     return keyboard
