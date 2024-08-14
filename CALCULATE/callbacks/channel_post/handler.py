@@ -6,6 +6,7 @@ from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import StatsState
 from common.utils import delete_message, edit_message, set_state_data
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
+from config_logger import logger
 from data.data import liteDb
 from db import db
 from models import Calculation
@@ -35,6 +36,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
+    
+    logger.info(f'channel_post_callback (type={type} stat_id={stat_id})')
 
     if type == 'main':
         send_main(call.message, bot, user_id)
