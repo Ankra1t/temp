@@ -29,7 +29,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     logger.info(
         f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
     )
-    logger.info(type == 'stats')
 
     if 'calc' in type or type == 'settings' or type == 'calc_stats':
         calc = calculation.get(stat_id)
@@ -89,8 +88,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         today_violation = violation.getToday(user_db_id)
         if today_violation:
             result = False if '+no' in type else True if '+yes' in type else 'null'
-            print(type)
-            print(result)
             violation.update(today_violation.get('id', 0), status=result)
             type = 'violations'
 

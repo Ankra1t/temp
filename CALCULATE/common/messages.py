@@ -3311,7 +3311,7 @@ Within a month you can score up to <b>150 points</b>.""",
 
     current_date = get_str_by_datetime(get_datetime_now(), "day.month")
     month = ('За' if lang == 'ru' else 'For') + ' ' + \
-        months[lang][int(current_date.split('.')[1])]
+        months[lang][int(current_date.split('.')[1]) - 1]
 
     return f"""<b>{texts[lang]['main']} - {current_date}</b>""" \
         + (f"""\n\n{texts[lang]['info']}""" if not isToday else '') \
