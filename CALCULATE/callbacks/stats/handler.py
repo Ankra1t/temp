@@ -1163,6 +1163,8 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
             live = channel_calc.getLiveInfo()
             if live and len(live[1]) > 0:
                 msg = ''
+                print(live[0])
+                print(live[1])
                 for calc_ in live[1]:
                     tool: str = calc_.get('tool', '')
                     valueCount: int = calc_.get('valueCount', 0)
@@ -1215,12 +1217,13 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
 
                 if calc.status == 'DEAL' or live[0] is None:
                     if live[0]:
-                        bot.delete_message(chId, int(live[0].mesIds[chId_i]))
+                        delete_message(bot, int(chId), int(live[0].mesIds[chId_i]))
                     new_mes = bot.send_message(
                         chId, msg,
                     )
                     new_live_mes_ids.append(str(new_mes.id))
                 else:
+                    print(msg)
                     bot.edit_message_text(
                         msg, chId, int(live[0].mesIds[chId_i])
                     )
