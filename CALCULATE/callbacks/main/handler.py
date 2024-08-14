@@ -29,6 +29,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     logger.info(
         f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
     )
+    print(type == 'stats')
 
     if 'calc' in type or type == 'settings' or type == 'calc_stats':
         calc = calculation.get(stat_id)
@@ -59,7 +60,6 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_main(call.message, bot, user_id)
 
     if type == 'stats':
-        print('stats')
         send_stats(bot, call.message, user_id)
 
     if type == 'buy':
