@@ -210,9 +210,10 @@ More often: <b>{result}</b>"""
         calculation.update(
             stat_id, status='CANCEL'
         )
-
+        print(1)
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
+            print(2)
             edit_channel_post(bot, stat_id)
             type = 'results'
         else:

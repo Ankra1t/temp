@@ -2,6 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
+from CALCULATE.callbacks.stats.handler import edit_channel_post
 from config_logger import logger
 from AuthRoles import check_registrate
 from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel_post
@@ -164,7 +165,7 @@ def _results(message: Message, bot: TeleBot):
 
 
 def _test(message: Message, bot: TeleBot):
-    pass
+    edit_channel_post(bot, 2048)
 
 
 def commands_registration(bot: TeleBot):
@@ -196,4 +197,4 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_test, commands=['test11'])
 
-    bot.register_channel_post_handler(_test, pass_bot=True)
+    # bot.register_channel_post_handler(_test, pass_bot=True)
