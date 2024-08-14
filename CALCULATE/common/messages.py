@@ -2165,7 +2165,7 @@ def msg_channel_calculation(
         '',
         f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
     )) + ((
-        f'<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
+        f'\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
         + profit_result
     ) if not without_stop else '') \
         + (f'\n\n{description}' if description else '') \
