@@ -2001,7 +2001,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show} | {status}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
-        f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if p_val < 10 else 1)} {calc.currency}',
+        f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
         f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
         '',
