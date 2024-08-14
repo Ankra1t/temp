@@ -59,6 +59,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         send_main(call.message, bot, user_id)
 
     if type == 'stats':
+        print('stats')
         send_stats(bot, call.message, user_id)
 
     if type == 'buy':

@@ -36,7 +36,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
-    
+
     logger.info(f'channel_post_callback (type={type} stat_id={stat_id})')
 
     if type == 'main':

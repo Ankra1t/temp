@@ -105,6 +105,7 @@ def getWeekStats(userId: int):
 def update(
     id: int, **kwargs
 ):
+    print(id, kwargs)
     res = session.post(
         f'{API_URL}/calculations/{id}',
         json.dumps(kwargs).encode()
