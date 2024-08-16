@@ -2,7 +2,7 @@ import json
 from config_global import API_URL
 from db import LANGUAGES_TYPE
 from .base_config import session_decorator, session, check_response
-from models import SendCalc, CalcSentMessages, SentMessages
+from models import LiveInfo, LiveWait, SendCalc, CalcSentMessages, SentMessages
 
 
 @session_decorator
@@ -147,9 +147,14 @@ def getLiveInfo():
 
     res = res.json()
     messages = res.get('messages')
-    result: list[dict] = res.get('data')
+    data: list[dict] = res.get('data')
+    wait: list[dict] = res.get('wait')
 
-    return (None if messages is None else SentMessages(**messages), result)
+    return (
+        None if messages is None else SentMessages(**messages),
+        [LiveInfo(**el) for el in data],
+        [LiveWait(**el) for el in wait]
+    )
 
 
 @session_decorator

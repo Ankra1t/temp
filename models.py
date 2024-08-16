@@ -331,9 +331,8 @@ class Exchange(BaseModel):
 
 class TickerInfo(BaseModel):
     turnover: Optional[float]
-    buyRatio: Optional[float]
-    sellRatio: Optional[float]
     price24hPcnt: Optional[float]
+    indexPrice: Optional[float]
 
 
 class SentMessages(BaseModel):
@@ -362,3 +361,19 @@ class SendCalc(BaseModel):
     time: Optional[str]
     isVote: bool
     createdAt: str
+
+
+class LiveInfo(BaseModel):
+    tool: str
+    valueCount: Optional[float]
+    dealAt: Optional[str]
+    finishAt: Optional[str]
+    comment: Optional[str]
+    messages: Optional[SentMessages]
+    currentPrice: Optional[float]
+    takeProfit: Optional[float]
+
+
+class LiveWait(BaseModel):
+    tool: str
+    messages: Optional[SentMessages]

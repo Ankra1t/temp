@@ -1,9 +1,10 @@
+import json
 import telebot
 import flask
 from flask import jsonify, request, send_file, Response
 
 from CALCULATE.callbacks.calculate.handler import send_after_first_try
-from CALCULATE.callbacks.stats.handler import send_vote, send_week_stats
+from CALCULATE.callbacks.stats.handler import edit_live_info, send_vote, send_week_stats
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
@@ -12,6 +13,7 @@ from config_logger import logger
 
 from MAIN.initialize import bot
 from db import db
+from models import LiveInfo, LiveWait, SentMessages
 from thread_tasks import run_thread
 
 
@@ -100,6 +102,30 @@ def stats_post():
         return Response(status=400)
 
     send_week_stats(bot, is_new_week=True)
+
+    return Response(status=200)
+
+@app.route(base_url + '/live-info', methods=['POST'])
+def live_info():
+    access_token = db.get_access_token()
+    api_key = request.headers.get('tg-api-key')
+
+    if access_token is None or api_key is None or access_token != api_key:
+        return Response(status=400)
+
+    res = request.get_json()
+
+    messages = res.get('messages')
+    data: list[dict] = res.get('data')
+    wait: list[dict] = res.get('wait')
+
+    live = (
+        None if messages is None else SentMessages(**messages),
+        [LiveInfo(**el) for el in data],
+        [LiveWait(**el) for el in wait]
+    )
+
+    edit_live_info(bot, live)
 
     return Response(status=200)
 

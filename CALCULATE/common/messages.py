@@ -1,4 +1,5 @@
 from typing import Literal
+import requests
 from telebot import TeleBot
 from datetime import datetime, timedelta
 
@@ -2023,10 +2024,11 @@ def msg_channel_calculation(
     tickerInfo: TickerInfo | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
-    status: CALC_STATUS_TYPE = 'WAIT',
     date: str | None = None,
     try_link: str = '',
 ):
+    status = calc.status
+
     if calc.profit is not None or status == 'FINISH':
         return msg_channel_calc_result(
             calc, lang, time, count, description, week_stat_link, date, try_link
@@ -2062,6 +2064,7 @@ def msg_channel_calculation(
             'CANCEL': 'Отменён',
             'WAIT': 'В ожидании',
             'try': 'Рассчитать',
+            'chart': 'График',
         },
         'en': {
             'open': 'Buy' if long_short == 'long' else 'Sell',
@@ -2085,6 +2088,7 @@ def msg_channel_calculation(
             'CANCEL': 'Cancel',
             'WAIT': 'Waiting',
             'try': 'Calculate',
+            'chart': 'Chart',
         }
     }
 
@@ -2112,18 +2116,21 @@ def msg_channel_calculation(
 
     profit_result = ''
     if not without_stop:
-        conclusion = ''
+        conclusion = '\n'
         for i in range(calc_result.tp_count):
             tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
+
+            if tickerInfo and tickerInfo.indexPrice and tp_val > tickerInfo.indexPrice:
+                conclusion = f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+                break
 
             conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if i != calc_result.tp_count - 1:
                 conclusion += '\n'
 
-        profit_result = f"""\n\n<b>{texts[lang]['conclusion']}</b>:
-{conclusion}"""
+        profit_result = f"""\n<b>{texts[lang]['conclusion']}</b>: {conclusion}"""
 
     count_show = ''
     if count != -1:
@@ -2134,11 +2141,6 @@ def msg_channel_calculation(
     rate_show = ''
     oborot_show = ''
     if tickerInfo:
-        # buyRatio = tickerInfo.buyRatio
-        # sellRatio = tickerInfo.sellRatio
-        # if buyRatio is not None and sellRatio is not None:
-        #     info_show += f'{texts[lang]["buy/sell"]}: <b>{round(buyRatio * 100, 1)}%</b> / <b>{round(sellRatio * 100, 1)}%</b>'
-
         rate24h = tickerInfo.price24hPcnt
         if rate24h is not None:
             percent = round(rate24h * 100, 2)
@@ -2161,18 +2163,29 @@ def msg_channel_calculation(
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
+
+    chart_link = ''
+    if try_link != '':
+        chart_link = f'https://ru.tradingview.com/symbols/{(calc.tool or "").replace("/USDT", "")}USD'
+        res = requests.get(chart_link)
+
+        if res.status_code >= 200 and res.status_code < 300:
+            chart_link = f' | <a href="{chart_link}">{texts[lang]["chart"]}</a>'
+        else:
+            chart_link = ''
+
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{rate_show} | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
     )) + ((
-        f'\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
+        f'\n\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
         + profit_result
     ) if not without_stop else '') \
         + (f'\n\n{description}' if description else '') \
         + oborot_show \
         + trading_style_type \
-        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
 
 def msg_channel_calc_result(
@@ -2455,7 +2468,7 @@ def msg_enter_calc_img_text(user_id: int, calc: Calculation):
             'info': 'При отправке фото с комментарием предыдующая картинка будет утерена',
         },
         'en': {
-            'main': 'Describe the deal and knead the picture',
+            'main': 'Describe the deal and attach the picture',
             'change': 'Send a new description and picture for <u>changes</u>',
             'comment': 'Write a comment and add a schedule',
             'info': 'When sending a photo with a comment, the previous picture will be lost',

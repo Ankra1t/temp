@@ -68,6 +68,7 @@ def get_ticker_info(ticker: str):
             f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
+
         return TickerInfo(**res.json())
     except Exception as e:
         logger.error(f'/get_ticker_info {e}')

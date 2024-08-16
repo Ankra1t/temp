@@ -913,13 +913,13 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
         mesIds = messages.get('mesIds')
         langs = messages.get('langs')
         link = ''
-        for i in range(2):
+        for i in range(1):
             try:
                 link = f'https://t.me/c/{chIds[i].replace("-100", "")}/{mesIds[i]}'
             except:
                 pass
 
-            stats_link += f'   <a href="{link}">{langs[i]}</a>'
+            stats_link += f'   <a href="{link}">Статистика</a>'
 
     if len(inWaitSends) == 0:
         mes = '👉 Нет расчётов, требующих дествий'
@@ -1018,6 +1018,7 @@ def send_admin_channel_calc_item(
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
+<b>Объем</b>: {get_print_float(calc_result.count_bet)} монет
 <b>Цена входа</b>: {get_print_float(calc.openPrice, 5)} USDT
 <b>Стоп-лосс</b>: {get_print_float(calc.stopLoss, 5)} USDT
 <b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT

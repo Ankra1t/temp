@@ -109,7 +109,7 @@ def get_lang(tg_id: int):
 
 
 def get_print_float(value: float, round_count: int | None = None):
-    def del_nulls(val: str):
+    def del_nulls(val: str) -> str:
         if ('.' in val and val.endswith('0')) or val.endswith('.'):
             return del_nulls(val[:-1])
 

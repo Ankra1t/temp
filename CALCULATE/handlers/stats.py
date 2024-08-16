@@ -176,7 +176,8 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     if text:
         if calc.status == 'FINISH' or type == 'stats':
             now = get_datetime_now() + timedelta(hours=3)
-            data['comment'] = f'{now.strftime("%H:%M")} - ' + text
+            data['comment'] = (calc.comment or '') + \
+                f'{now.strftime("%H:%M")} - ' + text
         else:
             data['description'] = text
 
@@ -193,7 +194,8 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
         send_calculation(bot, message, user_id, calc, True)
     else:
         edit_channel_post(bot, stat_id)
-        send_admin_channel_calc_item(bot, message, user_id, stat_id, is_first=True)
+        send_admin_channel_calc_item(
+            bot, message, user_id, stat_id, is_first=True)
 
 
 def handle_send_text(message: Message, bot: TeleBot):
@@ -303,7 +305,6 @@ def handle_violation_message(message: Message, bot: TeleBot):
     if message.photo is not None:
         photo = message.photo[0].file_id
 
-
     violation.update(
         violation_id,
         text,
@@ -312,7 +313,6 @@ def handle_violation_message(message: Message, bot: TeleBot):
 
     bot.delete_state(user_id, chat_id)
     send_violation(bot, message, user_id, is_first=True)
-
 
 
 def registration(bot: TeleBot):
