@@ -2,6 +2,8 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
+from CALCULATE.callbacks.stats.handler import edit_channel_post
+from CALCULATE.callbacks.stats.keyboards import kb_deal_profit_cancel
 from MAIN.start import start_with_calc
 from config_logger import logger
 from Classes import currencyService
@@ -221,7 +223,8 @@ def handle_deposit(message: Message, bot: TeleBot):
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    logger.info(f'callback "handle_deposit" user_tg_id={user_id} value={value}')
+    logger.info(
+        f'callback "handle_deposit" user_tg_id={user_id} value={value}')
 
     set_state_data(bot, user_id, chat_id, {'deposit': value})
     choose_calculate_step(bot, user_id, message, last_value='deposit')
@@ -310,20 +313,23 @@ def handle_open_price(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     mes_id = message.id
 
+    with bot.retrieve_data(user_id, chat_id) as data:
+        stat_id = data.get('stat_id')
+
     value = digit_accept(message)
     if value is None:
         new_mes = bot.send_message(
             chat_id, msg_digit_error(user_id),
-            reply_markup=kb_calc_cancel(user_id)
+            reply_markup=kb_calc_cancel(
+                user_id
+            ) if stat_id is None else kb_deal_profit_cancel(user_id, stat_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
-        f'callback "handle_open_price" user_tg_id={user_id} value={value}')
-
-    with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data.get('stat_id')
+        f'callback "handle_open_price" user_tg_id={user_id} value={value}'
+    )
 
     if stat_id is None:
         set_state_data(bot, user_id, chat_id, {'open_price': value})
@@ -343,6 +349,8 @@ def handle_open_price(message: Message, bot: TeleBot):
         db.change_calculation_open_price(stat_id, value)
         calc_info.openPrice = value
 
+        edit_channel_post(bot, stat_id)
+
         send_calculation(bot, message, user_id, calc_info, True)
         bot.delete_state(user_id, chat_id)
 
@@ -351,19 +359,21 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    stop_loss = digit_accept(message)
-    if stop_loss is None:
-        new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
-            reply_markup=kb_calc_cancel(user_id)
-        )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
-        return
-
     with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         stat_id = data.get('stat_id', '')
         open_price = data.get('open_price', '')
+
+    stop_loss = digit_accept(message)
+    if stop_loss is None:
+        new_mes = bot.send_message(
+            chat_id, msg_digit_error(user_id),
+            reply_markup=kb_calc_cancel(
+                user_id
+            ) if stat_id is None else kb_deal_profit_cancel(user_id, stat_id)
+        )
+        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        return
 
     if stop_loss == open_price:
         new_mes = bot.send_message(
@@ -380,6 +390,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     if action == 'send_calc':
         start_with_calc(bot, message, user_id, stat_id, stop_loss)
     else:
+        edit_channel_post(bot, stat_id)
         create_and_send_calc(bot, message, user_id, stop_loss)
 
 

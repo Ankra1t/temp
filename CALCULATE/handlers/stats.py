@@ -178,7 +178,7 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
             now = get_datetime_now() + timedelta(hours=3)
             data['comment'] = (
                 (calc.comment or '') +
-                f'\n{now.strftime("%H:%M")} - '
+                f'\n<b>{now.strftime("%H:%M")}</b> - '
                 + text
             ).strip()
         else:
@@ -196,9 +196,9 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     if type != 'stats':
         send_calculation(bot, message, user_id, calc, True)
     else:
-        live = channel_calc.getLiveInfo()
-        if live:
-            edit_live_info(bot, live)
+        send_data = channel_calc.getByCalc(calc.id)
+        if send_data:
+            edit_channel_post(bot, calc.id)
 
         send_admin_channel_calc_item(
             bot, message, user_id, stat_id, is_first=True

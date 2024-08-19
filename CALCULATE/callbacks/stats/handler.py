@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from io import StringIO
 import os
 from random import randint
 from time import sleep
@@ -29,7 +30,7 @@ from config_logger import logger
 from Classes import calcService, pay_guard
 from db import db
 from CALCULATE.common.messages import (
-    msg_calculate_change, msg_calculate_delete,
+    msg_calculate_change, msg_calculate_delete, msg_calculation,
     msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_img_text,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
@@ -41,7 +42,7 @@ from services import calculation, channel_calc, ticker
 from CALCULATE.common.messages import status_transaltes
 
 from ..main.keyboards import kb_main
-from ..settings.keyboards import kb_trading_style
+from ..settings.keyboards import kb_take_profit, kb_trading_style
 from .keyboards import (
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
@@ -471,6 +472,35 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     'del_mes_id': call.message.id
                 }
             )
+        elif 'take' in kind:
+            calc = calculation.get(calc_id)
+
+            if calc:
+                bot.edit_message_text(
+                    msg_calculation(user_id, calc),
+                    chat_id, mes_id,
+                    reply_markup=kb_take_profit(user_id, calc.tpRatio, calc.id)
+                )
+
+    if 'tp_rate+' in type:
+        _, rate = type.split('+')
+        rate = int(rate)
+
+        calc = calculation.get(calc_id)
+        if calc and len(calc.tpRatio) != 1:
+            if rate in calc.tpRatio:
+                calc.tpRatio.remove(rate)
+            else:
+                calc.tpRatio.append(rate)
+                calc.tpRatio.sort()
+
+            calc = calculation.update(calc.id, tpRatio=calc.tpRatio)
+            if calc:
+                bot.edit_message_text(
+                    msg_calculation(user_id, calc),
+                    chat_id, mes_id,
+                    reply_markup=kb_take_profit(user_id, calc.tpRatio, calc.id)
+                )
 
     if type == 'remove_img_text':
         calc = calculation.update(calc_id, photo=None, description=None)
@@ -788,6 +818,20 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         delete_message(bot, chat_id, mes_id)
         send_calculation(bot, call.message, user_id, calc, True)
 
+    if type == 'result_wait':
+        calculation.update(
+            calc_id, status='WAIT'
+        )
+
+        edit_channel_post(bot, calc_id)
+
+        calc = calculation.get(calc_id)
+        if calc is None:
+            return
+
+        delete_message(bot, chat_id, mes_id)
+        send_calculation(bot, call.message, user_id, calc, True)
+
     if type == 'result_take':
         calc = calculation.get(calc_id)
         if calc is None:
@@ -926,9 +970,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
         },
     }
 
-    lang = 'en'
+    lang = 'ru'
     data = channel_calc.getWeekStat(calcId)
-
     if data is None:
         msg = texts[lang]["title"]
 
@@ -936,182 +979,185 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             RESULTS_CHANNEL_ID, msg,
         )
 
-        channel_calc.createWeekStat([RESULTS_CHANNEL_ID], [mes.id], ['ru'])
+        channel_calc.createWeekStat([RESULTS_CHANNEL_ID], [mes.id], [lang])
 
     data = channel_calc.getWeekStat(calcId)
     if data is None:
         return
 
     ch_mes: dict = data.get('messages')
-    chId: str = ch_mes.get('chIds', [0])[0]
-    mesId = int(ch_mes.get('mesIds', [0])[0])
+    chIds: str = ch_mes.get('chIds', [0])
 
-    startDate = data.get('startDate')
-    endDate = data.get('endDate')
+    for chId_i, chId in enumerate(chIds):
+        mesId = int(ch_mes.get('mesIds', [0])[chId_i])
+        lang = ch_mes.get('langs', ['en'])[chId_i]
 
-    values: list[dict] = data.get('values')
+        startDate = data.get('startDate')
+        endDate = data.get('endDate')
 
-    msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
+        values: list[dict] = data.get('values')
 
-    all_tp_count = 0
-    all_sl_count = 0
+        msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
 
-    long_count = 0
-    short_count = 0
+        all_tp_count = 0
+        all_sl_count = 0
 
-    all_success_count = 0
-    all_fail_count = 0
+        long_count = 0
+        short_count = 0
 
-    tool_counts: dict[str, int] = {}
+        all_success_count = 0
+        all_fail_count = 0
 
-    msg_in_deal = ''
-    msg_dates = ''
+        tool_counts: dict[str, int] = {}
 
-    for valueDate_i, valueDate in enumerate(values):
-        date_msg = ''
+        msg_in_deal = ''
+        msg_dates = ''
 
-        tp_count = 0
-        sl_count = 0
+        for valueDate_i, valueDate in enumerate(values):
+            date_msg = ''
 
-        success_count = 0
-        fail_count = 0
+            tp_count = 0
+            sl_count = 0
 
-        canceled = ''
+            success_count = 0
+            fail_count = 0
 
-        for value_i, value in enumerate(valueDate.get('calcs', [])):
-            status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
-            if status == 'WAIT':
-                continue
+            canceled = ''
 
-            valueCount = value.get('valueCount')
-            openPrice = value.get('openPrice')
-            closePrice = value.get('closePrice')
+            for value_i, value in enumerate(valueDate.get('calcs', [])):
+                status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
+                if status == 'WAIT':
+                    continue
 
-            calc_messages = value.get('messages')
+                valueCount = value.get('valueCount')
+                openPrice = value.get('openPrice')
+                closePrice = value.get('closePrice')
 
-            tp_sl = ''
-            if valueCount is None:
-                tp_sl = status_transaltes[lang][status]
-            elif valueCount == 0:
-                tp_sl = texts[lang]['breakeven']
-                tp_count += 1
-                sl_count += 1
-            elif valueCount > 0:
-                tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
-                tp_count += valueCount
-                success_count += 1
+                calc_messages = value.get('messages')
 
-                if closePrice > openPrice:
-                    long_count += 1
+                tp_sl = ''
+                if valueCount is None:
+                    tp_sl = status_transaltes[lang][status]
+                elif valueCount == 0:
+                    tp_sl = texts[lang]['breakeven']
+                    tp_count += 1
+                    sl_count += 1
+                elif valueCount > 0:
+                    tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
+                    tp_count += valueCount
+                    success_count += 1
+
+                    if closePrice > openPrice:
+                        long_count += 1
+                    else:
+                        short_count += 1
                 else:
-                    short_count += 1
-            else:
-                tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
-                sl_count += abs(valueCount)
-                fail_count += 1
+                    tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
+                    sl_count += abs(valueCount)
+                    fail_count += 1
 
-                if closePrice > openPrice:
-                    short_count += 1
+                    if closePrice > openPrice:
+                        short_count += 1
+                    else:
+                        long_count += 1
+
+                calc_chId = calc_messages.get('chIds', [None])[0]
+                calc_mesId = calc_messages.get('mesIds', [None])[0]
+                link_start = f'<a href="https://t.me/c/{calc_chId.replace("-100", "")}/{calc_mesId}">' if calc_mesId is not None else ''
+                link_end = '</a>' if calc_mesId is not None else ''
+
+                tool = value.get("tool")
+                tool_num = ''
+                if tool not in tool_counts:
+                    tool_counts[tool] = 1
                 else:
-                    long_count += 1
+                    tool_counts[tool] += 1
+                    tool_num = f'({tool_counts[tool]})'
 
-            calc_chId = calc_messages.get('chIds', [None])[0]
-            calc_mesId = calc_messages.get('mesIds', [None])[0]
-            link_start = f'<a href="https://t.me/c/{calc_chId.replace("-100", "")}/{calc_mesId}">' if calc_mesId is not None else ''
-            link_end = '</a>' if calc_mesId is not None else ''
+                if status == 'DEAL':
+                    msg_in_deal += f'\n{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                elif status == 'CANCEL':
+                    if canceled != '':
+                        canceled += ', '
+                    canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                else:
+                    date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
 
-            tool = value.get("tool")
-            tool_num = ''
-            if tool not in tool_counts:
-                tool_counts[tool] = 1
+            tp_sl_result = round(tp_count - sl_count, 1)
+            tp_sl_show = ''
+            if tp_sl_result > 0:
+                tp_sl_show = f'{texts[lang]["tp"]}'
             else:
-                tool_counts[tool] += 1
-                tool_num = f'({tool_counts[tool]})'
+                tp_sl_show = f'{texts[lang]["sl"]}'
 
-            if status == 'DEAL':
-                msg_in_deal += f'\n{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
-            elif status == 'CANCEL':
+            tp_sl_msg = ''
+            if tp_count != 0 or sl_count != 0:
+                if tp_sl_result == 0:
+                    tp_sl_msg = f'{texts[lang]["breakeven"]}'
+                else:
+                    tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+                tp_sl_msg = f' ({tp_sl_msg})'
+
+            if date_msg.lstrip() != '' or canceled != '':
+                msg_dates += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
+                msg_dates += f'{date_msg}'
+
                 if canceled != '':
-                    canceled += ', '
-                canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
-            else:
-                date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
+                    msg_dates += f'\n\n{texts[lang]["canceled"]}: {canceled}'
 
-        tp_sl_result = round(tp_count - sl_count, 1)
+                # if success_count != 0 or fail_count != 0:
+                #     msg_dates += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+
+            all_success_count += success_count
+            all_fail_count += fail_count
+            all_tp_count += tp_count
+            all_sl_count += sl_count
+
+        if msg_in_deal != '':
+            msg += '\n\n<b>In deal:</b>'
+            msg += msg_in_deal
+        msg += msg_dates
+        msg += f'\n_________________________________'
+
+        tp_sl_result = round(all_tp_count - all_sl_count, 1)
+
         tp_sl_show = ''
         if tp_sl_result > 0:
             tp_sl_show = f'{texts[lang]["tp"]}'
         else:
             tp_sl_show = f'{texts[lang]["sl"]}'
 
-        tp_sl_msg = ''
-        if tp_count != 0 or sl_count != 0:
-            if tp_sl_result == 0:
-                tp_sl_msg = f'{texts[lang]["breakeven"]}'
+        if all_tp_count == 0 and all_sl_count == 0:
+            if lang == 'ru':
+                msg += f'\n\nОжидаются ближайшие сделки'
             else:
-                tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
-            tp_sl_msg = f' ({tp_sl_msg})'
+                msg += f'\n\nUpcoming deals are expected'
 
-        if date_msg.lstrip() != '' or canceled != '':
-            msg_dates += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
-            msg_dates += f'{date_msg}'
+        if all_tp_count != 0 or all_sl_count != 0:
+            msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
+            if tp_sl_result == 0:
+                msg += f'{texts[lang]["breakeven"]}'
+            else:
+                msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+            msg += '\n'
 
-            if canceled != '':
-                msg_dates += f'\n\n{texts[lang]["canceled"]}: {canceled}'
+        if long_count != 0 or short_count != 0:
+            if long_count != 0:
+                msg += f'<b>{texts[lang]["long"]}</b>: {long_count}'
+            if long_count != 0 and short_count != 0:
+                msg += ' / '
+            if short_count != 0:
+                msg += f'<b>{texts[lang]["short"]}</b>: {short_count}'
 
-            # if success_count != 0 or fail_count != 0:
-            #     msg_dates += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+        if all_success_count != 0 or all_fail_count != 0:
+            msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
 
-        all_success_count += success_count
-        all_fail_count += fail_count
-        all_tp_count += tp_count
-        all_sl_count += sl_count
-
-    if msg_in_deal != '':
-        msg += '\n\n<b>In deal:</b>'
-        msg += msg_in_deal
-    msg += msg_dates
-    msg += f'\n_________________________________'
-
-    tp_sl_result = round(all_tp_count - all_sl_count, 1)
-
-    tp_sl_show = ''
-    if tp_sl_result > 0:
-        tp_sl_show = f'{texts[lang]["tp"]}'
-    else:
-        tp_sl_show = f'{texts[lang]["sl"]}'
-
-    if all_tp_count == 0 and all_sl_count == 0:
-        if lang == 'ru':
-            msg += f'\n\nОжидаются ближайшие сделки'
-        else:
-            msg += f'\n\nUpcoming deals are expected'
-
-    if all_tp_count != 0 or all_sl_count != 0:
-        msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
-        if tp_sl_result == 0:
-            msg += f'{texts[lang]["breakeven"]}'
-        else:
-            msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
-        msg += '\n'
-
-    if long_count != 0 or short_count != 0:
-        if long_count != 0:
-            msg += f'<b>{texts[lang]["long"]}</b>: {long_count}'
-        if long_count != 0 and short_count != 0:
-            msg += ' / '
-        if short_count != 0:
-            msg += f'<b>{texts[lang]["short"]}</b>: {short_count}'
-
-    if all_success_count != 0 or all_fail_count != 0:
-        msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
-
-    try:
-        bot.edit_message_text(
-            msg, chId, mesId
-        )
-    except:
-        pass
+        try:
+            bot.edit_message_text(
+                msg, chId, mesId
+            )
+        except:
+            pass
 
 
 def edit_channel_post(bot: TeleBot, calc_id: int):
@@ -1171,6 +1217,8 @@ def edit_live_info(
 
         if live and len(live[1]) > 0:
             msges: dict[str, str] = {}
+            current_counts: dict[str, int] = {}
+
             for calc_ in live[1]:
                 current_msg = ''
 
@@ -1205,11 +1253,19 @@ def edit_live_info(
                     else:
                         tp_sl = 'стоп' if lang == 'ru' else 'stop'
 
-                    result += f' ({get_print_float(valueCount, 1)} {tp_sl})'
+                    result += 'Завершено' if lang == 'ru' else 'Finished'
+                    result += f': {get_print_float(valueCount, 1)} {tp_sl}'
+                    result = f'<b>{result}</b>'
                 else:
-                    result = 'В сделке' if lang == 'ru' else 'In deal'
+                    if calc_.takeProfit:
+                        result = ('Тейк' if lang == 'ru' else 'Take') + f""": <b>{get_print_float(
+                            calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
+                        )}$</b>"""
+                    else:
+                        result = 'В сделке' if lang == 'ru' else 'In deal'
+                        result = f'<b>{result}</b>'
 
-                tool = f'⚡️ {calc_.tool.replace("/USDT", "")}'
+                tool = f'{calc_.tool.replace("/USDT", "")}'
                 if calcMesId is not None:
                     tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
 
@@ -1219,9 +1275,9 @@ def edit_live_info(
                 take_profit = ''
                 if calc_.currentPrice is not None:
                     price = get_print_float(
-                        calc_.currentPrice, 0 if calc_.currentPrice > 10 else 2
+                        calc_.currentPrice, 0 if calc_.currentPrice > 100 else 4
                     )
-                    price = f' <b>({price}$)</b>'
+                    price = f' - <b>{price}$</b>'
 
                     # if calc_.takeProfit:
                     #     take_profit = '\n\n'
@@ -1231,7 +1287,14 @@ def edit_live_info(
                     #     )} USDT</b>"""
                     #     is_shift = True
 
-                current_msg += f'\n<b>{tool}</b>{price} | <b>{result}</b>'
+                if date in current_counts:
+                    current_count = current_counts[date]
+                    current_counts[date] += 1
+                else:
+                    current_count = 1
+                    current_counts[date] = 2
+
+                current_msg += f'\n{current_count}. <b>{tool}</b>{price} | {result}'
                 current_msg += take_profit
 
                 # if dealAt is not None:
@@ -1239,6 +1302,8 @@ def edit_live_info(
                 #     current_msg += 'в сделке' if lang == 'ru' else 'in deal'
 
                 if lang == 'ru' and comment is not None:
+                    comment = comment.split('\n')
+                    comment = '\n'.join([f'<b>{i[:6]}</b>{i[6:]}' for i in comment])
                     current_msg += f'\n{comment}'
                     is_shift = True
 
@@ -1264,7 +1329,7 @@ def edit_live_info(
 
             msg = ''
             for key in msges:
-                msg += f'\n\n<b>{key}</b>\n'
+                msg += f'\n\n⚡️ <b>{key} | В сделках</b>\n\n'
                 msg += msges[key].strip()
 
             if len(live[2]) > 0:

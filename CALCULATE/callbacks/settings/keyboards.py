@@ -8,6 +8,7 @@ from models import MARKETS_TYPE
 
 from .filter import settings_factory
 from ..calculate.keyboards import get_settings_from_calc_button
+from ..stats.keyboards import getButton as getStatsButton
 from ..calculate.filter import calculate_factory
 
 
@@ -493,7 +494,7 @@ def kb_summury_profit_type(user_id: int):
     return keyboard
 
 
-def kb_take_profit(user_id: int, current_tp: list[int]):
+def kb_take_profit(user_id: int, current_tp: list[int], stat_id: int | None = None):
     """
         Выбор значения коэфицента для тейк-профита
     """
@@ -528,33 +529,47 @@ def kb_take_profit(user_id: int, current_tp: list[int]):
     if len(current_tp) != tp_count_max:
         for el in range(2, tp_max + 1):
             added = '✅ ' if el in current_tp else ''
-            btn = getButton(
-                f'{added}x{el}', f'change_summury_profit',
-                'default', el
-            )
+
+            if stat_id is None:
+                btn = getButton(
+                    f'{added}x{el}', f'change_summury_profit',
+                    'default', el
+                )
+            else:
+                btn = getStatsButton(
+                    f'{added}x{el}', f'tp_rate+{el}', stat_id=stat_id
+                )
+
             buttons.append(btn)
             if len(buttons) == row_width or (el == tp_max and len(buttons) != 0):
                 keyboard.add(*buttons)
                 buttons = []
 
-    # Сохранение выбранного
-    btn_save = getButton('✅ ' + texts[lang]['save'], 'tp_save')
+    if stat_id is None:
+        # Сохранение выбранного
+        btn_save = getButton('✅ ' + texts[lang]['save'], 'tp_save')
 
-    # Отмена, выход к выбору типа
-    btn_cancel = getButton(
-        cancel_txt(lang), 'change_summury_profit'
-    )
+        # Отмена, выход к выбору типа
+        btn_cancel = getButton(
+            cancel_txt(lang), 'change_summury_profit'
+        )
 
-    # Шаг назад, убираем последний тейк-профит
-    btn_back = getButton(
-        back_txt(lang),
-        'change_summury_profit', 'default', None, -1
-    )
+        # Шаг назад, убираем последний тейк-профит
+        btn_back = getButton(
+            back_txt(lang),
+            'change_summury_profit', 'default', None, -1
+        )
 
-    if len(current_tp) != 0:
-        keyboard.add(btn_back, btn_cancel, btn_save)
-    else:  # Если еще ничего не выбрано, выводим только кнопку отмены
-        keyboard.add(btn_cancel)
+        if len(current_tp) != 0:
+            keyboard.add(btn_back, btn_cancel, btn_save)
+        else:  # Если еще ничего не выбрано, выводим только кнопку отмены
+            keyboard.add(btn_cancel)
+    else:
+        keyboard.add(
+            getStatsButton(
+                back_txt(lang), 'ch_c+', stat_id
+            )
+        )
 
     return keyboard
 

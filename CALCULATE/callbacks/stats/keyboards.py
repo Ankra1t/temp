@@ -183,6 +183,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
 
             'deal': 'В сделке',
             'cancel_deal': 'Отмена сделки',
+            'wait': 'В ожидание',
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
@@ -199,6 +200,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
 
             'deal': 'In deal',
             'cancel_deal': 'Cancel deal',
+            'wait': 'In wait',
             'take': 'Take',
             'stop': 'Stop',
             'breakeven': 'Breakeven'
@@ -215,6 +217,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
 
             'deal': 'Sudada',
             'cancel_deal': 'Sudani bekor qilish',
+            'wait': 'Kutish paytida',
             'take': 'Olish',
             'stop': 'Toʻxtatish',
             'breakeven': 'Tenglash'
@@ -231,6 +234,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
 
             'deal': 'Anlaşmada',
             'cancel_deal': 'Anlaşmayı iptal et',
+            'wait': 'Beklemede',
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası'
@@ -248,6 +252,10 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
                 ))
                 buttons.append(getButton(
                     texts[lang]['deal'], 'result_deal', stat_id=calc.id
+                ))
+            else:
+                keyboard.add(getButton(
+                    texts[lang]['wait'], 'result_wait', stat_id=calc.id
                 ))
 
             buttons.append(getButton(
@@ -455,24 +463,28 @@ def kb_calculate_change(user_id: int, stat_id: int):
             'stop_loss': 'Стоп-лосс',
             'tool': 'Инструмент',
             'style': 'Стиль',
+            'take_profit': 'Тейки',
         },
         'en': {
             'open_price': 'Open price',
             'stop_loss': 'Stop loss',
             'tool': 'Tool',
             'style': 'Style',
+            'take_profit': 'Takes',
         },
         'uz': {
             'open_price': 'Ochiq narx',
             'stop_loss': 'Stop loss',
             'tool': 'Asbob',
             'style': 'Uslubi',
+            'take_profit': 'Davom etadi',
         },
         'tr': {
             'open_price': 'açılış fiyatını',
             'stop_loss': 'Stop loss',
             'tool': 'Enstrüman',
             'style': 'Tarzı',
+            'take_profit': 'Almak',
         },
     }
 
@@ -482,12 +494,15 @@ def kb_calculate_change(user_id: int, stat_id: int):
                        'ch_c+stop_loss', stat_id)
     btn_tool = getButton(texts[lang]["tool"], 'ch_c+tool', stat_id)
     btn_style = getButton(texts[lang]["style"], 'ch_c+style', stat_id)
+    btn_take_profit = getButton(
+        texts[lang]["take_profit"], 'ch_c+take', stat_id
+    )
     btn_back = getButton(back_txt(lang), 'ch_c+back', stat_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_op, btn_sl)
     keyboard.add(btn_tool, btn_style)
-    keyboard.add(btn_back)
+    keyboard.add(btn_take_profit, btn_back)
     return keyboard
 
 

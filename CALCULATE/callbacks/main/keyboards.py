@@ -41,6 +41,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'stats': 'Ваша статистика',
             'link': 'Сигналы',
             'info': 'Инструкция',
+            'violations': 'Нарушения',
         },
         'en': {
             'calc': 'Make a calculation',
@@ -50,6 +51,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'stats': 'Your stats',
             'link': 'Signals',
             'info': 'Manual',
+            'violations': 'Violations',
         },
         'uz': {
             'calc': 'Hisoblash',
@@ -59,6 +61,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'stats': 'Sizning stastitikangiz',
             'link': 'Signallar',
             'info': 'Qo\'llanma',
+            'violations': 'Buzish',
         },
         'tr': {
             'calc': 'Hesaplama',
@@ -68,6 +71,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             'stats': 'Sizin istatistik',
             'link': 'Sinyaller',
             'info': 'Manuel',
+            'violations': 'İhlaller',
         },
     }
 
@@ -123,7 +127,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
             buttons.append(btn_info)
 
             buttons.append(
-                getButton('Нарушения', 'violations')
+                getButton(texts[lang]['violations'], 'violations')
             )
 
             if isAdmin:

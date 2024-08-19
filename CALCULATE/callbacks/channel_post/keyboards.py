@@ -111,23 +111,28 @@ def kb_channel_calc_result(
 ):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    btn_tp = getButton('Тейк', 'result_take', stat_id, is_calc)
-    btn_sl = getButton('Стоп', 'result_stop', stat_id, is_calc)
-    keyboard.add(btn_tp, btn_sl)
-
     if not in_deal:
         btn_deal = getButton('В сделке', 'result_deal', stat_id, is_calc)
         btn_cancel = getButton(
             'Отмена сделки', 'result_cancel', stat_id, is_calc
         )
         keyboard.add(btn_cancel, btn_deal)
+    else:
+        keyboard.add(getButton(
+            'В ожидание', 'result_wait', stat_id=stat_id
+        ))
+
+    btn_tp = getButton('Тейк', 'result_take', stat_id, is_calc)
+    btn_sl = getButton('Стоп', 'result_stop', stat_id, is_calc)
+    keyboard.add(btn_tp, btn_sl)
 
     keyboard.add(
         getButton('Безубыток', 'take+0', stat_id, is_calc),
         getButton('Комментарий', 'comment', stat_id, is_calc),
         getButton(
-            back_txt(
-                'ru'), 'results' if not is_user else 'go_stats', stat_id, is_calc
+            back_txt('ru'),
+            'results' if not is_user else 'go_stats',
+            stat_id, is_calc
         )
     )
 

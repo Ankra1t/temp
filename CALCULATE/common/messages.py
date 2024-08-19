@@ -2047,7 +2047,7 @@ def msg_channel_calculation(
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
-            'nearest': 'Ближайший тейк',
+            'nearest': 'Тейк',
             'style': '<b>С</b>тиль',
 
             'direct': 'Направление',
@@ -2072,7 +2072,7 @@ def msg_channel_calculation(
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
-            'nearest': 'The nearest take',
+            'nearest': 'Take',
             'style': '<b>S</b>tyle',
 
             'direct': 'Direction',
@@ -2100,6 +2100,11 @@ def msg_channel_calculation(
     if calc.forexInfo is not None and calc.market == 'forex':
         trading_currency = calc.forexInfo.pair[1]
         tool = ''.join(calc.forexInfo.pair)
+    
+    if trading_currency == 'USDT' or trading_currency == 'USD':
+        trading_currency = '$'
+    else:
+        trading_currency = f' {trading_currency}'
 
     t_style = txt_trading_style(lang, calc.tradingStyle)
     trading_style_type = ''
@@ -2132,11 +2137,11 @@ def msg_channel_calculation(
                     (diffOpSl < 0 and tp_val < tickerInfo.indexPrice)
                 )
             ):
-                profit_result = f'\n<b>{texts[lang]["nearest"]}</b>: '
-                profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+                profit_result = f'\n<b>{texts[lang]["nearest"]} ({tp_ratio} {texts[lang]["to"]} 1)</b>: '
+                profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
                 break
 
-            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if i != calc_result.tp_count - 1:
                 profit_result += '\n'
@@ -2193,12 +2198,13 @@ def msg_channel_calculation(
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{rate_show} | {texts[lang][status]}',
         '',
-        f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) + ((
-        f'\n\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}'
+        f'\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code>{trading_currency}'
         + profit_result
     ) if not without_stop else '') \
         + (f'\n\n{description}' if description else '') \
+        + (f'\n\n{calc.comment}' if calc.comment else '') \
         + oborot_show \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')

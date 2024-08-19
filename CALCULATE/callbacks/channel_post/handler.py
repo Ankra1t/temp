@@ -232,6 +232,18 @@ More often: <b>{result}</b>"""
         else:
             send_stats(bot, call.message, user_id)
 
+    if type == 'result_wait':
+        calculation.update(
+            stat_id, status='WAIT'
+        )
+
+        send_data = channel_calc.getByCalc(stat_id)
+        if send_data is not None:
+            edit_channel_post(bot, stat_id)
+            type = 'result'
+        else:
+            send_stats(bot, call.message, user_id)
+
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(stat_id)
         if calc is None:
