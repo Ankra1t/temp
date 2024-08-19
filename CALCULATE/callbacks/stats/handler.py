@@ -15,7 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
-from AuthRoles import get_ticker_info, vote_timeout
+from AuthRoles import vote_timeout
 from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from CALCULATE.states.stats import ChannelCalcState
@@ -27,7 +27,7 @@ from data.data import liteDb
 from config_global import EN_CHANNEL_ID, PROD, RESULTS_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from Classes import calcService, pay_guard
-from db import LANGUAGES_TYPE, db
+from db import db
 from CALCULATE.common.messages import (
     msg_calculate_change, msg_calculate_delete,
     msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_img_text,
@@ -37,7 +37,7 @@ from CALCULATE.common.messages import (
 )
 from CALCULATE.states import StatsState
 from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
-from services import calculation, channel_calc
+from services import calculation, channel_calc, ticker
 from CALCULATE.common.messages import status_transaltes
 
 from ..main.keyboards import kb_main
@@ -342,7 +342,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             is_valid = pay_guard.valid_use_calc(user_id, bot)
             calc_info = calculation.get(calc_id)
-            print(calc_info)
+
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
@@ -558,7 +558,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         for i, CHANNEL_ID in enumerate(channels):
             lang = 'ru' if i == 0 else 'en'
 
-            tickerInfo = get_ticker_info(calc.tool or '')
+            tickerInfo = ticker.get_info(calc.tool or '')
 
             weekStat = channel_calc.getWeekStat()
             link = ''
@@ -1131,9 +1131,10 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
             except:
                 pass
 
+        tickerInfo = ticker.get_info(calc.tool or '')
         msg = msg_channel_calculation(
             calc, messages.langs[chId_i], send_data.withoutStop, send_data.time or '',
-            messages.mesNum or -1, None, calc.description, link,
+            messages.mesNum or -1, tickerInfo, calc.description, link,
             messages.date,
             try_link=f'https://t.me/{bot.get_me().username}?start=calc_{calc_id}'
         )
@@ -1212,6 +1213,8 @@ def edit_live_info(
                 if calcMesId is not None:
                     tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
 
+                is_shift = False
+
                 price = ''
                 take_profit = ''
                 if calc_.currentPrice is not None:
@@ -1220,14 +1223,15 @@ def edit_live_info(
                     )
                     price = f' <b>({price}$)</b>'
 
-                    if calc_.takeProfit:
-                        take_profit = '\n\n'
-                        take_profit += '<b>Б</b>лижайший тейк: ' if lang == 'ru' else '<b>T</b>he nearest take: '
-                        take_profit += f"""<b>{get_print_float(
-                            calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
-                        )} USDT</b>"""
+                    # if calc_.takeProfit:
+                    #     take_profit = '\n\n'
+                    #     take_profit += '<b>Б</b>лижайший тейк: ' if lang == 'ru' else '<b>T</b>he nearest take: '
+                    #     take_profit += f"""<b>{get_print_float(
+                    #         calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
+                    #     )} USDT</b>"""
+                    #     is_shift = True
 
-                current_msg += f'\n\n<b>{tool}</b>{price} | <b>{result}</b>'
+                current_msg += f'\n<b>{tool}</b>{price} | <b>{result}</b>'
                 current_msg += take_profit
 
                 # if dealAt is not None:
@@ -1236,6 +1240,10 @@ def edit_live_info(
 
                 if lang == 'ru' and comment is not None:
                     current_msg += f'\n{comment}'
+                    is_shift = True
+
+                if is_shift:
+                    current_msg += '\n'
 
                 # if finishAt is not None and valueCount is not None:
                 #     current_msg += f'\n{finishAt.strftime("%H:%M")} - '
@@ -1256,8 +1264,8 @@ def edit_live_info(
 
             msg = ''
             for key in msges:
-                msg += f'\n\n<b>{key}</b>'
-                msg += msges[key]
+                msg += f'\n\n<b>{key}</b>\n'
+                msg += msges[key].strip()
 
             if len(live[2]) > 0:
                 msg += '\n\n'

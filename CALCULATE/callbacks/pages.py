@@ -6,7 +6,7 @@ from typing import Literal
 from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
-from AuthRoles import first_timeout, get_ticker_info
+from AuthRoles import first_timeout
 from CALCULATE.states.stats import ChannelCalcState
 from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
@@ -25,7 +25,7 @@ from CALCULATE.common.messages import (
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
-from services import calculation, channel_calc, violation
+from services import calculation, channel_calc, ticker, violation
 from CALCULATE.common.messages import status_transaltes
 
 from .manual.keyboards import kb_manual, kb_manuals
@@ -660,7 +660,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
     if stat is None or send_data is None:
         return
 
-    info = get_ticker_info(stat.tool or '')
+    info = ticker.get_info(stat.tool or '')
 
     photo = stat.photo
     text = msg_channel_calculation(

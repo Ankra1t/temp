@@ -1,8 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from AuthRoles import get_ticker_atr
-from services import calculation, channel_calc
+from services import calculation, channel_calc, ticker
 from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
 from ..settings.keyboards import kb_first_dep
 from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
@@ -159,7 +158,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         atr_settings = liteDb.getUserAtrSettings(user_id)
         period, count = atr_settings[1].split('+')
 
-        value = get_ticker_atr(cur_tool, period, int(count))
+        value = ticker.get_atr(cur_tool, period, int(count))
         if not value:
             return
 

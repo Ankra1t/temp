@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
-from CALCULATE.callbacks.stats.handler import edit_channel_post
 from config_logger import logger
 from AuthRoles import check_registrate
 from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel_post

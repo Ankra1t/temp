@@ -5,7 +5,7 @@ from telebot.types import Message
 
 from CALCULATE.callbacks.main.keyboards import kb_violation_skip
 from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation
-from CALCULATE.callbacks.stats.handler import edit_channel_post
+from CALCULATE.callbacks.stats.handler import edit_channel_post, edit_live_info
 from CALCULATE.states.settings import ViolationState
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
@@ -17,8 +17,8 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from CALCULATE.states import StatsState
 from CALCULATE.callbacks import (
     kb_deal_profit_minus, kb_calc_image_text,
-    send_main, send_calculation, send_freeze,
-    kb_calc_result, send_confirm_calc_send
+    send_calculation, send_freeze,
+    send_confirm_calc_send
 )
 from CALCULATE.common.messages import (
     msg_digit_error, msg_freeze_error, msg_frozen, msg_text_error
@@ -176,8 +176,11 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     if text:
         if calc.status == 'FINISH' or type == 'stats':
             now = get_datetime_now() + timedelta(hours=3)
-            data['comment'] = (calc.comment or '') + \
-                f'{now.strftime("%H:%M")} - ' + text
+            data['comment'] = (
+                (calc.comment or '') +
+                f'\n{now.strftime("%H:%M")} - '
+                + text
+            ).strip()
         else:
             data['description'] = text
 
@@ -193,9 +196,13 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     if type != 'stats':
         send_calculation(bot, message, user_id, calc, True)
     else:
-        edit_channel_post(bot, stat_id)
+        live = channel_calc.getLiveInfo()
+        if live:
+            edit_live_info(bot, live)
+
         send_admin_channel_calc_item(
-            bot, message, user_id, stat_id, is_first=True)
+            bot, message, user_id, stat_id, is_first=True
+        )
 
 
 def handle_send_text(message: Message, bot: TeleBot):

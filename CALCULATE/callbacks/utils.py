@@ -1,12 +1,12 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from AuthRoles import get_ticker_atr
 from Classes import pay_guard
 from data.data import liteDb
 from db import db
 from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
+from services import ticker
 
 from .pages import create_and_send_calc, send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
@@ -191,7 +191,7 @@ def choose_calculate_step(
             atr_settings = liteDb.getUserAtrSettings(user_id)
             period, count = atr_settings[1].split('+')
 
-            value = get_ticker_atr(tool, period, int(count)) or None
+            value = ticker.get_atr(tool, period, int(count)) or None
 
             if atr_settings[0] and value is not None:
                 rate = 1

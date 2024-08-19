@@ -52,3 +52,21 @@ def getUserNotificationMessages(userId: int):
         return
 
     return UserNotification(**res.json())
+
+
+@session_decorator
+def change_password(id: int, password: str):
+    data = {
+        'id_telegram': id,
+        'password': password,
+    }
+
+    res = session.post(
+        f'{API_URL}/auth/tg_change_pass',
+        json.dumps(data).encode()
+    )
+
+    if not check_response(res):
+        return
+
+    return True

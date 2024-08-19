@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from AuthRoles import get_ticker_atr
 from CALCULATE.common.messages import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 from CALCULATE.states.calculate import CalculateState
 from common.utils import set_state_data
@@ -12,7 +11,7 @@ from MAIN.common.utils import send_in_development
 from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
-from services import calculation, channel_calc
+from services import calculation, channel_calc, ticker
 
 
 def send_start_by_user(
@@ -44,7 +43,7 @@ def send_start_by_user(
 
                 bot.set_state(user_id, CalculateState.stop_atr, chat_id)
 
-                ticker_val = get_ticker_atr(
+                ticker_val = ticker.get_atr(
                     calc.tool or '', period, int(count)) or None
 
                 if atr_settings[0] and ticker_val is not None:

@@ -8,8 +8,7 @@ from MAIN.common.messages import msg_enter_nickname
 from MAIN.states import UserAccountState
 from MAIN.callbacks import send_user_account, kb_user_params_back, send_user_params
 from common.utils import text_accept
-
-from AuthRoles import change_password
+from services import auth
 
 
 def handle_new_password(message: Message, bot: TeleBot):
@@ -27,7 +26,7 @@ def handle_new_password(message: Message, bot: TeleBot):
         )
         return
 
-    response = change_password(user_id, new_pass)
+    response = auth.change_password(user_id, new_pass)
 
     if response:
         bot.send_message(chat_id, 'Пароль успешно изменен')

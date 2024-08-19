@@ -2047,6 +2047,7 @@ def msg_channel_calculation(
             'sl': 'Стоп',
 
             'conclusion': 'Тейк-профит',
+            'nearest': 'Ближайший тейк',
             'style': '<b>С</b>тиль',
 
             'direct': 'Направление',
@@ -2071,6 +2072,7 @@ def msg_channel_calculation(
             'sl': 'Stop loss',
 
             'conclusion': 'Take profit',
+            'nearest': 'The nearest take',
             'style': '<b>S</b>tyle',
 
             'direct': 'Direction',
@@ -2114,23 +2116,30 @@ def msg_channel_calculation(
         round_count
     )
 
-    profit_result = ''
+    profit_result = f'\n<b>{texts[lang]["conclusion"]}</b>: '
     if not without_stop:
-        conclusion = '\n'
+        profit_result += '\n'
         for i in range(calc_result.tp_count):
             tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
 
-            if tickerInfo and tickerInfo.indexPrice and tp_val > tickerInfo.indexPrice:
-                conclusion = f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            diffOpSl = calc.openPrice - calc.stopLoss
+
+            if (
+                tickerInfo and tickerInfo.indexPrice and
+                (
+                    (diffOpSl > 0 and tp_val > tickerInfo.indexPrice) or
+                    (diffOpSl < 0 and tp_val < tickerInfo.indexPrice)
+                )
+            ):
+                profit_result = f'\n<b>{texts[lang]["nearest"]}</b>: '
+                profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
                 break
 
-            conclusion += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
 
             if i != calc_result.tp_count - 1:
-                conclusion += '\n'
-
-        profit_result = f"""\n<b>{texts[lang]['conclusion']}</b>: {conclusion}"""
+                profit_result += '\n'
 
     count_show = ''
     if count != -1:
@@ -2144,7 +2153,14 @@ def msg_channel_calculation(
         rate24h = tickerInfo.price24hPcnt
         if rate24h is not None:
             percent = round(rate24h * 100, 2)
-            rate_show += f' ({"+" if percent > 0 else ""}{percent}%)'
+
+            indexPrice = ''
+            # if tickerInfo and tickerInfo.indexPrice:
+            #     indexPrice = get_print_float(
+            #         tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 10 else 2
+            #     ) + '$ '
+
+            rate_show += f' ({indexPrice}{"+" if percent > 0 else ""}{percent}%)'
 
         turnover = tickerInfo.turnover
         if turnover is not None:
@@ -2163,10 +2179,10 @@ def msg_channel_calculation(
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
-
     chart_link = ''
     if try_link != '':
         chart_link = f'https://ru.tradingview.com/symbols/{(calc.tool or "").replace("/USDT", "")}USD'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USD'
         res = requests.get(chart_link)
 
         if res.status_code >= 200 and res.status_code < 300:
@@ -2224,6 +2240,7 @@ def msg_channel_calc_result(
             'try': 'Рассчитать',
 
             'breakeven': 'безубыток',
+            'chart': 'График',
         },
         'en': {
             'open': '<b>Open</b> price',
@@ -2247,6 +2264,7 @@ def msg_channel_calc_result(
             'try': 'Calculate',
 
             'breakeven': 'breakeven',
+            'chart': 'Chart',
         }
     }
 
@@ -2286,6 +2304,17 @@ def msg_channel_calc_result(
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
+    chart_link = ''
+    if try_link != '':
+        chart_link = f'https://ru.tradingview.com/symbols/{(calc.tool or "").replace("/USDT", "")}USD'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USD'
+        res = requests.get(chart_link)
+
+        if res.status_code >= 200 and res.status_code < 300:
+            chart_link = f' | <a href="{chart_link}">{texts[lang]["chart"]}</a>'
+        else:
+            chart_link = ''
+
     return f"""{count_show}<b>{link(calc.tool or '-').replace('/USDT', '')}</b> | {result}
 
 <b>{texts[lang]["date"]}</b>: {date}
@@ -2293,7 +2322,7 @@ def msg_channel_calc_result(
 {texts[lang]["close"]}: {get_print_float(close_price)} USDT""" \
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
-        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>\n' if try_link != '' else '')
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
 
 def msg_calc_list(user_id: int, calcs: list[Calculation], type: str):

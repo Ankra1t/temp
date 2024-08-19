@@ -38,7 +38,6 @@ def vote_timeout(stat_id: int):
             f'{API_URL}/tg/vote_timeout?stat_id={stat_id}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
-        print(res.json())
         return res.json()
     except Exception as e:
         logger.error(f'/auth/vote_timeout {e}')
@@ -53,87 +52,10 @@ def first_timeout(user_id: int):
             f'{API_URL}/tg/first_timeout?user_id={user_id}',
             headers=HEADERS | {'tg-api-key': access_token}
         )
-        print(res.json())
         return res.json()
     except Exception as e:
         logger.error(f'/auth/first_timeout {e}')
         return False
-
-
-def get_ticker_info(ticker: str):
-    access_token = db.get_access_token() or ''
-
-    try:
-        res = requests.get(
-            f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
-            headers=HEADERS | {'tg-api-key': access_token}
-        )
-
-        return TickerInfo(**res.json())
-    except Exception as e:
-        logger.error(f'/get_ticker_info {e}')
-        return False
-
-
-def get_ticker_atr(ticker: str, period: str, count: int):
-    access_token = db.get_access_token() or ''
-
-    try:
-        res = requests.get(
-            f'{API_URL}/tg/getAvgAtr/{ticker.replace("/", "").upper()}',
-            {
-                'period': period,
-                'count': count
-            },
-            headers=HEADERS | {'tg-api-key': access_token}
-        )
-        print(res.json())
-        if res.status_code == 200:
-            return res.json()
-    except Exception as e:
-        logger.error(f'/get_ticker_atr {e}')
-        return False
-
-
-def get_ticker_delivery_fee(ticker: str):
-    access_token = db.get_access_token() or ''
-
-    try:
-        res = requests.get(
-            f'{API_URL}/tg/{ticker.replace("/", "").upper()}/deliveryFee',
-            headers=HEADERS | {'tg-api-key': access_token}
-        )
-
-        return float(res.json())
-    except Exception as e:
-        logger.error(f'/get_ticker_delivery_fee {e}')
-        return False
-
-
-def change_password(id: int, password: str):
-    access_token = db.get_access_token() or ''
-
-    try:
-        data = {
-            'id_telegram': id,
-            'password': password,
-            'tg_api_auth_token': access_token
-        }
-        response = requests.post(
-            f'{API_URL}/auth/tg_change_pass',
-            json.dumps(data).encode(), headers=HEADERS
-        )
-
-        logger.info(
-            f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
-        )
-    except Exception as e:
-        logger.error(
-            f'/auth/site_code [id={id}] {response.status_code} {response.json()}'
-        )
-        return False
-
-    return response.status_code == 200
 
 
 def check_registrate(tg_id: int):
