@@ -1221,17 +1221,17 @@ def edit_live_info(
             current_counts: dict[str, int] = {}
 
             for calc_ in live[1]:
-                if calc_.update != False:
-                    calcService.set_profit(
-                        calc_.id, calc_.update
-                    )
+                # if calc_.update != False:
+                #     calcService.set_profit(
+                #         calc_.id, calc_.update
+                #     )
 
-                    calculation.update(
-                        calc_.id, status='FINISH'
-                    )
+                #     calculation.update(
+                #         calc_.id, status='FINISH'
+                #     )
 
-                    edit_channel_post(bot, calc_.id)
-                    return
+                #     edit_channel_post(bot, calc_.id)
+                #     return
 
                 current_msg = ''
 
