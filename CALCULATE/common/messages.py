@@ -2187,7 +2187,7 @@ def msg_channel_calculation(
 
     chart_link = ''
     if try_link != '':
-        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USDT.P'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=BYBIT%3A{(calc.tool or "").replace("/", "")}.P'
         res = requests.get(chart_link)
 
         if res.status_code >= 200 and res.status_code < 300:
@@ -2313,7 +2313,7 @@ def msg_channel_calc_result(
 
     chart_link = ''
     if try_link != '':
-        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USDT.P'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=BYBIT%3A{(calc.tool or "").replace("/", "")}.P'
         res = requests.get(chart_link)
 
         if res.status_code >= 200 and res.status_code < 300:
