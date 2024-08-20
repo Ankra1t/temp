@@ -2180,14 +2180,14 @@ def msg_channel_calculation(
             oborot_show += f'\n\n{texts[lang]["turnover24"]}: <b>{oborot}</b>'
 
     def link(value: str):
+        return f'<a href="https://t.me/trade_res">{value}</a>'
         if week_stat_link is not None:
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
     chart_link = ''
     if try_link != '':
-        chart_link = f'https://ru.tradingview.com/symbols/{(calc.tool or "").replace("/USDT", "")}USD'
-        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USD'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USDT.P'
         res = requests.get(chart_link)
 
         if res.status_code >= 200 and res.status_code < 300:
@@ -2306,14 +2306,14 @@ def msg_channel_calc_result(
             trading_style_type += f' ({texts[lang][time]})\n'
 
     def link(value: str):
+        return f'<a href="https://t.me/trade_res">{value}</a>'
         if week_stat_link is not None:
             return f'<a href="{week_stat_link}">{value}</a>'
         return value
 
     chart_link = ''
     if try_link != '':
-        chart_link = f'https://ru.tradingview.com/symbols/{(calc.tool or "").replace("/USDT", "")}USD'
-        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USD'
+        chart_link = f'https://ru.tradingview.com/chart/?symbol=CRYPTO%3A{(calc.tool or "").replace("/USDT", "")}USDT.P'
         res = requests.get(chart_link)
 
         if res.status_code >= 200 and res.status_code < 300:

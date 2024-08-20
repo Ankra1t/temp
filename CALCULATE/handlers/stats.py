@@ -5,7 +5,7 @@ from telebot.types import Message
 
 from CALCULATE.callbacks.main.keyboards import kb_violation_skip
 from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation
-from CALCULATE.callbacks.stats.handler import edit_channel_post, edit_live_info
+from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.settings import ViolationState
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger

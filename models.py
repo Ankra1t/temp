@@ -364,6 +364,7 @@ class SendCalc(BaseModel):
 
 
 class LiveInfo(BaseModel):
+    id: int
     tool: str
     valueCount: Optional[float]
     dealAt: Optional[str]
@@ -372,6 +373,7 @@ class LiveInfo(BaseModel):
     messages: Optional[SentMessages]
     currentPrice: Optional[float]
     takeProfit: Optional[float]
+    update: Literal[False] | float
 
 
 class LiveWait(BaseModel):

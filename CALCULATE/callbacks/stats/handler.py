@@ -1114,7 +1114,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             all_sl_count += sl_count
 
         if msg_in_deal != '':
-            msg += '\n\n<b>In deal:</b>'
+            msg += '\n\n'
+            msg += '<b>В сделке:</b>' if lang == 'ru' else '<b>In deal:</b>'
             msg += msg_in_deal
         msg += msg_dates
         msg += f'\n_________________________________'
@@ -1220,6 +1221,18 @@ def edit_live_info(
             current_counts: dict[str, int] = {}
 
             for calc_ in live[1]:
+                if calc_.update != False:
+                    calcService.set_profit(
+                        calc_.id, calc_.update
+                    )
+
+                    calculation.update(
+                        calc_.id, status='FINISH'
+                    )
+
+                    edit_channel_post(bot, calc_.id)
+                    return
+
                 current_msg = ''
 
                 calcMesId = None
@@ -1259,7 +1272,7 @@ def edit_live_info(
                 else:
                     if calc_.takeProfit:
                         result = ('Тейк' if lang == 'ru' else 'Take') + f""": <b>{get_print_float(
-                            calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
+                            calc_.takeProfit, 0 if calc_.takeProfit > 100 else 4
                         )}$</b>"""
                     else:
                         result = 'В сделке' if lang == 'ru' else 'In deal'
@@ -1346,10 +1359,10 @@ def edit_live_info(
 
             week = channel_calc.getWeekStat()
             if week is not None:
-                weekChId = week.get('messages', {}).get('chIds')[0]
-                weekMesId = week.get('messages', {}).get('mesIds')[0]
+                # weekChId = week.get('messages', {}).get('chIds')[0]
+                # weekMesId = week.get('messages', {}).get('mesIds')[0]
                 text = 'Результаты недели' if lang == 'ru' else 'Week results'
-                msg += f'\n\n<a href="https://t.me/c/{str(weekChId).replace("-100", "")}/{weekMesId}">{text}</a>'
+                msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
 
             try:
                 if changed_calc is not None and changed_calc.status == 'DEAL' or live[0] is None:
