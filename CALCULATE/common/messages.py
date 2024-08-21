@@ -2100,7 +2100,7 @@ def msg_channel_calculation(
     if calc.forexInfo is not None and calc.market == 'forex':
         trading_currency = calc.forexInfo.pair[1]
         tool = ''.join(calc.forexInfo.pair)
-    
+
     if trading_currency == 'USDT' or trading_currency == 'USD':
         trading_currency = '$'
     else:
@@ -2155,29 +2155,29 @@ def msg_channel_calculation(
     rate_show = ''
     oborot_show = ''
     if tickerInfo:
-        rate24h = tickerInfo.price24hPcnt
-        if rate24h is not None:
-            percent = round(rate24h * 100, 2)
+        # rate24h = tickerInfo.price24hPcnt
+        # if rate24h is not None:
+        #     percent = round(rate24h * 100, 2)
 
-            indexPrice = ''
-            # if tickerInfo and tickerInfo.indexPrice:
-            #     indexPrice = get_print_float(
-            #         tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 10 else 2
-            #     ) + '$ '
+        #     indexPrice = ''
+        #     if tickerInfo and tickerInfo.indexPrice:
+        #         indexPrice = get_print_float(
+        #             tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 10 else 2
+        #         ) + '$ '
 
-            rate_show += f' ({indexPrice}{"+" if percent > 0 else ""}{percent}%)'
+        #     rate_show += f' ({indexPrice}{"+" if percent > 0 else ""}{percent}%)'
 
         turnover = tickerInfo.turnover
         if turnover is not None:
             oborot = ''
             if turnover // (10 ** 9) > 0:
-                oborot = f'{round(turnover / (10**9), 1)}B USDT'
+                oborot = f'{round(turnover / (10**9), 1)}B $'
             elif turnover // (10 ** 6) > 0:
-                oborot = f'{round(turnover / (10**6), 1)}M USDT'
+                oborot = f'{round(turnover / (10**6), 1)}M $'
             else:
-                oborot = f'{round(turnover, 0)} USDT'
+                oborot = f'{round(turnover, 0)} $'
 
-            oborot_show += f'\n\n{texts[lang]["turnover24"]}: <b>{oborot}</b>'
+            oborot_show += f' (<b>{oborot}</b>)'
 
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
@@ -2196,7 +2196,7 @@ def msg_channel_calculation(
             chart_link = ''
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{rate_show} | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{oborot_show} | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) + ((

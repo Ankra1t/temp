@@ -988,6 +988,20 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
     ch_mes: dict = data.get('messages')
     chIds: str = ch_mes.get('chIds', [0])
 
+    marathon_data: list[float | None] = data.get('marathon')
+    marathon = ''
+
+    if marathon_data is not None and len(marathon_data) > 0:
+        marathon = '<b>Марафон 30 дней:</b>'
+        for i, el in enumerate(marathon_data):
+            marathon += f'\n{i + 1} день - '
+            if el is None:
+                marathon += 'нет сделок'
+            elif el > 0:
+                marathon += f'{el} тейков'
+            else:
+                marathon += f'{abs(el)} стоп'
+
     for chId_i, chId in enumerate(chIds):
         mesId = int(ch_mes.get('mesIds', [0])[chId_i])
         lang = ch_mes.get('langs', ['en'])[chId_i]
@@ -1023,6 +1037,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             fail_count = 0
 
             canceled = ''
+
+            num = 0
 
             for value_i, value in enumerate(valueDate.get('calcs', [])):
                 status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
@@ -1081,7 +1097,8 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                         canceled += ', '
                     canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
                 else:
-                    date_msg += f'\n{value_i + 1}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
+                    num += 1
+                    date_msg += f'\n{num}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
 
             tp_sl_result = round(tp_count - sl_count, 1)
             tp_sl_show = ''
@@ -1155,7 +1172,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
         try:
             bot.edit_message_text(
-                msg, chId, mesId
+                msg + f'\n\n{marathon}', chId, mesId
             )
         except:
             pass
@@ -1206,11 +1223,15 @@ def edit_channel_post(bot: TeleBot, calc_id: int):
     send_week_stats(bot, calc_id)
 
 
+now_changed = ''
+
+
 def edit_live_info(
     bot: TeleBot,
     live: tuple[SentMessages | None, list[LiveInfo], list[LiveWait]],
     changed_calc: Calculation | None = None
 ):
+    global now_changed
     new_live_mes_ids = []
 
     for chId_i, chId in enumerate(channels):
@@ -1316,7 +1337,8 @@ def edit_live_info(
 
                 if lang == 'ru' and comment is not None:
                     comment = comment.split('\n')
-                    comment = '\n'.join([f'<b>{i[:6]}</b>{i[6:]}' for i in comment])
+                    comment = '\n'.join(
+                        [f'<b>{i[:6]}</b>{i[6:]}' for i in comment])
                     current_msg += f'\n{comment}'
                     is_shift = True
 
@@ -1334,6 +1356,12 @@ def edit_live_info(
                 #         tp_sl = 'стоп' if lang == 'ru' else 'stop'
 
                 #     current_msg += f' ({get_print_float(valueCount, 1)} {tp_sl})'
+
+                if changed_calc is not None and changed_calc.id == calc_.id:
+                    dot_i = current_msg.find('.')
+
+                    now_changed = '<b>Прямо сейчас:</b>\n\n'
+                    now_changed += f'\n❗️ {current_msg[dot_i + 1:]}'.strip()
 
                 if date in msges:
                     msges[date] += current_msg
@@ -1363,6 +1391,8 @@ def edit_live_info(
                 # weekMesId = week.get('messages', {}).get('mesIds')[0]
                 text = 'Результаты недели' if lang == 'ru' else 'Week results'
                 msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
+
+            msg = now_changed + msg
 
             try:
                 if changed_calc is not None and changed_calc.status == 'DEAL' or live[0] is None:
