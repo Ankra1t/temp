@@ -1,4 +1,4 @@
-from db import LANGUAGES_TYPE
+from models import LANGUAGES_TYPE
 
 
 def admin_main_msg(

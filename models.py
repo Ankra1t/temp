@@ -2,6 +2,9 @@ from pydantic import BaseModel
 from typing import Literal, Union, Optional
 from datetime import datetime
 
+SUBSCRIBE_TYPE = Literal['trial', 'PAID']
+BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
+SORT_BY_TYPE = Literal['new', 'old']
 
 TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
@@ -9,8 +12,13 @@ PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
-MANUAL_TYPE = Literal['settings', 'exchange',
-                      'trading_type', 'trading_style', 'calc']
+MANUAL_TYPE = Literal[
+    'settings', 'exchange',
+    'trading_type', 'trading_style', 'calc'
+]
+
+LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
+LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
 
 class Invoice(BaseModel):

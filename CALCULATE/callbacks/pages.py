@@ -24,9 +24,10 @@ from CALCULATE.common.messages import (
 
 from messages.manual import msg_manual
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
+from messages.common import transl_status
+
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import calculation, channel_calc, ticker, violation
-from CALCULATE.common.messages import status_transaltes
 
 from .manual.keyboards import kb_manual, kb_manuals
 from .main.keyboards import kb_main, kb_violation
@@ -346,7 +347,7 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
             tp_sl = ''
             if valueCount is None:
-                tp_sl = status_transaltes[lang][status]
+                tp_sl = transl_status(status, lang)
             elif valueCount == 0:
                 tp_sl = texts[lang]['breakeven']
             elif valueCount > 0:

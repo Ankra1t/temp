@@ -11,8 +11,9 @@ from common.utils import set_state_data
 from config_logger import logger
 
 from Classes import pay_guard
-from db import SORT_BY_TYPE, db
+from db import db
 from messages.users import gift_subscribe_msg
+from models import SORT_BY_TYPE
 
 
 from .keyboards import (

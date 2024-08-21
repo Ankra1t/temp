@@ -9,7 +9,8 @@ from CALCULATE.callbacks.utils import send_calc_start
 from MAIN.callbacks.user.pages import send_referral
 from NOTIFIER import notifier
 from common.utils import is_digit
-from db import LANGUAGES, db
+from db import db
+from models import LANGUAGES
 
 from CALCULATE.callbacks import send_manual_page, send_settings
 from CALCULATE.commands import _start as _calc

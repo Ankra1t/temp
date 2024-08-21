@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from io import StringIO
 import os
 from random import randint
 from time import sleep
@@ -39,7 +38,7 @@ from CALCULATE.common.messages import (
 from CALCULATE.states import StatsState
 from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
 from services import calculation, channel_calc, ticker
-from CALCULATE.common.messages import status_transaltes
+from messages.common import transl_status
 
 from ..main.keyboards import kb_main
 from ..settings.keyboards import kb_take_profit, kb_trading_style
@@ -1053,7 +1052,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
                 tp_sl = ''
                 if valueCount is None:
-                    tp_sl = status_transaltes[lang][status]
+                    tp_sl = transl_status(status, lang)
                 elif valueCount == 0:
                     tp_sl = texts[lang]['breakeven']
                     tp_count += 1

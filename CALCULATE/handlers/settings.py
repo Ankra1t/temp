@@ -5,7 +5,8 @@ from telebot.types import Message
 
 from CALCULATE.states.settings import FirstCalcState
 from config_logger import logger
-from db import db, BASE_VALUE_TYPE
+from db import db
+from models import BASE_VALUE_TYPE
 from data.data import liteDb
 from common.utils import digit_accept, is_digit, set_state_data, text_accept
 

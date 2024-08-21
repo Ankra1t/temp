@@ -9,7 +9,7 @@ from services import calculation
 from .CurrencyService import CurrencyService
 
 
-market_translates = {
+transl_market = {
     'ru': {
         'crypto': 'Криптовалюты',
         'paper': 'Акции',
@@ -517,7 +517,7 @@ class CalculationService():
         if calc.market == 'crypto':
             market = 'Крипто' if lang == 'ru' else 'Crypto'
         else:
-            market = market_translates[lang][calc.market]
+            market = transl_market[lang][calc.market]
 
         return (f"""
 <header class="header">

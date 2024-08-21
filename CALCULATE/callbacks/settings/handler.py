@@ -1,15 +1,16 @@
 from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
+
 from CALCULATE.callbacks.main.keyboards import kb_first_calc
 from CALCULATE.callbacks.utils import choose_calculate_step
-
 from CALCULATE.states.settings import FirstCalcState
 from NOTIFIER import notifier
 from config_logger import logger
-from db import db, LANGUAGES
+from db import db
 from data.data import liteDb
 from Classes import text_editor
+from models import LANGUAGES
 
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState

@@ -6,8 +6,8 @@ from common.dt import get_str_by_datetime
 
 from common.lang import getLangByCode
 from config_logger import logger
-from db import LANGUAGES_TYPE, db
-from models import SentMessages, UserInfo, UserNotification
+from db import db
+from models import SentMessages, UserInfo, UserNotification, LANGUAGES_TYPE
 
 
 MESSAGE_TYPE = Literal['text', 'photo', 'video']

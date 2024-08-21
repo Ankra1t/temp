@@ -6,10 +6,16 @@ from datetime import datetime, timedelta
 from Classes import text_editor
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
-from db import LANGUAGES_TYPE, db
+from db import db
 from data.data import liteDb
 from Classes import calcService
-from models import CALC_STATUS_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation, CalculatorStats, ForexInfo, TickerInfo
+from models import (
+    MARKETS_TYPE, TRADING_TYPE, LANGUAGES_TYPE,
+    Calculation, CalculatorStats, ForexInfo, TickerInfo,
+)
+from messages.common import (
+    transl_market, transl_tr_style, transl_tr_type, transl_status
+)
 
 
 POINT = '•'
@@ -17,99 +23,12 @@ TAB = '   '
 ENTER = '\n'
 
 
-market_translates: dict[LANGUAGES_TYPE, dict[MARKETS_TYPE, str]] = {
-    'ru': {
-        'crypto': 'Криптовалюты',
-        'paper': 'Акции',
-        'forex': 'Форекс',
-        'RF': 'РФ',
-        'USA': 'США',
-    },
-    'en': {
-        'crypto': 'Cryptocurrency',
-        'paper': 'Stocks',
-        'forex': 'Forex',
-        'RF': 'RF',
-        'USA': 'USA',
-    },
-    'uz': {
-        'crypto': 'Cryptocurrency',
-        'paper': 'Stocks',
-        'forex': 'Forex',
-        'RF': 'RF',
-        'USA': 'USA',
-    },
-    'tr': {
-        'crypto': 'Cryptocurrency',
-        'paper': 'Stocks',
-        'forex': 'Forex',
-        'RF': 'RF',
-        'USA': 'USA',
-    },
-}
-
-trading_styles_translates = {
-    'пробой уровня': 'breakout',
-    'отбой от уровня': 'bounce',
-    'ложные пробои': 'fakeout',
-    'скользящие средние': 'moving average',
-    'торговля на high/low': 'high/low trading',
-    'Пробой': 'Breakout',
-    'Отбой': 'Bounce',
-    'Ложные': 'Fakeout',
-    'Скользящие': 'Moving average',
-    'high/low': 'high/low',
-}
-
-trading_type_translates: dict[LANGUAGES_TYPE, dict[TRADING_TYPE, str]] = {
-    'ru': {
-        'margin': 'маржинальный',
-        'spot': 'спотовый',
-    },
-    'en': {
-        'margin': 'margin',
-        'spot': 'spot',
-    },
-    'uz': {
-        'margin': 'marjasi',
-        'spot': 'sple',
-    },
-    'tr': {
-        'margin': 'marj',
-        'spot': 'spot',
-    },
-}
-
-status_transaltes: dict[LANGUAGES_TYPE, dict[CALC_STATUS_TYPE, str]] = {
-    'ru': {
-        'WAIT': 'В ожидании',
-        'DEAL': 'В сделке',
-        'CANCEL': 'Отменён',
-    },
-    'en': {
-        'WAIT': 'In wait',
-        'DEAL': 'In deal',
-        'CANCEL': 'Cancel',
-    },
-    'uz': {
-        'WAIT': 'Kutish paytida',
-        'DEAL': 'Bitim',
-        'CANCEL': 'Bekor qilmoq',
-    },
-    'tr': {
-        'WAIT': 'Beklemede',
-        'DEAL': 'Anlaşma içinde',
-        'CANCEL': 'İptal etmek',
-    },
-}
-
-
 def txt_trading_style(lang: LANGUAGES_TYPE, trading_style: str | None):
     if trading_style is None:
         return
 
     if lang != 'ru':
-        result = trading_styles_translates.get(trading_style)
+        result = transl_tr_style(trading_style)
 
         if result is None:
             try:
@@ -487,14 +406,14 @@ def msg_settings(user_id: int, is_risk_update=False):
     return f"""
 ⚙️ <b><u>{texts[lang]["name"]}</u></b>
 
-{POINT} {texts[lang]["market"]}: <b>{market_translates[lang][u_base.market]}</b>
+{POINT} {texts[lang]["market"]}: <b>{transl_market(u_base.market, lang)}</b>
 
 {POINT} {texts[lang]["dep"]}: <b>{show_deposit} {currency}</b>
 {POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
 {POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
 
 {POINT} {texts[lang]["trading_style"]}: <b>{txt_trading_style(lang, u_base.trading_style) or '-'}</b>
-{POINT} {texts[lang]["trading_type"]}: <b>{trading_type_translates[lang][u_base.trading_type]}</b>
+{POINT} {texts[lang]["trading_type"]}: <b>{transl_tr_type(u_base.trading_type, lang)}</b>
 {POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
 
 {POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
@@ -1092,7 +1011,7 @@ def msg_market_stats(user_id: int, market: MARKETS_TYPE, stats: CalculatorStats)
         },
     }
 
-    return f"""📊 <b>{texts[lang]['name']}</b> - <u><b>{market_translates[lang][market]}</b></u>
+    return f"""📊 <b>{texts[lang]['name']}</b> - <u><b>{transl_market(market, lang)}</b></u>
 
 {POINT} {texts[lang]['all']}: <b>{stats.all_stats_count} {texts[lang]['pieces']}</b>
 
@@ -1394,7 +1313,7 @@ def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MA
         },
     }
 
-    return f"""<b>{texts[lang]['market']}</b>: {market_translates[lang][market]}
+    return f"""<b>{texts[lang]['market']}</b>: {transl_market(market, lang)}
 <b>{texts[lang]['dep']}</b>: {dep} {currency}
 <b>{texts[lang]['risk']}</b>: {risk}%"""
 
@@ -1728,7 +1647,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
         text += f'<b><u>{pair}</u></b>'
     elif type == 'crypto' and tool != '':
         text += f'<b><u>{tool}</u></b>'
-    text += f' - {market_translates[lang].get(type, "")} {"(demo)" if is_try else ""}\n\n'
+    text += f' - {transl_market(type, lang)} {"(demo)" if is_try else ""}\n\n'
 
     for el in type_list:
         item = vars_dict[el]
@@ -1745,7 +1664,7 @@ def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
                 ))
 
     if not is_try:
-        text += f'\n<b>{point[lang]["trading_type"]}</b>: {trading_type_translates[lang][trading_type]}\n'
+        text += f'\n<b>{point[lang]["trading_type"]}</b>: {transl_tr_type(trading_type, lang)}\n'
 
     text += '\n'
     return text
@@ -1920,7 +1839,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
             trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}'
 
             if calc.tradingType:
-                trading_style_type = f' ({trading_type_translates[lang][calc.tradingType]})'
+                trading_style_type = f' ({transl_tr_type(calc.tradingType, lang)})'
             trading_style_type += '\n'
 
     # Округление
@@ -1979,7 +1898,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
         demo_show = ' - demo'
 
     if calc.status != 'FINISH':
-        status = f'{status_transaltes[lang][calc.status]}'
+        status = f'{transl_status(calc.status, lang)}'
     else:
         tp_sl_count = (calc.profit or 0) / calc.riskValue
 
@@ -3067,22 +2986,22 @@ def txt_send_data(lang: LANGUAGES_TYPE, send_stat: Calculation):
         short_long = 'short'
 
     if lang == 'ru':
-        dop = f"""#{(send_stat.tool or '').replace('/USDT', '')} - {market_translates[lang][send_stat.market]}
+        dop = f"""#{(send_stat.tool or '').replace('/USDT', '')} - {transl_market(send_stat.market, lang)}
 
 Цена: {send_stat.openPrice} USDT
 Направление: {short_long}"""
     elif lang == 'uz':
-        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+        dop = f"""#{send_stat.tool} - {transl_market(send_stat.market, lang)}
 
 Narx: {send_stat.openPrice} USDT
 Yo'nalish: {short_long}"""
     elif lang == 'tr':
-        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+        dop = f"""#{send_stat.tool} - {transl_market(send_stat.market, lang)}
 
 Fiyat: {send_stat.openPrice} USDT
 Yön: {short_long}"""
     else:
-        dop = f"""#{send_stat.tool} - {market_translates[lang][send_stat.market]}
+        dop = f"""#{send_stat.tool} - {transl_market(send_stat.market, lang)}
 
 Price: {send_stat.openPrice} USDT
 Direction: {short_long}"""

@@ -11,18 +11,12 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from config_logger import logger
 
 from models import (
-    ROLE_TYPE, TRADING_TYPE, Calculation, Forex, ForexInfo, Post, PostDetails,
-    Text, UnfinishedCalculation, UserCalcSettings, UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Task,
-    MARKETS_TYPE
+    BASE_VALUE_TYPE, LANGUAGES_TYPE, ROLE_TYPE,
+    SORT_BY_TYPE, SUBSCRIBE_TYPE, TRADING_TYPE, Calculation,
+    Forex, ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
+    UserCalcSettings, UserInfo, Price, Subscribe,
+    Transactions, Purchase, Worker, Task, MARKETS_TYPE,
 )
-
-SUBSCRIBE_TYPE = Literal['trial', 'PAID']
-BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
-SORT_BY_TYPE = Literal['new', 'old']
-
-LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
-LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
 
 class Database:

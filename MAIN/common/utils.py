@@ -4,9 +4,9 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from common.dt import get_str_by_datetime
 
 from data.data import liteDb
-from db import LANGUAGES_TYPE, db
+from db import db
 from common.utils import get_decimal_count, get_print_float, get_normal_text
-from models import Post, UserInfo
+from models import Post, UserInfo, LANGUAGES_TYPE
 
 
 def get_post_from_message(bot: TeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):

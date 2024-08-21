@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from messages.common import transl_tr_style
 from CALCULATE.callbacks.pages import send_main
 from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import StatsState
@@ -10,7 +11,7 @@ from config_logger import logger
 from data.data import liteDb
 from db import db
 from models import Calculation
-from CALCULATE.common.messages import msg_enter_trading_style, trading_styles_translates
+from CALCULATE.common.messages import msg_enter_trading_style
 from Classes import text_editor, calcService
 from services import calculation, channel_calc
 
@@ -144,7 +145,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
 Чаще всего торговал: <b>{' '.join(max_tools or [])}</b>""" + (f'\nЧаще всего: <b>{max_style}</b>' if max_style else '')
                 else:
-                    result = trading_styles_translates.get(max_style)
+                    result = transl_tr_style(max_style)
 
                     if result is None:
                         try:

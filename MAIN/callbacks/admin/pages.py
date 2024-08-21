@@ -5,7 +5,7 @@ from telebot.types import Message, InputMediaPhoto
 from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_lang, get_print_float
-from db import LANGUAGES_TYPE, db
+from db import db
 from data.data import liteDb
 from Classes import base_statis
 
@@ -13,7 +13,7 @@ from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
 from messages.statistics import admin_main_statistics
 from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
-from models import Post
+from models import Post, LANGUAGES_TYPE
 
 from .main.keyboards import kb_admin_main
 from .tariffs.keyboards import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit

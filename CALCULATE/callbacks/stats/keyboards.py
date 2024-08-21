@@ -1,12 +1,12 @@
 from typing import Literal
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from CALCULATE.common.messages import market_translates
+from CALCULATE.common.messages import transl_market
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
-from db import LANGUAGES_TYPE, db
-from models import MARKETS_TYPE, Calculation
+from db import db
+from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE
 from services import calculation, channel_calc
 
 from ..channel_post.keyboards import getButton as getChannelButton
@@ -37,7 +37,7 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
     )  # 'paper', 'future',
     for i, el in enumerate(markets_list):
         btn = getButton(
-            market_translates[lang][el],
+            transl_market(el, lang),
             'stats_market' if el != prev_market else '',
             -1, el
         )

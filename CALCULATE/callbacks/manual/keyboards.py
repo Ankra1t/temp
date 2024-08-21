@@ -2,8 +2,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt
 from common.utils import get_lang
-from db import LANGUAGES_TYPE
-from models import MANUAL_TYPE
+from models import MANUAL_TYPE, LANGUAGES_TYPE
 
 from .filter import manual_factory
 

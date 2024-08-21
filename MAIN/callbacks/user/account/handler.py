@@ -5,7 +5,8 @@ from telebot.types import CallbackQuery
 
 from Classes.TonWallet import get_connector
 from config_logger import logger
-from db import LANGUAGES, db
+from db import db
+from models import LANGUAGES
 
 from .keyboards import (
     kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,

@@ -3,7 +3,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
-from CALCULATE.common.messages import market_translates, trading_type_translates, txt_trading_style
+from messages.common import transl_market, transl_tr_type
+from CALCULATE.common.messages import txt_trading_style
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
@@ -316,7 +317,7 @@ def kb_change_market(user_id: int, action: str = '', current: MARKETS_TYPE | Non
         cur_show = '✅ ' if current == el else ''
 
         btn = getButton(
-            cur_show + market_translates[lang][el],
+            cur_show + transl_market(el, lang),
             f'market_{el}{""if action == "" else f"_{action}"}'
         )
         buttons.append(btn)
@@ -772,11 +773,11 @@ def kb_trading_type(user_id: int):
     lang = get_lang(user_id)
 
     btn_margin = getButton(
-        trading_type_translates[lang]['margin'].capitalize(),
+        transl_tr_type('margin', lang).capitalize(),
         'trading_type', trading_style='margin'
     )
     btn_spot = getButton(
-        trading_type_translates[lang]['spot'].capitalize(),
+        transl_tr_type('spot', lang).capitalize(),
         'trading_type', trading_style='spot'
     )
     # btn_from_dep = getButton(
