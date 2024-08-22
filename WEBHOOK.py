@@ -117,11 +117,13 @@ def live_info():
     messages = res.get('messages')
     data: list[dict] = res.get('data')
     wait: list[dict] = res.get('wait')
+    canceled: list[dict] = res.get('canceled')
 
     live = (
         None if messages is None else SentMessages(**messages),
         [LiveInfo(**el) for el in data],
-        [LiveWait(**el) for el in wait]
+        [LiveWait(**el) for el in wait],
+        [LiveWait(**el) for el in canceled],
     )
 
     edit_live_info(bot, live)

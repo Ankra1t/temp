@@ -148,11 +148,13 @@ def getLiveInfo():
     messages = res.get('messages')
     data: list[dict] = res.get('data')
     wait: list[dict] = res.get('wait')
+    canceled: list[dict] = res.get('canceled')
 
     return (
         None if messages is None else SentMessages(**messages),
         [LiveInfo(**el) for el in data],
-        [LiveWait(**el) for el in wait]
+        [LiveWait(**el) for el in wait],
+        [LiveWait(**el) for el in canceled],
     )
 
 
