@@ -373,6 +373,7 @@ class LiveInfo(BaseModel):
     messages: Optional[SentMessages]
     currentPrice: Optional[float]
     takeProfit: Optional[float]
+    takeProfitRatio: Optional[float]
     update: Literal[False] | float
 
 

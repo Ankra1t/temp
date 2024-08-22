@@ -6,7 +6,6 @@ from db import db
 from config_logger import logger
 from config_global import API_URL
 from common.vars import HEADERS
-from models import TickerInfo
 
 
 def get_site_code(user_id: int) -> str | Literal[False]:

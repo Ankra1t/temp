@@ -2036,19 +2036,19 @@ def msg_channel_calculation(
 
     calc_result = calcService.get_result(calc)
 
-    if calc.openPrice > calc.stopLoss:
-        long_short = 'long'
-    else:
-        long_short = 'short'
-
     texts = {
         'ru': {
-            'open': 'Покупка' if long_short == 'long' else 'Продажа',
-            'sl': 'Стоп',
+            'open': 'Войду по' if status == 'WAIT' else 'Вошел по' if status == 'DEAL' else 'Вход',
 
-            'conclusion': 'Тейк-профит',
-            'nearest': 'Тейк',
+            'price': 'Цена сейчас',
+            'now': 'Сейчас',
+
+            'stop': 'Стоп',
+            'take': 'Тейк',
             'style': '<b>С</b>тиль',
+
+            'tp': 'тейка',
+            'sl': 'стопа',
 
             'direct': 'Направление',
             'to': 'к',
@@ -2068,12 +2068,17 @@ def msg_channel_calculation(
             'chart': 'График',
         },
         'en': {
-            'open': 'Buy' if long_short == 'long' else 'Sell',
-            'sl': 'Stop loss',
+            'open': 'Will enter by' if status == 'WAIT' else 'Entered by' if status == 'DEAL' else 'Enter',
 
-            'conclusion': 'Take profit',
-            'nearest': 'Take',
+            'stop': 'Stop',
+            'price': 'Current price',
+            'now': 'Now',
+
+            'take': 'Take',
             'style': '<b>S</b>tyle',
+
+            'tp': 'тейка',
+            'sl': 'стопа',
 
             'direct': 'Direction',
             'to': 'to',
@@ -2109,7 +2114,7 @@ def msg_channel_calculation(
     t_style = txt_trading_style(lang, calc.tradingStyle)
     trading_style_type = ''
     if t_style is not None:
-        trading_style_type += f'\n{t_style.capitalize()}'
+        trading_style_type += f'\n\n{t_style.capitalize()}'
         if time != '':
             trading_style_type += f' ({texts[lang][time]})'
 
@@ -2121,69 +2126,42 @@ def msg_channel_calculation(
         round_count
     )
 
-    profit_result = f'\n<b>{texts[lang]["conclusion"]}</b>: '
+    diffOpSl = calc.openPrice - calc.stopLoss
+    current_value_count = None
+    if tickerInfo and tickerInfo.indexPrice and status == 'DEAL':
+        current_value_count = get_print_float(
+            (tickerInfo.indexPrice - calc.openPrice) / diffOpSl, 1
+        )
+
+    profit_result = ''
     if not without_stop:
-        profit_result += '\n'
         for i in range(calc_result.tp_count):
             tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
 
-            diffOpSl = calc.openPrice - calc.stopLoss
-
             if (
-                tickerInfo and tickerInfo.indexPrice and
+                (status == 'CANCEL' and i == 0) or
                 (
-                    (diffOpSl > 0 and tp_val > tickerInfo.indexPrice) or
-                    (diffOpSl < 0 and tp_val < tickerInfo.indexPrice)
-                )
+                    tickerInfo and tickerInfo.indexPrice and
+                    (
+                    (diffOpSl > 0 and tickerInfo.indexPrice > tp_val) or
+                    (diffOpSl < 0 and tickerInfo.indexPrice < tp_val)
+                    )
+                ) or i == 0
             ):
-                profit_result = f'\n<b>{texts[lang]["nearest"]} ({tp_ratio} {texts[lang]["to"]} 1)</b>: '
+                profit_result = f'\n<b>{texts[lang]["take"]}</b> ({get_print_float(calc.riskValue * tp_ratio, 2)}{trading_currency}): '
                 profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
-                break
-
-            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency} ({tp_ratio} {texts[lang]["to"]} 1)'
-
-            if i != calc_result.tp_count - 1:
-                profit_result += '\n'
 
     count_show = ''
     if count != -1:
         count_show = f'{count}. '
 
-    rate24h: float | None = None
-
-    rate_show = ''
-    oborot_show = ''
-    if tickerInfo:
-        # rate24h = tickerInfo.price24hPcnt
-        # if rate24h is not None:
-        #     percent = round(rate24h * 100, 2)
-
-        #     indexPrice = ''
-        #     if tickerInfo and tickerInfo.indexPrice:
-        #         indexPrice = get_print_float(
-        #             tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 10 else 2
-        #         ) + '$ '
-
-        #     rate_show += f' ({indexPrice}{"+" if percent > 0 else ""}{percent}%)'
-
-        turnover = tickerInfo.turnover
-        if turnover is not None:
-            oborot = ''
-            if turnover // (10 ** 9) > 0:
-                oborot = f'{round(turnover / (10**9), 1)}B $'
-            elif turnover // (10 ** 6) > 0:
-                oborot = f'{round(turnover / (10**6), 1)}M $'
-            else:
-                oborot = f'{round(turnover, 0)} $'
-
-            oborot_show += f' (<b>{oborot}</b>)'
+    price_show = ''
+    if tickerInfo and tickerInfo.indexPrice is not None:
+        price_show = f'<code>{get_print_float(tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 100 else 4)}</code>{trading_currency}'
 
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
-        if week_stat_link is not None:
-            return f'<a href="{week_stat_link}">{value}</a>'
-        return value
 
     chart_link = ''
     if try_link != '':
@@ -2196,16 +2174,24 @@ def msg_channel_calculation(
             chart_link = ''
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{oborot_show} | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{f" - {price_show}" if (status == "WAIT" and price_show != "") else ""} | {texts[lang][status]}',
         '',
-        f'<b>{texts[lang]["open"]}</b> ({long_short}): <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
-    )) + ((
-        f'\n<b>{texts[lang]["sl"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code>{trading_currency}'
-        + profit_result
-    ) if not without_stop else '') \
+        f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
+    )) \
+        + (
+            (
+                f'\n<b>{texts[lang]["price"]}</b>: {price_show}'
+            ) if status == 'DEAL' else ''
+    ) \
+        + (
+            (
+                f'\n<b>{texts[lang]["stop"]}</b> ({get_print_float(calc.riskValue, 2)}{trading_currency}): <code>{get_print_float(calc.stopLoss, price_round_count)}</code>{trading_currency}'
+                + profit_result
+            ) if not without_stop else ''
+    ) \
+        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) > 0 else "sl"]}' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
-        + (f'\n\n{calc.comment}' if calc.comment else '') \
-        + oborot_show \
+        + (f'\n\n{calc.comment.strip()}' if calc.comment else '') \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
@@ -2223,13 +2209,18 @@ def msg_channel_calc_result(
     if calc.profit is None:
         return ''
 
+    calc_result = calcService.get_result(calc)
+
     texts = {
         'ru': {
-            'open': '<b>Цена</b> входа',
-            'close': '<b>Цена</b> выхода',
+            'open': '<b>Входил по</b>',
+            'close': '<b>Закрыл по</b>',
+            'result': '<b>Результат</b>',
 
-            'tp': 'Тейк профит',
-            'sl': 'стоп лосс',
+            'stop': '<b>Стоп</b>',
+            'take': '<b>Тейк</b>',
+            'tp': 'тейка',
+            'sl': 'стопа',
 
             'style': '<b>С</b>тиль торговли',
             'deal': '<b>С</b>делка',
@@ -2249,11 +2240,14 @@ def msg_channel_calc_result(
             'chart': 'График',
         },
         'en': {
-            'open': '<b>Open</b> price',
-            'close': '<b>Close</b> price',
+            'open': '<b>Entered by</b>',
+            'close': '<b>Closed</b>',
+            'result': '<b>Result</b>',
 
-            'tp': 'Take profit',
-            'sl': 'stop loss',
+            'stop': '<b>Stop</b>',
+            'take': '<b>Take</b>',
+            'tp': 'take',
+            'sl': 'stop',
 
             'style': '<b>T</b>rading style',
             'deal': '<b>T</b>rade',
@@ -2274,11 +2268,19 @@ def msg_channel_calc_result(
         }
     }
 
-    take_or_stop = 'take' if calc.profit > 0 else 'stop'
+    # Валюта торговли
+    trading_currency = calc.currency
+    tool = calc.tool or ''
+    if calc.forexInfo is not None and calc.market == 'forex':
+        trading_currency = calc.forexInfo.pair[1]
+        tool = ''.join(calc.forexInfo.pair)
 
-    short_long = 'long'
-    if calc.openPrice < calc.stopLoss:
-        short_long = 'short'
+    if trading_currency == 'USDT' or trading_currency == 'USD':
+        trading_currency = '$'
+    else:
+        trading_currency = f' {trading_currency}'
+
+    take_or_stop = 'take' if calc.profit > 0 else 'stop'
 
     tp_sl_count = (calc.profit / calc.riskValue)
     close_price = calc.openPrice + \
@@ -2296,6 +2298,16 @@ def msg_channel_calc_result(
     else:
         result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
+    nearTake = calc.tpRatio[0]
+    nearValue = calc_result.tp_values[0]
+    for i in range(len(calc_result.tp_values)):
+        tp_ratio = calc.tpRatio[i]
+        tp_val = calc_result.tp_values[i]
+
+        if (abs(close_price - tp_val) < abs(close_price - nearValue)):
+            nearValue = tp_val
+            nearTake = tp_ratio
+
     trading_style_type = ''
     t_style = txt_trading_style(lang, calc.tradingStyle)
     if t_style is not None or time != '':
@@ -2307,9 +2319,6 @@ def msg_channel_calc_result(
 
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
-        if week_stat_link is not None:
-            return f'<a href="{week_stat_link}">{value}</a>'
-        return value
 
     chart_link = ''
     if try_link != '':
@@ -2321,11 +2330,15 @@ def msg_channel_calc_result(
         else:
             chart_link = ''
 
-    return f"""{count_show}<b>{link(calc.tool or '-').replace('/USDT', '')}</b> | {result}
+# <b>{texts[lang]["date"]}</b>: {date}
+    return f"""{count_show}<b>{link(tool).replace('/USDT', '')}</b> | {'Завершено' if lang == 'ru' else 'Finished'}
 
-<b>{texts[lang]["date"]}</b>: {date}
-{texts[lang]["open"]} ({texts[lang][short_long]}): {get_print_float(calc.openPrice)} USDT
-{texts[lang]["close"]}: {get_print_float(close_price)} USDT""" \
+{texts[lang]["open"]}: {get_print_float(calc.openPrice)}{trading_currency}
+{texts[lang]["stop"]} ({get_print_float(calc.riskValue, 2)}{trading_currency}): {get_print_float(calc.stopLoss)}{trading_currency}
+{texts[lang]["take"]} ({get_print_float(calc.riskValue * nearTake, 2)}{trading_currency}): {get_print_float(nearValue)}{trading_currency}
+
+⚡️ {texts[lang]["close"]}: {get_print_float(close_price)}{trading_currency}
+⚡️ {texts[lang]["result"]}: {result}""" \
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
