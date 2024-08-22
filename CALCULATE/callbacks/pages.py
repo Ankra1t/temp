@@ -16,15 +16,17 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation, msg_change_style_settings, msg_channel_calculation, msg_deposit, msg_dop_settings, msg_exchange,
-    msg_freeze_calc, msg_main, msg_main_freeze, msg_maker_or_taker,
-    msg_no_uses, msg_settings, msg_sl_op_equal_error,
+    msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation,
+    msg_change_style_settings, msg_channel_calculation, msg_dop_settings, msg_exchange,
+    msg_freeze_calc, msg_maker_or_taker, msg_sl_op_equal_error,
     msg_stop_page, msg_summury_profit_settings, msg_manuals, msg_violation
 )
 
 from messages.manual import msg_manual
+from messages.settings import msg_deposit, msg_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
+from messages.main import msg_main, msg_main_freeze, msg_no_uses
 
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import calculation, channel_calc, ticker, violation
@@ -41,6 +43,9 @@ from .channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_resu
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
+    lang = get_lang(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -50,17 +55,16 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     is_rus = bot.get_chat_member(chat_id, user_id).user.language_code == 'ru'
     is_valid_use = pay_guard.valid_use_calc(user_id, bot)
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
     uses_count = db.get_calculator_uses_count(user_db_id) or 0
     freeze_dt = db.get_user_calc_freeze(user_db_id)
     unfinished_calc = db.get_unfinished_calc_by_user(user_db_id)
 
     if is_valid_use:
-        text = msg_main(user_id, uses_count, True)
+        text = msg_main(lang, uses_count, True)
     elif freeze_dt is not None:
-        text = msg_main_freeze(user_id, freeze_dt)
+        text = msg_main_freeze(lang, freeze_dt)
     else:
-        text = msg_no_uses(user_id)
+        text = msg_no_uses(lang)
 
     keyboard = kb_main(user_id, is_valid_use, None,
                        unfinished_calc is not None)
@@ -77,6 +81,8 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
 
 
 def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -84,8 +90,12 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     liteDb.addPagesCount(user_id)
 
     is_risk_update = liteDb.getRiskUpdate(user_id)
+    u_base = db.get_calc_user_settings(user_db_id)
 
-    msg = msg_settings(user_id, is_risk_update)
+    if u_base is None:
+        return
+
+    msg = msg_settings(lang, u_base, is_risk_update)
     markup = kb_settings(user_id)
 
     if is_first:
@@ -185,12 +195,14 @@ def send_maker_or_taker(bot: TeleBot, message: Message, user_id: int, info: tupl
 
 
 def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=False):
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
     chat_id = message.chat.id
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
+    stop = liteDb.getUserStop(user_id)
     market = db.get_user_current_market(user_db_id)
     u_base = db.get_calc_user_settings(user_db_id)
 
@@ -198,7 +210,7 @@ def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     if u_base is not None:
         is_update = u_base.is_updating_deposit
 
-    text = msg_deposit(user_id)
+    text = msg_deposit(lang, u_base, stop)
     keyboard = kb_change_deposit(user_id, is_update, market)
 
     if is_first:
@@ -1211,7 +1223,8 @@ def send_violation(
 
     isToday = violation.getToday(user_db_id) is not None
 
-    msg = msg_violation(user_id, current.get('points'), isToday, current.get('result'), is_edit)
+    msg = msg_violation(user_id, current.get('points'),
+                        isToday, current.get('result'), is_edit)
 
     kb = kb_violation(user_id, isToday, current.get('canEdit', False), is_edit)
 

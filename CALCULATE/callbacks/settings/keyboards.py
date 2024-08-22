@@ -3,8 +3,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
-from messages.common import transl_market, transl_tr_type
-from CALCULATE.common.messages import txt_trading_style
+from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import MARKETS_TYPE
 
 from .filter import settings_factory
@@ -705,6 +704,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
+    # TODO - check
     styles = {
         'Пробой': 'пробой уровня',
         'Отбой': 'отбой от уровня',
@@ -734,7 +734,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
 
     buttons = []
     for key in styles.keys():
-        buttons.append(getThisButton(txt_trading_style(lang, key) or '', styles[key]))
+        buttons.append(getThisButton(transl_tr_style(key, lang) or '', styles[key]))
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []

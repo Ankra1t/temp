@@ -3,7 +3,6 @@ import requests
 from telebot import TeleBot
 from datetime import datetime, timedelta
 
-from Classes import text_editor
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from db import db
@@ -14,35 +13,8 @@ from models import (
     Calculation, CalculatorStats, ForexInfo, TickerInfo,
 )
 from messages.common import (
-    transl_market, transl_tr_style, transl_tr_type, transl_status
+    ENTER, POINT, TAB, transl_market, transl_tr_style, transl_tr_type, transl_status
 )
-
-
-POINT = '•'
-TAB = '   '
-ENTER = '\n'
-
-
-def txt_trading_style(lang: LANGUAGES_TYPE, trading_style: str | None):
-    if trading_style is None:
-        return
-
-    if lang != 'ru':
-        result = transl_tr_style(trading_style)
-
-        if result is None:
-            try:
-                result = str(
-                    text_editor.translator.translate(
-                        trading_style, 'en', 'ru'
-                    ).text
-                )
-            except:
-                result = trading_style
-    else:
-        result = trading_style
-
-    return result
 
 
 def txt_atr_bars(lang: LANGUAGES_TYPE, value: str):
@@ -163,27 +135,6 @@ def get_freeze_annotation(lang: LANGUAGES_TYPE):
 
 
 # Основные страницы
-def msg_uses_count(user_id: int, count: int):
-    lang = get_lang(user_id)
-
-    text = {
-        'ru': {
-            'uses': 'Бесплатных расчетов',
-        },
-        'en': {
-            'uses': 'Free calculations left',
-        },
-        'uz': {
-            'uses': 'Bepul hisob-kitoblar',
-        },
-        'tr': {
-            'uses': 'Kalan ücretsiz hesaplama',
-        },
-    }
-
-    return f'{text[lang]["uses"]}: <b>{count}</b>'
-
-
 def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None):
     text_time = {
         'avg': 'Среднесрочная',
@@ -196,325 +147,6 @@ def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str
 Отправка опроса: {'Да' if vote else 'Нет'}
 Базовый стиль: {style or '-'}
 Базовый период: {text_time[time] if time is not None else '-'}"""
-
-
-def msg_main(user_id: int, uses_count: int, is_rus=False):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'name': 'Меню',
-            '1': 'Настройте калькулятор',
-            '2': 'Получите точные расчеты',
-            'uses': 'Бесплатных расчетов',
-        },
-        'en': {
-            'name': 'Menu',
-            '1': 'Choose the market',
-            '2': 'Get accurate calculations',
-            'uses': 'Free calculations left',
-        },
-        'uz': {
-            'name': 'Menyu',
-            '1': 'Bozorni tanlang',
-            '2': 'To\'g\'ri hisob-kitoblarni oling',
-            'uses': 'Bepul hisob-kitoblar qoldi',
-        },
-        'tr': {
-            'name': 'Menü',
-            '1': 'Pazarı seçin',
-            '2': 'Doğru hesaplamalar alın',
-            'uses': 'Ücretsiz hesaplamalar kaldı',
-        },
-    }
-
-    return f"""
-⚡️ <b><u>{texts[lang]["name"]}</u></b>
-
-1. <b>{texts[lang]["1"]}</b>
-2. <b>{texts[lang]["2"]}</b>
-
-{msg_uses_count(user_id, uses_count) if not is_rus else ''}
-"""
-
-
-def msg_no_uses(user_id: int):
-    lang = get_lang(user_id)
-    text = {
-        'ru': {
-            '1': 'Тестовые 100 использований закончились',
-            '2': 'Перейдите в бота рекомендаций для покупки доступа'
-        },
-        'en': {
-            '1': '100 test uses are over',
-            '2': 'Go to the signal bot for buying access'
-        },
-        'uz': {
-            '1': 'Test 100 ta foydalanish tugadi',
-            '2': 'Kirishni sotib olish uchun bot tavsiyalariga o\'ting'
-        },
-        'tr': {
-            '1': '100 kullanımlık test erişim sona erdi',
-            '2': 'Erişim satın almak için öneri botuna gidiniz'
-        },
-    }
-
-    return f"""
-❗️ {text[lang]["1"]}
-{text[lang]["2"]}
-"""
-
-
-def msg_main_freeze(user_id: int, freeze_dt: datetime):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'name': 'Меню',
-        },
-        'en': {
-            'name': 'Menu',
-        },
-        'uz': {
-            'name': 'Menyu',
-        },
-        'tr': {
-            'name': 'Menü',
-        },
-    }
-
-    return f"""⚡️ <b><u>{texts[lang]["name"]}</u></b>
-
-{msg_frozen(user_id, get_str_by_datetime(freeze_dt))}
-"""
-
-
-def msg_settings(user_id: int, is_risk_update=False):
-    lang = get_lang(user_id)
-
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    calc_output = db.get_user_calc_output(user_db_id)
-
-    u_base = db.get_calc_user_settings(user_db_id)
-    if u_base is None:
-        return ''
-
-    texts = {
-        'ru': {
-            'name': 'Настройки',
-            'dep': 'Базовый депозит',
-            'risk': 'Базовый риск',
-            'day_risk': 'Риск на день',
-            'round_count': 'Округление до',
-            'trading_style': 'Стиль торговли',
-            'trading_type': 'Тип торговли',
-            'updating_deposit': 'Обновление депозита',
-            'tp_show': 'Деление профита',
-            'market': 'Рынок',
-            'round_count': 'Округление',
-            'on': 'Включено',
-            'off': 'Выключено',
-
-            'output': 'Вывод расчета',
-            'by_text': 'текстом',
-            'by_image': 'картинкой',
-
-            'is_risk_update': 'Изменение риска во время расчета'
-        },
-        'en': {
-            'name': 'Settings',
-            'dep': 'Default deposit',
-            'risk': 'Default risk',
-            'day_risk': 'Daily risk',
-            'round_count': 'Rounding',
-            'trading_style': 'Trading style',
-            'trading_type': 'Trading type',
-            'updating_deposit': 'Deposit updating',
-            'tp_show': 'Profit division',
-            'market': 'Market',
-            'on': 'On',
-            'off': 'Off',
-
-            'output': 'Calc output',
-            'by_text': 'in text',
-            'by_image': 'in image',
-
-            'is_risk_update': 'Changing of risk at the time of calculation'
-        },
-        'uz': {
-            'name': 'Sozlamalar',
-            'dep': 'Asosiy depozit',
-            'risk': 'Asosiy xavf',
-            'day_risk': 'Kundalik xavf',
-            'round_count': 'Yaxlitlash',
-            'trading_style': 'Savdo uslubi',
-            'trading_type': 'Savdo turi',
-            'updating_deposit': 'Depozitni yangilash',
-            'tp_show': 'Foyda taqsimoti',
-            'market': 'Bozor',
-            'on': 'Haqida',
-            'off': 'Yopiq',
-
-            'output': 'Hisoblash chiqishi',
-            'by_text': 'matnda',
-            'by_image': 'rasmda',
-
-            'is_risk_update': 'Hisoblash paytida xavfning o\'zgarishi'
-        },
-        'tr': {
-            'name': 'Ayarlar',
-            'dep': 'Temel depozito',
-            'risk': 'Temel risk',
-            'day_risk': 'Günlük risk',
-            'round_count': 'Rounding',
-            'trading_style': 'Ticaret tarzı',
-            'trading_type': 'Ticaret türü',
-            'updating_deposit': 'Depozito güncellemesi',
-            'tp_show': 'Kâr paylaşımı',
-            'market': 'Pazar',
-            'on': 'Üzerinde',
-            'off': 'Kapalı',
-
-            'output': 'Hesaplama çıktısı',
-            'by_text': 'metinde',
-            'by_image': 'görüntüde',
-
-            'is_risk_update': 'Hesaplama sırasında risk değişimi'
-        },
-    }
-
-    currency = u_base.currency or ''
-
-    tp_result = ''
-    for el in u_base.tp_ratio:
-        tp_result += f'x{el} '
-
-    show_deposit = '-'
-    if u_base.deposit is not None:
-        show_deposit = get_print_float(u_base.deposit)
-
-    show_risk = (str(get_print_float(u_base.risk[0])) +
-                 ("%" if u_base.risk[1] else f" {currency}")) if (u_base.risk is not None) else "-"
-
-    show_day_risk = (f'{get_print_float(u_base.day_risk[0])}' +
-                     ('%' if u_base.day_risk[1] else f' {currency}')) if (u_base.day_risk is not None) else "-"
-
-    updating_deposit = texts[lang]['off']
-    if u_base.is_updating_deposit:
-        updating_deposit = texts[lang]['on']
-
-    return f"""
-⚙️ <b><u>{texts[lang]["name"]}</u></b>
-
-{POINT} {texts[lang]["market"]}: <b>{transl_market(u_base.market, lang)}</b>
-
-{POINT} {texts[lang]["dep"]}: <b>{show_deposit} {currency}</b>
-{POINT} {texts[lang]["risk"]}: <b>{show_risk}</b>
-{POINT} {texts[lang]["updating_deposit"]}: <b>{updating_deposit}</b>
-
-{POINT} {texts[lang]["trading_style"]}: <b>{txt_trading_style(lang, u_base.trading_style) or '-'}</b>
-{POINT} {texts[lang]["trading_type"]}: <b>{transl_tr_type(u_base.trading_type, lang)}</b>
-{POINT} {texts[lang]["tp_show"]}: <b>{tp_result}</b>
-
-{POINT} {texts[lang]["day_risk"]}: <b>{show_day_risk}</b>
-{POINT} {texts[lang]["round_count"]}: <b>{u_base.round_count or '-'}</b>
-
-{POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>
-{POINT} {texts[lang]["is_risk_update"]}: <b>{texts[lang]['on'] if is_risk_update else texts[lang]['off']}</b>"""
-
-
-def msg_deposit(user_id: int):
-    lang = get_lang(user_id)
-
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    u_base = db.get_calc_user_settings(user_db_id)
-
-    stop = liteDb.getUserStop(user_id)
-
-    if stop is None:
-        stop_show = '-'
-    elif stop == 'default':
-        stop_show = '-'
-    elif stop == 'atr':
-        stop_show = 'ATR'
-    else:
-        _, percent = stop.split('+')
-        stop_show = f'{percent}% of ATR'
-
-    is_update = False
-    deposit = '-'
-    currency = 'USD'
-    round_count = '-'
-    if u_base is not None:
-        deposit = get_print_float(u_base.deposit or 0.) or deposit
-        currency = u_base.currency or currency
-        is_update = u_base.is_updating_deposit
-        round_count = u_base.round_count if u_base.round_count is not None else round_count
-
-    info = {
-        'ru': 'Настройте калькулятор для максимально удобного использования, начиная от депозита, заканчивая округлениями цифр и деление профита для частичного выхода из сделки(ок)',
-        'en': 'Personalize the calculator for highest ease of use, from deposit to rounding figures and dividing the profit for partial exit from the trade(s).',
-        'uz': "Kalkulyatorni omonatdan boshlab, raqamlarning yaxlitlanishi va qisman bitimdan qisman bo'linish bilan tugash bilan tugaydigan kalkulyatorni sozlang",
-        'tr': 'Hesap makinesini, depozitten başlayarak, sayıların yuvarlanması ve işlemden kısmi çıkış için kârın bölünmesi ile biten en uygun kullanım için yapılandırın (OK)',
-    }
-
-    info_upd = {
-        'ru': "При сохранении статистики по каждой сделке, депозит может автоматически изменяться (при вкл функции), рассчитывая новые сделки, исходя из действующего депозита",
-        'en': "When saving statistics for each trade, the deposit can automatically change (when the function is on), calculating new trades based on the current deposit",
-        'uz': "Har bir bitim bo'yicha statistikani saqlab turganda, omonat avtomatik ravishda joriy omonat asosida yangi operatsiyalarni hisoblash, yangi operatsiyalarni hisoblashi mumkin",
-        'tr': "Her işlemle ilgili istatistikleri korurken, depozito otomatik olarak değişebilir (bir işlevin bir işleviyle), mevcut depozitoya dayalı yeni işlemleri hesaplayabilir",
-    }
-
-    texts = {
-        'ru': {
-            'main': 'Настройка депозита',
-            'dep': 'Текущий депозит',
-            'update': 'Обновление депозита',
-            'on': 'включено',
-            'round_count': 'Округление',
-            'stop': 'Вид риска',
-            'off': 'выключено',
-        },
-        'en': {
-            'main': 'Deposit setup',
-            'dep': 'Current deposit',
-            'update': 'Updating the deposit',
-            'on': 'on',
-            'round_count': 'Rounding',
-            'stop': 'Type of risk',
-            'off': 'off',
-        },
-        'uz': {
-            'main': 'Depozit sozlamalari',
-            'dep': 'Joriy depozit',
-            'update': 'Omonatni yangilash',
-            'on': 'yoqilgan',
-            'round_count': 'Yaxlitlash',
-            'stop': 'Xavf turi',
-            'off': 'o\'chirilgan',
-        },
-        'tr': {
-            'main': 'Depozito ayarları',
-            'dep': 'Vadeli mevduat',
-            'update': 'Depozitoyu güncellemek',
-            'on': 'etkin',
-            'round_count': 'Yuvarlama',
-            'stop': 'Risk türü',
-            'off': 'kapalı',
-        },
-    }
-
-    return f"""<b><u>{texts[lang]['main']}</u></b>
-
-{info[lang]}
-
-{POINT} {texts[lang]['dep']}: <b>{deposit} {currency}</b>
-{POINT} {texts[lang]['round_count']}: <b>{round_count}</b>
-{POINT} {texts[lang]['stop']}: <b>{stop_show}</b>
-
-{POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
-{info_upd[lang]}
-"""
 
 
 def msg_change_style_settings(user_id: int, style: str, style_update_on: bool):
@@ -567,7 +199,7 @@ Hesaplamalar sırasında ticaret stilinizi de değiştirebilirsiniz.Bazı tücca
 
 {info[lang]}
 
-{POINT} {txt_current_value(lang)}: <b>{txt_trading_style(lang, style) or '-'}</b>
+{POINT} {txt_current_value(lang)}: <b>{transl_tr_style(style, lang) or '-'}</b>
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if style_update_on else texts[lang]['off']}</b>
 """
 
@@ -1196,156 +828,6 @@ def msg_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
 """ + bars
 
 
-# Первые сообщения
-def msg_welcome(user_id: int):
-    lang = get_lang(user_id)
-
-    if lang == 'ru':
-        return f"""Как работает калькулятор:
-
-<b>Мой баланс</b>: 10 000 USDT
-
-<b>Инструмент</b>: Биткоин
-<b>Цена</b>: 62000 USDT
-
-Сколько монет нужно купить на <b>10 000</b> USDT?"""
-    elif lang == 'uz':
-        return f"""Kalkulyator qanday ishlaydi:
-
-<b>Mening balansim</b>: 10 000 USDT
-
-<b>Asbob</b>: Bitcoin
-<b>Narx</b>: 62000 USDT
-
-Siz sotib olishingiz kerak bo'lgan juda ko'p tanga <b>10 000</b> USDT?"""
-    elif lang == 'tr':
-        return """Hesap Makinesi Nasıl Çalışır?:
-
-<b>Benim dengem</b>: 10 000 USDT
-
-<b>Enstrüman</b>: Bitcoin
-<b>Fiyat</b>: 62000 USDT
-
-Kaç para satın almanız gerekiyor <b>10 000</b> USDT?"""
-    else:
-        return """How the calculator works:
-
-<b>My balance</b>: 10 000 USDT
-
-<b>Instrument</b>: Bitcoin
-<b>Price</b>: 62000 USDT
-
-How many coins you need to buy for <b>10 000</b> USDT?"""
-
-    if lang == 'ru':
-        return f"""Этим калькулятором пользуются уже 15 000 человек по всему миру.
-
-Нужен для управления риском во время торговли.
-
-Трейдеры рискуют не более <b>1-2% депозита</b> на каждую сделку.
-
-<i>на примере акций Газпром: </i>
-
-<b>Ваш</b> <b>депозит</b>: 100 000 руб
-<b>Риск</b>: 1% (1 000 руб)
-<b>Цена за акцию</b>: 125 руб
-<b>Стоп</b>: 120 руб
-
-👉Вопрос
-
-Сколько нужно купить акций, чтобы при цене 120, убыток составлял только 1 000 руб из 100 000 руб?
-
-Калькулятор рассчитал:
-<b>200 акций.</b>
-
-Высчитывает и ближайшие тейк-профиты, где фиксируется прибыль.
-
-<b>Попробуйте теперь Вы.</b>"""
-    else:
-        return """This calculator is already used by 15,000 people around the world. 
-
-It is intended for managing risk while trading.
-
-Traders risk no more than <b>1-2% of their deposit</b> on each trade.
-
-<i>On the example of Amazon shares: </i>
-
-<b>Your deposit</b>: 100,000 USD
-<b>Risk</b>: 1% (1 000 USD)
-<b>Price per share</b>: 185 USD
-<b>Stop loss</b>: 180 USD
-
-👉Question
-
-How many shares should you buy so that at the price of 180, the loss is only 1,000 USD out of 100,000 USD?
-
-The calculator has figured out:
-<b>200 shares.</b>
-
-It also calculates the nearest take profit where the profit is fixed.
-
-<b>Try it now.</b>"""
-
-
-def msg_after_first_settings(user_id: int, dep: float, currency: str, market: MARKETS_TYPE, risk: float):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'market': 'Рынок',
-            'dep': 'Депозит',
-            'risk': 'Риск на сделку'
-        },
-        'en': {
-            'market': 'Market',
-            'dep': 'Deposit',
-            'risk': 'Trade risk'
-        },
-        'uz': {
-            'market': 'Bozor',
-            'dep': 'Depozit',
-            'risk': 'Savdo xavfi'
-        },
-        'tr': {
-            'market': 'Pazar',
-            'dep': 'Depozito',
-            'risk': 'Ticaret riski'
-        },
-    }
-
-    return f"""<b>{texts[lang]['market']}</b>: {transl_market(market, lang)}
-<b>{texts[lang]['dep']}</b>: {dep} {currency}
-<b>{texts[lang]['risk']}</b>: {risk}%"""
-
-
-def msg_success_base_set(user_id: int):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            '1': 'Базовые значения сохранены',
-            '2': 'Поменять их можно в настройках'
-        },
-        'en': {
-            '1': 'The basic data have been saved',
-            '2': 'You can change them in the settings'
-        },
-        'uz': {
-            '1': 'Asosiy qiymatlar saqlangan',
-            '2': 'ularni sozlamalarda o\'zgartirishingiz mumkin'
-        },
-        'tr': {
-            '1': 'Temel değerler kaydedildi',
-            '2': 'Bunları ayarlardan değiştirebilirsiniz'
-        },
-    }
-
-    return f"""
-✅ {texts[lang]["1"]}!
-{texts[lang]["2"]} ⚙️
-"""
-
-
 # Базовые
 def msg_success_edit(user_id: int):
     lang = get_lang(user_id)
@@ -1358,19 +840,6 @@ def msg_success_edit(user_id: int):
     }
 
     return f'✅ {texts[lang]}!'
-
-
-def msg_frozen(user_id: int, datetime: str):
-    lang = get_lang(user_id)
-
-    text = {
-        'ru': 'Калькулятор заморожен до',
-        'en': 'The calculator is frozen until',
-        'uz': 'Kalkulyator qotib qolgan',
-        'tr': 'Hesap makinesi tarihine kadar donduruldu',
-    }
-
-    return f'❄️ {text[lang]} <b>{datetime}</b>'
 
 
 # Ошибки ввода данных
@@ -1834,7 +1303,7 @@ def msg_calculation(user_id: int, calc: Calculation, is_try=False):
 
     trading_style_type = ''
     if not is_try:
-        t_style = txt_trading_style(lang, calc.tradingStyle)
+        t_style = transl_tr_style(calc.tradingStyle, lang)
         if t_style is not None:
             trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}'
 
@@ -2025,7 +1494,7 @@ def msg_channel_calculation(
     else:
         trading_currency = f' {trading_currency}'
 
-    t_style = txt_trading_style(lang, calc.tradingStyle)
+    t_style = transl_tr_style(calc.tradingStyle, lang)
     trading_style_type = ''
     if t_style is not None:
         trading_style_type += f'\n{t_style.capitalize()}'
@@ -2216,7 +1685,7 @@ def msg_channel_calc_result(
         result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
     trading_style_type = ''
-    t_style = txt_trading_style(lang, calc.tradingStyle)
+    t_style = transl_tr_style(calc.tradingStyle, lang)
     if t_style is not None or time != '':
         trading_style_type += '\n\n'
     if t_style is not None:

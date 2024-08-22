@@ -12,6 +12,7 @@ from data.data import liteDb
 from Classes import text_editor
 from models import LANGUAGES
 
+from messages.main import msg_success_base_set, msg_welcome
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from CALCULATE.common.messages import (
@@ -19,7 +20,7 @@ from CALCULATE.common.messages import (
     msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_market,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
-    msg_settings_change_market, msg_success_base_set, msg_success_edit, msg_settings_change_base, msg_welcome,
+    msg_settings_change_market, msg_success_edit, msg_settings_change_base,
 )
 from services import auth, calculation
 
@@ -47,6 +48,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     add_count = callback_data.get('count', '')
 
     user_id = call.from_user.id
+    lang = get_lang(user_id)
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = call.message.chat.id
@@ -158,7 +160,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                 if 'welcome' in type:
                     bot.edit_message_text(
-                        msg_success_base_set(user_id), chat_id, mes_id
+                        msg_success_base_set(lang), chat_id, mes_id
                     )
                 else:
                     bot.edit_message_text(
@@ -217,7 +219,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     liteDb.setFirstLang(user_id)
 
                     bot.edit_message_text(
-                        msg_welcome(user_id), chat_id, mes_id,
+                        msg_welcome(lang), chat_id, mes_id,
                         reply_markup=kb_first_calc(user_id),
                         disable_web_page_preview=True
                     )

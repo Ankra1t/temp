@@ -1,9 +1,9 @@
 from typing import Literal
-from CALCULATE.common.messages import POINT
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_lang, get_print_float
-from models import Price, Purchase, UserInfo
+from messages.common import POINT
 
+from models import Price, Purchase, UserInfo
 from db import db
 
 

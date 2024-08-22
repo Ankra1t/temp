@@ -2,7 +2,6 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from CALCULATE.common.messages import POINT
 from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_lang, get_print_float
 from db import db
@@ -13,6 +12,7 @@ from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
 from messages.statistics import admin_main_statistics
 from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
+from messages.common import POINT
 from models import Post, LANGUAGES_TYPE
 
 from .main.keyboards import kb_admin_main

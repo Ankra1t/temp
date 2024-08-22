@@ -20,7 +20,7 @@ from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_st
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from CALCULATE.states.stats import ChannelCalcState
 from common.calculation import get_count_value_bet
-from common.utils import delete_message, edit_message, get_print_float, set_state_data
+from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from data.data import liteDb
@@ -33,9 +33,10 @@ from CALCULATE.common.messages import (
     msg_calculation_deleted, msg_channel_calculation, msg_enter_calc_img_text,
     msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus,
     msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
-    msg_frozen, msg_market_stats, msg_enter_profit_sum,
+     msg_market_stats, msg_enter_profit_sum,
 )
 from CALCULATE.states import StatsState
+from messages.main import msg_frozen
 from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
 from services import calculation, channel_calc, ticker
 from messages.common import transl_status
@@ -193,6 +194,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     )  # type: ignore
 
     user_id = call.from_user.id
+    lang = get_lang(user_id)
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
@@ -212,7 +214,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         db.set_user_calc_freeze(user_db_id, date, market)
 
         bot.edit_message_text(
-            msg_frozen(user_id, get_str_by_datetime(date)),
+            msg_frozen(lang, get_str_by_datetime(date)),
             chat_id, mes_id
         )
         bot.delete_state(user_id, chat_id)

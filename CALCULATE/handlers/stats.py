@@ -11,7 +11,7 @@ from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
 from Classes import calcService
 from db import db
-from common.utils import delete_message, digit_accept, set_state_data, text_accept
+from common.utils import delete_message, digit_accept, get_lang, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from CALCULATE.states import StatsState
@@ -21,8 +21,9 @@ from CALCULATE.callbacks import (
     send_confirm_calc_send
 )
 from CALCULATE.common.messages import (
-    msg_digit_error, msg_freeze_error, msg_frozen, msg_text_error
+    msg_digit_error, msg_freeze_error, msg_text_error
 )
+from messages.main import msg_frozen
 from services import calculation, channel_calc, violation
 
 
@@ -96,6 +97,7 @@ def handle_sum(message: Message, bot: TeleBot):
 
 def handle_freeze_dt(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
@@ -135,7 +137,7 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
     db.set_user_calc_freeze(user_db_id, finish_freeze, market)
     bot.send_message(
         chat_id,
-        msg_frozen(user_id, get_str_by_datetime(finish_freeze))
+        msg_frozen(lang, get_str_by_datetime(finish_freeze))
     )
     bot.delete_state(user_id, chat_id)
 

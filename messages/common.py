@@ -1,4 +1,10 @@
 from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, MARKETS_TYPE, TRADING_TYPE
+from Classes import text_editor
+
+
+POINT = '•'
+TAB = '   '
+ENTER = '\n'
 
 
 def transl_market(market: MARKETS_TYPE, lang: LANGUAGES_TYPE = 'ru'):
@@ -34,23 +40,6 @@ def transl_market(market: MARKETS_TYPE, lang: LANGUAGES_TYPE = 'ru'):
     }
 
     return texts.get(lang, {}).get(market, '')
-
-
-def transl_tr_style(value: str):
-    texts = {
-        'пробой уровня': 'breakout',
-        'отбой от уровня': 'bounce',
-        'ложные пробои': 'fakeout',
-        'скользящие средние': 'moving average',
-        'торговля на high/low': 'high/low trading',
-        'Пробой': 'Breakout',
-        'Отбой': 'Bounce',
-        'Ложные': 'Fakeout',
-        'Скользящие': 'Moving average',
-        'high/low': 'high/low',
-    }
-
-    return texts.get(value, '')
 
 
 def transl_tr_type(type: TRADING_TYPE, lang: LANGUAGES_TYPE = 'ru'):
@@ -101,3 +90,38 @@ def transl_status(status: CALC_STATUS_TYPE, lang: LANGUAGES_TYPE = 'ru'):
     }
 
     return texts.get(lang, {}).get(status, '')
+
+
+def transl_tr_style(trading_style: str | None, lang: LANGUAGES_TYPE = 'ru'):
+    if trading_style is None:
+        return
+
+    result = trading_style
+
+    if lang != 'ru':
+        texts = {
+            'пробой уровня': 'breakout',
+            'отбой от уровня': 'bounce',
+            'ложные пробои': 'fakeout',
+            'скользящие средние': 'moving average',
+            'торговля на high/low': 'high/low trading',
+            'Пробой': 'Breakout',
+            'Отбой': 'Bounce',
+            'Ложные': 'Fakeout',
+            'Скользящие': 'Moving average',
+            'high/low': 'high/low',
+        }
+
+        result = texts.get(trading_style, '')
+
+        if result is None:
+            try:
+                result = str(
+                    text_editor.translator.translate(
+                        trading_style, 'en', 'ru'
+                    ).text
+                )
+            except:
+                pass
+
+    return result

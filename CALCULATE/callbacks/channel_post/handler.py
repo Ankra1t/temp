@@ -12,7 +12,7 @@ from data.data import liteDb
 from db import db
 from models import Calculation
 from CALCULATE.common.messages import msg_enter_trading_style
-from Classes import text_editor, calcService
+from Classes import calcService
 from services import calculation, channel_calc
 
 from .keyboards import kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
@@ -145,17 +145,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
 Чаще всего торговал: <b>{' '.join(max_tools or [])}</b>""" + (f'\nЧаще всего: <b>{max_style}</b>' if max_style else '')
                 else:
-                    result = transl_tr_style(max_style)
+                    result = transl_tr_style(max_style, 'en')
 
-                    if result is None:
-                        try:
-                            result = str(
-                                text_editor.translator.translate(
-                                    max_style, 'en', 'ru'
-                                ).text
-                            )
-                        except:
-                            result = max_style
                     text = f""" - {count_all} deals
 - {count_short} short
 - {count_long} long

@@ -8,8 +8,9 @@ from config_logger import logger
 from db import db
 from models import BASE_VALUE_TYPE
 from data.data import liteDb
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept
 
+from messages.main import msg_after_first_settings, msg_success_base_set
 from CALCULATE.callbacks import (
     kb_base_cancel, kb_splitting, kb_trading_style,
     send_settings, send_user_deposit, kb_deposit_cancel,
@@ -23,8 +24,7 @@ from CALCULATE.common.messages import (
     msg_choose_exchange_level, msg_currency_error, msg_digit_error, msg_enter_day_risk,
     msg_enter_deposit, msg_enter_exchange_not_found,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_trading_style,
-    msg_after_first_settings, msg_splitting_error,
-    msg_success_base_set, msg_success_edit, msg_text_error
+    msg_splitting_error, msg_success_edit, msg_text_error
 )
 
 
@@ -250,6 +250,7 @@ def handle_round_count(message: Message, bot: TeleBot):
 
 def handle_trading_style(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
@@ -275,7 +276,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     bot.delete_state(user_id, chat_id)
 
     if action == 'welcome':
-        bot.send_message(chat_id, msg_success_base_set(user_id))
+        bot.send_message(chat_id, msg_success_base_set(lang))
     else:
         bot.send_message(chat_id, msg_success_edit(user_id))
 
@@ -314,6 +315,7 @@ def handle_first_deposit(message: Message, bot: TeleBot):
 def handle_first_risk(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
+    lang = get_lang(user_id)
 
     message.text = (message.text or '').replace('%', '')
 
@@ -335,7 +337,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
 
     bot.send_message(
         chat_id, msg_after_first_settings(
-            user_id, u_base.deposit or 0,
+            lang, u_base.deposit or 0,
             'USDT', u_base.market,
             (u_base.risk or (1, True))[0]
         ),
