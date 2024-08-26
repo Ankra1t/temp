@@ -1299,7 +1299,7 @@ def edit_live_info(
                         result = ('<b>Тейк</b>' if lang == 'ru' else '<b>Take</b>') \
                             + f""": {get_print_float(
                                 calc_.takeProfit, 0 if calc_.takeProfit > 100 else 4
-                            )}$""" + (f' ({get_print_float(calc_.takeProfitRatio, 1)})' if calc_.takeProfitRatio else '')
+                            )}""" + (f' ({get_print_float(calc_.takeProfitRatio, 1)})' if calc_.takeProfitRatio else '')
                     else:
                         result = 'В сделке' if lang == 'ru' else 'In deal'
                         result = f'<b>{result}</b>'
@@ -1320,7 +1320,7 @@ def edit_live_info(
                     price = get_print_float(
                         calc_.currentPrice, 0 if calc_.currentPrice > 100 else 4
                     )
-                    price = f' - {price}$'
+                    price = f' - {price}'
 
                     # if calc_.takeProfit:
                     #     take_profit = '\n\n'
@@ -1430,12 +1430,13 @@ def edit_live_info(
                             bot, int(chId),
                             int(live[0].mesIds[chId_i])
                         )
-                    new_mes = bot.send_message(
+
+                    new_mes = antiflood(
+                        bot.send_message,
                         chId, msg,
                     )
                     new_live_mes_ids.append(str(new_mes.id))
                 else:
-                    print('UPDATE')
                     antiflood(
                         bot.edit_message_text,
                         msg, chId, int(live[0].mesIds[chId_i])
