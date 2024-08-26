@@ -1,6 +1,11 @@
+from typing import Literal
+from CALCULATE.common.messages import txt_current_value
 from common.utils import get_print_float
 from messages.common import POINT, transl_market, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, UserCalcSettings
+
+# TODO - delete db from messages files
+from db import db
 
 
 def msg_settings(lang: LANGUAGES_TYPE, u_base: UserCalcSettings, is_risk_update=False):
@@ -210,5 +215,174 @@ def msg_deposit(lang: LANGUAGES_TYPE, u_base: UserCalcSettings | None, stop: str
 {POINT} {texts[lang]['stop']}: <b>{stop_show}</b>
 
 {POINT} {texts[lang]['update']}: <b>{texts[lang]['on'] if is_update else texts[lang]['off']}</b>
-{info_upd[lang]}
-"""
+{info_upd[lang]}"""
+
+
+def msg_settings_change_base(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'subname': 'Изменение значений',
+        },
+        'en': {
+            'name': 'Settings',
+            'subname': 'Change base',
+        },
+        'uz': {
+            'name': 'Sozlamalar',
+            'subname': 'Qiymat o\'zgarishi',
+        },
+        'tr': {
+            'name': 'Ayarlar',
+            'subname': 'Değerlerin değiştirilmesi',
+        },
+    }
+
+    return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
+
+
+def msg_settings_change_market(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'subname': 'Изменение рынка',
+        },
+        'en': {
+            'name': 'Settings',
+            'subname': 'Change market',
+        },
+        'uz': {
+            'name': 'Sozlamalar',
+            'subname': 'Bozordagi o\'zgarishlar',
+        },
+        'tr': {
+            'name': 'Ayarlar',
+            'subname': 'Piyasa değiştirilmes',
+        },
+    }
+
+    return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
+
+
+def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool):
+    texts = {
+        'ru': {
+            'main': 'Дополнительные настройки',
+            'output': 'Здесь вы можете настроить тип вывод расчёта',
+            'text': 'текст',
+            'photo': 'картинка',
+            'risk': 'А также функцию изменения риска в момент расчёта',
+            'on': 'включено',
+            'off': 'выключено'
+        },
+        'en': {
+            'main': 'Extra settings',
+            'output': 'Here you can set up the type of calculation output',
+            'text': 'text',
+            'photo': 'image',
+            'risk': 'As well as the function of risk change at the moment of calculation',
+            'on': 'on',
+            'off': 'off'
+        },
+        'uz': {
+            'main': 'Qo\'shimcha Sozlamalar',
+            'output': 'Bu yerda siz hisoblash chiqishi turini o\'rnatishingiz mumkin',
+            'text': 'matn',
+            'photo': 'rasm',
+            'risk': 'Shuningdek, hisoblash paytida xavf o\'zgarishi funktsiyasi',
+            'on': 'Kiritilgan',
+            'off': 'o\'chirilgan',
+        },
+        'tr': {
+            'main': 'Ekstra ayarlar',
+            'output': 'Burada hesaplama çıktısının türünü ayarlayabilirsiniz',
+            'text': 'metin',
+            'photo': 'görüntü',
+            'risk': 'Hesaplama anında risk değişiminin işlevi kadar',
+            'on': 'Etkin',
+            'off': 'kapalı',
+        },
+    }
+
+    return f"""<b><u>{texts[lang]['main']}</u></b>
+
+{texts[lang]['output']}
+{txt_current_value(lang)}: <b>{texts[lang][output]}</b>
+
+{texts[lang]['risk']}
+{txt_current_value(lang)}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
+
+
+def msg_summury_profit_settings(lang: LANGUAGES_TYPE, user_db_id: int):
+    u_base = db.get_calc_user_settings(user_db_id)
+    tp_ratio = u_base.tp_ratio if (u_base is not None) else []
+    split_values = u_base.split_values if (u_base is not None) else None
+
+    texts = {
+        'ru': {
+            'name': 'Настройки',
+            'info': 'Деление тейк-профита позволяет выходить из сделки частями, заранее зная цену, объем для фиксации',
+            'subname': 'Деление профита',
+            'take_profit': 'Ваш тейк-профит',
+            'split': 'Разделение',
+            'on': 'включено',
+            'off': 'выключено',
+        },
+        'en': {
+            'name': 'Settings',
+            'info': 'The division of the take profit allows you to leave the transaction in parts, knowing in advance the price, the volume for fixation',
+            'subname': 'Profit division',
+            'take_profit': 'Your take profit',
+            'split': 'Splitting',
+            'on': 'turned on',
+            'off': 'turned off',
+        },
+        'uz': {
+            'name': 'Sozlamalari',
+            'info': "Formni olishning bo'linishi sizga bitimni qismlarga, fiksatov uchun hajmini bilish, narxni bilish, narxni bilish, narxni ajratish va",
+            'subname': 'Daromad taqsimoti',
+            'take_profit': 'Sizning daromadingiz',
+            'split': 'Ajratish',
+            'on': 'Kiritilgan',
+            'off': 'o\'chirilgan',
+        },
+        'tr': {
+            'name': 'Ayarlar',
+            'info': 'Kâr Alma Bölümü, fiyatı önceden bilerek işlemi parçalar halinde bırakmanıza izin verir, tespit hacmi',
+            'subname': 'Kâr paylaşımı',
+            'take_profit': 'Take profitiniz',
+            'split': 'Bölme',
+            'on': 'Etkin',
+            'off': 'kapalı',
+        },
+    }
+
+    info_result = ''
+
+    if split_values is not None and len(split_values) != 0:
+        on_off = "on"
+
+        for i, el in enumerate(tp_ratio):
+            info_result += f'<b>x{el} ({split_values[i]}%)</b>'
+
+            if i == len(tp_ratio) - 1:
+                pass
+            elif i % 3 != 2:
+                info_result += ' - '
+            else:
+                info_result += '\n'
+    else:
+        on_off = "off"
+
+        info_result = f'{texts[lang]["take_profit"]}: '
+        for i, el in enumerate(tp_ratio):
+            info_result += f'<b>x{el}</b>'
+            if i != len(tp_ratio) - 1:
+                info_result += ' - '
+
+    return f"""⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>
+
+{texts[lang]['info']}
+
+{texts[lang]["split"]}: <b>{texts[lang][on_off]}</b>
+{info_result}"""

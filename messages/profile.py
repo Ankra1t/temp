@@ -1,24 +1,12 @@
 from typing import Literal
 from common.dt import get_datetime_now, get_str_by_datetime
-from common.utils import get_lang, get_print_float
 from messages.common import POINT
+from models import LANGUAGES_TYPE, Price, Purchase, UserInfo
 
-from models import Price, Purchase, UserInfo
 from db import db
 
 
-def default_menu(name: str):
-    return f"""
-<b>{name}</b>
-
-Выберите:
-"""
-
-
-def msg_referral(user_id: int, ref_count: int, bot_name: str):
-    lang = get_lang(user_id)
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-
+def msg_referral(lang: LANGUAGES_TYPE, ref_count: int, bot_name: str, user_db_id: int):
     texts = {
         'ru': {
             '1': f'<b>Сейчас у вас:</b> {ref_count} реферал(ов)',
@@ -47,13 +35,10 @@ def msg_referral(user_id: int, ref_count: int, bot_name: str):
 {texts[lang]['2']}
 {texts[lang]['3']}😉
 
-<code>https://t.me/{bot_name}/?start={user_db_id}</code>
-"""
+<code>https://t.me/{bot_name}/?start={user_db_id}</code>"""
 
 
-def msg_referral_list(user_id: int, referrals: list[UserInfo]):
-    lang = get_lang(user_id)
-
+def msg_referral_list(lang: LANGUAGES_TYPE, user_db_id: int, referrals: list[UserInfo]):
     texts = {
         'ru': {
             'name': 'Ник',
@@ -82,7 +67,7 @@ def msg_referral_list(user_id: int, referrals: list[UserInfo]):
         for ref in referrals:
             name = f'@{ref.tg_username}' if ref.tg_username else '-'
 
-            purchase = db.get_purchases_by_user(user_id)
+            purchase = db.get_purchases_by_user(user_db_id)
             money = 0
             for el in purchase:
                 money += el.sum or 0
@@ -93,9 +78,7 @@ def msg_referral_list(user_id: int, referrals: list[UserInfo]):
     return res
 
 
-def msg_site_login(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_site_login(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'name': 'Вход на сайт',
@@ -122,11 +105,10 @@ def msg_site_login(user_id: int):
     return f"""<b><u>{texts[lang]['name']}</u></b>
 
 👇 {texts[lang]['click']}
-<i>{texts[lang]['time']}</i>
-"""
+<i>{texts[lang]['time']}</i>"""
 
 
-def msg_user_tariff(user_id: int, tariff: Price):
+def msg_user_tariff(tariff: Price):  # TODO - переводы
     discount = ''
     if tariff.discount is not None:
         now = get_datetime_now()
@@ -140,41 +122,10 @@ def msg_user_tariff(user_id: int, tariff: Price):
 {tariff.description}
 <i>действует {tariff.duration_days} дн.</i>
 
-{discount}
-"""
+{discount}"""
 
 
-def msg_admin_tariff(tariff: Price):
-    discount = ''
-    if tariff.discount is not None:
-        now = get_datetime_now()
-        if tariff.discount.findate > now:
-            fin_date = get_str_by_datetime(tariff.discount.findate)
-            discount = f'Скидка <b>{get_print_float(tariff.discount.percent, 2)}%</b> до {fin_date}'
-
-    return f"""
-{tariff.name}
-<b>{get_print_float(tariff.price)} {tariff.currency}</b>
-{tariff.description}
-
-Продукт: <b>{tariff.type_product}</b>
-Действует <b>{tariff.duration_days}</b> дней
-""" + (f'\n{discount}' if discount != '' else '')
-
-
-def msg_admin_users_markets(counts: dict[str, int]):
-    return f"""<b><u>Клиенты по рынкам</u></b>
-
-{POINT} Крипта: <b>{counts.get('crypto', 0)}</b>
-{POINT} Форекс: <b>{counts.get('forex', 0)}</b>
-{POINT} РФ: <b>{counts.get('RF', 0)}</b>
-{POINT} США: <b>{counts.get('USA', 0)}</b>
-"""
-
-
-def msg_user_account(user_id: int, spent: float, refs: int):
-    lang = get_lang(user_id)
-
+def msg_user_account(lang: LANGUAGES_TYPE, spent: float, refs: int):
     texts = {
         'ru': {
             'name': 'Личный кабинет',
@@ -205,9 +156,7 @@ def msg_user_account(user_id: int, spent: float, refs: int):
 # {texts[lang]['spent']}: <b>{get_print_float(spent)}</b>
 
 
-def msg_user_params(user_id: int, user: UserInfo):
-    lang = get_lang(user_id)
-
+def msg_user_params(lang: LANGUAGES_TYPE, user: UserInfo):
     texts = {
         'ru': {
             'main': 'Параметры',
@@ -232,9 +181,7 @@ def msg_user_params(user_id: int, user: UserInfo):
 <b>{texts[lang]['name']}</b>: {user.nickname or '-'}"""
 
 
-def msg_user_purchases(user_id: int, purchases: list[Purchase]):
-    lang = get_lang(user_id)
-
+def msg_user_purchases(lang: LANGUAGES_TYPE, purchases: list[Purchase]):
     texts = {
         'ru': {
             'name': 'Мои покупки',
@@ -299,9 +246,7 @@ def msg_user_purchases(user_id: int, purchases: list[Purchase]):
     return result
 
 
-def msg_enter_nickname(user_id: int, error: Literal['min', 'max', 'taken', 'default'] | None = None):
-    lang = get_lang(user_id)
-
+def msg_enter_nickname(lang: LANGUAGES_TYPE, error: Literal['min', 'max', 'taken', 'default'] | None = None):
     texts = {
         'ru': {
             'err_min': 'Минимальная длина 4 символа',

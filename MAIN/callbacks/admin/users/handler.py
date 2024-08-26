@@ -2,7 +2,6 @@ import math
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from MAIN.common.messages import msg_admin_users_markets
 from MAIN.common.utils import get_short_user_info
 from MAIN.states import AdminUsersState
 from common.dt import get_str_by_datetime
@@ -12,6 +11,7 @@ from config_logger import logger
 
 from Classes import pay_guard
 from db import db
+from messages.admin import msg_admin_users_markets
 from messages.users import gift_subscribe_msg
 from models import SORT_BY_TYPE
 

@@ -8,7 +8,6 @@ from telebot import TeleBot
 
 from AuthRoles import first_timeout
 from CALCULATE.states.stats import ChannelCalcState
-from MAIN.common.messages import msg_user_tariff
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
 from db import db
 from data.data import liteDb
@@ -17,13 +16,14 @@ from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
     msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation,
-    msg_change_style_settings, msg_channel_calculation, msg_dop_settings, msg_exchange,
+    msg_change_style_settings, msg_channel_calculation, msg_exchange,
     msg_freeze_calc, msg_maker_or_taker, msg_sl_op_equal_error,
-    msg_stop_page, msg_summury_profit_settings, msg_manuals, msg_violation
+    msg_stop_page, msg_manuals, msg_violation
 )
 
 from messages.manual import msg_manual
-from messages.settings import msg_deposit, msg_settings
+from messages.profile import msg_user_tariff
+from messages.settings import msg_deposit, msg_dop_settings, msg_settings, msg_summury_profit_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
 from messages.main import msg_main, msg_main_freeze, msg_no_uses
@@ -114,10 +114,12 @@ def send_dop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     calc_output = db.get_user_calc_output(user_db_id)
     is_risk_update = liteDb.getRiskUpdate(user_id)
 
-    msg = msg_dop_settings(user_id, calc_output, is_risk_update)
+    msg = msg_dop_settings(lang, calc_output, is_risk_update)
     markup = kb_dop_settings(user_id, calc_output, is_risk_update)
 
     if is_first:
@@ -252,9 +254,12 @@ def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, i
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+
     bot.delete_state(user_id, chat_id)
 
-    text = msg_summury_profit_settings(user_id)
+    text = msg_summury_profit_settings(lang, user_db_id)
     kb = kb_summury_profit(user_id)
 
     if is_first:
@@ -545,7 +550,7 @@ def send_tariffs_list_item(
         else:
             image = tariff.img_en or tariff.img
 
-        text = msg_user_tariff(user_id, tariff)
+        text = msg_user_tariff(tariff)
         keyboard = kb_tariff_list(
             user_id, tariff_id, count, tariff_type, page, is_rus)
 

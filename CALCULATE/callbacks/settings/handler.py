@@ -10,6 +10,7 @@ from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import text_editor
+from messages.settings import msg_settings_change_base, msg_settings_change_market
 from models import LANGUAGES
 
 from messages.main import msg_success_base_set, msg_welcome
@@ -20,7 +21,7 @@ from CALCULATE.common.messages import (
     msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_exchange, msg_enter_market,
     msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type,
-    msg_settings_change_market, msg_success_edit, msg_settings_change_base,
+    msg_success_edit
 )
 from services import auth, calculation
 
@@ -249,7 +250,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'go_change_base':
         bot.edit_message_text(
-            msg_settings_change_base(user_id),
+            msg_settings_change_base(lang),
             chat_id, mes_id,
             reply_markup=kb_change_base(user_id)
         )
@@ -276,7 +277,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 )
             else:
                 bot.edit_message_text(
-                    msg_settings_change_market(user_id),
+                    msg_settings_change_market(lang),
                     chat_id, mes_id,
                     reply_markup=kb
                 )

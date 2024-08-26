@@ -4,8 +4,10 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from Classes.TonWallet import get_connector
+from common.utils import get_lang
 from config_logger import logger
 from db import db
+from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 from models import LANGUAGES
 
 from .keyboards import (
@@ -16,7 +18,6 @@ from .filter import user_account_factory, UserAccountCallbackFilter
 from ..pages import send_referral, send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
-from MAIN.common.messages import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
 from CALCULATE.common.messages import msg_choose_lang, msg_support
 
@@ -27,8 +28,11 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data: dict = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
 
-    chat_id = call.message.chat.id
     user_id = call.from_user.id
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
+    chat_id = call.message.chat.id
     mes_id = call.message.id
 
     logger.info(
@@ -39,7 +43,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         purchases = db.get_purchases_by_user(user_id)
 
         bot.edit_message_text(
-            msg_user_purchases(user_id, purchases),
+            msg_user_purchases(lang, purchases),
             chat_id, mes_id,
             reply_markup=kb_user_purchases(user_id)
         )
@@ -67,7 +71,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         user_db_id = db.get_user_id_by_tg_id(user_id)
         referrals = db.get_user_referals(user_db_id)
 
-        text = msg_referral_list(user_id, referrals)
+        text = msg_referral_list(lang, user_db_id, referrals)
 
         bot.edit_message_text(
             text, chat_id, mes_id,
@@ -102,7 +106,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'set_name':
         bot.edit_message_text(
-            msg_enter_nickname(user_id), chat_id, mes_id,
+            msg_enter_nickname(lang), chat_id, mes_id,
             reply_markup=kb_user_params_back(user_id)
         )
         bot.set_state(user_id, UserAccountState.nickname, chat_id)

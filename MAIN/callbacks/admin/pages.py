@@ -2,7 +2,6 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from MAIN.common.messages import msg_admin_tariff
 from common.utils import delete_message, get_lang, get_print_float
 from db import db
 from data.data import liteDb
@@ -11,7 +10,7 @@ from Classes import base_statis
 from MAIN.common.utils import get_print_signal_info
 from common.dt import get_str_by_datetime
 from messages.statistics import admin_main_statistics
-from messages.workers import admin_fut_posts_msg, admin_main_msg, admin_users_msg, menu_msg
+from messages.admin import msg_admin_fut_posts, msg_admin_main, msg_admin_tariff, msg_admin_users, msg_admin_menu
 from messages.common import POINT
 from models import Post, LANGUAGES_TYPE
 
@@ -66,7 +65,7 @@ def send_admin_main(
             count_first_lang += 1
 
     keyboard = kb_admin_main()
-    text = admin_main_msg(
+    text = msg_admin_main(
         count_all, count_with_sub, count_blocked,
         count_admins, len(todays_users), count_first_tries,
         count_first_lang, count_refs, lang_counts
@@ -111,7 +110,7 @@ def send_admin_users(
     count_blocked = len(db.get_blocked_users())
     count_with_sub = base_statis.count_payments_dry()
 
-    text = admin_users_msg(count_all, count_with_sub,
+    text = msg_admin_users(count_all, count_with_sub,
                            count_blocked, lang_counts)
     keyboard = kb_admin_users()
 
@@ -169,7 +168,7 @@ def send_admin_fut_posts(
 
     posts_count = len(db.get_all_posts())
 
-    text = admin_fut_posts_msg(posts_count)
+    text = msg_admin_fut_posts(posts_count)
     keyboard = kb_posts()
 
     if is_first:
@@ -195,7 +194,7 @@ def send_admin_params(
 
     bot.delete_state(user_id, chat_id)
 
-    text = menu_msg('Параметры')
+    text = msg_admin_menu('Параметры')
     keyboard = kb_params()
 
     if is_first:
@@ -355,7 +354,7 @@ def send_admin_workers(
 
     bot.delete_state(user_id, chat_id)
 
-    text = menu_msg('Работники')
+    text = msg_admin_menu('Работники')
     keyboard = kb_admin_workers()
 
     if is_first:
@@ -466,7 +465,7 @@ def send_admin_tariffs(
 
     bot.delete_state(user_id, chat_id)
 
-    text = menu_msg('Тарифы')
+    text = msg_admin_menu('Тарифы')
     keyboard = kb_admin_tariffs()
 
     if is_first:
