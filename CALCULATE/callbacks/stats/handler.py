@@ -1428,12 +1428,13 @@ def edit_live_info(
                             bot, int(chId),
                             int(live[0].mesIds[chId_i])
                         )
-                    new_mes = bot.send_message(
+
+                    new_mes = antiflood(
+                        bot.send_message,
                         chId, msg,
                     )
                     new_live_mes_ids.append(str(new_mes.id))
                 else:
-                    print('UPDATE')
                     antiflood(
                         bot.edit_message_text,
                         msg, chId, int(live[0].mesIds[chId_i])

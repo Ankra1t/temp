@@ -3,7 +3,7 @@ import flask
 from flask import jsonify, request, send_file, Response
 
 from CALCULATE.callbacks.calculate.handler import send_after_first_try
-from CALCULATE.callbacks.stats.handler import edit_live_info, send_vote, send_week_stats
+from CALCULATE.callbacks.stats.handler import edit_channel_post, edit_live_info, send_vote, send_week_stats
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
@@ -101,6 +101,22 @@ def stats_post():
         return Response(status=400)
 
     send_week_stats(bot, is_new_week=True)
+
+    return Response(status=200)
+
+@app.route(base_url + '/calc_post', methods=['GET'])
+def calc_post():
+    # access_token = db.get_access_token()
+    # api_key = request.headers.get('tg-api-key')
+
+    # if access_token is None or api_key is None or access_token != api_key:
+    #     return Response(status=400)
+
+    calc_id = request.args.get('calc_id')
+    if calc_id is None or not calc_id.isnumeric():
+        return Response(status=400)
+
+    edit_channel_post(bot, int(calc_id))
 
     return Response(status=200)
 

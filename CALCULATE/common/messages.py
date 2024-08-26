@@ -2189,7 +2189,7 @@ def msg_channel_calculation(
                 + profit_result
             ) if not without_stop else ''
     ) \
-        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) > 0 else "sl"]}' if current_value_count is not None else '') \
+        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{calc.comment.strip()}' if calc.comment else '') \
         + trading_style_type \
