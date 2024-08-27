@@ -1,12 +1,22 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
+from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+
+from keyboards.stats import kb_calc_result
 
 from common.keyboard import back_txt, cancel_txt
-from common.utils import get_lang
-from models import Calculation
+from models import LANGUAGES_TYPE, Calculation
 from db import db
 
-from ..stats.keyboards import kb_calc_result
-from .filter import main_factory
+
+main_factory = CallbackData('type', 'stat_id', 'is_saved', prefix='main')
+
+
+class MainCallbackFilter(AdvancedCustomFilter):
+    key = 'main'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, is_saved=False, stat_id=-1):
@@ -20,15 +30,11 @@ def getButton(text: str, type: str, is_saved=False, stat_id=-1):
     )
 
 
-def cancel_btn(user_id: int):
-    lang = get_lang(user_id)
-
+def cancel_btn(lang: LANGUAGES_TYPE):
     return getButton(cancel_txt(lang), 'go_main')
 
 
-def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
-    lang = get_lang(user_id)
-
+def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     isAdmin = db.get_worker_role(user_db_id)
 
@@ -142,7 +148,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
                     )
                 )
         else:
-            kb = kb_calc_result(user_id, stat)
+            kb = kb_calc_result(lang, user_db_id, stat)
             buttons_rows = kb.keyboard
 
             for row in buttons_rows:
@@ -155,9 +161,7 @@ def kb_main(user_id: int, is_access=True, stat: Calculation | None = None, is_un
     return keyboard
 
 
-def kb_first_calc(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_first_calc(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'calc': 'Рассчитать',
@@ -180,9 +184,7 @@ def kb_first_calc(user_id: int):
     return keyboard
 
 
-def kb_menu_back(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_menu_back(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton(back_txt(lang), 'go_main'),
@@ -190,8 +192,7 @@ def kb_menu_back(user_id: int):
     return keyboard
 
 
-def kb_violation(user_id: int, isToday: bool, canEdit: bool, is_edit: bool):
-    lang = get_lang(user_id)
+def kb_violation(lang: LANGUAGES_TYPE, isToday: bool, canEdit: bool, is_edit: bool):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     texts = {
@@ -239,8 +240,7 @@ def kb_violation(user_id: int, isToday: bool, canEdit: bool, is_edit: bool):
     return keyboard
 
 
-def kb_violation_skip(user_id: int):
-    lang = get_lang(user_id)
+def kb_violation_skip(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {

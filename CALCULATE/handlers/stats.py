@@ -3,9 +3,6 @@ from datetime import timedelta, datetime
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.main.keyboards import kb_violation_skip
-from CALCULATE.callbacks.pages import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation
-from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.settings import ViolationState
 from CALCULATE.states.stats import ChannelCalcState
 from config_logger import logger
@@ -14,12 +11,12 @@ from db import db
 from common.utils import delete_message, digit_accept, get_lang, set_state_data, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
+from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
+from keyboards.main import kb_violation_skip
+from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
+from callbacks.stats import edit_channel_post
+
 from CALCULATE.states import StatsState
-from CALCULATE.callbacks import (
-    kb_deal_profit_minus, kb_calc_image_text,
-    send_calculation, send_freeze,
-    send_confirm_calc_send
-)
 from messages.errros import msg_digit_error, msg_freeze_error, msg_text_error
 from messages.main import msg_frozen
 from services import calculation, channel_calc, violation
@@ -38,7 +35,7 @@ def handle_loss(message: Message, bot: TeleBot):
     if value is None:
         bot.send_message(
             chat_id, msg_digit_error(lang),
-            reply_markup=kb_deal_profit_minus(user_id, stat_id)
+            reply_markup=kb_deal_profit_minus(lang, stat_id)
         )
         return
 
@@ -74,7 +71,7 @@ def handle_sum(message: Message, bot: TeleBot):
     if value is None or value < 0:
         bot.send_message(
             chat_id, msg_digit_error(lang, 0),
-            reply_markup=kb_deal_profit_minus(user_id, stat_id)
+            reply_markup=kb_deal_profit_minus(lang, stat_id)
         )
         return
 
@@ -146,6 +143,8 @@ def handle_freeze_dt(message: Message, bot: TeleBot):
 
 def handle_calc_image_text(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -158,7 +157,7 @@ def handle_calc_image_text(message: Message, bot: TeleBot):
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = bot.send_message(
             chat_id, calc_text,
-            reply_markup=kb_calc_image_text(user_id, stat_id)
+            reply_markup=kb_calc_image_text(lang, stat_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -309,7 +308,7 @@ def handle_violation_message(message: Message, bot: TeleBot):
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = bot.send_message(
             chat_id, msg_text_error(lang),
-            reply_markup=kb_violation_skip(user_id)
+            reply_markup=kb_violation_skip(lang)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return

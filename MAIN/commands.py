@@ -4,7 +4,6 @@ from telebot.util import extract_arguments
 
 from config_logger import logger
 from AuthRoles import check_registrate
-from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel_post
 from CALCULATE.callbacks.utils import send_calc_start
 from MAIN.callbacks.user.pages import send_referral
 from NOTIFIER import notifier
@@ -13,7 +12,8 @@ from db import db
 from messages.main import msg_support
 from models import LANGUAGES
 
-from CALCULATE.callbacks import send_manual_page, send_settings
+from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual_page, send_settings
+
 from CALCULATE.commands import _start as _calc
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code, kb_support

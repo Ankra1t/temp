@@ -5,7 +5,7 @@ from models import MANUAL_TYPE
 from messages.common import msg_manuals
 
 from .filter import manual_factory, ManualCallbackFilter
-from ..pages import send_main, send_manual
+from pages.calculate import send_main, send_manual
 
 
 def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):

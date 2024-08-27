@@ -17,7 +17,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
 from AuthRoles import vote_timeout
+
 from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_stop, kb_channel_calc_result_take
+from CALCULATE.callbacks.settings.keyboards import kb_take_profit, kb_trading_style
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from CALCULATE.states.stats import ChannelCalcState
 from CALCULATE.states import StatsState
@@ -41,15 +43,16 @@ from messages.stats import msg_market_stats
 from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
 from services import calculation, channel_calc, ticker
 
-from ..main.keyboards import kb_main
-from ..settings.keyboards import kb_take_profit, kb_trading_style
-from .keyboards import (
+from keyboards.main import kb_main
+
+from keyboards.stats import (
+    stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
 )
-from .filter import stats_factory, StatsCallbackFilter
-from ..pages import send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+from pages.calculate import send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+
 
 loading_vote_message_ids: dict[int, tuple[int, int]] = {}
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
@@ -227,7 +230,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             delete_message(bot, chat_id, mes_id)
             bot.send_message(
                 chat_id, msg_enter_save_calc(lang),
-                reply_markup=kb_deal_result(user_id, calc_id)
+                reply_markup=kb_deal_result(lang, calc_id)
             )
         else:
             is_cancel = False
@@ -242,7 +245,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     msg_enter_profit_minus(lang),
                     chat_id, mes_id,
-                    reply_markup=kb_deal_profit_minus(user_id, calc_id)
+                    reply_markup=kb_deal_profit_minus(lang, calc_id)
                 )
             else:
                 if 'loss' in profit:
@@ -283,7 +286,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_profit_sum(lang),
             chat_id, mes_id,
-            reply_markup=kb_deal_profit_cancel(user_id, calc_id)
+            reply_markup=kb_deal_profit_cancel(lang, calc_id)
         )
 
     if type == 'go_main':
@@ -294,7 +297,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if calc is not None and not calc.openedList:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(user_id, calc)
+                reply_markup=kb_calc_result(lang, user_db_id, calc)
             )
 
         send_stats(bot, call.message, user_id,
@@ -306,7 +309,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             text, chat_id, mes_id,
-            reply_markup=kb_stats(user_id, 'market')
+            reply_markup=kb_stats(lang, 'market')
         )
 
     if type == 'back_calc':
@@ -320,7 +323,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             is_access = pay_guard.valid_use_calc(user_id, bot)
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(user_id, calc, True)
+                reply_markup=kb_calc_result(lang, user_db_id, calc, True)
             )
 
     if 'delete_calc' in type:
@@ -348,7 +351,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
-                kb_main(user_id, is_valid, calc_info),
+                kb_main(lang, user_id, is_valid, calc_info),
                 media
             )
         else:
@@ -364,7 +367,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 msg_calculate_delete(lang, text),
-                kb_calculate_delete(user_id, calc_id),
+                kb_calculate_delete(lang, calc_id),
                 media
             )
 
@@ -387,7 +390,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 msg_calculate_change(lang, text),
-                kb_calculate_change(user_id, calc_id),
+                kb_calculate_change(lang, calc_id),
                 media
             )
         elif kind == 'back':
@@ -407,14 +410,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
-                kb_main(user_id, is_valid, calc_info),
+                kb_main(lang, user_id, is_valid, calc_info),
                 media
             )
         elif kind == 'open_price':
             edit_message(
                 bot, call.message, 'text',
                 msg_enter_open_price(lang),
-                kb_deal_profit_cancel(user_id, calc_id)
+                kb_deal_profit_cancel(lang, calc_id)
             )
             bot.set_state(user_id, CalculateState.open_price, chat_id)
             set_state_data(
@@ -427,7 +430,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, 'text',
                 msg_enter_stop_loss(lang),
-                kb_deal_profit_cancel(user_id, calc_id)
+                kb_deal_profit_cancel(lang, calc_id)
             )
             bot.set_state(user_id, CalculateState.stop_loss, chat_id)
             set_state_data(
@@ -450,7 +453,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             edit_message(
                 bot, call.message, 'text', msg,
-                kb_deal_profit_cancel(user_id, calc_id)
+                kb_deal_profit_cancel(lang, calc_id)
             )
             bot.set_state(user_id, state, chat_id)
             set_state_data(
@@ -515,7 +518,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         text = msg_enter_calc_img_text(lang, calc)
-        kb = kb_calc_image_text(user_id, calc)
+        kb = kb_calc_image_text(lang, calc)
 
         new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
@@ -532,7 +535,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         text = 'Введите комментарий:'
-        kb = kb_calc_image_text(user_id, calc)
+        kb = kb_calc_image_text(lang, calc)
 
         new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
@@ -570,7 +573,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_reply_markup(
             chat_id, mes_id,
             reply_markup=kb_calc_result(
-                user_id, calc
+                lang, user_db_id, calc
             )
         )
         send_confirm_calc_send(bot, call.message, calc_id, True)

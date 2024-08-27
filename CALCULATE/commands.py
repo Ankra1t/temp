@@ -4,7 +4,7 @@ from telebot.types import Message
 from db import db
 
 # from CALCULATE.common.messages import msg_support
-from CALCULATE.callbacks import send_manual_page, send_main
+from pages.calculate import send_manual_page, send_main
 # from MAIN.callbacks import kb_support
 
 

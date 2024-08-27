@@ -3,9 +3,6 @@ from telebot.types import CallbackQuery
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation, channel_calc, ticker
-from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
-from ..settings.keyboards import kb_first_dep
-from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
 from data.data import liteDb
@@ -13,9 +10,15 @@ from common.utils import get_decimal_count, get_lang, set_state_data
 from Classes import currencyService
 from models import Calculation, ForexInfo, UnfinishedCalculation
 
-from .filter import calculate_factory, CalculateCallbackFilter
-from ..utils import choose_calculate_step
-from ..pages import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
+from CALCULATE.callbacks.settings.keyboards import kb_first_dep
+from CALCULATE.callbacks.utils import choose_calculate_step
+from CALCULATE.states.calculate import CalculateState
+
+from keyboards.calculate import (
+    calculate_factory, CalculateCallbackFilter, kb_calc_cancel, kb_calc_direct
+)
+
+from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -148,7 +151,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_max_bar(lang),
             chat_id, mes_id,
-            reply_markup=kb_calc_cancel(user_id)
+            reply_markup=kb_calc_cancel(lang)
         )
         bot.set_state(user_id, CalculateState.max_bar, chat_id)
 
@@ -166,7 +169,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             msg_choose_direct(lang, user_id), chat_id, mes_id,
-            reply_markup=kb_calc_direct(user_id)
+            reply_markup=kb_calc_direct(lang)
         )
 
         rate = 1
@@ -271,7 +274,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                     stopLoss=stop_loss,
                     tradingStyle=calc.tradingStyle,
                     tradingType=calc.tradingType,
-                    roundCount=(u_base.round_count or 5) if u_base is not None else 5,
+                    roundCount=(
+                        u_base.round_count or 5) if u_base is not None else 5,
                     tool=calc.tool,
                     tpRatio=calc.tpRatio,
                     splitValues=calc.splitValues,

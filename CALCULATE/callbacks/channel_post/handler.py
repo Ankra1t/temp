@@ -1,10 +1,8 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from messages.common import transl_tr_style
-from CALCULATE.callbacks.pages import send_main
-from CALCULATE.callbacks.stats.handler import edit_channel_post
 from CALCULATE.states.stats import StatsState
+from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, set_state_data
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
@@ -15,15 +13,18 @@ from models import Calculation
 from Classes import calcService
 from services import calculation, channel_calc
 
+from callbacks.stats import edit_channel_post
+
 from .keyboards import kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
 from .filter import ChannelPostCallbackFilter, channel_post_factory
-from ..pages import (
+from pages.calculate import (
     send_admin_channel_calc_item,
     send_admin_channel_calc_list,
     send_admin_send_settings,
     send_calc_stat_item,
     send_calculation,
-    send_stats
+    send_stats,
+    send_main
 )
 
 

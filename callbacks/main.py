@@ -1,16 +1,18 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.stats.handler import send_week_stats
 from config_logger import logger
-from common.utils import delete_message
+from common.utils import delete_message, get_lang
 from db import db
 from services import calculation, violation
 
-from ..stats.keyboards import kb_calc_result
-from ..utils import send_calc_start
-from ..pages import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
-from .filter import main_factory, MainCallbackFilter
+from callbacks.stats import send_week_stats
+from keyboards.stats import kb_calc_result
+
+from CALCULATE.callbacks.utils import send_calc_start
+
+from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
+from keyboards.main import main_factory, MainCallbackFilter
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
@@ -20,9 +22,11 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     stat_id = int(callback_data.get('stat_id', -1))
 
     user_id = call.from_user.id
+    user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     chat_id = call.message.chat.id
     mes_id = call.message.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
 
     is_rus = call.from_user.language_code == 'ru'
 
@@ -35,7 +39,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if calc is not None:
             bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(user_id, calc)
+                reply_markup=kb_calc_result(lang, user_db_id, calc)
             )
         else:
             delete_message(bot, chat_id, mes_id)

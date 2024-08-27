@@ -1,16 +1,26 @@
 from typing import Literal
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
+from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+
+from CALCULATE.callbacks.channel_post.keyboards import getButton as getChannelButton
 
 from common.keyboard import back_txt, cancel_txt
-from common.utils import get_lang
 
 from db import db
 from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE
 from services import calculation, channel_calc
 
-from ..channel_post.keyboards import getButton as getChannelButton
-from .filter import stats_factory
+
+stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
+
+
+class StatsCallbackFilter(AdvancedCustomFilter):
+    key = 'stats'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'crypto', page=0):
@@ -25,9 +35,7 @@ def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'cry
     )
 
 
-def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market: MARKETS_TYPE | None = None):
-    lang = get_lang(user_id)
-
+def kb_stats(lang: LANGUAGES_TYPE, type: Literal['main', 'market'] = 'main', prev_market: MARKETS_TYPE | None = None):
     row_width = 2
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -56,8 +64,7 @@ def kb_stats(user_id: int, type: Literal['main', 'market'] = 'main', prev_market
     return keyboard
 
 
-def kb_stats_page(user_id: int):
-    lang = get_lang(user_id)
+def kb_stats_page(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {
@@ -98,9 +105,7 @@ def kb_stats_page(user_id: int):
     return keyboard
 
 
-def kb_calc_list(user_id: int, page: int, count: int, list_type: str):
-    lang = get_lang(user_id)
-
+def kb_calc_list(lang: LANGUAGES_TYPE, page: int, count: int, list_type: str):
     texts = {
         'ru': {
             'start': 'В начало',
@@ -163,10 +168,7 @@ def kb_calc_list(user_id: int, page: int, count: int, list_type: str):
     return keyboard
 
 
-def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
-    lang = get_lang(user_id)
-
-    user_db_id = db.get_user_id_by_tg_id(user_id)
+def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isResult=False):
     isAdmin = db.get_worker_role(user_db_id)
     send_data = channel_calc.getByCalc(calc.id)
 
@@ -332,8 +334,7 @@ def kb_calc_result(user_id: int, calc: Calculation, isResult=False):
     return keyboard
 
 
-def kb_freeze_calc(user_id: int):
-    lang = get_lang(user_id)
+def kb_freeze_calc(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     hours = {
@@ -356,9 +357,7 @@ def kb_freeze_calc(user_id: int):
     return keyboard
 
 
-def kb_deal_result(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-
+def kb_deal_result(lang: LANGUAGES_TYPE, stat_id: int):
     texts = {
         'ru': {
             'minus': 'Стоп-лосс',
@@ -401,9 +400,7 @@ def kb_deal_result(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_deal_profit_minus(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-
+def kb_deal_profit_minus(lang: LANGUAGES_TYPE, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     btn_cancel = getButton(back_txt(lang), 'profit+cancel', stat_id)
@@ -415,8 +412,7 @@ def kb_deal_profit_minus(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_deal_profit_cancel(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
+def kb_deal_profit_cancel(lang: LANGUAGES_TYPE, stat_id: int):
     btn_cancel = getButton(cancel_txt(lang), 'profit+cancel', stat_id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -424,9 +420,7 @@ def kb_deal_profit_cancel(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_calculate_delete(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-
+def kb_calculate_delete(lang: LANGUAGES_TYPE, stat_id: int):
     texts = {
         'ru': {
             'yes': 'Да',
@@ -454,9 +448,7 @@ def kb_calculate_delete(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_calculate_change(user_id: int, stat_id: int):
-    lang = get_lang(user_id)
-
+def kb_calculate_change(lang: LANGUAGES_TYPE, stat_id: int):
     texts = {
         'ru': {
             'open_price': 'Цену входа',
@@ -506,9 +498,7 @@ def kb_calculate_change(user_id: int, stat_id: int):
     return keyboard
 
 
-def kb_calc_image_text(user_id: int, calc: Calculation):
-    lang = get_lang(user_id)
-
+def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation):
     isReset = False
     if calc.status != 'FINISH' and (calc.photo is not None or calc.description is not None):
         isReset = True

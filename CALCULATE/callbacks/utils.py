@@ -8,8 +8,8 @@ from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 from services import ticker
 
-from .pages import create_and_send_calc, send_main
-from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
+from pages.calculate import create_and_send_calc, send_main
+from keyboards.calculate import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
 from messages.enter import (
@@ -105,7 +105,7 @@ def choose_calculate_step(
 
     # text = msg_calculate(bot, user_id, chat_id, is_try)
     text = ''
-    keyboard = kb_calc_cancel(user_id)
+    keyboard = kb_calc_cancel(lang)
 
     if currency is None:
         text += msg_enter_currency(lang)
@@ -117,7 +117,7 @@ def choose_calculate_step(
         text += msg_enter_pair(lang)
         edit_to = names[lang]['pair']
         state = ForexCalcState.pair
-        keyboard = kb_pair(user_id)
+        keyboard = kb_pair(lang)
 
     elif calc_type != 'forex' and tool is None:
         text += msg_enter_tool(lang, calc_type)
@@ -129,7 +129,7 @@ def choose_calculate_step(
         else:
             last_tools = db.get_last_tools(user_db_id, calc_type)
 
-        keyboard = kb_tool(user_id, last_tools)
+        keyboard = kb_tool(lang, last_tools)
 
     elif (
         calc_type == 'forex' and
@@ -175,11 +175,11 @@ def choose_calculate_step(
         if calc_type == 'forex' and forex is not None:
             op_value = round(forex.price, 5)
 
-        keyboard = kb_price(user_id, updated_risk is None, op_value)
+        keyboard = kb_price(lang, user_id, updated_risk is None, op_value)
     elif stop_loss == -1:
         bot.send_message(
             chat_id, msg_choose_direct(lang, user_id),
-            reply_markup=kb_calc_direct(user_id)
+            reply_markup=kb_calc_direct(lang)
         )
         return
     else:
@@ -206,11 +206,11 @@ def choose_calculate_step(
                 )
                 bot.send_message(
                     chat_id, msg_choose_direct(lang, value),
-                    reply_markup=kb_calc_direct(user_id)
+                    reply_markup=kb_calc_direct(lang)
                 )
                 return
 
-            keyboard = kb_calc_atr(user_id, value)
+            keyboard = kb_calc_atr(lang, user_id, value)
         else:
             if stop_loss is None:
                 text += msg_enter_stop_loss(lang, is_try)

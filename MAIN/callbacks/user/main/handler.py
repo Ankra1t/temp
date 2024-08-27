@@ -4,12 +4,13 @@ from telebot.types import CallbackQuery
 from CALCULATE.callbacks.utils import send_calc_start
 from config_logger import logger
 from AuthRoles import check_registrate
-from CALCULATE.callbacks import send_main
 from MAIN.callbacks import (
     send_user_education, send_user_account, send_site_code,
     send_admin_main, send_user_main
 )
 from MAIN.common.utils import send_in_development
+
+from pages.calculate import send_main
 
 from .filter import user_main_factory, UserMainCallbackFilter
 

@@ -1,11 +1,10 @@
-from curses.ascii import TAB
 from datetime import datetime, timedelta
 from typing import Literal
 import requests
 from telebot  import TeleBot
 
 from common.utils import get_decimal_count, get_lang, get_print_float
-from messages.common import ENTER, transl_market, transl_status, transl_tr_style, transl_tr_type
+from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, TickerInfo
 
 from Classes import calcService

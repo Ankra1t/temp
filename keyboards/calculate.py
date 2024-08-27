@@ -1,11 +1,21 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
-from common.utils import get_lang
 from db import db
+from models import LANGUAGES_TYPE
 
-from .filter import calculate_factory
+
+calculate_factory = CallbackData('type', prefix='calculate')
+
+
+class CalculateCallbackFilter(AdvancedCustomFilter):
+    key = 'calculate'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str):
@@ -19,8 +29,7 @@ def get_settings_from_calc_button():
     return getButton('⚙️', 'settings_from_calc')
 
 
-def kb_pair(user_id: int):
-    lang = get_lang(user_id)
+def kb_pair(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY']
@@ -38,9 +47,7 @@ def kb_pair(user_id: int):
     return keyboard
 
 
-def kb_tool(user_id: int, prev_tools: list[str]):
-    lang = get_lang(user_id)
-
+def kb_tool(lang: LANGUAGES_TYPE, prev_tools: list[str]):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     buttons = []
@@ -60,8 +67,7 @@ def kb_tool(user_id: int, prev_tools: list[str]):
     return keyboard
 
 
-def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None):
-    lang = get_lang(user_id)
+def kb_price(lang: LANGUAGES_TYPE, user_id: int, is_risk_update=False, open_price: float | None = None):
     is_user_risk_update = liteDb.getRiskUpdate(user_id)
 
     texts = {
@@ -98,9 +104,7 @@ def kb_price(user_id: int, is_risk_update=False, open_price: float | None = None
     return keyboard
 
 
-def kb_calc_cancel(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_calc_cancel(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(
         getButton(back_txt(lang), 'calc_back'),
@@ -110,9 +114,7 @@ def kb_calc_cancel(user_id: int):
     return keyboard
 
 
-def kb_calc_atr(user_id: int, avg_atr: float | None = None):
-    lang = get_lang(user_id)
-
+def kb_calc_atr(lang: LANGUAGES_TYPE, user_id: int, avg_atr: float | None = None):
     texts = {
         'ru': 'Быстро рассчитать ATR',
         'en': 'Quickly calculate ATR',
@@ -141,9 +143,7 @@ def kb_calc_atr(user_id: int, avg_atr: float | None = None):
     return keyboard
 
 
-def kb_calc_direct(user_id: int, start_calc=False):
-    lang = get_lang(user_id)
-
+def kb_calc_direct(lang: LANGUAGES_TYPE, start_calc=False):
     start_calc_show = ''
     if start_calc:
         start_calc_show = 'f'

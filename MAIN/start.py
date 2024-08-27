@@ -9,7 +9,9 @@ from MAIN.common.utils import send_in_development
 
 from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 
-from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
+from pages.calculate import send_calculation
+from keyboards.calculate import kb_calc_atr, kb_calc_direct
+
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
 from models import Calculation
 from services import calculation, channel_calc, ticker
@@ -62,12 +64,12 @@ def send_start_by_user(
                     )
                     bot.send_message(
                         chat_id, msg_choose_direct(lang, ticker_val),
-                        reply_markup=kb_calc_direct(user_id, True)
+                        reply_markup=kb_calc_direct(lang, True)
                     )
                 else:
                     bot.send_message(
                         chat_id, msg_enter_atr(lang, calc),
-                        reply_markup=kb_calc_atr(user_id, ticker_val)
+                        reply_markup=kb_calc_atr(lang, user_id, ticker_val)
                     )
             else:
                 bot.send_message(

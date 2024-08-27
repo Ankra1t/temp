@@ -2,13 +2,14 @@ import telebot
 import flask
 from flask import jsonify, request, send_file, Response
 
-from CALCULATE.callbacks.calculate.handler import send_after_first_try
-from CALCULATE.callbacks.stats.handler import edit_channel_post, edit_live_info, send_vote, send_week_stats
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
 from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
 from config_logger import logger
+
+from callbacks.calculate import send_after_first_try
+from callbacks.stats import edit_channel_post, edit_live_info, send_vote, send_week_stats
 
 from MAIN.initialize import bot
 from db import db

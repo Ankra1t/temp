@@ -2,7 +2,6 @@ from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.main.keyboards import kb_first_calc
 from CALCULATE.callbacks.utils import choose_calculate_step
 from CALCULATE.states.settings import FirstCalcState
 from NOTIFIER import notifier
@@ -21,6 +20,8 @@ from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
 from services import auth, calculation
 
+from keyboards.main import kb_first_calc
+
 from .filter import settings_factory, SettingsCallbackFilter
 from .keyboards import (
     kb_atr_bars, kb_atr_bars_count, kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
@@ -28,7 +29,7 @@ from .keyboards import (
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
-from ..pages import (
+from pages.calculate import (
     send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
     send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
     send_user_deposit
@@ -217,7 +218,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
                     bot.edit_message_text(
                         msg_welcome(lang), chat_id, mes_id,
-                        reply_markup=kb_first_calc(user_id),
+                        reply_markup=kb_first_calc(lang),
                         disable_web_page_preview=True
                     )
 

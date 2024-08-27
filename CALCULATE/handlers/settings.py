@@ -19,13 +19,15 @@ from messages.enter import (
     msg_enter_trading_style, msg_enter_day_risk, msg_enter_deposit,
 )
 
+from keyboards.main import kb_main
+from pages.calculate import send_settings, send_user_deposit, send_exchange_settings,send_maker_or_taker, send_atr_settings, send_stop_settings
+
 from CALCULATE.callbacks import (
     kb_base_cancel, kb_splitting, kb_trading_style,
-    send_settings, send_user_deposit, kb_deposit_cancel,
-    kb_enter_exchange, send_exchange_settings,
-    kb_change_fee, kb_choose_exchange_level, send_maker_or_taker,
-    send_stop_settings, kb_round_count, kb_main,
-    send_atr_settings
+    kb_deposit_cancel,
+    kb_enter_exchange,
+    kb_change_fee, kb_choose_exchange_level,
+    kb_round_count,
 )
 from CALCULATE.states import SettingsState
 
@@ -349,7 +351,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
             'USDT', u_base.market,
             (u_base.risk or (1, True))[0]
         ),
-        reply_markup=kb_main(user_id, is_first=True)
+        reply_markup=kb_main(lang, user_id, is_first=True)
     )
 
 

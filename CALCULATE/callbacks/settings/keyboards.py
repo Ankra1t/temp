@@ -6,10 +6,11 @@ from common.utils import get_lang
 from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import MARKETS_TYPE
 
+from keyboards.stats import getButton as getStatsButton
+from keyboards.calculate import get_settings_from_calc_button, calculate_factory
+
 from .filter import settings_factory
-from ..calculate.keyboards import get_settings_from_calc_button
-from ..stats.keyboards import getButton as getStatsButton
-from ..calculate.filter import calculate_factory
+
 
 
 def getButton(
@@ -33,6 +34,7 @@ def getButton(
 
 def kb_settings(user_id: int):
     lang = get_lang(user_id)
+
     texts = {
         'ru': {
             'lang': 'Язык',
