@@ -73,9 +73,6 @@ from .user.account.keyboards import (
 )
 
 
-from CALCULATE.callbacks import callbacks_registration as _reg_calculator
-
-
 def callbacks_registration(bot: _TB):
     _reg_admin_main(bot)
     _reg_admin_tariffs(bot)
@@ -88,7 +85,5 @@ def callbacks_registration(bot: _TB):
     _reg_user_main(bot)
     _reg_user_education(bot)
     _reg_user_account(bot)
-
-    _reg_calculator(bot)
 
     _reg_livepost(bot)

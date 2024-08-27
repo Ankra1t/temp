@@ -32,12 +32,12 @@ bot.setup_middleware(AuthMiddleWare(bot))
 
 commands_registration(bot)
 
-_reg_cb_calculate(bot)
+_reg_cb_manual(bot)
 _reg_cb_main(bot)
+_reg_cb_calculate(bot)
+_reg_cb_settings(bot)
 _reg_cb_stats(bot)
 _reg_cb_channel_post(bot)
-_reg_cb_manual(bot)
-_reg_cb_settings(bot)
 _reg_cb_tariff(bot)
 
 callbacks_registration(bot)
