@@ -4,6 +4,8 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.states.settings import FirstCalcState
+from CALCULATE.states import SettingsState
+
 from config_logger import logger
 from db import db
 from messages.common import msg_success_edit
@@ -20,16 +22,13 @@ from messages.enter import (
 )
 
 from keyboards.main import kb_main
-from pages.calculate import send_settings, send_user_deposit, send_exchange_settings,send_maker_or_taker, send_atr_settings, send_stop_settings
-
-from CALCULATE.callbacks import (
+from keyboards.settings import (
     kb_base_cancel, kb_splitting, kb_trading_style,
-    kb_deposit_cancel,
-    kb_enter_exchange,
+    kb_deposit_cancel, kb_enter_exchange,
     kb_change_fee, kb_choose_exchange_level,
     kb_round_count,
 )
-from CALCULATE.states import SettingsState
+from pages.calculate import send_settings, send_user_deposit, send_exchange_settings,send_maker_or_taker, send_atr_settings, send_stop_settings
 
 
 def handle_new_value(type: BASE_VALUE_TYPE):
@@ -81,7 +80,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
                 bot.set_state(user_id, SettingsState.trading_style, chat_id)
                 bot.send_message(
                     chat_id, msg_enter_trading_style(lang),
-                    reply_markup=kb_trading_style(user_id, 'welcome')
+                    reply_markup=kb_trading_style(lang, 'welcome')
                 )
         else:
             bot.delete_state(user_id, chat_id)
@@ -102,7 +101,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         bot.send_message(
             chat_id, msg_currency_error(lang),
-            reply_markup=kb_deposit_cancel(user_id)
+            reply_markup=kb_deposit_cancel(lang)
         )
         return
 
@@ -168,7 +167,7 @@ def handle_splitting(message: Message, bot: TeleBot):
     current_split.append(value)
     bot.send_message(
         chat_id, msg_enter_splitting(lang, current_tp, current_split),
-        reply_markup=kb_splitting(user_id, current_tp, current_split)
+        reply_markup=kb_splitting(lang, current_tp, current_split)
     )
     set_state_data(bot, user_id, chat_id, {'split': current_split})
     bot.set_state(user_id, SettingsState.summury_profit, chat_id)
@@ -184,7 +183,7 @@ def handle_day_risk(message: Message, bot: TeleBot):
     value = text_accept(message)
 
     enter_mes = msg_enter_day_risk(lang)
-    keyboard = kb_base_cancel(user_id)
+    keyboard = kb_base_cancel(lang)
 
     if value is None:
         bot.send_message(
@@ -231,7 +230,7 @@ def handle_round_count(message: Message, bot: TeleBot):
         current_value = u_base.round_count or current_value
 
     enter_mes = msg_enter_round_count(lang)
-    keyboard = kb_round_count(user_id, current_value)
+    keyboard = kb_round_count(lang, current_value)
 
     if value is None:
         bot.send_message(
@@ -270,7 +269,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
         new_mes = bot.send_message(
             chat_id,
             msg_text_error(lang) + '\n' + msg_enter_trading_style(lang),
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_base_cancel(lang)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -383,7 +382,7 @@ def handle_exchange(message: Message, bot: TeleBot):
 
         new_mes = bot.send_message(
             chat_id, msg_enter_exchange_not_found(lang, len(difflist) != 0),
-            reply_markup=kb_enter_exchange(user_id, original_names)
+            reply_markup=kb_enter_exchange(lang, original_names)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -395,7 +394,7 @@ def handle_exchange(message: Message, bot: TeleBot):
         new_mes = bot.send_message(
             chat_id, msg_choose_exchange_level(lang, exchange.fees),
             reply_markup=kb_choose_exchange_level(
-                user_id, exchange.name, [fee[0] for fee in exchange.fees]
+                lang, exchange.name, [fee[0] for fee in exchange.fees]
             )
         )
         return
@@ -417,7 +416,7 @@ def handle_fee(message: Message, bot: TeleBot):
     if value is None:
         new_mes = bot.send_message(
             chat_id, msg_digit_error(lang),
-            reply_markup=kb_change_fee(user_id)
+            reply_markup=kb_change_fee(lang)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return

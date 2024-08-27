@@ -6,16 +6,18 @@ from services import calculation, channel_calc, ticker
 from config_logger import logger
 from db import db
 from data.data import liteDb
-from common.utils import get_decimal_count, get_lang, set_state_data
 from Classes import currencyService
 from models import Calculation, ForexInfo, UnfinishedCalculation
 
-from CALCULATE.callbacks.settings.keyboards import kb_first_dep
-from CALCULATE.callbacks.utils import choose_calculate_step
 from CALCULATE.states.calculate import CalculateState
 
+from common.calc_step import choose_calculate_step
+from common.utils import get_decimal_count, get_lang, set_state_data
+
+from keyboards.settings import kb_first_dep
 from keyboards.calculate import (
-    calculate_factory, CalculateCallbackFilter, kb_calc_cancel, kb_calc_direct
+    calculate_factory, CalculateCallbackFilter,
+    kb_calc_cancel, kb_calc_direct
 )
 
 from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
@@ -306,7 +308,7 @@ def send_after_first_try(bot: TeleBot, user_id: int):
 
     bot.send_message(
         user_id, msg,
-        reply_markup=kb_first_dep(user_id)
+        reply_markup=kb_first_dep(lang)
     )
 
 

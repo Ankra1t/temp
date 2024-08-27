@@ -2,13 +2,14 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.states.tariff import TariffState
+from CALCULATE.states import TariffState
 from Classes.YooKassa import yooKassa_create_payment
 from config_logger import logger
 from db import db
 from common.utils import get_lang, text_accept
 
-from CALCULATE.states import TariffState
-from CALCULATE.callbacks import kb_bill
+from keyboards.tariff import kb_bill
+
 from messages.errros import msg_text_error
 from messages.users import msg_loading_invoice, msg_bill
 
@@ -54,7 +55,7 @@ def handle_email(message: Message, bot: TeleBot):
     bot.edit_message_text(
         msg_bill(user_id),
         chat_id, edit_wait_mess.id,
-        reply_markup=kb_bill(user_id, yookassa_payment_url)
+        reply_markup=kb_bill(lang, yookassa_payment_url)
     )
     bot.delete_state(user_id, chat_id)
 

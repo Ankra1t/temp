@@ -1,10 +1,19 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
+from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt
-from common.utils import get_lang
 from models import MANUAL_TYPE, LANGUAGES_TYPE
 
-from .filter import manual_factory
+
+manual_factory = CallbackData('type', 'page', prefix='manual')
+
+
+class ManualCallbackFilter(AdvancedCustomFilter):
+    key = 'manual'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(
@@ -19,14 +28,13 @@ def getButton(
         ))
 
 
-def kb_manuals(user_id: int, num_page: int, max_page: int):
+def kb_manuals(lang: LANGUAGES_TYPE, num_page: int, max_page: int):
     def getButton(text: str, type: str):
         return InlineKeyboardButton(
             text, None,
             manual_factory.new(type=type, page=num_page)
         )
 
-    lang = get_lang(user_id)
     texts = {
         'ru': {
             'prev': 'Назад',
@@ -72,9 +80,8 @@ def kb_manuals(user_id: int, num_page: int, max_page: int):
     return keyboard
 
 
-def kb_manual(user_id: int):
+def kb_manual(lang: LANGUAGES_TYPE):
     row_width = 2
-    lang = get_lang(user_id)
     lang = 'ru' if lang == 'ru' else 'en'
 
     keyboard = InlineKeyboardMarkup(row_width=row_width)

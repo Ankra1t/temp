@@ -2,33 +2,33 @@ from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.utils import choose_calculate_step
 from CALCULATE.states.settings import FirstCalcState
+from CALCULATE.states import SettingsState
 from NOTIFIER import notifier
 from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import text_editor
 from models import LANGUAGES
+from services import auth, calculation
 
 from messages.common import msg_success_edit
 from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type
 from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
 from messages.main import msg_success_base_set, msg_welcome
 
+from common.calc_step import choose_calculate_step
 from common.utils import delete_message, get_lang, set_state_data
-from CALCULATE.states import SettingsState
-from services import auth, calculation
 
 from keyboards.main import kb_first_calc
-
-from .filter import settings_factory, SettingsCallbackFilter
-from .keyboards import (
+from keyboards.settings import (
+    settings_factory, SettingsCallbackFilter,
     kb_atr_bars, kb_atr_bars_count, kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
     kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_round_count, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
     kb_summury_profit_type, kb_take_profit, kb_deposit_cancel, kb_trading_type
 )
+
 from pages.calculate import (
     send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
     send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
@@ -65,7 +65,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_deposit(lang, current_value),
             chat_id, mes_id,
-            reply_markup=kb_deposit_cancel(user_id)
+            reply_markup=kb_deposit_cancel(lang)
         )
         bot.set_state(user_id, SettingsState.deposit, chat_id)
 
@@ -73,7 +73,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_risk_percent(lang),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_base_cancel(lang)
         )
         bot.set_state(user_id, SettingsState.risk_percent, chat_id)
 
@@ -81,7 +81,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_enter_day_risk(lang),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(user_id)
+            reply_markup=kb_base_cancel(lang)
         )
         bot.set_state(user_id, SettingsState.day_risk, chat_id)
 
@@ -96,7 +96,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_round_count(lang),
                 chat_id, mes_id,
-                reply_markup=kb_round_count(user_id, current_value)
+                reply_markup=kb_round_count(lang, current_value)
             )
             bot.set_state(user_id, SettingsState.round_count, chat_id)
         else:
@@ -113,7 +113,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_trading_style(lang),
                 chat_id, mes_id,
-                reply_markup=kb_trading_style(user_id)
+                reply_markup=kb_trading_style(lang)
             )
         else:
             value = trading_value.lower()
@@ -176,7 +176,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_currency(lang),
                 chat_id, mes_id,
-                reply_markup=kb_change_currency(user_id)
+                reply_markup=kb_change_currency(lang)
             )
             bot.set_state(user_id, SettingsState.currency, chat_id)
         else:
@@ -236,7 +236,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_choose_lang(lang),
                 chat_id, mes_id,
-                reply_markup=kb_choose_lang(user_id)
+                reply_markup=kb_choose_lang(lang)
             )
 
     if type == 'go_main':
@@ -249,7 +249,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_settings_change_base(lang),
             chat_id, mes_id,
-            reply_markup=kb_change_base(user_id)
+            reply_markup=kb_change_base(lang)
         )
 
     if 'market' in type:
@@ -262,7 +262,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             market = db.get_user_current_market(user_db_id)
 
-            kb = kb_change_market(user_id, '', market)
+            kb = kb_change_market(lang, '', market)
 
             if lang == 'ru' and media_id != '':
                 delete_message(bot, chat_id, mes_id)
@@ -303,7 +303,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 if currency == '':
                     bot.edit_message_text(
                         msg_enter_currency(lang), chat_id, mes_id,
-                        reply_markup=kb_change_currency(user_id, 'welcome')
+                        reply_markup=kb_change_currency(lang, 'welcome')
                     )
                     bot.set_state(user_id, SettingsState.currency, chat_id)
                     set_state_data(
@@ -332,7 +332,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             # Переход к логике ввода базовых значений
             bot.edit_message_text(
                 msg_enter_currency(lang), chat_id, mes_id,
-                reply_markup=kb_change_currency(user_id, 'welcome')
+                reply_markup=kb_change_currency(lang, 'welcome')
             )
             bot.set_state(user_id, SettingsState.currency, chat_id)
             set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
@@ -351,7 +351,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         else:
             bot.edit_message_text(
                 msg_confirm_reset(lang), chat_id, mes_id,
-                reply_markup=kb_settings_confirm(user_id, 'reset')
+                reply_markup=kb_settings_confirm(lang, 'reset')
             )
 
     if 'deposit_update' in type:
@@ -373,7 +373,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_summury_profit_type(lang),
                 chat_id, mes_id,
-                reply_markup=kb_summury_profit_type(user_id)
+                reply_markup=kb_summury_profit_type(lang)
             )
 
             # Стираем state и задаем новый
@@ -429,19 +429,19 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     msg_enter_take_profit(lang, current_tp_ratio),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(user_id, current_tp_ratio)
+                    reply_markup=kb_take_profit(lang, current_tp_ratio)
                 )
             elif summury_type == 'splitting':
                 if add_count != '':
                     # Если было добавлено больше одного элемента
                     kb = kb_splitting(
-                        user_id, current_tp_ratio, current_split, add_count
+                        lang, current_tp_ratio, current_split, add_count
                     )
                 elif len(current_tp_ratio) == len(current_split):
                     # Если кол-во тейк-профитов и процентов одинаково,
                     # то даем выбрать следующий тейк-профит
                     kb = kb_splitting(
-                        user_id, current_tp_ratio, current_split
+                        lang, current_tp_ratio, current_split
                     )
                 else:
                     # Иначе даем ввести процент для последнего выбранного тейк-профита
@@ -492,14 +492,14 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 lang, current_tp_ratio, current_split, True
             ),
             chat_id, mes_id,
-            reply_markup=kb_splitting_last(user_id)
+            reply_markup=kb_splitting_last(lang)
         )
 
     if 'trading_type' in type:
         if trading_value == '':
             bot.edit_message_text(
                 msg_enter_trading_type(lang), chat_id, mes_id,
-                reply_markup=kb_trading_type(user_id)
+                reply_markup=kb_trading_type(lang)
             )
         else:
             db.set_user_trading_type(user_db_id, trading_value)  # type: ignore
@@ -516,7 +516,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'set_first_settings':
         bot.edit_message_text(
             msg_enter_market(lang), chat_id, mes_id,
-            reply_markup=kb_change_market(user_id, 'first')
+            reply_markup=kb_change_market(lang, 'first')
         )
 
     if type == 'set_risk_update':
@@ -530,7 +530,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_exchange(lang),
                 chat_id, mes_id,
-                reply_markup=kb_enter_exchange(user_id, is_first=True)
+                reply_markup=kb_enter_exchange(lang, is_first=True)
             )
             bot.set_state(user_id, SettingsState.exchange, chat_id)
             set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
@@ -542,7 +542,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_enter_exchange(lang),
                 chat_id, mes_id,
-                reply_markup=kb_enter_exchange(user_id)
+                reply_markup=kb_enter_exchange(lang)
             )
             bot.set_state(user_id, SettingsState.exchange, chat_id)
             set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
@@ -558,7 +558,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                     msg_choose_exchange_level(lang, exchange.fees),
                     chat_id, mes_id,
                     reply_markup=kb_choose_exchange_level(
-                        user_id, exchange.name, [el[0] for el in exchange.fees]
+                        lang, exchange.name, [el[0] for el in exchange.fees]
                     )
                 )
             else:
@@ -600,7 +600,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
                 msg_choose_exchange_level(lang, exchange.fees),
                 chat_id, mes_id,
                 reply_markup=kb_choose_exchange_level(
-                    user_id, exchange.name, [el[0] for el in exchange.fees]
+                    lang, exchange.name, [el[0] for el in exchange.fees]
                 )
             )
         else:
@@ -627,7 +627,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
         if new_stop_type == 'atr_percent':
             bot.edit_message_text(
                 msg_enter_atr_percent(lang), chat_id, mes_id,
-                reply_markup=kb_stop_type_cancel(user_id)
+                reply_markup=kb_stop_type_cancel(lang)
             )
             bot.set_state(user_id, SettingsState.atr_percent, chat_id)
         else:
@@ -679,7 +679,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
     if type == 'atr_bars':
         bot.edit_message_text(
             msg_enter_bars(lang), chat_id, mes_id,
-            reply_markup=kb_atr_bars(user_id)
+            reply_markup=kb_atr_bars(lang)
         )
 
     if 'set_atr_bars+' in type:
@@ -693,7 +693,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             msg_enter_bars_count(lang), chat_id, mes_id,
-            reply_markup=kb_atr_bars_count(user_id)
+            reply_markup=kb_atr_bars_count(lang)
         )
         bot.set_state(user_id, SettingsState.atr_bars_count, chat_id)
 

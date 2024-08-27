@@ -1,5 +1,5 @@
 from common.utils import get_lang
-
+# TODO - lang вместо user_id
 
 def end_trial_subscribe_msg(user_id: int):
     lang = get_lang(user_id)

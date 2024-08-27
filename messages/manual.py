@@ -1,10 +1,7 @@
-from common.utils import get_lang
-from models import MANUAL_TYPE
+from models import LANGUAGES_TYPE, MANUAL_TYPE
 
 
-def msg_manual(user_id: int, type: MANUAL_TYPE):
-    lang = get_lang(user_id)
-
+def msg_manual(lang: LANGUAGES_TYPE, type: MANUAL_TYPE):
     if type == 'calc':
         if lang == 'ru':
             return """Для чего калькулятор?

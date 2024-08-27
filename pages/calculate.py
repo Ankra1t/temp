@@ -30,16 +30,19 @@ from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import calculation, channel_calc, ticker, violation
 
+from keyboards.channel_post import (
+    kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
+    kb_channel_post_back, kb_channel_post_list, kb_send_settings, kb_channel_post
+)
 from keyboards.main import kb_main, kb_violation
+from keyboards.manual import kb_manual, kb_manuals
 from keyboards.stats import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
-
-from CALCULATE.callbacks.manual.keyboards import kb_manual, kb_manuals
-from CALCULATE.callbacks.settings.keyboards import (
+from keyboards.tariff import kb_choose_products, kb_tariff_list, kb_user_tariff_back
+from keyboards.settings import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
-from CALCULATE.callbacks.tariff.keyboards import kb_choose_products, kb_tariff_list, kb_user_tariff_back
-from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take, kb_channel_post_back, kb_channel_post_list, kb_send_settings, kb_channel_post
+
 
 
 def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
@@ -98,7 +101,7 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
         return
 
     msg = msg_settings(lang, u_base, is_risk_update)
-    markup = kb_settings(user_id)
+    markup = kb_settings(lang)
 
     if is_first:
         bot.send_message(
@@ -122,7 +125,7 @@ def send_dop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     is_risk_update = liteDb.getRiskUpdate(user_id)
 
     msg = msg_dop_settings(lang, calc_output, is_risk_update)
-    markup = kb_dop_settings(user_id, calc_output, is_risk_update)
+    markup = kb_dop_settings(lang, calc_output, is_risk_update)
 
     if is_first:
         bot.send_message(
@@ -144,7 +147,7 @@ def send_exchange_settings(bot: TeleBot, message: Message, user_id: int, is_firs
     exchange = liteDb.getUserExchange(user_id)
 
     msg = msg_exchange(lang, exchange)
-    markup = kb_exchange(user_id, exchange is not None)
+    markup = kb_exchange(lang, exchange is not None)
 
     if is_first:
         bot.send_message(
@@ -173,7 +176,7 @@ def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is
     is_style_change = liteDb.getStyleChange(user_id)
 
     msg = msg_change_style_settings(lang, style, is_style_change)
-    markup = kb_change_style_settings(user_id, is_style_change)
+    markup = kb_change_style_settings(lang, is_style_change)
 
     if is_first:
         bot.send_message(
@@ -193,7 +196,7 @@ def send_maker_or_taker(bot: TeleBot, message: Message, user_id: int, info: tupl
     bot.delete_state(user_id, chat_id)
 
     msg = msg_maker_or_taker(lang, info[1], info[2])
-    markup = kb_maker_or_taker(user_id, *info)
+    markup = kb_maker_or_taker(lang, *info)
 
     if is_first:
         bot.send_message(
@@ -221,7 +224,7 @@ def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=Fal
         is_update = u_base.is_updating_deposit
 
     text = msg_deposit(lang, u_base, stop)
-    keyboard = kb_change_deposit(user_id, is_update, market)
+    keyboard = kb_change_deposit(lang, is_update, market)
 
     if is_first:
         bot.send_message(
@@ -236,6 +239,8 @@ def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=Fal
 
 
 def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is_first=False):
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -243,7 +248,7 @@ def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is
 
     text = msg_manuals[page - 1]
     photo = open(f'src/img/info_calc/{page}.jpg', 'rb')
-    keyboard = kb_manuals(user_id, page, len(msg_manuals))
+    keyboard = kb_manuals(lang, page, len(msg_manuals))
 
     if is_first:
         bot.send_photo(
@@ -268,7 +273,7 @@ def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, i
     bot.delete_state(user_id, chat_id)
 
     text = msg_summury_profit_settings(lang, user_db_id)
-    kb = kb_summury_profit(user_id)
+    kb = kb_summury_profit(lang)
 
     if is_first:
         bot.send_message(
@@ -512,10 +517,12 @@ def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     bot.delete_state(user_id, chat_id)
 
     text = msg_choose_tariff_type(user_id)
-    keyboard = kb_choose_products(user_id)
+    keyboard = kb_choose_products(lang)
 
     if is_first:
         bot.send_message(
@@ -540,19 +547,19 @@ def send_tariffs_list_item(
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     tariffs = db.get_prices_by_product(tariff_type, True, True)
     count = len(tariffs)
 
     if count == 0:
         bot.edit_message_text(
             msg_no_tariffs(user_id), chat_id, mes_id,
-            reply_markup=kb_user_tariff_back(user_id)
+            reply_markup=kb_user_tariff_back(lang)
         )
     else:
         tariff = tariffs[page]
         tariff_id = tariff.id or 0
-
-        lang = get_lang(user_id)
 
         if lang == 'ru':
             image = tariff.img
@@ -561,7 +568,8 @@ def send_tariffs_list_item(
 
         text = msg_user_tariff(tariff)
         keyboard = kb_tariff_list(
-            user_id, tariff_id, count, tariff_type, page, is_rus)
+            lang, tariff_id, count, tariff_type, page, is_rus
+        )
 
         def send():
             if image is None:
@@ -846,7 +854,7 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
     atr_settings = liteDb.getUserAtrSettings(user_id)
 
     mes = msg_stop_page(lang, atr_settings, stop_type, current_fd)
-    kb = kb_choose_stop_type(user_id)
+    kb = kb_choose_stop_type(lang)
 
     if is_first:
         bot.send_message(
@@ -868,7 +876,7 @@ def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
 
     atr_settings = liteDb.getUserAtrSettings(user_id)
     mes = msg_atr_settings(lang, atr_settings)
-    kb = kb_atr_settings(user_id, atr_settings)
+    kb = kb_atr_settings(lang, atr_settings)
 
     if is_first:
         bot.send_message(
@@ -1185,13 +1193,15 @@ def send_manual(
     type: MANUAL_TYPE = 'calc',
     is_first=False
 ):
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
     bot.delete_state(user_id, chat_id)
 
-    msg = msg_manual(user_id, type)
-    kb = kb_manual(user_id)
+    msg = msg_manual(lang, type)
+    kb = kb_manual(lang)
 
     text = db.get_text_by_name(type)
     photo = None

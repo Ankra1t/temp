@@ -1,3 +1,6 @@
+
+# TODO - перенос в keyboards.common
+
 from models import LANGUAGES_TYPE
 
 

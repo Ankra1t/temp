@@ -18,8 +18,6 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from AuthRoles import vote_timeout
 
-from CALCULATE.callbacks.channel_post.keyboards import kb_channel_calc_result_stop, kb_channel_calc_result_take
-from CALCULATE.callbacks.settings.keyboards import kb_take_profit, kb_trading_style
 from CALCULATE.states.calculate import CalculateState, ForexCalcState
 from CALCULATE.states.stats import ChannelCalcState
 from CALCULATE.states import StatsState
@@ -32,19 +30,20 @@ from data.data import liteDb
 from config_global import EN_CHANNEL_ID, PROD, RESULTS_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 
-from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation
-from messages.enter import msg_enter_calc_img_text, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
-from messages.main import msg_frozen
-from messages.common import transl_status
-
 from db import db
 from Classes import calcService, pay_guard
 from messages.stats import msg_market_stats
 from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
 from services import calculation, channel_calc, ticker
 
-from keyboards.main import kb_main
+from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation
+from messages.enter import msg_enter_calc_img_text, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
+from messages.main import msg_frozen
+from messages.common import transl_status
 
+from keyboards.settings import kb_take_profit, kb_trading_style
+from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
+from keyboards.main import kb_main
 from keyboards.stats import (
     stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
@@ -467,7 +466,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             edit_message(
                 bot, call.message, 'text',
                 msg_enter_trading_style(lang),
-                kb_trading_style(user_id, 'ch_calc' + stc)
+                kb_trading_style(lang, 'ch_calc' + stc)
             )
             bot.set_state(user_id, CalculateState.trading_style, chat_id)
             set_state_data(
@@ -483,7 +482,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     msg_calculation(lang, calc),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(user_id, calc.tpRatio, calc.id)
+                    reply_markup=kb_take_profit(lang, calc.tpRatio, calc.id)
                 )
 
     if 'tp_rate+' in type:
@@ -503,7 +502,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     msg_calculation(lang, calc),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(user_id, calc.tpRatio, calc.id)
+                    reply_markup=kb_take_profit(lang, calc.tpRatio, calc.id)
                 )
 
     if type == 'remove_img_text':

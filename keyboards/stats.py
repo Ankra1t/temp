@@ -3,8 +3,8 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.custom_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from CALCULATE.callbacks.channel_post.keyboards import getButton as getChannelButton
 
+from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt
 
 from db import db

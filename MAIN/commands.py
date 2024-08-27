@@ -2,22 +2,24 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
+from CALCULATE.commands import _start as _calc
+from MAIN.callbacks.user.pages import send_referral
+from MAIN.start import send_start_by_user
+from MAIN.callbacks import send_site_code, kb_support
+
 from config_logger import logger
 from AuthRoles import check_registrate
-from CALCULATE.callbacks.utils import send_calc_start
-from MAIN.callbacks.user.pages import send_referral
 from NOTIFIER import notifier
-from common.utils import get_lang, is_digit
 from db import db
 from messages.main import msg_support
 from models import LANGUAGES
+from services import auth
+
+from common.utils import get_lang, is_digit
+from common.calc_step import send_calc_start
 
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual_page, send_settings
 
-from CALCULATE.commands import _start as _calc
-from MAIN.start import send_start_by_user
-from MAIN.callbacks import send_site_code, kb_support
-from services import auth
 
 
 def _start(message: Message, bot: TeleBot):

@@ -13,10 +13,13 @@ from models import Calculation
 from Classes import calcService
 from services import calculation, channel_calc
 
+from keyboards.channel_post import (
+    ChannelPostCallbackFilter, channel_post_factory,
+    kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
+    kb_send_settings_calc_time, kb_send_settings_trading_style
+)
 from callbacks.stats import edit_channel_post
 
-from .keyboards import kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_send_settings_calc_time, kb_send_settings_trading_style
-from .filter import ChannelPostCallbackFilter, channel_post_factory
 from pages.calculate import (
     send_admin_channel_calc_item,
     send_admin_channel_calc_list,

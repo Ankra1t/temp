@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from models import MANUAL_TYPE
 from messages.common import msg_manuals
 
-from .filter import manual_factory, ManualCallbackFilter
+from keyboards.manual import manual_factory, ManualCallbackFilter
 from pages.calculate import send_main, send_manual
 
 
@@ -24,7 +24,7 @@ def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
         type_arr = type.split('+')
         manual_type: MANUAL_TYPE = 'calc'
         if len(type_arr) == 2:
-            manual_type = type_arr[1] # type: ignore
+            manual_type = type_arr[1]  # type: ignore
 
         send_manual(bot, call.message, user_id, manual_type)
 

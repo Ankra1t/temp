@@ -17,13 +17,11 @@ from callbacks.stats import edit_channel_post
 from pages.calculate import send_calculation, create_and_send_calc
 from keyboards.calculate import kb_tool, kb_calc_direct, kb_calc_cancel
 from keyboards.stats import kb_deal_profit_cancel
+from keyboards.settings import kb_change_currency, kb_trading_style
 
+from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept
-from CALCULATE.callbacks import (
-    choose_calculate_step,
-     kb_change_currency,
-     kb_trading_style,
-)
+
 from CALCULATE.states import CalculateState, ForexCalcState
 from services import calculation
 
@@ -195,7 +193,7 @@ def handle_currency(message: Message, bot: TeleBot):
     if value is None or len(value) > 10:
         new_mes = bot.send_message(
             chat_id, msg_currency_error(lang),
-            reply_markup=kb_change_currency(user_id, 'calc')
+            reply_markup=kb_change_currency(lang, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -207,7 +205,7 @@ def handle_currency(message: Message, bot: TeleBot):
     if not check:
         new_mes = bot.send_message(
             chat_id, msg_currency_error(lang, 'not_found'),
-            reply_markup=kb_change_currency(user_id, 'calc')
+            reply_markup=kb_change_currency(lang, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -289,7 +287,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
         msg_error = f'{msg_trading_style_error(lang)}\n{msg_enter_trading_style(lang)}'
         new_mes = bot.send_message(
             chat_id, msg_error,
-            reply_markup=kb_trading_style(user_id, 'calc')
+            reply_markup=kb_trading_style(lang, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return

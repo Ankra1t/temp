@@ -10,7 +10,7 @@ from services import ticker
 
 from pages.calculate import create_and_send_calc, send_main
 from keyboards.calculate import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
-from .settings.keyboards import kb_change_currency, kb_trading_style
+from keyboards.settings import kb_change_currency, kb_trading_style
 
 from messages.enter import (
     msg_choose_direct, msg_enter_atr, msg_enter_currency, msg_enter_deposit,
@@ -111,7 +111,7 @@ def choose_calculate_step(
         text += msg_enter_currency(lang)
         edit_to = names[lang]['currency']
         state = CalculateState.currency
-        keyboard = kb_change_currency(user_id, 'calc')
+        keyboard = kb_change_currency(lang, 'calc')
 
     elif calc_type == 'forex' and forex is None:
         text += msg_enter_pair(lang)
@@ -154,7 +154,7 @@ def choose_calculate_step(
         text += msg_enter_trading_style(lang)
         edit_to = names[lang]['style']
         state = CalculateState.trading_style
-        keyboard = kb_trading_style(user_id, 'calc')
+        keyboard = kb_trading_style(lang, 'calc')
 
     elif deposit is None:
         text += msg_enter_deposit(lang)

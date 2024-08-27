@@ -1,8 +1,19 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from common.keyboard import back_txt
 
-from .filter import channel_post_factory
+
+channel_post_factory = CallbackData(
+    'type', 'stat_id', 'is_calc', 'page', prefix='channel_post')
+
+
+class ChannelPostCallbackFilter(AdvancedCustomFilter):
+    key = 'channel_post'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, stat_id: int = 0, is_calc=False, page=0):

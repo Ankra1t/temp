@@ -4,12 +4,16 @@ from telebot.types import CallbackQuery
 from CALCULATE.states.tariff import TariffState
 from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message, get_lang, set_state_data
 from db import db
+
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_bill
 
-from .filter import user_tariff_factory, UserTariffCallbackFilter
-from .keyboards import kb_bill, kb_user_tariff_back
+from keyboards.tariff import (
+    user_tariff_factory, UserTariffCallbackFilter,
+    kb_bill, kb_user_tariff_back
+)
+
 from pages.calculate import send_main, send_tariffs_list_item
 
 
@@ -23,6 +27,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     mes_id = call.message.id
+
+    lang = get_lang(user_id)
 
     is_rus = call.from_user.language_code == 'ru'
 
@@ -66,7 +72,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if user_sub is not None:
             bot.send_message(
                 chat_id, msg_is_subscribed(user_id),
-                reply_markup=kb_user_tariff_back(user_id)
+                reply_markup=kb_user_tariff_back(lang)
             )
             return
 
@@ -93,7 +99,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_bill(user_id),
             chat_id, edit_wait_mess.id,
-            reply_markup=kb_bill(user_id, cryptopay_payment_url)
+            reply_markup=kb_bill(lang, cryptopay_payment_url)
         )
 
     bot.answer_callback_query(call.id)

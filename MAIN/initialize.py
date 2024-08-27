@@ -14,6 +14,10 @@ from MAIN.callbacks import callbacks_registration
 from callbacks.calculate import registration as _reg_cb_calculate
 from callbacks.main import registration as _reg_cb_main
 from callbacks.stats import registration as _reg_cb_stats
+from callbacks.channel_post import registration as _reg_cb_channel_post
+from callbacks.manual import registration as _reg_cb_manual
+from callbacks.settings import registration as _reg_cb_settings
+from callbacks.tariff import registration as _reg_cb_tariff
 
 
 bot = TeleBot(
@@ -31,6 +35,10 @@ commands_registration(bot)
 _reg_cb_calculate(bot)
 _reg_cb_main(bot)
 _reg_cb_stats(bot)
+_reg_cb_channel_post(bot)
+_reg_cb_manual(bot)
+_reg_cb_settings(bot)
+_reg_cb_tariff(bot)
 
 callbacks_registration(bot)
 handlers_registration(bot)

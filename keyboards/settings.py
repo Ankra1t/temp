@@ -1,16 +1,27 @@
 from typing import Literal
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
+from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
-from common.utils import get_lang
 from messages.common import transl_market, transl_tr_style, transl_tr_type
-from models import MARKETS_TYPE
+from models import LANGUAGES_TYPE, MARKETS_TYPE
 
 from keyboards.stats import getButton as getStatsButton
 from keyboards.calculate import get_settings_from_calc_button, calculate_factory
 
-from .filter import settings_factory
 
+settings_factory = CallbackData(
+    'type', 'sum_type', 'tp', 'count', 'style',
+    prefix='settings'
+)
+
+
+class SettingsCallbackFilter(AdvancedCustomFilter):
+    key = 'settings'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(
@@ -32,9 +43,7 @@ def getButton(
         ))
 
 
-def kb_settings(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_settings(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'lang': 'Язык',
@@ -121,8 +130,7 @@ def kb_settings(user_id: int):
     return keyboard
 
 
-def kb_change_base(user_id: int):
-    lang = get_lang(user_id)
+def kb_change_base(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'risk': 'Процент риска',
@@ -158,9 +166,7 @@ def kb_change_base(user_id: int):
     return keyboard
 
 
-def kb_deposit_cancel(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_deposit_cancel(lang: LANGUAGES_TYPE):
     btn_cancal = getButton(cancel_txt(lang), 'deposit_update')
 
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -168,9 +174,7 @@ def kb_deposit_cancel(user_id: int):
     return keyboard
 
 
-def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_TYPE):
-    lang = get_lang(user_id)
-
+def kb_change_deposit(lang: LANGUAGES_TYPE, is_updating_deposit: bool, market: MARKETS_TYPE):
     texts = {
         'ru': {
             'change': 'Изменить депозит',
@@ -261,19 +265,13 @@ def kb_change_deposit(user_id: int, is_updating_deposit: bool, market: MARKETS_T
     return keyboard
 
 
-def kb_base_cancel(user_id: int):
-    lang = get_lang(user_id)
+def kb_base_cancel(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn = getButton(cancel_txt(lang), 'deposit_update')
-
-    keyboard.add(btn)
+    keyboard.add(getButton(cancel_txt(lang), 'deposit_update'))
     return keyboard
 
 
-def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
-    lang = get_lang(user_id)
-
+def kb_change_currency(lang: LANGUAGES_TYPE, type: Literal['calc', 'welcome', ''] = ''):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -303,9 +301,7 @@ def kb_change_currency(user_id: int, type: Literal['calc', 'welcome', ''] = ''):
     return keyboard
 
 
-def kb_change_market(user_id: int, action: str = '', current: MARKETS_TYPE | None = None):
-    lang = get_lang(user_id)
-
+def kb_change_market(lang: LANGUAGES_TYPE, action: str = '', current: MARKETS_TYPE | None = None):
     row_width = 2
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
@@ -333,9 +329,7 @@ def kb_change_market(user_id: int, action: str = '', current: MARKETS_TYPE | Non
     return keyboard
 
 
-def kb_round_count(user_id: int, current=-1):
-    lang = get_lang(user_id)
-
+def kb_round_count(lang: LANGUAGES_TYPE, current=-1):
     buttons = []
     for el in range(6):
         is_current = ''
@@ -351,8 +345,7 @@ def kb_round_count(user_id: int, current=-1):
     return keyboard
 
 
-def kb_choose_lang(user_id: int, is_first=False):
-    lang = get_lang(user_id)
+def kb_choose_lang(lang: LANGUAGES_TYPE, is_first=False):
     texts = {
         'ru': {
             'ru': 'Русский',
@@ -396,8 +389,7 @@ def kb_choose_lang(user_id: int, is_first=False):
     return keyboard
 
 
-def kb_settings_confirm(user_id: int, action: str):
-    lang = get_lang(user_id)
+def kb_settings_confirm(lang: LANGUAGES_TYPE, action: str):
     texts = {
         'ru': {
             'yes': 'Да',
@@ -426,9 +418,7 @@ def kb_settings_confirm(user_id: int, action: str):
     return keyboard
 
 
-def kb_summury_profit(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_summury_profit(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'change': 'Изменить',
@@ -455,12 +445,10 @@ def kb_summury_profit(user_id: int):
     return keyboard
 
 
-def kb_summury_profit_type(user_id: int):
+def kb_summury_profit_type(lang: LANGUAGES_TYPE):
     """
         Выбор типа вывода профита
     """
-    lang = get_lang(user_id)
-
     texts = {
         'ru': {
             'default': 'Простой',
@@ -496,12 +484,10 @@ def kb_summury_profit_type(user_id: int):
     return keyboard
 
 
-def kb_take_profit(user_id: int, current_tp: list[int], stat_id: int | None = None):
+def kb_take_profit(lang: LANGUAGES_TYPE, current_tp: list[int], stat_id: int | None = None):
     """
         Выбор значения коэфицента для тейк-профита
     """
-    lang = get_lang(user_id)
-
     texts = {
         'ru': {
             'save': 'Сохранить',
@@ -576,12 +562,11 @@ def kb_take_profit(user_id: int, current_tp: list[int], stat_id: int | None = No
     return keyboard
 
 
-def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float], added_count=0):
+def kb_splitting(lang: LANGUAGES_TYPE, current_tp: list[int], current_split: list[float], added_count=0):
     """
         Выбор значения коэфицента для тейк-профита, для выставления процентов
     """
     added_count = max(added_count, 1)
-    lang = get_lang(user_id)
 
     texts = {
         'ru': {
@@ -661,12 +646,10 @@ def kb_splitting(user_id: int, current_tp: list[int], current_split: list[float]
     return keyboard
 
 
-def kb_splitting_last(user_id: int):
+def kb_splitting_last(lang: LANGUAGES_TYPE):
     """
         Вывод кнопок выбора числа, на которое разделиться остаток
     """
-    lang = get_lang(user_id)
-
     ratio_max = 4
     row_width = 4
 
@@ -694,14 +677,12 @@ def kb_splitting_last(user_id: int):
     return keyboard
 
 
-def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', ''] = ''):
+def kb_trading_style(lang: LANGUAGES_TYPE, type: Literal['calc', 'welcome', 'ch_calc', 'ch_calc+stc', ''] = ''):
     def getThisButton(text: str, style: str):
         return getButton(
             text, f'ss_{type}',
             trading_style=style
         )
-
-    lang = get_lang(user_id)
 
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
@@ -736,7 +717,8 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
 
     buttons = []
     for key in styles.keys():
-        buttons.append(getThisButton(transl_tr_style(key, lang) or '', styles[key]))
+        buttons.append(getThisButton(
+            transl_tr_style(key, lang) or '', styles[key]))
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []
@@ -771,9 +753,7 @@ def kb_trading_style(user_id: int, type: Literal['calc', 'welcome', 'ch_calc', '
     return keyboard
 
 
-def kb_trading_type(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_trading_type(lang: LANGUAGES_TYPE):
     btn_margin = getButton(
         transl_tr_type('margin', lang).capitalize(),
         'trading_type', trading_style='margin'
@@ -793,9 +773,7 @@ def kb_trading_type(user_id: int):
     return keyboard
 
 
-def kb_first_calc_info(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_first_calc_info(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Настроить свой калькулятор',
         'en': 'Set up your calculator',
@@ -810,9 +788,7 @@ def kb_first_calc_info(user_id: int):
     return keyboard
 
 
-def kb_exchange(user_id: int, is_exchange: bool = False):
-    lang = get_lang(user_id)
-
+def kb_exchange(lang: LANGUAGES_TYPE, is_exchange: bool = False):
     texts = {
         'ru': {
             'set_exchange': 'Установить биржу',
@@ -860,9 +836,7 @@ def kb_exchange(user_id: int, is_exchange: bool = False):
     return keyboard
 
 
-def kb_change_style_settings(user_id: int, is_style_change: bool):
-    lang = get_lang(user_id)
-
+def kb_change_style_settings(lang: LANGUAGES_TYPE, is_style_change: bool):
     texts = {
         'ru': {
             'set_style': 'Изменить стиль',
@@ -898,9 +872,7 @@ def kb_change_style_settings(user_id: int, is_style_change: bool):
     return keyboard
 
 
-def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: float):
-    lang = get_lang(user_id)
-
+def kb_maker_or_taker(lang: LANGUAGES_TYPE, name: str, maker_fee: float, taker_fee: float):
     texts = {
         'ru': {
             'maker': 'Мейкер',
@@ -931,9 +903,7 @@ def kb_maker_or_taker(user_id: int, name: str, maker_fee: float, taker_fee: floa
     return keyboard
 
 
-def kb_enter_exchange(user_id: int, values: list[str] = [], is_first=False):
-    lang = get_lang(user_id)
-
+def kb_enter_exchange(lang: LANGUAGES_TYPE, values: list[str] = [], is_first=False):
     if len(values) == 0:
         values = ['Bybit', 'Binance', 'OKX', 'KuCoin']
 
@@ -949,9 +919,7 @@ def kb_enter_exchange(user_id: int, values: list[str] = [], is_first=False):
     return keyboard
 
 
-def kb_choose_exchange_level(user_id: int, exchange: str, values: list[str]):
-    lang = get_lang(user_id)
-
+def kb_choose_exchange_level(lang: LANGUAGES_TYPE, exchange: str, values: list[str]):
     buttons = []
     for el in values:
         buttons.append(getButton(el, f'set_ex_lvl++{exchange}++{el}'))
@@ -962,16 +930,13 @@ def kb_choose_exchange_level(user_id: int, exchange: str, values: list[str]):
     return keyboard
 
 
-def kb_change_fee(user_id: int):
-    lang = get_lang(user_id)
+def kb_change_fee(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(back_txt(lang), 'go_settings'))
     return keyboard
 
 
-def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bool):
-    lang = get_lang(user_id)
-
+def kb_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool):
     texts = {
         'ru': {
             'calc_output': 'Вывод расчета: ' + ('текстом 📝' if output == 'photo' else 'картинкой 🖼'),
@@ -1019,9 +984,7 @@ def kb_dop_settings(user_id: int, output: Literal['text', 'photo'], risk_upd: bo
     return keyboard
 
 
-def kb_choose_stop_type(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_choose_stop_type(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'simple': 'Простой',
@@ -1063,17 +1026,13 @@ def kb_choose_stop_type(user_id: int):
     return keyboard
 
 
-def kb_stop_type_cancel(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_stop_type_cancel(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(cancel_txt(lang), 'stop_settings'))
     return keyboard
 
 
-def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
-    lang = get_lang(user_id)
-
+def kb_atr_settings(lang: LANGUAGES_TYPE, atr_settings: tuple[bool, str]):
     texts = {
         'ru': {
             'change': 'Изменить бары',
@@ -1113,9 +1072,7 @@ def kb_atr_settings(user_id: int, atr_settings: tuple[bool, str]):
     return keyboard
 
 
-def kb_atr_bars(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_atr_bars(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=4)
     keyboard.add(
         getButton('15m', 'set_atr_bars+15m'),
@@ -1127,9 +1084,7 @@ def kb_atr_bars(user_id: int):
     return keyboard
 
 
-def kb_atr_bars_count(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_atr_bars_count(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(
         getButton('1', 'set_atr_count+1'),
@@ -1140,9 +1095,7 @@ def kb_atr_bars_count(user_id: int):
     return keyboard
 
 
-def kb_first_dep(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_first_dep(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'Настроить',
         'en': 'Settings',

@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.callbacks.utils import send_calc_start
 from config_logger import logger
 from AuthRoles import check_registrate
 from MAIN.callbacks import (
@@ -9,6 +8,8 @@ from MAIN.callbacks import (
     send_admin_main, send_user_main
 )
 from MAIN.common.utils import send_in_development
+
+from common.calc_step import send_calc_start
 
 from pages.calculate import send_main
 

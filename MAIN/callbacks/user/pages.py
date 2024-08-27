@@ -2,7 +2,6 @@ from threading import Timer
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.callbacks.settings.keyboards import kb_choose_lang
 from Classes import text_editor
 from AuthRoles import get_site_code
 from common.utils import edit_message, get_lang
@@ -15,6 +14,8 @@ from messages.education import termins
 from messages.enter import msg_choose_lang
 from messages.profile import msg_referral, msg_site_login, msg_user_account, msg_user_params
 from messages.users import msg_start
+
+from keyboards.settings import kb_choose_lang
 
 from .main.keyboards import kb_site_login, kb_user_main
 from .education.keyboards import kb_user_education, kb_user_pages
@@ -57,7 +58,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     else:
         bot.send_message(
             chat_id, msg_choose_lang(lang),
-            reply_markup=kb_choose_lang(user_id, True)
+            reply_markup=kb_choose_lang(lang, True)
         )
 
 

@@ -1,9 +1,18 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
-from common.utils import get_lang
+from models import LANGUAGES_TYPE
 
-from .filter import user_tariff_factory
+user_tariff_factory = CallbackData('type', 'tariff_id', 'page', 'tariff_type', prefix='user_tariff')
+
+
+class UserTariffCallbackFilter(AdvancedCustomFilter):
+    key = 'user_tariff'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, tariff_id: int | str = '', tariff_type='', page: int = 0):
@@ -15,16 +24,14 @@ def getButton(text: str, type: str, tariff_id: int | str = '', tariff_type='', p
     )
 
 
-def kb_user_tariff_back(user_id: int):
-    lang = get_lang(user_id)
+def kb_user_tariff_back(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     keyboard.add(getButton(back_txt(lang), 'go_main'))
     return keyboard
 
 
-def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, page=0, is_rus=False):
-    lang = get_lang(user_id)
+def kb_tariff_list(lang: LANGUAGES_TYPE, tariff_id: int, count: int, tariff_type: str, page=0, is_rus=False):
     keyboard = InlineKeyboardMarkup(row_width=3)
 
     texts = {
@@ -90,9 +97,7 @@ def kb_tariff_list(user_id: int, tariff_id: int, count: int, tariff_type: str, p
     return keyboard
 
 
-def kb_bill(user_id: int, url: str):
-    lang = get_lang(user_id)
-
+def kb_bill(lang: LANGUAGES_TYPE, url: str):
     texts = {
         'ru': 'Оплатить',
         'en': 'Pay',
@@ -110,8 +115,7 @@ def kb_bill(user_id: int, url: str):
     return keyboard
 
 
-def kb_choose_products(user_id: int):
-    lang = get_lang(user_id)
+def kb_choose_products(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {

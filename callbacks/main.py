@@ -2,17 +2,16 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
-from common.utils import delete_message, get_lang
 from db import db
 from services import calculation, violation
 
+from common.utils import delete_message, get_lang
+from common.calc_step import send_calc_start
+
 from callbacks.stats import send_week_stats
 from keyboards.stats import kb_calc_result
-
-from CALCULATE.callbacks.utils import send_calc_start
-
-from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 from keyboards.main import main_factory, MainCallbackFilter
+from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 
 
 def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
