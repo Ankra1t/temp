@@ -1,10 +1,10 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation, channel_calc, ticker
 from ..calculate.keyboards import kb_calc_cancel, kb_calc_direct
 from ..settings.keyboards import kb_first_dep
-from CALCULATE.common.messages import msg_choose_direct, msg_enter_max_bar
 from CALCULATE.states.calculate import CalculateState
 from config_logger import logger
 from db import db
@@ -23,6 +23,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     type = callback_data.get('type', '')
 
     user_id = call.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
@@ -144,7 +146,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
     if type == 'calc_atr':
         bot.edit_message_text(
-            msg_enter_max_bar(user_id),
+            msg_enter_max_bar(lang),
             chat_id, mes_id,
             reply_markup=kb_calc_cancel(user_id)
         )
@@ -163,7 +165,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             return
 
         bot.edit_message_text(
-            msg_choose_direct(user_id), chat_id, mes_id,
+            msg_choose_direct(lang, user_id), chat_id, mes_id,
             reply_markup=kb_calc_direct(user_id)
         )
 

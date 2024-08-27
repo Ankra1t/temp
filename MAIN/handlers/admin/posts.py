@@ -4,7 +4,6 @@ from telebot import TeleBot
 from telebot.types import Message
 from Classes.BlockTGBotSender import BlockTGBotSender
 
-from CALCULATE.common.messages import msg_digit_error
 from MAIN.states import AdminPostsState
 from MAIN.callbacks import (
     kb_posts_back, kb_post_add_confirm, kb_post_confirm,
@@ -15,7 +14,8 @@ from common.dt import get_datetime_by_str, get_datetime_now
 
 from config_logger import logger
 from db import db
-from common.utils import digit_accept, set_state_data, text_accept
+from common.utils import digit_accept, get_lang, set_state_data, text_accept
+from messages.errros import msg_digit_error
 from models import Post, PostDetails
 
 
@@ -248,12 +248,14 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
 def handle_action_post(action: Literal['send', 'delete']):
     def r_func(message: Message, bot: TeleBot):
         user_id = message.from_user.id
+        lang = get_lang(user_id)
+
         chat_id = message.chat.id
 
         post_id = digit_accept(message, int)
         if post_id is None:
             bot.send_message(
-                chat_id, msg_digit_error(user_id),
+                chat_id, msg_digit_error(lang),
                 reply_markup=kb_posts_back())
             return
 

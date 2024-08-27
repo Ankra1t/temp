@@ -10,7 +10,13 @@ from Classes import currencyService
 from db import db
 from models import MARKETS_TYPE, ForexInfo
 
-from common.utils import digit_accept, is_digit, set_state_data, text_accept
+from messages.errros import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
+from messages.enter import (
+    msg_choose_direct, msg_enter_min_bar, msg_enter_trading_style,
+)
+
+
+from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept
 from CALCULATE.callbacks import (
     choose_calculate_step, kb_tool,
     send_calculation, kb_change_currency,
@@ -18,11 +24,6 @@ from CALCULATE.callbacks import (
     kb_calc_direct, create_and_send_calc
 )
 from CALCULATE.states import CalculateState, ForexCalcState
-from CALCULATE.common.messages import (
-    msg_choose_direct, msg_currency_error, msg_enter_min_bar, msg_latin_error, msg_trading_style_error,
-    msg_digit_error, msg_enter_trading_style, msg_pair_error,
-    msg_sl_op_equal_error, msg_text_error,
-)
 from services import calculation
 
 
@@ -31,10 +32,12 @@ def handle_tool(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     tool = text_accept(message)
     if tool is None or is_digit(tool):
         new_mes = bot.send_message(
-            chat_id, msg_text_error(user_id),
+            chat_id, msg_text_error(lang),
             reply_markup=kb_tool(user_id, [])
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -42,7 +45,7 @@ def handle_tool(message: Message, bot: TeleBot):
 
     if not re.match(r'^[a-zA-Z0-9 ]+$', tool):
         new_mes = bot.send_message(
-            chat_id, msg_latin_error(user_id),
+            chat_id, msg_latin_error(lang),
             reply_markup=kb_tool(user_id, [])
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -80,15 +83,17 @@ def handle_forex_pair(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     pair = text_accept(message)
     if pair is None or is_digit(pair):
-        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     if not re.match(r'^[a-zA-Z \/]+$', pair):
         new_mes = bot.send_message(
-            chat_id, msg_pair_error(user_id),
+            chat_id, msg_pair_error(lang),
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
@@ -100,7 +105,7 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     pair_arr = pair.split('/')
     if len(pair_arr) != 2 or pair_arr[0] == pair_arr[1]:
-        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
@@ -153,9 +158,11 @@ def handle_forex_pair_price(message: Message, bot: TeleBot):
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     pair_price = digit_accept(message)
     if pair_price is None:
-        new_mes = bot.send_message(chat_id, msg_pair_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
@@ -178,6 +185,7 @@ def handle_forex_pair_price(message: Message, bot: TeleBot):
 
 def handle_currency(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -185,7 +193,7 @@ def handle_currency(message: Message, bot: TeleBot):
     value = text_accept(message)
     if value is None or len(value) > 10:
         new_mes = bot.send_message(
-            chat_id, msg_currency_error(user_id),
+            chat_id, msg_currency_error(lang),
             reply_markup=kb_change_currency(user_id, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -197,7 +205,7 @@ def handle_currency(message: Message, bot: TeleBot):
     check = currencyService.getPrice('USD', value)
     if not check:
         new_mes = bot.send_message(
-            chat_id, msg_currency_error(user_id, 'not_found'),
+            chat_id, msg_currency_error(lang, 'not_found'),
             reply_markup=kb_change_currency(user_id, 'calc')
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -210,6 +218,7 @@ def handle_currency(message: Message, bot: TeleBot):
 def handle_deposit(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -217,7 +226,7 @@ def handle_deposit(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -233,6 +242,7 @@ def handle_deposit(message: Message, bot: TeleBot):
 def handle_risk_percent(message: Message, bot: TeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -245,7 +255,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         return
@@ -267,6 +277,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
 
 def handle_trading_style(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
@@ -274,7 +285,7 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = text_accept(message)
 
     if value is None or is_digit(value):
-        msg_error = f'{msg_trading_style_error(user_id)}\n{msg_enter_trading_style(user_id)}'
+        msg_error = f'{msg_trading_style_error(lang)}\n{msg_enter_trading_style(lang)}'
         new_mes = bot.send_message(
             chat_id, msg_error,
             reply_markup=kb_trading_style(user_id, 'calc')
@@ -310,6 +321,8 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
 def handle_open_price(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -319,7 +332,7 @@ def handle_open_price(message: Message, bot: TeleBot):
     value = digit_accept(message)
     if value is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(
                 user_id
             ) if stat_id is None else kb_deal_profit_cancel(user_id, stat_id)
@@ -342,7 +355,7 @@ def handle_open_price(message: Message, bot: TeleBot):
             return
 
         if calc_info.stopLoss == value:
-            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
             set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
@@ -357,6 +370,8 @@ def handle_open_price(message: Message, bot: TeleBot):
 
 def handle_stop_loss(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -367,7 +382,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     stop_loss = digit_accept(message)
     if stop_loss is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(
                 user_id
             ) if stat_id is None else kb_deal_profit_cancel(user_id, stat_id)
@@ -377,7 +392,7 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
     if stop_loss == open_price:
         new_mes = bot.send_message(
-            chat_id, msg_sl_op_equal_error(user_id),
+            chat_id, msg_sl_op_equal_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -396,12 +411,14 @@ def handle_stop_loss(message: Message, bot: TeleBot):
 
 def handle_stop_atr(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     stop_atr = digit_accept(message)
     if stop_atr is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -421,7 +438,7 @@ def handle_stop_atr(message: Message, bot: TeleBot):
         rate = float(percent) * 0.01
 
     new_mes = bot.send_message(
-        chat_id, msg_choose_direct(user_id),
+        chat_id, msg_choose_direct(lang, user_id),
         reply_markup=kb_calc_direct(user_id, action == 'send_calc')
     )
 
@@ -435,19 +452,21 @@ def handle_stop_atr(message: Message, bot: TeleBot):
 
 def handle_max_bar(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     max_bar = digit_accept(message)
     if max_bar is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     new_mes = bot.send_message(
-        chat_id, msg_enter_min_bar(user_id),
+        chat_id, msg_enter_min_bar(lang),
         reply_markup=kb_calc_cancel(user_id)
     )
     set_state_data(
@@ -460,12 +479,14 @@ def handle_max_bar(message: Message, bot: TeleBot):
 
 def handle_min_bar(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     min_bar = digit_accept(message)
     if min_bar is None:
         new_mes = bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(user_id)
         )
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
@@ -482,7 +503,7 @@ def handle_min_bar(message: Message, bot: TeleBot):
         rate = float(percent) * 0.01
 
     new_mes = bot.send_message(
-        chat_id, msg_choose_direct(user_id),
+        chat_id, msg_choose_direct(lang, user_id),
         reply_markup=kb_calc_direct(user_id, action == 'send_calc')
     )
 

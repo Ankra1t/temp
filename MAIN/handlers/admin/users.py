@@ -9,8 +9,8 @@ from config_logger import logger
 
 from MAIN.states import AdminUsersState
 from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel
-from CALCULATE.common.messages import msg_digit_error
-from common.utils import digit_accept, is_digit, text_accept
+from common.utils import digit_accept, get_lang, is_digit, text_accept
+from messages.errros import msg_digit_error
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
 
 
@@ -58,13 +58,15 @@ def handle_client_search(message: Message, bot: TeleBot):
 
 def handle_days_subscribe(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
     days = digit_accept(message, int)
     current_state = bot.get_state(user_id, chat_id)
 
     if days is None:
         bot.send_message(
-            chat_id, msg_digit_error(user_id),
+            chat_id, msg_digit_error(lang),
             reply_markup=kb_admin_users_back()
         )
         return

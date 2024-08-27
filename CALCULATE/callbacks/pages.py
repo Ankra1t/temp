@@ -15,15 +15,15 @@ from data.data import liteDb
 from Classes import pay_guard, calcService, hti
 from CALCULATE.states import StatsState
 from CALCULATE.common.messages import (
-    msg_admin_send_settings, msg_atr_settings, msg_calc_list, msg_calculation,
-    msg_change_style_settings, msg_channel_calculation, msg_exchange,
-    msg_freeze_calc, msg_maker_or_taker, msg_sl_op_equal_error,
-    msg_stop_page, msg_manuals, msg_violation
+    msg_freeze_calc, msg_manuals, msg_violation
 )
 
+from messages.admin import msg_admin_send_settings
+from messages.calc import msg_calc_list, msg_calculation, msg_channel_calculation
+from messages.errros import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
-from messages.settings import msg_deposit, msg_dop_settings, msg_settings, msg_summury_profit_settings
+from messages.settings import msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summury_profit_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
 from messages.main import msg_main, msg_main_freeze, msg_no_uses
@@ -135,11 +135,13 @@ def send_exchange_settings(bot: TeleBot, message: Message, user_id: int, is_firs
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     bot.delete_state(user_id, chat_id)
 
     exchange = liteDb.getUserExchange(user_id)
 
-    msg = msg_exchange(user_id, exchange)
+    msg = msg_exchange(lang, exchange)
     markup = kb_exchange(user_id, exchange is not None)
 
     if is_first:
@@ -158,6 +160,8 @@ def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     u_base = db.get_calc_user_settings(user_db_id)
 
     style = '-'
@@ -166,7 +170,7 @@ def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is
 
     is_style_change = liteDb.getStyleChange(user_id)
 
-    msg = msg_change_style_settings(user_id, style, is_style_change)
+    msg = msg_change_style_settings(lang, style, is_style_change)
     markup = kb_change_style_settings(user_id, is_style_change)
 
     if is_first:
@@ -182,9 +186,11 @@ def send_maker_or_taker(bot: TeleBot, message: Message, user_id: int, info: tupl
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     bot.delete_state(user_id, chat_id)
 
-    msg = msg_maker_or_taker(user_id, info[1], info[2])
+    msg = msg_maker_or_taker(lang, info[1], info[2])
     markup = kb_maker_or_taker(user_id, *info)
 
     if is_first:
@@ -457,6 +463,7 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
 
     calc_list = None
     if list_type == 'deal':
@@ -479,7 +486,7 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
 
     calc_list = calc_list[page * N: (page + 1) * N]
 
-    msg = msg_calc_list(user_id, calc_list, list_type)
+    msg = msg_calc_list(lang, calc_list, list_type)
     kb = kb_calc_list(user_id, page, pages, list_type)
 
     new_mes_id = mes_id
@@ -597,6 +604,8 @@ def send_calculation(
     is_access = pay_guard.valid_use_calc(user_id, bot)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     calc_output = db.get_user_calc_output(user_db_id)
 
     if is_list:
@@ -611,7 +620,7 @@ def send_calculation(
         )
 
     if True or calc_output == 'text' or is_try:
-        text = msg_calculation(user_id, calc, is_try)
+        text = msg_calculation(lang, calc, is_try)
 
         if calc.photo is None:
             if is_first:
@@ -716,6 +725,7 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float, is_send=True):
     chat_id = message.chat.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
 
     with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
@@ -741,7 +751,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
             return
 
         if calc_info.openPrice == stop_loss:
-            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
             set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
@@ -753,7 +763,7 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         return
 
     if open_price == stop_loss:
-        new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(user_id))
+        new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
         set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
@@ -820,6 +830,8 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
     stop_type = liteDb.getUserStop(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     u_base = db.get_calc_user_settings(user_db_id)
 
     current_fd = False
@@ -828,7 +840,7 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
 
     atr_settings = liteDb.getUserAtrSettings(user_id)
 
-    mes = msg_stop_page(user_id, atr_settings, stop_type, current_fd)
+    mes = msg_stop_page(lang, atr_settings, stop_type, current_fd)
     kb = kb_choose_stop_type(user_id)
 
     if is_first:
@@ -847,8 +859,10 @@ def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     atr_settings = liteDb.getUserAtrSettings(user_id)
-    mes = msg_atr_settings(user_id, atr_settings)
+    mes = msg_atr_settings(lang, atr_settings)
     kb = kb_atr_settings(user_id, atr_settings)
 
     if is_first:

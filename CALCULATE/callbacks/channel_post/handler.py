@@ -10,8 +10,8 @@ from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
 from db import db
+from messages.enter import msg_enter_trading_style
 from models import Calculation
-from CALCULATE.common.messages import msg_enter_trading_style
 from Classes import calcService
 from services import calculation, channel_calc
 
@@ -187,7 +187,7 @@ More often: <b>{result}</b>"""
 
     if type == 'ss_style':
         bot.edit_message_text(
-            msg_enter_trading_style(user_id),
+            msg_enter_trading_style(lang),
             chat_id, mes_id,
             reply_markup=kb_send_settings_trading_style()
         )

@@ -5,18 +5,18 @@ from CALCULATE.states.tariff import TariffState
 from Classes.YooKassa import yooKassa_create_payment
 from config_logger import logger
 from db import db
-from common.utils import text_accept
+from common.utils import get_lang, text_accept
 
 from CALCULATE.states import TariffState
 from CALCULATE.callbacks import kb_bill
-from CALCULATE.common.messages import (
-    msg_text_error
-)
+from messages.errros import msg_text_error
 from messages.users import msg_loading_invoice, msg_bill
 
 
 def handle_email(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = message.chat.id
 
     with bot.retrieve_data(user_id, chat_id) as data:
@@ -25,7 +25,7 @@ def handle_email(message: Message, bot: TeleBot):
     email = text_accept(message)
     if email is None:
         bot.send_message(
-            chat_id, msg_text_error(user_id)
+            chat_id, msg_text_error(lang)
         )
         return
 

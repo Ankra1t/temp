@@ -12,7 +12,7 @@ from .pages import create_and_send_calc, send_main
 from .calculate.keyboards import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from .settings.keyboards import kb_change_currency, kb_trading_style
 
-from CALCULATE.common.messages import (
+from messages.enter import (
     msg_choose_direct, msg_enter_atr, msg_enter_currency, msg_enter_deposit,
     msg_enter_open_price, msg_enter_pair,
     msg_enter_pair_price, msg_enter_risk_percent,
@@ -108,19 +108,19 @@ def choose_calculate_step(
     keyboard = kb_calc_cancel(user_id)
 
     if currency is None:
-        text += msg_enter_currency(user_id)
+        text += msg_enter_currency(lang)
         edit_to = names[lang]['currency']
         state = CalculateState.currency
         keyboard = kb_change_currency(user_id, 'calc')
 
     elif calc_type == 'forex' and forex is None:
-        text += msg_enter_pair(user_id)
+        text += msg_enter_pair(lang)
         edit_to = names[lang]['pair']
         state = ForexCalcState.pair
         keyboard = kb_pair(user_id)
 
     elif calc_type != 'forex' and tool is None:
-        text += msg_enter_tool(user_id, calc_type)
+        text += msg_enter_tool(lang, calc_type)
         edit_to = names[lang]['tool']
         state = CalculateState.tool
 
@@ -145,29 +145,29 @@ def choose_calculate_step(
         if pair in forex.cross_prices:
             pair = f'{forex.pair[0]}/{currency}'
 
-        text += msg_enter_pair_price(user_id, pair)
+        text += msg_enter_pair_price(lang, pair)
         edit_to = pair
         state = ForexCalcState.pair_price
         set_state_data(bot, user_id, chat_id, {'current_pair': pair})
 
     elif is_style_change:
-        text += msg_enter_trading_style(user_id)
+        text += msg_enter_trading_style(lang)
         edit_to = names[lang]['style']
         state = CalculateState.trading_style
         keyboard = kb_trading_style(user_id, 'calc')
 
     elif deposit is None:
-        text += msg_enter_deposit(user_id)
+        text += msg_enter_deposit(lang)
         edit_to = names[lang]['dep']
         state = CalculateState.deposit
 
     elif risk is None:
-        text += msg_enter_risk_percent(user_id)
+        text += msg_enter_risk_percent(lang)
         edit_to = names[lang]['risk']
         state = CalculateState.risk_percent
 
     elif open_price is None:
-        text += msg_enter_open_price(user_id, is_try)
+        text += msg_enter_open_price(lang, is_try)
         edit_to = names[lang]['op']
         state = CalculateState.open_price
 
@@ -178,13 +178,13 @@ def choose_calculate_step(
         keyboard = kb_price(user_id, updated_risk is None, op_value)
     elif stop_loss == -1:
         bot.send_message(
-            chat_id, msg_choose_direct(user_id),
+            chat_id, msg_choose_direct(lang, user_id),
             reply_markup=kb_calc_direct(user_id)
         )
         return
     else:
         if 'atr' in stop_type:
-            text += msg_enter_atr(user_id)
+            text += msg_enter_atr(lang)
             edit_to = names[lang]['atr']
             state = CalculateState.stop_atr
 
@@ -205,7 +205,7 @@ def choose_calculate_step(
                     }
                 )
                 bot.send_message(
-                    chat_id, msg_choose_direct(user_id, value),
+                    chat_id, msg_choose_direct(lang, value),
                     reply_markup=kb_calc_direct(user_id)
                 )
                 return
@@ -213,7 +213,7 @@ def choose_calculate_step(
             keyboard = kb_calc_atr(user_id, value)
         else:
             if stop_loss is None:
-                text += msg_enter_stop_loss(user_id, is_try)
+                text += msg_enter_stop_loss(lang, is_try)
                 edit_to = names[lang]['sl']
                 state = CalculateState.stop_loss
             else:

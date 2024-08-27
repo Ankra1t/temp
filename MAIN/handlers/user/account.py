@@ -2,11 +2,11 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.common.messages import msg_success_edit
 from db import db
 from MAIN.states import UserAccountState
 from MAIN.callbacks import send_user_account, kb_user_params_back, send_user_params
 from common.utils import get_lang, text_accept
+from messages.common import msg_success_edit
 from messages.profile import msg_enter_nickname
 from services import auth
 
@@ -73,7 +73,7 @@ def handle_nickname(message: Message, bot: TeleBot):
         )
         return
 
-    bot.send_message(chat_id, msg_success_edit(user_id))
+    bot.send_message(chat_id, msg_success_edit(lang))
     send_user_params(bot, message, user_id, True)
 
 

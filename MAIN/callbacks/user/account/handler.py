@@ -7,8 +7,10 @@ from Classes.TonWallet import get_connector
 from common.utils import get_lang
 from config_logger import logger
 from db import db
-from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
+from messages.enter import msg_choose_lang
 from models import LANGUAGES
+
+from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
 from .keyboards import (
     kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,
@@ -19,7 +21,7 @@ from ..pages import send_referral, send_user_account, send_user_main, send_user_
 
 from MAIN.states import UserAccountState
 
-from CALCULATE.common.messages import msg_choose_lang, msg_support
+from CALCULATE.common.messages import msg_support
 
 
 connector = get_connector(6919899538)
@@ -99,7 +101,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         if not is_edit_lang:
             bot.edit_message_text(
-                msg_choose_lang(user_id),
+                msg_choose_lang(lang),
                 chat_id, mes_id,
                 reply_markup=kb_params_choose_lang(user_id)
             )

@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.common.messages import msg_enter_email
 from CALCULATE.states.tariff import TariffState
 from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment

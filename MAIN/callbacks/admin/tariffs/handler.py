@@ -2,9 +2,9 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from MAIN.states import AdminTariffState
-from CALCULATE.common.messages import msg_success_edit
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message, get_lang, set_state_data
 from db import db
+from messages.common import msg_success_edit
 
 from .filter import admin_tariffs_factory, AdminTariffsCallbackFilter
 from .keyboards import kb_admin_tariff_add_type, kb_admin_tariffs_back, kb_admin_tariffs_list_back
@@ -18,6 +18,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     tariff_id = int(data.get('id', -1))
 
     user_id = call.from_user.id
+    lang = get_lang(user_id)
+
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
@@ -58,7 +60,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if 'yes' in type:
             if db.deactive_price(tariff_id):
                 delete_message(bot, chat_id, mes_id)
-                bot.send_message(chat_id, msg_success_edit(user_id))
+                bot.send_message(chat_id, msg_success_edit(lang))
                 send_admin_tariffs(bot, call.message, user_id, True)
         elif 'no' in type:
             send_admin_tariffs_list_item(bot, call.message, user_id, page)

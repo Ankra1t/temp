@@ -1,12 +1,13 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.common.messages import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 from CALCULATE.states.calculate import CalculateState
-from common.utils import set_state_data
+from common.utils import get_lang, set_state_data
 from data.data import liteDb
 from db import db
 from MAIN.common.utils import send_in_development
+
+from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 
 from CALCULATE.callbacks import send_calculation, kb_calc_atr, kb_calc_direct
 from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
@@ -23,6 +24,8 @@ def send_start_by_user(
 ):
     chat_id = message.chat.id
     bot.delete_state(user_id, chat_id)
+
+    lang = get_lang(user_id)
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
@@ -58,17 +61,17 @@ def send_start_by_user(
                         }
                     )
                     bot.send_message(
-                        chat_id, msg_choose_direct(user_id, ticker_val),
+                        chat_id, msg_choose_direct(lang, ticker_val),
                         reply_markup=kb_calc_direct(user_id, True)
                     )
                 else:
                     bot.send_message(
-                        chat_id, msg_enter_atr(user_id, calc),
+                        chat_id, msg_enter_atr(lang, calc),
                         reply_markup=kb_calc_atr(user_id, ticker_val)
                     )
             else:
                 bot.send_message(
-                    chat_id, msg_enter_stop_loss(user_id, send_stat=calc),
+                    chat_id, msg_enter_stop_loss(lang, send_stat=calc),
                 )
                 bot.set_state(user_id, CalculateState.stop_loss, chat_id)
 
@@ -84,7 +87,8 @@ def send_start_by_user(
                 }
             )
         else:
-            start_with_calc(bot, message, user_id, int(id), is_try=has_registered_now)
+            start_with_calc(bot, message, user_id, int(id),
+                            is_try=has_registered_now)
 
     elif user_role == 0:
         send_user_main(bot, message, user_id, True, has_registered_now)

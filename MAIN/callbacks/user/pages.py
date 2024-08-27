@@ -3,7 +3,6 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from CALCULATE.callbacks.settings.keyboards import kb_choose_lang
-from CALCULATE.common.messages import msg_choose_lang
 from Classes import text_editor
 from AuthRoles import get_site_code
 from common.utils import edit_message, get_lang
@@ -13,6 +12,7 @@ from data.data import liteDb
 from config_logger import logger
 
 from messages.education import termins
+from messages.enter import msg_choose_lang
 from messages.profile import msg_referral, msg_site_login, msg_user_account, msg_user_params
 from messages.users import msg_start
 
@@ -25,6 +25,8 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     # new_user=True
     chat_id = message.chat.id
     mes_id = message.id
+
+    lang = get_lang(user_id)
 
     bot.delete_state(user_id, chat_id)
 
@@ -54,7 +56,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
 
     else:
         bot.send_message(
-            chat_id, msg_choose_lang(user_id),
+            chat_id, msg_choose_lang(lang),
             reply_markup=kb_choose_lang(user_id, True)
         )
 

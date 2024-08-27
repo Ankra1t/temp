@@ -86,3 +86,17 @@ def msg_admin_users_markets(counts: dict[str, int]):
 {POINT} Форекс: <b>{counts.get('forex', 0)}</b>
 {POINT} РФ: <b>{counts.get('RF', 0)}</b>
 {POINT} США: <b>{counts.get('USA', 0)}</b>"""
+
+
+def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None):
+    text_time = {
+        'avg': 'Среднесрочная',
+        'day': 'Внутридневная',
+    }
+
+    return f"""<u><b>Настройка отправки</b></u>
+
+Отправка стопа: {'Да' if stop else 'Нет'}
+Отправка опроса: {'Да' if vote else 'Нет'}
+Базовый стиль: {style or '-'}
+Базовый период: {text_time[time] if time is not None else '-'}"""
