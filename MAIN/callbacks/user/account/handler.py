@@ -8,6 +8,7 @@ from common.utils import get_lang
 from config_logger import logger
 from db import db
 from messages.enter import msg_choose_lang
+from messages.main import msg_support
 from models import LANGUAGES
 
 from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
@@ -20,9 +21,6 @@ from .filter import user_account_factory, UserAccountCallbackFilter
 from ..pages import send_referral, send_user_account, send_user_main, send_user_params
 
 from MAIN.states import UserAccountState
-
-from CALCULATE.common.messages import msg_support
-
 
 connector = get_connector(6919899538)
 
@@ -58,7 +56,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'support':
         sup = db.get_support_name()
-        msg = msg_support(user_id)
+        msg = msg_support(lang)
 
         bot.edit_message_text(
             msg, chat_id, mes_id,

@@ -724,3 +724,33 @@ def msg_atr_settings(lang: LANGUAGES_TYPE, atr_settings: tuple[bool, str]):
 
 {texts[lang]['calc']}: {texts[lang]['auto'] if atr_settings[0] else texts[lang]['self']}
 """ + bars
+
+
+def msg_confirm_reset(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Вы действительно хотите <b>сбросить</b> все настройки',
+        'en': 'Do you really want to  <b>return to default</b> settings',
+        'uz': 'Haqiqatan ham barcha sozlamalarni tiklamoqchimisiz',
+        'tr': 'Tüm ayarları <b>sıfırlamak</b> istediğinizden emin misiniz',
+    }
+
+    return f'⚠️ {texts[lang]}?'
+
+
+def msg_update_deposit(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': {
+            'main': 'Хотите изменять свой депозит при сохранении расчета?'
+        },
+        'en': {
+            'main': 'Do you want to change your deposit after saving the calculation?'
+        },
+        'uz': {
+            'main': 'Hisob-kitobni saqlagan holda omonatingizni o\'zgartirmoqchimisiz?'
+        },
+        'tr': {
+            'main': 'Hesaplamayı kaydederken depozitonuzu değiştirmek ister misiniz?'
+        },
+    }
+
+    return texts[lang]['main']

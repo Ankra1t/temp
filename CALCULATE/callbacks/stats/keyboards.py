@@ -1,11 +1,11 @@
 from typing import Literal
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from CALCULATE.common.messages import transl_market
 from common.keyboard import back_txt, cancel_txt
 from common.utils import get_lang
 
 from db import db
+from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE
 from services import calculation, channel_calc
 

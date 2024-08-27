@@ -8,13 +8,13 @@ from CALCULATE.callbacks.pages import send_admin_channel_calc_list, send_channel
 from CALCULATE.callbacks.utils import send_calc_start
 from MAIN.callbacks.user.pages import send_referral
 from NOTIFIER import notifier
-from common.utils import is_digit
+from common.utils import get_lang, is_digit
 from db import db
+from messages.main import msg_support
 from models import LANGUAGES
 
 from CALCULATE.callbacks import send_manual_page, send_settings
 from CALCULATE.commands import _start as _calc
-from CALCULATE.common.messages import msg_support
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code, kb_support
 from services import auth
@@ -105,9 +105,10 @@ def _about_us(message: Message, bot: TeleBot):
 
 def _support(message: Message, bot: TeleBot):
     user_id = message.from_user.id
+    lang = get_lang(user_id)
 
     sup = db.get_support_name()
-    msg = msg_support(user_id)
+    msg = msg_support(lang)
 
     bot.send_message(
         message.chat.id, msg,

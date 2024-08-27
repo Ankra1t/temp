@@ -1,5 +1,5 @@
 from typing import Literal
-from CALCULATE.common.messages import msg_freeze_info
+from messages.common import msg_freeze_info
 from models import LANGUAGES_TYPE
 
 

@@ -17,6 +17,7 @@ def get_html_from_crypto_calc(
     saved=False,
 ):
     lang = get_lang(user_id)
+
     point = {
         'ru': {
             'dep': 'Депозит',
@@ -168,32 +169,6 @@ def get_html_from_crypto_calc(
     #     f'<p class="value">{trading_style}</p>'
     # '</div>'
 
-def get_msg_of_calc(user_id: int, calc: Calculation):
-    lang = get_lang(user_id)
-
-    texts = {
-        'ru': {
-            'style': 'Стиль торговли'
-        },
-        'en': {
-            'style': 'Trading style'
-        },
-    }
-
-    result = 'NO'
-
-    if calc.market == 'crypto':
-        result = calc.tool or 'BTC/USDT'
-    elif calc.market == 'forex' and calc.forexInfo is not None:
-        result = ''.join(calc.forexInfo.pair)
-
-    style = ''
-    if calc.tradingStyle is not None:
-        style = f'{texts[lang]["style"]}: <b>{calc.tradingStyle}</b>'
-
-    return f"""{style}
-#{result.replace('/', '').lower()}"""
-
 
 def get_count_value_bet(calc: Calculation, lot=pow(10, 5)):
     """Возвращает кол-во и сумму покупки, коэффициент спота"""
@@ -309,7 +284,7 @@ def get_html_from_forex_calc(
             rate = 1
             tp_ratio_i = calc.tpRatio[i]
             tp_i = max(calc.openPrice + (calc.openPrice -
-                                          calc.stopLoss) * tp_ratio_i, 0)
+                                         calc.stopLoss) * tp_ratio_i, 0)
 
             percent_show = ''
             coins_show = ''

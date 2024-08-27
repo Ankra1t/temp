@@ -8,16 +8,14 @@ from telebot import TeleBot
 
 from AuthRoles import first_timeout
 from CALCULATE.states.stats import ChannelCalcState
+from CALCULATE.states import StatsState
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
-from db import db
 from data.data import liteDb
 
+from db import db
 from Classes import pay_guard, calcService, hti
-from CALCULATE.states import StatsState
-from CALCULATE.common.messages import (
-    msg_freeze_calc, msg_manuals, msg_violation
-)
 
+from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
 from messages.calc import msg_calc_list, msg_calculation, msg_channel_calculation
 from messages.errros import msg_sl_op_equal_error
@@ -26,8 +24,9 @@ from messages.profile import msg_user_tariff
 from messages.settings import msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summury_profit_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
-from messages.main import msg_main, msg_main_freeze, msg_no_uses
+from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
 
+from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
 from services import calculation, channel_calc, ticker, violation
 
@@ -661,12 +660,14 @@ def send_freeze(
     chat_id = message.chat.id
     mes_id = message.id
 
+    lang = get_lang(user_id)
+
     day_risk = calcService.check_day_risk(user_id, market)
     if day_risk:
         bot.set_state(user_id, StatsState.freeze, chat_id)
         set_state_data(bot, user_id, chat_id, {'market': market})
 
-        text = msg_freeze_calc(user_id, day_risk)
+        text = msg_freeze_calc(lang, day_risk)
         kb = kb_freeze_calc(user_id)
 
         if is_first:
@@ -1236,14 +1237,21 @@ def send_violation(
     bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
+    lang = get_lang(user_id)
+
     current = violation.getMonthPoints(user_db_id)
     if current is None:
         return
 
     isToday = violation.getToday(user_db_id) is not None
 
-    msg = msg_violation(user_id, current.get('points'),
-                        isToday, current.get('result'), is_edit)
+    msg = msg_violation(
+        lang,
+        current.get('points'),
+        isToday,
+        current.get('result'),
+        is_edit
+    )
 
     kb = kb_violation(user_id, isToday, current.get('canEdit', False), is_edit)
 

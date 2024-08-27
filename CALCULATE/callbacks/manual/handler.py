@@ -1,8 +1,8 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.common.messages import msg_manuals
 from models import MANUAL_TYPE
+from messages.common import msg_manuals
 
 from .filter import manual_factory, ManualCallbackFilter
 from ..pages import send_main, send_manual

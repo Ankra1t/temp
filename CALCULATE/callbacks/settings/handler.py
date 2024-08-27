@@ -10,17 +10,15 @@ from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import text_editor
-from messages.common import msg_success_edit
-from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type
-from messages.settings import msg_choose_exchange_level, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
 from models import LANGUAGES
 
+from messages.common import msg_success_edit
+from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type
+from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
 from messages.main import msg_success_base_set, msg_welcome
+
 from common.utils import delete_message, get_lang, set_state_data
 from CALCULATE.states import SettingsState
-from CALCULATE.common.messages import (
-    msg_confirm_reset
-)
 from services import auth, calculation
 
 from .filter import settings_factory, SettingsCallbackFilter
@@ -351,7 +349,7 @@ def _settings_callback_handler(call: CallbackQuery, bot: TeleBot):
             send_settings(bot, call.message, user_id)
         else:
             bot.edit_message_text(
-                msg_confirm_reset(user_id), chat_id, mes_id,
+                msg_confirm_reset(lang), chat_id, mes_id,
                 reply_markup=kb_settings_confirm(user_id, 'reset')
             )
 
