@@ -2,7 +2,7 @@ import json
 from config_global import API_URL
 from db import LANGUAGES_TYPE
 from .base_config import session_decorator, session, check_response
-from models import LiveInfo, LiveWait, SendCalc, CalcSentMessages, SentMessages
+from models import LiveInfo, LiveStats, LiveWait, SendCalc, CalcSentMessages, SentMessages
 
 
 @session_decorator
@@ -156,6 +156,7 @@ def getLiveInfo():
         [LiveInfo(**el) for el in data],
         [LiveWait(**el) for el in wait],
         [LiveWait(**el) for el in canceled],
+        LiveStats(**res)
     )
 
 
