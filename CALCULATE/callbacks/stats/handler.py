@@ -992,12 +992,30 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
     marathon = ''
 
     if marathon_data is not None and len(marathon_data) > 0:
+        week_num = 0
+        week_value = 0
+
         marathon = '<b>Марафон 30 дней:</b>'
         for i, el in enumerate(marathon_data):
+            if len(marathon_data) - week_num * 7 >= 7:
+                week_value += (el or 0)
+
+                if i + 1 == (week_num + 1) * 7:
+                    week_num += 1
+                    marathon += f'\n{week_num} неделя - '
+
+                    if week_value is None:
+                        marathon += 'нет сделок'
+                    elif week_value >= 0:
+                        marathon += f'{get_print_float(week_value, 1)} тейков'
+                    else:
+                        marathon += f'{get_print_float(abs(week_value), 1)} стоп'
+                continue
+
             marathon += f'\n{i + 1} день - '
             if el is None:
                 marathon += 'нет сделок'
-            elif el > 0:
+            elif el >= 0:
                 marathon += f'{el} тейков'
             else:
                 marathon += f'{abs(el)} стоп'
