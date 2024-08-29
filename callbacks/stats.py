@@ -1019,9 +1019,9 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
             if el is None:
                 marathon += 'нет сделок'
             elif el >= 0:
-                marathon += f'{el} тейков'
+                marathon += f'{get_print_float(el, 1)} тейков'
             else:
-                marathon += f'{abs(el)} стоп'
+                marathon += f'{get_print_float(abs(el), 1)} стоп'
 
     for chId_i, chId in enumerate(chIds):
         mesId = int(ch_mes.get('mesIds', [0])[chId_i])
