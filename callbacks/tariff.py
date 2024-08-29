@@ -1,12 +1,12 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.states.tariff import TariffState
 from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment
 from common.utils import delete_message, get_lang, set_state_data
 from db import db
 
+from states.tariff import TariffState
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_bill
 
 from keyboards.tariff import (

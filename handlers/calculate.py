@@ -22,7 +22,7 @@ from keyboards.settings import kb_change_currency, kb_trading_style
 from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept
 
-from CALCULATE.states import CalculateState, ForexCalcState
+from states.calculate import CalculateState, ForexCalcState
 from services import calculation
 
 

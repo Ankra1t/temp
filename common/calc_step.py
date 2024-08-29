@@ -8,6 +8,7 @@ from common.utils import get_lang, set_state_data
 from models import MARKETS_TYPE, ForexInfo
 from services import ticker
 
+from states.calculate import CalculateState, ForexCalcState
 from pages.calculate import create_and_send_calc, send_main
 from keyboards.calculate import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from keyboards.settings import kb_change_currency, kb_trading_style
@@ -18,7 +19,6 @@ from messages.enter import (
     msg_enter_pair_price, msg_enter_risk_percent,
     msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style,
 )
-from CALCULATE.states import CalculateState, ForexCalcState
 
 
 names = {

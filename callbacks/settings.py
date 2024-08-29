@@ -2,8 +2,6 @@ from typing import Any
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.states.settings import FirstCalcState
-from CALCULATE.states import SettingsState
 from NOTIFIER import notifier
 from config_logger import logger
 from db import db
@@ -11,6 +9,8 @@ from data.data import liteDb
 from Classes import text_editor
 from models import LANGUAGES
 from services import auth, calculation
+
+from states.settings import FirstCalcState, SettingsState
 
 from messages.common import msg_success_edit
 from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type

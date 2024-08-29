@@ -3,8 +3,7 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.states.settings import FirstCalcState
-from CALCULATE.states import SettingsState
+from states.settings import FirstCalcState, SettingsState
 
 from config_logger import logger
 from db import db

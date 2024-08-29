@@ -11,7 +11,10 @@ from .user.account import registration as _reg_user_account
 
 from .common.livepost import registration as _reg_livepost
 
-from CALCULATE.handlers import handlers_registration as _reg_calculator
+from handlers.calculate import registration as _reg_calc
+from handlers.settings import registration as _reg_settings
+from handlers.stats import registration as _reg_stats
+from handlers.tariff import registration as _reg_tariff
 
 
 def handlers_registration(bot: _TB):
@@ -24,6 +27,9 @@ def handlers_registration(bot: _TB):
 
     _reg_user_account(bot)
 
-    _reg_calculator(bot)
+    _reg_calc(bot)
+    _reg_settings(bot)
+    _reg_stats(bot)
+    _reg_tariff(bot)
 
     _reg_livepost(bot)  # !Должен регестрироваться последним

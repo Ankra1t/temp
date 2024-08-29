@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
-from CALCULATE.commands import _start as _calc
 from MAIN.callbacks.user.pages import send_referral
 from MAIN.start import send_start_by_user
 from MAIN.callbacks import send_site_code, kb_support
@@ -18,8 +17,7 @@ from services import auth
 from common.utils import get_lang, is_digit
 from common.calc_step import send_calc_start
 
-from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual_page, send_settings
-
+from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_main, send_manual_page, send_settings
 
 
 def _start(message: Message, bot: TeleBot):
@@ -74,6 +72,14 @@ def _start(message: Message, bot: TeleBot):
         bot, message, user_id,
         user_role or 0, is_registered or False,
     )
+
+
+def _calc(message: Message, bot: TeleBot):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    send_main(message, bot, user_id, True)
+    bot.delete_state(user_id, chat_id)
 
 
 def _teststart(message: Message, bot: TeleBot):

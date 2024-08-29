@@ -1,13 +1,12 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from CALCULATE.states.tariff import TariffState
-from CALCULATE.states import TariffState
 from Classes.YooKassa import yooKassa_create_payment
 from config_logger import logger
 from db import db
 from common.utils import get_lang, text_accept
 
+from states.tariff import TariffState
 from keyboards.tariff import kb_bill
 
 from messages.errros import msg_text_error

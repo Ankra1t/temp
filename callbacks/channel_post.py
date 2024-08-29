@@ -1,7 +1,6 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from CALCULATE.states.stats import StatsState
 from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, set_state_data
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
@@ -13,6 +12,7 @@ from models import Calculation
 from Classes import calcService
 from services import calculation, channel_calc
 
+from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory,
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,

@@ -7,8 +7,7 @@ from telebot.types import Message, InputMediaPhoto
 from telebot import TeleBot
 
 from AuthRoles import first_timeout
-from CALCULATE.states.stats import ChannelCalcState
-from CALCULATE.states import StatsState
+from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
 from data.data import liteDb
 

@@ -9,7 +9,7 @@ from data.data import liteDb
 from Classes import currencyService
 from models import Calculation, ForexInfo, UnfinishedCalculation
 
-from CALCULATE.states.calculate import CalculateState
+from states.calculate import CalculateState
 
 from common.calc_step import choose_calculate_step
 from common.utils import get_decimal_count, get_lang, set_state_data

@@ -18,9 +18,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from AuthRoles import vote_timeout
 
-from CALCULATE.states.calculate import CalculateState, ForexCalcState
-from CALCULATE.states.stats import ChannelCalcState
-from CALCULATE.states import StatsState
+from states.calculate import CalculateState, ForexCalcState
+from states.stats import ChannelCalcState, StatsState
 
 from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
