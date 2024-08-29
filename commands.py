@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
-from MAIN.start import send_start_by_user
 
 from config_logger import logger
 from AuthRoles import check_registrate
@@ -17,6 +16,7 @@ from common.calc_step import send_calc_start
 
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_main, send_manual_page, send_settings
 from pages.user import send_referral, send_site_code
+from pages.start import send_start_by_user
 
 from keyboards.account import kb_support
 

@@ -11,17 +11,18 @@ from config_logger import logger
 
 from Classes import pay_guard
 from db import db
-from messages.admin import msg_admin_users_markets
-from messages.users import gift_subscribe_msg
 from models import SORT_BY_TYPE
 
+from messages.users import gift_subscribe_msg
+from messages.admin import msg_admin_users_markets
 
-from .keyboards import (
+from pages.admin import send_admin_client, send_admin_main, send_admin_users
+
+from keyboards.admin_users import (
+    admin_users_factory, AdminUsersCallbackFilter,
     kb_admin_choose_list, kb_admin_users_back, kb_admin_users_cancel,
     kb_admin_users_confirm, kb_admin_client_list, kb_admin_users_markets
 )
-from .filter import admin_users_factory, AdminUsersCallbackFilter
-from ..pages import send_admin_client, send_admin_main, send_admin_users
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):

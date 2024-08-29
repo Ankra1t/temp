@@ -5,10 +5,12 @@ from telebot.types import Message
 from common.utils import digit_accept, text_accept, set_state_data
 from common.dt import get_datetime_by_str, get_str_by_datetime
 
-from MAIN.callbacks import (
-    kb_admin_tariffs_list_back, send_admin_tariffs_list_item, kb_admin_tariffs_back, send_admin_tariffs
+from keyboards.admin_tariffs import (
+    kb_admin_tariffs_list_back, kb_admin_tariffs_back
 )
+
 from states.admin_tariff import AdminTariffState
+from pages.admin import send_admin_tariffs, send_admin_tariffs_list_item
 
 from db import db
 from models import Price

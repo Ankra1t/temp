@@ -3,7 +3,6 @@ from telebot.types import CallbackQuery
 
 from config_logger import logger
 from AuthRoles import check_registrate
-from MAIN.callbacks import send_admin_main
 from MAIN.common.utils import send_in_development
 
 from common.calc_step import send_calc_start
@@ -11,6 +10,7 @@ from common.calc_step import send_calc_start
 from keyboards.user_main import user_main_factory, UserMainCallbackFilter
 
 from pages.calculate import send_main
+from pages.admin import send_admin_main
 from pages.user import send_user_education, send_user_account, send_site_code, send_user_main
 
 

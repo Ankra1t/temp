@@ -1,11 +1,11 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
+from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
+
 from pages.calculate import send_admin_send_settings
 from pages.user import send_site_code
-
-from .filter import admin_main_factory, AdminMainCallbackFilter
-from ..pages import (
+from pages.admin import (
     send_admin_main, send_admin_users, send_admin_fut_posts, send_admin_workers,
     send_admin_params, send_admin_payment, send_admin_tariffs
 )

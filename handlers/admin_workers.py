@@ -3,10 +3,11 @@ from telebot.types import Message
 
 from db import db
 
-from states.admin_workers import AdminWorkersState
-from MAIN.callbacks import kb_admin_workers_confirm, kb_admin_workers_back, send_admin_workers_support
 from common.utils import digit_accept, set_state_data
 
+from states.admin_workers import AdminWorkersState
+from keyboards.admin_workers import kb_admin_workers_confirm, kb_admin_workers_back
+from pages.admin import send_admin_workers_support
 
 def handle_add_id(message: Message, bot: TeleBot):
     chat_id = message.chat.id

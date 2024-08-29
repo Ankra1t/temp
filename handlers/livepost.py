@@ -2,12 +2,12 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from AuthRoles import check_registrate
-from MAIN.callbacks.admin.posts.keyboards import kb_posts_back
 from common.utils import delete_message, set_state_data
-from MAIN.callbacks import kb_livepost_type
 from MAIN.common.utils import get_post_from_message
 from states.admin_posts import AdminPostsState
 
+from keyboards.admin_posts import kb_posts_back
+from keyboards.livepost import kb_livepost_type
 from pages.calculate import send_admin_channel_calc_item, send_calculation
 
 from services import calculation

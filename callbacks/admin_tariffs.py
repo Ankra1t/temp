@@ -4,11 +4,14 @@ from telebot.types import CallbackQuery
 from states.admin_tariff import AdminTariffState
 from common.utils import delete_message, get_lang, set_state_data
 from db import db
-from messages.common import msg_success_edit
 
-from .filter import admin_tariffs_factory, AdminTariffsCallbackFilter
-from .keyboards import kb_admin_tariff_add_type, kb_admin_tariffs_back, kb_admin_tariffs_list_back
-from ..pages import send_admin_main, send_admin_tariffs, send_admin_tariffs_list_item
+from messages.common import msg_success_edit
+from pages.admin import send_admin_main, send_admin_tariffs, send_admin_tariffs_list_item
+
+from keyboards.admin_tariffs import (
+    admin_tariffs_factory, AdminTariffsCallbackFilter,
+    kb_admin_tariff_add_type, kb_admin_tariffs_back, kb_admin_tariffs_list_back
+)
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):

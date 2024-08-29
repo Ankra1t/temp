@@ -2,7 +2,6 @@ import re
 from telebot import TeleBot
 from telebot.types import Message
 
-from MAIN.start import start_with_calc
 from config_logger import logger
 from Classes import currencyService
 from db import db
@@ -18,6 +17,7 @@ from pages.calculate import send_calculation, create_and_send_calc
 from keyboards.calculate import kb_tool, kb_calc_direct, kb_calc_cancel
 from keyboards.stats import kb_deal_profit_cancel
 from keyboards.settings import kb_change_currency, kb_trading_style
+from pages.start import start_with_calc
 
 from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, get_lang, is_digit, set_state_data, text_accept

@@ -7,11 +7,14 @@ from Classes import pay_guard
 
 from config_logger import logger
 
-from states.admin_users import AdminUsersState
-from MAIN.callbacks import kb_admin_users_back, send_admin_client, kb_admin_users_cancel
 from common.utils import digit_accept, get_lang, is_digit, text_accept
+
 from messages.errros import msg_digit_error
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
+
+from states.admin_users import AdminUsersState
+from keyboards.admin_users import kb_admin_users_back, kb_admin_users_cancel
+from pages.admin import send_admin_client
 
 
 def handle_client_search(message: Message, bot: TeleBot):

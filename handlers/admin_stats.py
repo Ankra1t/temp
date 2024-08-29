@@ -11,7 +11,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from Classes import base_statis
 
 from states.admin_stats import AdminStatisticsState
-from MAIN.callbacks import kb_statistics_back
+from keyboards.admin_stats import kb_statistics_back
 
 
 def handle_start_date(message: Message, bot: TeleBot):

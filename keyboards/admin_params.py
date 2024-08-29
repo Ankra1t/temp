@@ -1,9 +1,19 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
 from MAIN.common.utils import get_calculator_btn_link
 
-from .filter import admin_params_factory
+
+admin_params_factory = CallbackData('type', prefix='admin_params')
+
+
+class AdminParamsCallbackFilter(AdvancedCustomFilter):
+    key = 'admin_params'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str):

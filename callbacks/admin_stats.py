@@ -6,9 +6,13 @@ from Classes import base_statis
 from states.admin_stats import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
 
-from .keyboards import kb_statistics_back, kb_stats_periods, kb_stats_products
-from .filter import admin_statistics_factory, AdminStatisticsCallbackFilter
-from ..pages import send_admin_main, send_admin_payment
+from pages.admin import send_admin_main, send_admin_payment
+
+from keyboards.admin_stats import (
+    admin_statistics_factory, AdminStatisticsCallbackFilter,
+    kb_statistics_back, kb_stats_periods, kb_stats_products
+)
+
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):
     callback_data = admin_statistics_factory.parse(call.data)

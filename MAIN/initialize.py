@@ -7,8 +7,7 @@ from config_global import TOKEN_MAIN_BOT
 from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from Middlewares.ExceptionHandler import ExHandler
-from MAIN.commands import commands_registration
-from MAIN.callbacks import callbacks_registration
+from commands import commands_registration
 
 from callbacks.calculate import registration as _reg_cb_calculate
 from callbacks.main import registration as _reg_cb_main
@@ -17,6 +16,19 @@ from callbacks.channel_post import registration as _reg_cb_channel_post
 from callbacks.manual import registration as _reg_cb_manual
 from callbacks.settings import registration as _reg_cb_settings
 from callbacks.tariff import registration as _reg_cb_tariff
+from callbacks.education import registration as _reg_cb_education
+from callbacks.account import registration as _reg_cb_account
+
+from callbacks.admin_main import registration as _reg_cb_admin_main
+from callbacks.admin_params import registration as _reg_cb_admin_params
+from callbacks.admin_posts import registration as _reg_cb_admin_posts
+from callbacks.admin_stats import registration as _reg_cb_admin_stats
+from callbacks.admin_tariffs import registration as _reg_cb_admin_tariffs
+from callbacks.admin_workers import registration as _reg_cb_admin_workers
+from callbacks.admin_users import registration as _reg_cb_admin_users
+from callbacks.user_main import registration as _reg_cb_user_main
+
+from callbacks.livepost import registration as _reg_cb_livepost
 
 from handlers.admin_tariff import registration as _reg_admin_tariff
 from handlers.admin_stats import registration as _reg_admin_statistics
@@ -55,7 +67,19 @@ _reg_cb_stats(bot)
 _reg_cb_channel_post(bot)
 _reg_cb_tariff(bot)
 
-callbacks_registration(bot)
+_reg_cb_admin_main(bot)
+_reg_cb_admin_tariffs(bot)
+_reg_cb_admin_workers(bot)
+_reg_cb_admin_params(bot)
+_reg_cb_admin_posts(bot)
+_reg_cb_admin_users(bot)
+_reg_cb_admin_stats(bot)
+
+_reg_cb_user_main(bot)
+_reg_cb_education(bot)
+_reg_cb_account(bot)
+
+_reg_cb_livepost(bot)
 
 _reg_admin_tariff(bot)
 _reg_admin_statistics(bot)

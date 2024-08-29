@@ -4,11 +4,14 @@ from telebot.types import CallbackQuery
 from db import db
 
 from common.utils import is_digit, set_state_data
-from states.admin_workers import AdminWorkersState
 
-from .filter import admin_workers_factory, AdminWorkersCallbackFilter
-from .keyboards import kb_admin_workers_back
-from ..pages import (
+from keyboards.admin_workers import (
+    admin_workers_factory, AdminWorkersCallbackFilter,
+    kb_admin_workers_back,
+)
+
+from states.admin_workers import AdminWorkersState
+from pages.admin import (
     send_admin_main, send_admin_workers, send_admin_workers_admin,
     send_admin_workers_redactors, send_admin_workers_support
 )

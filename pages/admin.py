@@ -14,13 +14,13 @@ from messages.admin import msg_admin_fut_posts, msg_admin_main, msg_admin_tariff
 from messages.common import POINT
 from models import Post, LANGUAGES_TYPE
 
-from .main.keyboards import kb_admin_main
-from .tariffs.keyboards import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
-from .users.keyboards import kb_admin_client_info, kb_admin_users
-from .workers.keyboards import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
-from .statistics.keyboards import kb_statistics
-from .posts.keyboards import kb_posts
-from .params.keyboards import kb_params
+from keyboards.admin_main import kb_admin_main
+from keyboards.admin_tariffs import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
+from keyboards.admin_users import kb_admin_client_info, kb_admin_users
+from keyboards.admin_workers import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
+from keyboards.admin_stats import kb_statistics
+from keyboards.admin_posts import kb_posts
+from keyboards.admin_params import kb_params
 
 
 def send_admin_main(

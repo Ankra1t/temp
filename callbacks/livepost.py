@@ -1,15 +1,17 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from db import db
 from Classes.BlockTGBotSender import send_same_message_to_users
-
-from states.admin_posts import AdminPostsState
-from MAIN.callbacks import send_admin_main
+from db import db
 from models import Post
 
-from .filter import livepost_factory, LivepostCallbackFilter
-from .keyboards import kb_livepost_cancel, kb_livepost_direction, kb_livepost_market, kb_livepost_time
+from states.admin_posts import AdminPostsState
+from keyboards.livepost import (
+    livepost_factory, LivepostCallbackFilter,
+    kb_livepost_cancel, kb_livepost_direction,
+    kb_livepost_market, kb_livepost_time
+)
+from pages.admin import send_admin_main
 
 
 def _handle_callback(call: CallbackQuery, bot: TeleBot):

@@ -6,8 +6,9 @@ from db import db
 from Classes import pay_guard
 
 from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
-from MAIN.callbacks import kb_params_choice, kb_params_back
+
 from states.admin_params import AdminParamsState
+from keyboards.admin_params import kb_params_choice, kb_params_back
 
 
 _pair_pattern = r'^[a-zA-Z]{3}/[a-zA-Z]{3}$'

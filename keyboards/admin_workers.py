@@ -1,9 +1,21 @@
 from typing import Literal
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
 
-from .filter import admin_workers_factory
+
+admin_workers_factory = CallbackData(
+    'type', 'id', 'role', prefix='admin_workers'
+)
+
+
+class AdminWorkersCallbackFilter(AdvancedCustomFilter):
+    key = 'admin_workers'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, role: int = -1, id: int = -1):
