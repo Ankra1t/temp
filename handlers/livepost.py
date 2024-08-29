@@ -3,7 +3,7 @@ from telebot.types import Message
 
 from AuthRoles import check_registrate
 from common.utils import delete_message, set_state_data
-from MAIN.common.utils import get_post_from_message
+from common.utils import get_post_from_message
 from states.admin_posts import AdminPostsState
 
 from keyboards.admin_posts import kb_posts_back

@@ -5,12 +5,11 @@ from telebot.types import Message
 from Classes.BlockTGBotSender import BlockTGBotSender
 
 
-from MAIN.common.utils import get_post_from_message
-from common.dt import get_datetime_by_str, get_datetime_now
-from config_logger import logger
 from db import db
-from common.utils import digit_accept, get_lang, set_state_data, text_accept
 from models import Post, PostDetails
+from config_logger import logger
+from common.utils import digit_accept, get_lang, set_state_data, text_accept, get_post_from_message
+from common.dt import get_datetime_by_str, get_datetime_now
 
 from messages.errros import msg_digit_error
 from states.admin_posts import AdminPostsState

@@ -1,10 +1,10 @@
 from telebot import TeleBot
 from telebot.types import Message
 
-from common.utils import get_lang, set_state_data
 from data.data import liteDb
 from db import db
-from MAIN.common.utils import send_in_development
+
+from common.utils import get_lang, set_state_data, send_in_development
 
 from states.calculate import CalculateState
 from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss

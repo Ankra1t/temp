@@ -3,7 +3,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.custom_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
-from MAIN.common.utils import get_calculator_btn_link
+from common.utils import get_calculator_btn_link
 
 
 admin_params_factory = CallbackData('type', prefix='admin_params')

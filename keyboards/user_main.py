@@ -2,10 +2,11 @@ from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.custom_filters import AdvancedCustomFilter
 
-from MAIN.common.utils import get_calculator_btn_link
-from common.keyboard import back_txt
 from config_global import SITE_URL
 from models import LANGUAGES_TYPE
+
+from common.utils import get_calculator_btn_link
+from common.keyboard import back_txt
 
 
 user_main_factory = CallbackData('type', prefix='user_main')

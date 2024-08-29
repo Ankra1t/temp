@@ -3,9 +3,9 @@ from telebot.types import CallbackQuery
 
 from config_logger import logger
 from AuthRoles import check_registrate
-from MAIN.common.utils import send_in_development
 
 from common.calc_step import send_calc_start
+from common.utils import send_in_development
 
 from keyboards.user_main import user_main_factory, UserMainCallbackFilter
 

@@ -2,17 +2,17 @@ from typing import Literal
 from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto
 
-from common.utils import delete_message, get_lang, get_print_float
 from db import db
 from data.data import liteDb
 from Classes import base_statis
+from models import Post, LANGUAGES_TYPE
 
-from MAIN.common.utils import get_print_signal_info
+from common.utils import delete_message, get_lang, get_print_float, get_print_signal_info
 from common.dt import get_str_by_datetime
+
 from messages.statistics import admin_main_statistics
 from messages.admin import msg_admin_fut_posts, msg_admin_main, msg_admin_tariff, msg_admin_users, msg_admin_menu
 from messages.common import POINT
-from models import Post, LANGUAGES_TYPE
 
 from keyboards.admin_main import kb_admin_main
 from keyboards.admin_tariffs import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit

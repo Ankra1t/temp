@@ -11,7 +11,7 @@ from config_logger import logger
 from callbacks.calculate import send_after_first_try
 from callbacks.stats import edit_channel_post, edit_live_info, send_vote, send_week_stats
 
-from MAIN.initialize import bot
+from initialize import bot
 from db import db
 from models import LiveInfo, LiveStats, LiveWait, SentMessages
 from thread_tasks import run_thread
