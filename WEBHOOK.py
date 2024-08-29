@@ -13,7 +13,7 @@ from callbacks.stats import edit_channel_post, edit_live_info, send_vote, send_w
 
 from MAIN.initialize import bot
 from db import db
-from models import LiveInfo, LiveWait, SentMessages
+from models import LiveInfo, LiveStats, LiveWait, SentMessages
 from thread_tasks import run_thread
 
 
@@ -141,6 +141,7 @@ def live_info():
         [LiveInfo(**el) for el in data],
         [LiveWait(**el) for el in wait],
         [LiveWait(**el) for el in canceled],
+        LiveStats(**res)
     )
 
     edit_live_info(bot, live)

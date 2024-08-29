@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from typing import Literal
 import requests
-from telebot  import TeleBot
+from telebot import TeleBot
 
+from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, TickerInfo
@@ -10,8 +11,17 @@ from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, TickerI
 from Classes import calcService
 
 
+months = {'ru': [
+    'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+    'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
+], 'en': [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+]}
+
+
 def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
-    lang = get_lang(user_id) # TODO - delete
+    lang = get_lang(user_id)  # TODO - delete
 
     with bot.retrieve_data(user_id, chat_id) as data:
         updated_risk = data.get('updated_risk') or 1.
@@ -380,6 +390,7 @@ def msg_channel_calculation(
     date: str | None = None,
     try_link: str = '',
 ):
+    monthCount = tickerInfo.monthCount if tickerInfo is not None else 0
     status = calc.status
 
     if calc.profit is not None or status == 'FINISH':
@@ -519,6 +530,10 @@ def msg_channel_calculation(
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
 
+    current_date = get_str_by_datetime(get_datetime_now(), "day.month")
+    month = ('За' if lang == 'ru' else 'For') + ' ' + \
+        months[lang][int(current_date.split('.')[1]) - 1]
+
     chart_link = ''
     if try_link != '':
         chart_link = f'https://ru.tradingview.com/chart/?symbol=BYBIT%3A{(calc.tool or "").replace("/", "")}.P'
@@ -548,6 +563,13 @@ def msg_channel_calculation(
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]} ({current_values_sum}{trading_currency})' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{calc.comment.strip()}' if calc.comment else '') \
+        + (
+            (
+                f'\n\n<b>{month}:</b> '
+                f"{f'торгую {monthCount} раз(а)' if lang == 'ru' else f'traded {monthCount} time(s)'}"
+                f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if tickerInfo.monthValue > 0 else ""}{get_print_float(tickerInfo.monthValue, 1)} '
+                f'{("тейков" if lang == "ru" else "take") if tickerInfo.monthValue > 0 else ("стопов" if lang == "ru" else "stop") }'
+            ) if status == 'WAIT' and tickerInfo else "") \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 

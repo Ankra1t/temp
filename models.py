@@ -341,6 +341,8 @@ class TickerInfo(BaseModel):
     turnover: Optional[float]
     price24hPcnt: Optional[float]
     indexPrice: Optional[float]
+    monthCount: int
+    monthValue: float
 
 
 class SentMessages(BaseModel):
@@ -383,6 +385,12 @@ class LiveInfo(BaseModel):
     takeProfit: Optional[float]
     takeProfitRatio: Optional[float]
     update: Literal[False] | float
+
+
+class LiveStats(BaseModel):
+    todayValueCount: float
+    monthValueCount: float
+    todayProfit: float
 
 
 class LiveWait(BaseModel):

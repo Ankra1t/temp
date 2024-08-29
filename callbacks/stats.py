@@ -33,10 +33,10 @@ from config_logger import logger
 from db import db
 from Classes import calcService, pay_guard
 from messages.stats import msg_market_stats
-from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveWait, SentMessages
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveStats, LiveWait, SentMessages
 from services import calculation, channel_calc, ticker
 
-from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation
+from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation, months # TODO - months в commmon файл
 from messages.enter import msg_enter_calc_img_text, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 from messages.main import msg_frozen
 from messages.common import transl_status
@@ -995,12 +995,30 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
     marathon = ''
 
     if marathon_data is not None and len(marathon_data) > 0:
+        week_num = 0
+        week_value = 0
+
         marathon = '<b>Марафон 30 дней:</b>'
         for i, el in enumerate(marathon_data):
+            if len(marathon_data) - week_num * 7 >= 7:
+                week_value += (el or 0)
+
+                if i + 1 == (week_num + 1) * 7:
+                    week_num += 1
+                    marathon += f'\n{week_num} неделя - '
+
+                    if week_value is None:
+                        marathon += 'нет сделок'
+                    elif week_value >= 0:
+                        marathon += f'{get_print_float(week_value, 1)} тейков'
+                    else:
+                        marathon += f'{get_print_float(abs(week_value), 1)} стоп'
+                continue
+
             marathon += f'\n{i + 1} день - '
             if el is None:
                 marathon += 'нет сделок'
-            elif el > 0:
+            elif el >= 0:
                 marathon += f'{el} тейков'
             else:
                 marathon += f'{abs(el)} стоп'
@@ -1235,7 +1253,7 @@ changed_id = -1
 
 def edit_live_info(
     bot: TeleBot,
-    live: tuple[SentMessages | None, list[LiveInfo], list[LiveWait], list[LiveWait]],
+    live: tuple[SentMessages | None, list[LiveInfo], list[LiveWait], list[LiveWait], LiveStats],
     changed_calc: Calculation | None = None
 ):
     global changed_id
@@ -1248,9 +1266,9 @@ def edit_live_info(
 
         if live and len(live[1]) > 0:
             msges: dict[str, str] = {}
-            current_counts: dict[str, int] = {}
 
             now_changed = ''
+            count_deal = 0
 
             for calc_ in live[1]:
                 if calc_.valueCount is None and chId_i == 0:
@@ -1264,11 +1282,13 @@ def edit_live_info(
 
                 dealAt = calc_.dealAt
                 if dealAt is not None:
+                    count_deal += 1
                     dealAt = datetime.fromisoformat(
                         (dealAt or "").replace("Z", "")) + timedelta(hours=3)
 
                 finishAt = calc_.finishAt
                 if finishAt is not None:
+                    count_deal -= 1
                     finishAt = datetime.fromisoformat(
                         (finishAt or "").replace("Z", ""))
 
@@ -1331,13 +1351,6 @@ def edit_live_info(
                     #     )} USDT</b>"""
                     #     is_shift = True
 
-                if date in current_counts:
-                    current_count = current_counts[date]
-                    current_counts[date] += 1
-                else:
-                    current_count = 1
-                    current_counts[date] = 2
-
                 current_msg += f'\n<b>{tool}</b>{price} | {result}'
                 current_msg += take_profit
 
@@ -1367,7 +1380,7 @@ def edit_live_info(
                 if changed_calc is not None and changed_calc.id == calc_.id:
                     changed_id = calc_.id
 
-                if changed_id == calc_.id:
+                if changed_id == calc_.id and count_deal > 2:
                     now_changed = '⚡️ <b>НОВОЕ:</b>\n\n' if lang == 'ru' else '⚡️ <b>NEW:</b>\n\n'
                     now_changed += f'\n{current_msg}'.strip()
 
@@ -1382,6 +1395,29 @@ def edit_live_info(
                 msg += 'LIVE-сделки' if lang == 'ru' else 'LIVE-deals'
                 msg += '</b>\n\n'
                 msg += msges[key].strip()
+
+            if msg != '':
+                msg += '\n\n<b>'
+                msg += 'За день' if lang == 'ru' else 'Today'
+                msg += ':</b> '
+
+                tp_sl_show = ''
+                if live[4].todayValueCount >= 0:
+                    tp_sl_show = 'тейков' if lang == 'ru' else 'take'
+                else:
+                    tp_sl_show = 'стопов' if lang == 'ru' else 'stop'
+                msg += f'{"+" if live[4].todayValueCount > 0 else ""}{get_print_float(live[4].todayValueCount, 1)} {tp_sl_show} ({get_print_float(live[4].todayProfit)}$)'
+
+                current_date = get_str_by_datetime(
+                    get_datetime_now(), "day.month"
+                )
+
+                msg += '\n<b>'
+                msg += months[lang][int(current_date.split('.')[1]) - 1].capitalize()
+                msg += ':</b> '
+
+                tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
+                msg += f'{"+" if live[4].monthValueCount > 0 else ""}{get_print_float(live[4].monthValueCount, 1)}% {tp_sl_show}'
 
             if finished != '':
                 msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Завершено:</b>\n'
@@ -1413,7 +1449,7 @@ def edit_live_info(
                         tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{el.messages.mesIds[chId_i]}">{tool}</a>'
 
                     msg += tool
-                    if i != len(live[2]) - 1:
+                    if i != len(live[3]) - 1:
                         msg += ', '
 
             week = channel_calc.getWeekStat()
