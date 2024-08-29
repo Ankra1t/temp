@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from Classes.BlockTGBotSender import BlockTGBotSender
 
-from MAIN.states import AdminPostsState
+from states.admin_posts import AdminPostsState
 from MAIN.callbacks import (
     kb_posts_back, kb_post_add_confirm, kb_post_confirm,
     send_admin_post, send_admin_params, kb_livepost_cancel

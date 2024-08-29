@@ -8,7 +8,7 @@ from common.dt import get_datetime_by_str, get_str_by_datetime
 from MAIN.callbacks import (
     kb_admin_tariffs_list_back, send_admin_tariffs_list_item, kb_admin_tariffs_back, send_admin_tariffs
 )
-from MAIN.states import AdminTariffState
+from states.admin_tariff import AdminTariffState
 
 from db import db
 from models import Price

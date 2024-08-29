@@ -3,7 +3,7 @@ from telebot.types import CallbackQuery
 
 from Classes import base_statis
 
-from MAIN.states import AdminStatisticsState
+from states.admin_stats import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
 
 from .keyboards import kb_statistics_back, kb_stats_periods, kb_stats_products

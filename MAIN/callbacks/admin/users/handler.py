@@ -3,7 +3,7 @@ from telebot import TeleBot
 from telebot.types import CallbackQuery
 
 from MAIN.common.utils import get_short_user_info
-from MAIN.states import AdminUsersState
+from states.admin_users import AdminUsersState
 from common.dt import get_str_by_datetime
 from common.utils import set_state_data
 

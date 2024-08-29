@@ -7,7 +7,7 @@ from Classes import pay_guard
 
 from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
 from MAIN.callbacks import kb_params_choice, kb_params_back
-from MAIN.states import AdminParamsState
+from states.admin_params import AdminParamsState
 
 
 _pair_pattern = r'^[a-zA-Z]{3}/[a-zA-Z]{3}$'

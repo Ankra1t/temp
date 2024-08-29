@@ -4,7 +4,7 @@ from telebot.types import CallbackQuery
 from db import db
 from Classes.BlockTGBotSender import send_same_message_to_users
 
-from MAIN.states import AdminPostsState
+from states.admin_posts import AdminPostsState
 from MAIN.callbacks import send_admin_main
 from models import Post
 

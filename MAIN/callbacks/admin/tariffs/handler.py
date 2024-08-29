@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from MAIN.states import AdminTariffState
+from states.admin_tariff import AdminTariffState
 from common.utils import delete_message, get_lang, set_state_data
 from db import db
 from messages.common import msg_success_edit

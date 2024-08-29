@@ -10,7 +10,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 
 from Classes import base_statis
 
-from MAIN.states import AdminStatisticsState
+from states.admin_stats import AdminStatisticsState
 from MAIN.callbacks import kb_statistics_back
 
 

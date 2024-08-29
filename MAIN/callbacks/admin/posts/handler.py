@@ -3,9 +3,10 @@ from telebot.types import CallbackQuery
 
 from Classes import pay_guard
 from db import db
-from MAIN.states import AdminPostsState
 from common.utils import set_state_data
 from models import Post
+
+from states.admin_posts import AdminPostsState
 
 from .keyboards import kb_post_kinds, kb_posts, kb_posts_back
 from .filter import admin_posts_factory, AdminPostsCallbackFilter

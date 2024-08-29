@@ -6,7 +6,7 @@ from db import db
 from Classes import pay_guard
 
 from common.utils import set_state_data
-from MAIN.states import AdminParamsState
+from states.admin_params import AdminParamsState
 
 from .keyboards import kb_calculator, kb_edit_text, kb_params_back, kb_params_change
 from .filter import admin_params_factory, AdminParamsCallbackFilter
