@@ -2,9 +2,7 @@ from telebot import TeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
-from MAIN.callbacks.user.pages import send_referral
 from MAIN.start import send_start_by_user
-from MAIN.callbacks import send_site_code, kb_support
 
 from config_logger import logger
 from AuthRoles import check_registrate
@@ -18,6 +16,9 @@ from common.utils import get_lang, is_digit
 from common.calc_step import send_calc_start
 
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_main, send_manual_page, send_settings
+from pages.user import send_referral, send_site_code
+
+from keyboards.account import kb_support
 
 
 def _start(message: Message, bot: TeleBot):
@@ -120,7 +121,7 @@ def _support(message: Message, bot: TeleBot):
 
     bot.send_message(
         message.chat.id, msg,
-        reply_markup=kb_support(user_id, sup)
+        reply_markup=kb_support(lang, sup)
     )
     bot.delete_state(message.from_user.id, message.chat.id)
 

@@ -1,9 +1,19 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt, cancel_txt
-from common.utils import get_lang
+from models import LANGUAGES_TYPE
 
-from .filter import user_account_factory
+
+user_account_factory = CallbackData('type', prefix='user_account')
+
+
+class UserAccountCallbackFilter(AdvancedCustomFilter):
+    key = 'user_account'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str):
@@ -13,9 +23,7 @@ def getButton(text: str, type: str):
     )
 
 
-def kb_user_account(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_user_account(lang: LANGUAGES_TYPE, user_id: int):
     texts = {
         'ru': {
             'refs': 'Рефералка',
@@ -67,9 +75,7 @@ def kb_user_account(user_id: int):
     return keyboard
 
 
-def kb_user_referral(user_id: int, referals_count=0):
-    lang = get_lang(user_id)
-
+def kb_user_referral(lang: LANGUAGES_TYPE, referals_count=0):
     texts = {
         'ru': {
             'refs': 'Список рефералов'
@@ -98,27 +104,19 @@ def kb_user_referral(user_id: int, referals_count=0):
     return keyboard
 
 
-def kb_user_referral_list(user_id: int):
-    lang = get_lang(user_id)
+def kb_user_referral_list(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup()
-
-    btn_back = getButton(back_txt(lang), 'referral')
-
-    keyboard.add(btn_back)
+    keyboard.add(getButton(back_txt(lang), 'referral'))
     return keyboard
 
 
-def kb_user_purchases(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_user_purchases(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(back_txt(lang), 'back'))
     return keyboard
 
 
-def kb_user_params(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_user_params(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'lang': 'Язык',
@@ -147,8 +145,7 @@ def kb_user_params(user_id: int):
     return keyboard
 
 
-def kb_params_choose_lang(user_id: int):
-    lang = get_lang(user_id)
+def kb_params_choose_lang(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'ru': 'Русский',
@@ -189,18 +186,15 @@ def kb_params_choose_lang(user_id: int):
     return keyboard
 
 
-def kb_user_params_back(user_id: int):
-    lang = get_lang(user_id)
-
+def kb_user_params_back(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
     btn_back = getButton(cancel_txt(lang), 'params')
     keyboard.add(btn_back)
     return keyboard
 
 
-def kb_support(user_id: int, link: str):
+def kb_support(lang: LANGUAGES_TYPE, link: str):
     link = link.replace('@', '')
-    lang = get_lang(user_id)
 
     texts = {
         'ru': {
@@ -236,9 +230,8 @@ def kb_support(user_id: int, link: str):
     return keyboard
 
 
-def kb_wallets(user_id: int, wallets: list[str]):
+def kb_wallets(lang: LANGUAGES_TYPE, wallets: list[str]):
     row_width = 2
-    lang = get_lang(user_id)
 
     back = getButton(back_txt(lang), 'back')
     wal_buttons = [getButton(el, f'connect++{el}') for el in wallets]
@@ -248,9 +241,7 @@ def kb_wallets(user_id: int, wallets: list[str]):
     return keyboard
 
 
-def kb_wallet_connect(user_id: int, url: str):
-    lang = get_lang(user_id)
-
+def kb_wallet_connect(lang: LANGUAGES_TYPE, url: str):
     texts = {
         'ru': 'Подключить',
         'en': 'Connect',

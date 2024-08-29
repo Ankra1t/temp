@@ -3,12 +3,16 @@ from telebot import TeleBot
 from telebot.types import Message
 
 from db import db
-from MAIN.states import UserAccountState
-from MAIN.callbacks import send_user_account, kb_user_params_back, send_user_params
+from states.account import UserAccountState
 from common.utils import get_lang, text_accept
+from services import auth
+
+from keyboards.account import kb_user_params_back
+from pages.user import send_user_account, send_user_params
+
 from messages.common import msg_success_edit
 from messages.profile import msg_enter_nickname
-from services import auth
+
 
 
 def handle_new_password(message: Message, bot: TeleBot):
@@ -46,7 +50,7 @@ def handle_nickname(message: Message, bot: TeleBot):
     if nickname is None or not re.match(r'^[a-zA-Z0-9]+$', nickname):
         bot.send_message(
             chat_id, msg_enter_nickname(lang, 'default'),
-            reply_markup=kb_user_params_back(user_id)
+            reply_markup=kb_user_params_back(lang)
         )
         return
 
@@ -59,7 +63,7 @@ def handle_nickname(message: Message, bot: TeleBot):
     if length_error != '':
         bot.send_message(
             chat_id, msg_enter_nickname(lang, length_error),
-            reply_markup=kb_user_params_back(user_id)
+            reply_markup=kb_user_params_back(lang)
         )
         return
 
@@ -69,7 +73,7 @@ def handle_nickname(message: Message, bot: TeleBot):
     if res == 'Nickname has taken':
         bot.send_message(
             chat_id, msg_enter_nickname(lang, 'taken'),
-            reply_markup=kb_user_params_back(user_id)
+            reply_markup=kb_user_params_back(lang)
         )
         return
 

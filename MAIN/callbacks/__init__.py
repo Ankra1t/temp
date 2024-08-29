@@ -9,10 +9,6 @@ from .admin.pages import (
     send_admin_fut_posts, send_admin_params, send_admin_tariffs_list_item,
     send_admin_tariffs
 )
-from .user.pages import (
-    send_user_education, send_user_main, send_user_terms,
-    send_user_account, send_site_code, send_user_params,
-)
 
 from .common.livepost.handler import registration as _reg_livepost
 from .common.livepost.keyboards import (
@@ -58,19 +54,9 @@ from .admin.statistics.keyboards import kb_statistics, kb_statistics_back
 from .admin.posts.handler import registration as _reg_admin_posts
 from .admin.posts.keyboards import kb_posts, kb_posts_back, kb_post_add_confirm, kb_post_confirm, kb_post_kinds
 
-
-from .user.main.handler import registration as _reg_user_main
-from .user.main.keyboards import kb_user_main, kb_user_calculator, kb_site_login
-
-from .user.education.handler import registration as _reg_user_education
-from .user.education.keyboards import kb_user_education, kb_user_curs, kb_user_pages
-
-from .user.account.handler import registration as _reg_user_account
-from .user.account.keyboards import (
-    kb_user_account, kb_user_referral, kb_user_referral_list,
-    kb_user_purchases, kb_user_params, kb_params_choose_lang,
-    kb_user_params_back, kb_support
-)
+from callbacks.user_main import registration as _reg_user_main
+from callbacks.account import registration as _reg_user_account
+from callbacks.education import registration as _reg_user_education
 
 
 def callbacks_registration(bot: _TB):

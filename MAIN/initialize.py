@@ -8,7 +8,6 @@ from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from Middlewares.ExceptionHandler import ExHandler
 from MAIN.commands import commands_registration
-from MAIN.handlers import handlers_registration
 from MAIN.callbacks import callbacks_registration
 
 from callbacks.calculate import registration as _reg_cb_calculate
@@ -18,6 +17,22 @@ from callbacks.channel_post import registration as _reg_cb_channel_post
 from callbacks.manual import registration as _reg_cb_manual
 from callbacks.settings import registration as _reg_cb_settings
 from callbacks.tariff import registration as _reg_cb_tariff
+
+from handlers.admin_tariff import registration as _reg_admin_tariff
+from handlers.admin_stats import registration as _reg_admin_statistics
+from handlers.admin_workers import registration as _reg_admin_workers
+from handlers.admin_users import registration as _reg_admin_users
+from handlers.admin_params import registration as _reg_admin_params
+from handlers.admin_posts import registration as _reg_admin_posts
+
+from handlers.account import registration as _reg_user_account
+
+from handlers.livepost import registration as _reg_livepost
+
+from handlers.calculate import registration as _reg_calc
+from handlers.settings import registration as _reg_settings
+from handlers.stats import registration as _reg_stats
+from handlers.tariff import registration as _reg_tariff
 
 
 bot = TeleBot(
@@ -41,7 +56,23 @@ _reg_cb_channel_post(bot)
 _reg_cb_tariff(bot)
 
 callbacks_registration(bot)
-handlers_registration(bot)
+
+_reg_admin_tariff(bot)
+_reg_admin_statistics(bot)
+_reg_admin_workers(bot)
+_reg_admin_users(bot)
+_reg_admin_params(bot)
+_reg_admin_posts(bot)
+
+_reg_user_account(bot)
+
+_reg_calc(bot)
+_reg_settings(bot)
+_reg_stats(bot)
+_reg_tariff(bot)
+
+_reg_livepost(bot)  # !Должен регестрироваться последним
+
 chat_member_handler_registration(bot)
 
 bot.add_custom_filter(StateFilter(bot))

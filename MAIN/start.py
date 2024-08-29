@@ -10,9 +10,11 @@ from states.calculate import CalculateState
 from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
 
 from pages.calculate import send_calculation
+from pages.user import send_user_main, send_site_code
+
 from keyboards.calculate import kb_calc_atr, kb_calc_direct
 
-from MAIN.callbacks import send_user_main, send_admin_main, send_site_code
+from MAIN.callbacks import send_admin_main
 from models import Calculation
 from services import calculation, channel_calc, ticker
 

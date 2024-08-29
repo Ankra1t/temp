@@ -13,14 +13,15 @@ from models import LANGUAGES
 
 from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
-from .keyboards import (
+from states.account import UserAccountState
+from keyboards.account import (
+    user_account_factory, UserAccountCallbackFilter,
     kb_params_choose_lang, kb_support, kb_user_params_back, kb_user_purchases,
     kb_user_referral_list, kb_params_choose_lang, kb_wallet_connect, kb_wallets
 )
-from .filter import user_account_factory, UserAccountCallbackFilter
-from ..pages import send_referral, send_user_account, send_user_main, send_user_params
 
-from MAIN.states import UserAccountState
+from pages.user import send_referral, send_user_account, send_user_main, send_user_params
+
 
 connector = get_connector(6919899538)
 
@@ -45,7 +46,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             msg_user_purchases(lang, purchases),
             chat_id, mes_id,
-            reply_markup=kb_user_purchases(user_id)
+            reply_markup=kb_user_purchases(lang)
         )
 
     if type == 'main':
@@ -60,7 +61,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             msg, chat_id, mes_id,
-            reply_markup=kb_support(user_id, sup)
+            reply_markup=kb_support(lang, sup)
         )
         bot.delete_state(user_id, mes_id)
 
@@ -75,7 +76,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         bot.edit_message_text(
             text, chat_id, mes_id,
-            reply_markup=kb_user_referral_list(user_id)
+            reply_markup=kb_user_referral_list(lang)
         )
 
     if type == 'password':
@@ -101,13 +102,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 msg_choose_lang(lang),
                 chat_id, mes_id,
-                reply_markup=kb_params_choose_lang(user_id)
+                reply_markup=kb_params_choose_lang(lang)
             )
 
     if type == 'set_name':
         bot.edit_message_text(
             msg_enter_nickname(lang), chat_id, mes_id,
-            reply_markup=kb_user_params_back(user_id)
+            reply_markup=kb_user_params_back(lang)
         )
         bot.set_state(user_id, UserAccountState.nickname, chat_id)
 
@@ -127,6 +128,8 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
     connected = await connector.restore_connection()
 
+    lang = get_lang(user_id)
+
     if connected:
         # mk_b.button(text='Send Transaction', callback_data='send_tr')
         # mk_b.button(text='Disconnect', callback_data='disconnect')
@@ -135,7 +138,7 @@ async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
     else:
         wallets_list = TonConnect.get_wallets()  # type: ignore
         wallets_names = [el['name'] for el in wallets_list]
-        kb = kb_wallets(user_id, wallets_names)
+        kb = kb_wallets(lang, wallets_names)
 
         bot.send_message(
             chat_id, 'Коннект',
@@ -147,6 +150,8 @@ async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, 
     wallets_list = connector.get_wallets()
     wallet = None
 
+    lang = get_lang(user_id)
+
     for w in wallets_list:
         if w['name'] == wallet_name:
             wallet = w
@@ -155,7 +160,7 @@ async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, 
         raise Exception(f'Unknown wallet: {wallet_name}')
 
     generated_url = await connector.connect(wallet)
-    kb = kb_wallet_connect(user_id, generated_url)
+    kb = kb_wallet_connect(lang, generated_url)
 
     bot.edit_message_text(
         'КОННЕКТ', chat_id, mes_id, reply_markup=kb

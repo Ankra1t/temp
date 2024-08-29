@@ -16,10 +16,9 @@ from messages.profile import msg_referral, msg_site_login, msg_user_account, msg
 from messages.users import msg_start
 
 from keyboards.settings import kb_choose_lang
-
-from .main.keyboards import kb_site_login, kb_user_main
-from .education.keyboards import kb_user_education, kb_user_pages
-from .account.keyboards import kb_user_account, kb_user_params, kb_user_referral
+from keyboards.account import kb_user_account, kb_user_params, kb_user_referral
+from keyboards.education import kb_user_education, kb_user_pages
+from keyboards.user_main import kb_site_login, kb_user_main
 
 
 def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False, new_user=False):
@@ -37,7 +36,7 @@ def send_user_main(bot: TeleBot, message: Message, user_id: int, is_first=False,
     #         send_site_code(bot, message, user_id, True)
     #         return
 
-    keyboard = kb_user_main(user_id, new_user)
+    keyboard = kb_user_main(lang, new_user)
 
     if not new_user:
         text = text_editor.get_text(
@@ -103,7 +102,7 @@ def send_user_account(bot: TeleBot, message: Message, user_id: int, is_first=Fal
         money += el.sum or 0
 
     text = msg_user_account(lang, money, referals)
-    keyboard = kb_user_account(user_id)
+    keyboard = kb_user_account(lang, user_id)
 
     if is_first:
         bot.send_message(
@@ -127,7 +126,7 @@ def send_site_code(bot: TeleBot, message: Message, user_id: int, is_first=False,
     new_code = prev_code or get_site_code(user_id)
 
     text = msg_site_login(lang)
-    keyboard = kb_site_login(user_id, new_code or '', is_reset)
+    keyboard = kb_site_login(lang, new_code or '', is_reset)
 
     try:
         if is_first:
@@ -163,7 +162,7 @@ def send_referral(bot: TeleBot, message: Message, user_id: int, is_first=False):
     referals_count = len(db.get_user_referals(user_db_id))
 
     text = msg_referral(lang, referals_count, bot.get_me().username, user_db_id)
-    kb = kb_user_referral(user_id, referals_count)
+    kb = kb_user_referral(lang, referals_count)
 
     if is_first:
         bot.send_message(chat_id, text, reply_markup=kb)
@@ -184,7 +183,7 @@ def send_user_params(bot: TeleBot, message: Message, user_id: int, is_first=Fals
 
     if user is not None:
         text = msg_user_params(lang, user)
-        kb = kb_user_params(user_id)
+        kb = kb_user_params(lang)
 
         if is_first:
             bot.send_message(

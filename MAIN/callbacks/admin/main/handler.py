@@ -1,9 +1,8 @@
 from telebot import TeleBot
 from telebot.types import CallbackQuery
 
-from MAIN.callbacks.user.pages import send_site_code
-
 from pages.calculate import send_admin_send_settings
+from pages.user import send_site_code
 
 from .filter import admin_main_factory, AdminMainCallbackFilter
 from ..pages import (

@@ -1,18 +1,28 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
 from MAIN.common.utils import get_calculator_btn_link
 from common.keyboard import back_txt
-from common.utils import get_lang
 from config_global import SITE_URL
-from .filter import user_main_factory
+from models import LANGUAGES_TYPE
+
+
+user_main_factory = CallbackData('type', prefix='user_main')
+
+
+class UserMainCallbackFilter(AdvancedCustomFilter):
+    key = 'user_main'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str):
     return InlineKeyboardButton(text, None, user_main_factory.new(type=type))
 
 
-def kb_user_main(user_id: int, new_user=False):
-    lang = get_lang(user_id)
+def kb_user_main(lang: LANGUAGES_TYPE, new_user=False):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {
@@ -72,18 +82,13 @@ def kb_user_main(user_id: int, new_user=False):
     return keyboard
 
 
-def kb_user_calculator(user_id: int):
-    lang = get_lang(user_id)
+def kb_user_calculator(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_link = get_calculator_btn_link(lang)
-
-    keyboard.add(btn_link)
+    keyboard.add(get_calculator_btn_link(lang))
     return keyboard
 
 
-def kb_site_login(user_id: int, code: str, is_reset=False):
-    lang = get_lang(user_id)
+def kb_site_login(lang: LANGUAGES_TYPE, code: str, is_reset=False):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     texts = {
@@ -115,4 +120,3 @@ def kb_site_login(user_id: int, code: str, is_reset=False):
 
     keyboard.add(*buttons)
     return keyboard
-

@@ -1,6 +1,17 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.callback_data import CallbackData, CallbackDataFilter
+from telebot.custom_filters import AdvancedCustomFilter
 
-from .filter import user_education_factory
+user_education_factory = CallbackData(
+    'type', 'page', 'num_les', prefix='user_education'
+)
+
+
+class UserEducationCallbackFilter(AdvancedCustomFilter):
+    key = 'user_education'
+
+    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+        return config.check(call)
 
 
 def getButton(text: str, type: str, page: int | None = None, num_les: int | None = None):
