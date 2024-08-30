@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from config_logger import logger
@@ -14,11 +14,11 @@ from states.admin_stats import AdminStatisticsState
 from keyboards.admin_stats import kb_statistics_back
 
 
-def handle_start_date(message: Message, bot: TeleBot):
+async def handle_start_date(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = bot.get_state(user_id, chat_id)
+    current_state = await bot.get_state(user_id, chat_id)
 
     start_date = text_accept(message)
 
@@ -29,7 +29,7 @@ def handle_start_date(message: Message, bot: TeleBot):
         logger.error(f'Ошибка handle_start_date [{e}]')
 
     if not start_date or not start_date_obj:
-        bot.send_message(
+        await bot.send_message(
             chat_id, '<b>Неправильный формат</b> даты начала (<b>требуется DD.MM.YY</b>), введите дату в правильном формате',
             reply_markup=kb_statistics_back())
         return
@@ -37,16 +37,18 @@ def handle_start_date(message: Message, bot: TeleBot):
     start_date_obj -= timedelta(hours=3)
 
     if current_state == 'AdminStatisticsState:start_date':
-        set_state_data(bot, user_id, chat_id, {
-                       'start_date_obj': start_date_obj})
+        await set_state_data(
+            bot, user_id, chat_id, {
+                'start_date_obj': start_date_obj
+            })
 
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             "Введите дату ОКОНЧАНИЯ ПЕРИОДА в формате DD.MM.YY",
             reply_markup=kb_statistics_back()
         )
 
-        bot.set_state(user_id, AdminStatisticsState.fin_date, chat_id)
+        await bot.set_state(user_id, AdminStatisticsState.fin_date, chat_id)
 
     if current_state == 'AdminStatisticsState:start_date_only':
         start_date_filter = start_date_obj.strftime(DATE_FORMAT)
@@ -55,23 +57,25 @@ def handle_start_date(message: Message, bot: TeleBot):
         date_start_show = get_str_by_datetime(start_date_obj)
         date_fin_show = get_str_by_datetime(get_datetime_now())
 
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
             reply_markup=None
         )
-        base_statis.show_paid_users(bot, 
-            message, start_to_fin=f'{start_date_filter}|{fin_date_filter}')
-        bot.send_message(
+        await base_statis.show_paid_users(
+            bot,
+            message, start_to_fin=f'{start_date_filter}|{fin_date_filter}'
+        )
+        await bot.send_message(
             chat_id,
             "Вернуться:",
             reply_markup=kb_statistics_back()
         )
 
-        bot.delete_state(user_id, chat_id)
+        await bot.delete_state(user_id, chat_id)
 
 
-def handle_fin_date(message: Message, bot: TeleBot):
+async def handle_fin_date(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -83,14 +87,14 @@ def handle_fin_date(message: Message, bot: TeleBot):
         logger.error(f'Ошибка handle_fin_date [{e}]')
 
     if not fin_date or not fin_date_obj:
-        bot.send_message(
+        await bot.send_message(
             chat_id, '<b>Неправильный формат</b> даты ОКОНЧАНИЯ ПЕРИОДА (<b>требуемый DD.MM.YY</b>), введите дату в правильном формате',
             reply_markup=kb_statistics_back())
         return
 
     fin_date_obj -= timedelta(hours=3)
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         start_date_obj: datetime = data.get('start_date_obj')
 
     start_date_filter = start_date_obj.strftime(DATE_FORMAT)
@@ -99,23 +103,25 @@ def handle_fin_date(message: Message, bot: TeleBot):
     date_start_show = get_str_by_datetime(start_date_obj)
     date_fin_show = get_str_by_datetime(get_datetime_now())
 
-    bot.send_message(
+    await bot.send_message(
         chat_id,
         f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
         reply_markup=None
     )
-    base_statis.show_paid_users(bot, 
-        message, start_to_fin=f'{start_date_filter}|{fin_date_filter}')
-    bot.send_message(
+    await base_statis.show_paid_users(
+        bot,
+        message, start_to_fin=f'{start_date_filter}|{fin_date_filter}'
+    )
+    await bot.send_message(
         chat_id,
         "Вернуться:",
         reply_markup=kb_statistics_back()
     )
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

@@ -1,35 +1,33 @@
-from telebot import TeleBot
-from telebot.util import antiflood
+from telebot.async_telebot import AsyncTeleBot
 from typing import Optional
 from time import sleep
-# from CALCULATE.common.messages import msg_calculate_result
-# from MAIN.common.utils import get_print_signal_info
 
 from config_logger import logger, log_send_fails, log_send_ok
 from db import db
-
 from models import Post, UserInfo
 
+from common.utils import antiflood
 
-def send_message_by_type(
-    bot: TeleBot,
+
+async def send_message_by_type(
+    bot: AsyncTeleBot,
     user_id: int,
     type: str,
     text: str,
     media_id: Optional[str] = None
 ):
     if type == 'photo':
-        bot.send_photo(
+        await bot.send_photo(
             user_id, media_id,
             caption=text
         )
     elif type == 'video':
-        bot.send_video(
+        await bot.send_video(
             user_id, media_id,
             caption=text
         )
     else:
-        bot.send_message(user_id, text)
+        await bot.send_message(user_id, text)
 
 
 # def get_post_content(post: Post, user_id: int) -> tuple[str, str | None]:
@@ -86,10 +84,10 @@ def send_message_by_type(
 #     return signal_text, calc_text
 
 
-def send_same_message_to_users(bot: TeleBot, users: list[UserInfo], post: Post):
+async def send_same_message_to_users(bot: AsyncTeleBot, users: list[UserInfo], post: Post):
     for user in users:
         try:
-            antiflood(
+            await antiflood(
                 send_message_by_type,
                 bot, user.tg_id, post.mes_type, post.content, post.media,
                 number_retries=2
@@ -106,7 +104,7 @@ class BlockTGBotSender(object):
     """Класс для рассылки сообщений через бота Telebot согласно ограничений API TG"""
 
     def __init__(
-            self, bot: TeleBot, users: list[int], post: Post
+            self, bot: AsyncTeleBot, users: list[int], post: Post
     ):
         # Ограничение телеграм на кол-во сообщений разным пользователям в сек (с запасом)
         self.c_tg = 26

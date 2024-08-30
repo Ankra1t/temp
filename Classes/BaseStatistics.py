@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 from datetime import timedelta
 
@@ -16,7 +16,7 @@ class BaseStatistics(object):
         self.db = db
 
     # # # # # # Вывод пользователей
-    def show_paid_users(self, bot: TeleBot, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
+    async def show_paid_users(self, bot: AsyncTeleBot, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
         chat_id = message.chat.id
 
         if period:
@@ -35,7 +35,7 @@ class BaseStatistics(object):
             trans_list = self.db.get_paid_transactions_all()
 
         if not trans_list:
-            bot.send_message(
+            await bot.send_message(
                 message.chat.id,
                 'Оплат не обнаружено'
             )
@@ -68,7 +68,7 @@ class BaseStatistics(object):
             user = self.db.get_user_by_id(el)
             if user is not None:
                 msg = self.temp_client(user, str(clients.get(el)))
-                bot.send_message(chat_id, msg, reply_markup=None)
+                await bot.send_message(chat_id, msg, reply_markup=None)
             else:
                 logger.error(
                     f"Пользователь tg_id {el} не найден - оплаты по нему не выводим")

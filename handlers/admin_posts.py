@@ -1,6 +1,6 @@
 import re
 from typing import Literal
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 from Classes.BlockTGBotSender import BlockTGBotSender
 
@@ -25,11 +25,11 @@ from pages.admin import send_admin_post, send_admin_params
 ticker_pattern = r'[a-zA-Z]+\/[a-zA-Z]+'
 
 
-def handle_new_post_name(message: Message, bot: TeleBot):
+async def handle_new_post_name(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         post: Post = data.get('post')
         kind: str = data.get('kind') or ''
 
@@ -40,7 +40,7 @@ def handle_new_post_name(message: Message, bot: TeleBot):
 
     name = text_accept(message)
     if name is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите название текстом:',
             reply_markup=kb_cancel
         )
@@ -64,19 +64,19 @@ def handle_new_post_name(message: Message, bot: TeleBot):
         text = 'Введите цену входа:'
         state = AdminPostsState.signal_values
 
-    bot.set_state(user_id, state, chat_id)
-    set_state_data(bot, user_id, chat_id, {'post': post})
-    bot.send_message(
+    await bot.set_state(user_id, state, chat_id)
+    await set_state_data(bot, user_id, chat_id, {'post': post})
+    await bot.send_message(
         chat_id, text,
         reply_markup=kb_cancel
     )
 
 
-def handle_new_post_ticker(message: Message, bot: TeleBot):
+async def handle_new_post_ticker(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         post: Post = data.get('post')
         kind: str = data.get('kind') or ''
 
@@ -89,7 +89,7 @@ def handle_new_post_ticker(message: Message, bot: TeleBot):
 
     # if ticker is None or re.search(ticker_pattern, post.content) is None:
     if ticker is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите тикер текстом (***/***):',
             reply_markup=kb_cancel
         )
@@ -98,19 +98,19 @@ def handle_new_post_ticker(message: Message, bot: TeleBot):
     if post.details is not None:
         post.details.ticker = ticker.upper()
 
-    bot.set_state(user_id, AdminPostsState.signal_values, chat_id)
-    set_state_data(bot, user_id, chat_id, {'post': post})
-    bot.send_message(
+    await bot.set_state(user_id, AdminPostsState.signal_values, chat_id)
+    await set_state_data(bot, user_id, chat_id, {'post': post})
+    await bot.send_message(
         chat_id, 'Введите цену входа:',
         reply_markup=kb_cancel
     )
 
 
-def handle_new_post_signal(message: Message, bot: TeleBot):
+async def handle_new_post_signal(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as state_data:
+    async with bot.retrieve_data(user_id, chat_id) as state_data:
         kind = state_data.get('kind') or ''
         post: Post = state_data.get('post')
 
@@ -130,7 +130,7 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         else:
             text = 'Введите стоп-лосс числом:'
 
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=kb_cancel
         )
@@ -140,13 +140,13 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         post.details.stop_loss = value
 
         kind = 'signal'
-        new_message = bot.send_message(chat_id, 'Отправка...')
+        new_message = await bot.send_message(chat_id, 'Отправка...')
 
         tg_sender = BlockTGBotSender(bot, [], post)
         tg_sender.send()
 
-        bot.delete_state(user_id, chat_id)
-        bot.edit_message_text('Успешно отправлен!', chat_id, new_message.id)
+        await bot.delete_state(user_id, chat_id)
+        await bot.edit_message_text('Успешно отправлен!', chat_id, new_message.id)
         return
 
     if post.details.open_price == -1:
@@ -158,28 +158,28 @@ def handle_new_post_signal(message: Message, bot: TeleBot):
         state = AdminPostsState.datetime
         text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, text,
         reply_markup=kb_cancel
     )
-    set_state_data(bot, user_id, chat_id, {'post': post})
-    bot.set_state(user_id, state, chat_id)
+    await set_state_data(bot, user_id, chat_id, {'post': post})
+    await bot.set_state(user_id, state, chat_id)
 
 
-def handle_new_post_content(message: Message, bot: TeleBot):
+async def handle_new_post_content(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
     post = get_post_from_message(bot, message, kb_posts_back)
 
     if post is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Ошибка, попробуйте снова:',
             reply_markup=kb_posts_back()
         )
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         data['post'] = post
         kind = data.get('kind') or ''
 
@@ -190,14 +190,14 @@ def handle_new_post_content(message: Message, bot: TeleBot):
         state = AdminPostsState.datetime
         text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, text,
         reply_markup=kb_posts_back()
     )
-    bot.set_state(user_id, state, chat_id)
+    await bot.set_state(user_id, state, chat_id)
 
 
-def handle_new_post_datetime(message: Message, bot: TeleBot):
+async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
@@ -208,14 +208,14 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
     if mes_text != '-':
         value = get_datetime_by_str(mes_text)
         if value == False:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, 'Введите дату и время в формате ДД.ММ.ГГ ЧЧ:ММ',
                 reply_markup=kb_posts_back())
             return
     else:
         value = get_datetime_now()
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         kind = data.get('kind')
         post: Post = data.get('post')
         post.date_time = value
@@ -234,22 +234,22 @@ def handle_new_post_datetime(message: Message, bot: TeleBot):
         tg_sender = BlockTGBotSender(bot, [], post)
         tg_sender.send()
 
-        bot.delete_state(user_id, chat_id)
-        send_admin_params(bot, message, user_id, True)
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_params(bot, message, user_id, True)
     else:
         dt = post.date_time or get_datetime_now()
-        send_admin_post(bot, chat_id, post)
+        await send_admin_post(bot, chat_id, post)
 
-        bot.set_state(user_id, AdminPostsState.confirm_add, chat_id)
-        set_state_data(bot, user_id, chat_id, {'post': post})
-        bot.send_message(
+        await bot.set_state(user_id, AdminPostsState.confirm_add, chat_id)
+        await set_state_data(bot, user_id, chat_id, {'post': post})
+        await bot.send_message(
             chat_id, 'Выберите дейтсвие:',
             reply_markup=kb_post_add_confirm()
         )
 
 
-def handle_action_post(action: Literal['send', 'delete']):
-    def r_func(message: Message, bot: TeleBot):
+async def handle_action_post(action: Literal['send', 'delete']):
+    async def r_func(message: Message, bot: AsyncTeleBot):
         user_id = message.from_user.id
         lang = get_lang(user_id)
 
@@ -257,7 +257,7 @@ def handle_action_post(action: Literal['send', 'delete']):
 
         post_id = digit_accept(message, int)
         if post_id is None:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg_digit_error(lang),
                 reply_markup=kb_posts_back())
             return
@@ -265,51 +265,52 @@ def handle_action_post(action: Literal['send', 'delete']):
         post = db.get_post(post_id)
 
         if post is None:
-            bot.send_message(chat_id, f'Пост с ID: {post_id} - не существует!')
-            bot.send_message(
+            await bot.send_message(chat_id, f'Пост с ID: {post_id} - не существует!')
+            await bot.send_message(
                 chat_id, 'Отправьте ID поста:',
                 reply_markup=kb_posts_back()
             )
             return
 
-        send_admin_post(bot, chat_id, post)
+        await send_admin_post(bot, chat_id, post)
 
         if action == 'delete':
             text = 'Удалить?'
         else:
             text = 'Отправить?'
 
-        set_state_data(bot, user_id, chat_id, {'post_id': post_id})
-        bot.set_state(user_id, AdminPostsState.comfirm_send_delete, chat_id)
-        bot.send_message(
+        await set_state_data(bot, user_id, chat_id, {'post_id': post_id})
+        await bot.set_state(user_id, AdminPostsState.comfirm_send_delete, chat_id)
+        await bot.send_message(
             chat_id, text,
-            reply_markup=kb_post_confirm(action))
+            reply_markup=kb_post_confirm(action)
+        )
 
     return r_func
 
 
-def handle_edit_text(message: Message, bot: TeleBot):
+async def handle_edit_text(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     mes_id = message.id
 
     text = text_accept(message)
     if text is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите контент текстом:',
             reply_markup=kb_posts_back()
         )
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         name = data.get('name', '')
 
     db.update_text(name, text)
-    bot.delete_state(user_id, chat_id)
-    send_admin_params(bot, message, user_id)
+    await bot.delete_state(user_id, chat_id)
+    await send_admin_params(bot, message, user_id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

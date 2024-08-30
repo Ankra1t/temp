@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 from telebot.util import extract_arguments
 
@@ -21,7 +21,7 @@ from pages.start import send_start_by_user
 from keyboards.account import kb_support
 
 
-def _start(message: Message, bot: TeleBot):
+async def _start(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -54,7 +54,7 @@ def _start(message: Message, bot: TeleBot):
             db.set_user_lang(new_user.id, lang)
 
             # Уведомление о регистрации
-            sentMessages = notifier.send_user_is_registered(
+            sentMessages = await notifier.send_user_is_registered(
                 new_user.id, user_lang, num
             )
 
@@ -69,116 +69,117 @@ def _start(message: Message, bot: TeleBot):
                 f'Ошибка регистрации пользователя tg_id={user_id} @{username}'
             )
 
-    send_start_by_user(
+    await send_start_by_user(
         bot, message, user_id,
         user_role or 0, is_registered or False,
     )
 
 
-def _calc(message: Message, bot: TeleBot):
+async def _calc(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    send_main(message, bot, user_id, True)
-    bot.delete_state(user_id, chat_id)
+    await send_main(message, bot, user_id, True)
+    await bot.delete_state(user_id, chat_id)
 
 
-def _teststart(message: Message, bot: TeleBot):
+async def _teststart(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     db.set_calculator_user_market(user_db_id, 'crypto')
 
-    send_start_by_user(
+    await send_start_by_user(
         bot, message, user_id,
         0, True,
     )
 
 
-def _faq(message: Message, bot: TeleBot):
+async def _faq(message: Message, bot: AsyncTeleBot):
     text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else '*Ошибка*'
 
-    bot.send_message(message.chat.id, msg)
-    bot.delete_state(message.from_user.id, message.chat.id)
+    await bot.send_message(message.chat.id, msg)
+    await bot.delete_state(message.from_user.id, message.chat.id)
 
 
-def _about_us(message: Message, bot: TeleBot):
+async def _about_us(message: Message, bot: AsyncTeleBot):
     text = db.get_text_by_name('О нас')
     msg = text.message if (text is not None) else '*Ошибка*'
 
-    bot.send_message(message.chat.id, msg)
-    bot.delete_state(message.from_user.id, message.chat.id)
+    await bot.send_message(message.chat.id, msg)
+    await bot.delete_state(message.from_user.id, message.chat.id)
 
 
-def _support(message: Message, bot: TeleBot):
+async def _support(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     sup = db.get_support_name()
     msg = msg_support(lang)
 
-    bot.send_message(
+    await bot.send_message(
         message.chat.id, msg,
         reply_markup=kb_support(lang, sup)
     )
-    bot.delete_state(message.from_user.id, message.chat.id)
+    await bot.delete_state(message.from_user.id, message.chat.id)
 
 
-def _manual(message: Message, bot: TeleBot):
-    send_manual_page(message, bot, 1, message.from_user.id, True)
+async def _manual(message: Message, bot: AsyncTeleBot):
+    await send_manual_page(message, bot, 1, message.from_user.id, True)
 
 
-def _site(message: Message, bot: TeleBot):
-    send_site_code(bot, message, message.from_user.id, True)
+async def _site(message: Message, bot: AsyncTeleBot):
+    await send_site_code(bot, message, message.from_user.id, True)
 
 
-def _settings(message: Message, bot: TeleBot):
-    send_settings(bot, message, message.from_user.id, True)
+async def _settings(message: Message, bot: AsyncTeleBot):
+    await send_settings(bot, message, message.from_user.id, True)
 
 
-def _calc_start(message: Message, bot: TeleBot):
-    send_calc_start(bot, message, message.from_user.id)
+async def _calc_start(message: Message, bot: AsyncTeleBot):
+    await send_calc_start(bot, message, message.from_user.id)
 
 
-def _channel_calc(message: Message, bot: TeleBot):
+async def _channel_calc(message: Message, bot: AsyncTeleBot):
     user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
     isAdmin = db.get_worker_role(user_db_id)
 
     if not isAdmin:
         return
 
-    send_calc_start(bot, message, message.from_user.id, is_channel_calc=True)
+    await send_calc_start(bot, message, message.from_user.id, is_channel_calc=True)
 
 
-def _referral(message: Message, bot: TeleBot):
-    send_referral(bot, message, message.from_user.id, True)
+async def _referral(message: Message, bot: AsyncTeleBot):
+    await send_referral(bot, message, message.from_user.id, True)
 
 
-def _channel_post(message: Message, bot: TeleBot):
+async def _channel_post(message: Message, bot: AsyncTeleBot):
     user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
     admin = db.get_worker_role(user_db_id)
     if admin is None:
         return
 
-    send_channel_post(bot, message, message.from_user.id, True)
+    await send_channel_post(bot, message, message.from_user.id, True)
 
 
-def _results(message: Message, bot: TeleBot):
+async def _results(message: Message, bot: AsyncTeleBot):
     user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
     admin = db.get_worker_role(user_db_id)
     if admin is None:
         return
 
-    send_admin_channel_calc_list(bot, message, message.from_user.id, True)
+    await send_admin_channel_calc_list(bot, message, message.from_user.id, True)
 
 
-def _test(message: Message, bot: TeleBot):
+async def _test(message: Message, bot: AsyncTeleBot):
     print(message.chat.id)
+    return
 
 
-def commands_registration(bot: TeleBot):
+def commands_registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
@@ -207,4 +208,4 @@ def commands_registration(bot: TeleBot):
 
     reg_mes(_test, commands=['test11'])
 
-    bot.register_channel_post_handler(_test, pass_bot=True)
+    bot.register_channel_post_handler(_test, pass_bot=True) # type: ignore

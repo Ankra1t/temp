@@ -1,6 +1,6 @@
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 
 from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
@@ -14,7 +14,7 @@ calculate_factory = CallbackData('type', prefix='calculate')
 class CalculateCallbackFilter(AdvancedCustomFilter):
     key = 'calculate'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

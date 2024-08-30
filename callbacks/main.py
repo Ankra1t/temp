@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
@@ -14,7 +14,7 @@ from keyboards.main import main_factory, MainCallbackFilter
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 
 
-def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
+async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data = main_factory.parse(call.data)
     type = callback_data.get('type', '')
     is_saved = callback_data.get('is_saved', 'False')
@@ -36,51 +36,51 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'calc' in type or type == 'settings' or type == 'calc_stats':
         calc = calculation.get(stat_id)
         if calc is not None:
-            bot.edit_message_reply_markup(
+            await bot.edit_message_reply_markup(
                 chat_id, mes_id,
                 reply_markup=kb_calc_result(lang, user_db_id, calc)
             )
         else:
-            delete_message(bot, chat_id, mes_id)
+            await delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
-        send_calc_start(
+        await send_calc_start(
             bot, call.message, user_id,
             is_continue='_continue' in type, is_channel_calc='ch_calc' in type
         )
 
     if type == 'first_try':
-        send_calc_start(
+        await send_calc_start(
             bot, call.message, user_id,
             is_continue='_continue' in type, is_edit=True, is_try=True
         )
 
     if type == 'settings':
-        send_settings(bot, call.message, user_id, True)
+        await send_settings(bot, call.message, user_id, True)
 
     if type == 'go_main':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     if type == 'stats':
-        send_stats(bot, call.message, user_id)
+        await send_stats(bot, call.message, user_id)
 
     if type == 'buy':
-        send_tariffs_list_item(
+        await send_tariffs_list_item(
             bot, call.message, user_id, 'calc', 0, is_rus=is_rus
         )
 
     if type == 'week_stat':
-        send_week_stats(bot)
-        send_week_stats(bot, 652)
+        await send_week_stats(bot)
+        await send_week_stats(bot, 652)
 
     if type == 'channels':
-        send_admin_channel_calc_list(bot, call.message, user_id)
+        await send_admin_channel_calc_list(bot, call.message, user_id)
 
     if type == 'channel_post':
-        send_channel_post(bot, call.message, user_id)
+        await send_channel_post(bot, call.message, user_id)
 
     if type == 'info':
-        send_manual(bot, call.message, user_id)
+        await send_manual(bot, call.message, user_id)
 
     if 'violation+' in type:
         result = False if '+no' in type else True if '+yes' in type else None
@@ -95,10 +95,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             type = 'violations'
 
     if type == 'violation_edit':
-        send_violation(bot, call.message, user_id, is_edit=True)
+        await send_violation(bot, call.message, user_id, is_edit=True)
 
     if type == 'violations':
-        send_violation(bot, call.message, user_id)
+        await send_violation(bot, call.message, user_id)
 
     # if type == 'violation_yes':
     #     data = violation.create(user_db_id, True)
@@ -119,13 +119,13 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     #             }
     #         )
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(MainCallbackFilter())
     bot.register_callback_query_handler(
-        _main_callback_handler,
+        _main_callback_handler, # type: ignore
         lambda _: True, pass_bot=True,
         main=main_factory.filter()
     )

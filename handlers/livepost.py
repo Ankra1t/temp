@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from AuthRoles import check_registrate
@@ -13,7 +13,7 @@ from pages.calculate import send_admin_channel_calc_item, send_calculation
 from services import calculation
 from db import db
 
-def handle_livepost(message: Message, bot: TeleBot):
+async def handle_livepost(message: Message, bot: AsyncTeleBot):
     mes_id = message.id
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -22,14 +22,14 @@ def handle_livepost(message: Message, bot: TeleBot):
         text = message.text
 
         if text.startswith('/') and bot.get_state(user_id, chat_id) == 'handle_calc_id':
-            delete_message(bot, chat_id, mes_id)
+            await delete_message(bot, chat_id, mes_id)
 
             text = text.replace('/', '')
             if not text.isdigit():
                 return
 
             calc_id = int(text)
-            send_admin_channel_calc_item(
+            await send_admin_channel_calc_item(
                 bot, message, user_id, calc_id, is_first=True
             )
 
@@ -38,7 +38,7 @@ def handle_livepost(message: Message, bot: TeleBot):
         type = str(bot.get_state(user_id, chat_id))
 
         if text.startswith('/') and 'user_calc_id' in type:
-            delete_message(bot, chat_id, mes_id)
+            await delete_message(bot, chat_id, mes_id)
 
             text = text.replace('/', '')
 
@@ -87,7 +87,7 @@ def handle_livepost(message: Message, bot: TeleBot):
             if calc is None:
                 return
 
-            send_calculation(bot, message, user_id, calc, is_first=True, is_list=True)
+            await send_calculation(bot, message, user_id, calc, is_first=True, is_list=True)
             return
 
     # livepost
@@ -110,18 +110,18 @@ def handle_livepost(message: Message, bot: TeleBot):
         return
 
     state_data = {'post': post, 'kind': 'live'}
-    bot.set_state(user_id, AdminPostsState.live, chat_id)
-    set_state_data(bot, user_id, chat_id, state_data)
+    await bot.set_state(user_id, AdminPostsState.live, chat_id)
+    await set_state_data(bot, user_id, chat_id, state_data)
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, 'Выберите действие:',
         reply_markup=kb_livepost_type()
     )
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.register_message_handler(
-        handle_livepost,
+        handle_livepost, # type: ignore
         content_types=['photo', 'video', 'text', 'animation'],
         pass_bot=True
     )

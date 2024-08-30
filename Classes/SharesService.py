@@ -6,7 +6,7 @@ class SharesService(object):
     def __init__(self) -> None:
         self.url = 'https://finnhub.io/api/v1/'
 
-    def check(self, name: str):
+    async def check(self, name: str):
         res = requests.get(
             f'{self.url}/search?q={name}&token={"cpirg6pr01qlu187103gcpirg6pr01qlu1871040"}'
         )

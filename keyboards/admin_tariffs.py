@@ -1,5 +1,5 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from common.keyboard import back_txt
@@ -13,7 +13,7 @@ admin_tariffs_factory = CallbackData(
 class AdminTariffsCallbackFilter(AdvancedCustomFilter):
     key = 'admin_tariffs'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

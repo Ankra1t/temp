@@ -1,5 +1,5 @@
 from datetime import timedelta
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from common.utils import digit_accept, text_accept, set_state_data
@@ -16,11 +16,11 @@ from db import db
 from models import Price
 
 
-def handle_name(message: Message, bot: TeleBot):
+async def handle_name(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         page = data.get('page', 0)
         tariff_id = data.get('tariff_id', -1)
@@ -32,32 +32,32 @@ def handle_name(message: Message, bot: TeleBot):
 
     name = text_accept(message)
     if name is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите название текстом:',
             reply_markup=back_keyboard
         )
         return
 
     if action == 'create':
-        set_state_data(bot, user_id, chat_id, {'name': name})
-        bot.set_state(user_id, AdminTariffState.price, chat_id)
-        bot.send_message(
+        await set_state_data(bot, user_id, chat_id, {'name': name})
+        await bot.set_state(user_id, AdminTariffState.price, chat_id)
+        await bot.send_message(
             chat_id, 'Введите цену тарифа:',
             reply_markup=back_keyboard
         )
     else:
         db.update_price_name(tariff_id, name)
-        bot.delete_state(user_id, chat_id)
-        send_admin_tariffs_list_item(
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
         )
 
 
-def handle_price(message: Message, bot: TeleBot):
+async def handle_price(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         page = data.get('page', 0)
         tariff_id = data.get('tariff_id', -1)
@@ -69,32 +69,32 @@ def handle_price(message: Message, bot: TeleBot):
 
     price = digit_accept(message)
     if price is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите цену числом:',
             reply_markup=back_keyboard
         )
         return
 
     if action == 'create':
-        set_state_data(bot, user_id, chat_id, {'price': price})
-        bot.set_state(user_id, AdminTariffState.duration, chat_id)
-        bot.send_message(
+        await set_state_data(bot, user_id, chat_id, {'price': price})
+        await bot.set_state(user_id, AdminTariffState.duration, chat_id)
+        await bot.send_message(
             chat_id, 'Введите <b>кол-во дней</b> срока действия:',
             reply_markup=back_keyboard
         )
     else:
         db.update_price_price(tariff_id, price)
-        bot.delete_state(user_id, chat_id)
-        send_admin_tariffs_list_item(
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
         )
 
 
-def handle_duration(message: Message, bot: TeleBot):
+async def handle_duration(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         page = data.get('page', 0)
         tariff_id = data.get('tariff_id', -1)
@@ -106,32 +106,32 @@ def handle_duration(message: Message, bot: TeleBot):
 
     duration = digit_accept(message, int)
     if duration is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите срок действия числом:',
             reply_markup=back_keyboard
         )
         return
 
     if action == 'create':
-        set_state_data(bot, user_id, chat_id, {'duration': duration})
-        bot.set_state(user_id, AdminTariffState.image, chat_id)
-        bot.send_message(
+        await set_state_data(bot, user_id, chat_id, {'duration': duration})
+        await bot.set_state(user_id, AdminTariffState.image, chat_id)
+        await bot.send_message(
             chat_id, 'Отправьте картинку для тарифа:',
             reply_markup=back_keyboard
         )
     else:
         db.update_price_duration(tariff_id, duration)
-        bot.delete_state(user_id, chat_id)
-        send_admin_tariffs_list_item(
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
         )
 
 
-def handle_image(message: Message, bot: TeleBot):
+async def handle_image(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         page = data.get('page', 0)
         tariff_id = data.get('tariff_id', -1)
@@ -142,7 +142,7 @@ def handle_image(message: Message, bot: TeleBot):
         back_keyboard = kb_admin_tariffs_list_back(page)
 
     if (message.content_type != 'photo') or (message.photo is None) or (len(message.photo) == 0):
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Отправьте картинку:',
             reply_markup=back_keyboard
         )
@@ -151,29 +151,29 @@ def handle_image(message: Message, bot: TeleBot):
     media_id = message.photo[0].file_id
 
     if action == 'create':
-        set_state_data(bot, user_id, chat_id, {'image': media_id})
-        bot.set_state(user_id, AdminTariffState.description, chat_id)
-        bot.send_message(
+        await set_state_data(bot, user_id, chat_id, {'image': media_id})
+        await bot.set_state(user_id, AdminTariffState.description, chat_id)
+        await bot.send_message(
             chat_id, 'Отправьте описание для тарифа:',
             reply_markup=back_keyboard
         )
     else:
-        if bot.get_state(user_id, chat_id) == str(AdminTariffState.image_en):
+        if (await bot.get_state(user_id, chat_id)) == str(AdminTariffState.image_en):
             db.update_price_image_en(tariff_id, media_id)
         else:
             db.update_price_image(tariff_id, media_id)
 
-        bot.delete_state(user_id, chat_id)
-        send_admin_tariffs_list_item(
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
         )
 
 
-def handle_description(message: Message, bot: TeleBot):
+async def handle_description(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         page = data.get('page', 0)
         tariff_id = data.get('tariff_id', -1)
@@ -185,14 +185,14 @@ def handle_description(message: Message, bot: TeleBot):
 
     description = text_accept(message)
     if description is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите описание текстом:',
             reply_markup=back_keyboard
         )
         return
 
     if action == 'create':
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             type_product = data.get('type_product', '')
             name = data.get('name', '')
             price = data.get('price', 0)
@@ -211,56 +211,56 @@ def handle_description(message: Message, bot: TeleBot):
             switch_active=True
         ))
 
-        bot.send_message(chat_id, '✅ Тариф создан!')
-        send_admin_tariffs(bot, message, user_id, True)
+        await bot.send_message(chat_id, '✅ Тариф создан!')
+        await send_admin_tariffs(bot, message, user_id, True)
     else:
         db.update_price_description(tariff_id, description)
-        bot.delete_state(user_id, chat_id)
-        send_admin_tariffs_list_item(
+        await bot.delete_state(user_id, chat_id)
+        await send_admin_tariffs_list_item(
             bot, message, user_id, page, 'default', True
         )
 
 
-def handle_discount_percent(message: Message, bot: TeleBot):
+async def handle_discount_percent(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     message.text = (message.text or '').replace('%', '')
     discount_percent = digit_accept(message, int)
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         page = data.get('page', 0)
 
     if discount_percent is None or discount_percent < 0 or discount_percent > 100:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите скидку в % от 0 до 100',
             reply_markup=kb_admin_tariffs_list_back(page)
         )
         return
 
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id,
         {'discount_percent': discount_percent}
     )
-    bot.set_state(user_id, AdminTariffState.discount_datetime, chat_id)
-    bot.send_message(
+    await bot.set_state(user_id, AdminTariffState.discount_datetime, chat_id)
+    await bot.send_message(
         chat_id, 'Введите дату окончания скидки в формате ДД.ММ.ГГ ЧЧ:ММ',
         reply_markup=kb_admin_tariffs_list_back(page)
     )
 
 
-def handle_discount_datetime(message: Message, bot: TeleBot):
+async def handle_discount_datetime(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         discount_percent = data.get('discount_percent', 0)
         tariff_id = data.get('tariff_id', -1)
         page = data.get('page', 0)
 
     discount_findate = text_accept(message)
     if discount_findate is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите дату и время текстом',
             reply_markup=kb_admin_tariffs_list_back(page)
         )
@@ -268,7 +268,7 @@ def handle_discount_datetime(message: Message, bot: TeleBot):
 
     findate = get_datetime_by_str(discount_findate)
     if findate == False:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите в формате - ДД.ММ.ГГ ЧЧ:ММ',
             reply_markup=kb_admin_tariffs_list_back(page)
         )
@@ -281,19 +281,19 @@ def handle_discount_datetime(message: Message, bot: TeleBot):
     tariff = db.get_price_by_id(tariff_id)
     name = tariff.name if tariff is not None else tariff_id
 
-    bot.send_message(
+    await bot.send_message(
         chat_id,
         f'✅ Тарифу "{name}" добавлена скидка {discount_percent}% до {get_str_by_datetime(findate)}',
         reply_markup=kb_admin_tariffs_list_back(page)
     )
-    send_admin_tariffs_list_item(
+    await send_admin_tariffs_list_item(
         bot, message, user_id, page, 'default', True
     )
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

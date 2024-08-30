@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from data.data import liteDb
@@ -19,15 +19,15 @@ from models import Calculation
 from services import calculation, channel_calc, ticker
 
 
-def send_start_by_user(
-    bot: TeleBot,
+async def send_start_by_user(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     user_role: int,
     has_registered_now=False
 ):
     chat_id = message.chat.id
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     lang = get_lang(user_id)
 
@@ -48,7 +48,7 @@ def send_start_by_user(
                 atr_settings = liteDb.getUserAtrSettings(user_id)
                 period, count = atr_settings[1].split('+')
 
-                bot.set_state(user_id, CalculateState.stop_atr, chat_id)
+                await bot.set_state(user_id, CalculateState.stop_atr, chat_id)
 
                 ticker_val = ticker.get_atr(
                     calc.tool or '', period, int(count)) or None
@@ -59,27 +59,27 @@ def send_start_by_user(
                         _, percent = stop_type.split('+')
                         rate = float(percent) * 0.01
 
-                    set_state_data(
+                    await set_state_data(
                         bot, user_id, chat_id, {
                             'atr': abs(ticker_val) * abs(rate)
                         }
                     )
-                    bot.send_message(
+                    await bot.send_message(
                         chat_id, msg_choose_direct(lang, ticker_val),
                         reply_markup=kb_calc_direct(lang, True)
                     )
                 else:
-                    bot.send_message(
+                    await bot.send_message(
                         chat_id, msg_enter_atr(lang, calc),
                         reply_markup=kb_calc_atr(lang, user_id, ticker_val)
                     )
             else:
-                bot.send_message(
+                await bot.send_message(
                     chat_id, msg_enter_stop_loss(lang, send_stat=calc),
                 )
-                bot.set_state(user_id, CalculateState.stop_loss, chat_id)
+                await bot.set_state(user_id, CalculateState.stop_loss, chat_id)
 
-            set_state_data(
+            await set_state_data(
                 bot, user_id, chat_id,
                 {
                     'action': 'send_calc',
@@ -91,27 +91,29 @@ def send_start_by_user(
                 }
             )
         else:
-            start_with_calc(bot, message, user_id, int(id),
-                            is_try=has_registered_now)
+            await start_with_calc(
+                bot, message, user_id, int(id),
+                is_try=has_registered_now
+            )
 
     elif user_role == 0:
-        send_user_main(bot, message, user_id, True, has_registered_now)
+        await send_user_main(bot, message, user_id, True, has_registered_now)
 
     elif message.text is not None and len(message.text.split()) == 2:
         _, code = message.text.split()
         if code == 'site':
-            send_site_code(bot, message, user_id, True)
+            await send_site_code(bot, message, user_id, True)
             return
 
     elif user_role == 1:
-        send_admin_main(bot, message, user_id, True)
+        await send_admin_main(bot, message, user_id, True)
 
     elif user_role in (2, 3):
-        send_in_development(bot, message)
+        await send_in_development(bot, message)
 
 
-def start_with_calc(
-    bot: TeleBot,
+async def start_with_calc(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     stat_id: int,
@@ -120,7 +122,7 @@ def start_with_calc(
 ):
     chat_id = message.chat.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     calc = calculation.get(int(stat_id))
     if calc is None:
@@ -168,4 +170,4 @@ def start_with_calc(
 
     new_id = db.add_calculation(new_calc)
     new_calc.id = new_id or -1
-    send_calculation(bot, message, user_id, new_calc, True, is_try=is_try)
+    await send_calculation(bot, message, user_id, new_calc, True, is_try=is_try)

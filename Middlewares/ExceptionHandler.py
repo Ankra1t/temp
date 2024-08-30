@@ -1,7 +1,8 @@
+from telebot.async_telebot import ExceptionHandler
 import traceback
-from telebot import ExceptionHandler
 
 from config_logger import logger
+
 
 class ExHandler(ExceptionHandler):
     def handle(self, e):

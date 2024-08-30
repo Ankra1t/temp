@@ -1,6 +1,6 @@
 from typing import Literal
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 
@@ -19,7 +19,7 @@ stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
 class StatsCallbackFilter(AdvancedCustomFilter):
     key = 'stats'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

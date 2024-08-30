@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
@@ -11,7 +11,7 @@ from pages.admin import (
 )
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     data = admin_main_factory.parse(call.data)
     type = data.get('type', '')
 
@@ -20,39 +20,39 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'users':
-        send_admin_users(bot, call.message, user_id)
+        await send_admin_users(bot, call.message, user_id)
 
     if type == 'workers':
-        send_admin_workers(bot, call.message, user_id)
+        await send_admin_workers(bot, call.message, user_id)
 
     if type == 'fut_posts':
-        send_admin_fut_posts(bot, call.message, user_id)
+        await send_admin_fut_posts(bot, call.message, user_id)
 
     if type == 'tariffs':
-        send_admin_tariffs(bot, call.message, user_id)
+        await send_admin_tariffs(bot, call.message, user_id)
 
     if type == 'params':
-        send_admin_params(bot, call.message, user_id)
+        await send_admin_params(bot, call.message, user_id)
 
     if type == 'payment':
-        send_admin_payment(bot, call.message, user_id)
+        await send_admin_payment(bot, call.message, user_id)
 
     if type == 'site_code':
-        send_site_code(bot, call.message, user_id)
+        await send_site_code(bot, call.message, user_id)
 
     if type == 'back':
-        send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user_id)
 
     if type == 'send_settings':
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminMainCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore # TODO - check
         lambda _: True, pass_bot=True,
         admin_main=admin_main_factory.filter()
     )

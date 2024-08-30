@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
@@ -14,7 +14,7 @@ from pages.admin import send_admin_main
 from pages.user import send_user_education, send_user_account, send_site_code, send_user_main
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data: dict = user_main_factory.parse(call.data)
     type = callback_data.get('type', '')
 
@@ -28,36 +28,36 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     if type == 'main':
         if role == 1:
-            send_admin_main(bot, call.message, user_id)
+            await send_admin_main(bot, call.message, user_id)
         else:
-            send_user_main(bot, call.message, user_id)
+            await send_user_main(bot, call.message, user_id)
 
     if type == 'education':
-        send_user_education(bot, call.message, user_id)
+        await send_user_education(bot, call.message, user_id)
 
     if type == 'account':
-        send_user_account(bot, call.message, user_id)
+        await send_user_account(bot, call.message, user_id)
 
     if type == 'calculator':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     if type == 'try':
-        send_calc_start(bot, call.message, user_id, is_try=True)
+        await send_calc_start(bot, call.message, user_id, is_try=True)
 
     if type == 'signals':
-        send_in_development(bot, call.message)
+        await send_in_development(bot, call.message)
 
     if 'site' in type:
         is_reset = 'reset' in type
-        send_site_code(bot, call.message, user_id, False, is_reset)
+        await send_site_code(bot, call.message, user_id, False, is_reset)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserMainCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         user_main=user_main_factory.filter()
     )

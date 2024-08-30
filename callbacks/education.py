@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
@@ -13,7 +13,7 @@ from keyboards.education import (
 from pages.user import send_user_main, send_user_terms, send_user_education
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data = user_education_factory.parse(call.data)
     type = callback_data.get('type', '')
     page = int(callback_data.get('page', -1))
@@ -29,10 +29,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         f'callback "user_education_factory" user_tg_id={user_id} type={type}')
 
     if type == 'back':
-        send_user_main(bot, call.message, user_id)
+        await send_user_main(bot, call.message, user_id)
 
     if type == 'go_education':
-        send_user_education(bot, call.message, user_id)
+        await send_user_education(bot, call.message, user_id)
 
     if 'terms' in type:
         if page == -1 or 'start' in type:
@@ -45,13 +45,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             page = len(termins)
 
         if 'counter' not in type:
-            send_user_terms(bot, call.message, page, user_id)
+            await send_user_terms(bot, call.message, page, user_id)
 
     if 'curs' in type:
         count_now_les = db.get_lesson_count(user_db_id)
         if 'les' in type:
             if len(curs) + 1 == num_les:
-                bot.edit_message_text(
+                await bot.edit_message_text(
                     f'Доступные уроки закончились!\n{curs_contents}',
                     chat_id, mes_id, parse_mode='Markdown',
                     reply_markup=kb_user_curs(count_now_les)
@@ -62,7 +62,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 if page == len(lesson) and count_now_les == num_les and count_now_les != len(curs):
                     db.add_lesson_count(user_db_id)
 
-                bot.edit_message_text(
+                await bot.edit_message_text(
                     lesson[page - 1], chat_id, mes_id,
                     parse_mode='Markdown',
                     reply_markup=kb_user_lesson(page, len(lesson), num_les)
@@ -70,18 +70,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         elif 'counter' in type:
             pass
         else:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 curs_contents, chat_id, mes_id,
                 parse_mode='Markdown',
                 reply_markup=kb_user_curs(count_now_les)
             )
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserEducationCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         user_education=user_education_factory.filter())

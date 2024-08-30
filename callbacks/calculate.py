@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
@@ -23,7 +23,7 @@ from keyboards.calculate import (
 from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
 
 
-def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
+async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data = calculate_factory.parse(call.data)
     type = callback_data.get('type', '')
 
@@ -37,22 +37,22 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         f'callback "calculate_factory" user_tg_id={user_id} type={type}')
 
     if type == 'go_main':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     if type == 'calc_back':
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             last_values = data.get('last_values')
             if last_values is not None and len(last_values) > 0:
                 value = data['last_values'].pop()
                 data[value] = None
 
-        choose_calculate_step(bot, user_id, call.message, True)
+        await choose_calculate_step(bot, user_id, call.message, True)
 
     if type == 'go_settings':
-        send_settings(bot, call.message, user_id)
+        await send_settings(bot, call.message, user_id)
 
     if type == 'settings_from_calc' and bot.get_state(user_id, chat_id) is not None:
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             open_price: float | None = data.get('open_price')
             tool: str | None = data.get('tool')
             forex: ForexInfo | None = data.get('forex')
@@ -89,7 +89,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
 
             db.add_unfinished_calc(unfinished_calc)
 
-        send_settings(bot, call.message, user_id)
+        await send_settings(bot, call.message, user_id)
 
     if 'pair' in type:
         _, pair = type.split('+')
@@ -113,10 +113,10 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             cross_prices=prices
         )
 
-        set_state_data(bot, user_id, chat_id, {
+        await set_state_data(bot, user_id, chat_id, {
             'forex': forex,
         })
-        choose_calculate_step(
+        await choose_calculate_step(
             bot, user_id, call.message,
             True, last_value='forex'
         )
@@ -124,8 +124,8 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'tool' in type:
         _, tool = type.split('++')
 
-        set_state_data(bot, user_id, chat_id, {'tool': tool})
-        choose_calculate_step(
+        await set_state_data(bot, user_id, chat_id, {'tool': tool})
+        await choose_calculate_step(
             bot, user_id, call.message,
             True, last_value='tool'
         )
@@ -133,32 +133,32 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'open_price' in type:
         _, open_price_val = type.split('+')
 
-        set_state_data(
+        await set_state_data(
             bot, user_id, chat_id, {
                 'open_price': float(open_price_val)}
         )
-        choose_calculate_step(
+        await choose_calculate_step(
             bot, user_id, call.message,
             True, last_value='open_price'
         )
 
     if 'risk' in type:
         value = float(type.replace('risk', ''))
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             data['updated_risk'] = value
 
-        choose_calculate_step(bot, user_id, call.message, True)
+        await choose_calculate_step(bot, user_id, call.message, True)
 
     if type == 'calc_atr':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_enter_max_bar(lang),
             chat_id, mes_id,
             reply_markup=kb_calc_cancel(lang)
         )
-        bot.set_state(user_id, CalculateState.max_bar, chat_id)
+        await bot.set_state(user_id, CalculateState.max_bar, chat_id)
 
     if type == 'calc_atr+':
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             cur_tool: str = data.get('tool', '')
             stop_type: str = data.get('stop_type', '')
 
@@ -169,7 +169,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
         if not value:
             return
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_choose_direct(lang, user_id), chat_id, mes_id,
             reply_markup=kb_calc_direct(lang)
         )
@@ -179,7 +179,7 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             _, percent = stop_type.split('+')
             rate = float(percent) * 0.01
 
-        set_state_data(
+        await set_state_data(
             bot, user_id, chat_id, {
                 'atr': abs(value) * abs(rate)
             }
@@ -188,14 +188,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
     if 'direct+' in type:
         _, action = type.split('+')
 
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             atr = data.get('atr', 0)
             stop_loss = data.get('stop_loss')
             stat_id = data.get('stat_id')
             op: float = data.get('open_price', 0)
 
         if stop_loss == -1:
-            stat_id = create_and_send_calc(
+            stat_id = await create_and_send_calc(
                 bot, call.message, user_id,
                 stop_loss if action == 'long' else op + 1,
                 False
@@ -226,18 +226,18 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
             if time:
                 channel_calc.update(send_data.id, time=time)
 
-            send_confirm_calc_send(bot, call.message, stat_id)
-            bot.delete_state(user_id, chat_id)
+            await send_confirm_calc_send(bot, call.message, stat_id)
+            await bot.delete_state(user_id, chat_id)
         else:
             atr *= -1 if action == 'long' else 1
 
             round_c = max(5, get_decimal_count(op))
             stop_loss = round(op + atr, round_c)
 
-            bot.delete_message(chat_id, mes_id)
+            await bot.delete_message(chat_id, mes_id)
 
             if 'f_direct' in type:
-                bot.delete_state(user_id, chat_id)
+                await bot.delete_state(user_id, chat_id)
 
                 calc = calculation.get(int(stat_id))
                 if calc is None:
@@ -287,14 +287,14 @@ def _main_callback_handler(call: CallbackQuery, bot: TeleBot):
                 new_id = db.add_calculation(new_calc)
                 new_calc.id = new_id or -1
 
-                send_calculation(bot, call.message, user_id, new_calc, True)
+                await send_calculation(bot, call.message, user_id, new_calc, True)
             else:
-                create_and_send_calc(bot, call.message, user_id, stop_loss)
+                await create_and_send_calc(bot, call.message, user_id, stop_loss)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def send_after_first_try(bot: TeleBot, user_id: int):
+async def send_after_first_try(bot: AsyncTeleBot, user_id: int):
     lang = get_lang(user_id)
 
     if lang == 'ru':
@@ -306,16 +306,16 @@ def send_after_first_try(bot: TeleBot, user_id: int):
     else:
         msg = 'Set your calculator by choosing a <b>deposit</b>, <b>the percentage of risk</b>, and everything else will calculate the system <u>automatically</u>'
 
-    bot.send_message(
+    await bot.send_message(
         user_id, msg,
         reply_markup=kb_first_dep(lang)
     )
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(CalculateCallbackFilter())
     bot.register_callback_query_handler(
-        _main_callback_handler,
+        _main_callback_handler, # type: ignore
         lambda _: True, pass_bot=True,
         calculate=calculate_factory.filter()
     )

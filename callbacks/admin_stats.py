@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from Classes import base_statis
@@ -14,7 +14,7 @@ from keyboards.admin_stats import (
 )
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data = admin_statistics_factory.parse(call.data)
     type = callback_data.get('type', '')
     filter = callback_data.get('filter', '')
@@ -24,10 +24,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'go_main':
-        send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user_id)
 
     if type == 'go_payment':
-        send_admin_payment(bot, call.message, user_id)
+        await send_admin_payment(bot, call.message, user_id)
 
     if type == 'stat_pay_periods':
 
@@ -44,7 +44,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         summ_half_year = base_statis.summ_by_transactions('half_year')
         summ_year = base_statis.summ_by_transactions('year')
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             admin_statistics_periods(count_today, summ_today=summ_today,
                                      count_week=count_week, summ_week=summ_week,
                                      count_month=count_month, summ_month=summ_month,
@@ -67,7 +67,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         summ_calc_signals = base_statis.summ_by_product('calc_signals')
 
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             admin_statistics_products(count_signals=count_signals, summ_signals=summ_signals,
                                       count_calc=count_calc, summ_calc=summ_calc,
                                       count_calc_signals=count_calc_signals, summ_calc_signals=summ_calc_signals
@@ -79,26 +79,26 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         clients_by_products = filter
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             f'Список клиентов с платежами, по выбранному продукту:', chat_id, mes_id,
             reply_markup=None
         )
-        base_statis.show_paid_users(bot, call.message, product=clients_by_products)
-        bot.send_message(
+        await base_statis.show_paid_users(bot, call.message, product=clients_by_products)
+        await bot.send_message(
             chat_id,
             "Вернуться:",
             reply_markup=kb_statistics_back()
         )
 
     elif type == 'stat_pay_clients':
-        bot.edit_message_text(
+        await bot.edit_message_text(
                 'Список клиентов с платежами:', chat_id, mes_id,
                 reply_markup=None
             )
 
-        base_statis.show_paid_users(bot, call.message)
+        await base_statis.show_paid_users(bot, call.message)
 
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             "Вернуться:",
             reply_markup=kb_statistics_back()
@@ -107,12 +107,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     elif type == 'stat_pay_period_choose':
         clients_for_period = filter
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             f'Список клиентов с платежами, за выбранный период:', chat_id, mes_id,
             reply_markup=None
         )
-        base_statis.show_paid_users(bot, call.message, clients_for_period)
-        bot.send_message(
+        await base_statis.show_paid_users(bot, call.message, clients_for_period)
+        await bot.send_message(
             chat_id,
             "Вернуться:",
             reply_markup=kb_statistics_back()
@@ -120,29 +120,29 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
     elif type == 'stat_pay_period_choose_start_date':
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите дату начала в формате DD.MM.YY', chat_id, mes_id,
             reply_markup=kb_statistics_back()
         )
 
-        bot.set_state(user_id, AdminStatisticsState.start_date_only, chat_id)
+        await bot.set_state(user_id, AdminStatisticsState.start_date_only, chat_id)
 
     elif type == 'stat_pay_period_choose_start_to_end':
         # Установить статус
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите дату начала в формате dd.mm.yy:', chat_id, mes_id,
             reply_markup=kb_statistics_back()
         )
 
-        bot.set_state(user_id, AdminStatisticsState.start_date, chat_id)
+        await bot.set_state(user_id, AdminStatisticsState.start_date, chat_id)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminStatisticsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         admin_params=admin_statistics_factory.filter())
 

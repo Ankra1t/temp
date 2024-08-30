@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from models import MANUAL_TYPE
@@ -8,7 +8,7 @@ from keyboards.manual import manual_factory, ManualCallbackFilter
 from pages.calculate import send_main, send_manual
 
 
-def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
+async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data: dict = manual_factory.parse(call.data)
     type = callback_data['type']
     page = int(callback_data['page'])
@@ -18,7 +18,7 @@ def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'main':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     if 'manual' in type:
         type_arr = type.split('+')
@@ -26,7 +26,7 @@ def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
         if len(type_arr) == 2:
             manual_type = type_arr[1]  # type: ignore
 
-        send_manual(bot, call.message, user_id, manual_type)
+        await send_manual(bot, call.message, user_id, manual_type)
 
     if type == 'prev':
         page -= 1
@@ -37,12 +37,12 @@ def _manual_callback_handler(call: CallbackQuery, bot: TeleBot):
     elif type == 'end':
         page = len(msg_manuals)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(ManualCallbackFilter())
     bot.register_callback_query_handler(
-        _manual_callback_handler,
+        _manual_callback_handler, # type: ignore
         lambda _: True, pass_bot=True,
         manual=manual_factory.filter())

@@ -1,6 +1,6 @@
 import difflib
 import re
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from states.settings import FirstCalcState, SettingsState
@@ -34,7 +34,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
     if type == 'currency':
         return
 
-    def r_func(message: Message, bot: TeleBot):
+    async def r_func(message: Message, bot: AsyncTeleBot):
         user_id = message.from_user.id
         user_db_id = db.get_user_id_by_tg_id(user_id)
         lang = get_lang(user_id)
@@ -48,7 +48,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         value = digit_accept(message)
         if value is None:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg_digit_error(lang),
             )
             return
@@ -68,28 +68,28 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         if type == 'risk':
             db.set_user_risk_is_percent(user_db_id, is_percent)
 
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             action = data.get('action')
 
         if action == 'welcome':
             if type == 'deposit':
-                bot.set_state(user_id, SettingsState.risk_percent, chat_id)
-                bot.send_message(chat_id, msg_enter_risk_percent(lang))
+                await bot.set_state(user_id, SettingsState.risk_percent, chat_id)
+                await bot.send_message(chat_id, msg_enter_risk_percent(lang))
             else:
-                bot.set_state(user_id, SettingsState.trading_style, chat_id)
-                bot.send_message(
+                await bot.set_state(user_id, SettingsState.trading_style, chat_id)
+                await bot.send_message(
                     chat_id, msg_enter_trading_style(lang),
                     reply_markup=kb_trading_style(lang, 'welcome')
                 )
         else:
-            bot.delete_state(user_id, chat_id)
-            bot.send_message(chat_id, msg_success_edit(lang))
-            send_user_deposit(bot, message, user_id, True)
+            await bot.delete_state(user_id, chat_id)
+            await bot.send_message(chat_id, msg_success_edit(lang))
+            await send_user_deposit(bot, message, user_id, True)
 
     return r_func
 
 
-def handle_new_currency(message: Message, bot: TeleBot):
+async def handle_new_currency(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -98,7 +98,7 @@ def handle_new_currency(message: Message, bot: TeleBot):
 
     value = text_accept(message)
     if value is None or len(value) > 10:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_currency_error(lang),
             reply_markup=kb_deposit_cancel(lang)
         )
@@ -118,25 +118,25 @@ def handle_new_currency(message: Message, bot: TeleBot):
 
     db.set_user_currency(user_db_id, value.upper())
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
 
     if action == 'welcome':
-        bot.set_state(user_id, FirstCalcState.deposit, chat_id)
-        bot.send_message(chat_id, msg_enter_deposit(lang))
+        await bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+        await bot.send_message(chat_id, msg_enter_deposit(lang))
     else:
-        bot.send_message(chat_id, msg_success_edit(lang))
-        send_user_deposit(bot, message, user_id, True)
+        await bot.send_message(chat_id, msg_success_edit(lang))
+        await send_user_deposit(bot, message, user_id, True)
 
 
-def handle_splitting(message: Message, bot: TeleBot):
+async def handle_splitting(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         current_tp: list[int] = data.get('take_profit', [])
         current_split: list[float] = data.get('split', [])
 
@@ -147,7 +147,7 @@ def handle_splitting(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             msg_splitting_error(lang, 'digit') + '\n' + enter_mes
         )
@@ -157,22 +157,22 @@ def handle_splitting(message: Message, bot: TeleBot):
         f'callback "handle_splitting" user_tg_id={user_id} value={value}')
 
     if sum(current_split) + value > 100:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             msg_splitting_error(lang, 'sum') + '\n' + enter_mes
         )
         return
 
     current_split.append(value)
-    bot.send_message(
+    await bot.send_message(
         chat_id, msg_enter_splitting(lang, current_tp, current_split),
         reply_markup=kb_splitting(lang, current_tp, current_split)
     )
-    set_state_data(bot, user_id, chat_id, {'split': current_split})
-    bot.set_state(user_id, SettingsState.summury_profit, chat_id)
+    await set_state_data(bot, user_id, chat_id, {'split': current_split})
+    await bot.set_state(user_id, SettingsState.summury_profit, chat_id)
 
 
-def handle_day_risk(message: Message, bot: TeleBot):
+async def handle_day_risk(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -185,7 +185,7 @@ def handle_day_risk(message: Message, bot: TeleBot):
     keyboard = kb_base_cancel(lang)
 
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             msg_text_error(lang) + '\n' + enter_mes,
             reply_markup=keyboard
@@ -199,7 +199,7 @@ def handle_day_risk(message: Message, bot: TeleBot):
     value = value.replace('%', '')
 
     if not is_digit(value):
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             'Введите число\n' + enter_mes,
             reply_markup=keyboard
@@ -209,11 +209,11 @@ def handle_day_risk(message: Message, bot: TeleBot):
     value = float(value)
 
     db.set_user_day_risk(user_db_id, value, is_percent)
-    bot.send_message(chat_id, msg_success_edit(lang))
-    send_user_deposit(bot, message, user_id, True)
+    await bot.send_message(chat_id, msg_success_edit(lang))
+    await send_user_deposit(bot, message, user_id, True)
 
 
-def handle_round_count(message: Message, bot: TeleBot):
+async def handle_round_count(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -232,7 +232,7 @@ def handle_round_count(message: Message, bot: TeleBot):
     keyboard = kb_round_count(lang, current_value)
 
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             msg_digit_error(lang) + '\n' + enter_mes,
             reply_markup=keyboard
@@ -243,7 +243,7 @@ def handle_round_count(message: Message, bot: TeleBot):
         f'callback "handle_round_count" user_tg_id={user_id} value={value}')
 
     if value < 0 or value > 5:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             msg_digit_error(lang, 0, 5) + '\n' + enter_mes,
             reply_markup=keyboard
@@ -251,11 +251,11 @@ def handle_round_count(message: Message, bot: TeleBot):
         return
 
     db.set_user_round_count(user_db_id, value)
-    bot.send_message(chat_id, msg_success_edit(lang))
-    send_user_deposit(bot, message, user_id, True)
+    await bot.send_message(chat_id, msg_success_edit(lang))
+    await send_user_deposit(bot, message, user_id, True)
 
 
-def handle_trading_style(message: Message, bot: TeleBot):
+async def handle_trading_style(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -265,32 +265,32 @@ def handle_trading_style(message: Message, bot: TeleBot):
     value = text_accept(message)
 
     if value is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id,
             msg_text_error(lang) + '\n' + msg_enter_trading_style(lang),
             reply_markup=kb_base_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
         f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action')
 
     db.set_user_trading_style(user_db_id, value.lower())
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     if action == 'welcome':
-        bot.send_message(chat_id, msg_success_base_set(lang))
+        await bot.send_message(chat_id, msg_success_base_set(lang))
     else:
-        bot.send_message(chat_id, msg_success_edit(lang))
+        await bot.send_message(chat_id, msg_success_edit(lang))
 
-    send_settings(bot, message, user_id, True)
+    await send_settings(bot, message, user_id, True)
 
 
-def handle_first_deposit(message: Message, bot: TeleBot):
+async def handle_first_deposit(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
     lang = get_lang(user_id)
@@ -301,7 +301,7 @@ def handle_first_deposit(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang)
         )
         return
@@ -312,15 +312,15 @@ def handle_first_deposit(message: Message, bot: TeleBot):
     db.set_user_base(user_db_id, 'risk', 1)
     db.set_user_risk_is_percent(user_db_id, True)
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, msg_enter_risk_percent(
             lang, True
         ),
     )
-    bot.set_state(user_id, FirstCalcState.risk, chat_id)
+    await bot.set_state(user_id, FirstCalcState.risk, chat_id)
 
 
-def handle_first_risk(message: Message, bot: TeleBot):
+async def handle_first_risk(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
     lang = get_lang(user_id)
@@ -329,7 +329,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang)
         )
         return
@@ -343,7 +343,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
     if u_base is None:
         return
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, msg_after_first_settings(
             lang, u_base.deposit or 0,
             'USDT', u_base.market,
@@ -353,7 +353,7 @@ def handle_first_risk(message: Message, bot: TeleBot):
     )
 
 
-def handle_exchange(message: Message, bot: TeleBot):
+async def handle_exchange(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -361,10 +361,10 @@ def handle_exchange(message: Message, bot: TeleBot):
 
     value = text_accept(message)
     if value is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_text_error(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     exchanges = liteDb.getExchanges()
@@ -379,11 +379,11 @@ def handle_exchange(message: Message, bot: TeleBot):
             indexAtList = names.index(el)
             original_names.append(exchanges[indexAtList].name)
 
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_enter_exchange_not_found(lang, len(difflist) != 0),
             reply_markup=kb_enter_exchange(lang, original_names)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     indexAtList = names.index(value.lower())
@@ -398,14 +398,14 @@ def handle_exchange(message: Message, bot: TeleBot):
         )
         return
 
-    send_maker_or_taker(bot, message, user_id, (
+    await send_maker_or_taker(bot, message, user_id, (
         exchange.name,
         exchange.maker_fee,
         exchange.taker_fee
     ), True)
 
 
-def handle_fee(message: Message, bot: TeleBot):
+async def handle_fee(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
 
     user_id = message.from_user.id
@@ -413,11 +413,11 @@ def handle_fee(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_change_fee(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     usersExchange = liteDb.getUserExchange(user_id)
@@ -427,10 +427,10 @@ def handle_fee(message: Message, bot: TeleBot):
         name = usersExchange[0]
 
     liteDb.setUserExchange(user_id, (name or '', value))
-    send_exchange_settings(bot, message, user_id, True)
+    await send_exchange_settings(bot, message, user_id, True)
 
 
-def handle_atr_percent(message: Message, bot: TeleBot):
+async def handle_atr_percent(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
     lang = get_lang(user_id)
@@ -439,47 +439,47 @@ def handle_atr_percent(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang)
         )
         return
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     db.set_user_from_deposit(user_db_id, False)
 
     liteDb.setUserStop(user_id, f'atr_percent+{value}')
     try:
-        send_stop_settings(bot, message, user_id, True)
+        await send_stop_settings(bot, message, user_id, True)
     except:
         pass
 
 
-def handle_atr_bars_count(message: Message, bot: TeleBot):
+async def handle_atr_bars_count(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     value = digit_accept(message, int)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang)
         )
         return
 
     value = min(max(value, 2), 20)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     atr_settings = liteDb.getUserAtrSettings(user_id)
     bars = atr_settings[1].split('+')
     liteDb.setUserAtrSettings(user_id, (atr_settings[0], f'{bars[0]}+{value}'))
 
-    send_atr_settings(bot, message, user_id, True)
+    await send_atr_settings(bot, message, user_id, True)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

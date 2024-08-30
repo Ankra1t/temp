@@ -1,5 +1,5 @@
 import math
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from common.dt import get_str_by_datetime
@@ -25,7 +25,7 @@ from keyboards.admin_users import (
 )
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data = admin_users_factory.parse(call.data)
 
     type: str = callback_data.get('type', '')
@@ -41,13 +41,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'go_main':
-        send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user_id)
 
     if type == 'go_users':
-        send_admin_users(bot, call.message, user_id)
+        await send_admin_users(bot, call.message, user_id)
 
     if type == 'lists':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Выберите <u>список</u> клиентов', chat_id, mes_id,
             reply_markup=kb_admin_choose_list()
         )
@@ -75,7 +75,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
                 text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=kb_admin_client_list(
                     pages_count, page, sort_by, filter
@@ -100,7 +100,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
                     text += f'\n{ban} {user.tg_id} | {nik}\n'
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text,
                 chat_id, mes_id,
                 reply_markup=kb_admin_client_list(
@@ -118,7 +118,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 for user in users:
                     text += '\n' + get_short_user_info(user) + '\n'
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=kb_admin_users_cancel(sort_by, page, filter)
             )
@@ -134,25 +134,25 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 for user in users:
                     text += '\n' + get_short_user_info(user) + '\n'
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=kb_admin_users_cancel(sort_by, page, filter)
             )
 
     if type == 'client_add_sub':
         # Задать сначала тариф для выдачи подписки
-        bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
-        set_state_data(bot, user_id, chat_id, {
+        await bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
+        await set_state_data(bot, user_id, chat_id, {
             'user_id': client_db_id,
         })
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Выберите тариф на базе которого выдать подписку:',
             chat_id, mes_id,
             reply_markup=kb_admin_users_back()
         )
 
     if type == 'choose_periods_for_tariffs':
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             tariff_id = data.get('tariff_id')
             subscribe_user_id = data.get('user_id')
 
@@ -179,21 +179,21 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         )
 
         data_fin = get_str_by_datetime(datetime_show)
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка до {data_fin}'
         )
 
-        bot.delete_state(user_id, chat_id)
+        await bot.delete_state(user_id, chat_id)
 
-        send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
+        await send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
 
-        bot.send_message(
+        await bot.send_message(
             user.tg_id, gift_subscribe_msg(user.tg_id, data_fin)
         )
 
     if type == 'client_cancel_sub':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             f'Отменить все подписки пользователю с id[{client_db_id}?]',
             chat_id, mes_id,
             reply_markup=kb_admin_users_confirm('cancel_sub', client_db_id)
@@ -209,7 +209,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         else:
             text = f'Забанить пользователя с id[{client_db_id}]'
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text,
             chat_id, mes_id,
             reply_markup=kb_admin_users_confirm('ban', client_db_id)
@@ -225,38 +225,38 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if 'ban' in type:
             db.set_user_ban(user.id, not user.ban)
 
-        bot.edit_message_text('Успешно!', chat_id, mes_id)
+        await bot.edit_message_text('Успешно!', chat_id, mes_id)
 
     if 'confirm_no' in type:
-        bot.edit_message_text('Отменено!', chat_id, mes_id)
+        await bot.edit_message_text('Отменено!', chat_id, mes_id)
 
     if 'confirm' in type:
-        send_admin_client(
+        await send_admin_client(
             bot, call.message,
             user_id, client_db_id,
             True, sort_by, page
         )
 
     if type == 'client_search':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите id или имя пользователя:',
             chat_id, mes_id,
             reply_markup=kb_admin_users_cancel(sort_by, page)
         )
-        bot.set_state(user_id, AdminUsersState.client_search, chat_id)
-        set_state_data(bot, user_id, chat_id, {
+        await bot.set_state(user_id, AdminUsersState.client_search, chat_id)
+        await set_state_data(bot, user_id, chat_id, {
             'sort_by': sort_by,
             'page': page
         })
 
     if type == 'client_set_trial_custom':
-        bot.set_state(
+        await bot.set_state(
             user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
         logger.error(f'Назначить пробную подписку пользователю handler')
-        set_state_data(bot, user_id, chat_id, {
+        await set_state_data(bot, user_id, chat_id, {
             'user_id': client_db_id,
         })
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите количество дней ПРОБНОЙ подписки:',
             chat_id, mes_id,
             reply_markup=kb_admin_users_back()
@@ -266,7 +266,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         users_markets_count = db.get_users_each_market_count()
 
         if filter == '':
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 msg_admin_users_markets(users_markets_count), chat_id, mes_id,
                 reply_markup=kb_admin_users_markets()
             )
@@ -300,19 +300,19 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
                 text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=kb_admin_client_list(
                     pages_count, page, sort_by, filter, 'markets'
                 )
             )
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminUsersCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         admin_users=admin_users_factory.filter())

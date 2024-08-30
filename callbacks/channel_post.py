@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from messages.common import transl_tr_style
@@ -31,7 +31,7 @@ from pages.calculate import (
 )
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     data = channel_post_factory.parse(call.data)
     type = data.get('type', '')
     is_calc = int(data.get('is_calc', 0))
@@ -45,17 +45,17 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     logger.info(f'channel_post_callback (type={type} stat_id={stat_id})')
 
     if type == 'main':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     if type == 'back':
         chat_id = call.message.chat.id
 
-        bot.delete_state(user_id, chat_id)
+        await bot.delete_state(user_id, chat_id)
 
         msg = 'Отправка сообщений в канал'
         kb = kb_channel_post()
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb
         )
@@ -134,7 +134,7 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
 Чаще всего торговал: <b>{' '.join(max_tools or [])}</b>""" + (f'\nЧаще всего: <b>{max_style}</b>' if max_style else '')
 
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=kb_channel_stat()
             )
@@ -157,25 +157,25 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
 Most often traded: <b>{' '.join(max_tools or [])}</b>
 More often: <b>{result}</b>"""
-            bot.send_message(
+            await bot.send_message(
                 CHANNEL_ID, text
             )
 
     if type == 'send_settings':
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
     if type == 'ss_stop':
         current = liteDb.getSendSettings('withoutStop')
         liteDb.updateSendSettings('withoutStop', f'{current != "True"}')
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
     if type == 'ss_vote':
         current = liteDb.getSendSettings('isVote')
         liteDb.updateSendSettings('isVote', f'{current != "True"}')
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
     if type == 'ss_time':
-        edit_message(
+        await edit_message(
             bot, call.message, 'text',
             '👉 Выберите тип периода:',
             kb_send_settings_calc_time()
@@ -187,10 +187,10 @@ More often: <b>{result}</b>"""
             time = None
 
         liteDb.updateSendSettings('time', time)
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
     if type == 'ss_style':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_enter_trading_style(lang),
             chat_id, mes_id,
             reply_markup=kb_send_settings_trading_style()
@@ -203,7 +203,7 @@ More often: <b>{result}</b>"""
             value = None
 
         liteDb.updateSendSettings('style', value)
-        send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user_id)
 
     if type == 'result_cancel':
         calculation.update(
@@ -211,10 +211,10 @@ More often: <b>{result}</b>"""
         )
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            edit_channel_post(bot, stat_id)
+            await edit_channel_post(bot, stat_id)
             type = 'results'
         else:
-            send_stats(bot, call.message, user_id)
+            await send_stats(bot, call.message, user_id)
 
     if type == 'result_deal':
         calculation.update(
@@ -223,10 +223,10 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            edit_channel_post(bot, stat_id)
+            await edit_channel_post(bot, stat_id)
             type = 'result'
         else:
-            send_stats(bot, call.message, user_id)
+            await send_stats(bot, call.message, user_id)
 
     if type == 'result_wait':
         calculation.update(
@@ -235,10 +235,10 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            edit_channel_post(bot, stat_id)
+            await edit_channel_post(bot, stat_id)
             type = 'result'
         else:
-            send_stats(bot, call.message, user_id)
+            await send_stats(bot, call.message, user_id)
 
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(stat_id)
@@ -262,44 +262,44 @@ More often: <b>{result}</b>"""
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            edit_channel_post(bot, stat_id)
+            await edit_channel_post(bot, stat_id)
 
             if is_calc == 0:
                 type = 'results'
         else:
             if is_calc == 0:
-                send_stats(bot, call.message, user_id)
+                await send_stats(bot, call.message, user_id)
 
         if is_calc == 1:
             calc = calculation.get(stat_id)
             if calc is None:
                 return
-            delete_message(bot, chat_id, mes_id)
-            send_calculation(bot, call.message, user_id, calc, True)
+            await delete_message(bot, chat_id, mes_id)
+            await send_calculation(bot, call.message, user_id, calc, True)
 
     if type == 'results':
-        send_admin_channel_calc_list(bot, call.message, user_id, page=page)
+        await send_admin_channel_calc_list(bot, call.message, user_id, page=page)
 
     if type == 'result' or type == 'result_take' or type == 'result_stop':
         mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
 
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
-            send_admin_channel_calc_item(
+            await send_admin_channel_calc_item(
                 bot, call.message, user_id, stat_id, mes_type
             )
         else:
-            send_calc_stat_item(
+            await send_calc_stat_item(
                 bot, call.message, user_id, stat_id, mes_type
             )
 
     if type == 'comment':
-        edit_message(
+        await edit_message(
             bot, call.message, 'text',
             'Введите ваш комментарий:', kb_channel_post_back_to_result()
         )
-        bot.set_state(user_id, StatsState.add_image_text, chat_id)
-        set_state_data(bot, user_id, chat_id, {
+        await bot.set_state(user_id, StatsState.add_image_text, chat_id)
+        await set_state_data(bot, user_id, chat_id, {
             'stat_id': stat_id,
             'del_mes_id': call.message.id,
             'type': 'stats'
@@ -310,18 +310,18 @@ More often: <b>{result}</b>"""
         if calc is None:
             return
 
-        send_calculation(bot, call.message, user_id, calc)
+        await send_calculation(bot, call.message, user_id, calc)
 
     if type == 'go_stats':
-        send_stats(bot, call.message, user_id)
+        await send_stats(bot, call.message, user_id)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(ChannelPostCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         channel_post=channel_post_factory.filter()
     )

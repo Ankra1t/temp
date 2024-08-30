@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from common.dt import get_str_by_datetime
@@ -17,17 +17,17 @@ from keyboards.admin_users import kb_admin_users_back, kb_admin_users_cancel
 from pages.admin import send_admin_client
 
 
-def handle_client_search(message: Message, bot: TeleBot):
+async def handle_client_search(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         sort_by = data.get('sort_by') or ''
         page = data.get('page') or 1
 
     client_name_id = text_accept(message)
     if client_name_id is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             'Введите id или имя пользователя текстом:',
             reply_markup=kb_admin_users_cancel(sort_by, page)
@@ -43,44 +43,44 @@ def handle_client_search(message: Message, bot: TeleBot):
     client = db.get_user_by_id(client_db_id)
 
     if client is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             'Пользователя не существует.\nВведите id или имя пользователя:',
             reply_markup=kb_admin_users_cancel(sort_by, page)
         )
         return
 
-    send_admin_client(
+    await send_admin_client(
         bot, message, user_id,
         client.id, True,
         sort_by, page
     )
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
 
-def handle_days_subscribe(message: Message, bot: TeleBot):
+async def handle_days_subscribe(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
     days = digit_accept(message, int)
-    current_state = bot.get_state(user_id, chat_id)
+    current_state = await bot.get_state(user_id, chat_id)
 
     if days is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_admin_users_back()
         )
         return
 
     if days <= 0:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите число больше нуля:',
             reply_markup=kb_admin_users_back()
         )
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         tariff_id = data.get('tariff_id')
         subscribe_user_id = data.get('user_id')
 
@@ -101,13 +101,13 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
         )
 
         data_fin = get_str_by_datetime(datetime_show)
-        bot.send_message(
+        await bot.send_message(
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
         )
-        send_admin_client(bot, message, user_id, subscribe_user_id, True)
+        await send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
-        bot.send_message(
+        await bot.send_message(
             user.tg_id,
             gift_subscribe_msg(user.tg_id, data_fin)
         )
@@ -118,23 +118,23 @@ def handle_days_subscribe(message: Message, bot: TeleBot):
             finish_dt = pay_guard.set_trial(user.id, 'calc', days)  # TODO
 
             data_fin = get_str_by_datetime(finish_dt)
-            bot.send_message(
+            await bot.send_message(
                 chat_id,
                 f'Клиенту с id[{subscribe_user_id}] установлена пробная подписка на {days} дней, до {data_fin}'
             )
-            send_admin_client(bot, message, user_id, subscribe_user_id, True)
+            await send_admin_client(bot, message, user_id, subscribe_user_id, True)
 
-            bot.send_message(
+            await bot.send_message(
                 user.tg_id, gift_trial_subscribe_msg(user.tg_id, data_fin)
             )
         except Exception as e:
             logger.error(f'Что то пошло не так {e}')
             pass
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

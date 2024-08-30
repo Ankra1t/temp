@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from datetime import timedelta
 import time
 import threading
@@ -13,7 +13,7 @@ from db import db
 from models import Post
 
 
-def _check_future_post_for_sent(bot: TeleBot):
+def _check_future_post_for_sent(bot: AsyncTeleBot):
     lose_hours = 4
     date_now = get_datetime_now()
     lose_time_back = date_now - timedelta(hours=lose_hours)
@@ -31,7 +31,7 @@ def _check_future_post_for_sent(bot: TeleBot):
     return True
 
 
-def _send_future_post_by_intime(bot: TeleBot, post: Post):
+def _send_future_post_by_intime(bot: AsyncTeleBot, post: Post):
     """Рассылка отложенных постов по времени"""
     users_id = list(map(lambda user: user.tg_id, pay_guard.get_paid_users()))
 
@@ -45,14 +45,14 @@ def _send_future_post_by_intime(bot: TeleBot, post: Post):
 
 
 # TODO - через класс рассылок
-def _check_finish_trial_subscribe(bot: TeleBot):
+async def _check_finish_trial_subscribe(bot: AsyncTeleBot):
     users = pay_guard.get_users_note_fin_trial()
     if len(users) == 0:
         return
 
     for user in users:
         try:
-            send_message_by_type(
+            await send_message_by_type(
                 bot, user.tg_id, 'text', end_trial_subscribe_msg(user.tg_id)
             )
         except Exception as e:
@@ -62,14 +62,14 @@ def _check_finish_trial_subscribe(bot: TeleBot):
 
 
 # TODO - через класс рассылок
-def _check_finish_paid_subscribe(bot: TeleBot):
+async def _check_finish_paid_subscribe(bot: AsyncTeleBot):
     users = pay_guard.get_users_note_fin_paid()
     if len(users) == 0:
         return
 
     for user in users:
         try:
-            send_message_by_type(
+            await send_message_by_type(
                 bot, user.tg_id, 'text', end_paid_subscribe_msg(user.tg_id)
             )
         except Exception as e:
@@ -84,7 +84,7 @@ def _check_tariff():
 
 
 # Проверка рассылок каждые 30 сек - в отдельном потоке
-def _check_infinite_tasks(bot: TeleBot):
+def _check_infinite_tasks(bot: AsyncTeleBot):
     sleep_time_check = 30
     while True:
         # _check_finish_paid_subscribe(bot)
@@ -102,7 +102,7 @@ def _check_exchanges():
         time.sleep(sleep_time_check)
 
 
-def run_thread(bot: TeleBot):
+def run_thread(bot: AsyncTeleBot):
     threading.Thread(
         target=_check_infinite_tasks, args=(bot,), name='check_unfinit_tasks'
     ).start()

@@ -1,5 +1,5 @@
 from typing import Literal
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message, InputMediaPhoto
 
 from db import db
@@ -23,8 +23,8 @@ from keyboards.admin_posts import kb_posts
 from keyboards.admin_params import kb_params
 
 
-def send_admin_main(
-    bot: TeleBot,
+async def send_admin_main(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -32,7 +32,7 @@ def send_admin_main(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     count_all = db.get_users_count()
     count_admins = len(db.get_all_workes())
@@ -72,19 +72,19 @@ def send_admin_main(
     )
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_users(
-    bot: TeleBot,
+async def send_admin_users(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -92,7 +92,7 @@ def send_admin_users(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     users = db.get_all_users()
     count_all = len(users)
@@ -115,19 +115,19 @@ def send_admin_users(
     keyboard = kb_admin_users()
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_payment(
-    bot: TeleBot,
+async def send_admin_payment(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -135,7 +135,7 @@ def send_admin_payment(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     count_payments = base_statis.count_payments()
     summ_all_users = base_statis.summ_by_transactions()
@@ -144,19 +144,19 @@ def send_admin_payment(
     keyboard = kb_statistics()
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_fut_posts(
-    bot: TeleBot,
+async def send_admin_fut_posts(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -164,7 +164,7 @@ def send_admin_fut_posts(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     posts_count = len(db.get_all_posts())
 
@@ -172,19 +172,19 @@ def send_admin_fut_posts(
     keyboard = kb_posts()
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_params(
-    bot: TeleBot,
+async def send_admin_params(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -192,25 +192,25 @@ def send_admin_params(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_admin_menu('Параметры')
     keyboard = kb_params()
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_post(
-    bot: TeleBot, chat_id: int, post: Post
+async def send_admin_post(
+    bot: AsyncTeleBot, chat_id: int, post: Post
 ):
     text = '\n'.join((
         '\n'.join((
@@ -230,21 +230,21 @@ def send_admin_post(
     ))
 
     if post.mes_type == 'photo':
-        bot.send_photo(
+        await bot.send_photo(
             chat_id, post.media,
             caption=text
         )
     elif post.mes_type == 'video':
-        bot.send_video(
+        await bot.send_video(
             chat_id, post.media,
             caption=text
         )
     else:
-        bot.send_message(chat_id, text)
+        await bot.send_message(chat_id, text)
 
 
-def send_admin_client(
-    bot: TeleBot,
+async def send_admin_client(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     client_db_id: int,
@@ -255,7 +255,7 @@ def send_admin_client(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     client = db.get_user_by_id(client_db_id)
     if client is None:
@@ -332,19 +332,19 @@ def send_admin_client(
     keyboard = kb_admin_client_info(client_db_id, is_banned, page, sort_by)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_workers(
-    bot: TeleBot,
+async def send_admin_workers(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -352,22 +352,22 @@ def send_admin_workers(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_admin_menu('Работники')
     keyboard = kb_admin_workers()
 
     if is_first:
-        bot.send_message(chat_id, text, reply_markup=keyboard)
+        await bot.send_message(chat_id, text, reply_markup=keyboard)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_workers_admin(
-    bot: TeleBot,
+async def send_admin_workers_admin(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -375,7 +375,7 @@ def send_admin_workers_admin(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     res = '<b>Админы</b>\n'
     admins = db.get_admins()
@@ -389,16 +389,16 @@ def send_admin_workers_admin(
     keyboard = kb_admin_workers_actions(1)
 
     if is_first:
-        bot.send_message(chat_id, res, reply_markup=keyboard)
+        await bot.send_message(chat_id, res, reply_markup=keyboard)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             res, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_workers_redactors(
-    bot: TeleBot,
+async def send_admin_workers_redactors(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -406,7 +406,7 @@ def send_admin_workers_redactors(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     res = '<b>Редакторы</b>\n'
     redactors = db.get_redactors()
@@ -420,16 +420,16 @@ def send_admin_workers_redactors(
     keyboard = kb_admin_workers_actions(2)
 
     if is_first:
-        bot.send_message(chat_id, res, reply_markup=keyboard)
+        await bot.send_message(chat_id, res, reply_markup=keyboard)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             res, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_workers_support(
-    bot: TeleBot,
+async def send_admin_workers_support(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
@@ -437,7 +437,7 @@ def send_admin_workers_support(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     sup = db.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
@@ -446,16 +446,16 @@ def send_admin_workers_support(
     keyboard = kb_admin_workers_support()
 
     if is_first:
-        bot.send_message(chat_id, text, reply_markup=keyboard)
+        await bot.send_message(chat_id, text, reply_markup=keyboard)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_tariffs(
-    bot: TeleBot,
+async def send_admin_tariffs(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False,
@@ -463,22 +463,22 @@ def send_admin_tariffs(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_admin_menu('Тарифы')
     keyboard = kb_admin_tariffs()
 
     if is_first:
-        bot.send_message(chat_id, text, reply_markup=keyboard)
+        await bot.send_message(chat_id, text, reply_markup=keyboard)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_admin_tariffs_list_item(
-    bot: TeleBot,
+async def send_admin_tariffs_list_item(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     page: int,
@@ -492,7 +492,7 @@ def send_admin_tariffs_list_item(
     count = len(tariffs)
 
     if count == 0:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Тарифов нет', chat_id, mes_id,
             reply_markup=kb_admin_tariffs_back()
         )
@@ -514,27 +514,27 @@ def send_admin_tariffs_list_item(
                 tariff.discount is not None
             )
 
-        def send():
+        async def send():
             if image is None:
-                bot.send_message(chat_id, text, reply_markup=keyboard)
+                await bot.send_message(chat_id, text, reply_markup=keyboard)
             else:
-                bot.send_photo(
+                await bot.send_photo(
                     chat_id, image, text,
                     reply_markup=keyboard
                 )
 
         if is_first:
-            send()
+            await send()
         elif message.content_type == 'photo' and image is not None:
-            bot.edit_message_media(
+            await bot.edit_message_media(
                 InputMediaPhoto(image, text, 'HTML'), chat_id, mes_id,
                 reply_markup=keyboard
             )
         elif message.content_type == 'text' and image is None:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=keyboard
             )
         else:
-            delete_message(bot, chat_id, mes_id)
-            send()
+            await delete_message(bot, chat_id, mes_id)
+            await send()

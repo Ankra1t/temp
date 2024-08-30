@@ -1,5 +1,5 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
@@ -11,7 +11,7 @@ livepost_factory = CallbackData('type', 'value', prefix='livepost')
 class LivepostCallbackFilter(AdvancedCustomFilter):
     key = 'livepost'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

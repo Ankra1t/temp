@@ -1,7 +1,9 @@
-from typing import Literal, TypeVar, Any, Callable
-from telebot import TeleBot
-from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
+import asyncio
 import re
+from typing import Coroutine, Literal, TypeVar, Any, Callable
+from telebot.async_telebot import AsyncTeleBot
+from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
+from telebot.apihelper import ApiTelegramException
 
 from common.dt import get_str_by_datetime
 from data.data import liteDb
@@ -35,17 +37,17 @@ def text_accept(message: Message):
         return message.text
 
 
-def set_state_data(bot: TeleBot, user_id: int, chat_id: int, value: dict[str, Any]):
+async def set_state_data(bot: AsyncTeleBot, user_id: int, chat_id: int, value: dict[str, Any]):
     try:
-        with bot.retrieve_data(user_id, chat_id) as data:
+        async with bot.retrieve_data(user_id, chat_id) as data:
             for key in value:
                 data[key] = value[key]
     except Exception as e:
         logger.error(f'Ошибка в записи данных state [{key} {value}] [{e}]')
 
 
-def edit_message(
-    bot: TeleBot,
+async def edit_message(
+    bot: AsyncTeleBot,
     message: Message,
     type: Literal['photo', 'text', 'video', 'animation'],
     text: str,
@@ -58,34 +60,34 @@ def edit_message(
     new_mes_id = mes_id
 
     if message.content_type == 'text' and type == 'text':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id, reply_markup=markup
         )
     elif message.content_type != 'text' and type != 'text':
-        bot.edit_message_media(
+        await bot.edit_message_media(
             InputMedia(type, media, text, 'HTML'),
             chat_id, mes_id,
             reply_markup=markup
         )
     else:
-        delete_message(bot, chat_id, mes_id)
+        await delete_message(bot, chat_id, mes_id)
         if type == 'text':
-            new_mes = bot.send_message(chat_id, text, reply_markup=markup)
+            new_mes = await bot.send_message(chat_id, text, reply_markup=markup)
             new_mes_id = new_mes.id
         elif type == 'video':
-            new_mes = bot.send_video(
+            new_mes = await bot.send_video(
                 chat_id, media,
                 caption=text,
                 reply_markup=markup
             )
             new_mes_id = new_mes.id
         elif type == 'animation':
-            bot.send_animation(
+            await bot.send_animation(
                 chat_id, media, caption=text,
                 reply_markup=markup
             )
         elif type == 'photo':
-            new_mes = bot.send_photo(
+            new_mes = await bot.send_photo(
                 chat_id, media, text,
                 reply_markup=markup
             )
@@ -94,13 +96,13 @@ def edit_message(
     return new_mes_id
 
 
-def delete_message(
-    bot: TeleBot,
+async def delete_message(
+    bot: AsyncTeleBot,
     chat_id: int,
     mes_id: int,
 ):
     try:
-        return bot.delete_message(chat_id, mes_id)
+        return await bot.delete_message(chat_id, mes_id)
     except:
         return False
 
@@ -168,12 +170,12 @@ def check_discount_price(tariff: Price, type: Literal['crypto', 'default']='defa
     return round(price * (1 - tariff.discount.percent / 100))
 
 
-def get_post_from_message(bot: TeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):
+async def get_post_from_message(bot: AsyncTeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):
     chat_id = message.chat.id
 
     mes_type = message.content_type
     if mes_type != 'text' and mes_type != 'video' and mes_type != 'photo':
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Отправьте пост в виде текста, картинки или видео:',
             reply_markup=kb_posts_back()
         )
@@ -202,8 +204,8 @@ def get_calculator_btn_link(lang: LANGUAGES_TYPE):
     return InlineKeyboardButton(f"⌨️ {text[lang]}", "https://t.me/fpcalcbot")
 
 
-def send_in_development(bot: TeleBot, message: Message):
-    bot.send_message(
+async def send_in_development(bot: AsyncTeleBot, message: Message):
+    await bot.send_message(
         message.chat.id, 'Временно ведётся разработка❗️\n<b>Следите</b> за обновлениями😉'
     )
 
@@ -265,3 +267,18 @@ def get_short_user_info(user: UserInfo):
     )
 
     return user_show
+
+T = TypeVar("T")
+async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, **kwargs) -> T:
+    number_retries=5
+
+    for _ in range(number_retries - 1):
+        try:
+            return await function(*args, **kwargs)
+        except ApiTelegramException as ex:
+            if ex.error_code == 429:
+                await asyncio.sleep(ex.result_json['parameters']['retry_after'])
+            else:
+                raise
+    else:
+        return await function(*args, **kwargs)

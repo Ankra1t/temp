@@ -1,5 +1,5 @@
 import re
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from db import db
@@ -14,90 +14,90 @@ from keyboards.admin_params import kb_params_choice, kb_params_back
 _pair_pattern = r'^[a-zA-Z]{3}/[a-zA-Z]{3}$'
 
 
-def handle_other_text(message: Message, bot: TeleBot):
+async def handle_other_text(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id, {
             'text': get_normal_text(message)
         }
     )
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, 'Применить изменения?',
         reply_markup=kb_params_choice('change')
     )
 
 
-def handle_forex_pair(message: Message, bot: TeleBot):
+async def handle_forex_pair(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     pair = text_accept(message)
     if pair is None or re.match(_pair_pattern, pair) is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите пару в формате (XXX/XXX):',
             reply_markup=kb_params_back())
         return
     pair = pair.upper()
 
-    set_state_data(bot, user_id, chat_id, {'pair': pair})
-    bot.send_message(
+    await set_state_data(bot, user_id, chat_id, {'pair': pair})
+    await bot.send_message(
         chat_id, 'Введите цену пары:',
         reply_markup=kb_params_back())
-    bot.set_state(user_id, AdminParamsState.forex_price, chat_id)
+    await bot.set_state(user_id, AdminParamsState.forex_price, chat_id)
 
 
-def handle_forex_price(message: Message, bot: TeleBot):
+async def handle_forex_price(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     price = digit_accept(message)
     if price is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите число:',
             reply_markup=kb_params_back())
         return
 
-    set_state_data(bot, user_id, chat_id, {'price': price})
-    bot.send_message(
+    await set_state_data(bot, user_id, chat_id, {'price': price})
+    await bot.send_message(
         chat_id, 'Введите вспомогательную пару (XXX/XXX) или "-", если её нет:',
         reply_markup=kb_params_back())
-    bot.set_state(user_id, AdminParamsState.forex_help_pair, chat_id)
+    await bot.set_state(user_id, AdminParamsState.forex_help_pair, chat_id)
 
 
-def handle_forex_help_pair(message: Message, bot: TeleBot):
+async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     help_pair = text_accept(message)
     if help_pair is None or not (help_pair == '-' or re.match(_pair_pattern, help_pair) is not None):
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите пару в формате (XXX/XXX) или "-":',
             reply_markup=kb_params_back())
         return
     help_pair = help_pair.upper() if help_pair != '-' else None
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         pair = data.get('pair', '')
         price = data.get('price', 0)
 
     db.update_forex(pair, price, help_pair)
-    bot.delete_state(user_id, chat_id)
-    bot.send_message(
+    await bot.delete_state(user_id, chat_id)
+    await bot.send_message(
         chat_id, 'Пара успешно добавлен!\nВведите валютную пару:',
         reply_markup=kb_params_back())
-    bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
+    await bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
 
 
-def handle_count_trial_days(message: Message, bot: TeleBot):
+async def handle_count_trial_days(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     count_days = digit_accept(message, int)
     if count_days is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Введите число:',
             reply_markup=kb_params_back())
         return
@@ -105,14 +105,15 @@ def handle_count_trial_days(message: Message, bot: TeleBot):
     # Сохраняем данные тарифа в таблице параметров
     pay_guard.set_option_trial_days(count_days)
 
-    bot.send_message(
+    await bot.send_message(
         chat_id, f'✅ Кол-во пробных дней {int(count_days)}дн. для нового пользователя сохранено',
-        reply_markup=kb_params_back())
+        reply_markup=kb_params_back()
+    )
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

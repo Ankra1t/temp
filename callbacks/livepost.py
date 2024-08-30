@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from Classes.BlockTGBotSender import send_same_message_to_users
@@ -14,7 +14,7 @@ from keyboards.livepost import (
 from pages.admin import send_admin_main
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     data = livepost_factory.parse(call.data)
     call_type = data.get('type', '')
     value = data.get('value', '')
@@ -24,31 +24,31 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if call_type == 'cancel':
-        bot.edit_message_text('Отменено!', chat_id, mes_id)
-        send_admin_main(bot, call.message, user_id, True)
+        await bot.edit_message_text('Отменено!', chat_id, mes_id)
+        await send_admin_main(bot, call.message, user_id, True)
 
     if call_type == 'signal':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите название рекомендации:',
             chat_id, mes_id,
             reply_markup=kb_livepost_cancel()
         )
-        bot.set_state(user_id, AdminPostsState.name, chat_id)
+        await bot.set_state(user_id, AdminPostsState.name, chat_id)
 
     if call_type == 'send_now':
         if value == '':
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'Кому отправить сообщение?',
                 chat_id, mes_id,
                 reply_markup=kb_livepost_direction()
             )
         elif value == 'time':
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'За какой период?', chat_id, mes_id,
                 reply_markup=kb_livepost_time()
             )
         elif value == 'market':
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'Для какого рынка?', chat_id, mes_id,
                 reply_markup=kb_livepost_market()
             )
@@ -65,29 +65,29 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                     int(value.replace('h', '')))
 
             if len(users) != 0:
-                with bot.retrieve_data(user_id, chat_id) as data:
+                async with bot.retrieve_data(user_id, chat_id) as data:
                     post: Post = data.get('post')
-                    bot.edit_message_text('Отправка...', chat_id, mes_id)
-                    send_same_message_to_users(
+                    await bot.edit_message_text('Отправка...', chat_id, mes_id)
+                    await send_same_message_to_users(
                         bot, users, post
                     )
-                    bot.edit_message_text(
+                    await bot.edit_message_text(
                         'Успешно отправлен!', chat_id, mes_id)
-                    bot.delete_state(user_id, chat_id)
+                    await bot.delete_state(user_id, chat_id)
             else:
-                bot.edit_message_text(
+                await bot.edit_message_text(
                     '❗️Таких пользователей нет.\nКому отправить сообщение?',
                     chat_id, mes_id,
                     reply_markup=kb_livepost_direction()
                 )
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(LivepostCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         livepost=livepost_factory.filter()
     )

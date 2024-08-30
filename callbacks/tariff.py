@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from config_logger import logger
@@ -17,7 +17,7 @@ from keyboards.tariff import (
 from pages.calculate import send_main, send_tariffs_list_item
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data: dict = user_tariff_factory.parse(call.data)
     type = callback_data.get('type', '')
     target_id = callback_data.get('tariff_id', '')
@@ -36,10 +36,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         f'callback "user_main_factory" user_tg_id={user_id} type={type} ({target_id} {tariff_type} {page})')
 
     if type == 'go_main':
-        send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user_id)
 
     elif 'go_tariff' in type:
-        send_tariffs_list_item(
+        await send_tariffs_list_item(
             bot, call.message, user_id, 'calc', page, is_rus
         )
 
@@ -65,18 +65,18 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if is_rus:
             return
 
-        delete_message(bot, chat_id, mes_id)
+        await delete_message(bot, chat_id, mes_id)
         user_db_id = db.get_user_id_by_tg_id(user_id)
         user_sub = db.get_current_subscribe_user(user_db_id)
 
         if user_sub is not None:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg_is_subscribed(user_id),
                 reply_markup=kb_user_tariff_back(lang)
             )
             return
 
-        edit_wait_mess = bot.send_message(
+        edit_wait_mess = await bot.send_message(
             call.message.chat.id,
             msg_loading_invoice(user_id)
         )
@@ -85,30 +85,30 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         if tariff is None:
             return
 
-        bot_url = f'https://t.me/{bot.get_me().username}'
+        bot_url = f'https://t.me/{(await bot.get_me()).username}'
         cryptopay_payment_url = cryptoPay_create_payment(
             user_id, tariff, bot_url
         )
 
         if cryptopay_payment_url == False:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'Ошибка', chat_id, edit_wait_mess.id
             )
             return
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_bill(user_id),
             chat_id, edit_wait_mess.id,
             reply_markup=kb_bill(lang, cryptopay_payment_url)
         )
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserTariffCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         user_tariff=user_tariff_factory.filter()
     )

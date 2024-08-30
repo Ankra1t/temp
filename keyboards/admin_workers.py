@@ -1,7 +1,7 @@
 from typing import Literal
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
 
@@ -14,7 +14,7 @@ admin_workers_factory = CallbackData(
 class AdminWorkersCallbackFilter(AdvancedCustomFilter):
     key = 'admin_workers'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

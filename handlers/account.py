@@ -1,5 +1,5 @@
 import re
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from db import db
@@ -15,17 +15,17 @@ from messages.profile import msg_enter_nickname
 
 
 
-def handle_new_password(message: Message, bot: TeleBot):
+async def handle_new_password(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
     new_pass = text_accept(message)
 
     if new_pass is None:
-        bot.send_message(chat_id, 'Пароль должен быть строкой:')
+        await bot.send_message(chat_id, 'Пароль должен быть строкой:')
         return
 
     if len(new_pass) < 8:
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Пароль должен состоять из 8 и более символов:'
         )
         return
@@ -33,14 +33,14 @@ def handle_new_password(message: Message, bot: TeleBot):
     response = auth.change_password(user_id, new_pass)
 
     if response:
-        bot.send_message(chat_id, 'Пароль успешно изменен')
+        await bot.send_message(chat_id, 'Пароль успешно изменен')
     else:
-        bot.send_message(chat_id, 'Ошибка!')
+        await bot.send_message(chat_id, 'Ошибка!')
 
-    send_user_account(bot, message, user_id, True)
+    await send_user_account(bot, message, user_id, True)
 
 
-def handle_nickname(message: Message, bot: TeleBot):
+async def handle_nickname(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -48,7 +48,7 @@ def handle_nickname(message: Message, bot: TeleBot):
 
     nickname = text_accept(message)
     if nickname is None or not re.match(r'^[a-zA-Z0-9]+$', nickname):
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_enter_nickname(lang, 'default'),
             reply_markup=kb_user_params_back(lang)
         )
@@ -61,7 +61,7 @@ def handle_nickname(message: Message, bot: TeleBot):
         length_error = 'max'
 
     if length_error != '':
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_enter_nickname(lang, length_error),
             reply_markup=kb_user_params_back(lang)
         )
@@ -71,17 +71,17 @@ def handle_nickname(message: Message, bot: TeleBot):
     res = db.set_user_nickname(user_db_id, nickname)
 
     if res == 'Nickname has taken':
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_enter_nickname(lang, 'taken'),
             reply_markup=kb_user_params_back(lang)
         )
         return
 
-    bot.send_message(chat_id, msg_success_edit(lang))
-    send_user_params(bot, message, user_id, True)
+    await bot.send_message(chat_id, msg_success_edit(lang))
+    await send_user_params(bot, message, user_id, True)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

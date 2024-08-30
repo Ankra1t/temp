@@ -1,6 +1,6 @@
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt, cancel_txt
 from models import LANGUAGES_TYPE
@@ -12,7 +12,7 @@ user_account_factory = CallbackData('type', prefix='user_account')
 class UserAccountCallbackFilter(AdvancedCustomFilter):
     key = 'user_account'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

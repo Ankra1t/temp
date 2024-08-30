@@ -1,5 +1,5 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
-from telebot.custom_filters import AdvancedCustomFilter
+from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt
@@ -12,7 +12,7 @@ manual_factory = CallbackData('type', 'page', prefix='manual')
 class ManualCallbackFilter(AdvancedCustomFilter):
     key = 'manual'
 
-    def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 

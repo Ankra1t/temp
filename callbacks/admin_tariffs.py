@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from states.admin_tariff import AdminTariffState
@@ -14,7 +14,7 @@ from keyboards.admin_tariffs import (
 )
 
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     data = admin_tariffs_factory.parse(call.data)
     type = data.get('type', '')
     page = int(data.get('page', 0))
@@ -27,21 +27,21 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     mes_id = call.message.id
 
     if type == 'go_main':
-        send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user_id)
 
     if 'go_tariffs' in type:
         is_del = 'del' in type
         if is_del:
-            delete_message(bot, chat_id, mes_id)
+            await delete_message(bot, chat_id, mes_id)
 
-        send_admin_tariffs(bot, call.message, user_id, is_del)
+        await send_admin_tariffs(bot, call.message, user_id, is_del)
 
     if type == 'list':
-        send_admin_tariffs_list_item(bot, call.message, user_id, page)
+        await send_admin_tariffs_list_item(bot, call.message, user_id, page)
 
     if 'add' in type:
         if type == 'add':
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'Выберите тип нового тарифа:',
                 chat_id, mes_id,
                 reply_markup=kb_admin_tariff_add_type()
@@ -49,12 +49,12 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
         else:
             _, kind = type.split('+')
 
-            bot.set_state(user_id, AdminTariffState.name, chat_id)
-            set_state_data(bot, user_id, chat_id, {
+            await bot.set_state(user_id, AdminTariffState.name, chat_id)
+            await set_state_data(bot, user_id, chat_id, {
                 'action': 'create',
                 'type_product': kind
             })
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 'Введите название нового тарифа:', chat_id, mes_id,
                 reply_markup=kb_admin_tariffs_back()
             )
@@ -62,24 +62,24 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if 'delete' in type:
         if 'yes' in type:
             if db.deactive_price(tariff_id):
-                delete_message(bot, chat_id, mes_id)
-                bot.send_message(chat_id, msg_success_edit(lang))
-                send_admin_tariffs(bot, call.message, user_id, True)
+                await delete_message(bot, chat_id, mes_id)
+                await bot.send_message(chat_id, msg_success_edit(lang))
+                await send_admin_tariffs(bot, call.message, user_id, True)
         elif 'no' in type:
-            send_admin_tariffs_list_item(bot, call.message, user_id, page)
+            await send_admin_tariffs_list_item(bot, call.message, user_id, page)
         else:
-            send_admin_tariffs_list_item(
+            await send_admin_tariffs_list_item(
                 bot, call.message, user_id, page, 'delete')
 
     if type == 'on_off':
         tariff = db.get_price_by_id(tariff_id)
         if tariff is not None:
             if db.switch_tariff(tariff_id, not tariff.switch_active):
-                send_admin_tariffs_list_item(bot, call.message, user_id, page)
+                await send_admin_tariffs_list_item(bot, call.message, user_id, page)
 
     if 'edit' in type:
         if type == 'edit':
-            send_admin_tariffs_list_item(
+            await send_admin_tariffs_list_item(
                 bot, call.message, user_id, page, 'edit'
             )
         else:
@@ -105,13 +105,13 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
             elif 'findate' in type:
                 state = ''
 
-            bot.set_state(user_id, state, chat_id)
-            set_state_data(bot, user_id, chat_id, {
+            await bot.set_state(user_id, state, chat_id)
+            await set_state_data(bot, user_id, chat_id, {
                 'page': page,
                 'tariff_id': tariff_id
             })
-            delete_message(bot, chat_id, mes_id)
-            bot.send_message(
+            await delete_message(bot, chat_id, mes_id)
+            await bot.send_message(
                 chat_id, text,
                 reply_markup=kb_admin_tariffs_list_back(page)
             )
@@ -119,27 +119,27 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'discount':
         tariff = db.get_price_by_id(tariff_id)
         if tariff is not None:
-            bot.set_state(user_id, AdminTariffState.discount_percent, chat_id)
-            set_state_data(bot, user_id, chat_id, {
+            await bot.set_state(user_id, AdminTariffState.discount_percent, chat_id)
+            await set_state_data(bot, user_id, chat_id, {
                 'tariff_id': tariff_id,
                 'page': page
             })
-            delete_message(bot, chat_id, mes_id)
-            bot.send_message(
+            await delete_message(bot, chat_id, mes_id)
+            await bot.send_message(
                 chat_id, 'Введите размер скидки в процентах:',
                 reply_markup=kb_admin_tariffs_list_back(page)
             )
 
     if type == 'discount_remove':
         if db.delete_price_discount(tariff_id):
-            send_admin_tariffs_list_item(bot, call.message, user_id, page)
+            await send_admin_tariffs_list_item(bot, call.message, user_id, page)
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminTariffsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
         admin_tariffs=admin_tariffs_factory.filter())

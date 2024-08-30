@@ -1,6 +1,5 @@
-from telebot import TeleBot
-from telebot.storage import StateMemoryStorage
-from telebot.custom_filters import StateFilter
+from telebot.async_telebot import AsyncTeleBot, StateMemoryStorage
+from telebot.asyncio_filters import StateFilter
 
 from config_global import TOKEN_MAIN_BOT
 
@@ -47,11 +46,9 @@ from handlers.stats import registration as _reg_stats
 from handlers.tariff import registration as _reg_tariff
 
 
-bot = TeleBot(
+bot = AsyncTeleBot(
     TOKEN_MAIN_BOT, 'HTML',
     state_storage=StateMemoryStorage(),
-    skip_pending=True,
-    use_class_middlewares=True,
     exception_handler=ExHandler()
 )
 

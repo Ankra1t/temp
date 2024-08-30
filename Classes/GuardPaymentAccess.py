@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from typing import Literal, Optional
 from datetime import datetime, timedelta
 
@@ -88,9 +88,9 @@ class GuardPaymentAccess():
         return db.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
-    def valid_use_calc(self, tg_id: int, bot:TeleBot):
+    async def valid_use_calc(self, tg_id: int, bot:AsyncTeleBot):
         try:
-            is_rus = bot.get_chat_member(tg_id, tg_id).user.language_code == 'ru'
+            is_rus = (await bot.get_chat_member(tg_id, tg_id)).user.language_code == 'ru'
         except:
             is_rus=True
 

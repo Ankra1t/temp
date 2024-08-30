@@ -1,32 +1,9 @@
-from typing import Literal
-import json
 import requests
 
 from db import db
 from config_logger import logger
 from config_global import API_URL
 from common.vars import HEADERS
-
-
-def get_site_code(user_id: int) -> str | Literal[False]:
-    access_token = db.get_access_token() or ''
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-
-    data: dict[str, str | int] = {
-        'id': user_db_id,
-    }
-
-    try:
-        response = requests.post(
-            f'{API_URL}/tg/auth/site_code',
-            json.dumps(data).encode(), headers=HEADERS | {'tg-api-key': access_token}
-        )
-
-        result = response.json()
-        return result.get('code', False)
-    except Exception as e:
-        logger.error(f'/auth/get_site_code {e}')
-        return False
 
 
 def vote_timeout(stat_id: int):

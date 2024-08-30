@@ -1,4 +1,4 @@
-from telebot.handler_backends import State, StatesGroup
+from telebot.asyncio_handler_backends import State, StatesGroup
 
 
 class AdminPostsState(StatesGroup):

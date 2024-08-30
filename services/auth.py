@@ -1,7 +1,8 @@
 import json
-from config_global import API_URL
-from models import SentMessages, UserNotification
+
 from services.base_config import check_response, session_decorator, session
+from models import SentMessages, UserNotification
+from config_global import API_URL
 
 
 @session_decorator
@@ -70,3 +71,20 @@ def change_password(id: int, password: str):
         return
 
     return True
+
+
+@session_decorator
+def get_site_code(userId: int):
+    data: dict[str, str | int] = {
+        'id': userId,
+    }
+
+    res = session.post(
+        f'{API_URL}/tg/auth/site_code',
+        json.dumps(data).encode()
+    )
+
+    if not check_response(res):
+        return
+
+    return res.json().get('code')

@@ -1,7 +1,7 @@
 import ast
 import traceback
 from httpx import request
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from hashlib import sha256
 from hmac import HMAC
 from flask import Request, Response
@@ -78,7 +78,7 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     return url
 
 
-def cryptoPay_payment_updates(bot: TeleBot, request: Request):
+async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
     body: dict | None = request.get_json(True, True)
     if body is None:
         return Response(status=400)
@@ -142,7 +142,7 @@ def cryptoPay_payment_updates(bot: TeleBot, request: Request):
 
                     user_show = f'@{user.tg_username}' if user.tg_username != '-' else f'{user.tg_id}'
                     sum_show = f'{transaction.sum} {transaction.currency}'
-                    bot.send_message(
+                    await bot.send_message(
                         user.refer_id,
                         text=paid_subscribe_refer_msg(
                             user.refer_id, user_show, sum_show
@@ -153,14 +153,14 @@ def cryptoPay_payment_updates(bot: TeleBot, request: Request):
             print(traceback.print_exc())
             pass
 
-        bot.send_message(
+        await bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
                 user.tg_id, finish_date_show, transaction.name
             ),
         )
 
-        notifier.send_notification('text', mess_user_paid(
+        await notifier.send_notification('text', mess_user_paid(
             user_id=user.id,
             user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
             summ_paid=summ_full,

@@ -1,6 +1,6 @@
 import asyncio
 from pytonconnect import TonConnect
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery
 
 from Classes.TonWallet import get_connector
@@ -25,7 +25,7 @@ from pages.user import send_referral, send_user_account, send_user_main, send_us
 
 connector = get_connector(6919899538)
 
-def _handle_callback(call: CallbackQuery, bot: TeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     callback_data: dict = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
 
@@ -43,30 +43,30 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'purchases':
         purchases = db.get_purchases_by_user(user_id)
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_user_purchases(lang, purchases),
             chat_id, mes_id,
             reply_markup=kb_user_purchases(lang)
         )
 
     if type == 'main':
-        send_user_main(bot, call.message, user_id)
+        await send_user_main(bot, call.message, user_id)
 
     if type == 'back':
-        send_user_account(bot, call.message, user_id)
+        await send_user_account(bot, call.message, user_id)
 
     if type == 'support':
         sup = db.get_support_name()
         msg = msg_support(lang)
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb_support(lang, sup)
         )
-        bot.delete_state(user_id, mes_id)
+        await bot.delete_state(user_id, mes_id)
 
     if type == 'referral':
-        send_referral(bot, call.message, user_id)
+        await send_referral(bot, call.message, user_id)
 
     if type == 'referral_list':
         user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -74,19 +74,19 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
 
         text = msg_referral_list(lang, user_db_id, referrals)
 
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=kb_user_referral_list(lang)
         )
 
     if type == 'password':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             'Введите новый пароль:', chat_id, mes_id
         )
-        bot.set_state(user_id, UserAccountState.password, chat_id)
+        await bot.set_state(user_id, UserAccountState.password, chat_id)
 
     if type == 'params':
-        send_user_params(bot, call.message, user_id)
+        await send_user_params(bot, call.message, user_id)
 
     if 'set_lang' in type:
         is_edit_lang = False
@@ -96,21 +96,21 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
                 is_edit_lang = True
                 user_db_id = db.get_user_id_by_tg_id(user_id)
                 db.set_user_lang(user_db_id, lang)
-                send_user_params(bot, call.message, user_id)
+                await send_user_params(bot, call.message, user_id)
 
         if not is_edit_lang:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 msg_choose_lang(lang),
                 chat_id, mes_id,
                 reply_markup=kb_params_choose_lang(lang)
             )
 
     if type == 'set_name':
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_enter_nickname(lang), chat_id, mes_id,
             reply_markup=kb_user_params_back(lang)
         )
-        bot.set_state(user_id, UserAccountState.nickname, chat_id)
+        await bot.set_state(user_id, UserAccountState.nickname, chat_id)
 
     if type == 'wallet':
         asyncio.run(walletPage(bot, chat_id, user_id))
@@ -122,10 +122,10 @@ def _handle_callback(call: CallbackQuery, bot: TeleBot):
     if type == 'wallet_check':
         asyncio.run(check_wallet(bot, chat_id, user_id, mes_id))
 
-    bot.answer_callback_query(call.id)
+    await bot.answer_callback_query(call.id)
 
 
-async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
+async def walletPage(bot: AsyncTeleBot, chat_id: int, user_id: int):
     connected = await connector.restore_connection()
 
     lang = get_lang(user_id)
@@ -140,13 +140,13 @@ async def walletPage(bot: TeleBot, chat_id: int, user_id: int):
         wallets_names = [el['name'] for el in wallets_list]
         kb = kb_wallets(lang, wallets_names)
 
-        bot.send_message(
+        await bot.send_message(
             chat_id, 'Коннект',
             reply_markup=kb
         )
 
 
-async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, wallet_name: str):
+async def connect_wallet(bot: AsyncTeleBot, chat_id: int, user_id: int, mes_id: int, wallet_name: str):
     wallets_list = connector.get_wallets()
     wallet = None
 
@@ -162,7 +162,7 @@ async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, 
     generated_url = await connector.connect(wallet)
     kb = kb_wallet_connect(lang, generated_url)
 
-    bot.edit_message_text(
+    await bot.edit_message_text(
         'КОННЕКТ', chat_id, mes_id, reply_markup=kb
     )
 
@@ -174,18 +174,19 @@ async def connect_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int, 
     unsub = connector.on_status_change(status_changed, status_changed)
 
 
-async def check_wallet(bot: TeleBot, chat_id: int, user_id: int, mes_id: int):
+async def check_wallet(bot: AsyncTeleBot, chat_id: int, user_id: int, mes_id: int):
     if connector.connected and connector.account is not None and connector.account.address:
         wallet_address = connector.account.address
-        bot.edit_message_text(
+        await bot.edit_message_text(
             f'You are connected with address <code>{wallet_address}</code>', chat_id, mes_id,
         )
         return
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserAccountCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback,
+        _handle_callback, # type: ignore
         lambda _: True, pass_bot=True,
-        user_account=user_account_factory.filter())
+        user_account=user_account_factory.filter()
+    )

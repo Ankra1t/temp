@@ -1,5 +1,5 @@
 import re
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from config_logger import logger
@@ -26,7 +26,7 @@ from states.calculate import CalculateState, ForexCalcState
 from services import calculation
 
 
-def handle_tool(message: Message, bot: TeleBot):
+async def handle_tool(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     mes_id = message.id
@@ -35,24 +35,24 @@ def handle_tool(message: Message, bot: TeleBot):
 
     tool = text_accept(message)
     if tool is None or is_digit(tool):
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_text_error(lang),
             reply_markup=kb_tool(lang, [])
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     if not re.match(r'^[a-zA-Z0-9 ]+$', tool):
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_latin_error(lang),
             reply_markup=kb_tool(lang, [])
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(f'callback "handle_tool" user_tg_id={user_id} value={tool}')
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
         calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
 
@@ -64,8 +64,8 @@ def handle_tool(message: Message, bot: TeleBot):
         tool += '/USDT'
 
     if stat_id is None:
-        set_state_data(bot, user_id, chat_id, {'tool': tool})
-        choose_calculate_step(bot, user_id, message, last_value='tool')
+        await set_state_data(bot, user_id, chat_id, {'tool': tool})
+        await choose_calculate_step(bot, user_id, message, last_value='tool')
     else:
         db.change_calculation_tool(stat_id, tool)
 
@@ -73,11 +73,11 @@ def handle_tool(message: Message, bot: TeleBot):
         if calc_info is None:
             return
 
-        send_calculation(bot, message, user_id, calc_info, True)
-        bot.delete_state(user_id, chat_id)
+        await send_calculation(bot, message, user_id, calc_info, True)
+        await bot.delete_state(user_id, chat_id)
 
 
-def handle_forex_pair(message: Message, bot: TeleBot):
+async def handle_forex_pair(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     mes_id = message.id
@@ -86,15 +86,15 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     pair = text_accept(message)
     if pair is None or is_digit(pair):
-        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     if not re.match(r'^[a-zA-Z \/]+$', pair):
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_pair_error(lang),
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
@@ -104,8 +104,8 @@ def handle_forex_pair(message: Message, bot: TeleBot):
 
     pair_arr = pair.split('/')
     if len(pair_arr) != 2 or pair_arr[0] == pair_arr[1]:
-        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -133,12 +133,12 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         cross_prices=prices or {}
     )
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
 
     if stat_id is None:
-        set_state_data(bot, user_id, chat_id, {'forex': forex})
-        choose_calculate_step(
+        await set_state_data(bot, user_id, chat_id, {'forex': forex})
+        await choose_calculate_step(
             bot, user_id, message, last_value='forex'
         )
     else:
@@ -148,11 +148,11 @@ def handle_forex_pair(message: Message, bot: TeleBot):
         if calc_info is None:
             return
 
-        send_calculation(bot, message, user_id, calc_info, True)
-        bot.delete_state(user_id, chat_id)
+        await send_calculation(bot, message, user_id, calc_info, True)
+        await bot.delete_state(user_id, chat_id)
 
 
-def handle_forex_pair_price(message: Message, bot: TeleBot):
+async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     chat_id = message.chat.id
     mes_id = message.id
@@ -161,28 +161,28 @@ def handle_forex_pair_price(message: Message, bot: TeleBot):
 
     pair_price = digit_accept(message)
     if pair_price is None:
-        new_mes = bot.send_message(chat_id, msg_pair_error(lang))
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
         f'callback "handle_forex_pair_price" user_tg_id={user_id} value={pair_price}'
     )
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         forex: ForexInfo = data.get('forex')
         current_pair = data.get('current_pair')
 
         forex.cross_prices[current_pair] = pair_price
         data['forex'] = forex
 
-    set_state_data(bot, user_id, chat_id, {'forex': forex})
-    choose_calculate_step(
+    await set_state_data(bot, user_id, chat_id, {'forex': forex})
+    await choose_calculate_step(
         bot, user_id, message, last_value='forex'
     )
 
 
-def handle_currency(message: Message, bot: TeleBot):
+async def handle_currency(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -191,11 +191,11 @@ def handle_currency(message: Message, bot: TeleBot):
 
     value = text_accept(message)
     if value is None or len(value) > 10:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_currency_error(lang),
             reply_markup=kb_change_currency(lang, 'calc')
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
@@ -203,18 +203,18 @@ def handle_currency(message: Message, bot: TeleBot):
 
     check = currencyService.getPrice('USD', value)
     if not check:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_currency_error(lang, 'not_found'),
             reply_markup=kb_change_currency(lang, 'calc')
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    set_state_data(bot, user_id, chat_id, {'currency': value.upper()})
-    choose_calculate_step(bot, user_id, message, last_value='currency')
+    await set_state_data(bot, user_id, chat_id, {'currency': value.upper()})
+    await choose_calculate_step(bot, user_id, message, last_value='currency')
 
 
-def handle_deposit(message: Message, bot: TeleBot):
+async def handle_deposit(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -224,21 +224,21 @@ def handle_deposit(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
         f'callback "handle_deposit" user_tg_id={user_id} value={value}')
 
-    set_state_data(bot, user_id, chat_id, {'deposit': value})
-    choose_calculate_step(bot, user_id, message, last_value='deposit')
+    await set_state_data(bot, user_id, chat_id, {'deposit': value})
+    await choose_calculate_step(bot, user_id, message, last_value='deposit')
 
 
-def handle_risk_percent(message: Message, bot: TeleBot):
+async def handle_risk_percent(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -253,7 +253,7 @@ def handle_risk_percent(message: Message, bot: TeleBot):
 
     value = digit_accept(message)
     if value is None:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
@@ -270,11 +270,11 @@ def handle_risk_percent(message: Message, bot: TeleBot):
     #     )
     #     return
 
-    set_state_data(bot, user_id, chat_id, {'risk': [value, is_percent]})
-    choose_calculate_step(bot, user_id, message, last_value='risk')
+    await set_state_data(bot, user_id, chat_id, {'risk': [value, is_percent]})
+    await choose_calculate_step(bot, user_id, message, last_value='risk')
 
 
-def handle_trading_style(message: Message, bot: TeleBot):
+async def handle_trading_style(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -285,11 +285,11 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     if value is None or is_digit(value):
         msg_error = f'{msg_trading_style_error(lang)}\n{msg_enter_trading_style(lang)}'
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_error,
             reply_markup=kb_trading_style(lang, 'calc')
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
@@ -297,12 +297,12 @@ def handle_trading_style(message: Message, bot: TeleBot):
 
     value = value.lower()
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
 
     if stat_id is None:
-        set_state_data(bot, user_id, chat_id, {'trading_style': value})
-        choose_calculate_step(
+        await set_state_data(bot, user_id, chat_id, {'trading_style': value})
+        await choose_calculate_step(
             bot, user_id, message,
             last_value='trading_style'
         )
@@ -314,29 +314,29 @@ def handle_trading_style(message: Message, bot: TeleBot):
         db.change_calculation_style(stat_id, value)
         calc_info.tradingStyle = value
 
-        send_calculation(bot, message, user_id, calc_info, True)
-        bot.delete_state(user_id, chat_id)
+        await send_calculation(bot, message, user_id, calc_info, True)
+        await bot.delete_state(user_id, chat_id)
 
 
-def handle_open_price(message: Message, bot: TeleBot):
+async def handle_open_price(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
 
     value = digit_accept(message)
     if value is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(
                 lang
             ) if stat_id is None else kb_deal_profit_cancel(lang, stat_id)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
@@ -344,8 +344,8 @@ def handle_open_price(message: Message, bot: TeleBot):
     )
 
     if stat_id is None:
-        set_state_data(bot, user_id, chat_id, {'open_price': value})
-        choose_calculate_step(
+        await set_state_data(bot, user_id, chat_id, {'open_price': value})
+        await choose_calculate_step(
             bot, user_id, message, last_value='open_price'
         )
     else:
@@ -354,47 +354,47 @@ def handle_open_price(message: Message, bot: TeleBot):
             return
 
         if calc_info.stopLoss == value:
-            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
-            set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
+            await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
         db.change_calculation_open_price(stat_id, value)
         calc_info.openPrice = value
 
-        edit_channel_post(bot, stat_id)
+        await edit_channel_post(bot, stat_id)
 
-        send_calculation(bot, message, user_id, calc_info, True)
-        bot.delete_state(user_id, chat_id)
+        await send_calculation(bot, message, user_id, calc_info, True)
+        await bot.delete_state(user_id, chat_id)
 
 
-def handle_stop_loss(message: Message, bot: TeleBot):
+async def handle_stop_loss(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         action = data.get('action', '')
         stat_id = data.get('stat_id', '')
         open_price = data.get('open_price', '')
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(
                 lang
             ) if stat_id is None else kb_deal_profit_cancel(lang, stat_id)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     if stop_loss == open_price:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_sl_op_equal_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
@@ -402,13 +402,13 @@ def handle_stop_loss(message: Message, bot: TeleBot):
     )
 
     if action == 'send_calc':
-        start_with_calc(bot, message, user_id, stat_id, stop_loss)
+        await start_with_calc(bot, message, user_id, stat_id, stop_loss)
     else:
-        edit_channel_post(bot, stat_id)
-        create_and_send_calc(bot, message, user_id, stop_loss)
+        await edit_channel_post(bot, stat_id)
+        await create_and_send_calc(bot, message, user_id, stop_loss)
 
 
-def handle_stop_atr(message: Message, bot: TeleBot):
+async def handle_stop_atr(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -416,18 +416,18 @@ def handle_stop_atr(message: Message, bot: TeleBot):
 
     stop_atr = digit_accept(message)
     if stop_atr is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     logger.info(
         f'callback "handle_stop_atr" user_tg_id={user_id} value={stop_atr}'
     )
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stop_type = data.get('stop_type', 'default')
         action = data.get('action', '')
 
@@ -436,12 +436,12 @@ def handle_stop_atr(message: Message, bot: TeleBot):
         _, percent = stop_type.split('+')
         rate = float(percent) * 0.01
 
-    new_mes = bot.send_message(
+    new_mes = await bot.send_message(
         chat_id, msg_choose_direct(lang, user_id),
         reply_markup=kb_calc_direct(lang, action == 'send_calc')
     )
 
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id, {
             'del_mes_id': new_mes.id,
             'atr': abs(stop_atr) * abs(rate)
@@ -449,7 +449,7 @@ def handle_stop_atr(message: Message, bot: TeleBot):
     )
 
 
-def handle_max_bar(message: Message, bot: TeleBot):
+async def handle_max_bar(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -457,26 +457,26 @@ def handle_max_bar(message: Message, bot: TeleBot):
 
     max_bar = digit_accept(message)
     if max_bar is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    new_mes = bot.send_message(
+    new_mes = await bot.send_message(
         chat_id, msg_enter_min_bar(lang),
         reply_markup=kb_calc_cancel(lang)
     )
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id, {
             'max_bar': max_bar,
             'del_mes_id': new_mes.id
         })
-    bot.set_state(user_id, CalculateState.min_bar, chat_id)
+    await bot.set_state(user_id, CalculateState.min_bar, chat_id)
 
 
-def handle_min_bar(message: Message, bot: TeleBot):
+async def handle_min_bar(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -484,14 +484,14 @@ def handle_min_bar(message: Message, bot: TeleBot):
 
     min_bar = digit_accept(message)
     if min_bar is None:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
             reply_markup=kb_calc_cancel(lang)
         )
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         max_bar = data.get('max_bar', 0)
         stop_type = data.get('stop_type', 'default')
         action = data.get('action', '')
@@ -501,12 +501,12 @@ def handle_min_bar(message: Message, bot: TeleBot):
         _, percent = stop_type.split('+')
         rate = float(percent) * 0.01
 
-    new_mes = bot.send_message(
+    new_mes = await bot.send_message(
         chat_id, msg_choose_direct(lang, user_id),
         reply_markup=kb_calc_direct(lang, action == 'send_calc')
     )
 
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id, {
             'del_mes_id': new_mes.id,
             'atr': abs(max_bar - min_bar) * abs(rate)
@@ -514,7 +514,7 @@ def handle_min_bar(message: Message, bot: TeleBot):
     )
 
 
-def registration(bot: TeleBot):
+def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 

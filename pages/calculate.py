@@ -4,11 +4,11 @@ import math
 import os
 from typing import Literal
 from telebot.types import Message, InputMediaPhoto
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 
 from AuthRoles import first_timeout
 from states.stats import ChannelCalcState, StatsState
-from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data
+from common.utils import delete_message, edit_message, edit_message, get_lang, get_print_float, set_state_data
 from data.data import liteDb
 
 from db import db
@@ -44,18 +44,17 @@ from keyboards.settings import (
 
 
 
-def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
+async def send_main(message: Message, bot: AsyncTeleBot, user_id: int, is_first=False):
     lang = get_lang(user_id)
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
     liteDb.addPagesCount(user_id)
 
-    is_rus = bot.get_chat_member(chat_id, user_id).user.language_code == 'ru'
-    is_valid_use = pay_guard.valid_use_calc(user_id, bot)
+    is_valid_use = await pay_guard.valid_use_calc(user_id, bot)
 
     uses_count = db.get_calculator_uses_count(user_db_id) or 0
     freeze_dt = db.get_user_calc_freeze(user_db_id)
@@ -74,23 +73,23 @@ def send_main(message: Message, bot: TeleBot, user_id: int, is_first=False):
     )
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        edit_message(
+        await edit_message(
             bot, message, 'text', text, keyboard
         )
 
 
-def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
     liteDb.addPagesCount(user_id)
 
     is_risk_update = liteDb.getRiskUpdate(user_id)
@@ -103,19 +102,19 @@ def send_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
     markup = kb_settings(lang)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=markup
         )
     else:
-        edit_message(bot, message, 'text', msg, markup)
+        await edit_message(bot, message, 'text', msg, markup)
 
 
-def send_dop_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_dop_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -127,21 +126,21 @@ def send_dop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     markup = kb_dop_settings(lang, calc_output, is_risk_update)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=markup
         )
     else:
-        edit_message(bot, message, 'text', msg, markup)
+        await edit_message(bot, message, 'text', msg, markup)
 
 
-def send_exchange_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_exchange_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
     lang = get_lang(user_id)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     exchange = liteDb.getUserExchange(user_id)
 
@@ -149,19 +148,19 @@ def send_exchange_settings(bot: TeleBot, message: Message, user_id: int, is_firs
     markup = kb_exchange(lang, exchange is not None)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=markup
         )
     else:
-        edit_message(bot, message, 'text', msg, markup)
+        await edit_message(bot, message, 'text', msg, markup)
 
 
-def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_trading_style_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -178,41 +177,41 @@ def send_trading_style_settings(bot: TeleBot, message: Message, user_id: int, is
     markup = kb_change_style_settings(lang, is_style_change)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=markup
         )
     else:
-        edit_message(bot, message, 'text', msg, markup)
+        await edit_message(bot, message, 'text', msg, markup)
 
 
-def send_maker_or_taker(bot: TeleBot, message: Message, user_id: int, info: tuple[str, float, float], is_first=False):
+async def send_maker_or_taker(bot: AsyncTeleBot, message: Message, user_id: int, info: tuple[str, float, float], is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
     lang = get_lang(user_id)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     msg = msg_maker_or_taker(lang, info[1], info[2])
     markup = kb_maker_or_taker(lang, *info)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=markup
         )
     else:
-        edit_message(bot, message, 'text', msg, markup)
+        await edit_message(bot, message, 'text', msg, markup)
 
 
-def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_user_deposit(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     stop = liteDb.getUserStop(user_id)
     market = db.get_user_current_market(user_db_id)
@@ -226,74 +225,74 @@ def send_user_deposit(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     keyboard = kb_change_deposit(lang, is_update, market)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_manual_page(message: Message, bot: TeleBot, page: int, user_id: int, is_first=False):
+async def send_manual_page(message: Message, bot: AsyncTeleBot, page: int, user_id: int, is_first=False):
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_manuals[page - 1]
     photo = open(f'src/img/info_calc/{page}.jpg', 'rb')
     keyboard = kb_manuals(lang, page, len(msg_manuals))
 
     if is_first:
-        bot.send_photo(
+        await bot.send_photo(
             chat_id, photo, text, 'MarkDown',
             reply_markup=keyboard
         )
     else:
-        bot.edit_message_media(
+        await bot.edit_message_media(
             InputMediaPhoto(photo, text, 'MarkDown'),
             chat_id, mes_id,
             reply_markup=keyboard
         )
 
 
-def send_summury_profit_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_summury_profit_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
     lang = get_lang(user_id)
     user_db_id = db.get_user_id_by_tg_id(user_id)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_summury_profit_settings(lang, user_db_id)
     kb = kb_summury_profit(lang)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=kb
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=kb
         )
 
 
-def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_stats(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     lang = get_lang(user_id)
     lang = 'en' if lang != 'ru' else 'ru'
 
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
     liteDb.addPagesCount(user_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
@@ -446,27 +445,27 @@ def send_stats(bot: TeleBot, message: Message, user_id: int, is_first=False):
 
     new_mes_id = mes_id
     if is_first:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, text,
             reply_markup=kb
         )
         new_mes_id = new_mes.id
     else:
-        edit_message(
+        await edit_message(
             bot, message, 'text', text, kb
         )
 
-    bot.set_state(user_id, 'user_calc_id live', chat_id)
-    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
+    await bot.set_state(user_id, 'user_calc_id live', chat_id)
+    await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
-def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str, page=0, is_first=False):
+async def send_calc_list(bot: AsyncTeleBot, message: Message, user_id: int, list_type: str, page=0, is_first=False):
     N = 10
 
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -497,45 +496,45 @@ def send_calc_list(bot: TeleBot, message: Message, user_id: int, list_type: str,
 
     new_mes_id = mes_id
     if is_first:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg,
             reply_markup=kb
         )
         new_mes_id = new_mes.id
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb
         )
 
-    bot.set_state(user_id, f'user_calc_id {list_type}', chat_id)
-    set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
+    await bot.set_state(user_id, f'user_calc_id {list_type}', chat_id)
+    await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
 
 
-def send_user_tariffs(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_user_tariffs(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
     lang = get_lang(user_id)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     text = msg_choose_tariff_type(user_id)
     keyboard = kb_choose_products(lang)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, text,
             reply_markup=keyboard
         )
     else:
-        edit_message(
+        await edit_message(
             bot, message, 'text', text, keyboard
         )
 
 
-def send_tariffs_list_item(
-    bot: TeleBot,
+async def send_tariffs_list_item(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     tariff_type: str,
@@ -552,7 +551,7 @@ def send_tariffs_list_item(
     count = len(tariffs)
 
     if count == 0:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg_no_tariffs(user_id), chat_id, mes_id,
             reply_markup=kb_user_tariff_back(lang)
         )
@@ -570,34 +569,34 @@ def send_tariffs_list_item(
             lang, tariff_id, count, tariff_type, page, is_rus
         )
 
-        def send():
+        async def send():
             if image is None:
-                bot.send_message(chat_id, text, reply_markup=keyboard)
+                await bot.send_message(chat_id, text, reply_markup=keyboard)
             else:
-                bot.send_photo(
+                await bot.send_photo(
                     chat_id, image, '',
                     reply_markup=keyboard
                 )
 
         if is_first:
-            send()
+            await send()
         elif message.content_type == 'photo' and image is not None:
-            bot.edit_message_media(
+            await bot.edit_message_media(
                 InputMediaPhoto(image, '', 'HTML'), chat_id, mes_id,
                 reply_markup=keyboard
             )
         elif message.content_type == 'text' and image is None:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 text, chat_id, mes_id,
                 reply_markup=keyboard
             )
         else:
-            delete_message(bot, chat_id, mes_id)
-            send()
+            await delete_message(bot, chat_id, mes_id)
+            await send()
 
 
-def send_calculation(
-    bot: TeleBot,
+async def send_calculation(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     calc: Calculation,
@@ -608,9 +607,9 @@ def send_calculation(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
-    is_access = pay_guard.valid_use_calc(user_id, bot)
+    is_access = await pay_guard.valid_use_calc(user_id, bot)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -634,14 +633,14 @@ def send_calculation(
 
         if calc.photo is None:
             if is_first:
-                bot.send_message(chat_id, text, reply_markup=kb)
+                await bot.send_message(chat_id, text, reply_markup=kb)
             else:
-                edit_message(bot, message, 'text', text, kb)
+                await edit_message(bot, message, 'text', text, kb)
         else:
             if is_first:
-                bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
+                await bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
             else:
-                edit_message(bot, message, 'photo', text, kb, calc.photo)
+                await edit_message(bot, message, 'photo', text, kb, calc.photo)
 
     else:
         file_path, caption = hti.create_calculation_image(
@@ -651,7 +650,7 @@ def send_calculation(
         with open(file_path, 'rb') as photo:
             if not is_first:
                 bot.delete_message(chat_id, mes_id)
-            bot.send_photo(
+            await bot.send_photo(
                 chat_id, photo, caption=caption,
                 reply_markup=kb,
             )
@@ -661,8 +660,8 @@ def send_calculation(
         first_timeout(user_id)
 
 
-def send_freeze(
-    bot: TeleBot,
+async def send_freeze(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     market: MARKETS_TYPE,
@@ -675,22 +674,22 @@ def send_freeze(
 
     day_risk = calcService.check_day_risk(user_id, market)
     if day_risk:
-        bot.set_state(user_id, StatsState.freeze, chat_id)
-        set_state_data(bot, user_id, chat_id, {'market': market})
+        await bot.set_state(user_id, StatsState.freeze, chat_id)
+        await set_state_data(bot, user_id, chat_id, {'market': market})
 
         text = msg_freeze_calc(lang, day_risk)
         kb = kb_freeze_calc(lang)
 
         if is_first:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, text,
                 reply_markup=kb,
             )
         else:
-            edit_message(bot, message, 'text', text, kb)
+            await edit_message(bot, message, 'text', text, kb)
 
 
-def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_first=False):
+async def send_confirm_calc_send(bot: AsyncTeleBot, message: Message, stat_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -716,30 +715,30 @@ def send_confirm_calc_send(bot: TeleBot, message: Message, stat_id: int, is_firs
 
     if is_first:
         if photo is None:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, text,
                 reply_markup=kb
             )
         else:
-            bot.send_photo(
+            await bot.send_photo(
                 chat_id,
                 photo, text,
                 reply_markup=kb
             )
     else:
-        edit_message(
+        await edit_message(
             bot,
             message, 'text' if photo is None else 'photo',
             text, kb, photo
         )
 
 
-def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss: float, is_send=True):
+async def create_and_send_calc(bot: AsyncTeleBot, message: Message, user_id: int, stop_loss: float, is_send=True):
     chat_id = message.chat.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         stat_id = data.get('stat_id')
         calc_type = data.get('calc_type', 'crypto')
 
@@ -763,20 +762,20 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
             return
 
         if calc_info.openPrice == stop_loss:
-            new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
-            set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
+            await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
             return
 
         db.change_calculation_stop_loss(stat_id, stop_loss)
         calc_info.stopLoss = stop_loss
 
-        send_calculation(bot, message, user_id, calc_info, True)
-        bot.delete_state(user_id, chat_id)
+        await send_calculation(bot, message, user_id, calc_info, True)
+        await bot.delete_state(user_id, chat_id)
         return
 
     if open_price == stop_loss:
-        new_mes = bot.send_message(chat_id, msg_sl_op_equal_error(lang))
-        set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
+        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
         return
 
     u_base = db.get_calc_user_settings(user_db_id)
@@ -829,13 +828,13 @@ def create_and_send_calc(bot: TeleBot, message: Message, user_id: int, stop_loss
         liteDb.setFirstTry(user_id)
 
     if is_send:
-        send_calculation(bot, message, user_id, calc_info, True, is_try)
+        await send_calculation(bot, message, user_id, calc_info, True, is_try)
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
     return new_id
 
 
-def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_stop_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -856,18 +855,18 @@ def send_stop_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fa
     kb = kb_choose_stop_type(lang)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, mes,
             reply_markup=kb
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             mes, chat_id, mes_id,
             reply_markup=kb
         )
 
 
-def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=False):
+async def send_atr_settings(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
     chat_id = message.chat.id
     mes_id = message.id
 
@@ -878,26 +877,26 @@ def send_atr_settings(bot: TeleBot, message: Message, user_id: int, is_first=Fal
     kb = kb_atr_settings(lang, atr_settings)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, mes,
             reply_markup=kb
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             mes, chat_id, mes_id,
             reply_markup=kb
         )
 
 
-def send_admin_send_settings(
-    bot: TeleBot,
+async def send_admin_send_settings(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
 ):
     chat_id = message.chat.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     withoutStop = liteDb.getSendSettings('withoutStop')
     isVote = liteDb.getSendSettings('isVote')
@@ -910,37 +909,37 @@ def send_admin_send_settings(
     kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
 
     if is_first:
-        bot.send_message(chat_id, msg, reply_markup=kb)
+        await bot.send_message(chat_id, msg, reply_markup=kb)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, message.id,
             reply_markup=kb
         )
 
 
-def send_channel_post(
-    bot: TeleBot,
+async def send_channel_post(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_first=False
 ):
     chat_id = message.chat.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     msg = '<b><u>Отправка сообщений в канал</u></b>'
     kb = kb_channel_post()
 
     if is_first:
-        bot.send_message(chat_id, msg, reply_markup=kb)
+        await bot.send_message(chat_id, msg, reply_markup=kb)
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, message.id,
             reply_markup=kb
         )
 
 
-def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, is_first=False, page=0):
+async def send_admin_channel_calc_list(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False, page=0):
     N = 7
 
     chat_id = message.chat.id
@@ -970,11 +969,11 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
         kb = kb_channel_post_back()
 
         if is_first:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, mes, reply_markup=kb
             )
         else:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 mes, chat_id, mes_id,
                 reply_markup=kb
             )
@@ -1001,22 +1000,22 @@ def send_admin_channel_calc_list(bot: TeleBot, message: Message, user_id: int, i
 
     kb = kb_channel_post_list(page, math.ceil(len(inWaitSends) / N))
     if is_first:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg, reply_markup=kb
         )
         del_mes_id = new_mes.id
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb
         )
 
-    bot.set_state(user_id, 'handle_calc_id', chat_id)
-    set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id})
+    await bot.set_state(user_id, 'handle_calc_id', chat_id)
+    await set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id})
 
 
-def send_admin_channel_calc_item(
-    bot: TeleBot,
+async def send_admin_channel_calc_item(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     calc_id: int,
@@ -1026,7 +1025,7 @@ def send_admin_channel_calc_item(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     send_data = channel_calc.getByCalc(calc_id)
     calc = calculation.get(calc_id)
@@ -1036,11 +1035,11 @@ def send_admin_channel_calc_item(
     if send_data is None or (calc.status != 'WAIT' and calc.status != 'DEAL') or calc is None:
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg,
             )
         else:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 msg, chat_id, mes_id
             )
         return
@@ -1087,26 +1086,26 @@ def send_admin_channel_calc_item(
 
     del_mes_id = mes_id
     if is_first:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg, reply_markup=kb
         )
         del_mes_id = new_mes.id
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb
         )
 
     if is_state:
-        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        set_state_data(
+        await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
+        await set_state_data(
             bot, user_id, chat_id, {
                 'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
             })
 
 
-def send_calc_stat_item(
-    bot: TeleBot,
+async def send_calc_stat_item(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     calc_id: int,
@@ -1116,7 +1115,7 @@ def send_calc_stat_item(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     calc = calculation.get(calc_id)
     if calc is None:
@@ -1125,11 +1124,11 @@ def send_calc_stat_item(
     if calc is None or (calc.status == 'FINISH'):
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg,
             )
         else:
-            bot.edit_message_text(
+            await bot.edit_message_text(
                 msg, chat_id, mes_id
             )
         return
@@ -1166,27 +1165,27 @@ def send_calc_stat_item(
 
     del_mes_id = mes_id
     if is_first:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             chat_id, msg, reply_markup=kb
         )
         del_mes_id = new_mes.id
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg, chat_id, mes_id,
             reply_markup=kb
         )
 
     if is_state:
-        bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        set_state_data(
+        await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
+        await set_state_data(
             bot, user_id, chat_id, {
                 'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
             }
         )
 
 
-def send_manual(
-    bot: TeleBot,
+async def send_manual(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     type: MANUAL_TYPE = 'calc',
@@ -1197,7 +1196,7 @@ def send_manual(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     msg = msg_manual(lang, type)
     kb = kb_manual(lang)
@@ -1213,12 +1212,12 @@ def send_manual(
 
     if is_first:
         if photo is None:
-            bot.send_photo(
+            await bot.send_photo(
                 chat_id, photo, msg,
                 reply_markup=kb
             )
         else:
-            bot.send_message(
+            await bot.send_message(
                 chat_id, msg,
                 reply_markup=kb
             )
@@ -1229,7 +1228,7 @@ def send_manual(
             message_type = 'photo'
 
         try:
-            edit_message(
+            await edit_message(
                 bot, message, message_type,
                 msg, kb, photo
             )
@@ -1237,8 +1236,8 @@ def send_manual(
             pass
 
 
-def send_violation(
-    bot: TeleBot,
+async def send_violation(
+    bot: AsyncTeleBot,
     message: Message,
     user_id: int,
     is_edit=False,
@@ -1247,7 +1246,7 @@ def send_violation(
     chat_id = message.chat.id
     mes_id = message.id
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -1269,12 +1268,12 @@ def send_violation(
     kb = kb_violation(lang, isToday, current.get('canEdit', False), is_edit)
 
     if is_first:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg,
             reply_markup=kb
         )
     else:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             msg,
             chat_id, mes_id,
             reply_markup=kb

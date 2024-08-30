@@ -61,7 +61,7 @@ def get_ton_manifest():
     })
 
 @app.route(base_url + '/vote_timeout', methods=['GET'])
-def vote_timeout():
+async def vote_timeout():
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
@@ -72,11 +72,11 @@ def vote_timeout():
     if stat_id is None or not stat_id.isnumeric():
         return Response(status=400)
 
-    send_vote(bot, int(stat_id))
+    await send_vote(bot, int(stat_id))
     return Response(status=200)
 
 @app.route(base_url + '/first_timeout', methods=['GET'])
-def first_timeout():
+async def first_timeout():
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
@@ -88,25 +88,25 @@ def first_timeout():
         return Response(status=400)
 
     try:
-        send_after_first_try(bot, int(user_id))
+        await send_after_first_try(bot, int(user_id))
     except:
         return Response(status=400)
     return Response(status=200)
 
 @app.route(base_url + '/stats_post', methods=['POST'])
-def stats_post():
+async def stats_post():
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
     if access_token is None or api_key is None or access_token != api_key:
         return Response(status=400)
 
-    send_week_stats(bot, is_new_week=True)
+    await send_week_stats(bot, is_new_week=True)
 
     return Response(status=200)
 
 @app.route(base_url + '/calc_post', methods=['GET'])
-def calc_post():
+async def calc_post():
     # access_token = db.get_access_token()
     # api_key = request.headers.get('tg-api-key')
 
@@ -117,12 +117,12 @@ def calc_post():
     if calc_id is None or not calc_id.isnumeric():
         return Response(status=400)
 
-    edit_channel_post(bot, int(calc_id))
+    await edit_channel_post(bot, int(calc_id))
 
     return Response(status=200)
 
 @app.route(base_url + '/live-info', methods=['POST'])
-def live_info():
+async def live_info():
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
@@ -144,7 +144,7 @@ def live_info():
         LiveStats(**res)
     )
 
-    edit_live_info(bot, live)
+    await edit_live_info(bot, live)
 
     return Response(status=200)
 

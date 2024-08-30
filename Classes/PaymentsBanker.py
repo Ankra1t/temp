@@ -1,7 +1,7 @@
 import hmac
 import json
 import requests
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from flask import Response, Request
 
 from Classes.GuardPaymentAccess import GuardPaymentAccess
@@ -20,7 +20,7 @@ from models import InvoiceBBanker, Price, UpdateBBanker
 class PaymentsBanker(object):
     """Класс обработки платежей, в том числе BitBanker"""
 
-    def __init__(self, api_key: str, api_secret: str, bot_instance: TeleBot, pay_guard: GuardPaymentAccess) -> None:
+    def __init__(self, api_key: str, api_secret: str, bot_instance: AsyncTeleBot, pay_guard: GuardPaymentAccess) -> None:
         self.bot = bot_instance
         self.token = api_key
         self.secret = api_secret
@@ -107,7 +107,7 @@ class PaymentsBanker(object):
 
     # # # # # # # Получение Webhooks
 
-    def get_updates(self, request: Request) -> Response:
+    async def get_updates(self, request: Request) -> Response:
         body: dict | None = request.get_json(True, True)
         if body is None:
             return Response(status=400)
@@ -120,7 +120,7 @@ class PaymentsBanker(object):
         true_amount = body['amount']
 
         if transaction:
-            self.bot.send_message(
+            await self.bot.send_message(
                 transaction['user_id'],
                 'Благодарим. Получили информацию о вашем платеже'
             )
@@ -168,7 +168,7 @@ class PaymentsBanker(object):
 
             update.payload = payload
 
-            self.invoice_paid(update)
+            await self.invoice_paid(update)
 
             return Response('Status OK!', status=200)
 
@@ -179,7 +179,7 @@ class PaymentsBanker(object):
             transaction = self.get_wait_transaction_by_invoice_id(
                 body['id'], body['currency'])
             if transaction:
-                self.bot.send_message(
+                await self.bot.send_message(
                     transaction['user_id'],
                     'Не смогли проверить корректность вашего платежа, обратитесь в нашу тех поддержку'
                 )
@@ -253,7 +253,7 @@ class PaymentsBanker(object):
         signature = hmac.digest(self.secret.encode("UTF-8"), text, 'sha256')
         return signature.hex()
 
-    def invoice_paid(self, update: UpdateBBanker) -> None:
+    async def invoice_paid(self, update: UpdateBBanker) -> None:
         if update.payload is None:
             return
 
@@ -267,7 +267,7 @@ class PaymentsBanker(object):
                 logger.info('-----> Нашли нужную транзакцию '
                             'далее transactions_complete [{}]'.format(transaction.id))
 
-                self.bot.send_message(
+                await self.bot.send_message(
                     transaction.user_id,
                     'Ваш платеж подтвержден и находиться в обработке'
                 )
@@ -287,7 +287,7 @@ class PaymentsBanker(object):
                 )
 
                 # Отправляем сообщение пользователю
-                self.bot.send_message(
+                await self.bot.send_message(
                     transaction.user_id,
                     text=paid_subscribe_msg(
                         transaction.user_id, finish_date, transaction.name
@@ -299,7 +299,7 @@ class PaymentsBanker(object):
 
                 user = db.get_user_by_tg_id(transaction.user_id)
                 if user is not None:
-                    notifier.send_notification('text', mess_user_paid(
+                    await notifier.send_notification('text', mess_user_paid(
                         user_id=user.id,
                         user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
                         summ_paid=summ_full,

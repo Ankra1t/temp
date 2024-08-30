@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from Classes import pay_guard
@@ -69,8 +69,8 @@ names = {
 }
 
 
-def choose_calculate_step(
-    bot: TeleBot,
+async def choose_calculate_step(
+    bot: AsyncTeleBot,
     user_id: int,
     message: Message,
     is_edit=False,
@@ -79,7 +79,7 @@ def choose_calculate_step(
     chat_id = message.chat.id
     mes_id = message.id
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         if last_value is not None:
             if data.get('last_values') is None:
                 data['last_values'] = [last_value]
@@ -148,7 +148,7 @@ def choose_calculate_step(
         text += msg_enter_pair_price(lang, pair)
         edit_to = pair
         state = ForexCalcState.pair_price
-        set_state_data(bot, user_id, chat_id, {'current_pair': pair})
+        await set_state_data(bot, user_id, chat_id, {'current_pair': pair})
 
     elif is_style_change:
         text += msg_enter_trading_style(lang)
@@ -177,7 +177,7 @@ def choose_calculate_step(
 
         keyboard = kb_price(lang, user_id, updated_risk is None, op_value)
     elif stop_loss == -1:
-        bot.send_message(
+        await bot.send_message(
             chat_id, msg_choose_direct(lang, user_id),
             reply_markup=kb_calc_direct(lang)
         )
@@ -199,12 +199,12 @@ def choose_calculate_step(
                     _, percent = stop_type.split('+')
                     rate = float(percent) * 0.01
 
-                set_state_data(
+                await set_state_data(
                     bot, user_id, chat_id, {
                         'atr': abs(value) * abs(rate)
                     }
                 )
-                bot.send_message(
+                await bot.send_message(
                     chat_id, msg_choose_direct(lang, value),
                     reply_markup=kb_calc_direct(lang)
                 )
@@ -217,27 +217,27 @@ def choose_calculate_step(
                 edit_to = names[lang]['sl']
                 state = CalculateState.stop_loss
             else:
-                bot.delete_message(chat_id, mes_id)
-                create_and_send_calc(bot, message, user_id, stop_loss)
+                await bot.delete_message(chat_id, mes_id)
+                await create_and_send_calc(bot, message, user_id, stop_loss)
                 return
 
-    bot.set_state(user_id, state, chat_id)
+    await bot.set_state(user_id, state, chat_id)
 
     if is_edit:
-        bot.edit_message_text(
+        await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=keyboard,
         )
         new_mes_id = mes_id
     else:
-        new_mes = bot.send_message(
+        new_mes = await bot.send_message(
             user_id, text,
             reply_markup=keyboard
         )
         new_mes_id = new_mes.id
 
     if not is_try:
-        set_state_data(
+        await set_state_data(
             bot, user_id, chat_id, {
                 'del_mes_id': new_mes_id,
                 'edit_mes': edit_to
@@ -245,8 +245,8 @@ def choose_calculate_step(
         )
 
 
-def choose_first_calculate_step(
-    bot: TeleBot, user_id: int, message: Message,
+async def choose_first_calculate_step(
+    bot: AsyncTeleBot, user_id: int, message: Message,
     type: MARKETS_TYPE,
     is_edit=False,
     is_continue=False,
@@ -298,19 +298,19 @@ def choose_first_calculate_step(
                             unfinished_calc.is_risk_percent]
 
     # Проверяем подписку
-    if not pay_guard.valid_use_calc(user_id, bot):
-        send_main(message, bot, user_id, True)
+    if not (await pay_guard.valid_use_calc(user_id, bot)):
+        await send_main(message, bot, user_id, True)
         return
 
-    bot.delete_state(user_id, chat_id)
+    await bot.delete_state(user_id, chat_id)
     if type == 'forex':
-        bot.set_state(user_id, ForexCalcState.pair, chat_id)
+        await bot.set_state(user_id, ForexCalcState.pair, chat_id)
     else:
-        bot.set_state(user_id, CalculateState.tool, chat_id)
+        await bot.set_state(user_id, CalculateState.tool, chat_id)
 
     liteDb.addStartCalcCount(user_id)
 
-    set_state_data(
+    await set_state_data(
         bot, user_id, chat_id, {
             'tool': None if not is_try else 'BTC/USDT',
             'open_price': None if not is_try else 62000,
@@ -328,14 +328,14 @@ def choose_first_calculate_step(
             'is_from_deposit': is_from_deposit,
         } | prev_values
     )
-    choose_calculate_step(bot, user_id, message, is_edit)
+    await choose_calculate_step(bot, user_id, message, is_edit)
 
 
-def send_calc_start(bot: TeleBot, message: Message, user_id: int, is_continue=False, is_try=False, is_edit=False, is_channel_calc=False):
+async def send_calc_start(bot: AsyncTeleBot, message: Message, user_id: int, is_continue=False, is_try=False, is_edit=False, is_channel_calc=False):
     user_db_id = db.get_user_id_by_tg_id(user_id)
     u_base = db.get_calc_user_settings(user_db_id)
     market = u_base.market if (u_base is not None) else 'crypto'
 
-    choose_first_calculate_step(
+    await choose_first_calculate_step(
         bot, user_id, message, market, is_edit, is_continue, is_try, is_channel_calc
     )

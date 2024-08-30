@@ -1,5 +1,5 @@
 import traceback
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 from flask import Request, Response
 from yookassa import Configuration, Payment
 from requests.exceptions import HTTPError
@@ -90,7 +90,7 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str, user
     return url
 
 
-def yooKassa_payment_updates(bot: TeleBot, request: Request):
+async def yooKassa_payment_updates(bot: AsyncTeleBot, request: Request):
     body: dict | None = request.get_json(True, True)
     if body is None:
         return Response(status=400)
@@ -145,13 +145,13 @@ def yooKassa_payment_updates(bot: TeleBot, request: Request):
                     refer.id, refer.refer_sum + int(transaction.sum * 0.2)
                 )
 
-        bot.send_message(
+        await bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
                 user.tg_id, finish_date_show, transaction.name
             ),
         )
-        notifier.send_notification('text', mess_user_paid(
+        await notifier.send_notification('text', mess_user_paid(
             user_id=user.id,
             user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
             summ_paid=summ_full,

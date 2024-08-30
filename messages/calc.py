@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Literal
 import requests
-from telebot import TeleBot
+from telebot.async_telebot import AsyncTeleBot
 
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
@@ -20,10 +20,10 @@ months = {'ru': [
 ]}
 
 
-def msg_calculate(bot: TeleBot, user_id: int, chat_id: int, is_try=False):
+async def msg_calculate(bot: AsyncTeleBot, user_id: int, chat_id: int, is_try=False):
     lang = get_lang(user_id)  # TODO - delete
 
-    with bot.retrieve_data(user_id, chat_id) as data:
+    async with bot.retrieve_data(user_id, chat_id) as data:
         updated_risk = data.get('updated_risk') or 1.
         type = data.get('calc_type')
         ticker = data.get('ticker')
