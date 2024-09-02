@@ -390,6 +390,8 @@ def msg_channel_calculation(
     date: str | None = None,
     try_link: str = '',
 ):
+    description = description if lang == 'ru' else None
+
     monthCount = tickerInfo.monthCount if tickerInfo is not None else 0
     status = calc.status
 
@@ -562,7 +564,7 @@ def msg_channel_calculation(
     ) \
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]} ({current_values_sum}{trading_currency})' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
-        + (f'\n\n{calc.comment.strip()}' if calc.comment else '') \
+        + (f'\n\n{calc.comment.strip()}' if (calc.comment and lang == 'ru') else '') \
         + (
             (
                 f'\n\n<b>{month}:</b> '
@@ -693,7 +695,7 @@ def msg_channel_calc_result(
     if t_style is not None:
         trading_style_type += f'{t_style.capitalize()}'
         if time != '':
-            trading_style_type += f' ({texts[lang][time]})\n'
+            trading_style_type += f' ({texts[lang][time]})'
 
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
