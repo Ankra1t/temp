@@ -1010,6 +1010,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
                         marathon += f'{get_print_float(week_value, 1)} тейков'
                     else:
                         marathon += f'{get_print_float(abs(week_value), 1)} стоп'
+                    week_value = 0
                 continue
 
             marathon += f'\n{i + 1} день - '
