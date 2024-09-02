@@ -392,7 +392,7 @@ def msg_enter_deposit(lang: LANGUAGES_TYPE, current: str | None = None):
 
     current_value = ''
     if current is not None and current != '':
-        current_value = f'\n<b>{msg_current_value(lang)}</b>:' + current
+        current_value = f'\n<b>{msg_current_value(lang)}</b>: {current}'
 
     return f'👉 {texts[lang]}?' + current_value
 

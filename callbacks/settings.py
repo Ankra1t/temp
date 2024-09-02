@@ -18,7 +18,7 @@ from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_
 from messages.main import msg_success_base_set, msg_welcome
 
 from common.calc_step import choose_calculate_step
-from common.utils import delete_message, get_lang, set_state_data
+from common.utils import delete_message, get_lang, get_print_float, set_state_data
 
 from keyboards.main import kb_first_calc
 from keyboards.settings import (
@@ -60,7 +60,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
         current_value = ''
         if u_base is not None and u_base.deposit is not None:
-            current_value = f'{u_base.deposit} {u_base.currency or ""}'
+            current_value = f'{get_print_float(u_base.deposit, 2)} {u_base.currency or ""}'
 
         await bot.edit_message_text(
             msg_enter_deposit(lang, current_value),
@@ -208,17 +208,17 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     if 'choose_lang' in type:
         is_edit_lang = False
 
-        for lang in LANGUAGES:
-            if f'_{lang}' in type:
+        for langg in LANGUAGES:
+            if f'_{langg}' in type:
                 is_edit_lang = True
-                db.set_user_lang(user_db_id, lang)
+                db.set_user_lang(user_db_id, langg)
 
                 if 'first' in type:
                     liteDb.setFirstLang(user_id)
 
                     await bot.edit_message_text(
-                        msg_welcome(lang), chat_id, mes_id,
-                        reply_markup=kb_first_calc(lang),
+                        msg_welcome(langg), chat_id, mes_id,
+                        reply_markup=kb_first_calc(langg),
                         disable_web_page_preview=True
                     )
 
@@ -228,7 +228,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
                     if sent_messages:
                         await notifier.change_user_choosed_lang(
-                            user_db_id, lang, sent_messages
+                            user_db_id, langg, sent_messages
                         )
                 else:
                     await send_settings(bot, call.message, user_id)
