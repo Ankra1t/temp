@@ -997,6 +997,7 @@ def send_week_stats(bot: TeleBot, calcId: int | None = None, is_new_week=False):
 
         marathon = '<b>Марафон 30 дней:</b>'
         for i, el in enumerate(marathon_data):
+            print(f'ДЕНЬ {i + 1} | {el}')
             if len(marathon_data) - week_num * 7 >= 7:
                 week_value += (el or 0)
 
