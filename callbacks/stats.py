@@ -4,7 +4,8 @@ from random import randint
 from time import sleep
 from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage, InputPollOption
+from telebot.states.asyncio.context import StateContext
 
 from selenium import webdriver as wd
 from selenium.webdriver.common.by import By
@@ -21,7 +22,7 @@ from states.calculate import CalculateState, ForexCalcState
 from states.stats import ChannelCalcState, StatsState
 
 from common.calculation import get_count_value_bet
-from common.utils import delete_message, edit_message, get_lang, get_print_float, set_state_data, antiflood
+from common.utils import delete_message, edit_message, get_lang, get_print_float, antiflood
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from data.data import liteDb
@@ -31,10 +32,11 @@ from config_logger import logger
 from db import db
 from Classes import calcService, pay_guard
 from messages.stats import msg_market_stats
-from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveStats, LiveWait, SentMessages
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveStats, LiveWait, SentMessages, CallbackQuery
 from services import calculation, channel_calc, ticker
 
-from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation, months # TODO - months в commmon файл
+# TODO - months в commmon файл
+from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation, months
 from messages.enter import msg_enter_calc_img_text, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 from messages.main import msg_frozen
 from messages.common import transl_status
@@ -184,7 +186,10 @@ def createScreen(
     return file_path
 
 
-async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = stats_factory.parse(call.data)
     type = callback_data.get('type', '')
     calc_id = int(callback_data.get('stat_id', 0))
@@ -208,8 +213,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
         _, time = type.split('+')
         date = get_datetime_now() + timedelta(hours=int(time))
 
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            market: MARKETS_TYPE | None = data.get('market')
+        data = state.data()
+        market: MARKETS_TYPE | None = data.get('market')
 
         db.set_user_calc_freeze(user_db_id, date, market)
 
@@ -217,10 +222,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             msg_frozen(lang, get_str_by_datetime(date)),
             chat_id, mes_id
         )
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
 
     if 'profit' in type:
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
         _, profit = type.split('+')
 
         if profit == '':
@@ -237,8 +242,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 return
 
             if profit == '-':
-                await bot.set_state(user_id, StatsState.loss, chat_id)
-                await set_state_data(bot, user_id, chat_id, {'stat_id': calc_id})
+                await state.set(StatsState.loss)
+                await state.add_data(stat_id=calc_id)
                 await bot.edit_message_text(
                     msg_enter_profit_minus(lang),
                     chat_id, mes_id,
@@ -278,8 +283,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                     )
 
     if type == 'sum':
-        await bot.set_state(user_id, StatsState.sum, chat_id)
-        await set_state_data(bot, user_id, chat_id, {'stat_id': calc_id})
+        await state.set(StatsState.sum)
+        await state.add_data(stat_id=calc_id)
         await bot.edit_message_text(
             msg_enter_profit_sum(lang),
             chat_id, mes_id,
@@ -298,7 +303,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             )
 
         await send_stats(bot, call.message, user_id,
-                   calc is not None and not calc.openedList)
+                         calc is not None and not calc.openedList)
 
     if type == 'stats_market':
         stats = calcService.get_stats(user_id, stats_market)
@@ -416,12 +421,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 msg_enter_open_price(lang),
                 kb_deal_profit_cancel(lang, calc_id)
             )
-            await bot.set_state(user_id, CalculateState.open_price, chat_id)
-            await set_state_data(
-                bot, user_id, chat_id, {
-                    'stat_id': calc_id,
-                    'del_mes_id': call.message.id
-                }
+            await state.set(CalculateState.open_price)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id
             )
         elif kind == 'stop_loss':
             await edit_message(
@@ -429,12 +432,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 msg_enter_stop_loss(lang),
                 kb_deal_profit_cancel(lang, calc_id)
             )
-            await bot.set_state(user_id, CalculateState.stop_loss, chat_id)
-            await set_state_data(
-                bot, user_id, chat_id, {
-                    'stat_id': calc_id,
-                    'del_mes_id': call.message.id
-                }
+            await state.set(CalculateState.stop_loss)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id
             )
         elif kind == 'tool':
             calc = calculation.get(calc_id)
@@ -442,22 +443,20 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 return
 
             if calc.forexInfo is not None:
-                state = ForexCalcState.pair
+                new_state = ForexCalcState.pair
                 msg = msg_enter_pair(lang)
             else:
-                state = CalculateState.tool
+                new_state = CalculateState.tool
                 msg = msg_enter_tool(lang, calc.market)
 
             await edit_message(
                 bot, call.message, 'text', msg,
                 kb_deal_profit_cancel(lang, calc_id)
             )
-            await bot.set_state(user_id, state, chat_id)
-            await set_state_data(
-                bot, user_id, chat_id, {
-                    'stat_id': calc_id,
-                    'del_mes_id': call.message.id
-                }
+            await state.set(new_state)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id
             )
         elif 'style' in kind:
             stc = '+stc' if '_stc' in type else ''
@@ -466,12 +465,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 msg_enter_trading_style(lang),
                 kb_trading_style(lang, 'ch_calc' + stc)
             )
-            await bot.set_state(user_id, CalculateState.trading_style, chat_id)
-            await set_state_data(
-                bot, user_id, chat_id, {
-                    'stat_id': calc_id,
-                    'del_mes_id': call.message.id
-                }
+            await state.set(CalculateState.trading_style)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id
             )
         elif 'take' in kind:
             calc = calculation.get(calc_id)
@@ -519,12 +516,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
         new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
-        await bot.set_state(user_id, StatsState.add_image_text, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'stat_id': calc_id,
-            'calc_text': text,
-            'del_mes_id': new_mes_id,
-        })
+        await state.set(StatsState.add_image_text)
+        await state.add_data(
+            stat_id=calc_id,
+            calc_text=text,
+            del_mes_id=new_mes_id,
+        )
 
     if type == 'comment':
         calc = calculation.get(calc_id)
@@ -536,12 +533,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
         new_mes_id = edit_message(bot, call.message, 'text', text, kb)
 
-        await bot.set_state(user_id, StatsState.add_image_text, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'stat_id': calc_id,
-            'type': 'stats',
-            'del_mes_id': new_mes_id,
-        })
+        await state.set(StatsState.add_image_text)
+        await state.add_data(
+            stat_id=calc_id,
+            type='stats',
+            del_mes_id=new_mes_id,
+        )
 
     if type == 'send_to_channels':
         calc = calculation.get(calc_id)
@@ -712,11 +709,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             kb_send_back(calc_id)
         )
 
-        await bot.set_state(user_id, StatsState.send_add_text, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': new_mes_id, 'stat_id': calc_id
-            }
+        await state.set(StatsState.send_add_text)
+        await state.add_data(
+            del_mes_id=new_mes_id, stat_id=calc_id
         )
 
     if type == 'stc+photo':
@@ -726,11 +721,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             kb_send_back(calc_id)
         )
 
-        await bot.set_state(user_id, StatsState.send_add_photo, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': new_mes_id, 'stat_id': calc_id
-            }
+        await state.set(StatsState.send_add_photo)
+        await state.add_data(
+            del_mes_id=new_mes_id, stat_id=calc_id
         )
 
     if type == 'stc+time':
@@ -843,14 +836,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 calc.tpRatio, calc_id, True
             )
         )
-        await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': mes_id,
-                'stat_id': calc_id,
-                'is_calc': True,
-                'type': 'take'
-            }
+        await state.set(ChannelCalcState.loss)
+        await state.add_data(
+            del_mes_id=mes_id,
+            stat_id=calc_id,
+            is_calc=True,
+            type='take'
         )
 
     if type == 'result_stop':
@@ -863,14 +854,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 calc_id, True
             )
         )
-        await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': mes_id,
-                'stat_id': calc_id,
-                'is_calc': True,
-                'type': 'stop'
-            }
+        await state.set(ChannelCalcState.loss)
+        await state.add_data(
+            del_mes_id=mes_id,
+            stat_id=calc_id,
+            is_calc=True,
+            type='stop'
         )
 
     if 'list+' in type:
@@ -912,7 +901,7 @@ async def send_vote(bot: AsyncTeleBot, stat_id: int):
                 ans = ['Yes', 'No']
 
         await bot.send_poll(
-            CHANNEL_ID, q, ans, True
+            CHANNEL_ID, q, [InputPollOption(el) for el in ans], True
         )
 
     if stat_id in loading_vote_message_ids:
@@ -1412,7 +1401,8 @@ async def edit_live_info(
                 )
 
                 msg += '\n<b>'
-                msg += months[lang][int(current_date.split('.')[1]) - 1].capitalize()
+                msg += months[lang][int(current_date.split('.')
+                                        [1]) - 1].capitalize()
                 msg += ':</b> '
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
@@ -1493,7 +1483,7 @@ async def edit_live_info(
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(StatsCallbackFilter())
     bot.register_callback_query_handler(
-        _main_callback_handler, # type: ignore
+        _main_callback_handler,  # type: ignore
         lambda _: True, pass_bot=True,
         main=stats_factory.filter()
     )

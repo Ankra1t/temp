@@ -1,5 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+
+from models import CallbackQuery
 
 from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
 
@@ -12,8 +14,11 @@ from pages.admin import (
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
-    data = admin_main_factory.parse(call.data)
-    type = data.get('type', '')
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
+    callback_data = admin_main_factory.parse(call.data)
+    type = callback_data.get('type', '')
 
     user_id = call.from_user.id
     chat_id = call.message.chat.id

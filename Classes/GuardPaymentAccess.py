@@ -1,11 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
-from typing import Literal, Optional
+from typing import Optional
 from datetime import datetime, timedelta
 
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from db import db
-from models import User, Subscribe, Transactions, PRODUCT_TYPE
+from models import Subscribe, Transactions, PRODUCT_TYPE
 
 
 class GuardPaymentAccess():
@@ -168,23 +168,23 @@ class GuardPaymentAccess():
         user_db_id = db.get_user_id_by_tg_id(tg_id)
         db.set_subscribe_unactive_by_user_id(user_db_id)
 
-    def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
-        if user.subscribe is None:
-            return
+    # def update_user_subscribe_findate(self, user: User, direct: Literal['add', 'deduct']):
+    #     if user.subscribe is None:
+    #         return
 
-        subscribe_id = user.subscribe.id
-        current_date = user.subscribe.finish_dt
-        days: int = user.subscribe_days or 0
+    #     subscribe_id = user.subscribe.id
+    #     current_date = user.subscribe.finish_dt
+    #     days: int = user.subscribe_days or 0
 
-        current_date_obj = current_date
+    #     current_date_obj = current_date
 
-        if direct == 'add':
-            finish_date = current_date_obj + timedelta(days=int(days))
-        else:
-            finish_date = current_date_obj - timedelta(days=int(days))
+    #     if direct == 'add':
+    #         finish_date = current_date_obj + timedelta(days=int(days))
+    #     else:
+    #         finish_date = current_date_obj - timedelta(days=int(days))
 
-        db.set_subscribe_findate(subscribe_id or 0, finish_date)
-        return finish_date
+    #     db.set_subscribe_findate(subscribe_id or 0, finish_date)
+    #     return finish_date
 
     def cancel_subscribes_for_time_type(self, time_type, count):
         """Отменить подписку за прошедший период"""

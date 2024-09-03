@@ -1,8 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from db import db
+from models import CallbackQuery
 
 from messages.education import curs_contents, curs, termins
 from keyboards.education import (
@@ -14,6 +15,9 @@ from pages.user import send_user_main, send_user_terms, send_user_education
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = user_education_factory.parse(call.data)
     type = callback_data.get('type', '')
     page = int(callback_data.get('page', -1))

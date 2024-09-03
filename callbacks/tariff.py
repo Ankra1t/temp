@@ -1,9 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 from Classes.CryptoBot import cryptoPay_create_payment
-from common.utils import delete_message, get_lang, set_state_data
+from common.utils import delete_message, get_lang
+from models import CallbackQuery
 from db import db
 
 from states.tariff import TariffState
@@ -17,7 +19,10 @@ from keyboards.tariff import (
 from pages.calculate import send_main, send_tariffs_list_item
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data: dict = user_tariff_factory.parse(call.data)
     type = callback_data.get('type', '')
     target_id = callback_data.get('tariff_id', '')
@@ -58,8 +63,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             return
 
         bot.send_message(chat_id, msg_enter_email(user_id))
-        bot.set_state(user_id, TariffState.email, chat_id)
-        set_state_data(bot, user_id, chat_id, {'tariff_id': target_id})
+        state.set(TariffState.email)
+        state.add_data(tariff_id=target_id)
 
     elif type == 'pay_tariff_cb':
         if is_rus:

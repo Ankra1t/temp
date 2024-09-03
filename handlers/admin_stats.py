@@ -1,20 +1,21 @@
 from datetime import datetime, timedelta
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 
-from common.utils import text_accept, set_state_data
+from common.utils import text_accept
 from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
+from models import Message
 from Classes import base_statis
 
 from states.admin_stats import AdminStatisticsState
 from keyboards.admin_stats import kb_statistics_back
 
 
-async def handle_start_date(message: Message, bot: AsyncTeleBot):
+async def handle_start_date(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -37,10 +38,9 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot):
     start_date_obj -= timedelta(hours=3)
 
     if current_state == 'AdminStatisticsState:start_date':
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'start_date_obj': start_date_obj
-            })
+        await state.add_data(
+            start_date_obj=start_date_obj
+        )
 
         await bot.send_message(
             chat_id,
@@ -48,7 +48,7 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot):
             reply_markup=kb_statistics_back()
         )
 
-        await bot.set_state(user_id, AdminStatisticsState.fin_date, chat_id)
+        await state.set(AdminStatisticsState.fin_date)
 
     if current_state == 'AdminStatisticsState:start_date_only':
         start_date_filter = start_date_obj.strftime(DATE_FORMAT)
@@ -72,10 +72,10 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot):
             reply_markup=kb_statistics_back()
         )
 
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
 
 
-async def handle_fin_date(message: Message, bot: AsyncTeleBot):
+async def handle_fin_date(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -94,8 +94,8 @@ async def handle_fin_date(message: Message, bot: AsyncTeleBot):
 
     fin_date_obj -= timedelta(hours=3)
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        start_date_obj: datetime = data.get('start_date_obj')
+    data = state.data()
+    start_date_obj: datetime = data.get('start_date_obj', {})
 
     start_date_filter = start_date_obj.strftime(DATE_FORMAT)
     fin_date_filter = fin_date_obj.strftime(DATE_FORMAT)
@@ -118,7 +118,7 @@ async def handle_fin_date(message: Message, bot: AsyncTeleBot):
         reply_markup=kb_statistics_back()
     )
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
 def registration(bot: AsyncTeleBot):

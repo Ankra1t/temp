@@ -1,11 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 
 from Classes import pay_guard
 from data.data import liteDb
 from db import db
-from common.utils import get_lang, set_state_data
-from models import MARKETS_TYPE, ForexInfo
+from common.utils import get_lang
+from models import MARKETS_TYPE, ForexInfo, Message
 from services import ticker
 
 from states.calculate import CalculateState, ForexCalcState
@@ -79,25 +78,34 @@ async def choose_calculate_step(
     chat_id = message.chat.id
     mes_id = message.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        if last_value is not None:
-            if data.get('last_values') is None:
-                data['last_values'] = [last_value]
-            else:
-                data['last_values'].append(last_value)
+    data = bot.retrieve_data(user_id, chat_id) or {}
 
-        calc_type: MARKETS_TYPE = data.get('calc_type')
-        forex: ForexInfo | None = data.get('forex')
-        open_price = data.get('open_price')
-        trading_style = data.get('trading_style')
-        tool = data.get('tool')
-        deposit = data.get('deposit')
-        currency = data.get('currency')
-        risk = data.get('risk')
-        updated_risk = data.get('updated_risk')
-        is_try = data.get('is_try', False)
-        stop_type = data.get('stop_type', 'default')
-        stop_loss = data.get('stop_loss')
+    if last_value is not None:
+        last_values = data.get('last_values')
+        if last_values is None:
+            await bot.add_data(
+                user_id, chat_id,
+                last_values=[last_value]
+            )
+        else:
+            last_values.append(last_value)
+            await bot.add_data(
+                user_id, chat_id,
+                last_values=last_values
+            )
+
+    calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
+    forex: ForexInfo | None = data.get('forex')
+    open_price = data.get('open_price')
+    trading_style = data.get('trading_style')
+    tool = data.get('tool', '')
+    deposit = data.get('deposit')
+    currency = data.get('currency')
+    risk = data.get('risk')
+    updated_risk = data.get('updated_risk')
+    is_try = data.get('is_try', False)
+    stop_type = data.get('stop_type', 'default')
+    stop_loss = data.get('stop_loss')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
@@ -110,19 +118,19 @@ async def choose_calculate_step(
     if currency is None:
         text += msg_enter_currency(lang)
         edit_to = names[lang]['currency']
-        state = CalculateState.currency
+        new_state = CalculateState.currency
         keyboard = kb_change_currency(lang, 'calc')
 
     elif calc_type == 'forex' and forex is None:
         text += msg_enter_pair(lang)
         edit_to = names[lang]['pair']
-        state = ForexCalcState.pair
+        new_state = ForexCalcState.pair
         keyboard = kb_pair(lang)
 
     elif calc_type != 'forex' and tool is None:
         text += msg_enter_tool(lang, calc_type)
         edit_to = names[lang]['tool']
-        state = CalculateState.tool
+        new_state = CalculateState.tool
 
         if is_try:
             last_tools = ['BTC', 'ETH', 'TON']
@@ -147,29 +155,33 @@ async def choose_calculate_step(
 
         text += msg_enter_pair_price(lang, pair)
         edit_to = pair
-        state = ForexCalcState.pair_price
-        await set_state_data(bot, user_id, chat_id, {'current_pair': pair})
+        new_state = ForexCalcState.pair_price
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            current_pair=pair
+        )
 
     elif is_style_change:
         text += msg_enter_trading_style(lang)
         edit_to = names[lang]['style']
-        state = CalculateState.trading_style
+        new_state = CalculateState.trading_style
         keyboard = kb_trading_style(lang, 'calc')
 
     elif deposit is None:
         text += msg_enter_deposit(lang)
         edit_to = names[lang]['dep']
-        state = CalculateState.deposit
+        new_state = CalculateState.deposit
 
     elif risk is None:
         text += msg_enter_risk_percent(lang)
         edit_to = names[lang]['risk']
-        state = CalculateState.risk_percent
+        new_state = CalculateState.risk_percent
 
     elif open_price is None:
         text += msg_enter_open_price(lang, is_try)
         edit_to = names[lang]['op']
-        state = CalculateState.open_price
+        new_state = CalculateState.open_price
 
         op_value = None
         if calc_type == 'forex' and forex is not None:
@@ -186,7 +198,7 @@ async def choose_calculate_step(
         if 'atr' in stop_type:
             text += msg_enter_atr(lang)
             edit_to = names[lang]['atr']
-            state = CalculateState.stop_atr
+            new_state = CalculateState.stop_atr
 
             atr_settings = liteDb.getUserAtrSettings(user_id)
             period, count = atr_settings[1].split('+')
@@ -199,10 +211,10 @@ async def choose_calculate_step(
                     _, percent = stop_type.split('+')
                     rate = float(percent) * 0.01
 
-                await set_state_data(
-                    bot, user_id, chat_id, {
-                        'atr': abs(value) * abs(rate)
-                    }
+                await bot.add_data(
+                    chat_id=chat_id,
+                    user_id=user_id,
+                    atr=abs(value) * abs(rate)
                 )
                 await bot.send_message(
                     chat_id, msg_choose_direct(lang, value),
@@ -215,13 +227,13 @@ async def choose_calculate_step(
             if stop_loss is None:
                 text += msg_enter_stop_loss(lang, is_try)
                 edit_to = names[lang]['sl']
-                state = CalculateState.stop_loss
+                new_state = CalculateState.stop_loss
             else:
                 await bot.delete_message(chat_id, mes_id)
                 await create_and_send_calc(bot, message, user_id, stop_loss)
                 return
 
-    await bot.set_state(user_id, state, chat_id)
+    await bot.set_state(user_id, new_state, chat_id)
 
     if is_edit:
         await bot.edit_message_text(
@@ -237,11 +249,11 @@ async def choose_calculate_step(
         new_mes_id = new_mes.id
 
     if not is_try:
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': new_mes_id,
-                'edit_mes': edit_to
-            }
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            del_mes_id=new_mes_id,
+            edit_mes=edit_to
         )
 
 
@@ -310,23 +322,27 @@ async def choose_first_calculate_step(
 
     liteDb.addStartCalcCount(user_id)
 
-    await set_state_data(
-        bot, user_id, chat_id, {
-            'tool': None if not is_try else 'BTC/USDT',
-            'open_price': None if not is_try else 62000,
-            'stop_loss': (-1 if is_channel_calc else None) if not is_try else 61800,
+    state_data = {
+        'tool': None if not is_try else 'BTC/USDT',
+        'open_price': None if not is_try else 62000,
+        'stop_loss': (-1 if is_channel_calc else None) if not is_try else 61800,
 
-            'calc_type': type if not is_try else 'crypto',
-            'stop_type': (stop_type or '') if not is_try else 'default',
+        'calc_type': type if not is_try else 'crypto',
+        'stop_type': (stop_type or '') if not is_try else 'default',
 
-            'trading_style': style,
-            'trading_type': trading_type,
-            'deposit': deposit if not is_try else 10000,
-            'currency': currency if not is_try else 'USDT',
-            'risk': risk if not is_try else (1, True),
-            'is_try': is_try,
-            'is_from_deposit': is_from_deposit,
-        } | prev_values
+        'trading_style': style,
+        'trading_type': trading_type,
+        'deposit': deposit if not is_try else 10000,
+        'currency': currency if not is_try else 'USDT',
+        'risk': risk if not is_try else (1, True),
+        'is_try': is_try,
+        'is_from_deposit': is_from_deposit,
+    } | prev_values
+
+    await bot.add_data(
+        chat_id=chat_id,
+        user_id=user_id,
+        **state_data
     )
     await choose_calculate_step(bot, user_id, message, is_edit)
 

@@ -1,15 +1,14 @@
 from typing import Literal
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt
 
 from db import db
 from messages.common import transl_market
-from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE
+from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
 from services import calculation, channel_calc
 
 

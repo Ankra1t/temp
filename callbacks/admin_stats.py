@@ -1,7 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from Classes import base_statis
+from models import CallbackQuery
 
 from states.admin_stats import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
@@ -14,7 +16,10 @@ from keyboards.admin_stats import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = admin_statistics_factory.parse(call.data)
     type = callback_data.get('type', '')
     filter = callback_data.get('filter', '')
@@ -66,7 +71,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         summ_calc = base_statis.summ_by_product('calc')
         summ_calc_signals = base_statis.summ_by_product('calc_signals')
 
-
         await bot.edit_message_text(
             admin_statistics_products(count_signals=count_signals, summ_signals=summ_signals,
                                       count_calc=count_calc, summ_calc=summ_calc,
@@ -83,6 +87,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             f'Список клиентов с платежами, по выбранному продукту:', chat_id, mes_id,
             reply_markup=None
         )
+
         await base_statis.show_paid_users(bot, call.message, product=clients_by_products)
         await bot.send_message(
             chat_id,
@@ -92,9 +97,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     elif type == 'stat_pay_clients':
         await bot.edit_message_text(
-                'Список клиентов с платежами:', chat_id, mes_id,
-                reply_markup=None
-            )
+            'Список клиентов с платежами:', chat_id, mes_id,
+            reply_markup=None
+        )
 
         await base_statis.show_paid_users(bot, call.message)
 
@@ -125,7 +130,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             reply_markup=kb_statistics_back()
         )
 
-        await bot.set_state(user_id, AdminStatisticsState.start_date_only, chat_id)
+        await state.set(AdminStatisticsState.start_date_only)
 
     elif type == 'stat_pay_period_choose_start_to_end':
         # Установить статус
@@ -134,7 +139,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             reply_markup=kb_statistics_back()
         )
 
-        await bot.set_state(user_id, AdminStatisticsState.start_date, chat_id)
+        await state.set(AdminStatisticsState.start_date)
 
     await bot.answer_callback_query(call.id)
 
@@ -142,8 +147,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminStatisticsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_params=admin_statistics_factory.filter())
-
-

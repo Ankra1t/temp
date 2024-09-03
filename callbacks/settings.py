@@ -1,13 +1,14 @@
 from typing import Any
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from NOTIFIER import notifier
 from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import text_editor
-from models import LANGUAGES
+from models import LANGUAGES, CallbackQuery
 from services import auth, calculation
 
 from states.settings import FirstCalcState, SettingsState
@@ -18,7 +19,7 @@ from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_
 from messages.main import msg_success_base_set, msg_welcome
 
 from common.calc_step import choose_calculate_step
-from common.utils import delete_message, get_lang, get_print_float, set_state_data
+from common.utils import delete_message, get_lang, get_print_float
 
 from keyboards.main import kb_first_calc
 from keyboards.settings import (
@@ -36,7 +37,10 @@ from pages.calculate import (
 )
 
 
-async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = settings_factory.parse(call.data)
     type = callback_data.get('type', '')
 
@@ -67,7 +71,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             chat_id, mes_id,
             reply_markup=kb_deposit_cancel(lang)
         )
-        await bot.set_state(user_id, SettingsState.deposit, chat_id)
+        await state.set(SettingsState.deposit)
 
     if type == 'set_risk_percent':
         await bot.edit_message_text(
@@ -75,7 +79,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             chat_id, mes_id,
             reply_markup=kb_base_cancel(lang)
         )
-        await bot.set_state(user_id, SettingsState.risk_percent, chat_id)
+        await state.set(SettingsState.risk_percent)
 
     if type == 'set_day_risk':
         await bot.edit_message_text(
@@ -83,7 +87,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             chat_id, mes_id,
             reply_markup=kb_base_cancel(lang)
         )
-        await bot.set_state(user_id, SettingsState.day_risk, chat_id)
+        await state.set(SettingsState.day_risk)
 
     if type == 'set_round_count':
         if add_count == '':
@@ -98,7 +102,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_round_count(lang, current_value)
             )
-            await bot.set_state(user_id, SettingsState.round_count, chat_id)
+            await state.set(SettingsState.round_count)
         else:
             add_count = int(add_count)
             db.set_user_round_count(user_db_id, min(max(add_count, 0), 5))
@@ -109,7 +113,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
     if 'ss_' in type:
         if trading_value == '':
-            await bot.set_state(user_id, SettingsState.trading_style, chat_id)
+            await state.set(SettingsState.trading_style)
             await bot.edit_message_text(
                 msg_enter_trading_style(lang),
                 chat_id, mes_id,
@@ -121,8 +125,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 value = None
 
             if 'ch_calc' in type:
-                async with bot.retrieve_data(user_id, chat_id) as data:
-                    stat_id = data.get('stat_id')
+                data = state.data()
+                stat_id = data.get('stat_id', 0)
 
                 calc_info = calculation.get(stat_id)
                 if calc_info is None:
@@ -139,15 +143,13 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                         bot, call.message,
                         user_id, calc_info
                     )
-                await bot.delete_state(user_id, chat_id)
+                await state.delete()
 
             elif 'calc' in type:
                 value = value or False
 
-                await set_state_data(
-                    bot, user_id, chat_id, {
-                        'trading_style': value
-                    }
+                await state.add_data(
+                    trading_style=value
                 )
                 await choose_calculate_step(
                     bot, user_id, call.message, True, last_value='trading_style'
@@ -178,22 +180,20 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_change_currency(lang)
             )
-            await bot.set_state(user_id, SettingsState.currency, chat_id)
+            await state.set(SettingsState.currency)
         else:
             _, currency = type.split('+')
 
             if 'welcome' in type:
                 db.set_user_currency(user_db_id, currency.upper())
-                await bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+                await state.set(FirstCalcState.deposit)
                 await bot.edit_message_text(
                     msg_enter_deposit(lang), chat_id, mes_id
                 )
             else:
                 if 'calc' in type:
-                    await set_state_data(
-                        bot, user_id, chat_id, {
-                            'currency': currency.upper()
-                        }
+                    await state.add_data(
+                        currency=currency.upper()
                     )
                     await choose_calculate_step(
                         bot, user_id, call.message, True, last_value='currency'
@@ -306,14 +306,13 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                         msg_enter_currency(lang), chat_id, mes_id,
                         reply_markup=kb_change_currency(lang, 'welcome')
                     )
-                    await bot.set_state(user_id, SettingsState.currency, chat_id)
-                    await set_state_data(
-                        bot, user_id, chat_id,
-                        {'action': 'welcome'}
+                    await state.set(SettingsState.currency)
+                    await state.add_data(
+                        action='welcome'
                     )
                 else:
                     db.set_user_currency(user_db_id, currency)
-                    await bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+                    await state.set(FirstCalcState.deposit)
                     await bot.edit_message_text(
                         msg_enter_deposit(lang), chat_id, mes_id
                     )
@@ -321,7 +320,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 await send_settings(bot, call.message, user_id)
 
     if type == 'first_dep':
-        await bot.set_state(user_id, FirstCalcState.deposit, chat_id)
+        await state.set(FirstCalcState.deposit)
         await bot.edit_message_text(
             msg_enter_deposit(lang), chat_id, mes_id
         )
@@ -335,8 +334,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 msg_enter_currency(lang), chat_id, mes_id,
                 reply_markup=kb_change_currency(lang, 'welcome')
             )
-            await bot.set_state(user_id, SettingsState.currency, chat_id)
-            await set_state_data(bot, user_id, chat_id, {'action': 'welcome'})
+            await state.set(SettingsState.currency)
+            await state.add_data(
+                action='welcome'
+            )
 
     if 'reset' in type:
         if '_yes' in type:
@@ -379,51 +380,54 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
             # Стираем state и задаем новый
             # State ничего не отслеживает, задается для сохранения данных
-            await bot.delete_state(user_id, chat_id)
-            await bot.set_state(user_id, SettingsState.summury_profit, chat_id)
+            await state.delete()
+            await state.set(SettingsState.summury_profit)
         else:
-            async with bot.retrieve_data(user_id, chat_id) as data:
-                # Получаем текущие данные
-                current_tp_ratio: list[int] = data.get('take_profit', [])
-                current_split: list[float] = data.get('split', [])
+            data = state.data()
 
-                # Проверяем задано ли кол-во на добавление/удаление
-                if add_count != '':
-                    add_count = int(add_count)
+            # Получаем текущие данные
+            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_split: list[float] = data.get('split', [])
 
-                    # Если число меньше нуля - удаляем это кол-во из массивов
-                    # Для случая, если пользователь нажимает на кнопку "Назад"
-                    if add_count < 0:
-                        current_tp_ratio = current_tp_ratio[:add_count]
-                        current_split = current_split[:add_count]
-                    else:
-                        # Ищем текущий максимальный тейк-профит
-                        max_tp = max(current_tp_ratio)
+            # Проверяем задано ли кол-во на добавление/удаление
+            if add_count != '':
+                add_count = int(add_count)
 
-                        # Разделяем остатки процентов на кол-во добавляемых
-                        percents_sum = sum(current_split)
-                        if abs(percents_sum - 100) < 0.1:
-                            percents_sum = 100
-                        new_percent = round(
-                            (100 - percents_sum) / add_count, 2
-                        )
+                # Если число меньше нуля - удаляем это кол-во из массивов
+                # Для случая, если пользователь нажимает на кнопку "Назад"
+                if add_count < 0:
+                    current_tp_ratio = current_tp_ratio[:add_count]
+                    current_split = current_split[:add_count]
+                else:
+                    # Ищем текущий максимальный тейк-профит
+                    max_tp = max(current_tp_ratio)
 
-                        # Добавляем значения
-                        for i in range(1, add_count + 1):
-                            current_tp_ratio.append(max_tp + i)
-                            current_split.append(new_percent)
+                    # Разделяем остатки процентов на кол-во добавляемых
+                    percents_sum = sum(current_split)
+                    if abs(percents_sum - 100) < 0.1:
+                        percents_sum = 100
+                    new_percent = round(
+                        (100 - percents_sum) / add_count, 2
+                    )
 
-                # Добавление тейк-профита, если задано
-                if take_profit_add != '':
-                    tp_temp = int(take_profit_add)
-                    if tp_temp in current_tp_ratio:
-                        current_tp_ratio.remove(tp_temp)
-                    else:
-                        current_tp_ratio.append(tp_temp)
+                    # Добавляем значения
+                    for i in range(1, add_count + 1):
+                        current_tp_ratio.append(max_tp + i)
+                        current_split.append(new_percent)
 
-                # Сохраняем данные в state
-                data['take_profit'] = current_tp_ratio
-                data['split'] = current_split
+            # Добавление тейк-профита, если задано
+            if take_profit_add != '':
+                tp_temp = int(take_profit_add)
+                if tp_temp in current_tp_ratio:
+                    current_tp_ratio.remove(tp_temp)
+                else:
+                    current_tp_ratio.append(tp_temp)
+
+            # Сохраняем данные в state
+            await state.add_data(
+                take_profit=current_tp_ratio,
+                split=current_split,
+            )
 
             # Далее выводим страницу по summury_type
             if summury_type == 'default':
@@ -447,7 +451,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 else:
                     # Иначе даем ввести процент для последнего выбранного тейк-профита
                     kb = None
-                    await bot.set_state(user_id, SettingsState.splitting, chat_id)
+                    await state.set(SettingsState.splitting)
                 await bot.edit_message_text(
                     msg_enter_splitting(
                         lang, current_tp_ratio, current_split
@@ -457,9 +461,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 )
 
     if 'save' in type:
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            current_tp_ratio: list[int] = data.get('take_profit', [])
-            current_split: list[float] = data.get('split', [])
+        data = state.data()
+        current_tp_ratio: list[int] = data.get('take_profit', [])
+        current_split: list[float] = data.get('split', [])
 
         # При сохранении тейк-профита без разделения
         if type == 'tp_save':
@@ -484,9 +488,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
         await send_summury_profit_settings(bot, call.message, user_id, True)
 
     if type == 'splitting_last':
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            current_tp_ratio: list[int] = data.get('take_profit', [])
-            current_split: list[float] = data.get('split', [])
+        data = state.data()
+        current_tp_ratio: list[int] = data.get('take_profit', [])
+        current_split: list[float] = data.get('split', [])
 
         await bot.edit_message_text(
             msg_enter_splitting(
@@ -533,8 +537,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_enter_exchange(lang, is_first=True)
             )
-            await bot.set_state(user_id, SettingsState.exchange, chat_id)
-            await set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+            await state.set(SettingsState.exchange)
+            await state.add_data(
+                del_mes_id=mes_id
+            )
         else:
             await send_exchange_settings(bot, call.message, user_id)
 
@@ -545,8 +551,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 chat_id, mes_id,
                 reply_markup=kb_enter_exchange(lang)
             )
-            await bot.set_state(user_id, SettingsState.exchange, chat_id)
-            await set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+            await state.set(SettingsState.exchange)
+            await state.add_data(
+                del_mes_id=mes_id
+            )
         else:
             exchange_value = type.split('++')[1]
 
@@ -610,8 +618,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 (exchange.name, exchange.maker_fee, exchange.taker_fee)
             )
 
-        await bot.set_state(user_id, SettingsState.fee, chat_id)
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': mes_id})
+        await state.set(SettingsState.fee)
+        await state.add_data(
+            del_mes_id=mes_id
+        )
 
     if 'set_ex_fee' in type:
         _, name, value = type.split('++')
@@ -630,7 +640,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 msg_enter_atr_percent(lang), chat_id, mes_id,
                 reply_markup=kb_stop_type_cancel(lang)
             )
-            await bot.set_state(user_id, SettingsState.atr_percent, chat_id)
+            await state.set(SettingsState.atr_percent)
         else:
             liteDb.setUserStop(user_id, new_stop_type)
 
@@ -638,7 +648,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
                 await send_atr_settings(bot, call.message, user_id)
             else:
                 try:
-                   await  send_stop_settings(bot, call.message, user_id)
+                    await send_stop_settings(bot, call.message, user_id)
                 except:
                     pass
 
@@ -696,7 +706,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
             msg_enter_bars_count(lang), chat_id, mes_id,
             reply_markup=kb_atr_bars_count(lang)
         )
-        await bot.set_state(user_id, SettingsState.atr_bars_count, chat_id)
+        await state.set(SettingsState.atr_bars_count)
 
     if 'set_atr_count+' in type:
         _, count = type.split('+')
@@ -714,7 +724,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(SettingsCallbackFilter())
     bot.register_callback_query_handler(
-        _settings_callback_handler, # type: ignore
+        _settings_callback_handler,  # type: ignore
         lambda _: True, pass_bot=True,
         settings=settings_factory.filter()
     )

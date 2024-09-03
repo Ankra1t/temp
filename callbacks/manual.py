@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
 
-from models import MANUAL_TYPE
+from models import MANUAL_TYPE, CallbackQuery
 from messages.common import msg_manuals
 
 from keyboards.manual import manual_factory, ManualCallbackFilter
@@ -9,6 +9,9 @@ from pages.calculate import send_main, send_manual
 
 
 async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data: dict = manual_factory.parse(call.data)
     type = callback_data['type']
     page = int(callback_data['page'])

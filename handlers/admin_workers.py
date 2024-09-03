@@ -1,23 +1,24 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from db import db
+from models import Message
 
-from common.utils import digit_accept, set_state_data
+from common.utils import digit_accept
 
 from states.admin_workers import AdminWorkersState
 from keyboards.admin_workers import kb_admin_workers_confirm, kb_admin_workers_back
 from pages.admin import send_admin_workers_support
 
 
-async def handle_add_id(message: Message, bot: AsyncTeleBot):
+async def handle_add_id(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     id = digit_accept(message, int)
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        current_role = data.get('role', 2)
+    data = state.data()
+    current_role = data.get('role', 2)
 
     if id is None:
         await bot.send_message(
@@ -35,22 +36,22 @@ async def handle_add_id(message: Message, bot: AsyncTeleBot):
         )
         return
 
-    await set_state_data(bot, user_id, chat_id, {'id': id})
-    await bot.delete_state(user_id, chat_id)
+    await state.add_data(id=id)
+    await state.delete()
     await bot.send_message(
         chat_id, f'Добавить @{user.tg_username} с id: <b>{id}</b>?',
         reply_markup=kb_admin_workers_confirm(id, current_role, 'add')
     )
 
 
-async def handle_delete_id(message: Message, bot: AsyncTeleBot):
+async def handle_delete_id(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
     id = digit_accept(message, int)
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        current_role = data.get('role', 2)
+    data = state.data()
+    current_role = data.get('role', 2)
 
     if id is None:
         await bot.send_message(
@@ -58,7 +59,7 @@ async def handle_delete_id(message: Message, bot: AsyncTeleBot):
             reply_markup=kb_admin_workers_back(current_role))
         return
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await bot.send_message(
         message.chat.id, f'Удалить <b>{id}</b>?',
         reply_markup=kb_admin_workers_confirm(
@@ -67,7 +68,7 @@ async def handle_delete_id(message: Message, bot: AsyncTeleBot):
     )
 
 
-async def handle_support_id(message: Message, bot: AsyncTeleBot):
+async def handle_support_id(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -80,7 +81,7 @@ async def handle_support_id(message: Message, bot: AsyncTeleBot):
 
     db.update_support(support_id)
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await send_admin_workers_support(bot, message, user_id, True)
 
 

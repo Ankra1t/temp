@@ -1,9 +1,9 @@
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
 from config_global import SITE_URL
-from models import LANGUAGES_TYPE
+from models import LANGUAGES_TYPE, CallbackQuery
 
 from common.utils import get_calculator_btn_link
 from common.keyboard import back_txt

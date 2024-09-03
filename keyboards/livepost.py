@@ -1,8 +1,10 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
+
+from models import CallbackQuery
 
 
 livepost_factory = CallbackData('type', 'value', prefix='livepost')

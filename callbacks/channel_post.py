@@ -1,14 +1,15 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from messages.common import transl_tr_style
-from common.utils import delete_message, edit_message, set_state_data
+from common.utils import delete_message, edit_message
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
 from db import db
 from messages.enter import msg_enter_trading_style
-from models import Calculation
+from models import Calculation, CallbackQuery
 from Classes import calcService
 from services import calculation, channel_calc
 
@@ -31,7 +32,10 @@ from pages.calculate import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     data = channel_post_factory.parse(call.data)
     type = data.get('type', '')
     is_calc = int(data.get('is_calc', 0))
@@ -50,7 +54,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     if type == 'back':
         chat_id = call.message.chat.id
 
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
 
         msg = 'Отправка сообщений в канал'
         kb = kb_channel_post()
@@ -298,12 +302,12 @@ More often: <b>{result}</b>"""
             bot, call.message, 'text',
             'Введите ваш комментарий:', kb_channel_post_back_to_result()
         )
-        await bot.set_state(user_id, StatsState.add_image_text, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'stat_id': stat_id,
-            'del_mes_id': call.message.id,
-            'type': 'stats'
-        })
+        await state.set(StatsState.add_image_text)
+        await state.add_data(
+            stat_id=stat_id,
+            del_mes_id=call.message.id,
+            type='stats'
+        )
 
     if type == 'calc':
         calc = calculation.get(stat_id)
@@ -321,7 +325,7 @@ More often: <b>{result}</b>"""
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(ChannelPostCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         channel_post=channel_post_factory.filter()
     )

@@ -1,10 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 
 from data.data import liteDb
 from db import db
 
-from common.utils import get_lang, set_state_data, send_in_development
+from common.utils import get_lang, send_in_development
 
 from states.calculate import CalculateState
 from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
@@ -15,7 +14,7 @@ from pages.admin import send_admin_main
 
 from keyboards.calculate import kb_calc_atr, kb_calc_direct
 
-from models import Calculation
+from models import Calculation, Message
 from services import calculation, channel_calc, ticker
 
 
@@ -58,11 +57,10 @@ async def send_start_by_user(
                     if 'atr_percent' in stop_type:
                         _, percent = stop_type.split('+')
                         rate = float(percent) * 0.01
-
-                    await set_state_data(
-                        bot, user_id, chat_id, {
-                            'atr': abs(ticker_val) * abs(rate)
-                        }
+                    await bot.add_data(
+                        chat_id=chat_id,
+                        user_id=user_id,
+                        atr=abs(ticker_val) * abs(rate)
                     )
                     await bot.send_message(
                         chat_id, msg_choose_direct(lang, ticker_val),
@@ -79,16 +77,15 @@ async def send_start_by_user(
                 )
                 await bot.set_state(user_id, CalculateState.stop_loss, chat_id)
 
-            await set_state_data(
-                bot, user_id, chat_id,
-                {
-                    'action': 'send_calc',
-                    'stat_id': id,
-                    'open_price': calc.openPrice,
-                    'tool': calc.tool,
-                    'deposit': u_base.deposit,
-                    'risk': u_base.risk
-                }
+            await bot.add_data(
+                chat_id=chat_id,
+                user_id=user_id,
+                action='send_calc',
+                stat_id=id,
+                open_price=calc.openPrice,
+                tool=calc.tool,
+                deposit=u_base.deposit,
+                risk=u_base.risk
             )
         else:
             await start_with_calc(

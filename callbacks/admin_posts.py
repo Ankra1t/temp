@@ -1,10 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from Classes import pay_guard
 from db import db
-from common.utils import set_state_data
-from models import Post
+from models import Post, CallbackQuery
 
 
 from keyboards.admin_posts import (
@@ -16,7 +16,10 @@ from states.admin_posts import AdminPostsState
 from pages.admin import send_admin_post, send_admin_fut_posts, send_admin_main
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data: dict = admin_posts_factory.parse(call.data)
     type = callback_data['type']
 
@@ -41,7 +44,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             'Отправьте ID поста', chat_id, mes_id,
             reply_markup=kb_posts_back()
         )
-        await bot.set_state(user_id, AdminPostsState.post_delete, chat_id)
+        await state.set(AdminPostsState.post_delete)
 
     if type == 'list':
         posts = db.get_all_posts()
@@ -61,14 +64,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     if type == 'send_now':
         await bot.edit_message_text('Отправьте ID поста, чтобы его разослать сейчас',
-                              chat_id, mes_id,
-                              reply_markup=kb_posts_back())
-        await bot.set_state(user_id, AdminPostsState.post_send, chat_id)
+                                    chat_id, mes_id,
+                                    reply_markup=kb_posts_back())
+        await state.set(AdminPostsState.post_send)
 
     if 'choose_kind_' in type:
         try:
-            async with bot.retrieve_data(user_id, chat_id) as data:
-                prev_kind = data.get('kind') or ''
+            data = bot.retrieve_data(user_id, chat_id) or {}
+            prev_kind = data.get('kind') or ''
         except:
             prev_kind = ''
 
@@ -78,18 +81,18 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             kind = 'post'
 
         text = 'Отправьте отложенный пост:'
-        state = AdminPostsState.content
+        new_state = AdminPostsState.content
 
         if prev_kind == 'live':
             if kind == 'signal':
-                state = AdminPostsState.signal_values
+                new_state = AdminPostsState.signal_values
                 text = 'Введите цену входа:'
             else:
-                state = AdminPostsState.datetime
+                new_state = AdminPostsState.datetime
                 text = 'Введите дату и время в формате ДД* ММ* ГГ  ЧЧ* ММ*\nГде * - обязательные значения\nВведите "-", если хотите выложить прямо сейчас'
 
-        await bot.set_state(user_id, state, chat_id)
-        await set_state_data(bot, user_id, chat_id, {'kind': kind})
+        await state.set(new_state)
+        await state.add_data(kind=kind)
         await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=kb_posts_back()
@@ -103,11 +106,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         else:
             type = 'Всем'
 
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            post_data: Post = data.get('post')
+        data = bot.retrieve_data(user_id, chat_id) or {}
+        post_data: Post = data.get('post', {})
 
         db.add_post(post_data)
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
 
         await bot.edit_message_text('Успешно!', chat_id, mes_id)
         await send_admin_fut_posts(bot, call.message, user_id, True)
@@ -118,8 +121,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
                 'Отправьте ID поста', chat_id, mes_id,
                 reply_markup=kb_posts_back())
         if 'yes' in type:
-            async with bot.retrieve_data(user_id, chat_id) as data:
-                post_id = data.get('post_id', 0)
+            data = bot.retrieve_data(user_id, chat_id) or {}
+            post_id = data.get('post_id', 0)
+
             text = 'Пост успешно удалён!'
 
             if 'send' in type:
@@ -154,7 +158,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
             db.delete_post(post_id)
 
-            await bot.delete_state(user_id, chat_id)
+            await state.delete()
             await bot.edit_message_text(text, chat_id, mes_id)
             await send_admin_fut_posts(bot, call.message, user_id, True)
 
@@ -164,6 +168,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminPostsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_posts=admin_posts_factory.filter())

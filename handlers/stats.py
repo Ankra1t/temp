@@ -1,7 +1,7 @@
 import re
 from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 # TODO - each state import from states
 from states.settings import ViolationState
@@ -9,8 +9,9 @@ from states.stats import ChannelCalcState
 
 from config_logger import logger
 from Classes import calcService
+from models import Message
 from db import db
-from common.utils import delete_message, digit_accept, get_lang, set_state_data, text_accept
+from common.utils import delete_message, digit_accept, get_lang, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
@@ -24,14 +25,14 @@ from messages.main import msg_frozen
 from services import calculation, channel_calc, violation
 
 
-async def handle_loss(message: Message, bot: AsyncTeleBot):
+async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data.get('stat_id', 0)
+    data = state.data()
+    stat_id = data.get('stat_id', 0)
 
     value = digit_accept(message)
     if value is None:
@@ -60,14 +61,14 @@ async def handle_loss(message: Message, bot: AsyncTeleBot):
     await send_freeze(bot, message, user_id, calc_info.market, True)
 
 
-async def handle_sum(message: Message, bot: AsyncTeleBot):
+async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data.get('stat_id', 0)
+    data = state.data()
+    stat_id = data.get('stat_id', 0)
 
     value = digit_accept(message)
     if value is None or value < 0:
@@ -96,15 +97,15 @@ async def handle_sum(message: Message, bot: AsyncTeleBot):
     await send_freeze(bot, message, user_id, calc_info.market, True)
 
 
-async def handle_freeze_dt(message: Message, bot: AsyncTeleBot):
+async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        market = data.get('market')
+    data = state.data()
+    market = data.get('market')
 
     value = text_accept(message) or ''
 
@@ -140,19 +141,19 @@ async def handle_freeze_dt(message: Message, bot: AsyncTeleBot):
         chat_id,
         msg_frozen(lang, get_str_by_datetime(finish_freeze))
     )
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
-async def handle_calc_image_text(message: Message, bot: AsyncTeleBot):
+async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        calc_text = data.get('calc_text', 'J')
-        stat_id = data.get('stat_id', 0)
-        type = data.get('type', '')
+    data = state.data()
+    calc_text = data.get('calc_text', 'J')
+    stat_id = data.get('stat_id', 0)
+    type = data.get('type', '')
 
     await delete_message(bot, chat_id, message.id)
 
@@ -161,7 +162,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot):
             chat_id, calc_text,
             reply_markup=kb_calc_image_text(lang, stat_id)
         )
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await state.add_data(del_mes_id=new_mes.id)
         return
 
     text = message.html_caption or message.html_text
@@ -196,7 +197,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot):
     if calc is None:
         return
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     if type != 'stats':
         await send_calculation(bot, message, user_id, calc, True)
@@ -210,7 +211,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot):
         )
 
 
-async def handle_send_text(message: Message, bot: AsyncTeleBot):
+async def handle_send_text(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -219,19 +220,19 @@ async def handle_send_text(message: Message, bot: AsyncTeleBot):
         new_mes = await bot.send_message(
             chat_id, 'Введите текст:'
         )
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await state.add_data(del_mes_id=new_mes.id)
         return
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data['stat_id']
+    data = state.data()
+    stat_id = data['stat_id']
 
     calculation.update(stat_id, description=new_text)
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await send_confirm_calc_send(bot, message, stat_id, True)
 
 
-async def handle_send_photo(message: Message, bot: AsyncTeleBot):
+async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -243,34 +244,34 @@ async def handle_send_photo(message: Message, bot: AsyncTeleBot):
         new_mes = await bot.send_message(
             chat_id, 'Отправьте фото:'
         )
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await state.add_data(del_mes_id=new_mes.id)
         return
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data['stat_id']
+    data = state.data()
+    stat_id = data.get('stat_id', 0)
 
     calculation.update(stat_id, photo=new_photo.file_id)
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await send_confirm_calc_send(bot, message, stat_id, True)
 
 
-async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot):
+async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data.get('stat_id')
-        is_calc = data.get('is_calc')
-        type = data.get('type')
+    data = state.data()
+    stat_id = data.get('stat_id', 0)
+    is_calc = data.get('is_calc')
+    type = data.get('type')
 
     value = digit_accept(message)
     if value is None:
         new_mes = await bot.send_message(
             chat_id, msg_digit_error(lang),
         )
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await state.add_data(del_mes_id=new_mes.id)
         return
 
     calcService.set_profit(stat_id, abs(value) * (-1 if type == 'stop' else 1))
@@ -282,7 +283,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot):
         stat_id, status='FINISH'
     )
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         await edit_channel_post(bot, stat_id)
@@ -298,21 +299,21 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot):
             await send_stats(bot, message, user_id, True)
 
 
-async def handle_violation_message(message: Message, bot: AsyncTeleBot):
+async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        violation_id = data.get('violation_id', 0)
+    data = state.data()
+    violation_id = data.get('violation_id', 0)
 
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = await bot.send_message(
             chat_id, msg_text_error(lang),
             reply_markup=kb_violation_skip(lang)
         )
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await state.add_data(del_mes_id=new_mes.id)
         return
 
     text = message.html_caption or message.html_text
@@ -326,7 +327,7 @@ async def handle_violation_message(message: Message, bot: AsyncTeleBot):
         photo
     )
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await send_violation(bot, message, user_id, is_first=True)
 
 

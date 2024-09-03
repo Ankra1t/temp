@@ -1,7 +1,8 @@
 import asyncio
 from pytonconnect import TonConnect
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from Classes.TonWallet import get_connector
 from common.utils import get_lang
@@ -9,7 +10,7 @@ from config_logger import logger
 from db import db
 from messages.enter import msg_choose_lang
 from messages.main import msg_support
-from models import LANGUAGES
+from models import LANGUAGES, CallbackQuery
 
 from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
@@ -25,7 +26,10 @@ from pages.user import send_referral, send_user_account, send_user_main, send_us
 
 connector = get_connector(6919899538)
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data: dict = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
 
@@ -63,7 +67,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             msg, chat_id, mes_id,
             reply_markup=kb_support(lang, sup)
         )
-        await bot.delete_state(user_id, mes_id)
+        await state.delete()
 
     if type == 'referral':
         await send_referral(bot, call.message, user_id)
@@ -83,7 +87,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         await bot.edit_message_text(
             'Введите новый пароль:', chat_id, mes_id
         )
-        await bot.set_state(user_id, UserAccountState.password, chat_id)
+        await state.set(UserAccountState.password)
 
     if type == 'params':
         await send_user_params(bot, call.message, user_id)
@@ -110,7 +114,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             msg_enter_nickname(lang), chat_id, mes_id,
             reply_markup=kb_user_params_back(lang)
         )
-        await bot.set_state(user_id, UserAccountState.nickname, chat_id)
+        await state.set(UserAccountState.nickname)
 
     if type == 'wallet':
         asyncio.run(walletPage(bot, chat_id, user_id))

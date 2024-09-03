@@ -1,5 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot, StateMemoryStorage
 from telebot.asyncio_filters import StateFilter
+from telebot.states.asyncio.middleware import StateMiddleware
 
 from config_global import TOKEN_MAIN_BOT
 
@@ -53,6 +54,7 @@ bot = AsyncTeleBot(
 )
 
 bot.setup_middleware(AuthMiddleWare(bot))
+bot.setup_middleware(StateMiddleware(bot))
 
 commands_registration(bot)
 

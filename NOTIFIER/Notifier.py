@@ -1,6 +1,5 @@
 from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 from common.dt import get_str_by_datetime
 
 from common.utils import antiflood
@@ -20,7 +19,7 @@ class Notifier():
         self.users = (156045434, 7159306363)
 
     async def _send_by_type(self, bot: AsyncTeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
-        mes: Message | None = None
+        mes = None
         try:
             if type == 'photo':
                 mes = await antiflood(

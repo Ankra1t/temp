@@ -1,11 +1,11 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.stats import kb_calc_result
 
 from common.keyboard import back_txt, cancel_txt
-from models import LANGUAGES_TYPE, Calculation
+from models import LANGUAGES_TYPE, Calculation, CallbackQuery
 from db import db
 
 

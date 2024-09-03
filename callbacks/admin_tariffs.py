@@ -1,10 +1,12 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
+
+from common.utils import delete_message, get_lang
+from db import db
+from models import CallbackQuery
 
 from states.admin_tariff import AdminTariffState
-from common.utils import delete_message, get_lang, set_state_data
-from db import db
-
 from messages.common import msg_success_edit
 from pages.admin import send_admin_main, send_admin_tariffs, send_admin_tariffs_list_item
 
@@ -14,7 +16,10 @@ from keyboards.admin_tariffs import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     data = admin_tariffs_factory.parse(call.data)
     type = data.get('type', '')
     page = int(data.get('page', 0))
@@ -49,11 +54,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         else:
             _, kind = type.split('+')
 
-            await bot.set_state(user_id, AdminTariffState.name, chat_id)
-            await set_state_data(bot, user_id, chat_id, {
-                'action': 'create',
-                'type_product': kind
-            })
+            await state.set(AdminTariffState.name)
+            await state.add_data(
+                action='create',
+                type_product=kind
+            )
             await bot.edit_message_text(
                 'Введите название нового тарифа:', chat_id, mes_id,
                 reply_markup=kb_admin_tariffs_back()
@@ -83,33 +88,33 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
                 bot, call.message, user_id, page, 'edit'
             )
         else:
-            state = ''
+            new_state = ''
             if 'name' in type:
-                state = AdminTariffState.name
+                new_state = AdminTariffState.name
                 text = 'Введите новое название тарифа:'
             elif 'price' in type:
-                state = AdminTariffState.price
+                new_state = AdminTariffState.price
                 text = 'Введите новую цену тарифа:'
             elif 'duration' in type:
-                state = AdminTariffState.duration
+                new_state = AdminTariffState.duration
                 text = 'Введите новый срок действия (в днях) тарифа:'
             elif 'description' in type:
-                state = AdminTariffState.description
+                new_state = AdminTariffState.description
                 text = 'Введите новое описание тарифа:'
             elif 'image' in type:
-                state = AdminTariffState.image
+                new_state = AdminTariffState.image
                 text = 'Отправьте новую картинку тарифа:'
             elif 'img_en' in type:
-                state = AdminTariffState.image_en
+                new_state = AdminTariffState.image_en
                 text = 'Отправьте картинку на английском для тарифа:'
             elif 'findate' in type:
-                state = ''
+                new_state = ''
 
-            await bot.set_state(user_id, state, chat_id)
-            await set_state_data(bot, user_id, chat_id, {
-                'page': page,
-                'tariff_id': tariff_id
-            })
+            await state.set(new_state)
+            await state.add_data(
+                page=page,
+                tariff_id=tariff_id
+            )
             await delete_message(bot, chat_id, mes_id)
             await bot.send_message(
                 chat_id, text,
@@ -119,11 +124,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     if type == 'discount':
         tariff = db.get_price_by_id(tariff_id)
         if tariff is not None:
-            await bot.set_state(user_id, AdminTariffState.discount_percent, chat_id)
-            await set_state_data(bot, user_id, chat_id, {
-                'tariff_id': tariff_id,
-                'page': page
-            })
+            await state.set(AdminTariffState.discount_percent)
+            await state.add_data(
+                tariff_id=tariff_id,
+                page=page
+            )
             await delete_message(bot, chat_id, mes_id)
             await bot.send_message(
                 chat_id, 'Введите размер скидки в процентах:',
@@ -140,6 +145,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminTariffsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_tariffs=admin_tariffs_factory.filter())

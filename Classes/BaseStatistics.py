@@ -1,12 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 from datetime import timedelta
 
 from config_logger import logger
 
 from common.dt import get_datetime_now
 from db import Database as DatabaseNew
-from models import UserInfo, Purchase
+from models import UserInfo, Purchase, Message
 
 
 class BaseStatistics(object):

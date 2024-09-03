@@ -1,6 +1,5 @@
 from threading import Timer
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 
 from Classes import text_editor
 from common.utils import edit_message, get_lang
@@ -8,6 +7,7 @@ from db import db
 from data.data import liteDb
 from services import auth
 from config_logger import logger
+from models import Message
 
 from messages.education import termins
 from messages.enter import msg_choose_lang
@@ -141,16 +141,19 @@ async def send_site_code(bot: AsyncTeleBot, message: Message, user_id: int, is_f
                 chat_id, mes_id,
                 reply_markup=keyboard
             )
+
+        if is_reset:
+            code = new_code or ''
+
+            async def get_default():
+                await send_site_code(
+                    bot, new_message, # type: ignore
+                    user_id, False, False, code
+                )
+
+            Timer(3, get_default).start()
     except:
         logger.error('[send_site_code]: сообщение не изменено!')
-
-    if is_reset:
-        code = new_code or ''
-
-        async def get_default():
-            await send_site_code(bot, new_message, user_id, False, False, code)
-
-        Timer(3, get_default).start()
 
 
 async def send_referral(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
@@ -161,7 +164,7 @@ async def send_referral(bot: AsyncTeleBot, message: Message, user_id: int, is_fi
     lang = get_lang(user_id)
     referals_count = len(db.get_user_referals(user_db_id))
 
-    text = msg_referral(lang, referals_count, (await bot.get_me()).username, user_db_id)
+    text = msg_referral(lang, referals_count, (await bot.get_me()).username or '', user_db_id)
     kb = kb_user_referral(lang, referals_count)
 
     if is_first:

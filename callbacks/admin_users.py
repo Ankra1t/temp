@@ -1,15 +1,16 @@
 import math
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from common.dt import get_str_by_datetime
-from common.utils import set_state_data, get_short_user_info
+from common.utils import get_short_user_info
 
 from config_logger import logger
 
 from Classes import pay_guard
 from db import db
-from models import SORT_BY_TYPE
+from models import SORT_BY_TYPE, CallbackQuery
 
 from states.admin_users import AdminUsersState
 
@@ -25,7 +26,10 @@ from keyboards.admin_users import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = admin_users_factory.parse(call.data)
 
     type: str = callback_data.get('type', '')
@@ -141,10 +145,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     if type == 'client_add_sub':
         # Задать сначала тариф для выдачи подписки
-        await bot.set_state(user_id, AdminUsersState.subscribe_days, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'user_id': client_db_id,
-        })
+        await state.set(AdminUsersState.subscribe_days)
+        await state.add_data(
+            user_id=client_db_id,
+        )
         await bot.edit_message_text(
             'Выберите тариф на базе которого выдать подписку:',
             chat_id, mes_id,
@@ -152,9 +156,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         )
 
     if type == 'choose_periods_for_tariffs':
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            tariff_id = data.get('tariff_id')
-            subscribe_user_id = data.get('user_id')
+        data = bot.retrieve_data(user_id, chat_id) or {}
+        tariff_id = data.get('tariff_id', 0)
+        subscribe_user_id: int = data.get('user_id', 0)
 
         # Получить tg_user_id
         user = db.get_user_by_id(subscribe_user_id)
@@ -170,7 +174,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
         tariff = db.get_price_by_id(tariff_id)
         if tariff is None:
-            logger.error(f'[choose_periods_for_tariffs]: tariff_id={tariff_id}')
+            logger.error(
+                f'[choose_periods_for_tariffs]: tariff_id={tariff_id}')
             return
 
         pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
@@ -184,7 +189,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка до {data_fin}'
         )
 
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
 
         await send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
 
@@ -243,19 +248,20 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             chat_id, mes_id,
             reply_markup=kb_admin_users_cancel(sort_by, page)
         )
-        await bot.set_state(user_id, AdminUsersState.client_search, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'sort_by': sort_by,
-            'page': page
-        })
+        await state.set(AdminUsersState.client_search)
+        await state.add_data(
+            sort_by=sort_by,
+            page=page
+        )
 
     if type == 'client_set_trial_custom':
-        await bot.set_state(
-            user_id, AdminUsersState.trial_subscribe_days_get_days, chat_id)
+        await state.set(
+            AdminUsersState.trial_subscribe_days_get_days
+        )
         logger.error(f'Назначить пробную подписку пользователю handler')
-        await set_state_data(bot, user_id, chat_id, {
-            'user_id': client_db_id,
-        })
+        await state.add_data(
+            user_id=client_db_id,
+        )
         await bot.edit_message_text(
             'Введите количество дней ПРОБНОЙ подписки:',
             chat_id, mes_id,
@@ -276,7 +282,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             pages_count = math.ceil(users_count / limit)
 
             users = db.get_paginated_users(
-                limit, page, sort_by, filter # type: ignore
+                limit, page, sort_by, filter  # type: ignore
             )
 
             if filter == 'crypto':
@@ -313,6 +319,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminUsersCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_users=admin_users_factory.filter())

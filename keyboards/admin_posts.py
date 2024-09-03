@@ -1,9 +1,10 @@
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt
 
+from models import CallbackQuery
 
 admin_posts_factory = CallbackData('type', prefix='admin_posts')
 

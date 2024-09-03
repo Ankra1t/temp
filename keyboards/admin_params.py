@@ -1,6 +1,8 @@
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
+
+from models import CallbackQuery
 
 from common.keyboard import back_txt
 from common.utils import get_calculator_btn_link

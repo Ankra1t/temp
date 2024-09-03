@@ -1,11 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from db import db
-
+from models import CallbackQuery
 from Classes import pay_guard
 
-from common.utils import set_state_data
 from states.admin_params import AdminParamsState
 
 from keyboards.admin_params import (
@@ -16,7 +16,10 @@ from keyboards.admin_params import (
 from pages.admin import send_admin_main, send_admin_params
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = admin_params_factory.parse(call.data)
     type = callback_data.get('type', '')
 
@@ -65,10 +68,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     elif 'edit_text' in type:
         text_name = type.split('+')[-1]
 
-        await bot.set_state(user_id, AdminParamsState.text, chat_id)
-        await set_state_data(bot, user_id, chat_id, {
-            'name': text_name
-        })
+        await state.set(AdminParamsState.text)
+        await state.add_data(
+            name=text_name
+        )
         await bot.delete_message(chat_id, mes_id)
         await bot.send_message(
             chat_id,
@@ -84,7 +87,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             f'Отправьте новое значение дней:', chat_id, mes_id,
             reply_markup=kb_params_back()
         )
-        await bot.set_state(user_id, AdminParamsState.count_trial_days, chat_id)
+        await state.set(AdminParamsState.count_trial_days)
 
     elif type == 'change':
         await bot.edit_message_text(
@@ -94,9 +97,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     elif 'choice' in type:
         if 'yes' in type:
-            async with bot.retrieve_data(user_id, chat_id) as data:
-                name = data.get('name', '')
-                text = data.get('text', '')
+            data = bot.retrieve_data(user_id, chat_id) or {}
+            name = data.get('name', '')
+            text = data.get('text', '')
 
             db.update_text(name, text)
 
@@ -107,7 +110,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             await bot.edit_message_text(
                 'Что изменяем?', chat_id, mes_id,
                 reply_markup=kb_params_change())
-        await bot.delete_state(user_id, chat_id)
+
+        await state.delete()
 
     elif 'change' in type:
         name = 'FAQ' if 'faq' in type else 'О нас'
@@ -116,8 +120,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         await bot.edit_message_text(
             text, chat_id, mes_id,
             reply_markup=kb_params_back())
-        await bot.set_state(user_id, AdminParamsState.text, chat_id)
-        await set_state_data(bot, user_id, chat_id, {'name': name})
+        await state.set(AdminParamsState.text)
+        await state.add_data(name=name)
 
     elif 'calculator' in type:
         if 'add_forex' in type:  # !deprecated
@@ -125,7 +129,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
                 'Введите валютную пару:', chat_id, mes_id,
                 reply_markup=kb_params_back()
             )
-            await bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
+            await state.set(AdminParamsState.forex_pair)
 
     await bot.answer_callback_query(call.id)
 
@@ -133,6 +137,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminParamsCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_params=admin_params_factory.filter())

@@ -1,8 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from AuthRoles import check_registrate
+from models import CallbackQuery
 
 from common.calc_step import send_calc_start
 from common.utils import send_in_development
@@ -15,6 +16,9 @@ from pages.user import send_user_education, send_user_account, send_site_code, s
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data: dict = user_main_factory.parse(call.data)
     type = callback_data.get('type', '')
 

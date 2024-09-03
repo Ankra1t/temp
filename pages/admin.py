@@ -1,11 +1,11 @@
 from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message, InputMediaPhoto
+from telebot.types import InputMediaPhoto
 
 from db import db
 from data.data import liteDb
 from Classes import base_statis
-from models import Post, LANGUAGES_TYPE
+from models import Post, LANGUAGES_TYPE, Message
 
 from common.utils import delete_message, get_lang, get_print_float, get_print_signal_info
 from common.dt import get_str_by_datetime

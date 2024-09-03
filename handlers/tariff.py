@@ -1,9 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from Classes.YooKassa import yooKassa_create_payment
 from config_logger import logger
 from db import db
+from models import Message
 from common.utils import get_lang, text_accept
 
 from states.tariff import TariffState
@@ -13,14 +14,14 @@ from messages.errros import msg_text_error
 from messages.users import msg_loading_invoice, msg_bill
 
 
-async def handle_email(message: Message, bot: AsyncTeleBot):
+async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        target_id = data.get('tariff_id', 0)
+    data = state.data()
+    target_id = data.get('tariff_id', 0)
 
     email = text_accept(message)
     if email is None:
@@ -56,7 +57,7 @@ async def handle_email(message: Message, bot: AsyncTeleBot):
         chat_id, edit_wait_mess.id,
         reply_markup=kb_bill(lang, yookassa_payment_url)
     )
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
 def registration(bot: AsyncTeleBot):

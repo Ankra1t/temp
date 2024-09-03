@@ -1,9 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from db import db
 from services import calculation, violation
+from models import CallbackQuery
 
 from common.utils import delete_message, get_lang
 from common.calc_step import send_calc_start
@@ -15,6 +16,9 @@ from pages.calculate import send_admin_channel_calc_list, send_channel_post, sen
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     callback_data = main_factory.parse(call.data)
     type = callback_data.get('type', '')
     is_saved = callback_data.get('is_saved', 'False')
@@ -99,25 +103,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
 
     if type == 'violations':
         await send_violation(bot, call.message, user_id)
-
-    # if type == 'violation_yes':
-    #     data = violation.create(user_db_id, True)
-    #     if data is not None:
-    #         id = data.get('id')
-
-    #         bot.edit_message_text(
-    #             msg_violation_message(user_id),
-    #             chat_id, mes_id,
-    #             reply_markup=kb_violation_skip(user_id)
-    #         )
-    #         bot.set_state(user_id, ViolationState.message, chat_id)
-    #         set_state_data(
-    #             bot, user_id, chat_id,
-    #             {
-    #                 'del_mes_id': mes_id,
-    #                 'violation_id': id
-    #             }
-    #         )
 
     await bot.answer_callback_query(call.id)
 

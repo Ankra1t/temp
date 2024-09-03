@@ -1,3 +1,4 @@
+from telebot.types import Message as _Message, User as _User, CallbackQuery as _CallbackQuery
 from pydantic import BaseModel
 from typing import Literal, Union, Optional
 from datetime import datetime
@@ -20,6 +21,12 @@ MANUAL_TYPE = Literal[
 LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
+
+class Message(_Message):
+    from_user: _User
+
+class CallbackQuery(_CallbackQuery):
+    message: Message
 
 class Invoice(BaseModel):
     """Структура чека"""
@@ -62,12 +69,10 @@ class Subscribe(BaseModel):
     transactions_payed_id: Optional[int] = None
 
 
-class User:
-    def __init__(self):
-        self.id: int | None = None
-        self.username: str | None = None
-        self.subscribe_days: int | None = None
-        self.subscribe: Subscribe | None = None
+class User(BaseModel):
+    id: int
+    tgId: int
+    lang: LANGUAGES_TYPE
 
 
 class Discount(BaseModel):

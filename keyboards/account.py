@@ -1,9 +1,9 @@
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
 from common.keyboard import back_txt, cancel_txt
-from models import LANGUAGES_TYPE
+from models import LANGUAGES_TYPE, CallbackQuery
 
 
 user_account_factory = CallbackData('type', prefix='user_account')

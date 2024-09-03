@@ -1,9 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from Classes.BlockTGBotSender import send_same_message_to_users
 from db import db
-from models import Post
+from models import Post, CallbackQuery
 
 from states.admin_posts import AdminPostsState
 from keyboards.livepost import (
@@ -14,7 +15,10 @@ from keyboards.livepost import (
 from pages.admin import send_admin_main
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     data = livepost_factory.parse(call.data)
     call_type = data.get('type', '')
     value = data.get('value', '')
@@ -33,7 +37,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             chat_id, mes_id,
             reply_markup=kb_livepost_cancel()
         )
-        await bot.set_state(user_id, AdminPostsState.name, chat_id)
+        await state.set(AdminPostsState.name)
 
     if call_type == 'send_now':
         if value == '':
@@ -65,15 +69,15 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
                     int(value.replace('h', '')))
 
             if len(users) != 0:
-                async with bot.retrieve_data(user_id, chat_id) as data:
-                    post: Post = data.get('post')
-                    await bot.edit_message_text('Отправка...', chat_id, mes_id)
-                    await send_same_message_to_users(
-                        bot, users, post
-                    )
-                    await bot.edit_message_text(
-                        'Успешно отправлен!', chat_id, mes_id)
-                    await bot.delete_state(user_id, chat_id)
+                data = state.data()
+                post: Post = data.get('post', {})
+                await bot.edit_message_text('Отправка...', chat_id, mes_id)
+                await send_same_message_to_users(
+                    bot, users, post
+                )
+                await bot.edit_message_text(
+                    'Успешно отправлен!', chat_id, mes_id)
+                await state.delete()
             else:
                 await bot.edit_message_text(
                     '❗️Таких пользователей нет.\nКому отправить сообщение?',

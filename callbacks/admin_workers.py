@@ -1,9 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery
+from telebot.types import InaccessibleMessage
+from telebot.states.asyncio.context import StateContext
 
 from db import db
+from models import CallbackQuery
 
-from common.utils import is_digit, set_state_data
+from common.utils import is_digit
 
 from keyboards.admin_workers import (
     admin_workers_factory, AdminWorkersCallbackFilter,
@@ -17,7 +19,10 @@ from pages.admin import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+    if isinstance(call.message, InaccessibleMessage) or call.data is None:
+        return
+
     data = admin_workers_factory.parse(call.data)
 
     type = data.get('type', '')
@@ -44,7 +49,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
         await send_admin_workers_support(bot, call.message, user_id)
 
     if type == 'workers_list':
-        await bot.delete_state(user_id, chat_id)
+        await state.delete()
         mas = db.get_all_workes()
         res = ''
 
@@ -74,15 +79,15 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             text = 'Отправьте ID редактора'
 
         if type == 'add':
-            state = AdminWorkersState.add_id
+            new_state = AdminWorkersState.add_id
         else:
-            state = AdminWorkersState.delete_id
+            new_state = AdminWorkersState.delete_id
 
         markup = kb_admin_workers_back(role)
 
-        await bot.set_state(user_id, state, chat_id)
+        await state.set(new_state)
 
-        await set_state_data(bot, user_id, chat_id, {'role': role})
+        await state.add_data(role=role)
         await bot.edit_message_text(text, chat_id, mes_id, reply_markup=markup)
 
     if type == 'add_yes':
@@ -121,7 +126,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     # Тех. поддержка
     if type == 'update_support':
-        await bot.set_state(user_id, AdminWorkersState.update_support, chat_id)
+        await state.set(AdminWorkersState.update_support)
         await bot.edit_message_text(
             'Отправьте id для тех. поддержки:',
             chat_id, mes_id,
@@ -134,6 +139,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(AdminWorkersCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         admin_workers=admin_workers_factory.filter())

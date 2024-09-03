@@ -1,11 +1,13 @@
 import re
+from typing import Any
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from db import db
+from models import Message
 from Classes import pay_guard
 
-from common.utils import digit_accept, set_state_data, text_accept, get_normal_text
+from common.utils import digit_accept, text_accept, get_normal_text
 
 from states.admin_params import AdminParamsState
 from keyboards.admin_params import kb_params_choice, kb_params_back
@@ -14,14 +16,12 @@ from keyboards.admin_params import kb_params_choice, kb_params_back
 _pair_pattern = r'^[a-zA-Z]{3}/[a-zA-Z]{3}$'
 
 
-async def handle_other_text(message: Message, bot: AsyncTeleBot):
+async def handle_other_text(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    await set_state_data(
-        bot, user_id, chat_id, {
-            'text': get_normal_text(message)
-        }
+    await state.add_data(
+        text=get_normal_text(message)
     )
 
     await bot.send_message(
@@ -30,7 +30,7 @@ async def handle_other_text(message: Message, bot: AsyncTeleBot):
     )
 
 
-async def handle_forex_pair(message: Message, bot: AsyncTeleBot):
+async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -42,14 +42,14 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot):
         return
     pair = pair.upper()
 
-    await set_state_data(bot, user_id, chat_id, {'pair': pair})
+    await state.add_data(pair=pair)
     await bot.send_message(
         chat_id, 'Введите цену пары:',
         reply_markup=kb_params_back())
-    await bot.set_state(user_id, AdminParamsState.forex_price, chat_id)
+    await state.set(AdminParamsState.forex_price)
 
 
-async def handle_forex_price(message: Message, bot: AsyncTeleBot):
+async def handle_forex_price(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -60,14 +60,14 @@ async def handle_forex_price(message: Message, bot: AsyncTeleBot):
             reply_markup=kb_params_back())
         return
 
-    await set_state_data(bot, user_id, chat_id, {'price': price})
+    await state.add_data(price=price)
     await bot.send_message(
         chat_id, 'Введите вспомогательную пару (XXX/XXX) или "-", если её нет:',
         reply_markup=kb_params_back())
-    await bot.set_state(user_id, AdminParamsState.forex_help_pair, chat_id)
+    await state.set(AdminParamsState.forex_help_pair)
 
 
-async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot):
+async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -79,19 +79,20 @@ async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot):
         return
     help_pair = help_pair.upper() if help_pair != '-' else None
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        pair = data.get('pair', '')
-        price = data.get('price', 0)
+    data: dict[str, Any] = state.data()
+    pair = data.get('pair', '')
+    price = data.get('price', 0)
 
     db.update_forex(pair, price, help_pair)
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
     await bot.send_message(
-        chat_id, 'Пара успешно добавлен!\nВведите валютную пару:',
-        reply_markup=kb_params_back())
-    await bot.set_state(user_id, AdminParamsState.forex_pair, chat_id)
+        chat_id, 'Пара успешно добавлена!\nВведите валютную пару:',
+        reply_markup=kb_params_back()
+    )
+    await state.set(AdminParamsState.forex_pair)
 
 
-async def handle_count_trial_days(message: Message, bot: AsyncTeleBot):
+async def handle_count_trial_days(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -110,7 +111,7 @@ async def handle_count_trial_days(message: Message, bot: AsyncTeleBot):
         reply_markup=kb_params_back()
     )
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
 def registration(bot: AsyncTeleBot):

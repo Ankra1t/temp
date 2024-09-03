@@ -1,8 +1,10 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from common.keyboard import back_txt
+
+from models import CallbackQuery
 
 
 admin_tariffs_factory = CallbackData(

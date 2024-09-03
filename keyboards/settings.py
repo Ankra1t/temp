@@ -1,11 +1,11 @@
 from typing import Literal
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, MARKETS_TYPE
+from models import LANGUAGES_TYPE, MARKETS_TYPE, CallbackQuery
 
 from keyboards.stats import getButton as getStatsButton
 from keyboards.calculate import get_settings_from_calc_button, calculate_factory

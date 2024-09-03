@@ -3,12 +3,12 @@ from math import ceil
 import math
 import os
 from typing import Literal
-from telebot.types import Message, InputMediaPhoto
+from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
 from AuthRoles import first_timeout
 from states.stats import ChannelCalcState, StatsState
-from common.utils import delete_message, edit_message, edit_message, get_lang, get_print_float, set_state_data
+from common.utils import delete_message, edit_message, edit_message, get_lang, get_print_float
 from data.data import liteDb
 
 from db import db
@@ -26,7 +26,7 @@ from messages.common import transl_status
 from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
 
 from messages.violation import msg_violation
-from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation
+from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message
 from services import calculation, channel_calc, ticker, violation
 
 from keyboards.channel_post import (
@@ -41,7 +41,6 @@ from keyboards.settings import (
     kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
-
 
 
 async def send_main(message: Message, bot: AsyncTeleBot, user_id: int, is_first=False):
@@ -255,7 +254,7 @@ async def send_manual_page(message: Message, bot: AsyncTeleBot, page: int, user_
         )
     else:
         await bot.edit_message_media(
-            InputMediaPhoto(photo, text, 'MarkDown'),
+            InputMediaPhoto(photo, text, 'MarkDown'), # type: ignore
             chat_id, mes_id,
             reply_markup=keyboard
         )
@@ -456,7 +455,11 @@ async def send_stats(bot: AsyncTeleBot, message: Message, user_id: int, is_first
         )
 
     await bot.set_state(user_id, 'user_calc_id live', chat_id)
-    await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
+    await bot.add_data(
+        chat_id=chat_id,
+        user_id=user_id,
+        del_mes_id=new_mes_id,
+    )
 
 
 async def send_calc_list(bot: AsyncTeleBot, message: Message, user_id: int, list_type: str, page=0, is_first=False):
@@ -508,7 +511,11 @@ async def send_calc_list(bot: AsyncTeleBot, message: Message, user_id: int, list
         )
 
     await bot.set_state(user_id, f'user_calc_id {list_type}', chat_id)
-    await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes_id})
+    await bot.add_data(
+        chat_id=chat_id,
+        user_id=user_id,
+        del_mes_id=new_mes_id,
+    )
 
 
 async def send_user_tariffs(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
@@ -675,7 +682,11 @@ async def send_freeze(
     day_risk = calcService.check_day_risk(user_id, market)
     if day_risk:
         await bot.set_state(user_id, StatsState.freeze, chat_id)
-        await set_state_data(bot, user_id, chat_id, {'market': market})
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            market=market,
+        )
 
         text = msg_freeze_calc(lang, day_risk)
         kb = kb_freeze_calc(lang)
@@ -738,23 +749,23 @@ async def create_and_send_calc(bot: AsyncTeleBot, message: Message, user_id: int
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        stat_id = data.get('stat_id')
-        calc_type = data.get('calc_type', 'crypto')
+    data =  bot.retrieve_data(user_id, chat_id) or {}
+    stat_id = data.get('stat_id')
+    calc_type = data.get('calc_type', 'crypto')
 
-        deposit: float = data.get('deposit') or 1.0
-        risk: tuple[float, bool] = data.get('risk') or (1., False)
-        currency = data.get('currency', 'USD')
-        trading_style = data.get('trading_style')
-        trading_type = data.get('trading_type') or 'margin'
+    deposit: float = data.get('deposit') or 1.0
+    risk: tuple[float, bool] = data.get('risk') or (1., False)
+    currency = data.get('currency', 'USD')
+    trading_style = data.get('trading_style')
+    trading_type = data.get('trading_type') or 'margin'
 
-        open_price: float = data.get('open_price') or 0
-        forex = data.get('forex')
-        tool = data.get('tool')
-        updated_risk = data.get('updated_risk') or 1.
-        is_from_deposit = data.get('is_from_deposit') or False
+    open_price: float = data.get('open_price') or 0
+    forex = data.get('forex')
+    tool = data.get('tool')
+    updated_risk = data.get('updated_risk') or 1.
+    is_from_deposit = data.get('is_from_deposit') or False
 
-        is_try = data.get('is_try', False)
+    is_try = data.get('is_try', False)
 
     if stat_id is not None:
         calc_info = calculation.get(stat_id)
@@ -763,7 +774,11 @@ async def create_and_send_calc(bot: AsyncTeleBot, message: Message, user_id: int
 
         if calc_info.openPrice == stop_loss:
             new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
-            await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+            await bot.add_data(
+                chat_id=chat_id,
+                user_id=user_id,
+                del_mes_id=new_mes.id,
+            )
             return
 
         db.change_calculation_stop_loss(stat_id, stop_loss)
@@ -775,7 +790,11 @@ async def create_and_send_calc(bot: AsyncTeleBot, message: Message, user_id: int
 
     if open_price == stop_loss:
         new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
-        await set_state_data(bot, user_id, chat_id, {'del_mes_id': new_mes.id})
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            del_mes_id=new_mes.id,
+        )
         return
 
     u_base = db.get_calc_user_settings(user_db_id)
@@ -1011,7 +1030,11 @@ async def send_admin_channel_calc_list(bot: AsyncTeleBot, message: Message, user
         )
 
     await bot.set_state(user_id, 'handle_calc_id', chat_id)
-    await set_state_data(bot, user_id, chat_id, {'del_mes_id': del_mes_id})
+    await bot.add_data(
+        chat_id=chat_id,
+        user_id=user_id,
+        del_mes_id=del_mes_id,
+    )
 
 
 async def send_admin_channel_calc_item(
@@ -1098,10 +1121,13 @@ async def send_admin_channel_calc_item(
 
     if is_state:
         await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
-            })
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            del_mes_id=del_mes_id,
+            stat_id=calc_id,
+            type=type
+        )
 
 
 async def send_calc_stat_item(
@@ -1177,10 +1203,12 @@ async def send_calc_stat_item(
 
     if is_state:
         await bot.set_state(user_id, ChannelCalcState.loss, chat_id)
-        await set_state_data(
-            bot, user_id, chat_id, {
-                'del_mes_id': del_mes_id, 'stat_id': calc_id, 'type': type
-            }
+        await bot.add_data(
+            chat_id=chat_id,
+            user_id=user_id,
+            del_mes_id=del_mes_id,
+            stat_id=calc_id,
+            type=type
         )
 
 

@@ -1,6 +1,9 @@
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
+
+from models import CallbackQuery
+
 
 user_education_factory = CallbackData(
     'type', 'page', 'num_les', prefix='user_education'

@@ -1,8 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from AuthRoles import check_registrate
-from common.utils import delete_message, set_state_data
+from common.utils import delete_message
 from common.utils import get_post_from_message
 from states.admin_posts import AdminPostsState
 
@@ -11,9 +11,10 @@ from keyboards.livepost import kb_livepost_type
 from pages.calculate import send_admin_channel_calc_item, send_calculation
 
 from services import calculation
+from models import Message
 from db import db
 
-async def handle_livepost(message: Message, bot: AsyncTeleBot):
+async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateContext):
     mes_id = message.id
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -109,9 +110,8 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot):
     if post is None:
         return
 
-    state_data = {'post': post, 'kind': 'live'}
-    await bot.set_state(user_id, AdminPostsState.live, chat_id)
-    await set_state_data(bot, user_id, chat_id, state_data)
+    await state.set(AdminPostsState.live)
+    await state.add_data(post=post, kind='live')
 
     await bot.send_message(
         chat_id, 'Выберите действие:',

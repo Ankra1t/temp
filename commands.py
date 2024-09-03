@@ -1,14 +1,13 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 from telebot.util import extract_arguments
-
+from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 from AuthRoles import check_registrate
 from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
-from models import LANGUAGES
+from models import LANGUAGES, Message
 from services import auth
 
 from common.utils import get_lang, is_digit
@@ -80,7 +79,6 @@ async def _calc(message: Message, bot: AsyncTeleBot):
     chat_id = message.chat.id
 
     await send_main(message, bot, user_id, True)
-    await bot.delete_state(user_id, chat_id)
 
 
 async def _teststart(message: Message, bot: AsyncTeleBot):
@@ -96,23 +94,23 @@ async def _teststart(message: Message, bot: AsyncTeleBot):
     )
 
 
-async def _faq(message: Message, bot: AsyncTeleBot):
+async def _faq(message: Message, bot: AsyncTeleBot, state: StateContext):
     text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     await bot.send_message(message.chat.id, msg)
-    await bot.delete_state(message.from_user.id, message.chat.id)
+    await state.delete()
 
 
-async def _about_us(message: Message, bot: AsyncTeleBot):
+async def _about_us(message: Message, bot: AsyncTeleBot, state: StateContext):
     text = db.get_text_by_name('О нас')
     msg = text.message if (text is not None) else '*Ошибка*'
 
     await bot.send_message(message.chat.id, msg)
-    await bot.delete_state(message.from_user.id, message.chat.id)
+    await state.delete()
 
 
-async def _support(message: Message, bot: AsyncTeleBot):
+async def _support(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
@@ -123,7 +121,7 @@ async def _support(message: Message, bot: AsyncTeleBot):
         message.chat.id, msg,
         reply_markup=kb_support(lang, sup)
     )
-    await bot.delete_state(message.from_user.id, message.chat.id)
+    await state.delete()
 
 
 async def _manual(message: Message, bot: AsyncTeleBot):

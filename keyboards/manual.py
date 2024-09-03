@@ -1,9 +1,9 @@
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt
-from models import MANUAL_TYPE, LANGUAGES_TYPE
+from models import MANUAL_TYPE, LANGUAGES_TYPE, CallbackQuery
 
 
 manual_factory = CallbackData('type', 'page', prefix='manual')

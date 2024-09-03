@@ -1,6 +1,6 @@
 import re
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from models import Message
 
 from db import db
 from states.account import UserAccountState

@@ -1,9 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.states.asyncio.context import StateContext
 
 from common.dt import get_str_by_datetime
 from db import db
 from Classes import pay_guard
+from models import Message
 
 from config_logger import logger
 
@@ -17,13 +18,13 @@ from keyboards.admin_users import kb_admin_users_back, kb_admin_users_cancel
 from pages.admin import send_admin_client
 
 
-async def handle_client_search(message: Message, bot: AsyncTeleBot):
+async def handle_client_search(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        sort_by = data.get('sort_by') or ''
-        page = data.get('page') or 1
+    data = state.data()
+    sort_by = data.get('sort_by') or ''
+    page = data.get('page') or 1
 
     client_name_id = text_accept(message)
     if client_name_id is None:
@@ -56,16 +57,16 @@ async def handle_client_search(message: Message, bot: AsyncTeleBot):
         sort_by, page
     )
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
-async def handle_days_subscribe(message: Message, bot: AsyncTeleBot):
+async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     lang = get_lang(user_id)
 
     chat_id = message.chat.id
     days = digit_accept(message, int)
-    current_state = await bot.get_state(user_id, chat_id)
+    current_state = await state.get()
 
     if days is None:
         await bot.send_message(
@@ -80,9 +81,9 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot):
             reply_markup=kb_admin_users_back()
         )
 
-    async with bot.retrieve_data(user_id, chat_id) as data:
-        tariff_id = data.get('tariff_id')
-        subscribe_user_id = data.get('user_id')
+    data = state.data()
+    tariff_id = data.get('tariff_id', 0)
+    subscribe_user_id = data.get('user_id', 0)
 
     # Получить tg_user_id
     user = db.get_user_by_id(subscribe_user_id)
@@ -131,7 +132,7 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot):
             logger.error(f'Что то пошло не так {e}')
             pass
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
 
 def registration(bot: AsyncTeleBot):

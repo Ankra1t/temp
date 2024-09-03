@@ -2,15 +2,14 @@ import asyncio
 import re
 from typing import Coroutine, Literal, TypeVar, Any, Callable
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from telebot.apihelper import ApiTelegramException
 
 from common.dt import get_str_by_datetime
 from data.data import liteDb
 from db import db
 
-from config_logger import logger
-from models import Price, Post, UserInfo, LANGUAGES_TYPE
+from models import Price, Post, UserInfo, LANGUAGES_TYPE, Message
 
 
 T = TypeVar('T', int, float)
@@ -35,15 +34,6 @@ def digit_accept(message: Message, type: type[T] = float):
 def text_accept(message: Message):
     if message.content_type == 'text' and message.text is not None:
         return message.text
-
-
-async def set_state_data(bot: AsyncTeleBot, user_id: int, chat_id: int, value: dict[str, Any]):
-    try:
-        async with bot.retrieve_data(user_id, chat_id) as data:
-            for key in value:
-                data[key] = value[key]
-    except Exception as e:
-        logger.error(f'Ошибка в записи данных state [{key} {value}] [{e}]')
 
 
 async def edit_message(
