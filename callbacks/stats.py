@@ -1367,17 +1367,16 @@ async def edit_live_info(
                     now_changed = '⚡️ <b>НОВОЕ:</b>\n\n' if lang == 'ru' else '⚡️ <b>NEW:</b>\n\n'
                     now_changed += f'\n{current_msg}'.strip()
 
-                if date in msges:
-                    msges[date] += current_msg
+                if 'main' in msges:
+                    msges['main'] += current_msg
                 else:
-                    msges[date] = current_msg
+                    msges['main'] = current_msg
 
-            msg = ''
-            for key in msges:
-                msg += f'\n\n⚡️ <b>{key} | '
-                msg += 'LIVE-сделки' if lang == 'ru' else 'LIVE-deals'
-                msg += '</b>\n\n'
-                msg += msges[key].strip()
+
+            day = 31 - 19 + 4 + 1
+            msg = f'⚡️ <b>{day} ' + ('ДЕНЬ МАРАФОНА' if lang == 'ru' else 'DAY OF MARATHON')
+            msg += '</b>\n\n'
+            msg += msges['main'].strip()
 
             if msg != '':
                 msg += '\n\n<b>'
