@@ -1457,7 +1457,7 @@ def edit_live_info(
                 text = 'Статистика' if lang == 'ru' else 'Stats'
                 msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
 
-            msg = now_changed + msg
+            # msg = now_changed + msg
             try:
                 if changed_calc is not None and changed_calc.status == 'DEAL' or live[0] is None:
                     if live[0] is not None:
