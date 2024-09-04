@@ -46,7 +46,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     elif type == 'pay_tariff_yoo':
         return
-        delete_message(bot, chat_id, mes_id)
+        await delete_message(bot, chat_id, mes_id)
 
         user_sub = db.get_current_subscribe_user(user.id)
 

@@ -283,7 +283,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             trading_style_type += f'<b>{texts[lang]["style"]}</b>: {t_style}'
 
             if calc.tradingType:
-                trading_style_type = f' ({transl_tr_type(calc.tradingType, lang)})'
+                trading_style_type += f' ({transl_tr_type(calc.tradingType, lang)})'
             trading_style_type += '\n'
 
     # Округление

@@ -27,8 +27,10 @@ class AuthMiddleWare(BaseMiddleware):
         state = StateContext(message, self.bot)  # type: ignore
 
         tgId = message.from_user.id
+        isText = False
         if isinstance(message, Message):
             chat_id = message.chat.id
+            isText = message.content_type == 'text'
         else:
             chat_id = message.message.chat.id
 
@@ -36,7 +38,7 @@ class AuthMiddleWare(BaseMiddleware):
         if db.check_ban_user(user_db_id):
             return CancelUpdate()
 
-        if await state.get() is not None:
+        if (await state.get() is not None) and isText:
             async with state.data() as state_data:
                 del_mes_id = state_data.get('del_mes_id')
                 edit_mes = state_data.get('edit_mes')

@@ -82,16 +82,9 @@ async def choose_calculate_step(
         if last_value is not None:
             last_values = data.get('last_values')
             if last_values is None:
-                await bot.add_data(
-                    user_id, chat_id,
-                    last_values=[last_value]
-                )
+                data['last_values'] = [last_value]
             else:
-                last_values.append(last_value)
-                await bot.add_data(
-                    user_id, chat_id,
-                    last_values=last_values
-                )
+                data['last_values'].append(last_value)
 
         calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
         forex: ForexInfo | None = data.get('forex')

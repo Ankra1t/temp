@@ -165,7 +165,7 @@ async def handle_new_post_signal(message: Message, bot: AsyncTeleBot, state: Sta
 async def handle_new_post_content(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
 
-    post = get_post_from_message(bot, message, kb_posts_back)
+    post = await get_post_from_message(bot, message, kb_posts_back)
 
     if post is None:
         await bot.send_message(

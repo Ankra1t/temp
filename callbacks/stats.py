@@ -384,7 +384,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             media = call.message.photo[-1].file_id if call.message.photo else None
 
-            edit_message(
+            await edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 msg_calculate_change(user.lang, text),
                 kb_calculate_change(user.lang, calc_id),
@@ -404,7 +404,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             is_valid = await pay_guard.valid_use_calc(user.tgId, bot)
             calc_info = calculation.get(calc_id)
 
-            edit_message(
+            await edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
                 kb_main(user.lang, user.tgId, is_valid, calc_info),
@@ -509,7 +509,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         text = msg_enter_calc_img_text(user.lang, calc)
         kb = kb_calc_image_text(user.lang, calc)
 
-        new_mes_id = edit_message(bot, call.message, 'text', text, kb)
+        new_mes_id = await edit_message(bot, call.message, 'text', text, kb)
 
         await state.set(StatsState.add_image_text)
         await state.add_data(
@@ -526,7 +526,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         text = 'Введите комментарий:'
         kb = kb_calc_image_text(user.lang, calc)
 
-        new_mes_id = edit_message(bot, call.message, 'text', text, kb)
+        new_mes_id = await edit_message(bot, call.message, 'text', text, kb)
 
         await state.set(StatsState.add_image_text)
         await state.add_data(
@@ -710,7 +710,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'stc+photo':
-        new_mes_id = edit_message(
+        new_mes_id = await edit_message(
             bot, call.message, 'text',
             '👉 Отправьте <b>новое фото</b>:',
             kb_send_back(calc_id)
@@ -1248,7 +1248,7 @@ async def edit_live_info(
         finished = ''
 
         if live and len(live[1]) > 0:
-            msges: dict[str, str] = {}
+            msges = ''
 
             now_changed = ''
             count_deal = 0
@@ -1367,16 +1367,13 @@ async def edit_live_info(
                     now_changed = '⚡️ <b>НОВОЕ:</b>\n\n' if lang == 'ru' else '⚡️ <b>NEW:</b>\n\n'
                     now_changed += f'\n{current_msg}'.strip()
 
-                if 'main' in msges:
-                    msges['main'] += current_msg
-                else:
-                    msges['main'] = current_msg
+                msges += current_msg
 
 
-            day = 31 - 19 + 4 + 1
+            day = 31 - 19 + get_datetime_now().day + 1
             msg = f'⚡️ <b>{day} ' + ('ДЕНЬ МАРАФОНА' if lang == 'ru' else 'DAY OF MARATHON')
             msg += '</b>\n\n'
-            msg += msges['main'].strip()
+            msg += msges.strip()
 
             if msg != '':
                 msg += '\n\n<b>'

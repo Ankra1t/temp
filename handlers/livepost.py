@@ -104,7 +104,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
     except:
         pass
 
-    post = get_post_from_message(bot, message, kb_posts_back)
+    post = await get_post_from_message(bot, message, kb_posts_back)
 
     if post is None:
         return

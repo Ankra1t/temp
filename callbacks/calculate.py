@@ -46,6 +46,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 value = last_values.pop()
                 data[value] = None
 
+        async with state.data() as data:
+            print(data)
+
         await choose_calculate_step(bot, user.tgId, call.message, True)
 
     if type == 'go_settings':
