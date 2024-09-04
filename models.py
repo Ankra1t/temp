@@ -1,4 +1,7 @@
 from telebot.types import Message as _Message, User as _User, CallbackQuery as _CallbackQuery
+from telebot.states.asyncio.context import StateContext as _StateContext
+from telebot.asyncio_storage.base_storage import StateDataContext as _StateDataContext
+
 from pydantic import BaseModel
 from typing import Literal, Union, Optional
 from datetime import datetime
@@ -21,6 +24,9 @@ MANUAL_TYPE = Literal[
 LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
+class StateContext(_StateContext):
+    def data(self) -> _StateDataContext:
+        return super().data() # type: ignore
 
 class Message(_Message):
     from_user: _User

@@ -1,10 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from Classes import pay_guard
 from db import db
-from models import Post, CallbackQuery
+from models import Post, CallbackQuery, StateContext, User
 
 
 from keyboards.admin_posts import (
@@ -16,7 +15,7 @@ from states.admin_posts import AdminPostsState
 from pages.admin import send_admin_post, send_admin_fut_posts, send_admin_main
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -24,14 +23,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     type = callback_data['type']
 
     chat_id = call.message.chat.id
-    user_id = call.from_user.id
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user.tgId)
 
     if type == 'go_posts':
-        await send_admin_fut_posts(bot, call.message, user_id)
+        await send_admin_fut_posts(bot, call.message, user.tgId)
 
     if type == 'add':
         await bot.edit_message_text(
@@ -52,7 +50,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if len(posts) == 0:
             await bot.edit_message_text(
                 'Нет отложенных постов',
-                chat_id, user_id,
+                chat_id, user.tgId,
                 reply_markup=kb_posts()
             )
             return
@@ -60,7 +58,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         for i in range(len(posts)):
             await send_admin_post(bot, chat_id, posts[i])
 
-        await send_admin_fut_posts(bot, call.message, user_id, True)
+        await send_admin_fut_posts(bot, call.message, user.tgId, True)
 
     if type == 'send_now':
         await bot.edit_message_text('Отправьте ID поста, чтобы его разослать сейчас',
@@ -70,8 +68,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if 'choose_kind_' in type:
         try:
-            data = bot.retrieve_data(user_id, chat_id) or {}
-            prev_kind = data.get('kind') or ''
+            async with state.data() as data:
+                prev_kind = data.get('kind') or ''
         except:
             prev_kind = ''
 
@@ -106,14 +104,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             type = 'Всем'
 
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        post_data: Post = data.get('post', {})
+        async with state.data() as data:
+            post_data: Post = data.get('post', {})
 
         db.add_post(post_data)
         await state.delete()
 
         await bot.edit_message_text('Успешно!', chat_id, mes_id)
-        await send_admin_fut_posts(bot, call.message, user_id, True)
+        await send_admin_fut_posts(bot, call.message, user.tgId, True)
 
     if 'confirm' in type:
         if 'no':
@@ -121,8 +119,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                 'Отправьте ID поста', chat_id, mes_id,
                 reply_markup=kb_posts_back())
         if 'yes' in type:
-            data = bot.retrieve_data(user_id, chat_id) or {}
-            post_id = data.get('post_id', 0)
+            async with state.data() as data:
+                post_id = data.get('post_id', 0)
 
             text = 'Пост успешно удалён!'
 
@@ -160,7 +158,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
             await state.delete()
             await bot.edit_message_text(text, chat_id, mes_id)
-            await send_admin_fut_posts(bot, call.message, user_id, True)
+            await send_admin_fut_posts(bot, call.message, user.tgId, True)
 
     await bot.answer_callback_query(call.id)
 

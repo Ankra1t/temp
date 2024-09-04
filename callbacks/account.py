@@ -2,7 +2,6 @@ import asyncio
 from pytonconnect import TonConnect
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from Classes.TonWallet import get_connector
 from common.utils import get_lang
@@ -10,7 +9,7 @@ from config_logger import logger
 from db import db
 from messages.enter import msg_choose_lang
 from messages.main import msg_support
-from models import LANGUAGES, CallbackQuery
+from models import LANGUAGES, CallbackQuery, StateContext, User
 
 from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
@@ -26,61 +25,56 @@ from pages.user import send_referral, send_user_account, send_user_main, send_us
 
 connector = get_connector(6919899538)
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
     callback_data: dict = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
 
-    user_id = call.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     logger.info(
-        f'callback "user_account_factory" user_tg_id={user_id} type={type}'
+        f'callback "user_account_factory" user_tg_id={user.tgId} type={type}'
     )
 
     if type == 'purchases':
-        purchases = db.get_purchases_by_user(user_id)
+        purchases = db.get_purchases_by_user(user.tgId)
 
         await bot.edit_message_text(
-            msg_user_purchases(lang, purchases),
+            msg_user_purchases(user.lang, purchases),
             chat_id, mes_id,
-            reply_markup=kb_user_purchases(lang)
+            reply_markup=kb_user_purchases(user.lang)
         )
 
     if type == 'main':
-        await send_user_main(bot, call.message, user_id)
+        await send_user_main(bot, call.message, user.tgId)
 
     if type == 'back':
-        await send_user_account(bot, call.message, user_id)
+        await send_user_account(bot, call.message, user.tgId)
 
     if type == 'support':
         sup = db.get_support_name()
-        msg = msg_support(lang)
+        msg = msg_support(user.lang)
 
         await bot.edit_message_text(
             msg, chat_id, mes_id,
-            reply_markup=kb_support(lang, sup)
+            reply_markup=kb_support(user.lang, sup)
         )
         await state.delete()
 
     if type == 'referral':
-        await send_referral(bot, call.message, user_id)
+        await send_referral(bot, call.message, user.tgId)
 
     if type == 'referral_list':
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        referrals = db.get_user_referals(user_db_id)
+        referrals = db.get_user_referals(user.id)
 
-        text = msg_referral_list(lang, user_db_id, referrals)
+        text = msg_referral_list(user.lang, user.id, referrals)
 
         await bot.edit_message_text(
             text, chat_id, mes_id,
-            reply_markup=kb_user_referral_list(lang)
+            reply_markup=kb_user_referral_list(user.lang)
         )
 
     if type == 'password':
@@ -90,7 +84,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.set(UserAccountState.password)
 
     if type == 'params':
-        await send_user_params(bot, call.message, user_id)
+        await send_user_params(bot, call.message, user.tgId)
 
     if 'set_lang' in type:
         is_edit_lang = False
@@ -98,9 +92,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         for lang in LANGUAGES:
             if f'_{lang}' in type:
                 is_edit_lang = True
-                user_db_id = db.get_user_id_by_tg_id(user_id)
-                db.set_user_lang(user_db_id, lang)
-                await send_user_params(bot, call.message, user_id)
+                db.set_user_lang(user.id, lang)
+                await send_user_params(bot, call.message, user.tgId)
 
         if not is_edit_lang:
             await bot.edit_message_text(
@@ -117,14 +110,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.set(UserAccountState.nickname)
 
     if type == 'wallet':
-        asyncio.run(walletPage(bot, chat_id, user_id))
+        asyncio.run(walletPage(bot, chat_id, user.tgId))
 
     if 'connect++' in type:
         _, wallet = type.split('++')
-        asyncio.run(connect_wallet(bot, chat_id, user_id, mes_id, wallet))
+        asyncio.run(connect_wallet(bot, chat_id, user.tgId, mes_id, wallet))
 
     if type == 'wallet_check':
-        asyncio.run(check_wallet(bot, chat_id, user_id, mes_id))
+        asyncio.run(check_wallet(bot, chat_id, user.tgId, mes_id))
 
     await bot.answer_callback_query(call.id)
 

@@ -78,34 +78,33 @@ async def choose_calculate_step(
     chat_id = message.chat.id
     mes_id = message.id
 
-    data = bot.retrieve_data(user_id, chat_id) or {}
+    async with bot.retrieve_data(user_id, chat_id) as data: # type: ignore
+        if last_value is not None:
+            last_values = data.get('last_values')
+            if last_values is None:
+                await bot.add_data(
+                    user_id, chat_id,
+                    last_values=[last_value]
+                )
+            else:
+                last_values.append(last_value)
+                await bot.add_data(
+                    user_id, chat_id,
+                    last_values=last_values
+                )
 
-    if last_value is not None:
-        last_values = data.get('last_values')
-        if last_values is None:
-            await bot.add_data(
-                user_id, chat_id,
-                last_values=[last_value]
-            )
-        else:
-            last_values.append(last_value)
-            await bot.add_data(
-                user_id, chat_id,
-                last_values=last_values
-            )
-
-    calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
-    forex: ForexInfo | None = data.get('forex')
-    open_price = data.get('open_price')
-    trading_style = data.get('trading_style')
-    tool = data.get('tool', '')
-    deposit = data.get('deposit')
-    currency = data.get('currency')
-    risk = data.get('risk')
-    updated_risk = data.get('updated_risk')
-    is_try = data.get('is_try', False)
-    stop_type = data.get('stop_type', 'default')
-    stop_loss = data.get('stop_loss')
+        calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
+        forex: ForexInfo | None = data.get('forex')
+        open_price = data.get('open_price')
+        trading_style = data.get('trading_style')
+        tool = data.get('tool', '')
+        deposit = data.get('deposit')
+        currency = data.get('currency')
+        risk = data.get('risk')
+        updated_risk = data.get('updated_risk')
+        is_try = data.get('is_try', False)
+        stop_type = data.get('stop_type', 'default')
+        stop_loss = data.get('stop_loss')
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)

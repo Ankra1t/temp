@@ -1,14 +1,13 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from common.dt import get_str_by_datetime
 from db import db
 from Classes import pay_guard
-from models import Message
+from models import Message, StateContext, User
 
 from config_logger import logger
 
-from common.utils import digit_accept, get_lang, is_digit, text_accept
+from common.utils import digit_accept, is_digit, text_accept
 
 from messages.errros import msg_digit_error
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
@@ -22,9 +21,9 @@ async def handle_client_search(message: Message, bot: AsyncTeleBot, state: State
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    data = state.data()
-    sort_by = data.get('sort_by') or ''
-    page = data.get('page') or 1
+    async with state.data() as data:
+        sort_by = data.get('sort_by') or ''
+        page = data.get('page') or 1
 
     client_name_id = text_accept(message)
     if client_name_id is None:
@@ -60,17 +59,14 @@ async def handle_client_search(message: Message, bot: AsyncTeleBot, state: State
     await state.delete()
 
 
-async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     days = digit_accept(message, int)
     current_state = await state.get()
 
     if days is None:
         await bot.send_message(
-            chat_id, msg_digit_error(lang),
+            chat_id, msg_digit_error(user.lang),
             reply_markup=kb_admin_users_back()
         )
         return
@@ -81,13 +77,13 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
             reply_markup=kb_admin_users_back()
         )
 
-    data = state.data()
-    tariff_id = data.get('tariff_id', 0)
-    subscribe_user_id = data.get('user_id', 0)
+    async with state.data() as data:
+        tariff_id = data.get('tariff_id', 0)
+        subscribe_user_id = data.get('user_id', 0)
 
     # Получить tg_user_id
-    user = db.get_user_by_id(subscribe_user_id)
-    if user is None:
+    usr = db.get_user_by_id(subscribe_user_id)
+    if usr is None:
         logger.error('[handle_days_subscribe]: не найден пользователь')
         return
 
@@ -96,9 +92,9 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
         if tariff is None:
             return
 
-        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
+        pay_guard.set_subscribe_unactive_by_user_id(usr.tg_id)
         datetime_show = pay_guard.set_trial(
-            user.tg_id, tariff.type_product, int(days)
+            usr.tg_id, tariff.type_product, int(days)
         )
 
         data_fin = get_str_by_datetime(datetime_show)
@@ -106,27 +102,27 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
         )
-        await send_admin_client(bot, message, user_id, subscribe_user_id, True)
+        await send_admin_client(bot, message, user.tgId, subscribe_user_id, True)
 
         await bot.send_message(
-            user.tg_id,
-            gift_subscribe_msg(user.tg_id, data_fin)
+            usr.tg_id,
+            gift_subscribe_msg(usr.tg_id, data_fin)
         )
 
     if current_state == 'AdminUsersState:trial_subscribe_days_get_days':
         try:
-            pay_guard.deactivate_user_trial_subscribe(user.id)
-            finish_dt = pay_guard.set_trial(user.id, 'calc', days)  # TODO
+            pay_guard.deactivate_user_trial_subscribe(usr.id)
+            finish_dt = pay_guard.set_trial(usr.id, 'calc', days)  # TODO
 
             data_fin = get_str_by_datetime(finish_dt)
             await bot.send_message(
                 chat_id,
                 f'Клиенту с id[{subscribe_user_id}] установлена пробная подписка на {days} дней, до {data_fin}'
             )
-            await send_admin_client(bot, message, user_id, subscribe_user_id, True)
+            await send_admin_client(bot, message, user.tgId, subscribe_user_id, True)
 
             await bot.send_message(
-                user.tg_id, gift_trial_subscribe_msg(user.tg_id, data_fin)
+                usr.tg_id, gift_trial_subscribe_msg(usr.tg_id, data_fin)
             )
         except Exception as e:
             logger.error(f'Что то пошло не так {e}')

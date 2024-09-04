@@ -1,11 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from Classes.YooKassa import yooKassa_create_payment
 from config_logger import logger
 from db import db
-from models import Message
-from common.utils import get_lang, text_accept
+from models import Message, StateContext, User
+from common.utils import text_accept
 
 from states.tariff import TariffState
 from keyboards.tariff import kb_bill
@@ -14,27 +13,24 @@ from messages.errros import msg_text_error
 from messages.users import msg_loading_invoice, msg_bill
 
 
-async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    target_id = data.get('tariff_id', 0)
+    async with state.data() as data:
+        target_id = data.get('tariff_id', 0)
 
     email = text_accept(message)
     if email is None:
         await bot.send_message(
-            chat_id, msg_text_error(lang)
+            chat_id, msg_text_error(user.lang)
         )
         return
 
-    logger.info(f'callback "handle_email" user_tg_id={user_id} value={email}')
+    logger.info(f'callback "handle_email" user_tg_id={user.tgId} value={email}')
 
     edit_wait_mess = await bot.send_message(
         message.chat.id,
-        msg_loading_invoice(user_id)
+        msg_loading_invoice(user.tgId)
     )
 
     tariff = db.get_price_by_id(target_id)
@@ -43,7 +39,7 @@ async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext)
 
     bot_url = f'https://t.me/{(await bot.get_me()).username}'
     yookassa_payment_url = yooKassa_create_payment(
-        user_id, tariff, bot_url, email
+        user.tgId, tariff, bot_url, email
     )
 
     if yookassa_payment_url == False:
@@ -53,9 +49,9 @@ async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext)
         return
 
     await bot.edit_message_text(
-        msg_bill(user_id),
+        msg_bill(user.tgId),
         chat_id, edit_wait_mess.id,
-        reply_markup=kb_bill(lang, yookassa_payment_url)
+        reply_markup=kb_bill(user.lang, yookassa_payment_url)
     )
     await state.delete()
 

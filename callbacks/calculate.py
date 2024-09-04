@@ -1,6 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation, channel_calc, ticker
@@ -8,7 +7,7 @@ from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import currencyService
-from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery
+from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery, StateContext, User
 
 from states.calculate import CalculateState
 
@@ -24,51 +23,47 @@ from keyboards.calculate import (
 from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
 
 
-async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
     callback_data = calculate_factory.parse(call.data)
     type = callback_data.get('type', '')
 
-    user_id = call.from_user.id
-    lang = get_lang(user_id)
-
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     logger.info(
-        f'callback "calculate_factory" user_tg_id={user_id} type={type}')
+        f'callback "calculate_factory" user_tg_id={user.tgId} type={type}')
 
     if type == 'go_main':
-        await send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user.tgId)
 
     if type == 'calc_back':
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        last_values = data.get('last_values', [])
-        if last_values is not None and len(last_values) > 0:
-            value = data['last_values'].pop()
-            data[value] = None
+        async with state.data() as data:
+            last_values = data.get('last_values', [])
+            if last_values is not None and len(last_values) > 0:
+                value = last_values.pop()
+                data[value] = None
 
-        await choose_calculate_step(bot, user_id, call.message, True)
+        await choose_calculate_step(bot, user.tgId, call.message, True)
 
     if type == 'go_settings':
-        await send_settings(bot, call.message, user_id)
+        await send_settings(bot, call.message, user.tgId)
 
-    if type == 'settings_from_calc' and bot.get_state(user_id, chat_id) is not None:
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        open_price: float | None = data.get('open_price')
-        tool: str | None = data.get('tool')
-        forex: ForexInfo | None = data.get('forex')
-        trading_style: str | None = data.get('trading_style')
-        risk: tuple[float, bool] | None = data.get('risk')
-        updated_risk: float | None = data.get('updated_risk')
-        deposit: float | None = data.get('deposit')
-        currency: str | None = data.get('currency')
-        last_values: list[str] = data.get('last_values') or []
+    if type == 'settings_from_calc' and (await state.get()) is not None:
+        async with state.data() as data:
+            open_price: float | None = data.get('open_price')
+            tool: str | None = data.get('tool')
+            forex: ForexInfo | None = data.get('forex')
+            trading_style: str | None = data.get('trading_style')
+            risk: tuple[float, bool] | None = data.get('risk')
+            updated_risk: float | None = data.get('updated_risk')
+            deposit: float | None = data.get('deposit')
+            currency: str | None = data.get('currency')
+            last_values: list[str] = data.get('last_values') or []
 
         if tool is not None or forex is not None:
-            user_db_id = db.get_user_id_by_tg_id(user_id)
             update_risk_rate = updated_risk
 
             risk_value = is_risk_percent = None
@@ -78,7 +73,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             unfinished_calc = UnfinishedCalculation(
                 id=-1,
-                user_id=user_db_id,
+                user_id=user.id,
                 tool=tool,
                 forex=forex,
                 open_price=open_price,
@@ -93,14 +88,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             db.add_unfinished_calc(unfinished_calc)
 
-        await send_settings(bot, call.message, user_id)
+        await send_settings(bot, call.message, user.tgId)
 
     if 'pair' in type:
         _, pair = type.split('+')
         pair_arr = pair.split('/')
 
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        user_settings = db.get_calc_user_settings(user_db_id)
+        user_settings = db.get_calc_user_settings(user.id)
         user_currency = getattr(user_settings, 'currency') or 'USD'
 
         price = currencyService.getPrice(pair_arr[0], pair_arr[1])
@@ -121,7 +115,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             forex=forex,
         )
         await choose_calculate_step(
-            bot, user_id, call.message,
+            bot, user.tgId, call.message,
             True, last_value='forex'
         )
 
@@ -130,7 +124,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         await state.add_data(tool=tool)
         await choose_calculate_step(
-            bot, user_id, call.message,
+            bot, user.tgId, call.message,
             True, last_value='tool'
         )
 
@@ -141,31 +135,30 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             open_price=float(open_price_val)
         )
         await choose_calculate_step(
-            bot, user_id, call.message,
+            bot, user.tgId, call.message,
             True, last_value='open_price'
         )
 
     if 'risk' in type:
         value = float(type.replace('risk', ''))
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        data['updated_risk'] = value
+        await state.add_data(update_risk=value)
 
-        await choose_calculate_step(bot, user_id, call.message, True)
+        await choose_calculate_step(bot, user.tgId, call.message, True)
 
     if type == 'calc_atr':
         await bot.edit_message_text(
-            msg_enter_max_bar(lang),
+            msg_enter_max_bar(user.lang),
             chat_id, mes_id,
-            reply_markup=kb_calc_cancel(lang)
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.set(CalculateState.max_bar)
 
     if type == 'calc_atr+':
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        cur_tool: str = data.get('tool', '')
-        stop_type: str = data.get('stop_type', '')
+        async with state.data() as data:
+            cur_tool: str = data.get('tool', '')
+            stop_type: str = data.get('stop_type', '')
 
-        atr_settings = liteDb.getUserAtrSettings(user_id)
+        atr_settings = liteDb.getUserAtrSettings(user.tgId)
         period, count = atr_settings[1].split('+')
 
         value = ticker.get_atr(cur_tool, period, int(count))
@@ -173,8 +166,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             return
 
         await bot.edit_message_text(
-            msg_choose_direct(lang, user_id), chat_id, mes_id,
-            reply_markup=kb_calc_direct(lang)
+            msg_choose_direct(user.lang, user.tgId), chat_id, mes_id,
+            reply_markup=kb_calc_direct(user.lang)
         )
 
         rate = 1
@@ -189,15 +182,15 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if 'direct+' in type:
         _, action = type.split('+')
 
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        atr = data.get('atr', 0)
-        stop_loss = data.get('stop_loss')
-        stat_id = data.get('stat_id', 0)
-        op: float = data.get('open_price', 0)
+        async with state.data() as data:
+            atr = data.get('atr', 0)
+            stop_loss = data.get('stop_loss')
+            stat_id = data.get('stat_id', 0)
+            op: float = data.get('open_price', 0)
 
         if stop_loss == -1:
             stat_id = await create_and_send_calc(
-                bot, call.message, user_id,
+                bot, call.message, user.tgId,
                 stop_loss if action == 'long' else op + 1,
                 False
             )
@@ -246,8 +239,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
                 stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
-                user_db_id = db.get_user_id_by_tg_id(user_id)
-                u_base = db.get_calc_user_settings(user_db_id, calc.market)
+                u_base = db.get_calc_user_settings(user.id, calc.market)
 
                 deposit = risk_val = None
                 if u_base is None or u_base.deposit is None:
@@ -268,7 +260,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
                 new_calc = Calculation(
                     id=-1,
-                    userId=user_db_id,
+                    userId=user.id,
                     currency=calc.currency,
                     deposit=deposit,
                     riskValue=risk_val,
@@ -288,9 +280,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 new_id = db.add_calculation(new_calc)
                 new_calc.id = new_id or -1
 
-                await send_calculation(bot, call.message, user_id, new_calc, True)
+                await send_calculation(bot, call.message, user.tgId, new_calc, True)
             else:
-                await create_and_send_calc(bot, call.message, user_id, stop_loss)
+                await create_and_send_calc(bot, call.message, user.tgId, stop_loss)
 
     await bot.answer_callback_query(call.id)
 

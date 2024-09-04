@@ -1,12 +1,11 @@
 import re
-from typing import Any, Literal
+from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from Classes.BlockTGBotSender import BlockTGBotSender
 
 from db import db
-from models import Post, PostDetails, Message
+from models import Post, PostDetails, Message, StateContext
 from config_logger import logger
 from common.utils import digit_accept, get_lang, text_accept, get_post_from_message
 from common.dt import get_datetime_by_str, get_datetime_now
@@ -26,12 +25,11 @@ ticker_pattern = r'[a-zA-Z]+\/[a-zA-Z]+'
 
 
 async def handle_new_post_name(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
     chat_id = message.chat.id
 
-    data: dict[str, Any] = state.data()
-    post: Post = data.get('post', {})
-    kind: str = data.get('kind') or ''
+    async with state.data() as data:
+        post: Post = data.get('post', {})
+        kind: str = data.get('kind') or ''
 
     if kind == 'live':
         kb_cancel = kb_livepost_cancel()
@@ -73,12 +71,11 @@ async def handle_new_post_name(message: Message, bot: AsyncTeleBot, state: State
 
 
 async def handle_new_post_ticker(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
     chat_id = message.chat.id
 
-    data = state.data()
-    post: Post = data.get('post', {})
-    kind: str = data.get('kind') or ''
+    async with state.data() as data:
+        post: Post = data.get('post', {})
+        kind: str = data.get('kind') or ''
 
     if kind == 'live':
         kb_cancel = kb_livepost_cancel()
@@ -107,12 +104,11 @@ async def handle_new_post_ticker(message: Message, bot: AsyncTeleBot, state: Sta
 
 
 async def handle_new_post_signal(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
     chat_id = message.chat.id
 
-    state_data = state.data()
-    kind = state_data.get('kind') or ''
-    post: Post = state_data.get('post', {})
+    async with state.data() as state_data:
+        kind = state_data.get('kind') or ''
+        post: Post = state_data.get('post', {})
 
     if post.details is None:
         logger.error('[handle_new_post_signal]: no details in post!')
@@ -167,7 +163,6 @@ async def handle_new_post_signal(message: Message, bot: AsyncTeleBot, state: Sta
 
 
 async def handle_new_post_content(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
     chat_id = message.chat.id
 
     post = get_post_from_message(bot, message, kb_posts_back)
@@ -179,9 +174,9 @@ async def handle_new_post_content(message: Message, bot: AsyncTeleBot, state: St
         )
         return
 
-    data = state.data()
-    data['post'] = post
-    kind = data.get('kind') or ''
+    async with state.data() as data:
+        data['post'] = post
+        kind = data.get('kind') or ''
 
     if kind == 'signal':
         new_state = AdminPostsState.name
@@ -215,9 +210,10 @@ async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot, state: S
     else:
         value = get_datetime_now()
 
-    data = state.data()
-    kind = data.get('kind')
-    post: Post = data.get('post', {})
+    async with state.data() as data:
+        kind = data.get('kind')
+        post: Post = data.get('post', {})
+
     post.date_time = value
 
     if post.details is None:
@@ -292,7 +288,6 @@ async def handle_action_post(action: Literal['send', 'delete']):
 async def handle_edit_text(message: Message, bot: AsyncTeleBot, state: StateContext):
     user_id = message.from_user.id
     chat_id = message.chat.id
-    mes_id = message.id
 
     text = text_accept(message)
     if text is None:
@@ -302,8 +297,8 @@ async def handle_edit_text(message: Message, bot: AsyncTeleBot, state: StateCont
         )
         return
 
-    data = state.data()
-    name = data.get('name', '')
+    async with state.data() as data:
+        name = data.get('name', '')
 
     db.update_text(name, text)
     await state.delete()

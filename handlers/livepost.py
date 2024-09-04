@@ -1,5 +1,4 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from AuthRoles import check_registrate
 from common.utils import delete_message
@@ -11,7 +10,7 @@ from keyboards.livepost import kb_livepost_type
 from pages.calculate import send_admin_channel_calc_item, send_calculation
 
 from services import calculation
-from models import Message
+from models import Message, StateContext
 from db import db
 
 async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateContext):
@@ -22,7 +21,9 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
     if message.content_type == 'text' and message.text is not None:
         text = message.text
 
-        if text.startswith('/') and bot.get_state(user_id, chat_id) == 'handle_calc_id':
+        type = str(await state.get())
+
+        if text.startswith('/') and type == 'handle_calc_id':
             await delete_message(bot, chat_id, mes_id)
 
             text = text.replace('/', '')
@@ -35,8 +36,6 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
             )
 
             return
-
-        type = str(bot.get_state(user_id, chat_id))
 
         if text.startswith('/') and 'user_calc_id' in type:
             await delete_message(bot, chat_id, mes_id)

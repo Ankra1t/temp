@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from models import CallbackQuery
+from models import CallbackQuery, User
 
 from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
 
@@ -13,43 +13,39 @@ from pages.admin import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
     callback_data = admin_main_factory.parse(call.data)
     type = callback_data.get('type', '')
 
-    user_id = call.from_user.id
-    chat_id = call.message.chat.id
-    mes_id = call.message.id
-
     if type == 'users':
-        await send_admin_users(bot, call.message, user_id)
+        await send_admin_users(bot, call.message, user.tgId)
 
     if type == 'workers':
-        await send_admin_workers(bot, call.message, user_id)
+        await send_admin_workers(bot, call.message, user.tgId)
 
     if type == 'fut_posts':
-        await send_admin_fut_posts(bot, call.message, user_id)
+        await send_admin_fut_posts(bot, call.message, user.tgId)
 
     if type == 'tariffs':
-        await send_admin_tariffs(bot, call.message, user_id)
+        await send_admin_tariffs(bot, call.message, user.tgId)
 
     if type == 'params':
-        await send_admin_params(bot, call.message, user_id)
+        await send_admin_params(bot, call.message, user.tgId)
 
     if type == 'payment':
-        await send_admin_payment(bot, call.message, user_id)
+        await send_admin_payment(bot, call.message, user.tgId)
 
     if type == 'site_code':
-        await send_site_code(bot, call.message, user_id)
+        await send_site_code(bot, call.message, user.tgId)
 
     if type == 'back':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user.tgId)
 
     if type == 'send_settings':
-        await send_admin_send_settings(bot, call.message, user_id)
+        await send_admin_send_settings(bot, call.message, user.tgId)
 
     await bot.answer_callback_query(call.id)
 

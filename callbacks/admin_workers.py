@@ -1,9 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from db import db
-from models import CallbackQuery
+from models import CallbackQuery, StateContext
 
 from common.utils import is_digit
 

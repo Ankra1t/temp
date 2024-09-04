@@ -23,17 +23,17 @@ months = {'ru': [
 async def msg_calculate(bot: AsyncTeleBot, user_id: int, chat_id: int, is_try=False):
     lang = get_lang(user_id)  # TODO - delete
 
-    data = bot.retrieve_data(user_id, chat_id) or {}
-    updated_risk = data.get('updated_risk') or 1.
-    type = data.get('calc_type', '')
-    ticker = data.get('ticker')
-    open_price = data.get('open_price')
-    forex: ForexInfo | None = data.get('forex')
-    tool: str = data.get('tool') or ''
-    deposit: float | None = data.get('deposit')
-    risk: tuple[float, bool] | None = data.get('risk')
-    currency: str | None = data.get('currency')
-    trading_type: TRADING_TYPE = data.get('trading_type', 'margin')
+    async with bot.retrieve_data(user_id, chat_id) as data: # type: ignore
+        updated_risk = data.get('updated_risk') or 1.
+        type = data.get('calc_type', '')
+        ticker = data.get('ticker')
+        open_price = data.get('open_price')
+        forex: ForexInfo | None = data.get('forex')
+        tool: str = data.get('tool') or ''
+        deposit: float | None = data.get('deposit')
+        risk: tuple[float, bool] | None = data.get('risk')
+        currency: str | None = data.get('currency')
+        trading_type: TRADING_TYPE = data.get('trading_type', 'margin')
 
     risk_value = risk[0] if (risk is not None) else None
     if (risk is not None) and risk[1] and (deposit is not None):

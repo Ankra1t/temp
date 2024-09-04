@@ -1,13 +1,12 @@
 from typing import Union
 from telebot.types import Message, CallbackQuery
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
-from telebot.states.asyncio.context import StateContext
 from telebot.util import update_types
 
 from common.utils import delete_message, get_lang
 
 from db import db
-from models import User
+from models import User, StateContext
 
 
 class AuthMiddleWare(BaseMiddleware):
@@ -25,6 +24,8 @@ class AuthMiddleWare(BaseMiddleware):
         if message.from_user is None:
             return CancelUpdate()
 
+        state = StateContext(message, self.bot)  # type: ignore
+
         tgId = message.from_user.id
         if isinstance(message, Message):
             chat_id = message.chat.id
@@ -35,10 +36,10 @@ class AuthMiddleWare(BaseMiddleware):
         if db.check_ban_user(user_db_id):
             return CancelUpdate()
 
-        if await self.bot.get_state(tgId, chat_id) is not None:
-            state_data = self.bot.retrieve_data(tgId, chat_id) or {}
-            del_mes_id = state_data.get('del_mes_id')
-            edit_mes = state_data.get('edit_mes')
+        if await state.get() is not None:
+            async with state.data() as state_data:
+                del_mes_id = state_data.get('del_mes_id')
+                edit_mes = state_data.get('edit_mes')
 
             await self.bot.add_data(
                 tgId, chat_id,
@@ -59,7 +60,7 @@ class AuthMiddleWare(BaseMiddleware):
 
         lang = get_lang(tgId)
 
-        data["state"] = StateContext(message, self.bot)  # type: ignore
+        data["state"] = state
         data["user"] = User(
             id=user_db_id,
             tgId=tgId,

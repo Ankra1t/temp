@@ -1,9 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from db import db
-from models import CallbackQuery
+from models import CallbackQuery, StateContext, User
 from Classes import pay_guard
 
 from states.admin_params import AdminParamsState
@@ -16,7 +15,7 @@ from keyboards.admin_params import (
 from pages.admin import send_admin_main, send_admin_params
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -24,14 +23,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     type = callback_data.get('type', '')
 
     chat_id = call.message.chat.id
-    user_id = call.from_user.id
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user.tgId)
 
     if type == 'go_params':
-        await send_admin_params(bot, call.message, user_id)
+        await send_admin_params(bot, call.message, user.tgId)
 
     if type == 'calculator':
         sup = db.get_support_name()
@@ -97,19 +95,20 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     elif 'choice' in type:
         if 'yes' in type:
-            data = bot.retrieve_data(user_id, chat_id) or {}
-            name = data.get('name', '')
-            text = data.get('text', '')
+            async with state.data() as data:
+                name = data.get('name', '')
+                text = data.get('text', '')
 
             db.update_text(name, text)
 
             await bot.send_message(chat_id, 'Успешно')
-            await send_admin_params(bot, call.message, user_id, True)
+            await send_admin_params(bot, call.message, user.tgId, True)
 
         if 'no' in type:
             await bot.edit_message_text(
                 'Что изменяем?', chat_id, mes_id,
-                reply_markup=kb_params_change())
+                reply_markup=kb_params_change()
+            )
 
         await state.delete()
 

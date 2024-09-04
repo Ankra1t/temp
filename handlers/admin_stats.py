@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 
@@ -8,7 +7,7 @@ from common.utils import text_accept
 from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from models import Message
+from models import Message, StateContext
 from Classes import base_statis
 
 from states.admin_stats import AdminStatisticsState
@@ -19,7 +18,7 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot, state: StateCon
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    current_state = await bot.get_state(user_id, chat_id)
+    current_state = await state.get()
 
     start_date = text_accept(message)
 
@@ -77,7 +76,6 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot, state: StateCon
 
 async def handle_fin_date(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     fin_date = text_accept(message)
     try:
@@ -94,8 +92,8 @@ async def handle_fin_date(message: Message, bot: AsyncTeleBot, state: StateConte
 
     fin_date_obj -= timedelta(hours=3)
 
-    data = state.data()
-    start_date_obj: datetime = data.get('start_date_obj', {})
+    async with state.data() as data:
+        start_date_obj: datetime = data.get('start_date_obj', {})
 
     start_date_filter = start_date_obj.strftime(DATE_FORMAT)
     fin_date_filter = fin_date_obj.strftime(DATE_FORMAT)

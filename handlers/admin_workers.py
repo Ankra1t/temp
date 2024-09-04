@@ -1,8 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from db import db
-from models import Message
+from models import Message, StateContext
 
 from common.utils import digit_accept
 
@@ -17,8 +16,8 @@ async def handle_add_id(message: Message, bot: AsyncTeleBot, state: StateContext
 
     id = digit_accept(message, int)
 
-    data = state.data()
-    current_role = data.get('role', 2)
+    async with state.data() as data:
+        current_role = data.get('role', 2)
 
     if id is None:
         await bot.send_message(
@@ -50,8 +49,8 @@ async def handle_delete_id(message: Message, bot: AsyncTeleBot, state: StateCont
 
     id = digit_accept(message, int)
 
-    data = state.data()
-    current_role = data.get('role', 2)
+    async with state.data() as data:
+        current_role = data.get('role', 2)
 
     if id is None:
         await bot.send_message(

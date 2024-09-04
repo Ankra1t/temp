@@ -1,11 +1,10 @@
 import re
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 from Classes import currencyService
 from db import db
-from models import MARKETS_TYPE, ForexInfo, Message
+from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
 from messages.errros import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
 from messages.enter import (
@@ -20,41 +19,37 @@ from keyboards.settings import kb_change_currency, kb_trading_style
 from pages.start import start_with_calc
 
 from common.calc_step import choose_calculate_step
-from common.utils import digit_accept, get_lang, is_digit, text_accept
+from common.utils import digit_accept, is_digit, text_accept
 
 from states.calculate import CalculateState, ForexCalcState
 from services import calculation
 
 
-async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
+async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
-
-    lang = get_lang(user_id)
 
     tool = text_accept(message)
     if tool is None or is_digit(tool):
         new_mes = await bot.send_message(
-            chat_id, msg_text_error(lang),
-            reply_markup=kb_tool(lang, [])
+            chat_id, msg_text_error(user.lang),
+            reply_markup=kb_tool(user.lang, [])
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     if not re.match(r'^[a-zA-Z0-9 ]+$', tool):
         new_mes = await bot.send_message(
-            chat_id, msg_latin_error(lang),
-            reply_markup=kb_tool(lang, [])
+            chat_id, msg_latin_error(user.lang),
+            reply_markup=kb_tool(user.lang, [])
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    logger.info(f'callback "handle_tool" user_tg_id={user_id} value={tool}')
+    logger.info(f'callback "handle_tool" user_tg_id={user.tgId} value={tool}')
 
-    data = state.data()
-    stat_id = data.get('stat_id')
-    calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
+    async with state.data() as data:
+        stat_id = data.get('stat_id')
+        calc_type: MARKETS_TYPE = data.get('calc_type', 'crypto')
 
     tool = tool.upper().replace('/', '').replace(' ', '')
 
@@ -65,7 +60,7 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext):
 
     if stat_id is None:
         await state.add_data(tool=tool)
-        await choose_calculate_step(bot, user_id, message, last_value='tool')
+        await choose_calculate_step(bot, user.tgId, message, last_value='tool')
     else:
         db.change_calculation_tool(stat_id, tool)
 
@@ -73,43 +68,38 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext):
         if calc_info is None:
             return
 
-        await send_calculation(bot, message, user_id, calc_info, True)
+        await send_calculation(bot, message, user.tgId, calc_info, True)
         await state.delete()
 
 
-async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
+async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
-
-    lang = get_lang(user_id)
 
     pair = text_accept(message)
     if pair is None or is_digit(pair):
-        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        new_mes = await bot.send_message(chat_id, msg_pair_error(user.lang))
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     if not re.match(r'^[a-zA-Z \/]+$', pair):
         new_mes = await bot.send_message(
-            chat_id, msg_pair_error(lang),
+            chat_id, msg_pair_error(user.lang),
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_forex_pair" user_tg_id={user_id} value={pair}')
+        f'callback "handle_forex_pair" user_tg_id={user.tgId} value={pair}')
 
     pair = pair.upper().replace(' ', '/')
 
     pair_arr = pair.split('/')
     if len(pair_arr) != 2 or pair_arr[0] == pair_arr[1]:
-        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        new_mes = await bot.send_message(chat_id, msg_pair_error(user.lang))
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    user_settings = db.get_calc_user_settings(user_db_id)
+    user_settings = db.get_calc_user_settings(user.id)
     user_currency = getattr(user_settings, 'currency') or 'USD'
 
     pairs = [pair]
@@ -133,13 +123,13 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         cross_prices=prices or {}
     )
 
-    data = state.data()
-    stat_id = data.get('stat_id')
+    async with state.data() as data:
+        stat_id = data.get('stat_id')
 
     if stat_id is None:
         await state.add_data(forex=forex)
         await choose_calculate_step(
-            bot, user_id, message, last_value='forex'
+            bot, user.tgId, message, last_value='forex'
         )
     else:
         db.change_calculation_forex(stat_id, forex)
@@ -148,20 +138,17 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         if calc_info is None:
             return
 
-        await send_calculation(bot, message, user_id, calc_info, True)
+        await send_calculation(bot, message, user.tgId, calc_info, True)
         await state.delete()
 
 
-async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot, state: StateContext):
+async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     user_id = message.from_user.id
     chat_id = message.chat.id
-    mes_id = message.id
-
-    lang = get_lang(user_id)
 
     pair_price = digit_accept(message)
     if pair_price is None:
-        new_mes = await bot.send_message(chat_id, msg_pair_error(lang))
+        new_mes = await bot.send_message(chat_id, msg_pair_error(user.lang))
         await state.add_data(del_mes_id=new_mes.id)
         return
 
@@ -169,9 +156,9 @@ async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot, state: St
         f'callback "handle_forex_pair_price" user_tg_id={user_id} value={pair_price}'
     )
 
-    data = state.data()
-    forex: ForexInfo = data.get('forex', {})
-    current_pair = data.get('current_pair', '')
+    async with state.data() as data:
+        forex: ForexInfo = data.get('forex', {})
+        current_pair = data.get('current_pair', '')
 
     forex.cross_prices[current_pair] = pair_price
 
@@ -185,69 +172,56 @@ async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot, state: St
     )
 
 
-async def handle_currency(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_currency(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
 
     value = text_accept(message)
     if value is None or len(value) > 10:
         new_mes = await bot.send_message(
-            chat_id, msg_currency_error(lang),
-            reply_markup=kb_change_currency(lang, 'calc')
+            chat_id, msg_currency_error(user.lang),
+            reply_markup=kb_change_currency(user.lang, 'calc')
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_currency" user_tg_id={user_id} value={value}')
+        f'callback "handle_currency" user_tg_id={user.tgId} value={value}')
 
     check = currencyService.getPrice('USD', value)
     if not check:
         new_mes = await bot.send_message(
-            chat_id, msg_currency_error(lang, 'not_found'),
-            reply_markup=kb_change_currency(lang, 'calc')
+            chat_id, msg_currency_error(user.lang, 'not_found'),
+            reply_markup=kb_change_currency(user.lang, 'calc')
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     await state.add_data(currency=value.upper())
-    await choose_calculate_step(bot, user_id, message, last_value='currency')
+    await choose_calculate_step(bot, user.tgId, message, last_value='currency')
 
 
-async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-
+async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     mes_id = message.id
 
     value = digit_accept(message)
     if value is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_deposit" user_tg_id={user_id} value={value}')
+        f'callback "handle_deposit" user_tg_id={user.tgId} value={value}')
 
     await state.add_data(deposit=value)
-    await choose_calculate_step(bot, user_id, message, last_value='deposit')
+    await choose_calculate_step(bot, user.tgId, message, last_value='deposit')
 
 
-async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-
+async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
 
     is_percent = False
     if message.text is not None and message.text.endswith('%'):
@@ -257,56 +231,52 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
     value = digit_accept(message)
     if value is None:
         await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         return
 
     logger.info(
-        f'callback "handle_risk_percent" user_tg_id={user_id} value={value}')
+        f'callback "handle_risk_percent" user_tg_id={user.tgId} value={value}')
 
     # if value <= 0 or value >= 100:
     #     bot.send_message(
     #         chat_id,
-    #         msg_percent_error(user_id),
-    #         reply_markup=kb_calc_cancel(user_id)
+    #         msg_percent_error(user.tgId),
+    #         reply_markup=kb_calc_cancel(user.tgId)
     #     )
     #     return
 
     await state.add_data(risk=[value, is_percent])
-    await choose_calculate_step(bot, user_id, message, last_value='risk')
+    await choose_calculate_step(bot, user.tgId, message, last_value='risk')
 
 
-async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
 
     value = text_accept(message)
 
     if value is None or is_digit(value):
-        msg_error = f'{msg_trading_style_error(lang)}\n{msg_enter_trading_style(lang)}'
+        msg_error = f'{msg_trading_style_error(user.lang)}\n{msg_enter_trading_style(user.lang)}'
         new_mes = await bot.send_message(
             chat_id, msg_error,
-            reply_markup=kb_trading_style(lang, 'calc')
+            reply_markup=kb_trading_style(user.lang, 'calc')
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_trading_style" user_tg_id={user_id} value={value}')
+        f'callback "handle_trading_style" user_tg_id={user.tgId} value={value}')
 
     value = value.lower()
 
-    data = state.data()
-    stat_id = data.get('stat_id')
+    async with state.data() as data:
+        stat_id = data.get('stat_id')
 
     if stat_id is None:
         await state.add_data(trading_style=value)
         await choose_calculate_step(
-            bot, user_id, message,
+            bot, user.tgId, message,
             last_value='trading_style'
         )
     else:
@@ -317,39 +287,35 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
         db.change_calculation_style(stat_id, value)
         calc_info.tradingStyle = value
 
-        await send_calculation(bot, message, user_id, calc_info, True)
+        await send_calculation(bot, message, user.tgId, calc_info, True)
         await state.delete()
 
 
-async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    mes_id = message.id
 
-    data = state.data()
-    stat_id = data.get('stat_id')
+    async with state.data() as data:
+        stat_id = data.get('stat_id')
 
     value = digit_accept(message)
     if value is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
+            chat_id, msg_digit_error(user.lang),
             reply_markup=kb_calc_cancel(
-                lang
-            ) if stat_id is None else kb_deal_profit_cancel(lang, stat_id)
+                user.lang
+            ) if stat_id is None else kb_deal_profit_cancel(user.lang, stat_id)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_open_price" user_tg_id={user_id} value={value}'
+        f'callback "handle_open_price" user_tg_id={user.tgId} value={value}'
     )
 
     if stat_id is None:
         await state.add_data(open_price=value)
         await choose_calculate_step(
-            bot, user_id, message, last_value='open_price'
+            bot, user.tgId, message, last_value='open_price'
         )
     else:
         calc_info = calculation.get(stat_id)
@@ -357,7 +323,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             return
 
         if calc_info.stopLoss == value:
-            new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(lang))
+            new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))
             await state.add_data(del_mes_id=new_mes.id)
             return
 
@@ -366,73 +332,67 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
 
         await edit_channel_post(bot, stat_id)
 
-        await send_calculation(bot, message, user_id, calc_info, True)
+        await send_calculation(bot, message, user.tgId, calc_info, True)
         await state.delete()
 
 
-async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    action = data.get('action', '')
-    stat_id = data.get('stat_id', '')
-    open_price = data.get('open_price', '')
+    async with state.data() as data:
+        action = data.get('action', '')
+        stat_id = data.get('stat_id', '')
+        open_price = data.get('open_price', '')
 
     stop_loss = digit_accept(message)
     if stop_loss is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
+            chat_id, msg_digit_error(user.lang),
             reply_markup=kb_calc_cancel(
-                lang
-            ) if stat_id is None else kb_deal_profit_cancel(lang, stat_id)
+                user.lang
+            ) if stat_id is None else kb_deal_profit_cancel(user.lang, stat_id)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     if stop_loss == open_price:
         new_mes = await bot.send_message(
-            chat_id, msg_sl_op_equal_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_sl_op_equal_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_stop_loss" user_tg_id={user_id} value={stop_loss}'
+        f'callback "handle_stop_loss" user_tg_id={user.tgId} value={stop_loss}'
     )
 
     if action == 'send_calc':
-        await start_with_calc(bot, message, user_id, stat_id, stop_loss)
+        await start_with_calc(bot, message, user.tgId, stat_id, stop_loss)
     else:
         await edit_channel_post(bot, stat_id)
-        await create_and_send_calc(bot, message, user_id, stop_loss)
+        await create_and_send_calc(bot, message, user.tgId, stop_loss)
 
 
-async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     stop_atr = digit_accept(message)
     if stop_atr is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     logger.info(
-        f'callback "handle_stop_atr" user_tg_id={user_id} value={stop_atr}'
+        f'callback "handle_stop_atr" user_tg_id={user.tgId} value={stop_atr}'
     )
 
-    data = state.data()
-    stop_type = data.get('stop_type', 'default')
-    action = data.get('action', '')
+    async with state.data() as data:
+        stop_type = data.get('stop_type', 'default')
+        action = data.get('action', '')
 
     rate = 1
     if 'atr_percent' in stop_type:
@@ -440,8 +400,8 @@ async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateConte
         rate = float(percent) * 0.01
 
     new_mes = await bot.send_message(
-        chat_id, msg_choose_direct(lang, user_id),
-        reply_markup=kb_calc_direct(lang, action == 'send_calc')
+        chat_id, msg_choose_direct(user.lang, user.tgId),
+        reply_markup=kb_calc_direct(user.lang, action == 'send_calc')
     )
 
     await state.add_data(
@@ -450,24 +410,21 @@ async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateConte
     )
 
 
-async def handle_max_bar(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_max_bar(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     max_bar = digit_accept(message)
     if max_bar is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
     new_mes = await bot.send_message(
-        chat_id, msg_enter_min_bar(lang),
-        reply_markup=kb_calc_cancel(lang)
+        chat_id, msg_enter_min_bar(user.lang),
+        reply_markup=kb_calc_cancel(user.lang)
     )
     await state.add_data(
         max_bar=max_bar,
@@ -476,25 +433,22 @@ async def handle_max_bar(message: Message, bot: AsyncTeleBot, state: StateContex
     await state.set(CalculateState.min_bar,)
 
 
-async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     min_bar = digit_accept(message)
     if min_bar is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_calc_cancel(lang)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_calc_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    data = state.data()
-    max_bar = data.get('max_bar', 0)
-    stop_type = data.get('stop_type', 'default')
-    action = data.get('action', '')
+    async with state.data() as data:
+        max_bar = data.get('max_bar', 0)
+        stop_type = data.get('stop_type', 'default')
+        action = data.get('action', '')
 
     rate = 1
     if 'atr_percent' in stop_type:
@@ -502,8 +456,8 @@ async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContex
         rate = float(percent) * 0.01
 
     new_mes = await bot.send_message(
-        chat_id, msg_choose_direct(lang, user_id),
-        reply_markup=kb_calc_direct(lang, action == 'send_calc')
+        chat_id, msg_choose_direct(user.lang, user.tgId),
+        reply_markup=kb_calc_direct(user.lang, action == 'send_calc')
     )
 
     await state.add_data(

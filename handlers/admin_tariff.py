@@ -1,6 +1,8 @@
 from datetime import timedelta
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
+
+from db import db
+from models import Price, Message, StateContext
 
 from common.utils import digit_accept, text_accept
 from common.dt import get_datetime_by_str, get_str_by_datetime
@@ -12,18 +14,16 @@ from keyboards.admin_tariffs import (
 from states.admin_tariff import AdminTariffState
 from pages.admin import send_admin_tariffs, send_admin_tariffs_list_item
 
-from db import db
-from models import Price, Message
 
 
 async def handle_name(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    action = data.get('action', '')
-    page = data.get('page', 0)
-    tariff_id = data.get('tariff_id', -1)
+    async with state.data() as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
     if action == 'create':
         back_keyboard = kb_admin_tariffs_back()
@@ -57,10 +57,10 @@ async def handle_price(message: Message, bot: AsyncTeleBot, state: StateContext)
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    action = data.get('action', '')
-    page = data.get('page', 0)
-    tariff_id = data.get('tariff_id', -1)
+    async with state.data() as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
     if action == 'create':
         back_keyboard = kb_admin_tariffs_back()
@@ -94,10 +94,10 @@ async def handle_duration(message: Message, bot: AsyncTeleBot, state: StateConte
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    action = data.get('action', '')
-    page = data.get('page', 0)
-    tariff_id = data.get('tariff_id', -1)
+    async with state.data() as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
     if action == 'create':
         back_keyboard = kb_admin_tariffs_back()
@@ -131,10 +131,10 @@ async def handle_image(message: Message, bot: AsyncTeleBot, state: StateContext)
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    action = data.get('action', '')
-    page = data.get('page', 0)
-    tariff_id = data.get('tariff_id', -1)
+    async with state.data() as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
     if action == 'create':
         back_keyboard = kb_admin_tariffs_back()
@@ -158,7 +158,7 @@ async def handle_image(message: Message, bot: AsyncTeleBot, state: StateContext)
             reply_markup=back_keyboard
         )
     else:
-        if (await bot.get_state(user_id, chat_id)) == str(AdminTariffState.image_en):
+        if (await state.get()) == str(AdminTariffState.image_en):
             db.update_price_image_en(tariff_id, media_id)
         else:
             db.update_price_image(tariff_id, media_id)
@@ -173,10 +173,10 @@ async def handle_description(message: Message, bot: AsyncTeleBot, state: StateCo
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    action = data.get('action', '')
-    page = data.get('page', 0)
-    tariff_id = data.get('tariff_id', -1)
+    async with state.data() as data:
+        action = data.get('action', '')
+        page = data.get('page', 0)
+        tariff_id = data.get('tariff_id', -1)
 
     if action == 'create':
         back_keyboard = kb_admin_tariffs_back()
@@ -192,11 +192,12 @@ async def handle_description(message: Message, bot: AsyncTeleBot, state: StateCo
         return
 
     if action == 'create':
-        type_product = data.get('type_product', '')
-        name = data.get('name', '')
-        price = data.get('price', 0)
-        duration = data.get('duration', 0)
-        image = data.get('image')
+        async with state.data() as data:
+            type_product = data.get('type_product', '')
+            name = data.get('name', '')
+            price = data.get('price', 0)
+            duration = data.get('duration', 0)
+            image = data.get('image')
 
         db.add_price(Price(
             id=0,
@@ -222,13 +223,12 @@ async def handle_description(message: Message, bot: AsyncTeleBot, state: StateCo
 
 async def handle_discount_percent(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     message.text = (message.text or '').replace('%', '')
     discount_percent = digit_accept(message, int)
 
-    data = state.data()
-    page = data.get('page', 0)
+    async with state.data() as data:
+        page = data.get('page', 0)
 
     if discount_percent is None or discount_percent < 0 or discount_percent > 100:
         await bot.send_message(
@@ -251,10 +251,10 @@ async def handle_discount_datetime(message: Message, bot: AsyncTeleBot, state: S
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    data = state.data()
-    discount_percent = data.get('discount_percent', 0)
-    tariff_id = data.get('tariff_id', -1)
-    page = data.get('page', 0)
+    async with state.data() as data:
+        discount_percent = data.get('discount_percent', 0)
+        tariff_id = data.get('tariff_id', -1)
+        page = data.get('page', 0)
 
     discount_findate = text_accept(message)
     if discount_findate is None:

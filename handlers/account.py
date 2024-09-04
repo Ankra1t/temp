@@ -1,10 +1,10 @@
 import re
 from telebot.async_telebot import AsyncTeleBot
-from models import Message
+from models import Message, User
 
 from db import db
 from states.account import UserAccountState
-from common.utils import get_lang, text_accept
+from common.utils import text_accept
 from services import auth
 
 from keyboards.account import kb_user_params_back
@@ -40,17 +40,14 @@ async def handle_new_password(message: Message, bot: AsyncTeleBot):
     await send_user_account(bot, message, user_id, True)
 
 
-async def handle_nickname(message: Message, bot: AsyncTeleBot):
+async def handle_nickname(message: Message, bot: AsyncTeleBot, user: User):
     chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    lang = get_lang(user_id)
 
     nickname = text_accept(message)
     if nickname is None or not re.match(r'^[a-zA-Z0-9]+$', nickname):
         await bot.send_message(
-            chat_id, msg_enter_nickname(lang, 'default'),
-            reply_markup=kb_user_params_back(lang)
+            chat_id, msg_enter_nickname(user.lang, 'default'),
+            reply_markup=kb_user_params_back(user.lang)
         )
         return
 
@@ -62,23 +59,22 @@ async def handle_nickname(message: Message, bot: AsyncTeleBot):
 
     if length_error != '':
         await bot.send_message(
-            chat_id, msg_enter_nickname(lang, length_error),
-            reply_markup=kb_user_params_back(lang)
+            chat_id, msg_enter_nickname(user.lang, length_error),
+            reply_markup=kb_user_params_back(user.lang)
         )
         return
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    res = db.set_user_nickname(user_db_id, nickname)
+    res = db.set_user_nickname(user.id, nickname)
 
     if res == 'Nickname has taken':
         await bot.send_message(
-            chat_id, msg_enter_nickname(lang, 'taken'),
-            reply_markup=kb_user_params_back(lang)
+            chat_id, msg_enter_nickname(user.lang, 'taken'),
+            reply_markup=kb_user_params_back(user.lang)
         )
         return
 
-    await bot.send_message(chat_id, msg_success_edit(lang))
-    await send_user_params(bot, message, user_id, True)
+    await bot.send_message(chat_id, msg_success_edit(user.lang))
+    await send_user_params(bot, message, user.tgId, True)
 
 
 def registration(bot: AsyncTeleBot):

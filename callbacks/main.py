@@ -2,11 +2,10 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from config_logger import logger
-from db import db
 from services import calculation, violation
-from models import CallbackQuery
+from models import CallbackQuery, User
 
-from common.utils import delete_message, get_lang
+from common.utils import delete_message
 from common.calc_step import send_calc_start
 
 from callbacks.stats import send_week_stats
@@ -15,7 +14,7 @@ from keyboards.main import main_factory, MainCallbackFilter
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 
 
-async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -24,17 +23,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     is_saved = callback_data.get('is_saved', 'False')
     stat_id = int(callback_data.get('stat_id', -1))
 
-    user_id = call.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     is_rus = call.from_user.language_code == 'ru'
 
     logger.info(
-        f'callback "main_factory" user_tg_id={user_id} type={type} stat_id={stat_id} saved={is_saved}'
+        f'callback "main_factory" user_tg_id={user.tgId} type={type} stat_id={stat_id} saved={is_saved}'
     )
 
     if 'calc' in type or type == 'settings' or type == 'calc_stats':
@@ -42,35 +37,35 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
         if calc is not None:
             await bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(lang, user_db_id, calc)
+                reply_markup=kb_calc_result(user.lang, user.id, calc)
             )
         else:
             await delete_message(bot, chat_id, mes_id)
 
     if 'calc' in type:
         await send_calc_start(
-            bot, call.message, user_id,
+            bot, call.message, user.tgId,
             is_continue='_continue' in type, is_channel_calc='ch_calc' in type
         )
 
     if type == 'first_try':
         await send_calc_start(
-            bot, call.message, user_id,
+            bot, call.message, user.tgId,
             is_continue='_continue' in type, is_edit=True, is_try=True
         )
 
     if type == 'settings':
-        await send_settings(bot, call.message, user_id, True)
+        await send_settings(bot, call.message, user.tgId, True)
 
     if type == 'go_main':
-        await send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user.tgId)
 
     if type == 'stats':
-        await send_stats(bot, call.message, user_id)
+        await send_stats(bot, call.message, user.tgId)
 
     if type == 'buy':
         await send_tariffs_list_item(
-            bot, call.message, user_id, 'calc', 0, is_rus=is_rus
+            bot, call.message, user.tgId, 'calc', 0, is_rus=is_rus
         )
 
     if type == 'week_stat':
@@ -78,31 +73,31 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
         await send_week_stats(bot, 652)
 
     if type == 'channels':
-        await send_admin_channel_calc_list(bot, call.message, user_id)
+        await send_admin_channel_calc_list(bot, call.message, user.tgId)
 
     if type == 'channel_post':
-        await send_channel_post(bot, call.message, user_id)
+        await send_channel_post(bot, call.message, user.tgId)
 
     if type == 'info':
-        await send_manual(bot, call.message, user_id)
+        await send_manual(bot, call.message, user.tgId)
 
     if 'violation+' in type:
         result = False if '+no' in type else True if '+yes' in type else None
-        violation.create(user_db_id, result)
+        violation.create(user.id, result)
         type = 'violations'
 
     if 'violation_edit+' in type:
-        today_violation = violation.getToday(user_db_id)
+        today_violation = violation.getToday(user.id)
         if today_violation:
             result = False if '+no' in type else True if '+yes' in type else 'null'
             violation.update(today_violation.get('id', 0), status=result)
             type = 'violations'
 
     if type == 'violation_edit':
-        await send_violation(bot, call.message, user_id, is_edit=True)
+        await send_violation(bot, call.message, user.tgId, is_edit=True)
 
     if type == 'violations':
-        await send_violation(bot, call.message, user_id)
+        await send_violation(bot, call.message, user.tgId)
 
     await bot.answer_callback_query(call.id)
 

@@ -1,7 +1,6 @@
 import re
 from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 # TODO - each state import from states
 from states.settings import ViolationState
@@ -9,9 +8,9 @@ from states.stats import ChannelCalcState
 
 from config_logger import logger
 from Classes import calcService
-from models import Message
+from models import Message, StateContext, User
 from db import db
-from common.utils import delete_message, digit_accept, get_lang, text_accept
+from common.utils import delete_message, digit_accept, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
@@ -25,24 +24,21 @@ from messages.main import msg_frozen
 from services import calculation, channel_calc, violation
 
 
-async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    stat_id = data.get('stat_id', 0)
+    async with state.data() as data:
+        stat_id = data.get('stat_id', 0)
 
     value = digit_accept(message)
     if value is None:
         await bot.send_message(
-            chat_id, msg_digit_error(lang),
-            reply_markup=kb_deal_profit_minus(lang, stat_id)
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_deal_profit_minus(user.lang, stat_id)
         )
         return
 
-    logger.info(f'callback "handle_loss" user_tg_id={user_id} value={value}')
+    logger.info(f'callback "handle_loss" user_tg_id={user.tgId} value={value}')
 
     calcService.set_profit(stat_id, -abs(value))
     calc_info = calculation.get(stat_id)
@@ -57,28 +53,25 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
     if send_data is not None:
         await edit_channel_post(bot, stat_id)
 
-    await send_calculation(bot, message, user_id, calc_info, True)
-    await send_freeze(bot, message, user_id, calc_info.market, True)
+    await send_calculation(bot, message, user.tgId, calc_info, True)
+    await send_freeze(bot, message, user.tgId, calc_info.market, True)
 
 
-async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    stat_id = data.get('stat_id', 0)
+    async with state.data() as data:
+        stat_id = data.get('stat_id', 0)
 
     value = digit_accept(message)
     if value is None or value < 0:
         await bot.send_message(
-            chat_id, msg_digit_error(lang, 0),
-            reply_markup=kb_deal_profit_minus(lang, stat_id)
+            chat_id, msg_digit_error(user.lang, 0),
+            reply_markup=kb_deal_profit_minus(user.lang, stat_id)
         )
         return
 
-    logger.info(f'callback "handle_sum" user_tg_id={user_id} value={value}')
+    logger.info(f'callback "handle_sum" user_tg_id={user.tgId} value={value}')
 
     calcService.set_profit(stat_id, value)
     calc_info = calculation.get(stat_id)
@@ -93,24 +86,20 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext):
     if send_data is not None:
         await edit_channel_post(bot, stat_id)
 
-    await send_calculation(bot, message, user_id, calc_info, True)
-    await send_freeze(bot, message, user_id, calc_info.market, True)
+    await send_calculation(bot, message, user.tgId, calc_info, True)
+    await send_freeze(bot, message, user.tgId, calc_info.market, True)
 
 
-async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-
+async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    market = data.get('market')
+    async with state.data() as data:
+        market = data.get('market')
 
     value = text_accept(message) or ''
 
     logger.info(
-        f'callback "handle_freeze_dt" user_tg_id={user_id} value={value}')
+        f'callback "handle_freeze_dt" user_tg_id={user.tgId} value={value}')
 
     try:
         time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'
@@ -132,35 +121,32 @@ async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateCont
             ) - timedelta(hours=3)
     except:
         await bot.send_message(
-            chat_id, msg_freeze_error(lang),
+            chat_id, msg_freeze_error(user.lang),
         )
         return
 
-    db.set_user_calc_freeze(user_db_id, finish_freeze, market)
+    db.set_user_calc_freeze(user.id, finish_freeze, market)
     await bot.send_message(
         chat_id,
-        msg_frozen(lang, get_str_by_datetime(finish_freeze))
+        msg_frozen(user.lang, get_str_by_datetime(finish_freeze))
     )
     await state.delete()
 
 
-async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    calc_text = data.get('calc_text', 'J')
-    stat_id = data.get('stat_id', 0)
-    type = data.get('type', '')
+    async with state.data() as data:
+        calc_text = data.get('calc_text', 'J')
+        stat_id = data.get('stat_id', 0)
+        type = data.get('type', '')
 
     await delete_message(bot, chat_id, message.id)
 
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = await bot.send_message(
             chat_id, calc_text,
-            reply_markup=kb_calc_image_text(lang, stat_id)
+            reply_markup=kb_calc_image_text(user.lang, stat_id)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
@@ -200,14 +186,14 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     await state.delete()
 
     if type != 'stats':
-        await send_calculation(bot, message, user_id, calc, True)
+        await send_calculation(bot, message, user.tgId, calc, True)
     else:
         send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             await edit_channel_post(bot, calc.id)
 
         await send_admin_channel_calc_item(
-            bot, message, user_id, stat_id, is_first=True
+            bot, message, user.tgId, stat_id, is_first=True
         )
 
 
@@ -223,8 +209,8 @@ async def handle_send_text(message: Message, bot: AsyncTeleBot, state: StateCont
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    data = state.data()
-    stat_id = data['stat_id']
+    async with state.data() as data:
+        stat_id = data['stat_id']
 
     calculation.update(stat_id, description=new_text)
 
@@ -247,8 +233,8 @@ async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateCon
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    data = state.data()
-    stat_id = data.get('stat_id', 0)
+    async with state.data() as data:
+        stat_id = data.get('stat_id', 0)
 
     calculation.update(stat_id, photo=new_photo.file_id)
 
@@ -256,20 +242,18 @@ async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateCon
     await send_confirm_calc_send(bot, message, stat_id, True)
 
 
-async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: StateContext):
+async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
 
-    data = state.data()
-    stat_id = data.get('stat_id', 0)
-    is_calc = data.get('is_calc')
-    type = data.get('type')
+    async with state.data() as data:
+        stat_id = data.get('stat_id', 0)
+        is_calc = data.get('is_calc')
+        type = data.get('type')
 
     value = digit_accept(message)
     if value is None:
         new_mes = await bot.send_message(
-            chat_id, msg_digit_error(lang),
+            chat_id, msg_digit_error(user.lang),
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
@@ -289,29 +273,26 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
         await edit_channel_post(bot, stat_id)
 
         if is_calc:
-            await send_calculation(bot, message, user_id, calc, True)
+            await send_calculation(bot, message, user.tgId, calc, True)
         else:
-            await send_admin_channel_calc_list(bot, message, user_id, True)
+            await send_admin_channel_calc_list(bot, message, user.tgId, True)
     else:
         if is_calc:
-            await send_calculation(bot, message, user_id, calc, True)
+            await send_calculation(bot, message, user.tgId, calc, True)
         else:
-            await send_stats(bot, message, user_id, True)
+            await send_stats(bot, message, user.tgId, True)
 
 
-async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
-    data = state.data()
-    violation_id = data.get('violation_id', 0)
+    async with state.data() as data:
+        violation_id = data.get('violation_id', 0)
 
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = await bot.send_message(
-            chat_id, msg_text_error(lang),
-            reply_markup=kb_violation_skip(lang)
+            chat_id, msg_text_error(user.lang),
+            reply_markup=kb_violation_skip(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
@@ -328,7 +309,7 @@ async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: S
     )
 
     await state.delete()
-    await send_violation(bot, message, user_id, is_first=True)
+    await send_violation(bot, message, user.tgId, is_first=True)
 
 
 def registration(bot: AsyncTeleBot):

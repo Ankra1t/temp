@@ -3,7 +3,7 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from db import db
-from models import CallbackQuery
+from models import CallbackQuery, User
 
 from messages.education import curs_contents, curs, termins
 from keyboards.education import (
@@ -14,7 +14,7 @@ from keyboards.education import (
 from pages.user import send_user_main, send_user_terms, send_user_education
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -23,20 +23,17 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     page = int(callback_data.get('page', -1))
     num_les = int(callback_data.get('num_les', -1))
 
-    user_id = call.from_user.id
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     logger.info(
-        f'callback "user_education_factory" user_tg_id={user_id} type={type}')
+        f'callback "user_education_factory" user_tg_id={user.tgId} type={type}')
 
     if type == 'back':
-        await send_user_main(bot, call.message, user_id)
+        await send_user_main(bot, call.message, user.tgId)
 
     if type == 'go_education':
-        await send_user_education(bot, call.message, user_id)
+        await send_user_education(bot, call.message, user.tgId)
 
     if 'terms' in type:
         if page == -1 or 'start' in type:
@@ -49,10 +46,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
             page = len(termins)
 
         if 'counter' not in type:
-            await send_user_terms(bot, call.message, page, user_id)
+            await send_user_terms(bot, call.message, page, user.tgId)
 
     if 'curs' in type:
-        count_now_les = db.get_lesson_count(user_db_id)
+        count_now_les = db.get_lesson_count(user.id)
         if 'les' in type:
             if len(curs) + 1 == num_les:
                 await bot.edit_message_text(
@@ -64,7 +61,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
                 lesson = curs[num_les - 1]
 
                 if page == len(lesson) and count_now_les == num_les and count_now_les != len(curs):
-                    db.add_lesson_count(user_db_id)
+                    db.add_lesson_count(user.id)
 
                 await bot.edit_message_text(
                     lesson[page - 1], chat_id, mes_id,

@@ -1,13 +1,12 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
-from telebot.states.asyncio.context import StateContext
 
 from config_logger import logger
 from AuthRoles import check_registrate
 from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
-from models import LANGUAGES, Message
+from models import LANGUAGES, Message, StateContext
 from services import auth
 
 from common.utils import get_lang, is_digit

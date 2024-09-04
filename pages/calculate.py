@@ -749,23 +749,23 @@ async def create_and_send_calc(bot: AsyncTeleBot, message: Message, user_id: int
     user_db_id = db.get_user_id_by_tg_id(user_id)
     lang = get_lang(user_id)
 
-    data =  bot.retrieve_data(user_id, chat_id) or {}
-    stat_id = data.get('stat_id')
-    calc_type = data.get('calc_type', 'crypto')
+    async with bot.retrieve_data(user_id, chat_id) as data: # type: ignore
+        stat_id = data.get('stat_id')
+        calc_type = data.get('calc_type', 'crypto')
 
-    deposit: float = data.get('deposit') or 1.0
-    risk: tuple[float, bool] = data.get('risk') or (1., False)
-    currency = data.get('currency', 'USD')
-    trading_style = data.get('trading_style')
-    trading_type = data.get('trading_type') or 'margin'
+        deposit: float = data.get('deposit') or 1.0
+        risk: tuple[float, bool] = data.get('risk') or (1., False)
+        currency = data.get('currency', 'USD')
+        trading_style = data.get('trading_style')
+        trading_type = data.get('trading_type') or 'margin'
 
-    open_price: float = data.get('open_price') or 0
-    forex = data.get('forex')
-    tool = data.get('tool')
-    updated_risk = data.get('updated_risk') or 1.
-    is_from_deposit = data.get('is_from_deposit') or False
+        open_price: float = data.get('open_price') or 0
+        forex = data.get('forex')
+        tool = data.get('tool')
+        updated_risk = data.get('updated_risk') or 1.
+        is_from_deposit = data.get('is_from_deposit') or False
 
-    is_try = data.get('is_try', False)
+        is_try = data.get('is_try', False)
 
     if stat_id is not None:
         calc_info = calculation.get(stat_id)

@@ -1,7 +1,6 @@
 import math
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from common.dt import get_str_by_datetime
 from common.utils import get_short_user_info
@@ -10,7 +9,7 @@ from config_logger import logger
 
 from Classes import pay_guard
 from db import db
-from models import SORT_BY_TYPE, CallbackQuery
+from models import SORT_BY_TYPE, CallbackQuery, StateContext, User
 
 from states.admin_users import AdminUsersState
 
@@ -26,7 +25,7 @@ from keyboards.admin_users import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -41,14 +40,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     page = int(callback_data.get('page', 1))
 
     chat_id = call.message.chat.id
-    user_id = call.from_user.id
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user.tgId)
 
     if type == 'go_users':
-        await send_admin_users(bot, call.message, user_id)
+        await send_admin_users(bot, call.message, user.tgId)
 
     if type == 'lists':
         await bot.edit_message_text(
@@ -73,8 +71,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                 text += '\nНет пользователей'
             else:
                 text += '<b>ID | Тг данные | Тест | Настройка</b>\n'
-                for user in users:
-                    text += '\n' + get_short_user_info(user) + '\n'
+                for usr in users:
+                    text += '\n' + get_short_user_info(usr) + '\n'
 
                 sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
                 text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'
@@ -97,12 +95,12 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             if len(users) == 0:
                 text += '\nНет пользователей'
             else:
-                for user in users:
-                    nik = f'@{user.tg_username}' if (
-                        user.tg_username is not None) else 'Скрыт'
-                    ban = '(BAN)' if user.ban else ''
+                for usr in users:
+                    nik = f'@{usr.tg_username}' if (
+                        usr.tg_username is not None) else 'Скрыт'
+                    ban = '(BAN)' if usr.ban else ''
 
-                    text += f'\n{ban} {user.tg_id} | {nik}\n'
+                    text += f'\n{ban} {usr.tg_id} | {nik}\n'
 
             await bot.edit_message_text(
                 text,
@@ -119,8 +117,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             if len(users) == 0:
                 text += '\nНет пользователей'
             else:
-                for user in users:
-                    text += '\n' + get_short_user_info(user) + '\n'
+                for usr in users:
+                    text += '\n' + get_short_user_info(usr) + '\n'
 
             await bot.edit_message_text(
                 text, chat_id, mes_id,
@@ -135,8 +133,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             if len(users) == 0:
                 text += '\nНет пользователей'
             else:
-                for user in users:
-                    text += '\n' + get_short_user_info(user) + '\n'
+                for usr in users:
+                    text += '\n' + get_short_user_info(usr) + '\n'
 
             await bot.edit_message_text(
                 text, chat_id, mes_id,
@@ -156,14 +154,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if type == 'choose_periods_for_tariffs':
-        data = bot.retrieve_data(user_id, chat_id) or {}
-        tariff_id = data.get('tariff_id', 0)
-        subscribe_user_id: int = data.get('user_id', 0)
+        async with state.data() as data:
+            tariff_id = data.get('tariff_id', 0)
+            subscribe_user_id: int = data.get('user_id', 0)
 
         # Получить tg_user_id
-        user = db.get_user_by_id(subscribe_user_id)
+        usr = db.get_user_by_id(subscribe_user_id)
 
-        if user is None:
+        if usr is None:
             logger.error(
                 f'[choose_periods_for_tariffs]: user_id={subscribe_user_id}'
             )
@@ -178,9 +176,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                 f'[choose_periods_for_tariffs]: tariff_id={tariff_id}')
             return
 
-        pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
+        pay_guard.set_subscribe_unactive_by_user_id(usr.tg_id)
         datetime_show = pay_guard.set_trial(
-            user.tg_id, tariff.type_product, int(days)
+            usr.tg_id, tariff.type_product, int(days)
         )
 
         data_fin = get_str_by_datetime(datetime_show)
@@ -191,10 +189,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
         await state.delete()
 
-        await send_admin_client(bot, call.message, user_id, subscribe_user_id, True)
+        await send_admin_client(bot, call.message, user.tgId, subscribe_user_id, True)
 
         await bot.send_message(
-            user.tg_id, gift_subscribe_msg(user.tg_id, data_fin)
+            usr.tg_id, gift_subscribe_msg(usr.tg_id, data_fin)
         )
 
     if type == 'client_cancel_sub':
@@ -205,11 +203,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if type == 'client_ban':
-        user = db.get_user_by_id(client_db_id)
-        if user is None:
+        usr = db.get_user_by_id(client_db_id)
+        if usr is None:
             return
 
-        if user.ban:
+        if usr.ban:
             text = f'Разбанить пользователя с id[{client_db_id}]'
         else:
             text = f'Забанить пользователя с id[{client_db_id}]'
@@ -221,14 +219,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if 'confirm_yes' in type:
-        user = db.get_user_by_id(client_db_id)
-        if user is None:
+        usr = db.get_user_by_id(client_db_id)
+        if usr is None:
             return
 
         if 'cancel_sub' in type:
-            pay_guard.set_subscribe_unactive_by_user_id(user.tg_id)
+            pay_guard.set_subscribe_unactive_by_user_id(usr.tg_id)
         if 'ban' in type:
-            db.set_user_ban(user.id, not user.ban)
+            db.set_user_ban(usr.id, not usr.ban)
 
         await bot.edit_message_text('Успешно!', chat_id, mes_id)
 
@@ -238,7 +236,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if 'confirm' in type:
         await send_admin_client(
             bot, call.message,
-            user_id, client_db_id,
+            user.tgId, client_db_id,
             True, sort_by, page
         )
 
@@ -300,8 +298,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                 text += '\nНет пользователей'
             else:
                 text += '<b>ID | Тг данные | Остаток расчетов</b>\n'
-                for user in users:
-                    text += '\n' + get_short_user_info(user) + '\n'
+                for usr in users:
+                    text += '\n' + get_short_user_info(usr) + '\n'
 
                 sort_by_text = 'новым' if (sort_by == 'new') else 'старым'
                 text += f'\n     | Сортировка по <b>{sort_by_text}</b> |'

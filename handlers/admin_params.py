@@ -1,10 +1,8 @@
 import re
-from typing import Any
 from telebot.async_telebot import AsyncTeleBot
-from telebot.states.asyncio.context import StateContext
 
 from db import db
-from models import Message
+from models import Message, StateContext
 from Classes import pay_guard
 
 from common.utils import digit_accept, text_accept, get_normal_text
@@ -18,7 +16,6 @@ _pair_pattern = r'^[a-zA-Z]{3}/[a-zA-Z]{3}$'
 
 async def handle_other_text(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     await state.add_data(
         text=get_normal_text(message)
@@ -32,26 +29,26 @@ async def handle_other_text(message: Message, bot: AsyncTeleBot, state: StateCon
 
 async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     pair = text_accept(message)
     if pair is None or re.match(_pair_pattern, pair) is None:
         await bot.send_message(
             chat_id, 'Введите пару в формате (XXX/XXX):',
-            reply_markup=kb_params_back())
+            reply_markup=kb_params_back()
+        )
         return
     pair = pair.upper()
 
     await state.add_data(pair=pair)
     await bot.send_message(
         chat_id, 'Введите цену пары:',
-        reply_markup=kb_params_back())
+        reply_markup=kb_params_back()
+    )
     await state.set(AdminParamsState.forex_price)
 
 
 async def handle_forex_price(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     price = digit_accept(message)
     if price is None:
@@ -63,13 +60,13 @@ async def handle_forex_price(message: Message, bot: AsyncTeleBot, state: StateCo
     await state.add_data(price=price)
     await bot.send_message(
         chat_id, 'Введите вспомогательную пару (XXX/XXX) или "-", если её нет:',
-        reply_markup=kb_params_back())
+        reply_markup=kb_params_back()
+    )
     await state.set(AdminParamsState.forex_help_pair)
 
 
 async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     help_pair = text_accept(message)
     if help_pair is None or not (help_pair == '-' or re.match(_pair_pattern, help_pair) is not None):
@@ -79,9 +76,9 @@ async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot, state: Sta
         return
     help_pair = help_pair.upper() if help_pair != '-' else None
 
-    data: dict[str, Any] = state.data()
-    pair = data.get('pair', '')
-    price = data.get('price', 0)
+    async with state.data() as data:
+        pair = data.get('pair', '')
+        price = data.get('price', 0)
 
     db.update_forex(pair, price, help_pair)
     await state.delete()
@@ -94,7 +91,6 @@ async def handle_forex_help_pair(message: Message, bot: AsyncTeleBot, state: Sta
 
 async def handle_count_trial_days(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     count_days = digit_accept(message, int)
     if count_days is None:

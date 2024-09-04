@@ -1,9 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from Classes import base_statis
-from models import CallbackQuery
+from models import CallbackQuery, StateContext, User
 
 from states.admin_stats import AdminStatisticsState
 from messages.statistics import admin_statistics_periods, admin_statistics_products
@@ -16,7 +15,7 @@ from keyboards.admin_stats import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -25,14 +24,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     filter = callback_data.get('filter', '')
 
     chat_id = call.message.chat.id
-    user_id = call.from_user.id
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, user.tgId)
 
     if type == 'go_payment':
-        await send_admin_payment(bot, call.message, user_id)
+        await send_admin_payment(bot, call.message, user.tgId)
 
     if type == 'stat_pay_periods':
 

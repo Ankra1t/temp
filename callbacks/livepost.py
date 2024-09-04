@@ -1,10 +1,9 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from Classes.BlockTGBotSender import send_same_message_to_users
 from db import db
-from models import Post, CallbackQuery
+from models import Post, CallbackQuery, StateContext
 
 from states.admin_posts import AdminPostsState
 from keyboards.livepost import (
@@ -69,8 +68,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                     int(value.replace('h', '')))
 
             if len(users) != 0:
-                data = state.data()
-                post: Post = data.get('post', {})
+                async with state.data() as data:
+                    post: Post = data.get('post', {})
+
                 await bot.edit_message_text('Отправка...', chat_id, mes_id)
                 await send_same_message_to_users(
                     bot, users, post

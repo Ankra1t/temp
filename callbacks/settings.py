@@ -1,14 +1,13 @@
 from typing import Any
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-from telebot.states.asyncio.context import StateContext
 
 from NOTIFIER import notifier
 from config_logger import logger
 from db import db
 from data.data import liteDb
 from Classes import text_editor
-from models import LANGUAGES, CallbackQuery
+from models import LANGUAGES, CallbackQuery, User, StateContext
 from services import auth, calculation
 
 from states.settings import FirstCalcState, SettingsState
@@ -19,7 +18,7 @@ from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_
 from messages.main import msg_success_base_set, msg_welcome
 
 from common.calc_step import choose_calculate_step
-from common.utils import delete_message, get_lang, get_print_float
+from common.utils import delete_message, get_print_float
 
 from keyboards.main import kb_first_calc
 from keyboards.settings import (
@@ -37,7 +36,7 @@ from pages.calculate import (
 )
 
 
-async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
+async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -49,75 +48,71 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     take_profit_add = callback_data.get('tp', '')
     add_count = callback_data.get('count', '')
 
-    user_id = call.from_user.id
-    lang = get_lang(user_id)
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     logger.info(
-        f'callback "settings_factory" user_tg_id={user_id} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
+        f'callback "settings_factory" user_tg_id={user.tgId} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
 
     if type == 'set_deposit':
-        u_base = db.get_calc_user_settings(user_db_id)
+        u_base = db.get_calc_user_settings(user.id)
 
         current_value = ''
         if u_base is not None and u_base.deposit is not None:
             current_value = f'{get_print_float(u_base.deposit, 2)} {u_base.currency or ""}'
 
         await bot.edit_message_text(
-            msg_enter_deposit(lang, current_value),
+            msg_enter_deposit(user.lang, current_value),
             chat_id, mes_id,
-            reply_markup=kb_deposit_cancel(lang)
+            reply_markup=kb_deposit_cancel(user.lang)
         )
         await state.set(SettingsState.deposit)
 
     if type == 'set_risk_percent':
         await bot.edit_message_text(
-            msg_enter_risk_percent(lang),
+            msg_enter_risk_percent(user.lang),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(lang)
+            reply_markup=kb_base_cancel(user.lang)
         )
         await state.set(SettingsState.risk_percent)
 
     if type == 'set_day_risk':
         await bot.edit_message_text(
-            msg_enter_day_risk(lang),
+            msg_enter_day_risk(user.lang),
             chat_id, mes_id,
-            reply_markup=kb_base_cancel(lang)
+            reply_markup=kb_base_cancel(user.lang)
         )
         await state.set(SettingsState.day_risk)
 
     if type == 'set_round_count':
         if add_count == '':
-            u_base = db.get_calc_user_settings(user_db_id, is_create=False)
+            u_base = db.get_calc_user_settings(user.id, is_create=False)
 
             current_value = -1
             if u_base is not None:
                 current_value = u_base.round_count or current_value
 
             await bot.edit_message_text(
-                msg_enter_round_count(lang),
+                msg_enter_round_count(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_round_count(lang, current_value)
+                reply_markup=kb_round_count(user.lang, current_value)
             )
             await state.set(SettingsState.round_count)
         else:
             add_count = int(add_count)
-            db.set_user_round_count(user_db_id, min(max(add_count, 0), 5))
-            await send_user_deposit(bot, call.message, user_id)
+            db.set_user_round_count(user.id, min(max(add_count, 0), 5))
+            await send_user_deposit(bot, call.message, user.tgId)
 
     if type == 'trading_style':
-        await send_trading_style_settings(bot, call.message, user_id)
+        await send_trading_style_settings(bot, call.message, user.tgId)
 
     if 'ss_' in type:
         if trading_value == '':
             await state.set(SettingsState.trading_style)
             await bot.edit_message_text(
-                msg_enter_trading_style(lang),
+                msg_enter_trading_style(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_trading_style(lang)
+                reply_markup=kb_trading_style(user.lang)
             )
         else:
             value = trading_value.lower()
@@ -125,8 +120,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 value = None
 
             if 'ch_calc' in type:
-                data = state.data()
-                stat_id = data.get('stat_id', 0)
+                async with state.data() as data:
+                    stat_id = data.get('stat_id', 0)
 
                 calc_info = calculation.get(stat_id)
                 if calc_info is None:
@@ -141,7 +136,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 else:
                     await send_calculation(
                         bot, call.message,
-                        user_id, calc_info
+                        user.tgId, calc_info
                     )
                 await state.delete()
 
@@ -152,43 +147,43 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     trading_style=value
                 )
                 await choose_calculate_step(
-                    bot, user_id, call.message, True, last_value='trading_style'
+                    bot, user.tgId, call.message, True, last_value='trading_style'
                 )
 
             else:
-                db.set_user_trading_style(user_db_id, value)
+                db.set_user_trading_style(user.id, value)
 
                 if 'welcome' in type:
                     await bot.edit_message_text(
-                        msg_success_base_set(lang), chat_id, mes_id
+                        msg_success_base_set(user.lang), chat_id, mes_id
                     )
                 else:
                     await bot.edit_message_text(
-                        msg_success_edit(lang), chat_id, mes_id
+                        msg_success_edit(user.lang), chat_id, mes_id
                     )
 
-                await send_trading_style_settings(bot, call.message, user_id)
+                await send_trading_style_settings(bot, call.message, user.tgId)
 
     if type == 'switch_style_change':
-        liteDb.switchStyleChange(user_id)
-        await send_trading_style_settings(bot, call.message, user_id)
+        liteDb.switchStyleChange(user.tgId)
+        await send_trading_style_settings(bot, call.message, user.tgId)
 
     if 'set_currency' in type:
         if type == 'set_currency':
             await bot.edit_message_text(
-                msg_enter_currency(lang),
+                msg_enter_currency(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_change_currency(lang)
+                reply_markup=kb_change_currency(user.lang)
             )
             await state.set(SettingsState.currency)
         else:
             _, currency = type.split('+')
 
             if 'welcome' in type:
-                db.set_user_currency(user_db_id, currency.upper())
+                db.set_user_currency(user.id, currency.upper())
                 await state.set(FirstCalcState.deposit)
                 await bot.edit_message_text(
-                    msg_enter_deposit(lang), chat_id, mes_id
+                    msg_enter_deposit(user.lang), chat_id, mes_id
                 )
             else:
                 if 'calc' in type:
@@ -196,14 +191,14 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         currency=currency.upper()
                     )
                     await choose_calculate_step(
-                        bot, user_id, call.message, True, last_value='currency'
+                        bot, user.tgId, call.message, True, last_value='currency'
                     )
                 else:
-                    db.set_user_currency(user_db_id, currency.upper())
+                    db.set_user_currency(user.id, currency.upper())
                     await bot.edit_message_text(
-                        msg_success_edit(lang), chat_id, mes_id
+                        msg_success_edit(user.lang), chat_id, mes_id
                     )
-                    await send_user_deposit(bot, call.message, user_id, True)
+                    await send_user_deposit(bot, call.message, user.tgId, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False
@@ -211,10 +206,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         for langg in LANGUAGES:
             if f'_{langg}' in type:
                 is_edit_lang = True
-                db.set_user_lang(user_db_id, langg)
+                db.set_user_lang(user.id, langg)
 
                 if 'first' in type:
-                    liteDb.setFirstLang(user_id)
+                    liteDb.setFirstLang(user.tgId)
 
                     await bot.edit_message_text(
                         msg_welcome(langg), chat_id, mes_id,
@@ -223,49 +218,48 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     )
 
                     sent_messages = auth.getUserNotificationMessages(
-                        user_db_id
+                        user.id
                     )
 
                     if sent_messages:
                         await notifier.change_user_choosed_lang(
-                            user_db_id, langg, sent_messages
+                            user.tgId, langg, sent_messages
                         )
                 else:
-                    await send_settings(bot, call.message, user_id)
+                    await send_settings(bot, call.message, user.tgId)
 
         if not is_edit_lang:
             await bot.edit_message_text(
-                msg_choose_lang(lang),
+                msg_choose_lang(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_choose_lang(lang)
+                reply_markup=kb_choose_lang(user.lang)
             )
 
     if type == 'go_main':
-        await send_main(call.message, bot, user_id)
+        await send_main(call.message, bot, user.tgId)
 
     if type == 'go_settings':
-        await send_settings(bot, call.message, user_id)
+        await send_settings(bot, call.message, user.tgId)
 
     if type == 'go_change_base':
         await bot.edit_message_text(
-            msg_settings_change_base(lang),
+            msg_settings_change_base(user.lang),
             chat_id, mes_id,
-            reply_markup=kb_change_base(lang)
+            reply_markup=kb_change_base(user.lang)
         )
 
     if 'market' in type:
         type_list = type.split('_')
 
         if len(type_list) == 1:
-            lang = get_lang(user_id)
-            text = text_editor.get_text(user_id, 'settings_market')
-            media_id = text_editor.get_media_id(user_id, 'settings_market')
+            text = text_editor.get_text(user.tgId, 'settings_market')
+            media_id = text_editor.get_media_id(user.tgId, 'settings_market')
 
-            market = db.get_user_current_market(user_db_id)
+            market = db.get_user_current_market(user.id)
 
-            kb = kb_change_market(lang, '', market)
+            kb = kb_change_market(user.lang, '', market)
 
-            if lang == 'ru' and media_id != '':
+            if user.lang == 'ru' and media_id != '':
                 await delete_message(bot, chat_id, mes_id)
 
                 await bot.send_animation(
@@ -275,7 +269,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 )
             else:
                 await bot.edit_message_text(
-                    msg_settings_change_market(lang),
+                    msg_settings_change_market(user.lang),
                     chat_id, mes_id,
                     reply_markup=kb
                 )
@@ -286,11 +280,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             except:
                 action = ''
 
-            db.set_calculator_user_market(user_db_id, market)
+            db.set_calculator_user_market(user.id, market)
 
             if action == 'first':
-                db.create_tg_user_settings(user_db_id, market)
-                liteDb.setUserFirstMarket(user_id, market)
+                db.create_tg_user_settings(user.id, market)
+                liteDb.setUserFirstMarket(user.tgId, market)
 
                 if market == 'RF':
                     currency = 'RUB'
@@ -303,36 +297,36 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
                 if currency == '':
                     await bot.edit_message_text(
-                        msg_enter_currency(lang), chat_id, mes_id,
-                        reply_markup=kb_change_currency(lang, 'welcome')
+                        msg_enter_currency(user.lang), chat_id, mes_id,
+                        reply_markup=kb_change_currency(user.lang, 'welcome')
                     )
                     await state.set(SettingsState.currency)
                     await state.add_data(
                         action='welcome'
                     )
                 else:
-                    db.set_user_currency(user_db_id, currency)
+                    db.set_user_currency(user.id, currency)
                     await state.set(FirstCalcState.deposit)
                     await bot.edit_message_text(
-                        msg_enter_deposit(lang), chat_id, mes_id
+                        msg_enter_deposit(user.lang), chat_id, mes_id
                     )
             else:
-                await send_settings(bot, call.message, user_id)
+                await send_settings(bot, call.message, user.tgId)
 
     if type == 'first_dep':
         await state.set(FirstCalcState.deposit)
         await bot.edit_message_text(
-            msg_enter_deposit(lang), chat_id, mes_id
+            msg_enter_deposit(user.lang), chat_id, mes_id
         )
 
     if 'welcome_confirm' in type:
         if 'no' in type:
-            await send_main(call.message, bot, user_id, True)
+            await send_main(call.message, bot, user.tgId, True)
         if 'yes' in type:
             # Переход к логике ввода базовых значений
             await bot.edit_message_text(
-                msg_enter_currency(lang), chat_id, mes_id,
-                reply_markup=kb_change_currency(lang, 'welcome')
+                msg_enter_currency(user.lang), chat_id, mes_id,
+                reply_markup=kb_change_currency(user.lang, 'welcome')
             )
             await state.set(SettingsState.currency)
             await state.add_data(
@@ -343,39 +337,39 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         if '_yes' in type:
             try:
                 # Сброс настроек калькулятора до начальных
-                db.reset_user_settings(user_db_id)
-                await send_settings(bot, call.message, user_id)
+                db.reset_user_settings(user.id)
+                await send_settings(bot, call.message, user.tgId)
             except:
                 # Нет изменений - ничего не изменяется
                 pass
         elif '_no' in type:
-            await send_settings(bot, call.message, user_id)
+            await send_settings(bot, call.message, user.tgId)
         else:
             await bot.edit_message_text(
-                msg_confirm_reset(lang), chat_id, mes_id,
-                reply_markup=kb_settings_confirm(lang, 'reset')
+                msg_confirm_reset(user.lang), chat_id, mes_id,
+                reply_markup=kb_settings_confirm(user.lang, 'reset')
             )
 
     if 'deposit_update' in type:
         if '_on' in type:
-            db.set_user_updating_deposit(user_db_id, True)
+            db.set_user_updating_deposit(user.id, True)
         elif '_off' in type:
-            db.set_user_updating_deposit(user_db_id, False)
+            db.set_user_updating_deposit(user.id, False)
 
-        await send_user_deposit(bot, call.message, user_id)
+        await send_user_deposit(bot, call.message, user.tgId)
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
-        await send_summury_profit_settings(bot, call.message, user_id)
+        await send_summury_profit_settings(bot, call.message, user.tgId)
 
     if type == 'change_summury_profit':
         # Если summury_type не задан, то выводим страницу для выбора типа
         # Два типа: с разделением и без
         if summury_type == '':
             await bot.edit_message_text(
-                msg_enter_summury_profit_type(lang),
+                msg_enter_summury_profit_type(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_summury_profit_type(lang)
+                reply_markup=kb_summury_profit_type(user.lang)
             )
 
             # Стираем state и задаем новый
@@ -383,11 +377,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             await state.delete()
             await state.set(SettingsState.summury_profit)
         else:
-            data = state.data()
-
             # Получаем текущие данные
-            current_tp_ratio: list[int] = data.get('take_profit', [])
-            current_split: list[float] = data.get('split', [])
+            async with state.data() as data:
+                current_tp_ratio: list[int] = data.get('take_profit', [])
+                current_split: list[float] = data.get('split', [])
 
             # Проверяем задано ли кол-во на добавление/удаление
             if add_count != '':
@@ -432,21 +425,21 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             # Далее выводим страницу по summury_type
             if summury_type == 'default':
                 await bot.edit_message_text(
-                    msg_enter_take_profit(lang, current_tp_ratio),
+                    msg_enter_take_profit(user.lang, current_tp_ratio),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(lang, current_tp_ratio)
+                    reply_markup=kb_take_profit(user.lang, current_tp_ratio)
                 )
             elif summury_type == 'splitting':
                 if add_count != '':
                     # Если было добавлено больше одного элемента
                     kb = kb_splitting(
-                        lang, current_tp_ratio, current_split, add_count
+                        user.lang, current_tp_ratio, current_split, add_count
                     )
                 elif len(current_tp_ratio) == len(current_split):
                     # Если кол-во тейк-профитов и процентов одинаково,
                     # то даем выбрать следующий тейк-профит
                     kb = kb_splitting(
-                        lang, current_tp_ratio, current_split
+                        user.lang, current_tp_ratio, current_split
                     )
                 else:
                     # Иначе даем ввести процент для последнего выбранного тейк-профита
@@ -454,22 +447,22 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     await state.set(SettingsState.splitting)
                 await bot.edit_message_text(
                     msg_enter_splitting(
-                        lang, current_tp_ratio, current_split
+                        user.lang, current_tp_ratio, current_split
                     ),
                     chat_id, mes_id,
                     reply_markup=kb
                 )
 
     if 'save' in type:
-        data = state.data()
-        current_tp_ratio: list[int] = data.get('take_profit', [])
-        current_split: list[float] = data.get('split', [])
+        async with state.data() as data:
+            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_split: list[float] = data.get('split', [])
 
         # При сохранении тейк-профита без разделения
         if type == 'tp_save':
             current_tp_ratio.sort()
-            db.set_calculator_tp_ratio(user_db_id, current_tp_ratio)
-            db.set_user_split_values(user_db_id, None)
+            db.set_calculator_tp_ratio(user.id, current_tp_ratio)
+            db.set_user_split_values(user.id, None)
 
         # При сохранении вывода с разделением
         if type == 'splitting_save':
@@ -480,76 +473,76 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             sorted_tp = list(sorted_tp)
             sorted_split = list(sorted_split)
 
-            db.set_calculator_tp_ratio(user_db_id, sorted_tp)
-            db.set_user_split_values(user_db_id, sorted_split)
+            db.set_calculator_tp_ratio(user.id, sorted_tp)
+            db.set_user_split_values(user.id, sorted_split)
 
         # Выводим сообщения
-        await bot.edit_message_text(msg_success_edit(lang), chat_id, mes_id)
-        await send_summury_profit_settings(bot, call.message, user_id, True)
+        await bot.edit_message_text(msg_success_edit(user.lang), chat_id, mes_id)
+        await send_summury_profit_settings(bot, call.message, user.tgId, True)
 
     if type == 'splitting_last':
-        data = state.data()
-        current_tp_ratio: list[int] = data.get('take_profit', [])
-        current_split: list[float] = data.get('split', [])
+        async with state.data() as data:
+            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_split: list[float] = data.get('split', [])
 
         await bot.edit_message_text(
             msg_enter_splitting(
-                lang, current_tp_ratio, current_split, True
+                user.lang, current_tp_ratio, current_split, True
             ),
             chat_id, mes_id,
-            reply_markup=kb_splitting_last(lang)
+            reply_markup=kb_splitting_last(user.lang)
         )
 
     if 'trading_type' in type:
         if trading_value == '':
             await bot.edit_message_text(
-                msg_enter_trading_type(lang), chat_id, mes_id,
-                reply_markup=kb_trading_type(lang)
+                msg_enter_trading_type(user.lang), chat_id, mes_id,
+                reply_markup=kb_trading_type(user.lang)
             )
         else:
-            db.set_user_trading_type(user_db_id, trading_value)  # type: ignore
-            await send_settings(bot, call.message, user_id)
+            db.set_user_trading_type(user.id, trading_value)  # type: ignore
+            await send_settings(bot, call.message, user.tgId)
 
     if type == 'calc_output':
-        cur_calc_output = db.get_user_calc_output(user_db_id)
+        cur_calc_output = db.get_user_calc_output(user.id)
         db.set_user_calc_output(
-            user_db_id,
+            user.id,
             'text' if cur_calc_output == 'photo' else 'photo'
         )
-        await send_dop_settings(bot, call.message, user_id)
+        await send_dop_settings(bot, call.message, user.tgId)
 
     if type == 'set_first_settings':
         await bot.edit_message_text(
-            msg_enter_market(lang), chat_id, mes_id,
-            reply_markup=kb_change_market(lang, 'first')
+            msg_enter_market(user.lang), chat_id, mes_id,
+            reply_markup=kb_change_market(user.lang, 'first')
         )
 
     if type == 'set_risk_update':
-        liteDb.reverseRiskUpdate(user_id)
-        await send_dop_settings(bot, call.message, user_id)
+        liteDb.reverseRiskUpdate(user.tgId)
+        await send_dop_settings(bot, call.message, user.tgId)
 
     if type == 'exchange':
-        exchange = liteDb.getUserExchange(user_id)
+        exchange = liteDb.getUserExchange(user.tgId)
 
         if exchange is None:
             await bot.edit_message_text(
-                msg_enter_exchange(lang),
+                msg_enter_exchange(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_enter_exchange(lang, is_first=True)
+                reply_markup=kb_enter_exchange(user.lang, is_first=True)
             )
             await state.set(SettingsState.exchange)
             await state.add_data(
                 del_mes_id=mes_id
             )
         else:
-            await send_exchange_settings(bot, call.message, user_id)
+            await send_exchange_settings(bot, call.message, user.tgId)
 
     if 'set_exchange' in type:
         if type == 'set_exchange':
             await bot.edit_message_text(
-                msg_enter_exchange(lang),
+                msg_enter_exchange(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_enter_exchange(lang)
+                reply_markup=kb_enter_exchange(user.lang)
             )
             await state.set(SettingsState.exchange)
             await state.add_data(
@@ -564,10 +557,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
             if len(exchange.fees) != 0:
                 await bot.edit_message_text(
-                    msg_choose_exchange_level(lang, exchange.fees),
+                    msg_choose_exchange_level(user.lang, exchange.fees),
                     chat_id, mes_id,
                     reply_markup=kb_choose_exchange_level(
-                        lang, exchange.name, [el[0] for el in exchange.fees]
+                        user.lang, exchange.name, [el[0] for el in exchange.fees]
                     )
                 )
             else:
@@ -590,12 +583,12 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 break
 
         await send_maker_or_taker(
-            bot, call.message, user_id,
+            bot, call.message, user.tgId,
             (exchange.name, maker_fee, taker_fee)
         )
 
     if type == 'set_fee':
-        user_exchange = liteDb.getUserExchange(user_id)
+        user_exchange = liteDb.getUserExchange(user.tgId)
 
         if user_exchange is None:
             return
@@ -606,10 +599,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
         if len(exchange.fees) != 0:
             await bot.edit_message_text(
-                msg_choose_exchange_level(lang, exchange.fees),
+                msg_choose_exchange_level(user.lang, exchange.fees),
                 chat_id, mes_id,
                 reply_markup=kb_choose_exchange_level(
-                    lang, exchange.name, [el[0] for el in exchange.fees]
+                    user.lang, exchange.name, [el[0] for el in exchange.fees]
                 )
             )
         else:
@@ -625,98 +618,98 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'set_ex_fee' in type:
         _, name, value = type.split('++')
-        liteDb.setUserExchange(user_id, (name, float(value)))
-        await send_exchange_settings(bot, call.message, user_id)
+        liteDb.setUserExchange(user.tgId, (name, float(value)))
+        await send_exchange_settings(bot, call.message, user.tgId)
 
     if type == 'dop':
-        await send_dop_settings(bot, call.message, user_id)
+        await send_dop_settings(bot, call.message, user.tgId)
 
     if 'set_stop' in type:
         _, new_stop_type = type.split('+')
 
-        db.set_user_from_deposit(user_db_id, False)
+        db.set_user_from_deposit(user.id, False)
         if new_stop_type == 'atr_percent':
             await bot.edit_message_text(
-                msg_enter_atr_percent(lang), chat_id, mes_id,
-                reply_markup=kb_stop_type_cancel(lang)
+                msg_enter_atr_percent(user.lang), chat_id, mes_id,
+                reply_markup=kb_stop_type_cancel(user.lang)
             )
             await state.set(SettingsState.atr_percent)
         else:
-            liteDb.setUserStop(user_id, new_stop_type)
+            liteDb.setUserStop(user.tgId, new_stop_type)
 
             if new_stop_type == 'atr':
-                await send_atr_settings(bot, call.message, user_id)
+                await send_atr_settings(bot, call.message, user.tgId)
             else:
                 try:
-                    await send_stop_settings(bot, call.message, user_id)
+                    await send_stop_settings(bot, call.message, user.tgId)
                 except:
                     pass
 
     if type == 'stop_settings':
-        await send_stop_settings(bot, call.message, user_id)
+        await send_stop_settings(bot, call.message, user.tgId)
 
     if type == 'change_fr_dp':
-        u_base = db.get_calc_user_settings(user_db_id)
+        u_base = db.get_calc_user_settings(user.id)
         curr = False
         if u_base is not None:
             curr = u_base.is_from_deposit
 
-        db.set_user_from_deposit(user_db_id, not curr)
-        await send_stop_settings(bot, call.message, user_id)
+        db.set_user_from_deposit(user.id, not curr)
+        await send_stop_settings(bot, call.message, user.tgId)
 
     if type == 'atr_settings':
-        await send_atr_settings(bot, call.message, user_id)
+        await send_atr_settings(bot, call.message, user.tgId)
 
     if type == 'atr_auto':
-        atr_settings = liteDb.getUserAtrSettings(user_id)
+        atr_settings = liteDb.getUserAtrSettings(user.tgId)
         if atr_settings[0]:
             return
 
         liteDb.setUserAtrSettings(
-            user_id, (not atr_settings[0], atr_settings[1])
+            user.tgId, (not atr_settings[0], atr_settings[1])
         )
-        await send_atr_settings(bot, call.message, user_id)
+        await send_atr_settings(bot, call.message, user.tgId)
 
     if type == 'atr_self':
-        atr_settings = liteDb.getUserAtrSettings(user_id)
+        atr_settings = liteDb.getUserAtrSettings(user.tgId)
         if not atr_settings[0]:
             return
 
         liteDb.setUserAtrSettings(
-            user_id, (not atr_settings[0], atr_settings[1])
+            user.tgId, (not atr_settings[0], atr_settings[1])
         )
-        await send_atr_settings(bot, call.message, user_id)
+        await send_atr_settings(bot, call.message, user.tgId)
 
     if type == 'atr_bars':
         await bot.edit_message_text(
-            msg_enter_bars(lang), chat_id, mes_id,
-            reply_markup=kb_atr_bars(lang)
+            msg_enter_bars(user.lang), chat_id, mes_id,
+            reply_markup=kb_atr_bars(user.lang)
         )
 
     if 'set_atr_bars+' in type:
         _, period = type.split('+')
-        atr_settings = liteDb.getUserAtrSettings(user_id)
+        atr_settings = liteDb.getUserAtrSettings(user.tgId)
         bars = atr_settings[1].split('+')
 
         liteDb.setUserAtrSettings(
-            user_id, (atr_settings[0], f'{period}+{bars[1]}')
+            user.tgId, (atr_settings[0], f'{period}+{bars[1]}')
         )
 
         await bot.edit_message_text(
-            msg_enter_bars_count(lang), chat_id, mes_id,
-            reply_markup=kb_atr_bars_count(lang)
+            msg_enter_bars_count(user.lang), chat_id, mes_id,
+            reply_markup=kb_atr_bars_count(user.lang)
         )
         await state.set(SettingsState.atr_bars_count)
 
     if 'set_atr_count+' in type:
         _, count = type.split('+')
 
-        atr_settings = liteDb.getUserAtrSettings(user_id)
+        atr_settings = liteDb.getUserAtrSettings(user.tgId)
         bars = atr_settings[1].split('+')
         liteDb.setUserAtrSettings(
-            user_id, (atr_settings[0], f'{bars[0]}+{count}'))
+            user.tgId, (atr_settings[0], f'{bars[0]}+{count}'))
 
-        await send_atr_settings(bot, call.message, user_id)
+        await send_atr_settings(bot, call.message, user.tgId)
 
         await bot.answer_callback_query(call.id)
 
