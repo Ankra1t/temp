@@ -180,7 +180,7 @@ async def setup():
 
     app.on_cleanup.append(shutdown)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     return app
 
@@ -191,7 +191,6 @@ if __name__ == '__main__':
         setup(),
         host='127.0.0.1',
         port=flask_port,
-        access_log=logger
     )
     # if PROD:
     #     web.run_app(
