@@ -50,7 +50,7 @@ from handlers.tariff import registration as _reg_tariff
 bot = AsyncTeleBot(
     TOKEN_MAIN_BOT, 'HTML',
     state_storage=StateMemoryStorage(),
-    exception_handler=ExHandler()
+    exception_handler=ExHandler(),
 )
 
 bot.setup_middleware(AuthMiddleWare(bot))

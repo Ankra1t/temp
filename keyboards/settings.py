@@ -20,7 +20,8 @@ settings_factory = CallbackData(
 class SettingsCallbackFilter(AdvancedCustomFilter):
     key = 'settings'
 
-    async def check(self, call: CallbackQuery, config: CallbackDataFilter):
+    @staticmethod
+    async def check(call: CallbackQuery, config: CallbackDataFilter):
         return config.check(call)
 
 
