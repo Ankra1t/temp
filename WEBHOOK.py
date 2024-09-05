@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import telebot
 from aiohttp import web
 
@@ -178,6 +179,8 @@ async def setup():
     app.add_routes(routes)
 
     app.on_cleanup.append(shutdown)
+
+    logging.basicConfig(level=logging.DEBUG)
 
     return app
 
