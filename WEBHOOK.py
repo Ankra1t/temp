@@ -162,13 +162,13 @@ async def setup():
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA')
+    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
 
     app = web.Application()
 
     routes = [
-        web.post(base_url + '/AAA', handle),
-        web.get(base_url + '/AAA', handle),
+        web.post(base_url + '/AAA/', handle),
+        web.get(base_url + '/AAA/', handle),
         web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
         web.post(base_url + YOOKASSA_URL, yookassa_updates),
         web.get(base_url + '/icon.png', get_icon),
