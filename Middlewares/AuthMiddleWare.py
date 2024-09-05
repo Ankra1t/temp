@@ -1,4 +1,5 @@
 from typing import Union
+from config_logger import logger
 from telebot.types import Message, CallbackQuery
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
 from telebot.util import update_types
@@ -25,7 +26,7 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         state = StateContext(message, self.bot)  # type: ignore
-        print(message.from_user)
+        logger.info(message.from_user)
         tgId = message.from_user.id
         isText = False
         if isinstance(message, Message):
