@@ -69,3 +69,4 @@ class AuthMiddleWare(BaseMiddleware):
             tgId=tgId,
             lang=lang
         )
+        logger.info(data)

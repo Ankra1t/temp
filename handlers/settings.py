@@ -85,7 +85,6 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
 
 async def handle_new_currency(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    logger.info(1)
     chat_id = message.chat.id
 
     value = text_accept(message)
