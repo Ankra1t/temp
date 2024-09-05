@@ -1,4 +1,5 @@
 import asyncio
+import json
 import telebot
 from aiohttp import web
 
@@ -40,21 +41,19 @@ async def yookassa_updates(request: web.Request):
 
 
 async def get_icon(request: web.Request):
-    with open('src/img/icon.png', mode='rb') as f:
-        file_data = f.read()
-
-    return web.Response(
-        body=file_data,
+    return web.FileResponse(
+        path='src/img/icon.png',
     )
 
 
 async def get_ton_manifest(request: web.Request):
     return web.Response(
-        body={
+        body=json.dumps({
             "url": "https://github.com/XaBbl4/pytonconnect",
             "name": "Calc",
             "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
         },
+        ),
     )
 
 
@@ -89,7 +88,7 @@ async def first_timeout(request: web.Request):
     except:
         return web.Response(status=403)
 
-    return web.Response(status=200)
+    return web.Response()
 
 
 async def stats_post(request: web.Request):
@@ -158,37 +157,43 @@ async def setup():
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(url=f'https://profmarkets.ai/{base_url}/AAA')
+    # await bot.set_webhook(url=f'https://profmarkets.ai/{base_url}/AAA')
 
     app = web.Application()
 
-    app.router.add_post('/AAA', handle)
-    app.router.add_post(CRYPTOPAY_URL, cryptobot_updates)
-    app.router.add_post(YOOKASSA_URL, yookassa_updates)
-    app.router.add_get('/icon.png', get_icon)
-    app.router.add_get('/manifest.json', get_ton_manifest)
-    app.router.add_get('/vote_timeout', vote_timeout)
-    app.router.add_get('/first_timeout', first_timeout)
-    app.router.add_get('/stats_post', stats_post)
-    app.router.add_get('/calc_post', calc_post)
-    app.router.add_get('/live-info', live_info)
+    routes = [
+        web.post('/AAA', handle),
+        web.post(CRYPTOPAY_URL, cryptobot_updates),
+        web.post(YOOKASSA_URL, yookassa_updates),
+        web.get('/icon.png', get_icon),
+        web.get('/manifest.json', get_ton_manifest),
+        web.get('/vote_timeout', vote_timeout),
+        web.get('/first_timeout', first_timeout),
+        web.get('/stats_post', stats_post),
+        web.get('/calc_post', calc_post),
+        web.get('/live-info', live_info)
+    ]
+
+    app.add_routes(routes)
 
     app.on_cleanup.append(shutdown)
 
-    print(2)
     return app
 
-print(11)
-logger.info(1)
 run_thread(bot)
 
 if __name__ == '__main__':
-    if PROD:
-        print(1)
-        web.run_app(
-            setup(),
-            host='127.0.0.1',
-            port=flask_port
-        )
-    else:
-        asyncio.run(bot.polling(skip_pending=True))
+    web.run_app(
+        setup(),
+        host='127.0.0.1',
+        port=flask_port,
+        access_log=logger,
+    )
+    # if PROD:
+    #     web.run_app(
+    #         setup(),
+    #         host='127.0.0.1',
+    #         port=flask_port
+    #     )
+    # else:
+    #     asyncio.run(bot.polling(skip_pending=True))
