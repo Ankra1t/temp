@@ -1418,7 +1418,7 @@ def edit_live_info(
                 msg += f'{"+" if live[4].monthValueCount > 0 else ""}{get_print_float(live[4].monthValueCount, 1)}% {tp_sl_show}'
 
             if finished != '':
-                msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Завершено:</b>\n'
+                msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'
                 msg += finished.strip()[:-1]
 
             if len(live[2]) > 0:
