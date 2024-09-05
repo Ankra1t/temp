@@ -26,7 +26,7 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         state = StateContext(message, self.bot)  # type: ignore
-        logger.info(message.from_user)
+
         tgId = message.from_user.id
         isText = False
         if isinstance(message, Message):
@@ -34,6 +34,8 @@ class AuthMiddleWare(BaseMiddleware):
             isText = message.content_type == 'text'
         else:
             chat_id = message.message.chat.id
+
+        logger.info(1)
 
         user_db_id = db.get_user_id_by_tg_id(tgId)
         if db.check_ban_user(user_db_id):
