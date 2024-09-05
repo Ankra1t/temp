@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if PROD:
         web.run_app(
             setup(),
-            host='0.0.0.0',
+            host='127.0.0.1',
             port=flask_port
         )
     else:
