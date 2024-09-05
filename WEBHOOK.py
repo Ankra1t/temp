@@ -174,6 +174,8 @@ async def setup():
     app.router.add_get('/live-info', live_info)
 
     app.on_cleanup.append(shutdown)
+
+    print(2)
     return app
 
 
@@ -181,6 +183,7 @@ run_thread(bot)
 
 if __name__ == '__main__':
     if PROD:
+        print(1)
         web.run_app(
             setup(),
             host='127.0.0.1',
