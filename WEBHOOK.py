@@ -23,12 +23,15 @@ run_thread(bot)
 
 
 @app.route(base_url + '/AAA', methods=['POST', 'GET'])
-def AAA():
+async def AAA():
     if request.headers.get('content-type') == 'application/json':
         update = telebot.types.Update.de_json(
             request.stream.read().decode('utf-8')
         )
-        bot.process_new_updates([update])  # type: ignore
+        if update is None:
+            flask.abort(403)
+
+        await bot.process_new_updates([update])
 
         return ''
     else:
@@ -37,13 +40,13 @@ def AAA():
 
 # Payments WebHooks
 @app.route(base_url + CRYPTOPAY_URL, methods=['POST', 'GET'])
-def cryptobot_updates():
-    return cryptoPay_payment_updates(bot, request)
+async def cryptobot_updates():
+    return await cryptoPay_payment_updates(bot, request)
 
 
 @app.route(base_url + YOOKASSA_URL, methods=['POST', 'GET'])
-def yookassa_updates():
-    return yooKassa_payment_updates(bot, request)
+async def yookassa_updates():
+    return await yooKassa_payment_updates(bot, request)
 
 
 @app.route(base_url + '/icon.png', methods=['GET'])
