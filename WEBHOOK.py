@@ -1,3 +1,4 @@
+import asyncio
 import telebot
 import flask
 from flask import jsonify, request, send_file, Response
@@ -31,7 +32,7 @@ async def AAA():
         if update is None:
             flask.abort(403)
 
-        await bot.process_new_updates([update])
+        asyncio.ensure_future(bot.process_new_updates([update]))
 
         return ''
     else:
