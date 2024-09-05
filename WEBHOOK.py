@@ -158,7 +158,9 @@ async def setup():
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+
+    if PROD:
+        await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
 
     app = web.Application()
 
@@ -187,17 +189,12 @@ async def setup():
 run_thread(bot)
 
 if __name__ == '__main__':
-    web.run_app(
-        setup(),
-        host='127.0.0.1',
-        port=flask_port,
-        access_log=None
-    )
-    # if PROD:
-    #     web.run_app(
-    #         setup(),
-    #         host='127.0.0.1',
-    #         port=flask_port
-    #     )
-    # else:
-    #     asyncio.run(bot.polling(skip_pending=True))
+    if not PROD:
+        web.run_app(
+            setup(),
+            host='127.0.0.1',
+            port=flask_port,
+            access_log=None
+        )
+    else:
+        asyncio.run(bot.polling(skip_pending=True))

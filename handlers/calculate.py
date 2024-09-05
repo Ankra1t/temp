@@ -27,7 +27,7 @@ from services import calculation
 
 async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
-
+    print(1)
     tool = text_accept(message)
     if tool is None or is_digit(tool):
         new_mes = await bot.send_message(
