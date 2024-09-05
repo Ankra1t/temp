@@ -443,8 +443,8 @@ def msg_channel_calculation(
             'take': 'Take',
             'style': '<b>S</b>tyle',
 
-            'tp': 'тейка',
-            'sl': 'стопа',
+            'tp': 'take',
+            'sl': 'stop',
 
             'direct': 'Direction',
             'to': 'to',

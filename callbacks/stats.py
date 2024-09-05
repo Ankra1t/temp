@@ -982,6 +982,7 @@ async def send_week_stats(bot: AsyncTeleBot, calcId: int | None = None, is_new_w
 
         marathon = '<b>Марафон 30 дней:</b>'
         for i, el in enumerate(marathon_data):
+            print(f'ДЕНЬ {i + 1} | {el}')
             if len(marathon_data) - week_num * 7 >= 7:
                 week_value += (el or 0)
 
@@ -1400,7 +1401,7 @@ async def edit_live_info(
                 msg += f'{"+" if live[4].monthValueCount > 0 else ""}{get_print_float(live[4].monthValueCount, 1)}% {tp_sl_show}'
 
             if finished != '':
-                msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Завершено:</b>\n'
+                msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'
                 msg += finished.strip()[:-1]
 
             if len(live[2]) > 0:
@@ -1439,7 +1440,7 @@ async def edit_live_info(
                 text = 'Статистика' if lang == 'ru' else 'Stats'
                 msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
 
-            msg = now_changed + msg
+            # msg = now_changed + msg
             try:
                 if changed_calc is not None and changed_calc.status == 'DEAL' or live[0] is None:
                     if live[0] is not None:
