@@ -188,6 +188,7 @@ if __name__ == '__main__':
         setup(),
         host='127.0.0.1',
         port=flask_port,
+        access_log=logger
     )
     # if PROD:
     #     web.run_app(
