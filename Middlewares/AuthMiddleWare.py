@@ -70,3 +70,4 @@ class AuthMiddleWare(BaseMiddleware):
             lang=lang
         )
         logger.info(data)
+        logger.info(update_types)
