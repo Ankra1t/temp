@@ -19,6 +19,7 @@ from thread_tasks import run_thread
 
 
 async def handle(request: web.Request):
+    print(1)
     if request.match_info.get('token') == bot.token and request.headers.get('content-type') == 'application/json':
         request_body_dict = await request.json()
         update = telebot.types.Update.de_json(request_body_dict)
