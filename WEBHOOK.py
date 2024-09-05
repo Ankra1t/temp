@@ -189,11 +189,12 @@ async def setup():
 run_thread(bot)
 
 if __name__ == '__main__':
-    if not PROD:
+    if PROD:
         web.run_app(
             setup(),
             host='127.0.0.1',
             port=flask_port,
+            access_log=None
         )
     else:
         asyncio.run(bot.polling(skip_pending=True))
