@@ -162,16 +162,16 @@ async def setup():
     app = web.Application()
 
     routes = [
-        web.post('/AAA', handle),
-        web.post(CRYPTOPAY_URL, cryptobot_updates),
-        web.post(YOOKASSA_URL, yookassa_updates),
-        web.get('/icon.png', get_icon),
-        web.get('/manifest.json', get_ton_manifest),
-        web.get('/vote_timeout', vote_timeout),
-        web.get('/first_timeout', first_timeout),
-        web.get('/stats_post', stats_post),
-        web.get('/calc_post', calc_post),
-        web.get('/live-info', live_info)
+        web.post(base_url + '/AAA', handle),
+        web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
+        web.post(base_url + YOOKASSA_URL, yookassa_updates),
+        web.get(base_url + '/icon.png', get_icon),
+        web.get(base_url + '/manifest.json', get_ton_manifest),
+        web.get(base_url + '/vote_timeout', vote_timeout),
+        web.get(base_url + '/first_timeout', first_timeout),
+        web.get(base_url + '/stats_post', stats_post),
+        web.get(base_url + '/calc_post', calc_post),
+        web.get(base_url + '/live-info', live_info)
     ]
 
     app.add_routes(routes)
@@ -187,7 +187,6 @@ if __name__ == '__main__':
         setup(),
         host='127.0.0.1',
         port=flask_port,
-        access_log=logger,
     )
     # if PROD:
     #     web.run_app(
