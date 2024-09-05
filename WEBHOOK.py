@@ -1,12 +1,11 @@
 import asyncio
 import telebot
-import flask
-from flask import jsonify, request, send_file, Response
+from aiohttp import web
 
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 
-from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, base_url, flask_port
+from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, base_url
 from config_logger import logger
 
 from callbacks.calculate import send_after_first_try
@@ -18,122 +17,117 @@ from models import LiveInfo, LiveStats, LiveWait, SentMessages
 from thread_tasks import run_thread
 
 
-logger.info('INITIALIZE')
-app = flask.Flask(__name__)
-run_thread(bot)
+async def handle(request: web.Request):
+    if request.match_info.get('token') == bot.token and request.headers.get('content-type') == 'application/json':
+        request_body_dict = await request.json()
+        update = telebot.types.Update.de_json(request_body_dict)
 
-
-@app.route(base_url + '/AAA', methods=['POST', 'GET'])
-async def AAA():
-    if request.headers.get('content-type') == 'application/json':
-        update = telebot.types.Update.de_json(
-            request.stream.read().decode('utf-8')
-        )
         if update is None:
-            flask.abort(403)
+            return web.Response(status=403)
 
         asyncio.ensure_future(bot.process_new_updates([update]))
-
-        return ''
+        return web.Response()
     else:
-        flask.abort(403)
+        return web.Response(status=403)
 
 
-# Payments WebHooks
-@app.route(base_url + CRYPTOPAY_URL, methods=['POST', 'GET'])
-async def cryptobot_updates():
+async def cryptobot_updates(request: web.Request):
     return await cryptoPay_payment_updates(bot, request)
 
 
-@app.route(base_url + YOOKASSA_URL, methods=['POST', 'GET'])
-async def yookassa_updates():
+async def yookassa_updates(request: web.Request):
     return await yooKassa_payment_updates(bot, request)
 
 
-@app.route(base_url + '/icon.png', methods=['GET'])
-def get_icon():
-    return send_file('src/img/icon.png', mimetype='image/png')
+async def get_icon(request: web.Request):
+    with open('src/img/icon.png', mode='rb') as f:
+        file_data = f.read()
+
+    return web.Response(
+        body=file_data,
+    )
 
 
-@app.route(base_url + '/manifest.json', methods=['GET'])
-def get_ton_manifest():
-    return jsonify({
-        # "url": f"https://t.me/{bot.get_me().username}",
-        "url": "https://github.com/XaBbl4/pytonconnect",
-        "name": "Calc",
-        "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
-    })
+async def get_ton_manifest(request: web.Request):
+    return web.Response(
+        body={
+            "url": "https://github.com/XaBbl4/pytonconnect",
+            "name": "Calc",
+            "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
+        },
+    )
 
-@app.route(base_url + '/vote_timeout', methods=['GET'])
-async def vote_timeout():
+
+async def vote_timeout(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
     if access_token is None or api_key is None or access_token != api_key:
-        return Response(status=400)
+        return web.Response(status=403)
 
-    stat_id = request.args.get('stat_id')
+    stat_id = request.query.get('stat_id')
     if stat_id is None or not stat_id.isnumeric():
-        return Response(status=400)
+        return web.Response(status=403)
 
     await send_vote(bot, int(stat_id))
-    return Response(status=200)
+    return web.Response()
 
-@app.route(base_url + '/first_timeout', methods=['GET'])
-async def first_timeout():
+
+async def first_timeout(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
     if access_token is None or api_key is None or access_token != api_key:
-        return Response(status=400)
+        return web.Response(status=403)
 
-    user_id = request.args.get('user_id')
+    user_id = request.query.get('user_id')
     if user_id is None or not user_id.isnumeric():
-        return Response(status=400)
+        return web.Response(status=403)
 
     try:
         await send_after_first_try(bot, int(user_id))
     except:
-        return Response(status=400)
-    return Response(status=200)
+        return web.Response(status=403)
 
-@app.route(base_url + '/stats_post', methods=['POST'])
-async def stats_post():
+    return web.Response(status=200)
+
+
+async def stats_post(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
     if access_token is None or api_key is None or access_token != api_key:
-        return Response(status=400)
+        return web.Response(status=403)
 
     await send_week_stats(bot, is_new_week=True)
 
-    return Response(status=200)
+    return web.Response()
 
-@app.route(base_url + '/calc_post', methods=['GET'])
-async def calc_post():
+
+async def calc_post(request: web.Request):
     # access_token = db.get_access_token()
     # api_key = request.headers.get('tg-api-key')
 
     # if access_token is None or api_key is None or access_token != api_key:
     #     return Response(status=400)
 
-    calc_id = request.args.get('calc_id')
+    calc_id = request.query.get('calc_id')
     if calc_id is None or not calc_id.isnumeric():
-        return Response(status=400)
+        return web.Response(status=403)
 
     await edit_channel_post(bot, int(calc_id))
 
-    return Response(status=200)
+    return web.Response()
 
-@app.route(base_url + '/live-info', methods=['POST'])
-async def live_info():
+
+async def live_info(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
     if access_token is None or api_key is None or access_token != api_key:
-        return Response(status=400)
+        return web.Response(status=403)
 
-    res = request.get_json()
+    res = await request.json()
 
     messages = res.get('messages')
     data: list[dict] = res.get('data')
@@ -150,11 +144,47 @@ async def live_info():
 
     await edit_live_info(bot, live)
 
-    return Response(status=200)
+    return web.Response()
 
-if PROD:
-    from waitress import serve
-    serve(app, host="127.0.0.1", port=flask_port, threads=5)
-else:
-    import _index  # type: ignore
-    app.run(host='127.0.0.1', port=flask_port)
+
+async def shutdown(app):
+    logger.info('Shutting down: removing webhook')
+    await bot.remove_webhook()
+    logger.info('Shutting down: closing session')
+    await bot.close_session()
+
+
+async def setup():
+    logger.info('Starting up: removing old webhook')
+    await bot.remove_webhook()
+    logger.info('Starting up: setting webhook')
+    await bot.set_webhook(url=f'https://profmarkets.ai/{base_url}/AAA')
+
+    app = web.Application()
+
+    app.router.add_post('/AAA', handle)
+    app.router.add_post(CRYPTOPAY_URL, cryptobot_updates)
+    app.router.add_post(YOOKASSA_URL, yookassa_updates)
+    app.router.add_get('/icon.png', get_icon)
+    app.router.add_get('/manifest.json', get_ton_manifest)
+    app.router.add_get('/vote_timeout', vote_timeout)
+    app.router.add_get('/first_timeout', first_timeout)
+    app.router.add_get('/stats_post', stats_post)
+    app.router.add_get('/calc_post', calc_post)
+    app.router.add_get('/live-info', live_info)
+
+    app.on_cleanup.append(shutdown)
+    return app
+
+
+run_thread(bot)
+
+if __name__ == '__main__':
+    if PROD:
+        web.run_app(
+            setup(),
+            host='0.0.0.0',
+            port=flask_port
+        )
+    else:
+        asyncio.run(bot.polling(skip_pending=True))

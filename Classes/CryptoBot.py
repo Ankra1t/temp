@@ -4,7 +4,7 @@ from httpx import request
 from telebot.async_telebot import AsyncTeleBot
 from hashlib import sha256
 from hmac import HMAC
-from flask import Request, Response
+from aiohttp.web import Request, Response
 from aiocryptopay.const import PaidButtons, InvoiceStatus
 
 from NOTIFIER.messages import mess_user_paid
@@ -79,18 +79,17 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
 
 
 async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
-    body: dict | None = request.get_json(True, True)
+    body = await request.json()
     if body is None:
         return Response(status=400)
 
-    body_text = request.get_data(True, True)
     crypto_pay_signature = request.headers.get(
         "Crypto-Pay-Api-Signature", "No value"
     )
 
     token = sha256(string=CRYPTOPAY_TOKEN.encode("UTF-8")).digest()
     signature = HMAC(
-        key=token, msg=body_text.encode("UTF-8"), digestmod=sha256
+        key=token, msg=body.encode("UTF-8"), digestmod=sha256
     ).hexdigest()
     if signature != crypto_pay_signature:
         return Response(status=400)
@@ -168,4 +167,4 @@ async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
             finish_date=finish_date_show
         ))
 
-    return Response(status=200)
+    return Response()

@@ -1,6 +1,7 @@
+import json
 import traceback
 from telebot.async_telebot import AsyncTeleBot
-from flask import Request, Response
+from aiohttp.web import Request, Response
 from yookassa import Configuration, Payment
 from requests.exceptions import HTTPError
 import uuid
@@ -91,9 +92,11 @@ def yooKassa_create_payment(user_id: int, tariff: Price, redirect_url: str, user
 
 
 async def yooKassa_payment_updates(bot: AsyncTeleBot, request: Request):
-    body: dict | None = request.get_json(True, True)
+    body = await request.json()
     if body is None:
         return Response(status=400)
+
+    body = json.loads(body)
 
     logger.info(f'YooKassa update: {body}')
 
