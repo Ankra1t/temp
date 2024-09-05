@@ -152,11 +152,9 @@ async def live_info():
 
     return Response(status=200)
 
-app.run(host='127.0.0.1', port=flask_port)
-
-# if PROD:
-#     from waitress import serve
-#     serve(app, host="127.0.0.1", port=flask_port, threads=5)
-# else:
-#     import _index  # type: ignore
-#     app.run(host='127.0.0.1', port=flask_port)
+if PROD:
+    from waitress import serve
+    serve(app, host="127.0.0.1", port=flask_port, threads=5)
+else:
+    import _index  # type: ignore
+    app.run(host='127.0.0.1', port=flask_port)

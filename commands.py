@@ -173,6 +173,7 @@ async def _results(message: Message, bot: AsyncTeleBot):
 
 async def _test(message: Message, bot: AsyncTeleBot):
     print(message.chat.id)
+    print(await bot.get_webhook_info())
     return
 
 
