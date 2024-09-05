@@ -178,7 +178,8 @@ async def setup():
     print(2)
     return app
 
-
+print(11)
+logger.info(1)
 run_thread(bot)
 
 if __name__ == '__main__':
