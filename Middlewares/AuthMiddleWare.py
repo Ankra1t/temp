@@ -25,7 +25,7 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         state = StateContext(message, self.bot)  # type: ignore
-
+        print(message.from_user)
         tgId = message.from_user.id
         isText = False
         if isinstance(message, Message):
