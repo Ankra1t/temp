@@ -194,7 +194,6 @@ if __name__ == '__main__':
             setup(),
             host='127.0.0.1',
             port=flask_port,
-            access_log=None
         )
     else:
         asyncio.run(bot.polling(skip_pending=True))
