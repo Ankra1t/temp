@@ -35,8 +35,6 @@ class AuthMiddleWare(BaseMiddleware):
         else:
             chat_id = message.message.chat.id
 
-        logger.info(1)
-
         user_db_id = db.get_user_id_by_tg_id(tgId)
         if db.check_ban_user(user_db_id):
             return CancelUpdate()
