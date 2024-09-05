@@ -164,6 +164,7 @@ async def setup():
 
     routes = [
         web.post(base_url + '/AAA', handle),
+        web.get(base_url + '/AAA', handle),
         web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
         web.post(base_url + YOOKASSA_URL, yookassa_updates),
         web.get(base_url + '/icon.png', get_icon),
