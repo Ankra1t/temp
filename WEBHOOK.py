@@ -21,8 +21,9 @@ from thread_tasks import run_thread
 async def handle(request: web.Request):
     print(1)
     print(request.match_info.get('token') == bot.token and request.headers.get('content-type') == 'application/json')
-    print(request.match_info)
-    print(request.headers)
+    print(request.match_info.get('token'))
+    print(request.headers.get('content-type'))
+    print(request.headers.get('Content-Type'))
     if request.match_info.get('token') == bot.token and request.headers.get('content-type') == 'application/json':
         print(2)
         request_body_dict = await request.json()
