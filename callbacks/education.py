@@ -3,7 +3,7 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from db import db
-from models import CallbackQuery, User
+from models import CallbackQuery, StateContext, User
 
 from messages.education import curs_contents, curs, termins
 from keyboards.education import (
@@ -14,7 +14,7 @@ from keyboards.education import (
 from pages.user import send_user_main, send_user_terms, send_user_education
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User, state: StateContext):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -30,10 +30,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
         f'callback "user_education_factory" user_tg_id={user.tgId} type={type}')
 
     if type == 'back':
-        await send_user_main(bot, call.message, user.tgId)
+        await send_user_main(bot, call.message, state, user)
 
     if type == 'go_education':
-        await send_user_education(bot, call.message, user.tgId)
+        await send_user_education(bot, call.message, state)
 
     if 'terms' in type:
         if page == -1 or 'start' in type:
@@ -46,7 +46,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
             page = len(termins)
 
         if 'counter' not in type:
-            await send_user_terms(bot, call.message, page, user.tgId)
+            await send_user_terms(bot, call.message, state, page)
 
     if 'curs' in type:
         count_now_les = db.get_lesson_count(user.id)

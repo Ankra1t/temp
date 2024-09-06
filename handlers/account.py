@@ -1,6 +1,6 @@
 import re
 from telebot.async_telebot import AsyncTeleBot
-from models import Message, User
+from models import Message, StateContext, User
 
 from db import db
 from states.account import UserAccountState
@@ -15,7 +15,7 @@ from messages.profile import msg_enter_nickname
 
 
 
-async def handle_new_password(message: Message, bot: AsyncTeleBot):
+async def handle_new_password(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     user_id = message.from_user.id
     new_pass = text_accept(message)
@@ -37,10 +37,10 @@ async def handle_new_password(message: Message, bot: AsyncTeleBot):
     else:
         await bot.send_message(chat_id, 'Ошибка!')
 
-    await send_user_account(bot, message, user_id, True)
+    await send_user_account(bot, message, state, user, True)
 
 
-async def handle_nickname(message: Message, bot: AsyncTeleBot, user: User):
+async def handle_nickname(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     nickname = text_accept(message)
@@ -74,7 +74,7 @@ async def handle_nickname(message: Message, bot: AsyncTeleBot, user: User):
         return
 
     await bot.send_message(chat_id, msg_success_edit(user.lang))
-    await send_user_params(bot, message, user.tgId, True)
+    await send_user_params(bot, message, state, user, True)
 
 
 def registration(bot: AsyncTeleBot):

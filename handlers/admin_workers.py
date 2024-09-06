@@ -81,7 +81,7 @@ async def handle_support_id(message: Message, bot: AsyncTeleBot, state: StateCon
     db.update_support(support_id)
 
     await state.delete()
-    await send_admin_workers_support(bot, message, user_id, True)
+    await send_admin_workers_support(bot, message, state, True)
 
 
 def registration(bot: AsyncTeleBot):

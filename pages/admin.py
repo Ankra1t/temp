@@ -5,7 +5,7 @@ from telebot.types import InputMediaPhoto
 from db import db
 from data.data import liteDb
 from Classes import base_statis
-from models import Post, LANGUAGES_TYPE, Message
+from models import Post, LANGUAGES_TYPE, Message, StateContext
 
 from common.utils import delete_message, get_lang, get_print_float, get_print_signal_info
 from common.dt import get_str_by_datetime
@@ -26,13 +26,13 @@ from keyboards.admin_params import kb_params
 async def send_admin_main(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     count_all = db.get_users_count()
     count_admins = len(db.get_all_workes())
@@ -86,13 +86,13 @@ async def send_admin_main(
 async def send_admin_users(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     users = db.get_all_users()
     count_all = len(users)
@@ -129,13 +129,13 @@ async def send_admin_users(
 async def send_admin_payment(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     count_payments = base_statis.count_payments()
     summ_all_users = base_statis.summ_by_transactions()
@@ -158,13 +158,13 @@ async def send_admin_payment(
 async def send_admin_fut_posts(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     posts_count = len(db.get_all_posts())
 
@@ -186,13 +186,13 @@ async def send_admin_fut_posts(
 async def send_admin_params(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     text = msg_admin_menu('Параметры')
     keyboard = kb_params()
@@ -246,16 +246,16 @@ async def send_admin_post(
 async def send_admin_client(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     client_db_id: int,
-    is_first=False,
     sort_by='',
-    page=1
+    page=1,
+    is_first=False,
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     client = db.get_user_by_id(client_db_id)
     if client is None:
@@ -346,13 +346,13 @@ async def send_admin_client(
 async def send_admin_workers(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     text = msg_admin_menu('Работники')
     keyboard = kb_admin_workers()
@@ -369,13 +369,13 @@ async def send_admin_workers(
 async def send_admin_workers_admin(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     res = '<b>Админы</b>\n'
     admins = db.get_admins()
@@ -400,13 +400,13 @@ async def send_admin_workers_admin(
 async def send_admin_workers_redactors(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     res = '<b>Редакторы</b>\n'
     redactors = db.get_redactors()
@@ -431,13 +431,13 @@ async def send_admin_workers_redactors(
 async def send_admin_workers_support(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
     is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     sup = db.get_support_name()
     sup_link = f'@{sup}' if sup != '' else '-'
@@ -457,13 +457,13 @@ async def send_admin_workers_support(
 async def send_admin_tariffs(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
-    is_first=False,
+    state: StateContext,
+    is_first=False
 ):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     text = msg_admin_menu('Тарифы')
     keyboard = kb_admin_tariffs()
@@ -480,7 +480,6 @@ async def send_admin_tariffs(
 async def send_admin_tariffs_list_item(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
     page: int,
     type: Literal['default', 'delete', 'edit'] = 'default',
     is_first=False

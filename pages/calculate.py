@@ -907,7 +907,7 @@ async def send_atr_settings(bot: AsyncTeleBot, message: Message, user_id: int, i
         )
 
 
-async def send_admin_send_settings(
+async def send_admin_send_settings( # TODO - move to admin
     bot: AsyncTeleBot,
     message: Message,
     user_id: int,

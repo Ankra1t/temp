@@ -22,13 +22,12 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     call_type = data.get('type', '')
     value = data.get('value', '')
 
-    user_id = call.from_user.id
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
     if call_type == 'cancel':
         await bot.edit_message_text('Отменено!', chat_id, mes_id)
-        await send_admin_main(bot, call.message, user_id, True)
+        await send_admin_main(bot, call.message, state, True)
 
     if call_type == 'signal':
         await bot.edit_message_text(

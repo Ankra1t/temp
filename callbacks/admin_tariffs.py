@@ -28,17 +28,17 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if 'go_tariffs' in type:
         is_del = 'del' in type
         if is_del:
             await delete_message(bot, chat_id, mes_id)
 
-        await send_admin_tariffs(bot, call.message, user.tgId, is_del)
+        await send_admin_tariffs(bot, call.message, state, is_del)
 
     if type == 'list':
-        await send_admin_tariffs_list_item(bot, call.message, user.tgId, page)
+        await send_admin_tariffs_list_item(bot, call.message, page)
 
     if 'add' in type:
         if type == 'add':
@@ -65,23 +65,24 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             if db.deactive_price(tariff_id):
                 await delete_message(bot, chat_id, mes_id)
                 await bot.send_message(chat_id, msg_success_edit(user.lang))
-                await send_admin_tariffs(bot, call.message, user.tgId, True)
+                await send_admin_tariffs(bot, call.message, state, True)
         elif 'no' in type:
-            await send_admin_tariffs_list_item(bot, call.message, user.tgId, page)
+            await send_admin_tariffs_list_item(bot, call.message, page)
         else:
             await send_admin_tariffs_list_item(
-                bot, call.message, user.tgId, page, 'delete')
+                bot, call.message, page, 'delete'
+            )
 
     if type == 'on_off':
         tariff = db.get_price_by_id(tariff_id)
         if tariff is not None:
             if db.switch_tariff(tariff_id, not tariff.switch_active):
-                await send_admin_tariffs_list_item(bot, call.message, user.tgId, page)
+                await send_admin_tariffs_list_item(bot, call.message, page)
 
     if 'edit' in type:
         if type == 'edit':
             await send_admin_tariffs_list_item(
-                bot, call.message, user.tgId, page, 'edit'
+                bot, call.message, page, 'edit'
             )
         else:
             new_state = ''
@@ -133,7 +134,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'discount_remove':
         if db.delete_price_discount(tariff_id):
-            await send_admin_tariffs_list_item(bot, call.message, user.tgId, page)
+            await send_admin_tariffs_list_item(bot, call.message, page)
 
     await bot.answer_callback_query(call.id)
 

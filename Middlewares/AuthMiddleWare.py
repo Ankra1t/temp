@@ -3,6 +3,7 @@ from telebot.types import Message, CallbackQuery
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
 from telebot.util import update_types
 
+from AuthRoles import check_registrate
 from common.utils import delete_message, get_lang
 
 from db import db
@@ -24,9 +25,11 @@ class AuthMiddleWare(BaseMiddleware):
         if message.from_user is None:
             return CancelUpdate()
 
-        state = StateContext(message, self.bot)  # type: ignore
-
         tgId = message.from_user.id
+        user_db_id = db.get_user_id_by_tg_id(tgId)
+        if db.check_ban_user(user_db_id):
+            return CancelUpdate()
+
         isText = False
         if isinstance(message, Message):
             chat_id = message.chat.id
@@ -34,9 +37,8 @@ class AuthMiddleWare(BaseMiddleware):
         else:
             chat_id = message.message.chat.id
 
-        user_db_id = db.get_user_id_by_tg_id(tgId)
-        if db.check_ban_user(user_db_id):
-            return CancelUpdate()
+
+        state = StateContext(message, self.bot)  # type: ignore
 
         if (await state.get() is not None) and isText:
             async with state.data() as state_data:
@@ -66,5 +68,6 @@ class AuthMiddleWare(BaseMiddleware):
         data["user"] = User(
             id=user_db_id,
             tgId=tgId,
-            lang=lang
+            lang=lang,
+            role=check_registrate(tgId) or 0
         )

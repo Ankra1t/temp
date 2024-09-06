@@ -49,10 +49,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if type == 'main':
-        await send_user_main(bot, call.message, user.tgId)
+        await send_user_main(bot, call.message, state, user)
 
     if type == 'back':
-        await send_user_account(bot, call.message, user.tgId)
+        await send_user_account(bot, call.message, state, user)
 
     if type == 'support':
         sup = db.get_support_name()
@@ -65,7 +65,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.delete()
 
     if type == 'referral':
-        await send_referral(bot, call.message, user.tgId)
+        await send_referral(bot, call.message, state, user)
 
     if type == 'referral_list':
         referrals = db.get_user_referals(user.id)
@@ -84,7 +84,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.set(UserAccountState.password)
 
     if type == 'params':
-        await send_user_params(bot, call.message, user.tgId)
+        await send_user_params(bot, call.message, state, user)
 
     if 'set_lang' in type:
         is_edit_lang = False
@@ -93,7 +93,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             if f'_{lang}' in type:
                 is_edit_lang = True
                 db.set_user_lang(user.id, lang)
-                await send_user_params(bot, call.message, user.tgId)
+                await send_user_params(bot, call.message, state, user)
 
         if not is_edit_lang:
             await bot.edit_message_text(

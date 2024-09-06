@@ -49,7 +49,7 @@ async def handle_name(message: Message, bot: AsyncTeleBot, state: StateContext):
         db.update_price_name(tariff_id, name)
         await state.delete()
         await send_admin_tariffs_list_item(
-            bot, message, user_id, page, 'default', True
+            bot, message, page, 'default', True
         )
 
 
@@ -86,7 +86,7 @@ async def handle_price(message: Message, bot: AsyncTeleBot, state: StateContext)
         db.update_price_price(tariff_id, price)
         await state.delete()
         await send_admin_tariffs_list_item(
-            bot, message, user_id, page, 'default', True
+            bot, message, page, 'default', True
         )
 
 
@@ -123,7 +123,7 @@ async def handle_duration(message: Message, bot: AsyncTeleBot, state: StateConte
         db.update_price_duration(tariff_id, duration)
         await state.delete()
         await send_admin_tariffs_list_item(
-            bot, message, user_id, page, 'default', True
+            bot, message, page, 'default', True
         )
 
 
@@ -165,7 +165,7 @@ async def handle_image(message: Message, bot: AsyncTeleBot, state: StateContext)
 
         await state.delete()
         await send_admin_tariffs_list_item(
-            bot, message, user_id, page, 'default', True
+            bot, message, page, 'default', True
         )
 
 
@@ -212,12 +212,12 @@ async def handle_description(message: Message, bot: AsyncTeleBot, state: StateCo
         ))
 
         await bot.send_message(chat_id, '✅ Тариф создан!')
-        await send_admin_tariffs(bot, message, user_id, True)
+        await send_admin_tariffs(bot, message, state, True)
     else:
         db.update_price_description(tariff_id, description)
         await state.delete()
         await send_admin_tariffs_list_item(
-            bot, message, user_id, page, 'default', True
+            bot, message, page, 'default', True
         )
 
 
@@ -285,7 +285,7 @@ async def handle_discount_datetime(message: Message, bot: AsyncTeleBot, state: S
         reply_markup=kb_admin_tariffs_list_back(page)
     )
     await send_admin_tariffs_list_item(
-        bot, message, user_id, page, 'default', True
+        bot, message, page, 'default', True
     )
 
     await state.delete()

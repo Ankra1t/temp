@@ -33,19 +33,19 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user_id)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'workers':
-        await send_admin_workers(bot, call.message, user_id)
+        await send_admin_workers(bot, call.message, state)
 
     if type == 'admins':
-        await send_admin_workers_admin(bot, call.message, user_id)
+        await send_admin_workers_admin(bot, call.message, state)
 
     if type == 'redactors':
-        await send_admin_workers_redactors(bot, call.message, user_id)
+        await send_admin_workers_redactors(bot, call.message, state)
 
     if type == 'support':
-        await send_admin_workers_support(bot, call.message, user_id)
+        await send_admin_workers_support(bot, call.message, state)
 
     if type == 'workers_list':
         await state.delete()
@@ -119,9 +119,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if '_yes' in type or '_no' in type:
         if role == 1:
-            await send_admin_workers_admin(bot, call.message, user_id, True)
+            await send_admin_workers_admin(bot, call.message, state, True)
         elif role == 2:
-            await send_admin_workers_redactors(bot, call.message, user_id, True)
+            await send_admin_workers_redactors(bot, call.message, state, True)
 
     # Тех. поддержка
     if type == 'update_support':

@@ -3,7 +3,7 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from AuthRoles import check_registrate
-from models import CallbackQuery
+from models import CallbackQuery, StateContext, User
 
 from common.calc_step import send_calc_start
 from common.utils import send_in_development
@@ -15,7 +15,7 @@ from pages.admin import send_admin_main
 from pages.user import send_user_education, send_user_account, send_site_code, send_user_main
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -26,21 +26,22 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
     user_id = call.from_user.id
     mes_id = call.message.id
 
-    logger.info(f'callback "user_main_factory" user_tg_id={user_id} type={type}')
+    logger.info(
+        f'callback "user_main_factory" user_tg_id={user_id} type={type}')
 
     role = check_registrate(user_id) or 0
 
     if type == 'main':
         if role == 1:
-            await send_admin_main(bot, call.message, user_id)
+            await send_admin_main(bot, call.message, state)
         else:
-            await send_user_main(bot, call.message, user_id)
+            await send_user_main(bot, call.message, state, user)
 
     if type == 'education':
-        await send_user_education(bot, call.message, user_id)
+        await send_user_education(bot, call.message, state)
 
     if type == 'account':
-        await send_user_account(bot, call.message, user_id)
+        await send_user_account(bot, call.message, state, user)
 
     if type == 'calculator':
         await send_main(call.message, bot, user_id)
@@ -53,7 +54,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 
     if 'site' in type:
         is_reset = 'reset' in type
-        await send_site_code(bot, call.message, user_id, False, is_reset)
+        await send_site_code(bot, call.message, state, user, is_reset, is_first=False)
 
     await bot.answer_callback_query(call.id)
 
@@ -61,7 +62,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot):
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserMainCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         user_main=user_main_factory.filter()
     )

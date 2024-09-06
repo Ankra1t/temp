@@ -1,13 +1,12 @@
 from threading import Timer
 from telebot.async_telebot import AsyncTeleBot
 
-from Classes import text_editor
-from common.utils import edit_message, get_lang
+from common.utils import edit_message
 from db import db
 from data.data import liteDb
 from services import auth
 from config_logger import logger
-from models import Message
+from models import Message, StateContext, User
 
 from messages.education import termins
 from messages.enter import msg_choose_lang
@@ -20,14 +19,19 @@ from keyboards.education import kb_user_education, kb_user_pages
 from keyboards.user_main import kb_site_login, kb_user_main
 
 
-async def send_user_main(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False, new_user=False):
+async def send_user_main(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    new_user=False,
+    is_first=False,
+):
     # new_user=True
     chat_id = message.chat.id
     mes_id = message.id
 
-    lang = get_lang(user_id)
-
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     # if not new_user and message.text is not None and len(message.text.split()) == 2:
     #     _, code = message.text.split()
@@ -35,12 +39,10 @@ async def send_user_main(bot: AsyncTeleBot, message: Message, user_id: int, is_f
     #         send_site_code(bot, message, user_id, True)
     #         return
 
-    keyboard = kb_user_main(lang, new_user)
+    keyboard = kb_user_main(user.lang, new_user)
 
     if not new_user:
-        text = text_editor.get_text(
-            user_id, 'user_restart_bot'
-        ) or msg_start(user_id)
+        text = msg_start(user.tgId)
 
         if is_first:
             await bot.send_message(
@@ -55,16 +57,20 @@ async def send_user_main(bot: AsyncTeleBot, message: Message, user_id: int, is_f
 
     else:
         await bot.send_message(
-            chat_id, msg_choose_lang(lang),
-            reply_markup=kb_choose_lang(lang, True)
+            chat_id, msg_choose_lang(user.lang),
+            reply_markup=kb_choose_lang(user.lang, True)
         )
 
 
-async def send_user_education(bot: AsyncTeleBot, message: Message, user_id: int):
+async def send_user_education(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     await bot.edit_message_text(
         'Обучение', chat_id, mes_id,
@@ -72,11 +78,17 @@ async def send_user_education(bot: AsyncTeleBot, message: Message, user_id: int)
     )
 
 
-async def send_user_terms(bot: AsyncTeleBot, message: Message, page: int, user_id: int, is_first=False):
+async def send_user_terms(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    page: int,
+    is_first=False
+):
     chat_id = message.chat.id
     mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     await bot.edit_message_text(
         termins[page - 1], chat_id, mes_id, parse_mode='Markdown',
@@ -84,28 +96,31 @@ async def send_user_terms(bot: AsyncTeleBot, message: Message, page: int, user_i
     )
 
 
-async def send_user_account(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
+async def send_user_account(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    is_first=False,
+):
     chat_id = message.chat.id
-    mes_id = message.id
 
-    await bot.delete_state(user_id, chat_id)
-    liteDb.addPagesCount(user_id)
+    await state.delete()
+    liteDb.addPagesCount(user.tgId)
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-    referals = len(db.get_user_referals(user_db_id))
+    referals = len(db.get_user_referals(user.id))
 
-    purchase = db.get_purchases_by_user(user_db_id)
+    purchase = db.get_purchases_by_user(user.id)
     money = 0
     for el in purchase:
         money += el.sum or 0
 
-    text = msg_user_account(lang, money, referals)
-    keyboard = kb_user_account(lang, user_id)
+    text = msg_user_account(user.lang, money, referals)
+    keyboard = kb_user_account(user.lang, user.tgId)
 
     if is_first:
         await bot.send_message(
-            user_id, text,
+            chat_id, text,
             reply_markup=keyboard
         )
     else:
@@ -114,19 +129,24 @@ async def send_user_account(bot: AsyncTeleBot, message: Message, user_id: int, i
         )
 
 
-async def send_site_code(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False, is_reset=False, prev_code=''):
+async def send_site_code(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    is_reset=False,
+    prev_code='',
+    is_first=False,
+):
     chat_id = message.chat.id
     mes_id = message.id
 
-    lang = get_lang(user_id)
-    user_db_id = db.get_user_id_by_tg_id(user_id)
+    await state.delete()
 
-    await bot.delete_state(user_id, chat_id)
+    new_code = prev_code or auth.get_site_code(user.id)
 
-    new_code = prev_code or auth.get_site_code(user_db_id)
-
-    text = msg_site_login(lang)
-    keyboard = kb_site_login(lang, new_code or '', is_reset)
+    text = msg_site_login(user.lang)
+    keyboard = kb_site_login(user.lang, new_code or '', is_reset)
 
     try:
         if is_first:
@@ -147,8 +167,8 @@ async def send_site_code(bot: AsyncTeleBot, message: Message, user_id: int, is_f
 
             async def get_default():
                 await send_site_code(
-                    bot, new_message, # type: ignore
-                    user_id, False, False, code
+                    bot, new_message, state, user,  # type: ignore
+                    False, code, False,
                 )
 
             Timer(3, get_default).start()
@@ -156,16 +176,22 @@ async def send_site_code(bot: AsyncTeleBot, message: Message, user_id: int, is_f
         logger.error('[send_site_code]: сообщение не изменено!')
 
 
-async def send_referral(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
+async def send_referral(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    is_first=False,
+):
     chat_id = message.chat.id
     mes_id = message.id
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    lang = get_lang(user_id)
-    referals_count = len(db.get_user_referals(user_db_id))
+    await state.delete()
 
-    text = msg_referral(lang, referals_count, (await bot.get_me()).username or '', user_db_id)
-    kb = kb_user_referral(lang, referals_count)
+    referals_count = len(db.get_user_referals(user.id))
+
+    text = msg_referral(user.lang, referals_count, (await bot.get_me()).username or '', user.id)
+    kb = kb_user_referral(user.lang, referals_count)
 
     if is_first:
         await bot.send_message(chat_id, text, reply_markup=kb)
@@ -176,17 +202,24 @@ async def send_referral(bot: AsyncTeleBot, message: Message, user_id: int, is_fi
         )
 
 
-async def send_user_params(bot: AsyncTeleBot, message: Message, user_id: int, is_first=False):
+async def send_user_params(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    is_first=False,
+):
     chat_id = message.chat.id
     mes_id = message.id
 
-    lang = get_lang(user_id)
-    user = db.get_user_by_tg_id(user_id)
-    liteDb.addPagesCount(user_id)
+    await state.delete()
 
-    if user is not None:
-        text = msg_user_params(lang, user)
-        kb = kb_user_params(lang)
+    liteDb.addPagesCount(user.tgId)
+    user_info = db.get_user_by_id(user.id)
+
+    if user_info is not None:
+        text = msg_user_params(user.lang, user_info)
+        kb = kb_user_params(user.lang)
 
         if is_first:
             await bot.send_message(

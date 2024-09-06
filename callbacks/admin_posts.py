@@ -26,10 +26,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'go_posts':
-        await send_admin_fut_posts(bot, call.message, user.tgId)
+        await send_admin_fut_posts(bot, call.message, state)
 
     if type == 'add':
         await bot.edit_message_text(
@@ -58,7 +58,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         for i in range(len(posts)):
             await send_admin_post(bot, chat_id, posts[i])
 
-        await send_admin_fut_posts(bot, call.message, user.tgId, True)
+        await send_admin_fut_posts(bot, call.message, state, True)
 
     if type == 'send_now':
         await bot.edit_message_text('Отправьте ID поста, чтобы его разослать сейчас',
@@ -111,7 +111,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.delete()
 
         await bot.edit_message_text('Успешно!', chat_id, mes_id)
-        await send_admin_fut_posts(bot, call.message, user.tgId, True)
+        await send_admin_fut_posts(bot, call.message, state, True)
 
     if 'confirm' in type:
         if 'no':
@@ -158,7 +158,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
             await state.delete()
             await bot.edit_message_text(text, chat_id, mes_id)
-            await send_admin_fut_posts(bot, call.message, user.tgId, True)
+            await send_admin_fut_posts(bot, call.message, state, True)
 
     await bot.answer_callback_query(call.id)
 

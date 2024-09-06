@@ -6,7 +6,7 @@ from AuthRoles import check_registrate
 from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
-from models import LANGUAGES, Message, StateContext
+from models import LANGUAGES, Message, StateContext, User
 from services import auth
 
 from common.utils import get_lang, is_digit
@@ -19,11 +19,8 @@ from pages.start import send_start_by_user
 from keyboards.account import kb_support
 
 
-async def _start(message: Message, bot: AsyncTeleBot):
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    user_role = check_registrate(user_id)
+async def _start(bot: AsyncTeleBot, message: Message, state: StateContext, user: User):
+    user_role = check_registrate(user.tgId)
     is_registered = False
 
     if user_role is None:
@@ -36,12 +33,12 @@ async def _start(message: Message, bot: AsyncTeleBot):
 
         username = message.from_user.username
 
-        is_registered = auth.registration(user_id, username, ref_id)
-        new_user = db.get_user_by_tg_id(user_id)
+        is_registered = auth.registration(user.tgId, username, ref_id)
+        new_user = db.get_user_by_tg_id(user.tgId)
 
         if new_user is not None and is_registered == True:
             logger.info(
-                f'/auth/tg_register [tg_id={user_id} @{username}]'
+                f'/auth/tg_register [tg_id={user.tgId} @{username}]'
             )
 
             num = len(db.get_today_users())
@@ -64,32 +61,36 @@ async def _start(message: Message, bot: AsyncTeleBot):
             is_registered = True
         else:
             logger.error(
-                f'Ошибка регистрации пользователя tg_id={user_id} @{username}'
+                f'Ошибка регистрации пользователя tg_id={user.tgId} @{username}'
             )
 
     await send_start_by_user(
-        bot, message, user_id,
-        user_role or 0, is_registered or False,
+        bot,
+        message,
+        state,
+        user,
+        is_registered or False,
     )
 
 
 async def _calc(message: Message, bot: AsyncTeleBot):
     user_id = message.from_user.id
-    chat_id = message.chat.id
 
     await send_main(message, bot, user_id, True)
 
 
-async def _teststart(message: Message, bot: AsyncTeleBot):
-    chat_id = message.chat.id
+async def _teststart(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     user_id = message.from_user.id
 
     user_db_id = db.get_user_id_by_tg_id(user_id)
     db.set_calculator_user_market(user_db_id, 'crypto')
 
     await send_start_by_user(
-        bot, message, user_id,
-        0, True,
+        bot,
+        message,
+        state,
+        user,
+        True,
     )
 
 
@@ -127,8 +128,8 @@ async def _manual(message: Message, bot: AsyncTeleBot):
     await send_manual_page(message, bot, 1, message.from_user.id, True)
 
 
-async def _site(message: Message, bot: AsyncTeleBot):
-    await send_site_code(bot, message, message.from_user.id, True)
+async def _site(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_site_code(bot, message, state, user, is_first=True)
 
 
 async def _settings(message: Message, bot: AsyncTeleBot):
@@ -139,36 +140,29 @@ async def _calc_start(message: Message, bot: AsyncTeleBot):
     await send_calc_start(bot, message, message.from_user.id)
 
 
-async def _channel_calc(message: Message, bot: AsyncTeleBot):
-    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
-    isAdmin = db.get_worker_role(user_db_id)
-
-    if not isAdmin:
+async def _channel_calc(message: Message, bot: AsyncTeleBot, user: User):
+    if user.role != 1:
         return
 
-    await send_calc_start(bot, message, message.from_user.id, is_channel_calc=True)
+    await send_calc_start(bot, message, user.tgId, is_channel_calc=True)
 
 
-async def _referral(message: Message, bot: AsyncTeleBot):
-    await send_referral(bot, message, message.from_user.id, True)
+async def _referral(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_referral(bot, message, state, user, True)
 
 
-async def _channel_post(message: Message, bot: AsyncTeleBot):
-    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
-    admin = db.get_worker_role(user_db_id)
-    if admin is None:
+async def _channel_post(message: Message, bot: AsyncTeleBot, user: User):
+    if user.role != 1:
         return
 
-    await send_channel_post(bot, message, message.from_user.id, True)
+    await send_channel_post(bot, message, user.tgId, True)
 
 
-async def _results(message: Message, bot: AsyncTeleBot):
-    user_db_id = db.get_user_id_by_tg_id(message.from_user.id)
-    admin = db.get_worker_role(user_db_id)
-    if admin is None:
+async def _results(message: Message, bot: AsyncTeleBot, user: User):
+    if user.role != 1:
         return
 
-    await send_admin_channel_calc_list(bot, message, message.from_user.id, True)
+    await send_admin_channel_calc_list(bot, message, user.tgId, True)
 
 
 async def _test(message: Message, bot: AsyncTeleBot):
@@ -205,4 +199,4 @@ def commands_registration(bot: AsyncTeleBot):
 
     reg_mes(_test, commands=['test11'])
 
-    bot.register_channel_post_handler(_test, pass_bot=True) # type: ignore
+    bot.register_channel_post_handler(_test, pass_bot=True)  # type: ignore

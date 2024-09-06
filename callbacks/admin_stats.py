@@ -27,10 +27,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'go_payment':
-        await send_admin_payment(bot, call.message, user.tgId)
+        await send_admin_payment(bot, call.message, state)
 
     if type == 'stat_pay_periods':
 

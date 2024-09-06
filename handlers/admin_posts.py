@@ -231,7 +231,7 @@ async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot, state: S
         tg_sender.send()
 
         await state.delete()
-        await send_admin_params(bot, message, user_id, True)
+        await send_admin_params(bot, message, state, True)
     else:
         dt = post.date_time or get_datetime_now()
         await send_admin_post(bot, chat_id, post)
@@ -302,7 +302,7 @@ async def handle_edit_text(message: Message, bot: AsyncTeleBot, state: StateCont
 
     db.update_text(name, text)
     await state.delete()
-    await send_admin_params(bot, message, user_id)
+    await send_admin_params(bot, message, state)
 
 
 def registration(bot: AsyncTeleBot):

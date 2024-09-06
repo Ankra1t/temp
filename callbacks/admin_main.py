@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from models import CallbackQuery, User
+from models import CallbackQuery, StateContext, User
 
 from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
 
@@ -13,7 +13,7 @@ from pages.admin import (
 )
 
 
-async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
+async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -21,28 +21,28 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User):
     type = callback_data.get('type', '')
 
     if type == 'users':
-        await send_admin_users(bot, call.message, user.tgId)
+        await send_admin_users(bot, call.message, state)
 
     if type == 'workers':
-        await send_admin_workers(bot, call.message, user.tgId)
+        await send_admin_workers(bot, call.message, state)
 
     if type == 'fut_posts':
-        await send_admin_fut_posts(bot, call.message, user.tgId)
+        await send_admin_fut_posts(bot, call.message, state)
 
     if type == 'tariffs':
-        await send_admin_tariffs(bot, call.message, user.tgId)
+        await send_admin_tariffs(bot, call.message, state)
 
     if type == 'params':
-        await send_admin_params(bot, call.message, user.tgId)
+        await send_admin_params(bot, call.message, state)
 
     if type == 'payment':
-        await send_admin_payment(bot, call.message, user.tgId)
+        await send_admin_payment(bot, call.message, state)
 
     if type == 'site_code':
-        await send_site_code(bot, call.message, user.tgId)
+        await send_site_code(bot, call.message, state, user)
 
     if type == 'back':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'send_settings':
         await send_admin_send_settings(bot, call.message, user.tgId)

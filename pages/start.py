@@ -3,7 +3,7 @@ from telebot.async_telebot import AsyncTeleBot
 from data.data import liteDb
 from db import db
 
-from common.utils import get_lang, send_in_development
+from common.utils import send_in_development
 
 from states.calculate import CalculateState
 from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
@@ -14,40 +14,38 @@ from pages.admin import send_admin_main
 
 from keyboards.calculate import kb_calc_atr, kb_calc_direct
 
-from models import Calculation, Message
+from models import Calculation, Message, StateContext, User
 from services import calculation, channel_calc, ticker
 
 
 async def send_start_by_user(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
-    user_role: int,
+    state: StateContext,
+    user: User,
     has_registered_now=False
 ):
     chat_id = message.chat.id
-    await bot.delete_state(user_id, chat_id)
 
-    lang = get_lang(user_id)
+    await state.delete()
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
         send_data = channel_calc.getByCalc(int(id))
         calc = calculation.get(int(id))
 
-        user_db_id = db.get_user_id_by_tg_id(user_id)
-        u_base = db.get_calc_user_settings(user_db_id)
+        u_base = db.get_calc_user_settings(user.id)
         if send_data is None or calc is None or u_base is None:
             return
 
         if send_data.withoutStop and not has_registered_now:
-            stop_type = liteDb.getUserStop(user_id) or ''
+            stop_type = liteDb.getUserStop(user.tgId) or ''
 
             if 'atr' in stop_type:
-                atr_settings = liteDb.getUserAtrSettings(user_id)
+                atr_settings = liteDb.getUserAtrSettings(user.tgId)
                 period, count = atr_settings[1].split('+')
 
-                await bot.set_state(user_id, CalculateState.stop_atr, chat_id)
+                await state.set(CalculateState.stop_atr)
 
                 ticker_val = ticker.get_atr(
                     calc.tool or '', period, int(count)) or None
@@ -59,27 +57,27 @@ async def send_start_by_user(
                         rate = float(percent) * 0.01
                     await bot.add_data(
                         chat_id=chat_id,
-                        user_id=user_id,
+                        user_id=user.tgId,
                         atr=abs(ticker_val) * abs(rate)
                     )
                     await bot.send_message(
-                        chat_id, msg_choose_direct(lang, ticker_val),
-                        reply_markup=kb_calc_direct(lang, True)
+                        chat_id, msg_choose_direct(user.lang, ticker_val),
+                        reply_markup=kb_calc_direct(user.lang, True)
                     )
                 else:
                     await bot.send_message(
-                        chat_id, msg_enter_atr(lang, calc),
-                        reply_markup=kb_calc_atr(lang, user_id, ticker_val)
+                        chat_id, msg_enter_atr(user.lang, calc),
+                        reply_markup=kb_calc_atr(user.lang, user.tgId, ticker_val)
                     )
             else:
                 await bot.send_message(
-                    chat_id, msg_enter_stop_loss(lang, send_stat=calc),
+                    chat_id, msg_enter_stop_loss(user.lang, send_stat=calc),
                 )
-                await bot.set_state(user_id, CalculateState.stop_loss, chat_id)
+                await state.set(CalculateState.stop_loss)
 
             await bot.add_data(
                 chat_id=chat_id,
-                user_id=user_id,
+                user_id=user.tgId,
                 action='send_calc',
                 stat_id=id,
                 open_price=calc.openPrice,
@@ -89,23 +87,23 @@ async def send_start_by_user(
             )
         else:
             await start_with_calc(
-                bot, message, user_id, int(id),
+                bot, message, user.tgId, int(id),
                 is_try=has_registered_now
             )
 
-    elif user_role == 0:
-        await send_user_main(bot, message, user_id, True, has_registered_now)
+    elif user.role == 0:
+        await send_user_main(bot, message, state, user, has_registered_now, True)
 
     elif message.text is not None and len(message.text.split()) == 2:
         _, code = message.text.split()
         if code == 'site':
-            await send_site_code(bot, message, user_id, True)
+            await send_site_code(bot, message, state, user, is_first=True)
             return
 
-    elif user_role == 1:
-        await send_admin_main(bot, message, user_id, True)
+    elif user.role == 1:
+        await send_admin_main(bot, message, state, True)
 
-    elif user_role in (2, 3):
+    elif user.role in (2, 3):
         await send_in_development(bot, message)
 
 

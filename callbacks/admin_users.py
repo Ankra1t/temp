@@ -43,10 +43,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'go_users':
-        await send_admin_users(bot, call.message, user.tgId)
+        await send_admin_users(bot, call.message, state)
 
     if type == 'lists':
         await bot.edit_message_text(
@@ -189,7 +189,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
         await state.delete()
 
-        await send_admin_client(bot, call.message, user.tgId, subscribe_user_id, True)
+        await send_admin_client(bot, call.message, state, subscribe_user_id, is_first=True)
 
         await bot.send_message(
             usr.tg_id, gift_subscribe_msg(usr.tg_id, data_fin)
@@ -235,9 +235,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if 'confirm' in type:
         await send_admin_client(
-            bot, call.message,
-            user.tgId, client_db_id,
-            True, sort_by, page
+            bot, call.message, state,
+            client_db_id,
+            sort_by, page, True
         )
 
     if type == 'client_search':

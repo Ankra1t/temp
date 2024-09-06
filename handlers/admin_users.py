@@ -51,9 +51,9 @@ async def handle_client_search(message: Message, bot: AsyncTeleBot, state: State
         return
 
     await send_admin_client(
-        bot, message, user_id,
-        client.id, True,
-        sort_by, page
+        bot, message, state,
+        client.id,
+        sort_by, page, True
     )
 
     await state.delete()
@@ -102,7 +102,7 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
             chat_id,
             f'Клиенту с id[{subscribe_user_id}] установлена платная подписка на {days} дней, до {data_fin}'
         )
-        await send_admin_client(bot, message, user.tgId, subscribe_user_id, True)
+        await send_admin_client(bot, message, state, subscribe_user_id, is_first=True)
 
         await bot.send_message(
             usr.tg_id,
@@ -119,7 +119,7 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
                 chat_id,
                 f'Клиенту с id[{subscribe_user_id}] установлена пробная подписка на {days} дней, до {data_fin}'
             )
-            await send_admin_client(bot, message, user.tgId, subscribe_user_id, True)
+            await send_admin_client(bot, message, state, subscribe_user_id, is_first=True)
 
             await bot.send_message(
                 usr.tg_id, gift_trial_subscribe_msg(usr.tg_id, data_fin)

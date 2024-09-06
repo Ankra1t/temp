@@ -133,6 +133,7 @@ class User(BaseModel):
     id: int
     tgId: int
     lang: LANGUAGES_TYPE
+    role: Literal[1, 0]
 
 
 class Discount(BaseModel):

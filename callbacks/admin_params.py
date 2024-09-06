@@ -26,10 +26,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     mes_id = call.message.id
 
     if type == 'go_main':
-        await send_admin_main(bot, call.message, user.tgId)
+        await send_admin_main(bot, call.message, state)
 
     if type == 'go_params':
-        await send_admin_params(bot, call.message, user.tgId)
+        await send_admin_params(bot, call.message, state)
 
     if type == 'calculator':
         sup = db.get_support_name()
@@ -102,7 +102,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             db.update_text(name, text)
 
             await bot.send_message(chat_id, 'Успешно')
-            await send_admin_params(bot, call.message, user.tgId, True)
+            await send_admin_params(bot, call.message, state, True)
 
         if 'no' in type:
             await bot.edit_message_text(
