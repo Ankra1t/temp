@@ -45,8 +45,7 @@ class AuthMiddleWare(BaseMiddleware):
                 del_mes_id = state_data.get('del_mes_id')
                 edit_mes = state_data.get('edit_mes')
 
-            await self.bot.add_data(
-                tgId, chat_id,
+            await state.add_data(
                 del_mes_id=None,
                 edit_mes=None
             )

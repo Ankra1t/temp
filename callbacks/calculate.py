@@ -37,7 +37,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         f'callback "calculate_factory" user_tg_id={user.tgId} type={type}')
 
     if type == 'go_main':
-        await send_main(call.message, bot, user.tgId)
+        await send_main(bot, call.message, state, user)
 
     if type == 'calc_back':
         async with state.data() as data:
@@ -46,10 +46,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 value = last_values.pop()
                 data[value] = None
 
-        await choose_calculate_step(bot, user.tgId, call.message, True)
+        await choose_calculate_step(bot, call.message, state, user, True)
 
     if type == 'go_settings':
-        await send_settings(bot, call.message, user.tgId)
+        await send_settings(bot, call.message, state, user)
 
     if type == 'settings_from_calc' and (await state.get()) is not None:
         async with state.data() as data:
@@ -88,7 +88,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             db.add_unfinished_calc(unfinished_calc)
 
-        await send_settings(bot, call.message, user.tgId)
+        await send_settings(bot, call.message, state, user)
 
     if 'pair' in type:
         _, pair = type.split('+')
@@ -115,7 +115,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             forex=forex,
         )
         await choose_calculate_step(
-            bot, user.tgId, call.message,
+            bot, call.message, state, user,
             True, last_value='forex'
         )
 
@@ -124,7 +124,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         await state.add_data(tool=tool)
         await choose_calculate_step(
-            bot, user.tgId, call.message,
+            bot, call.message, state, user,
             True, last_value='tool'
         )
 
@@ -135,7 +135,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             open_price=float(open_price_val)
         )
         await choose_calculate_step(
-            bot, user.tgId, call.message,
+            bot, call.message, state, user,
             True, last_value='open_price'
         )
 
@@ -143,7 +143,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         value = float(type.replace('risk', ''))
         await state.add_data(update_risk=value)
 
-        await choose_calculate_step(bot, user.tgId, call.message, True)
+        await choose_calculate_step(bot, call.message, state, user, True)
 
     if type == 'calc_atr':
         await bot.edit_message_text(
@@ -190,7 +190,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         if stop_loss == -1:
             stat_id = await create_and_send_calc(
-                bot, call.message, user.tgId,
+                bot, call.message, state, user,
                 stop_loss if action == 'long' else op + 1,
                 False
             )
@@ -280,9 +280,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 new_id = db.add_calculation(new_calc)
                 new_calc.id = new_id or -1
 
-                await send_calculation(bot, call.message, user.tgId, new_calc, True)
+                await send_calculation(bot, call.message, state, user, new_calc, True)
             else:
-                await create_and_send_calc(bot, call.message, user.tgId, stop_loss)
+                await create_and_send_calc(bot, call.message, state, user, stop_loss)
 
     await bot.answer_callback_query(call.id)
 

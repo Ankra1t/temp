@@ -26,7 +26,7 @@ from keyboards.settings import (
     kb_change_fee, kb_choose_exchange_level,
     kb_round_count,
 )
-from pages.calculate import send_settings, send_user_deposit, send_exchange_settings,send_maker_or_taker, send_atr_settings, send_stop_settings
+from pages.calculate import send_settings, send_user_deposit, send_exchange_settings, send_maker_or_taker, send_atr_settings, send_stop_settings
 
 
 def handle_new_value(type: BASE_VALUE_TYPE):
@@ -79,7 +79,7 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         else:
             await state.delete()
             await bot.send_message(chat_id, msg_success_edit(user.lang))
-            await send_user_deposit(bot, message, user.tgId, True)
+            await send_user_deposit(bot, message, state, user, True)
 
     return r_func
 
@@ -117,7 +117,7 @@ async def handle_new_currency(message: Message, bot: AsyncTeleBot, state: StateC
         await bot.send_message(chat_id, msg_enter_deposit(user.lang))
     else:
         await bot.send_message(chat_id, msg_success_edit(user.lang))
-        await send_user_deposit(bot, message, user.tgId, True)
+        await send_user_deposit(bot, message, state, user, True)
 
 
 async def handle_splitting(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -159,7 +159,7 @@ async def handle_splitting(message: Message, bot: AsyncTeleBot, state: StateCont
     await state.set(SettingsState.summury_profit)
 
 
-async def handle_day_risk(message: Message, bot: AsyncTeleBot, user: User):
+async def handle_day_risk(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     value = text_accept(message)
@@ -193,10 +193,10 @@ async def handle_day_risk(message: Message, bot: AsyncTeleBot, user: User):
 
     db.set_user_day_risk(user.id, value, is_percent)
     await bot.send_message(chat_id, msg_success_edit(user.lang))
-    await send_user_deposit(bot, message, user.tgId, True)
+    await send_user_deposit(bot, message, state, user, True)
 
 
-async def handle_round_count(message: Message, bot: AsyncTeleBot, user: User):
+async def handle_round_count(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
 
     value = digit_accept(message, int)
@@ -231,7 +231,7 @@ async def handle_round_count(message: Message, bot: AsyncTeleBot, user: User):
 
     db.set_user_round_count(user.id, value)
     await bot.send_message(chat_id, msg_success_edit(user.lang))
-    await send_user_deposit(bot, message, user.tgId, True)
+    await send_user_deposit(bot, message, state, user, True)
 
 
 async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -242,7 +242,8 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
     if value is None:
         new_mes = await bot.send_message(
             chat_id,
-            msg_text_error(user.lang) + '\n' + msg_enter_trading_style(user.lang),
+            msg_text_error(user.lang) + '\n' +
+            msg_enter_trading_style(user.lang),
             reply_markup=kb_base_cancel(user.lang)
         )
         await state.add_data(del_mes_id=new_mes.id)
@@ -262,7 +263,7 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
     else:
         await bot.send_message(chat_id, msg_success_edit(user.lang))
 
-    await send_settings(bot, message, user.tgId, True)
+    await send_settings(bot, message, state, user, True)
 
 
 async def handle_first_deposit(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -346,7 +347,8 @@ async def handle_exchange(message: Message, bot: AsyncTeleBot, state: StateConte
             original_names.append(exchanges[indexAtList].name)
 
         new_mes = await bot.send_message(
-            chat_id, msg_enter_exchange_not_found(user.lang, len(difflist) != 0),
+            chat_id, msg_enter_exchange_not_found(
+                user.lang, len(difflist) != 0),
             reply_markup=kb_enter_exchange(user.lang, original_names)
         )
         await state.add_data(del_mes_id=new_mes.id)
@@ -364,11 +366,15 @@ async def handle_exchange(message: Message, bot: AsyncTeleBot, state: StateConte
         )
         return
 
-    await send_maker_or_taker(bot, message, user.tgId, (
-        exchange.name,
-        exchange.maker_fee,
-        exchange.taker_fee
-    ), True)
+    await send_maker_or_taker(
+        bot, message, state, user,
+        (
+            exchange.name,
+            exchange.maker_fee,
+            exchange.taker_fee
+        ),
+        True
+    )
 
 
 async def handle_fee(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -390,7 +396,7 @@ async def handle_fee(message: Message, bot: AsyncTeleBot, state: StateContext, u
         name = usersExchange[0]
 
     liteDb.setUserExchange(user.tgId, (name or '', value))
-    await send_exchange_settings(bot, message, user.tgId, True)
+    await send_exchange_settings(bot, message, state, user, True)
 
 
 async def handle_atr_percent(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -411,7 +417,7 @@ async def handle_atr_percent(message: Message, bot: AsyncTeleBot, state: StateCo
 
     liteDb.setUserStop(user.tgId, f'atr_percent+{value}')
     try:
-        await send_stop_settings(bot, message, user.tgId, True)
+        await send_stop_settings(bot, message, state, user, True)
     except:
         pass
 
@@ -432,9 +438,10 @@ async def handle_atr_bars_count(message: Message, bot: AsyncTeleBot, state: Stat
 
     atr_settings = liteDb.getUserAtrSettings(user.tgId)
     bars = atr_settings[1].split('+')
-    liteDb.setUserAtrSettings(user.tgId, (atr_settings[0], f'{bars[0]}+{value}'))
+    liteDb.setUserAtrSettings(
+        user.tgId, (atr_settings[0], f'{bars[0]}+{value}'))
 
-    await send_atr_settings(bot, message, user.tgId, True)
+    await send_atr_settings(bot, message, state, user, True)
 
 
 def registration(bot: AsyncTeleBot):

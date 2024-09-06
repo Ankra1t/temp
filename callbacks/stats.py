@@ -263,7 +263,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 if calc_info is None:
                     return
 
-                await send_calculation(bot, call.message, user.tgId, calc_info)
+                await send_calculation(bot, call.message, state, user, calc_info)
 
                 if not is_cancel:
                     calculation.update(
@@ -273,7 +273,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     if send_data is not None:
                         await edit_channel_post(bot, calc_id)
                     await send_freeze(
-                        bot, call.message, user.tgId,
+                        bot, call.message, state, user,
                         calc_info.market, True
                     )
 
@@ -287,7 +287,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'go_main':
-        await send_main(call.message, bot, user.tgId)
+        await send_main(bot, call.message, state, user)
 
     if type == 'go_stats':
         calc = calculation.get(calc_id)
@@ -297,8 +297,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 reply_markup=kb_calc_result(user.lang, user.id, calc)
             )
 
-        await send_stats(bot, call.message, user.tgId,
-                         calc is not None and not calc.openedList)
+        await send_stats(
+            bot, call.message, state, user,
+            calc is not None and not calc.openedList
+        )
 
     if type == 'stats_market':
         stats = calcService.get_stats(user.tgId, stats_market)
@@ -312,7 +314,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'back_calc':
         calc = calculation.get(calc_id)
         if calc is not None:
-            await send_calculation(bot, call.message, user.tgId, calc)
+            await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_calc':
         calc = calculation.get(calc_id)
@@ -330,7 +332,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     bot, call.message, 'text',
                     msg_calculation_deleted(user.lang),
                 )
-                await send_main(call.message, bot, user.tgId, True)
+                await send_main(bot, call.message, state, user, True)
         elif '_no' in type:
             prev_type = call.message.content_type
 
@@ -472,7 +474,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 await bot.edit_message_text(
                     msg_calculation(user.lang, calc),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(user.lang, calc.tpRatio, calc.id)
+                    reply_markup=kb_take_profit(
+                        user.lang, calc.tpRatio, calc.id)
                 )
 
     if 'tp_rate+' in type:
@@ -492,14 +495,15 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 await bot.edit_message_text(
                     msg_calculation(user.lang, calc),
                     chat_id, mes_id,
-                    reply_markup=kb_take_profit(user.lang, calc.tpRatio, calc.id)
+                    reply_markup=kb_take_profit(
+                        user.lang, calc.tpRatio, calc.id)
                 )
 
     if type == 'remove_img_text':
         calc = calculation.update(calc_id, photo=None, description=None)
         if calc is None:
             return
-        await send_calculation(bot, call.message, user.tgId, calc)
+        await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'add_img_text':
         calc = calculation.get(calc_id)
@@ -641,7 +645,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             )
             loading_vote_message_ids[calc_id] = (chat_id, new_mes.id)
 
-        await send_main(call.message, bot, user.tgId, True)
+        await send_main(bot, call.message, state, user, True)
 
     if type == 'stc+rescreen':
         send_data = channel_calc.getByCalc(calc_id)
@@ -791,7 +795,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             return
 
         await delete_message(bot, chat_id, mes_id)
-        await send_calculation(bot, call.message, user.tgId, calc, True)
+        await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'result_deal':
         calculation.update(
@@ -805,7 +809,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             return
 
         await delete_message(bot, chat_id, mes_id)
-        await send_calculation(bot, call.message, user.tgId, calc, True)
+        await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'result_wait':
         calculation.update(
@@ -819,7 +823,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             return
 
         await delete_message(bot, chat_id, mes_id)
-        await send_calculation(bot, call.message, user.tgId, calc, True)
+        await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'result_take':
         calc = calculation.get(calc_id)
@@ -859,7 +863,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if 'list+' in type:
         _, list_type = type.split('+')
-        await send_calc_list(bot, call.message, user.tgId, list_type, page)
+        await send_calc_list(bot, call.message, state, user, list_type, page)
 
     await bot.answer_callback_query(call.id)
 
@@ -1370,9 +1374,9 @@ async def edit_live_info(
 
                 msges += current_msg
 
-
             day = 31 - 19 + get_datetime_now().day + 1
-            msg = f'⚡️ <b>{day} ' + ('ДЕНЬ МАРАФОНА' if lang == 'ru' else 'DAY OF MARATHON')
+            msg = f'⚡️ <b>{day} ' + \
+                ('ДЕНЬ МАРАФОНА' if lang == 'ru' else 'DAY OF MARATHON')
             msg += '</b>\n\n'
             msg += msges.strip()
 

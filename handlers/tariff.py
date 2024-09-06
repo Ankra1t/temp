@@ -30,7 +30,7 @@ async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext,
 
     edit_wait_mess = await bot.send_message(
         message.chat.id,
-        msg_loading_invoice(user.tgId)
+        msg_loading_invoice(user.lang)
     )
 
     tariff = db.get_price_by_id(target_id)
@@ -49,7 +49,7 @@ async def handle_email(message: Message, bot: AsyncTeleBot, state: StateContext,
         return
 
     await bot.edit_message_text(
-        msg_bill(user.tgId),
+        msg_bill(user.lang),
         chat_id, edit_wait_mess.id,
         reply_markup=kb_bill(user.lang, yookassa_payment_url)
     )

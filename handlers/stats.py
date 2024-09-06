@@ -53,8 +53,8 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
     if send_data is not None:
         await edit_channel_post(bot, stat_id)
 
-    await send_calculation(bot, message, user.tgId, calc_info, True)
-    await send_freeze(bot, message, user.tgId, calc_info.market, True)
+    await send_calculation(bot, message, state, user, calc_info, True)
+    await send_freeze(bot, message, state, user, calc_info.market, True)
 
 
 async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -86,8 +86,8 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
     if send_data is not None:
         await edit_channel_post(bot, stat_id)
 
-    await send_calculation(bot, message, user.tgId, calc_info, True)
-    await send_freeze(bot, message, user.tgId, calc_info.market, True)
+    await send_calculation(bot, message, state, user, calc_info, True)
+    await send_freeze(bot, message, state, user, calc_info.market, True)
 
 
 async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -186,14 +186,14 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     await state.delete()
 
     if type != 'stats':
-        await send_calculation(bot, message, user.tgId, calc, True)
+        await send_calculation(bot, message, state, user, calc, True)
     else:
         send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             await edit_channel_post(bot, calc.id)
 
         await send_admin_channel_calc_item(
-            bot, message, user.tgId, stat_id, is_first=True
+            bot, message, state, stat_id, is_first=True
         )
 
 
@@ -273,14 +273,14 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
         await edit_channel_post(bot, stat_id)
 
         if is_calc:
-            await send_calculation(bot, message, user.tgId, calc, True)
+            await send_calculation(bot, message, state, user, calc, True)
         else:
-            await send_admin_channel_calc_list(bot, message, user.tgId, True)
+            await send_admin_channel_calc_list(bot, message, state, is_first=True)
     else:
         if is_calc:
-            await send_calculation(bot, message, user.tgId, calc, True)
+            await send_calculation(bot, message, state, user, calc, True)
         else:
-            await send_stats(bot, message, user.tgId, True)
+            await send_stats(bot, message, state, user, True)
 
 
 async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -309,7 +309,7 @@ async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: S
     )
 
     await state.delete()
-    await send_violation(bot, message, user.tgId, is_first=True)
+    await send_violation(bot, message, state, user, is_first=True)
 
 
 def registration(bot: AsyncTeleBot):

@@ -6,7 +6,7 @@ from yookassa import Configuration, Payment
 from requests.exceptions import HTTPError
 import uuid
 
-from common.utils import check_discount_price
+from common.utils import check_discount_price, get_lang
 from NOTIFIER.messages import mess_user_paid
 from db import db
 from Classes import pay_guard
@@ -148,10 +148,11 @@ async def yooKassa_payment_updates(bot: AsyncTeleBot, request: Request):
                     refer.id, refer.refer_sum + int(transaction.sum * 0.2)
                 )
 
+        user_lang = get_lang(user.tg_id)
         await bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
-                user.tg_id, finish_date_show, transaction.name
+                user_lang, finish_date_show, transaction.name
             ),
         )
         await notifier.send_notification('text', mess_user_paid(

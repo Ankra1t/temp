@@ -11,7 +11,7 @@ from NOTIFIER.messages import mess_user_paid
 from config_logger import logger
 
 from common.dt import get_str_by_datetime
-from common.utils import check_discount_price
+from common.utils import check_discount_price, get_lang
 from db import db
 from messages.users import paid_subscribe_msg
 from models import InvoiceBBanker, Price, UpdateBBanker
@@ -276,7 +276,8 @@ class PaymentsBanker(object):
                 self.transactions_complete(transaction.id)
 
                 # Добавить платную подписку
-                finish_date_obj = self.pay_guard.set_paid_subscribe(transaction)
+                finish_date_obj = self.pay_guard.set_paid_subscribe(
+                    transaction)
                 finish_date = get_str_by_datetime(finish_date_obj)
 
                 logger.info(f'-----> Добавили пользователю платную подписку')
@@ -286,13 +287,16 @@ class PaymentsBanker(object):
                     transaction.user_id
                 )
 
-                # Отправляем сообщение пользователю
-                await self.bot.send_message(
-                    transaction.user_id,
-                    text=paid_subscribe_msg(
-                        transaction.user_id, finish_date, transaction.name
-                    ),
-                )
+                user_ = db.get_user_by_id(transaction.user_id)
+                if user_:
+                    user_lang = get_lang(user_.tg_id)
+                    # Отправляем сообщение пользователю
+                    await self.bot.send_message(
+                        user_.tg_id,
+                        text=paid_subscribe_msg(
+                            user_lang, finish_date, transaction.name
+                        ),
+                    )
 
                 # Сообщение в бот уведомлений об оплате
                 summ_full = f"{transaction.sum} {transaction.currency}"

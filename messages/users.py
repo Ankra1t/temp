@@ -1,9 +1,7 @@
-from common.utils import get_lang
-# TODO - lang вместо user_id
+from models import LANGUAGES_TYPE
 
-def end_trial_subscribe_msg(user_id: int):
-    lang = get_lang(user_id)
 
+def end_trial_subscribe_msg(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'Ваша пробная подписка закончилась. Вы можете оформить платную подписку.',
         'en': 'Your trial subscription has expired. You can sign up for a paid subscription.',
@@ -14,9 +12,7 @@ def end_trial_subscribe_msg(user_id: int):
     return f'❗️ {text[lang]}'
 
 
-def end_paid_subscribe_msg(user_id: int):
-    lang = get_lang(user_id)
-
+def end_paid_subscribe_msg(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'Ваша платная подписка закончилась. Пожалуйста, продлите подписку, чтобы снова пользоваться сервисом.',
         'en': 'Your paid subscription has expired. Please renew your subscription to have access to the service again.',
@@ -27,9 +23,7 @@ def end_paid_subscribe_msg(user_id: int):
     return f'❗️ {text[lang]}'
 
 
-def gift_subscribe_msg(user_id: int, end_date: str):
-    lang = get_lang(user_id)
-
+def gift_subscribe_msg(lang: LANGUAGES_TYPE, end_date: str):
     texts = {
         'ru': 'Поздравляем, админ подарил вам платную подписку до',
         'en': 'Congratulations, admin gave you a paid subscription to',
@@ -40,9 +34,7 @@ def gift_subscribe_msg(user_id: int, end_date: str):
     return f"""{texts[lang]} <b>{end_date}</b>"""
 
 
-def gift_trial_subscribe_msg(user_id: int, end_date: str):
-    lang = get_lang(user_id)
-
+def gift_trial_subscribe_msg(lang: LANGUAGES_TYPE, end_date: str):
     texts = {
         'ru': 'Вам выдан бесплатный период до',
         'en': 'You have been issued a free period before',
@@ -53,9 +45,7 @@ def gift_trial_subscribe_msg(user_id: int, end_date: str):
     return f"""{texts[lang]} <b>{end_date}</b>"""
 
 
-def paid_subscribe_msg(user_id: int, end_date: str, tariff_name: str):
-    lang = get_lang(user_id)
-
+def paid_subscribe_msg(lang: LANGUAGES_TYPE, end_date: str, tariff_name: str):
     texts = {
         'ru': f'Благодарим за оплату подписки, <b>"{tariff_name}"</b> будет действовать <b>до {end_date}</b>',
         'en': f'Thank you for completing your subscription payment, <b>"{tariff_name}"</b> will be valid <b>until {end_date}</b>',
@@ -66,9 +56,7 @@ def paid_subscribe_msg(user_id: int, end_date: str, tariff_name: str):
     return texts[lang]
 
 
-def paid_subscribe_refer_msg(refer_id: int, user: str, sum: str):
-    lang = get_lang(refer_id)
-
+def paid_subscribe_refer_msg(lang: LANGUAGES_TYPE, user: str, sum: str):
     texts = {
         'ru': f'Ваш реферал {user} оплатил подписку на {sum}',
         'en': f'Your referral {user} paid for subscription by {sum}',
@@ -100,9 +88,7 @@ def welcome_trial_subscribe_msg(days: int = 2):
 """
 
 
-def msg_start(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_start(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'name': 'Меню',
@@ -126,9 +112,7 @@ def msg_start(user_id: int):
 # {texts[lang]['action']}
 
 
-def msg_choose_tariff_type(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_choose_tariff_type(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'Какой продукт вас интересует?',
         'en': 'Which product interests you?',
@@ -139,9 +123,7 @@ def msg_choose_tariff_type(user_id: int):
     return text[lang]
 
 
-def msg_loading_invoice(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_loading_invoice(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Подготавливаем для вас возможные способы оплаты',
         'en': 'Prepare possible payment methods for you',
@@ -152,9 +134,7 @@ def msg_loading_invoice(user_id: int):
     return f'⏳ {texts[lang]}...'
 
 
-def msg_is_subscribed(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_is_subscribed(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'У вас уже есть подписка. Мы сообщим вам о ее завершении для следующей покупки.',
         'en': 'You already have a subscription. We will inform you about its completion before the next period.',
@@ -165,9 +145,7 @@ def msg_is_subscribed(user_id: int):
     return f'✅ {text[lang]}'
 
 
-def msg_bill(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_bill(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             '1': 'Нажмите на кнопку и оплатите тариф',
@@ -191,9 +169,7 @@ def msg_bill(user_id: int):
 {texts[lang]["2"]}"""
 
 
-def msg_no_tariffs(user_id: int):
-    lang = get_lang(user_id)
-
+def msg_no_tariffs(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Тарифов нет',
         'en': 'There are no subscribtions available',

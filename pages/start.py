@@ -55,9 +55,7 @@ async def send_start_by_user(
                     if 'atr_percent' in stop_type:
                         _, percent = stop_type.split('+')
                         rate = float(percent) * 0.01
-                    await bot.add_data(
-                        chat_id=chat_id,
-                        user_id=user.tgId,
+                    await state.add_data(
                         atr=abs(ticker_val) * abs(rate)
                     )
                     await bot.send_message(
@@ -75,9 +73,7 @@ async def send_start_by_user(
                 )
                 await state.set(CalculateState.stop_loss)
 
-            await bot.add_data(
-                chat_id=chat_id,
-                user_id=user.tgId,
+            await state.add_data(
                 action='send_calc',
                 stat_id=id,
                 open_price=calc.openPrice,
@@ -87,7 +83,7 @@ async def send_start_by_user(
             )
         else:
             await start_with_calc(
-                bot, message, user.tgId, int(id),
+                bot, message, state, user, int(id),
                 is_try=has_registered_now
             )
 
@@ -110,14 +106,13 @@ async def send_start_by_user(
 async def start_with_calc(
     bot: AsyncTeleBot,
     message: Message,
-    user_id: int,
+    state: StateContext,
+    user: User,
     stat_id: int,
     stop_loss: float | None = None,
     is_try=False
 ):
-    chat_id = message.chat.id
-
-    await bot.delete_state(user_id, chat_id)
+    await state.delete()
 
     calc = calculation.get(int(stat_id))
     if calc is None:
@@ -125,8 +120,7 @@ async def start_with_calc(
 
     stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    u_base = db.get_calc_user_settings(user_db_id, calc.market)
+    u_base = db.get_calc_user_settings(user.id, calc.market)
 
     deposit = risk = None
     if u_base is None or u_base.deposit is None:
@@ -147,7 +141,7 @@ async def start_with_calc(
 
     new_calc = Calculation(
         id=-1,
-        userId=user_db_id,
+        userId=user.id,
         currency=calc.currency,
         deposit=deposit,
         riskValue=risk,
@@ -165,4 +159,4 @@ async def start_with_calc(
 
     new_id = db.add_calculation(new_calc)
     new_calc.id = new_id or -1
-    await send_calculation(bot, message, user_id, new_calc, True, is_try=is_try)
+    await send_calculation(bot, message, state, user, new_calc, True, is_try=is_try)

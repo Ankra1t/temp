@@ -45,7 +45,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_main(bot, call.message, state)
 
     if type == 'send_settings':
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     await bot.answer_callback_query(call.id)
 

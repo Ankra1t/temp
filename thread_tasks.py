@@ -7,6 +7,7 @@ from Classes.BlockTGBotSender import BlockTGBotSender, send_message_by_type
 from Classes import pay_guard, coinmarketService
 
 from common.dt import get_datetime_now
+from common.utils import get_lang
 from messages.users import end_paid_subscribe_msg, end_trial_subscribe_msg
 from config_logger import logger
 from db import db
@@ -52,8 +53,9 @@ async def _check_finish_trial_subscribe(bot: AsyncTeleBot):
 
     for user in users:
         try:
+            lang = get_lang(user.tg_id)
             await send_message_by_type(
-                bot, user.tg_id, 'text', end_trial_subscribe_msg(user.tg_id)
+                bot, user.tg_id, 'text', end_trial_subscribe_msg(lang)
             )
         except Exception as e:
             logger.error(f'[end_trail_sub error sending message]: {e}')
@@ -69,8 +71,9 @@ async def _check_finish_paid_subscribe(bot: AsyncTeleBot):
 
     for user in users:
         try:
+            lang = get_lang(user.tg_id)
             await send_message_by_type(
-                bot, user.tg_id, 'text', end_paid_subscribe_msg(user.tg_id)
+                bot, user.tg_id, 'text', end_paid_subscribe_msg(lang)
             )
         except Exception as e:
             logger.error(f'[end_paid_sub error sending message]: {e}')

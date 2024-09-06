@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Literal
 import requests
-from telebot.async_telebot import AsyncTeleBot
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from common.utils import get_decimal_count, get_lang, get_print_float
+from common.utils import get_decimal_count, get_print_float
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, TickerInfo
+from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, TickerInfo, User
 
 from Classes import calcService
 
@@ -20,10 +19,8 @@ months = {'ru': [
 ]}
 
 
-async def msg_calculate(bot: AsyncTeleBot, user_id: int, chat_id: int, is_try=False):
-    lang = get_lang(user_id)  # TODO - delete
-
-    async with bot.retrieve_data(user_id, chat_id) as data: # type: ignore
+async def msg_calculate(state: StateContext, user: User, is_try=False):
+    async with state.data() as data:
         updated_risk = data.get('updated_risk') or 1.
         type = data.get('calc_type', '')
         ticker = data.get('ticker')
@@ -93,16 +90,16 @@ async def msg_calculate(bot: AsyncTeleBot, user_id: int, chat_id: int, is_try=Fa
         text += f'<b><u>{pair}</u></b>'
     elif type == 'crypto' and tool != '':
         text += f'<b><u>{tool}</u></b>'
-    text += f' - {transl_market(type, lang)} {"(demo)" if is_try else ""}\n\n'
+    text += f' - {transl_market(type, user.lang)} {"(demo)" if is_try else ""}\n\n'
 
     for el in type_list:
         item = vars_dict[el]
         if item is not None:
             if item == 'ticker':
-                text += f'<b>{point[lang][el]}</b>: {item}\n'
+                text += f'<b>{point[user.lang][el]}</b>: {item}\n'
             else:
                 text += ''.join((
-                    f'<b>{point[lang][el]}</b>: ',
+                    f'<b>{point[user.lang][el]}</b>: ',
                     f'{item} ',
                     (currency or '') if (
                         type != 'forex' or forex is None) else forex.pair[1],
@@ -110,7 +107,7 @@ async def msg_calculate(bot: AsyncTeleBot, user_id: int, chat_id: int, is_try=Fa
                 ))
 
     if not is_try:
-        text += f'\n<b>{point[lang]["trading_type"]}</b>: {transl_tr_type(trading_type, lang)}\n'
+        text += f'\n<b>{point[user.lang]["trading_type"]}</b>: {transl_tr_type(trading_type, user.lang)}\n'
 
     text += '\n'
     return text

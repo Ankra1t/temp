@@ -37,11 +37,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         f'callback "user_main_factory" user_tg_id={user.tgId} type={type} ({target_id} {tariff_type} {page})')
 
     if type == 'go_main':
-        await send_main(call.message, bot, user.tgId)
+        await send_main(bot, call.message, state, user)
 
     elif 'go_tariff' in type:
         await send_tariffs_list_item(
-            bot, call.message, user.tgId, 'calc', page, is_rus
+            bot, call.message, state, user, 'calc', page, is_rus
         )
 
     elif type == 'pay_tariff_yoo':
@@ -70,14 +70,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
         if user_sub is not None:
             await bot.send_message(
-                chat_id, msg_is_subscribed(user.tgId),
+                chat_id, msg_is_subscribed(user.lang),
                 reply_markup=kb_user_tariff_back(user.lang)
             )
             return
 
         edit_wait_mess = await bot.send_message(
             call.message.chat.id,
-            msg_loading_invoice(user.tgId)
+            msg_loading_invoice(user.lang)
         )
 
         tariff = db.get_price_by_id(target_id)
@@ -96,7 +96,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             return
 
         await bot.edit_message_text(
-            msg_bill(user.tgId),
+            msg_bill(user.lang),
             chat_id, edit_wait_mess.id,
             reply_markup=kb_bill(user.lang, cryptopay_payment_url)
         )

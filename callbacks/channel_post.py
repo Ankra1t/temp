@@ -47,7 +47,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     logger.info(f'channel_post_callback (type={type} stat_id={stat_id})')
 
     if type == 'main':
-        await send_main(call.message, bot, user.tgId)
+        await send_main(bot, call.message, state, user)
 
     if type == 'back':
         chat_id = call.message.chat.id
@@ -164,17 +164,17 @@ More often: <b>{result}</b>"""
             )
 
     if type == 'send_settings':
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     if type == 'ss_stop':
         current = liteDb.getSendSettings('withoutStop')
         liteDb.updateSendSettings('withoutStop', f'{current != "True"}')
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     if type == 'ss_vote':
         current = liteDb.getSendSettings('isVote')
         liteDb.updateSendSettings('isVote', f'{current != "True"}')
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     if type == 'ss_time':
         await edit_message(
@@ -189,7 +189,7 @@ More often: <b>{result}</b>"""
             time = None
 
         liteDb.updateSendSettings('time', time)
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     if type == 'ss_style':
         await bot.edit_message_text(
@@ -205,7 +205,7 @@ More often: <b>{result}</b>"""
             value = None
 
         liteDb.updateSendSettings('style', value)
-        await send_admin_send_settings(bot, call.message, user.tgId)
+        await send_admin_send_settings(bot, call.message, state)
 
     if type == 'result_cancel':
         calculation.update(
@@ -216,7 +216,7 @@ More often: <b>{result}</b>"""
             await edit_channel_post(bot, stat_id)
             type = 'results'
         else:
-            await send_stats(bot, call.message, user.tgId)
+            await send_stats(bot, call.message, state, user)
 
     if type == 'result_deal':
         calculation.update(
@@ -228,7 +228,7 @@ More often: <b>{result}</b>"""
             await edit_channel_post(bot, stat_id)
             type = 'result'
         else:
-            await send_stats(bot, call.message, user.tgId)
+            await send_stats(bot, call.message, state, user)
 
     if type == 'result_wait':
         calculation.update(
@@ -240,7 +240,7 @@ More often: <b>{result}</b>"""
             await edit_channel_post(bot, stat_id)
             type = 'result'
         else:
-            await send_stats(bot, call.message, user.tgId)
+            await send_stats(bot, call.message, state, user)
 
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(stat_id)
@@ -270,17 +270,17 @@ More often: <b>{result}</b>"""
                 type = 'results'
         else:
             if is_calc == 0:
-                await send_stats(bot, call.message, user.tgId)
+                await send_stats(bot, call.message, state, user)
 
         if is_calc == 1:
             calc = calculation.get(stat_id)
             if calc is None:
                 return
             await delete_message(bot, chat_id, mes_id)
-            await send_calculation(bot, call.message, user.tgId, calc, True)
+            await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'results':
-        await send_admin_channel_calc_list(bot, call.message, user.tgId, page=page)
+        await send_admin_channel_calc_list(bot, call.message, state, page)
 
     if type == 'result' or type == 'result_take' or type == 'result_stop':
         mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
@@ -288,11 +288,11 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(stat_id)
         if send_data is not None:
             await send_admin_channel_calc_item(
-                bot, call.message, user.tgId, stat_id, mes_type
+                bot, call.message, state, stat_id, mes_type
             )
         else:
             await send_calc_stat_item(
-                bot, call.message, user.tgId, stat_id, mes_type
+                bot, call.message, state, stat_id, mes_type
             )
 
     if type == 'comment':
@@ -312,10 +312,10 @@ More often: <b>{result}</b>"""
         if calc is None:
             return
 
-        await send_calculation(bot, call.message, user.tgId, calc)
+        await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'go_stats':
-        await send_stats(bot, call.message, user.tgId)
+        await send_stats(bot, call.message, state, user)
 
     await bot.answer_callback_query(call.id)
 

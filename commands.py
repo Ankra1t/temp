@@ -9,7 +9,7 @@ from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
 from services import auth
 
-from common.utils import get_lang, is_digit
+from common.utils import is_digit
 from common.calc_step import send_calc_start
 
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_main, send_manual_page, send_settings
@@ -73,10 +73,8 @@ async def _start(bot: AsyncTeleBot, message: Message, state: StateContext, user:
     )
 
 
-async def _calc(message: Message, bot: AsyncTeleBot):
-    user_id = message.from_user.id
-
-    await send_main(message, bot, user_id, True)
+async def _calc(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_main(bot, message, state, user, True)
 
 
 async def _teststart(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -110,59 +108,56 @@ async def _about_us(message: Message, bot: AsyncTeleBot, state: StateContext):
     await state.delete()
 
 
-async def _support(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    lang = get_lang(user_id)
-
+async def _support(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     sup = db.get_support_name()
-    msg = msg_support(lang)
+    msg = msg_support(user.lang)
 
     await bot.send_message(
         message.chat.id, msg,
-        reply_markup=kb_support(lang, sup)
+        reply_markup=kb_support(user.lang, sup)
     )
     await state.delete()
 
 
-async def _manual(message: Message, bot: AsyncTeleBot):
-    await send_manual_page(message, bot, 1, message.from_user.id, True)
+async def _manual(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_manual_page(bot, message, state, user, 1, True)
 
 
 async def _site(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     await send_site_code(bot, message, state, user, is_first=True)
 
 
-async def _settings(message: Message, bot: AsyncTeleBot):
-    await send_settings(bot, message, message.from_user.id, True)
+async def _settings(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_settings(bot, message, state, user, True)
 
 
-async def _calc_start(message: Message, bot: AsyncTeleBot):
-    await send_calc_start(bot, message, message.from_user.id)
+async def _calc_start(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    await send_calc_start(bot, message, state, user)
 
 
-async def _channel_calc(message: Message, bot: AsyncTeleBot, user: User):
+async def _channel_calc(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     if user.role != 1:
         return
 
-    await send_calc_start(bot, message, user.tgId, is_channel_calc=True)
+    await send_calc_start(bot, message, state, user, is_channel_calc=True)
 
 
 async def _referral(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     await send_referral(bot, message, state, user, True)
 
 
-async def _channel_post(message: Message, bot: AsyncTeleBot, user: User):
+async def _channel_post(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     if user.role != 1:
         return
 
-    await send_channel_post(bot, message, user.tgId, True)
+    await send_channel_post(bot, message, state, True)
 
 
-async def _results(message: Message, bot: AsyncTeleBot, user: User):
+async def _results(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     if user.role != 1:
         return
 
-    await send_admin_channel_calc_list(bot, message, user.tgId, True)
+    await send_admin_channel_calc_list(bot, message, state, is_first=True)
 
 
 async def _test(message: Message, bot: AsyncTeleBot):

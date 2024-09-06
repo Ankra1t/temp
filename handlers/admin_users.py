@@ -7,7 +7,7 @@ from models import Message, StateContext, User
 
 from config_logger import logger
 
-from common.utils import digit_accept, is_digit, text_accept
+from common.utils import digit_accept, get_lang, is_digit, text_accept
 
 from messages.errros import msg_digit_error
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
@@ -104,9 +104,10 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
         )
         await send_admin_client(bot, message, state, subscribe_user_id, is_first=True)
 
+        lang = get_lang(usr.tg_id)
         await bot.send_message(
             usr.tg_id,
-            gift_subscribe_msg(usr.tg_id, data_fin)
+            gift_subscribe_msg(lang, data_fin)
         )
 
     if current_state == 'AdminUsersState:trial_subscribe_days_get_days':
@@ -121,8 +122,9 @@ async def handle_days_subscribe(message: Message, bot: AsyncTeleBot, state: Stat
             )
             await send_admin_client(bot, message, state, subscribe_user_id, is_first=True)
 
+            lang = get_lang(usr.tg_id)
             await bot.send_message(
-                usr.tg_id, gift_trial_subscribe_msg(usr.tg_id, data_fin)
+                usr.tg_id, gift_trial_subscribe_msg(lang, data_fin)
             )
         except Exception as e:
             logger.error(f'Что то пошло не так {e}')

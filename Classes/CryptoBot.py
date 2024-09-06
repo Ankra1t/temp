@@ -15,7 +15,7 @@ from NOTIFIER import notifier
 from config_global import CRYPTOPAY_TOKEN
 from config_logger import logger
 
-from common.utils import check_discount_price
+from common.utils import check_discount_price, get_lang
 from messages.users import paid_subscribe_msg, paid_subscribe_refer_msg
 from models import Price
 from db import db
@@ -139,12 +139,14 @@ async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
                         refer.refer_sum + rub_price
                     )
 
+                    refer_lang = get_lang(refer.tg_id)
+
                     user_show = f'@{user.tg_username}' if user.tg_username != '-' else f'{user.tg_id}'
                     sum_show = f'{transaction.sum} {transaction.currency}'
                     await bot.send_message(
                         user.refer_id,
                         text=paid_subscribe_refer_msg(
-                            user.refer_id, user_show, sum_show
+                            refer_lang, user_show, sum_show
                         ),
                     )
         except Exception as e:
@@ -152,10 +154,12 @@ async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
             print(traceback.print_exc())
             pass
 
+        user_lang = get_lang(user.tg_id)
+
         await bot.send_message(
             user.tg_id,
             text=paid_subscribe_msg(
-                user.tg_id, finish_date_show, transaction.name
+                user_lang, finish_date_show, transaction.name
             ),
         )
 

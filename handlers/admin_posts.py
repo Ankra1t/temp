@@ -5,9 +5,9 @@ from telebot.async_telebot import AsyncTeleBot
 from Classes.BlockTGBotSender import BlockTGBotSender
 
 from db import db
-from models import Post, PostDetails, Message, StateContext
+from models import Post, PostDetails, Message, StateContext, User
 from config_logger import logger
-from common.utils import digit_accept, get_lang, text_accept, get_post_from_message
+from common.utils import digit_accept, text_accept, get_post_from_message
 from common.dt import get_datetime_by_str, get_datetime_now
 
 from messages.errros import msg_digit_error
@@ -245,16 +245,13 @@ async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot, state: S
 
 
 async def handle_action_post(action: Literal['send', 'delete']):
-    async def r_func(message: Message, bot: AsyncTeleBot, state: StateContext):
-        user_id = message.from_user.id
-        lang = get_lang(user_id)
-
+    async def r_func(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
         chat_id = message.chat.id
 
         post_id = digit_accept(message, int)
         if post_id is None:
             await bot.send_message(
-                chat_id, msg_digit_error(lang),
+                chat_id, msg_digit_error(user.lang),
                 reply_markup=kb_posts_back())
             return
 

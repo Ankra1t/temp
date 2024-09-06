@@ -44,10 +44,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_user_account(bot, call.message, state, user)
 
     if type == 'calculator':
-        await send_main(call.message, bot, user_id)
+        await send_main(bot, call.message, state, user)
 
     if type == 'try':
-        await send_calc_start(bot, call.message, user_id, is_try=True)
+        await send_calc_start(bot, call.message, state, user, is_try=True)
 
     if type == 'signals':
         await send_in_development(bot, call.message)

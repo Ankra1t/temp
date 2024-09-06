@@ -59,7 +59,7 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
 
     if stat_id is None:
         await state.add_data(tool=tool)
-        await choose_calculate_step(bot, user.tgId, message, last_value='tool')
+        await choose_calculate_step(bot, message, state, user, last_value='tool')
     else:
         db.change_calculation_tool(stat_id, tool)
 
@@ -67,7 +67,7 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         if calc_info is None:
             return
 
-        await send_calculation(bot, message, user.tgId, calc_info, True)
+        await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
 
 
@@ -128,7 +128,7 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
     if stat_id is None:
         await state.add_data(forex=forex)
         await choose_calculate_step(
-            bot, user.tgId, message, last_value='forex'
+            bot, message, state, user, last_value='forex'
         )
     else:
         db.change_calculation_forex(stat_id, forex)
@@ -137,7 +137,7 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         if calc_info is None:
             return
 
-        await send_calculation(bot, message, user.tgId, calc_info, True)
+        await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
 
 
@@ -167,7 +167,7 @@ async def handle_forex_pair_price(message: Message, bot: AsyncTeleBot, state: St
 
     await state.add_data(forex=forex)
     await choose_calculate_step(
-        bot, user_id, message, last_value='forex'
+        bot, message, state, user, last_value='forex'
     )
 
 
@@ -196,7 +196,7 @@ async def handle_currency(message: Message, bot: AsyncTeleBot, state: StateConte
         return
 
     await state.add_data(currency=value.upper())
-    await choose_calculate_step(bot, user.tgId, message, last_value='currency')
+    await choose_calculate_step(bot, message, state, user, last_value='currency')
 
 
 async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -216,7 +216,7 @@ async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContex
         f'callback "handle_deposit" user_tg_id={user.tgId} value={value}')
 
     await state.add_data(deposit=value)
-    await choose_calculate_step(bot, user.tgId, message, last_value='deposit')
+    await choose_calculate_step(bot, message, state, user, last_value='deposit')
 
 
 async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -247,7 +247,7 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
     #     return
 
     await state.add_data(risk=[value, is_percent])
-    await choose_calculate_step(bot, user.tgId, message, last_value='risk')
+    await choose_calculate_step(bot, message, state, user, last_value='risk')
 
 
 async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -275,7 +275,7 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
     if stat_id is None:
         await state.add_data(trading_style=value)
         await choose_calculate_step(
-            bot, user.tgId, message,
+            bot, message, state, user,
             last_value='trading_style'
         )
     else:
@@ -286,7 +286,7 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
         db.change_calculation_style(stat_id, value)
         calc_info.tradingStyle = value
 
-        await send_calculation(bot, message, user.tgId, calc_info, True)
+        await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
 
 
@@ -314,7 +314,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
     if stat_id is None:
         await state.add_data(open_price=value)
         await choose_calculate_step(
-            bot, user.tgId, message, last_value='open_price'
+            bot, message, state, user, last_value='open_price'
         )
     else:
         calc_info = calculation.get(stat_id)
@@ -331,7 +331,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
 
         await edit_channel_post(bot, stat_id)
 
-        await send_calculation(bot, message, user.tgId, calc_info, True)
+        await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
 
 
@@ -367,10 +367,10 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
     )
 
     if action == 'send_calc':
-        await start_with_calc(bot, message, user.tgId, stat_id, stop_loss)
+        await start_with_calc(bot, message, state, user, stat_id, stop_loss)
     else:
         await edit_channel_post(bot, stat_id)
-        await create_and_send_calc(bot, message, user.tgId, stop_loss)
+        await create_and_send_calc(bot, message, state, user, stop_loss)
 
 
 async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):

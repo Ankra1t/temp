@@ -1,14 +1,14 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from models import MANUAL_TYPE, CallbackQuery
+from models import MANUAL_TYPE, CallbackQuery, StateContext, User
 from messages.common import msg_manuals
 
 from keyboards.manual import manual_factory, ManualCallbackFilter
 from pages.calculate import send_main, send_manual
 
 
-async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
+async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
@@ -21,7 +21,7 @@ async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
     mes_id = call.message.id
 
     if type == 'main':
-        await send_main(call.message, bot, user_id)
+        await send_main(bot, call.message, state, user)
 
     if 'manual' in type:
         type_arr = type.split('+')
@@ -29,7 +29,7 @@ async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot):
         if len(type_arr) == 2:
             manual_type = type_arr[1]  # type: ignore
 
-        await send_manual(bot, call.message, user_id, manual_type)
+        await send_manual(bot, call.message, state, user, manual_type)
 
     if type == 'prev':
         page -= 1

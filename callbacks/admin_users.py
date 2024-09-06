@@ -3,7 +3,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from common.dt import get_str_by_datetime
-from common.utils import get_short_user_info
+from common.utils import get_lang, get_short_user_info
 
 from config_logger import logger
 
@@ -191,8 +191,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
         await send_admin_client(bot, call.message, state, subscribe_user_id, is_first=True)
 
+        usr_lang = get_lang(usr.tg_id)
         await bot.send_message(
-            usr.tg_id, gift_subscribe_msg(usr.tg_id, data_fin)
+            usr.tg_id, gift_subscribe_msg(usr_lang, data_fin)
         )
 
     if type == 'client_cancel_sub':

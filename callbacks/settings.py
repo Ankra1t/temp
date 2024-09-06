@@ -101,10 +101,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             add_count = int(add_count)
             db.set_user_round_count(user.id, min(max(add_count, 0), 5))
-            await send_user_deposit(bot, call.message, user.tgId)
+            await send_user_deposit(bot, call.message, state, user)
 
     if type == 'trading_style':
-        await send_trading_style_settings(bot, call.message, user.tgId)
+        await send_trading_style_settings(bot, call.message, state, user)
 
     if 'ss_' in type:
         if trading_value == '':
@@ -136,7 +136,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 else:
                     await send_calculation(
                         bot, call.message,
-                        user.tgId, calc_info
+                        state, user, calc_info
                     )
                 await state.delete()
 
@@ -147,7 +147,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     trading_style=value
                 )
                 await choose_calculate_step(
-                    bot, user.tgId, call.message, True, last_value='trading_style'
+                    bot, call.message, state, user, True, last_value='trading_style'
                 )
 
             else:
@@ -162,11 +162,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         msg_success_edit(user.lang), chat_id, mes_id
                     )
 
-                await send_trading_style_settings(bot, call.message, user.tgId)
+                await send_trading_style_settings(bot, call.message, state, user)
 
     if type == 'switch_style_change':
         liteDb.switchStyleChange(user.tgId)
-        await send_trading_style_settings(bot, call.message, user.tgId)
+        await send_trading_style_settings(bot, call.message, state, user)
 
     if 'set_currency' in type:
         if type == 'set_currency':
@@ -191,14 +191,14 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         currency=currency.upper()
                     )
                     await choose_calculate_step(
-                        bot, user.tgId, call.message, True, last_value='currency'
+                        bot, call.message, state, user, True, last_value='currency'
                     )
                 else:
                     db.set_user_currency(user.id, currency.upper())
                     await bot.edit_message_text(
                         msg_success_edit(user.lang), chat_id, mes_id
                     )
-                    await send_user_deposit(bot, call.message, user.tgId, True)
+                    await send_user_deposit(bot, call.message, state, user, True)
 
     if 'choose_lang' in type:
         is_edit_lang = False
@@ -226,7 +226,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                             user.tgId, langg, sent_messages
                         )
                 else:
-                    await send_settings(bot, call.message, user.tgId)
+                    await send_settings(bot, call.message, state, user)
 
         if not is_edit_lang:
             await bot.edit_message_text(
@@ -236,10 +236,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             )
 
     if type == 'go_main':
-        await send_main(call.message, bot, user.tgId)
+        await send_main(bot, call.message, state, user)
 
     if type == 'go_settings':
-        await send_settings(bot, call.message, user.tgId)
+        await send_settings(bot, call.message, state, user)
 
     if type == 'go_change_base':
         await bot.edit_message_text(
@@ -311,7 +311,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         msg_enter_deposit(user.lang), chat_id, mes_id
                     )
             else:
-                await send_settings(bot, call.message, user.tgId)
+                await send_settings(bot, call.message, state, user)
 
     if type == 'first_dep':
         await state.set(FirstCalcState.deposit)
@@ -321,7 +321,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'welcome_confirm' in type:
         if 'no' in type:
-            await send_main(call.message, bot, user.tgId, True)
+            await send_main(bot, call.message, state, user, True)
         if 'yes' in type:
             # Переход к логике ввода базовых значений
             await bot.edit_message_text(
@@ -338,12 +338,12 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             try:
                 # Сброс настроек калькулятора до начальных
                 db.reset_user_settings(user.id)
-                await send_settings(bot, call.message, user.tgId)
+                await send_settings(bot, call.message, state, user)
             except:
                 # Нет изменений - ничего не изменяется
                 pass
         elif '_no' in type:
-            await send_settings(bot, call.message, user.tgId)
+            await send_settings(bot, call.message, state, user)
         else:
             await bot.edit_message_text(
                 msg_confirm_reset(user.lang), chat_id, mes_id,
@@ -356,11 +356,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         elif '_off' in type:
             db.set_user_updating_deposit(user.id, False)
 
-        await send_user_deposit(bot, call.message, user.tgId)
+        await send_user_deposit(bot, call.message, state, user)
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
-        await send_summury_profit_settings(bot, call.message, user.tgId)
+        await send_summury_profit_settings(bot, call.message, state, user)
 
     if type == 'change_summury_profit':
         # Если summury_type не задан, то выводим страницу для выбора типа
@@ -478,7 +478,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
         # Выводим сообщения
         await bot.edit_message_text(msg_success_edit(user.lang), chat_id, mes_id)
-        await send_summury_profit_settings(bot, call.message, user.tgId, True)
+        await send_summury_profit_settings(bot, call.message, state, user, True)
 
     if type == 'splitting_last':
         async with state.data() as data:
@@ -501,7 +501,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             )
         else:
             db.set_user_trading_type(user.id, trading_value)  # type: ignore
-            await send_settings(bot, call.message, user.tgId)
+            await send_settings(bot, call.message, state, user)
 
     if type == 'calc_output':
         cur_calc_output = db.get_user_calc_output(user.id)
@@ -509,7 +509,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             user.id,
             'text' if cur_calc_output == 'photo' else 'photo'
         )
-        await send_dop_settings(bot, call.message, user.tgId)
+        await send_dop_settings(bot, call.message, state, user)
 
     if type == 'set_first_settings':
         await bot.edit_message_text(
@@ -519,7 +519,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'set_risk_update':
         liteDb.reverseRiskUpdate(user.tgId)
-        await send_dop_settings(bot, call.message, user.tgId)
+        await send_dop_settings(bot, call.message, state, user)
 
     if type == 'exchange':
         exchange = liteDb.getUserExchange(user.tgId)
@@ -535,7 +535,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 del_mes_id=mes_id
             )
         else:
-            await send_exchange_settings(bot, call.message, user.tgId)
+            await send_exchange_settings(bot, call.message, state, user)
 
     if 'set_exchange' in type:
         if type == 'set_exchange':
@@ -560,12 +560,13 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     msg_choose_exchange_level(user.lang, exchange.fees),
                     chat_id, mes_id,
                     reply_markup=kb_choose_exchange_level(
-                        user.lang, exchange.name, [el[0] for el in exchange.fees]
+                        user.lang, exchange.name, [el[0]
+                                                   for el in exchange.fees]
                     )
                 )
             else:
                 await send_maker_or_taker(
-                    bot, call.message, chat_id,
+                    bot, call.message, state, user,
                     (exchange.name, exchange.maker_fee, exchange.taker_fee)
                 )
 
@@ -583,7 +584,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 break
 
         await send_maker_or_taker(
-            bot, call.message, user.tgId,
+            bot, call.message, state, user,
             (exchange.name, maker_fee, taker_fee)
         )
 
@@ -607,7 +608,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             )
         else:
             await send_maker_or_taker(
-                bot, call.message, chat_id,
+                bot, call.message, state, user,
                 (exchange.name, exchange.maker_fee, exchange.taker_fee)
             )
 
@@ -619,10 +620,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if 'set_ex_fee' in type:
         _, name, value = type.split('++')
         liteDb.setUserExchange(user.tgId, (name, float(value)))
-        await send_exchange_settings(bot, call.message, user.tgId)
+        await send_exchange_settings(bot, call.message, state, user)
 
     if type == 'dop':
-        await send_dop_settings(bot, call.message, user.tgId)
+        await send_dop_settings(bot, call.message, state, user)
 
     if 'set_stop' in type:
         _, new_stop_type = type.split('+')
@@ -638,15 +639,15 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             liteDb.setUserStop(user.tgId, new_stop_type)
 
             if new_stop_type == 'atr':
-                await send_atr_settings(bot, call.message, user.tgId)
+                await send_atr_settings(bot, call.message, state, user)
             else:
                 try:
-                    await send_stop_settings(bot, call.message, user.tgId)
+                    await send_stop_settings(bot, call.message, state, user)
                 except:
                     pass
 
     if type == 'stop_settings':
-        await send_stop_settings(bot, call.message, user.tgId)
+        await send_stop_settings(bot, call.message, state, user)
 
     if type == 'change_fr_dp':
         u_base = db.get_calc_user_settings(user.id)
@@ -655,10 +656,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             curr = u_base.is_from_deposit
 
         db.set_user_from_deposit(user.id, not curr)
-        await send_stop_settings(bot, call.message, user.tgId)
+        await send_stop_settings(bot, call.message, state, user)
 
     if type == 'atr_settings':
-        await send_atr_settings(bot, call.message, user.tgId)
+        await send_atr_settings(bot, call.message, state, user)
 
     if type == 'atr_auto':
         atr_settings = liteDb.getUserAtrSettings(user.tgId)
@@ -668,7 +669,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         liteDb.setUserAtrSettings(
             user.tgId, (not atr_settings[0], atr_settings[1])
         )
-        await send_atr_settings(bot, call.message, user.tgId)
+        await send_atr_settings(bot, call.message, state, user)
 
     if type == 'atr_self':
         atr_settings = liteDb.getUserAtrSettings(user.tgId)
@@ -678,7 +679,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         liteDb.setUserAtrSettings(
             user.tgId, (not atr_settings[0], atr_settings[1])
         )
-        await send_atr_settings(bot, call.message, user.tgId)
+        await send_atr_settings(bot, call.message, state, user)
 
     if type == 'atr_bars':
         await bot.edit_message_text(
@@ -709,7 +710,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         liteDb.setUserAtrSettings(
             user.tgId, (atr_settings[0], f'{bars[0]}+{count}'))
 
-        await send_atr_settings(bot, call.message, user.tgId)
+        await send_atr_settings(bot, call.message, state, user)
 
         await bot.answer_callback_query(call.id)
 

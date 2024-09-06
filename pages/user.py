@@ -42,7 +42,7 @@ async def send_user_main(
     keyboard = kb_user_main(user.lang, new_user)
 
     if not new_user:
-        text = msg_start(user.tgId)
+        text = msg_start(user.lang)
 
         if is_first:
             await bot.send_message(

@@ -10,10 +10,10 @@ from keyboards.livepost import kb_livepost_type
 from pages.calculate import send_admin_channel_calc_item, send_calculation
 
 from services import calculation
-from models import Message, StateContext
+from models import Message, StateContext, User
 from db import db
 
-async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateContext):
+async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     mes_id = message.id
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -32,7 +32,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
 
             calc_id = int(text)
             await send_admin_channel_calc_item(
-                bot, message, user_id, calc_id, is_first=True
+                bot, message, state, calc_id, is_first=True
             )
 
             return
@@ -87,7 +87,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
             if calc is None:
                 return
 
-            await send_calculation(bot, message, user_id, calc, is_first=True, is_list=True)
+            await send_calculation(bot, message, state, user, calc, is_first=True, is_list=True)
             return
 
     # livepost
