@@ -1,6 +1,10 @@
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message as _Message, User as _User, CallbackQuery as _CallbackQuery
 from telebot.states.asyncio.context import StateContext as _StateContext
 from telebot.asyncio_storage.base_storage import StateDataContext as _StateDataContext
+from telebot.asyncio_filters import AdvancedCustomFilter
+from telebot.asyncio_handler_backends import State
+from telebot.states import resolve_context
 
 from pydantic import BaseModel
 from typing import Literal, Union, Optional
@@ -24,15 +28,65 @@ MANUAL_TYPE = Literal[
 LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
+
+class StateFilter(AdvancedCustomFilter):
+    def __init__(self, bot: AsyncTeleBot):
+        self.bot = bot
+
+    key = 'state'
+
+    async def check(self, message, text):
+        if self.bot.bot_id is None or self.bot.current_states is None:
+            return
+
+        chat_id, user_id, business_connection_id, bot_id, message_thread_id = resolve_context(
+            message, self.bot.bot_id
+        )
+
+        if chat_id is None:
+            chat_id = user_id  # May change in future
+
+        if isinstance(text, list):
+            new_text = []
+            for i in text:
+                if isinstance(i, State):
+                    i = i.name
+                new_text.append(i)
+            text = new_text
+        elif isinstance(text, State):
+            text = text.name
+
+        user_state = await self.bot.current_states.get_state(
+            chat_id=chat_id,
+            user_id=user_id,
+            business_connection_id=business_connection_id, # type: ignore
+            bot_id=bot_id, # type: ignore
+            message_thread_id=message_thread_id # type: ignore
+        )
+
+        # CHANGED BEHAVIOUR
+        if text == "*" and user_state is not None:
+            return True
+
+        if user_state == text:
+            return True
+        elif type(text) is list and user_state in text:
+            return True
+        return False
+
+
 class StateContext(_StateContext):
     def data(self) -> _StateDataContext:
-        return super().data() # type: ignore
+        return super().data()  # type: ignore
+
 
 class Message(_Message):
     from_user: _User
 
+
 class CallbackQuery(_CallbackQuery):
     message: Message
+
 
 class Invoice(BaseModel):
     """Структура чека"""

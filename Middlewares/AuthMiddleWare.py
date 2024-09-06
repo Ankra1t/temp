@@ -1,5 +1,4 @@
 from typing import Union
-from config_logger import logger
 from telebot.types import Message, CallbackQuery
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
 from telebot.util import update_types

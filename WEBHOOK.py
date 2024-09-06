@@ -21,7 +21,6 @@ from thread_tasks import run_thread
 
 async def handle(request: web.Request):
     if request.headers.get('content-type') == 'application/json':
-        print(2)
         request_body_dict = await request.json()
         update = telebot.types.Update.de_json(request_body_dict)
 
@@ -160,7 +159,8 @@ async def setup():
     logger.info('Starting up: setting webhook')
 
     if PROD:
-        await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+        # await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+        await bot.set_webhook(f'https://369f-188-225-49-128.ngrok-free.app{base_url}/AAA/')
 
     app = web.Application()
 

@@ -1,6 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
-from telebot.asyncio_filters import StateFilter
 
 from config_global import TOKEN_MAIN_BOT
 
@@ -8,6 +7,7 @@ from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from Middlewares.ExceptionHandler import ExHandler
 from commands import commands_registration
+from models import StateFilter
 
 from callbacks.calculate import registration as _reg_cb_calculate
 from callbacks.main import registration as _reg_cb_main
@@ -54,6 +54,9 @@ bot = AsyncTeleBot(
 )
 
 bot.setup_middleware(AuthMiddleWare(bot))
+
+from telebot.states.asyncio.middleware import StateMiddleware
+bot.setup_middleware(StateMiddleware(bot))
 
 commands_registration(bot)
 
