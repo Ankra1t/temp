@@ -92,6 +92,7 @@ async def first_timeout(request: web.Request):
 
 
 async def stats_post(request: web.Request):
+    logger.info(1)
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
@@ -167,7 +168,6 @@ async def setup():
 
     routes = [
         web.post(base_url + '/AAA/', handle),
-        web.get(base_url + '/AAA/', handle),
         web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
         web.post(base_url + YOOKASSA_URL, yookassa_updates),
         web.post(base_url + '/stats_post', stats_post),
