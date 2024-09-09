@@ -1188,7 +1188,6 @@ async def send_week_stats(bot: AsyncTeleBot, calcId: int | None = None, is_new_w
 
 
 async def edit_channel_post(bot: AsyncTeleBot, calc_id: int, updateLive=True):
-    logger.info(1)
     calc = calculation.get(calc_id)
     send_data = channel_calc.getByCalc(calc_id)
     messages = channel_calc.getSentMessagesByCalc(calc_id)
@@ -1226,8 +1225,7 @@ async def edit_channel_post(bot: AsyncTeleBot, calc_id: int, updateLive=True):
                     msg, chId, int(messages.mesIds[chId_i])
                 )
         except Exception as e:
-            # print(e)
-            pass
+            logger.info(e)
 
     if updateLive:
         live = channel_calc.getLiveInfo()
