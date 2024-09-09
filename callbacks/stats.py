@@ -1191,6 +1191,10 @@ async def edit_channel_post(bot: AsyncTeleBot, calc_id: int, updateLive=True):
     calc = calculation.get(calc_id)
     send_data = channel_calc.getByCalc(calc_id)
     messages = channel_calc.getSentMessagesByCalc(calc_id)
+
+    logger.info(calc)
+    logger.info(send_data)
+    logger.info(messages)
     if messages is None or calc is None or send_data is None:
         return
 
