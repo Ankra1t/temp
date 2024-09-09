@@ -19,7 +19,7 @@ from pages.start import send_start_by_user
 from keyboards.account import kb_support
 
 
-async def _start(bot: AsyncTeleBot, message: Message, state: StateContext, user: User):
+async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     user_role = check_registrate(user.tgId)
     is_registered = False
 
