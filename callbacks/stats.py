@@ -1247,7 +1247,6 @@ async def edit_live_info(
     global changed_id
     new_live_mes_ids = []
 
-    logger.info('START LIVE')
     for chId_i, chId in enumerate(channels):
         lang = 'ru' if chId_i == 0 else 'en'
 

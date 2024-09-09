@@ -95,6 +95,7 @@ async def stats_post(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
+    logger.info(f'{access_token} {api_key}')
     if access_token is None or api_key is None or access_token != api_key:
         return web.Response(status=403)
 
