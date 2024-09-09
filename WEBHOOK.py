@@ -92,11 +92,9 @@ async def first_timeout(request: web.Request):
 
 
 async def stats_post(request: web.Request):
-    logger.info(1)
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
-    logger.info(f'{access_token} {api_key}')
     if access_token is None or api_key is None or access_token != api_key:
         return web.Response(status=403)
 
@@ -122,9 +120,11 @@ async def calc_post(request: web.Request):
 
 
 async def live_info(request: web.Request):
+    logger.info(1)
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
 
+    logger.info(f'{access_token} {api_key}')
     if access_token is None or api_key is None or access_token != api_key:
         return web.Response(status=403)
 
