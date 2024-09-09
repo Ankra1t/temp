@@ -21,7 +21,7 @@ from callbacks.stats import edit_channel_post
 from states.stats import StatsState
 from messages.errros import msg_digit_error, msg_freeze_error, msg_text_error
 from messages.main import msg_frozen
-from services import calculation, channel_calc, violation
+from services import calculation, channel_calc, ticker, violation
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -51,7 +51,8 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
 
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        await edit_channel_post(bot, stat_id)
+        tickerInfo = ticker.get_info(calc_info.tool or '')
+        await edit_channel_post(bot, calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -84,7 +85,8 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
 
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        await edit_channel_post(bot, stat_id)
+        tickerInfo = ticker.get_info(calc_info.tool or '')
+        await edit_channel_post(bot, calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -190,7 +192,8 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     else:
         send_data = channel_calc.getByCalc(calc.id)
         if send_data:
-            await edit_channel_post(bot, calc.id)
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await send_admin_channel_calc_item(
             bot, message, state, stat_id, is_first=True
@@ -270,7 +273,8 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
     await state.delete()
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
-        await edit_channel_post(bot, stat_id)
+        tickerInfo = ticker.get_info(calc.tool or '')
+        await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         if is_calc:
             await send_calculation(bot, message, state, user, calc, True)

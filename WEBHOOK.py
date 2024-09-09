@@ -16,6 +16,7 @@ from callbacks.stats import edit_channel_post, edit_live_info, send_vote, send_w
 from initialize import bot
 from db import db
 from models import LiveInfo, LiveStats, LiveWait, SentMessages
+from services import calculation, channel_calc, ticker
 from thread_tasks import run_thread
 
 
@@ -114,7 +115,15 @@ async def calc_post(request: web.Request):
     if calc_id is None or not calc_id.isnumeric():
         return web.Response(status=403)
 
-    await edit_channel_post(bot, int(calc_id))
+    calc_id = int(calc_id)
+
+    calc = calculation.get(calc_id)
+    send_data = channel_calc.getByCalc(calc_id)
+    if not (calc and send_data):
+        return web.Response(status=403)
+
+    tickerInfo = ticker.get_info(calc.tool or '')
+    await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
     return web.Response()
 
@@ -135,7 +144,7 @@ async def live_info(request: web.Request):
 
     live = (
         None if messages is None else SentMessages(**messages),
-        [LiveInfo(**el) for el in data],
+        [LiveInfo.model_validate(**el) for el in data],
         [LiveWait(**el) for el in wait],
         [LiveWait(**el) for el in canceled],
         LiveStats(**res)
@@ -154,6 +163,8 @@ async def shutdown(app):
 
 
 async def setup():
+    logging.basicConfig(level=logging.INFO)
+
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
 
@@ -180,8 +191,6 @@ async def setup():
     app.add_routes(routes)
 
     app.on_cleanup.append(shutdown)
-
-    logging.basicConfig(level=logging.INFO)
 
     return app
 

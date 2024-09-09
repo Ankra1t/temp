@@ -59,9 +59,9 @@ class StateFilter(AdvancedCustomFilter):
         user_state = await self.bot.current_states.get_state(
             chat_id=chat_id,
             user_id=user_id,
-            business_connection_id=business_connection_id, # type: ignore
-            bot_id=bot_id, # type: ignore
-            message_thread_id=message_thread_id # type: ignore
+            business_connection_id=business_connection_id,  # type: ignore
+            bot_id=bot_id,  # type: ignore
+            message_thread_id=message_thread_id  # type: ignore
         )
 
         # CHANGED BEHAVIOUR
@@ -407,8 +407,6 @@ class TickerInfo(BaseModel):
     turnover: Optional[float]
     price24hPcnt: Optional[float]
     indexPrice: Optional[float]
-    monthCount: int
-    monthValue: float
 
 
 class SentMessages(BaseModel):
@@ -422,7 +420,7 @@ class UserNotification(SentMessages):
     num: int
 
 
-class CalcSentMessages(SentMessages):
+class CalcSentMessages(BaseModel):
     mesNum: Optional[int] = None
     messages: Optional[dict] = None
     date: str
@@ -437,6 +435,7 @@ class SendCalc(BaseModel):
     time: Optional[str]
     isVote: bool
     createdAt: str
+    messages: Optional[SentMessages]
 
 
 class LiveInfo(BaseModel):
@@ -450,7 +449,9 @@ class LiveInfo(BaseModel):
     currentPrice: Optional[float]
     takeProfit: Optional[float]
     takeProfitRatio: Optional[float]
-    update: Literal[False] | float
+    calc: Calculation
+    sendData: SendCalc
+    indexPrice: Optional[float]
 
 
 class LiveStats(BaseModel):
@@ -462,3 +463,8 @@ class LiveStats(BaseModel):
 class LiveWait(BaseModel):
     tool: str
     messages: Optional[SentMessages]
+
+
+class MonthToolStats(BaseModel):
+    count: int
+    value: float

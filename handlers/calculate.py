@@ -22,7 +22,7 @@ from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, is_digit, text_accept
 
 from states.calculate import CalculateState, ForexCalcState
-from services import calculation
+from services import calculation, channel_calc, ticker
 
 
 async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -317,21 +317,25 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             bot, message, state, user, last_value='open_price'
         )
     else:
-        calc_info = calculation.get(stat_id)
-        if calc_info is None:
+        calc = calculation.get(stat_id)
+        if calc is None:
             return
 
-        if calc_info.stopLoss == value:
+        if calc.stopLoss == value:
             new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))
             await state.add_data(del_mes_id=new_mes.id)
             return
 
         db.change_calculation_open_price(stat_id, value)
-        calc_info.openPrice = value
+        calc.openPrice = value
 
-        await edit_channel_post(bot, stat_id)
+        send_data = channel_calc.getByCalc(calc.id)
 
-        await send_calculation(bot, message, state, user, calc_info, True)
+        if send_data:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+
+        await send_calculation(bot, message, state, user, calc, True)
         await state.delete()
 
 
@@ -369,7 +373,13 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
     if action == 'send_calc':
         await start_with_calc(bot, message, state, user, stat_id, stop_loss)
     else:
-        await edit_channel_post(bot, stat_id)
+        calc = calculation.get(stat_id)
+        send_data = channel_calc.getByCalc(stat_id)
+
+        if calc and send_data:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+
         await create_and_send_calc(bot, message, state, user, stop_loss)
 
 

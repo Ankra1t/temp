@@ -1,7 +1,10 @@
 import json
+
+from pydantic.type_adapter import TypeAdapter
+
 from config_global import API_URL
 from .base_config import session_decorator, session, check_response
-from models import LiveInfo, LiveStats, LiveWait, SendCalc, CalcSentMessages, SentMessages, LANGUAGES_TYPE
+from models import LiveInfo, LiveStats, LiveWait, MonthToolStats, SendCalc, CalcSentMessages, SentMessages, LANGUAGES_TYPE
 
 
 @session_decorator
@@ -11,7 +14,7 @@ def get(id: int):
     if not check_response(res):
         return
 
-    return SendCalc(**res.json())
+    return SendCalc.model_validate_json(res.text)
 
 
 @session_decorator
@@ -21,7 +24,7 @@ def getByCalc(id: int):
     if not check_response(res):
         return
 
-    return SendCalc(**res.json())
+    return SendCalc.model_validate_json(res.text)
 
 
 @session_decorator
@@ -44,7 +47,7 @@ def getSentToday():
     if not check_response(res):
         return
 
-    return [SendCalc(**el) for el in res.json()]
+    return TypeAdapter(list[SendCalc]).validate_json(res.text)
 
 
 @session_decorator
@@ -54,7 +57,7 @@ def getInWait():
     if not check_response(res):
         return
 
-    return [SendCalc(**el) for el in res.json()]
+    return TypeAdapter(list[SendCalc]).validate_json(res.text)
 
 
 @session_decorator
@@ -64,7 +67,7 @@ def getSent():
     if not check_response(res):
         return
 
-    return [SendCalc(**el) for el in res.json()]
+    return TypeAdapter(list[SendCalc]).validate_json(res.text)
 
 
 @session_decorator
@@ -79,7 +82,7 @@ def create(calcId: int):
     if not check_response(res):
         return
 
-    return SendCalc(**res.json())
+    return SendCalc.model_validate_json(res.text)
 
 
 @session_decorator
@@ -94,7 +97,7 @@ def update(
     if not check_response(res):
         return
 
-    return SendCalc(**res.json())
+    return SendCalc.model_validate_json(res.text)
 
 
 @session_decorator
@@ -152,7 +155,7 @@ def getLiveInfo():
 
     return (
         None if messages is None else SentMessages(**messages),
-        [LiveInfo(**el) for el in data],
+        [LiveInfo.model_validate(**el) for el in data],
         [LiveWait(**el) for el in wait],
         [LiveWait(**el) for el in canceled],
         LiveStats(**res)
@@ -170,3 +173,14 @@ def updateLiveInfo(data: SentMessages):
         return
 
     return True
+
+@session_decorator
+def getMonthToolCount(tool: str):
+    res = session.post(
+        f'{API_URL}/channelCalc/monthCount/{tool}',
+    )
+
+    if not check_response(res):
+        return
+
+    return MonthToolStats.model_validate_json(res.text)

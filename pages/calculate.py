@@ -751,7 +751,7 @@ async def send_confirm_calc_send(
     photo = stat.photo
     text = msg_channel_calculation(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
-        tickerInfo=info or None,
+        indexPrice=info and info.indexPrice,
         description=stat.description
     )
 
@@ -1122,10 +1122,10 @@ async def send_admin_channel_calc_item(
 
     link = ''
     messages = channel_calc.getSentMessagesByCalc(calc.id)
-    if messages is not None:
+    if send_data.messages:
         try:
-            weekChId = messages.chIds[0]
-            weekMesId = messages.mesIds[0]
+            weekChId = send_data.messages.chIds[0]
+            weekMesId = send_data.messages.mesIds[0]
             link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
         except Exception as e:
             print(e)
@@ -1337,7 +1337,8 @@ async def send_violation(
         is_edit
     )
 
-    kb = kb_violation(user.lang, isToday, current.get('canEdit', False), is_edit)
+    kb = kb_violation(user.lang, isToday, current.get(
+        'canEdit', False), is_edit)
 
     if is_first:
         await bot.send_message(

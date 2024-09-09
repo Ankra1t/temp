@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 from random import randint
 from time import sleep
-from typing import Literal
+from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage, InputPollOption
 
@@ -31,7 +31,7 @@ from config_logger import logger
 from db import db
 from Classes import calcService, pay_guard
 from messages.stats import msg_market_stats
-from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveStats, LiveWait, SentMessages, CallbackQuery, StateContext, User
+from models import CALC_STATUS_TYPE, MARKETS_TYPE, Calculation, LiveInfo, LiveStats, LiveWait, SendCalc, SentMessages, CallbackQuery, StateContext, User
 from services import calculation, channel_calc, ticker
 
 # TODO - months в commmon файл
@@ -271,7 +271,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     )
                     send_data = channel_calc.getByCalc(calc_id)
                     if send_data is not None:
-                        await edit_channel_post(bot, calc_id)
+                        tickerInfo = ticker.get_info(calc_info.tool or '')
+                        await edit_channel_post(bot, calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
                     await send_freeze(
                         bot, call.message, state, user,
                         calc_info.market, True
@@ -600,7 +601,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             text = msg_channel_calculation(
                 calc, ch_lang, send_data.withoutStop, send_data.time or '', sent_today + 1,
-                tickerInfo=tickerInfo or None,
+                indexPrice=tickerInfo and tickerInfo.indexPrice,
                 description=calc.description if ch_lang == 'ru' else None,
                 week_stat_link=link,
                 try_link=f'https://t.me/{(await bot.get_me()).username}?start=calc_{calc_id}'
@@ -788,11 +789,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             calc_id, status='CANCEL'
         )
 
-        await edit_channel_post(bot, calc_id)
-
         calc = calculation.get(calc_id)
         if calc is None:
             return
+
+        send_data = channel_calc.getByCalc(calc.id)
+        if send_data:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await delete_message(bot, chat_id, mes_id)
         await send_calculation(bot, call.message, state, user, calc, True)
@@ -802,11 +806,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             calc_id, status='DEAL'
         )
 
-        await edit_channel_post(bot, calc_id)
-
         calc = calculation.get(calc_id)
         if calc is None:
             return
+
+        send_data = channel_calc.getByCalc(calc.id)
+        if send_data:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await delete_message(bot, chat_id, mes_id)
         await send_calculation(bot, call.message, state, user, calc, True)
@@ -816,11 +823,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             calc_id, status='WAIT'
         )
 
-        await edit_channel_post(bot, calc_id)
-
         calc = calculation.get(calc_id)
         if calc is None:
             return
+
+        send_data = channel_calc.getByCalc(calc.id)
+        if send_data:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await delete_message(bot, chat_id, mes_id)
         await send_calculation(bot, call.message, state, user, calc, True)
@@ -1187,44 +1197,54 @@ async def send_week_stats(bot: AsyncTeleBot, calcId: int | None = None, is_new_w
             pass
 
 
-async def edit_channel_post(bot: AsyncTeleBot, calc_id: int, updateLive=True):
-    calc = calculation.get(calc_id)
-    send_data = channel_calc.getByCalc(calc_id)
-    messages = channel_calc.getSentMessagesByCalc(calc_id)
+async def edit_channel_post(
+    bot: AsyncTeleBot,
+    calc: Calculation,
+    send_data: SendCalc,
+    indexPrice: Optional[float],
+    updateLive=True
+):
+    weekMessages = channel_calc.getSentMessagesByCalc(calc.id)
 
-    if messages is None or calc is None or send_data is None:
+    if send_data.messages is None:
         return
 
-    logger.info(1)
-    for chId_i, chId in enumerate(messages.chIds):
+    for chId_i, chId in enumerate(send_data.messages.chIds):
+        lang = send_data.messages.langs[chId_i]
+
+        if weekMessages:
+            mesNum = weekMessages.mesNum or 1
+            date = weekMessages.date
+        else:
+            mesNum = 1
+            date = ''
+
         link = ''
-        if messages.messages:
+        if weekMessages and weekMessages.messages:
             try:
-                weekMesId = messages.messages.get('mesIds', [])[0]
-                weekChId = messages.messages.get("chIds", [])[0]
+                weekMesId = weekMessages.messages.get('mesIds', [])[0]
+                weekChId = weekMessages.messages.get("chIds", [])[0]
                 link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
             except:
                 pass
 
-        tickerInfo = ticker.get_info(calc.tool or '')
         msg = msg_channel_calculation(
-            calc, messages.langs[chId_i], send_data.withoutStop, send_data.time or '',
-            messages.mesNum or -1, tickerInfo, calc.description, link,
-            messages.date,
-            try_link=f'https://t.me/{(await bot.get_me()).username}?start=calc_{calc_id}'
+            calc, lang, send_data.withoutStop, send_data.time or '',
+            mesNum, indexPrice, calc.description, link, date,
+            try_link=f'https://t.me/{(await bot.get_me()).username}?start=calc_{calc.id}'
         )
 
         try:
             if calc.photo is None:
                 await antiflood(
                     bot.edit_message_text,
-                    msg, chId, int(messages.mesIds[chId_i]),
+                    msg, chId, int(send_data.messages.mesIds[chId_i]),
                     disable_web_page_preview=True
                 )
             else:
                 await antiflood(
                     bot.edit_message_caption,
-                    msg, chId, int(messages.mesIds[chId_i])
+                    msg, chId, int(send_data.messages.mesIds[chId_i])
                 )
         except Exception as e:
             logger.info(e)
@@ -1234,7 +1254,7 @@ async def edit_channel_post(bot: AsyncTeleBot, calc_id: int, updateLive=True):
         if live:
             await edit_live_info(bot, live, calc)
 
-        await send_week_stats(bot, calc_id)
+        await send_week_stats(bot, calc.id)
 
 
 changed_id = -1
@@ -1261,7 +1281,7 @@ async def edit_live_info(
 
             for calc_ in live[1]:
                 if calc_.valueCount is None and chId_i == 0:
-                    await edit_channel_post(bot, calc_.id, False)
+                    await edit_channel_post(bot, calc_.calc, calc_.sendData, calc_.indexPrice, False)
 
                 current_msg = ''
 
@@ -1280,12 +1300,6 @@ async def edit_live_info(
                     count_deal -= 1
                     finishAt = datetime.fromisoformat(
                         (finishAt or "").replace("Z", ""))
-
-                date = ''
-                if finishAt is not None:
-                    date = finishAt.strftime("%d.%m")
-                elif dealAt is not None:
-                    date = dealAt.strftime("%d.%m")
 
                 comment = calc_.comment
                 valueCount = calc_.valueCount

@@ -5,9 +5,10 @@ import requests
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, TickerInfo, User
+from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
 
 from Classes import calcService
+from services import channel_calc
 
 
 months = {'ru': [
@@ -381,7 +382,7 @@ def msg_channel_calculation(
     without_stop=False,
     time: str = '',
     count=-1,
-    tickerInfo: TickerInfo | None = None,
+    indexPrice: float | None = None,
     description: str | None = None,
     week_stat_link: str | None = None,
     date: str | None = None,
@@ -389,7 +390,7 @@ def msg_channel_calculation(
 ):
     description = description if lang == 'ru' else None
 
-    monthCount = tickerInfo.monthCount if tickerInfo is not None else 0
+    monthStats = channel_calc.getMonthToolCount(calc.tool or '')
     status = calc.status
 
     if calc.profit is not None or status == 'FINISH':
@@ -492,9 +493,9 @@ def msg_channel_calculation(
     diffOpSl = calc.openPrice - calc.stopLoss
     current_value_count = None
     current_values_sum = None
-    if tickerInfo and tickerInfo.indexPrice and status == 'DEAL':
+    if indexPrice and status == 'DEAL':
         current_value_count = get_print_float(
-            (tickerInfo.indexPrice - calc.openPrice) / diffOpSl, 1
+            (indexPrice - calc.openPrice) / diffOpSl, 1
         )
         current_values_sum = get_print_float(
             calc.riskValue * float(current_value_count), 1)
@@ -508,10 +509,10 @@ def msg_channel_calculation(
             if (
                 (status == 'CANCEL' and i == 0) or
                 (
-                    tickerInfo and tickerInfo.indexPrice and
+                    indexPrice and
                     (
-                    (diffOpSl > 0 and tickerInfo.indexPrice > tp_val) or
-                    (diffOpSl < 0 and tickerInfo.indexPrice < tp_val)
+                        (diffOpSl > 0 and indexPrice > tp_val) or
+                        (diffOpSl < 0 and indexPrice < tp_val)
                     )
                 ) or i == 0
             ):
@@ -523,8 +524,8 @@ def msg_channel_calculation(
         count_show = f'{count}. '
 
     price_show = ''
-    if tickerInfo and tickerInfo.indexPrice is not None:
-        price_show = f'<code>{get_print_float(tickerInfo.indexPrice, 0 if tickerInfo.indexPrice > 100 else 4)}</code>{trading_currency}'
+    if indexPrice is not None:
+        price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
     def link(value: str):
         return f'<a href="https://t.me/trade_res">{value}</a>'
@@ -565,10 +566,10 @@ def msg_channel_calculation(
         + (
             (
                 f'\n\n<b>{month}:</b> '
-                f"{f'торгую {monthCount} раз(а)' if lang == 'ru' else f'traded {monthCount} time(s)'}"
-                f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if tickerInfo.monthValue > 0 else ""}{get_print_float(tickerInfo.monthValue, 1)} '
-                f'{("тейков" if lang == "ru" else "take") if tickerInfo.monthValue > 0 else ("стопов" if lang == "ru" else "stop") }'
-            ) if status == 'WAIT' and tickerInfo else "") \
+                f"{f'торгую {monthStats.count} раз(а)' if lang == 'ru' else f'traded {monthStats.count} time(s)'}"
+                f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
+                f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
+            ) if status == 'WAIT' and monthStats else "") \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
