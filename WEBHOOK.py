@@ -170,13 +170,13 @@ async def setup():
         web.get(base_url + '/AAA/', handle),
         web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
         web.post(base_url + YOOKASSA_URL, yookassa_updates),
+        web.post(base_url + '/stats_post', stats_post),
+        web.post(base_url + '/live-info', live_info),
         web.get(base_url + '/icon.png', get_icon),
         web.get(base_url + '/manifest.json', get_ton_manifest),
         web.get(base_url + '/vote_timeout', vote_timeout),
         web.get(base_url + '/first_timeout', first_timeout),
-        web.get(base_url + '/stats_post', stats_post),
         web.get(base_url + '/calc_post', calc_post),
-        web.get(base_url + '/live-info', live_info)
     ]
 
     app.add_routes(routes)
