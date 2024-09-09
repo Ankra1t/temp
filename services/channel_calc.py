@@ -155,7 +155,7 @@ def getLiveInfo():
 
     return (
         None if messages is None else SentMessages(**messages),
-        [LiveInfo.model_validate(**el) for el in data],
+        [LiveInfo.model_validate(el) for el in data],
         [LiveWait(**el) for el in wait],
         [LiveWait(**el) for el in canceled],
         LiveStats(**res)
