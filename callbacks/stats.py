@@ -1464,7 +1464,7 @@ async def edit_live_info(
                         msg, chId, int(live[0].mesIds[chId_i])
                     )
             except Exception as e:
-                print(e)
+                logger.error(e)
 
     if len(new_live_mes_ids) == len(channels):
         channel_calc.updateLiveInfo(
