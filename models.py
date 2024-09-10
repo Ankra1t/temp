@@ -446,7 +446,6 @@ class LiveInfo(BaseModel):
     dealAt: Optional[str]
     finishAt: Optional[str]
     comment: Optional[str]
-    messages: Optional[SentMessages]
     currentPrice: Optional[float]
     takeProfit: Optional[float]
     takeProfitRatio: Optional[float]

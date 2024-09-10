@@ -1313,8 +1313,8 @@ async def edit_live_info(
                 current_msg = ''
 
                 calcMesId = None
-                if calc_.messages is not None:
-                    calcMesId = calc_.messages.mesIds[chId_i]
+                if calc_.sendData.messages is not None:
+                    calcMesId = calc_.sendData.messages.mesIds[chId_i]
 
                 dealAt = calc_.dealAt
                 if dealAt is not None:
