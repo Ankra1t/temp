@@ -36,7 +36,7 @@ from services import calculation, channel_calc, ticker
 
 # TODO - months в commmon файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation, months
-from messages.enter import msg_enter_calc_img_text, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
+from messages.enter import msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 from messages.main import msg_frozen
 from messages.common import transl_status
 
@@ -44,7 +44,7 @@ from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from keyboards.main import kb_main
 from keyboards.stats import (
-    stats_factory, StatsCallbackFilter,
+    kb_cancel_at, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
@@ -875,6 +875,33 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         _, list_type = type.split('+')
         await send_calc_list(bot, call.message, state, user, list_type, page)
 
+    if type == 'cancel_at':
+        new_mes_id = await edit_message(
+            bot, call.message, 'text',
+            msg_enter_cancel_at(user.lang),
+            kb_cancel_at(user.lang, calc_id)
+        )
+        await state.set(StatsState.cancel_at)
+        await state.add_data(
+            calc_id=calc_id,
+            del_mes_id=new_mes_id
+        )
+
+    if 'cancel_at+' in type:
+        _, time = type.split('+')
+
+        if time == '1h':
+            time = 60
+        elif time == '4h':
+            time = 60 * 4
+        else:
+            time = 60 * 24
+
+        calc = calculation.updateCancelAt(calc_id, time)
+
+        if calc:
+            await send_calculation(bot, call.message, state, user, calc)
+
     await bot.answer_callback_query(call.id)
 
 
@@ -996,7 +1023,6 @@ async def send_week_stats(bot: AsyncTeleBot, calcId: int | None = None, is_new_w
 
         marathon = '<b>Марафон 30 дней:</b>'
         for i, el in enumerate(marathon_data):
-            print(f'ДЕНЬ {i + 1} | {el}')
             if len(marathon_data) - week_num * 7 >= 7:
                 week_value += (el or 0)
 

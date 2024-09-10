@@ -114,3 +114,20 @@ def update(
         return
 
     return Calculation(**res.json())
+
+
+@session_decorator
+def updateCancelAt(
+    id: int, minutes: int
+):
+    res = session.post(
+        f'{API_URL}/calculations/{id}/cancelAt',
+        json.dumps({
+            "minutes": minutes
+        }).encode()
+    )
+
+    if not check_response(res):
+        return
+
+    return Calculation(**res.json())

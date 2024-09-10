@@ -7,14 +7,14 @@ from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
 from db import db
-from messages.enter import msg_enter_trading_style
+from messages.enter import msg_enter_cancel_at, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
 from services import calculation, channel_calc, ticker
 
 from states.stats import StatsState
 from keyboards.channel_post import (
-    ChannelPostCallbackFilter, channel_post_factory,
+    ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
     kb_send_settings_calc_time, kb_send_settings_trading_style
 )
@@ -333,6 +333,42 @@ More often: <b>{result}</b>"""
 
     if type == 'go_stats':
         await send_stats(bot, call.message, state, user)
+
+    if type == 'cancel_at':
+        new_mes_id = await edit_message(
+            bot, call.message, 'text',
+            msg_enter_cancel_at(user.lang),
+            kb_channel_cancel_at(stat_id)
+        )
+        await state.set(StatsState.cancel_at)
+        await state.add_data(
+            calc_id=stat_id,
+            del_mes_id=new_mes_id,
+            action='send_data'
+        )
+
+    if 'cancel_at+' in type:
+        _, time = type.split('+')
+
+        if time == '1h':
+            time = 60
+        elif time == '4h':
+            time = 60 * 4
+        else:
+            time = 60 * 24
+
+        calc = calculation.updateCancelAt(stat_id, time)
+
+        if calc:
+            send_data = channel_calc.getByCalc(stat_id)
+            if send_data is not None:
+                await send_admin_channel_calc_item(
+                    bot, call.message, state, stat_id
+                )
+            else:
+                await send_calc_stat_item(
+                    bot, call.message, state, stat_id
+                )
 
     await bot.answer_callback_query(call.id)
 

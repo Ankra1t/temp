@@ -1121,7 +1121,6 @@ async def send_admin_channel_calc_item(
         return
 
     link = ''
-    messages = channel_calc.getSentMessagesByCalc(calc.id)
     if send_data.messages:
         try:
             weekChId = send_data.messages.chIds[0]
@@ -1135,6 +1134,11 @@ async def send_admin_channel_calc_item(
     for i in range(calc_result.tp_count):
         take_info += f'\n <b>({calc.tpRatio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
 
+    cancel_at = '-'
+    if calc.cancelAt:
+        dt = datetime.fromisoformat(calc.cancelAt.replace('Z', '')) + timedelta(hours=3)
+        cancel_at = dt.strftime("%d.%m %H:%M")
+
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
 
 <b>Объем</b>: {get_print_float(calc_result.count_bet)} монет
@@ -1142,7 +1146,9 @@ async def send_admin_channel_calc_item(
 <b>Стоп-лосс</b>: {get_print_float(calc.stopLoss, 5)} USDT
 <b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT
 
-<b>Тейки:</b>{take_info}"""
+<b>Тейки:</b>{take_info}
+
+<b>Время отмены:</b> {cancel_at}"""
 
     is_state = True
     if type == 'take':

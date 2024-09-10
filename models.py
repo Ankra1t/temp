@@ -362,6 +362,7 @@ class Calculation(BaseModel):
     openedList: bool = False
 
     createdAt: Optional[str] = None
+    cancelAt: Optional[str] = None
 
 
 class CalculationResult(BaseModel):
@@ -435,7 +436,7 @@ class SendCalc(BaseModel):
     time: Optional[str]
     isVote: bool
     createdAt: str
-    messages: Optional[SentMessages]
+    messages: Optional[SentMessages] = None
 
 
 class LiveInfo(BaseModel):

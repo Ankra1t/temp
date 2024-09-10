@@ -188,6 +188,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
+            'cancelAt': 'Время отмены',
         },
         'en': {
             'save': 'Save to stats',
@@ -204,7 +205,8 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'wait': 'In wait',
             'take': 'Take',
             'stop': 'Stop',
-            'breakeven': 'Breakeven'
+            'breakeven': 'Breakeven',
+            'cancelAt': 'Cancel at',
         },
         'uz': {
             'save': 'Hisobni saqlash',
@@ -221,7 +223,8 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'wait': 'Kutish paytida',
             'take': 'Olish',
             'stop': 'Toʻxtatish',
-            'breakeven': 'Tenglash'
+            'breakeven': 'Tenglash',
+            'cancelAt': 'Bekor qilish vaqti',
         },
         'tr': {
             'save': 'Hesaplamayı kaydet',
@@ -238,7 +241,8 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'wait': 'Beklemede',
             'take': 'Al',
             'stop': 'Durdur',
-            'breakeven': 'Kâr-zarar noktası'
+            'breakeven': 'Kâr-zarar noktası',
+            'cancelAt': 'İptal etmek',
         },
     }
 
@@ -271,6 +275,13 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                     'take+0', calc.id, True
                 )
             )
+
+            if calc.status == 'WAIT':
+                buttons.append(
+                    getButton(
+                        texts[lang]['cancelAt'], 'cancel_at', calc.id
+                    )
+                )
 
             if send_data is not None:
                 buttons.append(
@@ -610,5 +621,16 @@ def kb_send_back(stat_id: int):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         getButton(cancel_txt(), 'stc+back', stat_id)
+    )
+    return keyboard
+
+
+def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton('1h', 'cancel_at+1h', calc_id),
+        getButton('4h', 'cancel_at+4h', calc_id),
+        getButton('1d', 'cancel_at+4h', calc_id),
+        getButton(back_txt(), 'back_calc', calc_id)
     )
     return keyboard

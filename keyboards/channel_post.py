@@ -142,6 +142,14 @@ def kb_channel_calc_result(
     keyboard.add(
         getButton('Безубыток', 'take+0', stat_id, is_calc),
         getButton('Комментарий', 'comment', stat_id, is_calc),
+    )
+
+    if not in_deal:
+        keyboard.add(
+            getButton('Время отмены', 'cancel_at', stat_id, is_calc)
+        )
+
+    keyboard.add(
         getButton(
             back_txt('ru'),
             'results' if not is_user else 'go_stats',
@@ -238,5 +246,16 @@ def kb_channel_post_back_to_result():
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         getButton(back_txt('ru'), 'result')
+    )
+    return keyboard
+
+
+def kb_channel_cancel_at(calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton('1h', 'cancel_at+1h', calc_id),
+        getButton('4h', 'cancel_at+4h', calc_id),
+        getButton('1d', 'cancel_at+4h', calc_id),
+        getButton(back_txt(), 'back_calc', calc_id)
     )
     return keyboard

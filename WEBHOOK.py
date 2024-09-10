@@ -163,15 +163,15 @@ async def shutdown(app):
 
 
 async def setup():
-    logging.basicConfig(level=logging.INFO)
+    if PROD:
+        logging.basicConfig(level=logging.INFO)
 
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
 
-    if PROD:
-        logger.info('Starting up: setting webhook')
-        await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
-        # await bot.set_webhook(f'https://369f-188-225-49-128.ngrok-free.app{base_url}/AAA/')
+    logger.info('Starting up: setting webhook')
+    # await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+    await bot.set_webhook(f'https://85b8-178-204-230-120.ngrok-free.app{base_url}/AAA/')
 
     app = web.Application()
 
@@ -197,12 +197,9 @@ async def setup():
 run_thread(bot)
 
 if __name__ == '__main__':
-    if PROD:
-        web.run_app(
-            setup(),
-            host='127.0.0.1',
-            port=flask_port,
-            access_log=None
-        )
-    else:
-        asyncio.run(bot.polling(skip_pending=True))
+    web.run_app(
+        setup(),
+        host='127.0.0.1',
+        port=flask_port,
+        access_log=None
+    )

@@ -697,3 +697,14 @@ def msg_choose_lang(lang: LANGUAGES_TYPE):
     }
 
     return f'🌐 {texts[lang]}'
+
+
+def msg_enter_cancel_at(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Выберите время, через которое сделка будет отменена, либо введите <u>количество часов</u>',
+        'en': 'Select the time after which the transaction will be canceled, or enter the number of hours',
+        'tr': 'İşlemin iptal edileceği süreyi seçin veya saat sayısını girin',
+        'uz': 'Tranzaksiya bekor qilinadigan vaqtni tanlang yoki soat sonini kiriting',
+    }
+
+    return f'👉 {texts[lang]}'

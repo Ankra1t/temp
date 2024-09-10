@@ -176,8 +176,8 @@ def updateLiveInfo(data: SentMessages):
 
 @session_decorator
 def getMonthToolCount(tool: str):
-    res = session.post(
-        f'{API_URL}/channelCalc/monthCount/{tool}',
+    res = session.get(
+        f'{API_URL}/channelCalc/monthCount/{tool.replace("/", "")}',
     )
 
     if not check_response(res):
