@@ -122,13 +122,9 @@ class BlockTGBotSender(object):
 
     def batch_send(self, calc_test=False):
         current_batch = 0
-        if calc_test:
-            users = db.get_all_users()
 
-            users_info = users
-            users = list(map(lambda x: x.tg_id, users))
-        else:
-            users = self.users
+        users_info = db.get_all_users()
+        users = list(map(lambda x: x.tg_id, users_info))
 
         i = 0
         while i < len(users):

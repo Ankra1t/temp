@@ -86,6 +86,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             )
         else:
             new_state = ''
+            text = ''
             if 'name' in type:
                 new_state = AdminTariffState.name
                 text = 'Введите новое название тарифа:'

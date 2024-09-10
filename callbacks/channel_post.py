@@ -159,9 +159,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
 Most often traded: <b>{' '.join(max_tools or [])}</b>
 More often: <b>{result}</b>"""
-            await bot.send_message(
-                CHANNEL_ID, text
-            )
+                await bot.send_message(
+                    CHANNEL_ID, text
+                )
 
     if type == 'send_settings':
         await send_admin_send_settings(bot, call.message, state)
@@ -193,7 +193,7 @@ More often: <b>{result}</b>"""
 
     if type == 'ss_style':
         await bot.edit_message_text(
-            msg_enter_trading_style(lang),
+            msg_enter_trading_style(user.lang),
             chat_id, mes_id,
             reply_markup=kb_send_settings_trading_style()
         )

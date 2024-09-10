@@ -116,6 +116,8 @@ class PaymentsBanker(object):
             transaction = self.get_wait_transaction_by_invoice_id(
                 body['id'], body['currency']
             )
+        else:
+            return Response('Error', 404)
 
         true_amount = body['amount']
 

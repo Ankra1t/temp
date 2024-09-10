@@ -275,6 +275,9 @@ def get_html_from_forex_calc(
         value_bet = count_bet * LOT * \
             calc.forexInfo.cross_prices.get(yyyBASE, 1)
 
+    conclusion = ''
+    p_show = ''
+
     if saved:
         profit_info = get_html_from_calc_results(user_id, calc)
     else:

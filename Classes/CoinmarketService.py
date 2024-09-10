@@ -46,7 +46,8 @@ class CoinmarketService:
 
                 result.append((name, float(maker), float(taker)))
             except Exception as e:
-                logger.error(f'ERROR {[el.text for el in td]} {e}')
+                # logger.error(f'ERROR {[el.text for el in td]} {e}')
+                pass
 
         browser.close()
         return result
@@ -82,7 +83,8 @@ class CoinmarketService:
                     '%', '').replace(' ', '').split('/')
                 result.append((name, float(maker), float(taker)))
             except Exception as e:
-                logger.error(f'ERROR {[el.text for el in td]} {e}')
+                # logger.error(f'ERROR {[el.text for el in td]} {e}')
+                pass
 
         browser.close()
         return result
@@ -122,7 +124,8 @@ class CoinmarketService:
                 )
                 result.append((name, float(maker), float(taker)))
             except Exception as e:
-                logger.error(f'ERROR {[el.text for el in td]} {e}')
+                # logger.error(f'ERROR {[el.text for el in td]} {e}')
+                pass
 
         browser.close()
         return result
@@ -172,7 +175,8 @@ class CoinmarketService:
 
                     result.append((name, float(maker_fee), float(taker_fee)))
                 except Exception as e:
-                    logger.error(f'ERROR {name} {maker_fee} {taker_fee} {e}')
+                    # logger.error(f'ERROR {name} {maker_fee} {taker_fee} {e}')
+                    pass
 
         browser.close()
         return result

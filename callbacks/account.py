@@ -97,15 +97,15 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
         if not is_edit_lang:
             await bot.edit_message_text(
-                msg_choose_lang(lang),
+                msg_choose_lang(user.lang),
                 chat_id, mes_id,
-                reply_markup=kb_params_choose_lang(lang)
+                reply_markup=kb_params_choose_lang(user.lang)
             )
 
     if type == 'set_name':
         await bot.edit_message_text(
-            msg_enter_nickname(lang), chat_id, mes_id,
-            reply_markup=kb_user_params_back(lang)
+            msg_enter_nickname(user.lang), chat_id, mes_id,
+            reply_markup=kb_user_params_back(user.lang)
         )
         await state.set(UserAccountState.nickname)
 
