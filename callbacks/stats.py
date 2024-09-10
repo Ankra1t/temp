@@ -1232,6 +1232,7 @@ async def edit_channel_post(
 ):
     weekMessages = channel_calc.getSentMessagesByCalc(calc.id)
 
+    print(send_data.messages)
     if send_data.messages is None:
         return
 
