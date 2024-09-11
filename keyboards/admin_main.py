@@ -32,7 +32,7 @@ def kb_admin_main():
     btn_params = getButton("Параметры", 'params')
     btn_tariffs = getButton("Тарифы", 'tariffs')
     btn_send_settings = getButton("Настройки отправки", 'send_settings')
-    btn_get_tickers = getButton("Инструменты", 'tools')
+    btn_get_tickers = getButton("Список монет", 'tools')
     btn_site_code = getButton("Войти на сайт", 'site_code')
 
     keyboard.add(btn_users, btn_workers)
