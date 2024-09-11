@@ -14,7 +14,7 @@ from messages.statistics import admin_main_statistics
 from messages.admin import msg_admin_fut_posts, msg_admin_main, msg_admin_tariff, msg_admin_users, msg_admin_menu
 from messages.common import POINT
 
-from keyboards.admin_main import kb_admin_main
+from keyboards.admin_main import kb_admin_main, kb_admin_tools_list
 from keyboards.admin_tariffs import kb_admin_tariffs, kb_admin_tariffs_back, kb_admin_tariffs_delete, kb_admin_tariffs_list, kb_admin_tariffs_edit
 from keyboards.admin_users import kb_admin_client_info, kb_admin_users
 from keyboards.admin_workers import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
@@ -537,3 +537,32 @@ async def send_admin_tariffs_list_item(
         else:
             await delete_message(bot, chat_id, mes_id)
             await send()
+
+
+async def send_admin_tools_list(
+    bot: AsyncTeleBot,
+    message: Message,
+    turnover='',
+    is_first=False,
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    turnover_show = ''
+    if turnover:
+        turnover_show = f'\nОборот от {turnover}M USDT'
+
+    kb = kb_admin_tools_list(turnover)
+    msg = f'Какие инстурменты вы хотите получить?{turnover_show}'
+
+    if is_first:
+        await bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
+    else:
+        await bot.edit_message_text(
+            msg,
+            chat_id, mes_id,
+            reply_markup=kb
+        )

@@ -9,3 +9,7 @@ class AdminParamsState(StatesGroup):
     forex_help_pair = State()
 
     count_trial_days = State()
+
+
+class AdminMainState(StatesGroup):
+    turnover = State()

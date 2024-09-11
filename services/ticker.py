@@ -1,4 +1,6 @@
 
+import json
+from typing import Optional
 from models import TickerInfo
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL
@@ -39,3 +41,20 @@ def get_delivery_fee(ticker: str):
         return
 
     return float(res.json())
+
+
+@session_decorator
+def get_text(isSpot: Optional[bool] = None, turnover: Optional[float] = None) -> Optional[str]:
+    data = {
+        "isSpot": isSpot,
+        "turnover": turnover
+    }
+
+    res = session.post(
+        f'{API_URL}/tg/getTickers',
+        json.dumps(data).encode()
+    )
+    if not check_response(res):
+        return
+
+    return res.text

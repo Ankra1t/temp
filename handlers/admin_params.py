@@ -2,12 +2,14 @@ import re
 from telebot.async_telebot import AsyncTeleBot
 
 from db import db
+from keyboards.admin_main import kb_tools_list_back
 from models import Message, StateContext
 from Classes import pay_guard
 
-from common.utils import digit_accept, text_accept, get_normal_text
+from common.utils import digit_accept, get_print_float, text_accept, get_normal_text
 
-from states.admin_params import AdminParamsState
+from pages.admin import send_admin_tools_list
+from states.admin_params import AdminMainState, AdminParamsState
 from keyboards.admin_params import kb_params_choice, kb_params_back
 
 
@@ -110,6 +112,23 @@ async def handle_count_trial_days(message: Message, bot: AsyncTeleBot, state: St
     await state.delete()
 
 
+async def handle_turnover(message: Message, bot: AsyncTeleBot, state: StateContext):
+    chat_id = message.chat.id
+
+    turnover = digit_accept(message)
+    if turnover is None:
+        new_mes = await bot.send_message(
+            chat_id, 'Введите значение числом:',
+            reply_markup=kb_tools_list_back()
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
+    turnover = get_print_float(turnover, 1)
+
+    await send_admin_tools_list(bot, message, turnover, True)
+
+
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -121,3 +140,5 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_forex_help_pair, state=AdminParamsState.forex_help_pair)
 
     reg_mes(handle_count_trial_days, state=AdminParamsState.count_trial_days)
+
+    reg_mes(handle_turnover, state=AdminMainState.turnover)
