@@ -1273,7 +1273,7 @@ async def edit_channel_post(
                     msg, chId, int(send_data.messages.mesIds[chId_i])
                 )
         except Exception as e:
-            logger.info(e)
+            logger.error(f'ERROR EDIT CHANNEL POST: {e}')
 
     if updateLive:
         live = channel_calc.getLiveInfo()
@@ -1306,7 +1306,7 @@ async def edit_live_info(
             count_deal = 0
 
             for calc_ in live[1]:
-                if changed_calc is None and calc_.valueCount is None and chId_i == 0:
+                if changed_calc is None and calc_.valueCount is None:
                     await edit_channel_post(bot, calc_.calc, calc_.sendData, calc_.indexPrice, False)
 
                 current_msg = ''
