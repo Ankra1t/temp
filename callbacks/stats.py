@@ -1306,7 +1306,7 @@ async def edit_live_info(
             count_deal = 0
 
             for calc_ in live[1]:
-                if calc_.valueCount is None and chId_i == 0:
+                if changed_calc is not None and calc_.valueCount is None and chId_i == 0:
                     await edit_channel_post(bot, calc_.calc, calc_.sendData, calc_.indexPrice, False)
 
                 current_msg = ''
