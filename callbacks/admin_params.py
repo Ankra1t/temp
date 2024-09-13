@@ -122,14 +122,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await state.set(AdminParamsState.text)
         await state.add_data(name=name)
 
-    elif 'calculator' in type:
-        if 'add_forex' in type:  # !deprecated
-            await bot.edit_message_text(
-                'Введите валютную пару:', chat_id, mes_id,
-                reply_markup=kb_params_back()
-            )
-            await state.set(AdminParamsState.forex_pair)
-
     await bot.answer_callback_query(call.id)
 
 

@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from common.keyboard import back_txt
 
-from models import CallbackQuery
+from models import STYLES, CallbackQuery
 
 
 channel_post_factory = CallbackData(
@@ -91,28 +91,20 @@ def kb_send_settings_trading_style():
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    styles = {
-        'Пробой': 'пробой уровня',
-        'Отбой': 'отбой от уровня',
-        'Ложные': 'ложные пробои',
-        'Скользящие': 'скользящие средние',
-        'high/low': 'торговля на high/low',
-    }
-
     buttons = []
-    for key in styles.keys():
-        buttons.append(getThisButton(key, styles[key]))
+    for key in STYLES.keys():
+        buttons.append(getThisButton(key, STYLES[key]))
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []
 
-    btn_off = getThisButton('⭕️ Выключить', '**off**')
-
-    buttons.append(btn_off)
     if len(buttons) != 0:
         keyboard.add(*buttons)
 
-    keyboard.add(getButton(back_txt('ru'), 'send_settings'))
+    keyboard.add(
+        getThisButton('⭕️ Выключить', '**off**'),
+        getButton(back_txt('ru'), 'send_settings')
+    )
     return keyboard
 
 

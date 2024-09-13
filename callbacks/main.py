@@ -32,13 +32,16 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         f'callback "main_factory" user_tg_id={user.tgId} type={type} stat_id={stat_id} saved={is_saved}'
     )
 
-    if 'calc' in type or type == 'settings' or type == 'calc_stats':
+    if 'calc' in type or type == 'settings':
         calc = calculation.get(stat_id)
         if calc is not None:
-            await bot.edit_message_reply_markup(
-                chat_id, mes_id,
-                reply_markup=kb_calc_result(user.lang, user.id, calc)
-            )
+            try:
+                await bot.edit_message_reply_markup(
+                    chat_id, mes_id,
+                    reply_markup=kb_calc_result(user.lang, user.id, calc)
+                )
+            except:
+                pass
         else:
             await delete_message(bot, chat_id, mes_id)
 

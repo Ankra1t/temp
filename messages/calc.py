@@ -432,7 +432,7 @@ def msg_channel_calculation(
             'chart': 'График',
         },
         'en': {
-            'open': 'Will enter by' if status == 'WAIT' else 'Entered by' if status == 'DEAL' else 'Enter',
+            'open': 'Will enter at' if status == 'WAIT' else 'Entered at' if status == 'DEAL' else 'Enter',
 
             'stop': 'Stop',
             'price': 'Current price',

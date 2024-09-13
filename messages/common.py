@@ -106,11 +106,14 @@ def transl_tr_style(trading_style: str | None, lang: LANGUAGES_TYPE = 'ru'):
             'ложные пробои': 'fakeout',
             'скользящие средние': 'moving average',
             'торговля на high/low': 'high/low trading',
+            'в канале': 'in channel',
+
             'Пробой': 'Breakout',
             'Отбой': 'Bounce',
             'Ложные': 'Fakeout',
             'Скользящие': 'Moving average',
-            'high/low': 'high/low',
+            'High/low': 'High/low',
+            'В канале': 'In channel',
         }
 
         result = texts.get(trading_style, '')
@@ -125,7 +128,8 @@ def transl_tr_style(trading_style: str | None, lang: LANGUAGES_TYPE = 'ru'):
             except:
                 pass
 
-    return result
+    ch_styles = ['в канале', 'В канале']
+    return 'торговля внутри канала' if lang == 'ru' and trading_style in ch_styles else result
 
 
 def msg_atr_bars(lang: LANGUAGES_TYPE, value: str):

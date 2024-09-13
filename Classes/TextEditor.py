@@ -1,7 +1,7 @@
+from typing import Literal
 from googletrans import Translator
 
 from config_logger import logger
-from common.utils import get_lang
 from db import db
 
 
@@ -11,42 +11,18 @@ class TextEditor(object):
     def __init__(self) -> None:
         self.translator = Translator(raise_exception=True)
 
-    def get_text(self, user_id: int, label: str):
-        lang = get_lang(user_id)
+    def get(self, label: str, lang: Literal['ru', 'en'] = 'ru') -> tuple[str | None, str | None]:
+        """
+            Returns:
+                message, media_id
+        """
         text = db.get_text_by_name(label)
 
-        if text is not None:
-            result = text.message
-            if lang != 'ru':
-                try:
-                    result = str(
-                        self.translator.translate(
-                            text.message, 'en', 'ru'
-                        ).text
-                    )
-                except Exception as e:
-                    logger.error(e)
-                    result = text.message
+        if not text:
+            logger.warning(f'Передан несуществующий в БД label -> {label}')
+            return (None, None)
 
-            return result or text.message
-        else:
-            logger.warning('Передан несуществующий в БД label')
-            return ''
-
-    def get_media_id(self, user_id: int, label: str):
-        lang = get_lang(user_id)
-        text = db.get_text_by_name(label)
-
-        if text is None:
-            return ''
-
-        if lang == 'ru':
-            return text.media_id or ''
-        else:
-            return text.media_id_en or text.media_id or ''
-
-    def save_content(self, name: str, content: str):
-        if content:
-            db.update_text(name, content)
-        else:
-            logger.warning('Пустой текст затрет полностью старый текст!')
+        return (
+            text.message if lang == 'ru' else None,
+            text.media_id if lang == 'ru' else text.media_id_en or text.media_id
+        )

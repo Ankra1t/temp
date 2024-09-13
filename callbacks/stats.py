@@ -293,10 +293,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'go_stats':
         calc = calculation.get(calc_id)
         if calc is not None and not calc.openedList:
-            await bot.edit_message_reply_markup(
-                chat_id, mes_id,
-                reply_markup=kb_calc_result(user.lang, user.id, calc)
-            )
+            try:
+                await bot.edit_message_reply_markup(
+                    chat_id, mes_id,
+                    reply_markup=kb_calc_result(user.lang, user.id, calc)
+                )
+            except:
+                pass
 
         await send_stats(
             bot, call.message, state, user,
@@ -1273,7 +1276,8 @@ async def edit_channel_post(
                     msg, chId, int(send_data.messages.mesIds[chId_i])
                 )
         except Exception as e:
-            logger.error(f'ERROR EDIT CHANNEL POST: {e}')
+            # logger.error(f'ERROR EDIT CHANNEL POST: {e}')
+            pass
 
     if updateLive:
         live = channel_calc.getLiveInfo()

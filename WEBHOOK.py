@@ -170,8 +170,8 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
-    # await bot.set_webhook(f'https://4c96-178-204-188-215.ngrok-free.app{base_url}/AAA/')
+    # await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+    await bot.set_webhook(f'https://503b-178-204-68-228.ngrok-free.app{base_url}/AAA/')
 
     app = web.Application()
 

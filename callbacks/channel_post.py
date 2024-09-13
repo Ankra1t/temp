@@ -24,7 +24,6 @@ from pages.calculate import (
     send_admin_channel_calc_item,
     send_admin_channel_calc_list,
     send_admin_send_settings,
-    send_calc_stat_item,
     send_calculation,
     send_stats,
     send_main
@@ -307,10 +306,6 @@ More often: <b>{result}</b>"""
             await send_admin_channel_calc_item(
                 bot, call.message, state, stat_id, mes_type
             )
-        else:
-            await send_calc_stat_item(
-                bot, call.message, state, stat_id, mes_type
-            )
 
     if type == 'comment':
         await edit_message(
@@ -363,10 +358,6 @@ More often: <b>{result}</b>"""
             send_data = channel_calc.getByCalc(stat_id)
             if send_data is not None:
                 await send_admin_channel_calc_item(
-                    bot, call.message, state, stat_id
-                )
-            else:
-                await send_calc_stat_item(
                     bot, call.message, state, stat_id
                 )
 

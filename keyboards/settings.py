@@ -5,7 +5,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, MARKETS_TYPE, CallbackQuery
+from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
 
 from keyboards.stats import getButton as getStatsButton
 from keyboards.calculate import get_settings_from_calc_button, calculate_factory
@@ -687,15 +687,6 @@ def kb_trading_style(lang: LANGUAGES_TYPE, type: Literal['calc', 'welcome', 'ch_
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    # TODO - check
-    styles = {
-        'Пробой': 'пробой уровня',
-        'Отбой': 'отбой от уровня',
-        'Ложные': 'ложные пробои',
-        'Скользящие': 'скользящие средние',
-        'high/low': 'торговля на high/low',
-    }
-
     texts = {
         'ru': {
             'off_settings': 'Выключить',
@@ -716,19 +707,19 @@ def kb_trading_style(lang: LANGUAGES_TYPE, type: Literal['calc', 'welcome', 'ch_
     }
 
     buttons = []
-    for key in styles.keys():
+    for key in STYLES.keys():
         buttons.append(getThisButton(
-            transl_tr_style(key, lang) or '', styles[key]))
+            transl_tr_style(key, lang) or '', STYLES[key])
+        )
         if len(buttons) == row_width:
             keyboard.add(*buttons)
             buttons = []
 
-    off_text = f'⭕️ {texts[lang]["off"]}' if type == 'calc' else f'⭕️ {texts[lang]["off_settings"]}'
-    btn_off = getThisButton(off_text, '**off**')
-
-    buttons.append(btn_off)
     if len(buttons) != 0:
         keyboard.add(*buttons)
+
+    off_text = f'⭕️ {texts[lang]["off"]}' if type == 'calc' else f'⭕️ {texts[lang]["off_settings"]}'
+    btn_off = getThisButton(off_text, '**off**')
 
     if type == 'calc':
         btn_back = InlineKeyboardButton(
@@ -739,16 +730,17 @@ def kb_trading_style(lang: LANGUAGES_TYPE, type: Literal['calc', 'welcome', 'ch_
             cancel_txt(lang),
             'go_main'
         )
+        keyboard.add(btn_off)
         keyboard.add(btn_back, btn_settings, btn_cancel)
     elif type == 'ch_calc' or type == 'ch_calc+stc':
         btn_cancel = getThisButton(
             cancel_txt(lang),
             '**cancel**'
         )
-        keyboard.add(btn_cancel)
+        keyboard.add(btn_off, btn_cancel)
     else:
         btn_cancel = getButton(cancel_txt(lang), 'go_settings')
-        keyboard.add(btn_cancel)
+        keyboard.add(btn_off, btn_cancel)
 
     return keyboard
 

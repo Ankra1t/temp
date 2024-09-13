@@ -252,19 +252,21 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         type_list = type.split('_')
 
         if len(type_list) == 1:
-            text = text_editor.get_text(user.tgId, 'settings_market')
-            media_id = text_editor.get_media_id(user.tgId, 'settings_market')
+            text = text_editor.get(
+                'settings_market',
+                user.lang if user.lang == 'ru' else 'en'
+            )
 
             market = db.get_user_current_market(user.id)
 
             kb = kb_change_market(user.lang, '', market)
 
-            if user.lang == 'ru' and media_id != '':
+            if user.lang == 'ru' and text[1] != '':
                 await delete_message(bot, chat_id, mes_id)
 
                 await bot.send_animation(
-                    chat_id, media_id or 'CgACAgIAAxkBAAIBK2aFbYeuDAM1Re96gn3ps4JUeVy3AAJaSQACYZzRSaXZeP8tB3j8NQQ',
-                    caption=text,
+                    chat_id, text[1] or 'CgACAgIAAxkBAAIBK2aFbYeuDAM1Re96gn3ps4JUeVy3AAJaSQACYZzRSaXZeP8tB3j8NQQ',
+                    caption=text[0],
                     reply_markup=kb
                 )
             else:

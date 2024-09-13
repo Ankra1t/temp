@@ -13,7 +13,7 @@ from config_logger import logger
 from models import (
     BASE_VALUE_TYPE, LANGUAGES_TYPE, ROLE_TYPE,
     SORT_BY_TYPE, SUBSCRIBE_TYPE, TRADING_TYPE, Calculation,
-    Forex, ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
+    ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
     UserCalcSettings, UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Task, MARKETS_TYPE,
 )
@@ -2314,47 +2314,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    # Forexes
-    def _data_to_forex(self, data: DictRow):
-        return Forex(
-            id=data.get('id'),
-            pair=data.get('pair'),
-            price=data.get('price'),
-            help_pair=data.get('help_pair')
-        )
-
-    def get_forex(self, pair: str):
-        query = 'SELECT * FROM tgbot_forexes WHERE pair = %s'
-        params = (pair,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_forex(data) if (data is not None) else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def update_forex(self, pair: str, price: float, help_pair: str | None = None):
-        check_forex = self.get_forex(pair)
-        params = (pair, price, help_pair)
-
-        try:
-            if check_forex is None:
-                query = 'INSERT INTO tgbot_forexes (pair, price, help_pair) VALUES (%s, %s, %s)'
-                params = (pair, price, help_pair)
-            else:
-                query = 'UPDATE tgbot_forexes SET price = %s, help_pair = %s WHERE pair = %s'
-                params = (price, help_pair or check_forex.help_pair, pair)
-
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     # Unfinished calculation
     def _data_to_unfinished_calc(self, data: DictRow):

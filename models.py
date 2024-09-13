@@ -28,6 +28,15 @@ MANUAL_TYPE = Literal[
 LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
+STYLES = {
+    'Пробой': 'пробой уровня',
+    'Отбой': 'отбой от уровня',
+    'Ложные': 'ложные пробои',
+    'Скользящие': 'скользящие средние',
+    'High/low': 'торговля на high/low',
+    'В канале': 'в канале',
+}
+
 
 class StateFilter(AdvancedCustomFilter):
     def __init__(self, bot: AsyncTeleBot):
@@ -282,15 +291,8 @@ class Text(BaseModel):
     name: str
     message: str
     message_type: str
-    media_id: str
+    media_id: str | None
     media_id_en: str | None
-
-
-class Forex(BaseModel):
-    id: int
-    pair: str
-    price: float
-    help_pair: str | None
 
 
 class TaskMessage(BaseModel):
