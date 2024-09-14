@@ -37,13 +37,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     data = channel_post_factory.parse(call.data)
     type = data.get('type', '')
     is_calc = int(data.get('is_calc', 0))
-    stat_id = int(data.get('stat_id', 0))
+    calc_id = int(data.get('stat_id', 0))
     page = int(data.get('page', 0))
 
     chat_id = call.message.chat.id
     mes_id = call.message.id
 
-    logger.info(f'channel_post_callback (type={type} stat_id={stat_id})')
+    logger.info(f'channel_post_callback (type={type} calc_id={calc_id})')
 
     if type == 'main':
         await send_main(bot, call.message, state, user)
@@ -208,14 +208,14 @@ More often: <b>{result}</b>"""
 
     if type == 'result_cancel':
         calculation.update(
-            stat_id, status='CANCEL'
+            calc_id, status='CANCEL'
         )
 
-        calc = calculation.get(stat_id)
+        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(stat_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
             await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -225,14 +225,14 @@ More often: <b>{result}</b>"""
 
     if type == 'result_deal':
         calculation.update(
-            stat_id, status='DEAL'
+            calc_id, status='DEAL'
         )
 
-        calc = calculation.get(stat_id)
+        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(stat_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
             await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -242,14 +242,14 @@ More often: <b>{result}</b>"""
 
     if type == 'result_wait':
         calculation.update(
-            stat_id, status='WAIT'
+            calc_id, status='WAIT'
         )
 
-        calc = calculation.get(stat_id)
+        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(stat_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
             await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -258,7 +258,7 @@ More often: <b>{result}</b>"""
             await send_stats(bot, call.message, state, user)
 
     if 'stop+' in type or 'take+' in type:
-        calc = calculation.get(stat_id)
+        calc = calculation.get(calc_id)
         if calc is None:
             return
 
@@ -268,16 +268,16 @@ More often: <b>{result}</b>"""
         # _, _, spot_rate = get_count_value_bet(calc)
         spot_rate = 1
         calcService.set_profit(
-            stat_id,
+            calc_id,
             (-1 if 'stop+' in type else 1) *
             calc.riskValue * value * spot_rate
         )
 
         calculation.update(
-            stat_id, status='FINISH'
+            calc_id, status='FINISH'
         )
 
-        send_data = channel_calc.getByCalc(stat_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
             await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -289,7 +289,7 @@ More often: <b>{result}</b>"""
                 await send_stats(bot, call.message, state, user)
 
         if is_calc == 1:
-            calc = calculation.get(stat_id)
+            calc = calculation.get(calc_id)
             if calc is None:
                 return
             await delete_message(bot, chat_id, mes_id)
@@ -301,10 +301,10 @@ More often: <b>{result}</b>"""
     if type == 'result' or type == 'result_take' or type == 'result_stop':
         mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
 
-        send_data = channel_calc.getByCalc(stat_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             await send_admin_channel_calc_item(
-                bot, call.message, state, stat_id, mes_type
+                bot, call.message, state, calc_id, mes_type
             )
 
     if type == 'comment':
@@ -314,13 +314,13 @@ More often: <b>{result}</b>"""
         )
         await state.set(StatsState.add_image_text)
         await state.add_data(
-            stat_id=stat_id,
+            stat_id=calc_id,
             del_mes_id=call.message.id,
             type='stats'
         )
 
     if type == 'calc':
-        calc = calculation.get(stat_id)
+        calc = calculation.get(calc_id)
         if calc is None:
             return
 
@@ -333,11 +333,11 @@ More often: <b>{result}</b>"""
         new_mes_id = await edit_message(
             bot, call.message, 'text',
             msg_enter_cancel_at(user.lang),
-            kb_channel_cancel_at(stat_id)
+            kb_channel_cancel_at(calc_id)
         )
         await state.set(StatsState.cancel_at)
         await state.add_data(
-            calc_id=stat_id,
+            calc_id=calc_id,
             del_mes_id=new_mes_id,
             action='send_data'
         )
@@ -352,14 +352,23 @@ More often: <b>{result}</b>"""
         else:
             time = 60 * 24
 
-        calc = calculation.updateCancelAt(stat_id, time)
+        calc = calculation.updateCancelAt(calc_id, time)
 
         if calc:
-            send_data = channel_calc.getByCalc(stat_id)
+            send_data = channel_calc.getByCalc(calc_id)
             if send_data is not None:
                 await send_admin_channel_calc_item(
-                    bot, call.message, state, stat_id
+                    bot, call.message, state, calc_id
                 )
+
+    if type == 'new_stop':
+        await bot.edit_message_text(
+            'Введите новый стоп-лосс',
+            chat_id, mes_id,
+            reply_markup=kb_channel_post_back_to_result()
+        )
+        await state.set(StatsState.new_stop)
+        await state.add_data(del_mes_id=mes_id, calc_id=calc_id)
 
     await bot.answer_callback_query(call.id)
 

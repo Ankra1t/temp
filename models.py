@@ -351,6 +351,8 @@ class Calculation(BaseModel):
     riskValue: float
     openPrice: float
     stopLoss: float
+    newStop: Optional[float] = None
+
     tpRatio: list[int]
     splitValues: list[float] | None
 

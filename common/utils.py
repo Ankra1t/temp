@@ -3,7 +3,7 @@ import re
 from typing import Coroutine, Literal, TypeVar, Any, Callable
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
-from telebot.apihelper import ApiTelegramException
+from telebot.asyncio_helper import ApiTelegramException
 
 from common.dt import get_str_by_datetime
 from data.data import liteDb

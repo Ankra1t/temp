@@ -13,6 +13,7 @@ class StatsState(StatesGroup):
     send_add_photo = State()
 
     cancel_at = State()
+    new_stop = State()
 
 class ChannelCalcState(StatesGroup):
     loss = State()

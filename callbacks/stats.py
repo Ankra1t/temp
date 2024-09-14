@@ -5,6 +5,7 @@ from time import sleep
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage, InputPollOption
+from telebot.asyncio_helper import ApiTelegramException
 
 from selenium import webdriver as wd
 from selenium.webdriver.common.by import By
@@ -1219,7 +1220,8 @@ async def send_week_stats(bot: AsyncTeleBot, calcId: int | None = None, is_new_w
             msg += f'\n<b>{texts[lang]["success"]}</b>: {round((all_success_count * 100) / (all_success_count + all_fail_count))} %'
 
         try:
-            await bot.edit_message_text(
+            await antiflood(
+                bot.edit_message_text,
                 msg + f'\n\n{marathon}', chId, mesId
             )
         except:
@@ -1275,9 +1277,9 @@ async def edit_channel_post(
                     bot.edit_message_caption,
                     msg, chId, int(send_data.messages.mesIds[chId_i])
                 )
-        except Exception as e:
-            # logger.error(f'ERROR EDIT CHANNEL POST: {e}')
-            pass
+        except ApiTelegramException as e:
+            if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
+                logger.error(e)
 
     if updateLive:
         live = channel_calc.getLiveInfo()
@@ -1310,7 +1312,7 @@ async def edit_live_info(
             count_deal = 0
 
             for calc_ in live[1]:
-                if changed_calc is None and calc_.valueCount is None:
+                if changed_calc is None:
                     await edit_channel_post(bot, calc_.calc, calc_.sendData, calc_.indexPrice, False)
 
                 current_msg = ''

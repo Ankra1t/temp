@@ -111,7 +111,9 @@ async def calc_post(request: web.Request):
     # if access_token is None or api_key is None or access_token != api_key:
     #     return Response(status=400)
 
+    logger.info(111111111)
     calc_id = request.query.get('calc_id')
+    logger.info(calc_id)
     if calc_id is None or not calc_id.isnumeric():
         return web.Response(status=403)
 
@@ -119,11 +121,13 @@ async def calc_post(request: web.Request):
 
     calc = calculation.get(calc_id)
     send_data = channel_calc.getByCalc(calc_id)
+    print(calc, send_data)
+
     if not (calc and send_data):
         return web.Response(status=403)
 
     tickerInfo = ticker.get_info(calc.tool or '')
-    await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+    await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice, False)
 
     return web.Response()
 
@@ -170,8 +174,8 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    # await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
-    await bot.set_webhook(f'https://503b-178-204-68-228.ngrok-free.app{base_url}/AAA/')
+    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
+    # await bot.set_webhook(f'https://9a10-178-204-68-228.ngrok-free.app{base_url}/AAA/')
 
     app = web.Application()
 

@@ -343,6 +343,28 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
             await send_calculation(bot, message, state, user, calc, True)
 
 
+async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    chat_id = message.chat.id
+
+    async with state.data() as data:
+        calc_id = data.get('calc_id', 0)
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = await bot.send_message(
+            chat_id, msg_digit_error(user.lang),
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
+    calc = calculation.update(calc_id, newStop=value)
+
+    if calc:
+        await send_admin_channel_calc_item(
+            bot, message, state, calc.id, is_first=True
+        )
+
+
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -356,6 +378,7 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_send_photo, state=StatsState.send_add_photo, content_types=['message', 'photo'])
 
     reg_mes(handle_cancel_at, state=StatsState.cancel_at)
+    reg_mes(handle_new_stop, state=StatsState.new_stop)
 
     reg_mes(handle_channel_calc_loss, state=ChannelCalcState.loss)
     reg_mes(handle_violation_message, state=ViolationState.message)
