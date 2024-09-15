@@ -291,7 +291,6 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
 
 
 async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    logger.info('OPEN PRICE')
     chat_id = message.chat.id
 
     async with state.data() as data:
