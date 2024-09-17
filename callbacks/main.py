@@ -1,6 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
+from CHANNEL.channel_post import channel_post
 from config_logger import logger
 from services import calculation, violation
 from models import CallbackQuery, StateContext, User
@@ -8,7 +9,6 @@ from models import CallbackQuery, StateContext, User
 from common.utils import delete_message
 from common.calc_step import send_calc_start
 
-from callbacks.stats import send_week_stats
 from keyboards.stats import kb_calc_result
 from keyboards.main import main_factory, MainCallbackFilter
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
@@ -72,8 +72,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'week_stat':
-        await send_week_stats(bot)
-        await send_week_stats(bot, 652)
+        await channel_post.send_stats()
 
     if type == 'channels':
         await send_admin_channel_calc_list(bot, call.message, state)

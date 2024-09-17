@@ -3,6 +3,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 from config_logger import logger
 from Classes import currencyService
+from CHANNEL.channel_post import channel_post
 from db import db
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
@@ -11,7 +12,6 @@ from messages.enter import (
     msg_choose_direct, msg_enter_min_bar, msg_enter_trading_style,
 )
 
-from callbacks.stats import edit_channel_post
 from pages.calculate import send_calculation, create_and_send_calc
 from keyboards.calculate import kb_tool, kb_calc_direct, kb_calc_cancel
 from keyboards.stats import kb_deal_profit_cancel
@@ -333,7 +333,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
 
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await send_calculation(bot, message, state, user, calc, True)
         await state.delete()
@@ -378,7 +378,7 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
 
         if calc and send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await create_and_send_calc(bot, message, state, user, stop_loss)
 

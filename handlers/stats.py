@@ -8,6 +8,7 @@ from states.stats import ChannelCalcState
 
 from config_logger import logger
 from Classes import calcService
+from CHANNEL.channel_post import channel_post
 from models import Message, StateContext, User
 from db import db
 from common.utils import delete_message, digit_accept, text_accept
@@ -16,7 +17,6 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
 from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
-from callbacks.stats import edit_channel_post
 
 from states.stats import StatsState
 from messages.errros import msg_digit_error, msg_freeze_error, msg_text_error
@@ -52,7 +52,7 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc_info.tool or '')
-        await edit_channel_post(bot, calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
+        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -86,7 +86,7 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc_info.tool or '')
-        await edit_channel_post(bot, calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
+        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -193,7 +193,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         await send_admin_channel_calc_item(
             bot, message, state, stat_id, is_first=True
@@ -274,7 +274,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc.tool or '')
-        await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+        await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
         if is_calc:
             await send_calculation(bot, message, state, user, calc, True)

@@ -10,6 +10,7 @@ from db import db
 from messages.enter import msg_enter_cancel_at, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
+from CHANNEL.channel_post import channel_post
 from services import calculation, channel_calc, ticker
 
 from states.stats import StatsState
@@ -18,7 +19,6 @@ from keyboards.channel_post import (
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
     kb_send_settings_calc_time, kb_send_settings_trading_style
 )
-from callbacks.stats import edit_channel_post
 
 from pages.calculate import (
     send_admin_channel_calc_item,
@@ -218,7 +218,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
             type = 'results'
         else:
             await send_stats(bot, call.message, state, user)
@@ -235,7 +235,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -252,7 +252,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -280,7 +280,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
             if is_calc == 0:
                 type = 'results'

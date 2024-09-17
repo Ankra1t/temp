@@ -6,16 +6,17 @@ from aiohttp import web
 
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
+from CHANNEL.channel_post import channel_post
 
-from config_global import CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, base_url
+from config_global import BASE_HOST, CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, BASE_URL
 from config_logger import logger
 
 from callbacks.calculate import send_after_first_try
-from callbacks.stats import edit_channel_post, edit_live_info, send_vote, send_week_stats
 
 from initialize import bot
 from db import db
 from models import LiveInfo, LiveStats, LiveWait, SentMessages
+from registration import reg
 from services import calculation, channel_calc, ticker
 from thread_tasks import run_thread
 
@@ -69,7 +70,7 @@ async def vote_timeout(request: web.Request):
     if stat_id is None or not stat_id.isnumeric():
         return web.Response(status=403)
 
-    await send_vote(bot, int(stat_id))
+    await channel_post.send_vote(int(stat_id))
     return web.Response()
 
 
@@ -99,7 +100,7 @@ async def stats_post(request: web.Request):
     if access_token is None or api_key is None or access_token != api_key:
         return web.Response(status=403)
 
-    await send_week_stats(bot, is_new_week=True)
+    await channel_post.send_stats()
 
     return web.Response()
 
@@ -124,7 +125,9 @@ async def calc_post(request: web.Request):
         return web.Response(status=403)
 
     tickerInfo = ticker.get_info(calc.tool or '')
-    await edit_channel_post(bot, calc, send_data, tickerInfo and tickerInfo.indexPrice, calc.status == 'DEAL')
+    await channel_post.send_calc(
+        calc, send_data, tickerInfo and tickerInfo.indexPrice, calc.status == 'DEAL'
+    )
 
     return web.Response()
 
@@ -151,7 +154,7 @@ async def live_info(request: web.Request):
         LiveStats(**res)
     )
 
-    await edit_live_info(bot, live)
+    await channel_post.send_live(live)
 
     return web.Response()
 
@@ -171,22 +174,23 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'https://profmarkets.ai{base_url}/AAA/')
-    # await bot.set_webhook(f'https://9c4e-178-204-68-228.ngrok-free.app{base_url}/AAA/')
+    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/')
+
+    reg(bot)
 
     app = web.Application()
 
     routes = [
-        web.post(base_url + '/AAA/', handle),
-        web.post(base_url + CRYPTOPAY_URL, cryptobot_updates),
-        web.post(base_url + YOOKASSA_URL, yookassa_updates),
-        web.post(base_url + '/stats_post', stats_post),
-        web.post(base_url + '/live-info', live_info),
-        web.get(base_url + '/icon.png', get_icon),
-        web.get(base_url + '/manifest.json', get_ton_manifest),
-        web.get(base_url + '/vote_timeout', vote_timeout),
-        web.get(base_url + '/first_timeout', first_timeout),
-        web.get(base_url + '/calc_post', calc_post),
+        web.post(BASE_URL + '/AAA/', handle),
+        web.post(BASE_URL + CRYPTOPAY_URL, cryptobot_updates),
+        web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
+        web.post(BASE_URL + '/stats_post', stats_post),
+        web.post(BASE_URL + '/live-info', live_info),
+        web.get(BASE_URL + '/icon.png', get_icon),
+        web.get(BASE_URL + '/manifest.json', get_ton_manifest),
+        web.get(BASE_URL + '/vote_timeout', vote_timeout),
+        web.get(BASE_URL + '/first_timeout', first_timeout),
+        web.get(BASE_URL + '/calc_post', calc_post),
     ]
 
     app.add_routes(routes)

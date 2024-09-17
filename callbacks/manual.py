@@ -48,4 +48,5 @@ def registration(bot: AsyncTeleBot):
     bot.register_callback_query_handler(
         _manual_callback_handler, # type: ignore
         lambda _: True, pass_bot=True,
-        manual=manual_factory.filter())
+        manual=manual_factory.filter()
+    )
