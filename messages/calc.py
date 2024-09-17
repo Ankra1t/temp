@@ -365,7 +365,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
@@ -556,7 +556,7 @@ def msg_channel_calculation(
     ) \
         + (
             (
-                f'\n<b>{texts[lang]["stop"]}</b> ({get_print_float(calc.riskValue, 2)}{trading_currency}): <code>{get_print_float(calc.stopLoss, price_round_count)}</code>{trading_currency}'
+                f'\n<b>{texts[lang]["stop"]}</b> ({get_print_float(calc.riskValue, 2)}{trading_currency}): <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}'
                 + profit_result
             ) if not without_stop else ''
     ) \
@@ -712,7 +712,7 @@ def msg_channel_calc_result(
     return f"""{count_show}<b>{link(tool).replace('/USDT', '')}</b> | {'Завершено' if lang == 'ru' else 'Finished'}
 
 {texts[lang]["open"]}: {get_print_float(calc.openPrice)}{trading_currency}
-{texts[lang]["stop"]} ({get_print_float(calc.riskValue, 2)}{trading_currency}): {get_print_float(calc.stopLoss)}{trading_currency}
+{texts[lang]["stop"]} ({get_print_float(calc.riskValue, 2)}{trading_currency}): {get_print_float(calc.newStop or calc.stopLoss)}{trading_currency}
 {texts[lang]["take"]} ({get_print_float(calc.riskValue * nearTake, 2)}{trading_currency}): {get_print_float(nearValue)}{trading_currency}
 
 ⚡️ {texts[lang]["close"]}: {get_print_float(close_price)}{trading_currency}

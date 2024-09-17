@@ -154,7 +154,8 @@ async def start_with_calc(
         tool=calc.tool,
         tpRatio=calc.tpRatio,
         splitValues=calc.splitValues,
-        isFromDeposit=u_base.is_from_deposit if u_base is not None else False
+        isFromDeposit=u_base.is_from_deposit if u_base is not None else False,
+        newStop=calc.newStop
     )
 
     new_id = db.add_calculation(new_calc)

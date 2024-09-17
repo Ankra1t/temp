@@ -1068,7 +1068,7 @@ async def send_admin_channel_calc_list(
 
         msg += f'\n\n/{send_data.calcId} <b>{(calc.tool or "").replace("/USDT", "")}</b>'
         msg += f' ({datetime.fromisoformat(send_data.createdAt.replace("Z", "")).strftime("%d.%m %H:%M")})'
-        msg += f'\nВход/Стоп: <b>{get_print_float(calc.openPrice)} / {get_print_float(calc.stopLoss)}</b>'
+        msg += f'\nВход/Стоп: <b>{get_print_float(calc.openPrice)} / {get_print_float(calc.newStop or calc.stopLoss)}</b>'
 
     del_mes_id = mes_id
 
@@ -1143,7 +1143,7 @@ async def send_admin_channel_calc_item(
 
 <b>Объем</b>: {get_print_float(calc_result.count_bet)} монет
 <b>Цена входа</b>: {get_print_float(calc.openPrice, 5)} USDT
-<b>Стоп-лосс</b>: {get_print_float(calc.stopLoss, 5)} USDT
+<b>Стоп-лосс</b>: {get_print_float(calc.newStop or calc.stopLoss, 5)} USDT
 <b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT
 
 <b>Тейки:</b>{take_info}

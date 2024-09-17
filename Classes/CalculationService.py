@@ -544,7 +544,7 @@ class CalculationService():
     </div>
     <div class="block">
         <div class="name">{texts[lang]['sl']}:</div>
-        <div class="value">{get_print_float(calc.stopLoss, round_count)} {trading_currency}</div>
+        <div class="value">{get_print_float(calc.newStop or calc.stopLoss, round_count)} {trading_currency}</div>
     </div>
     {profit_info}
 </div>

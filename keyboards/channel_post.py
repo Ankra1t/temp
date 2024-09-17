@@ -140,10 +140,10 @@ def kb_channel_calc_result(
         keyboard.add(
             getButton('Время отмены', 'cancel_at', stat_id, is_calc)
         )
-    # else:
-    #     keyboard.add(
-    #         getButton('Сдвинуть стоп', 'new_stop', stat_id, is_calc)
-    #     )
+    else:
+        keyboard.add(
+            getButton('Сдвинуть стоп', 'new_stop', stat_id, is_calc)
+        )
 
     keyboard.add(
         getButton(

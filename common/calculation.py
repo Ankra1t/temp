@@ -144,7 +144,7 @@ def get_html_from_crypto_calc(
         <div class="name">{point[lang]['open']}</div>
     </div>
     <div class="block">
-        <div class="value">{get_print_float(calc.stopLoss, round_count)} {calc.currency}</div>
+        <div class="value">{get_print_float(calc.newStop or calc.stopLoss, round_count)} {calc.currency}</div>
         <div class="name">{point[lang]['sl']}</div>
     </div>
 </div>
@@ -364,7 +364,7 @@ def get_html_from_forex_calc(
     </div>
     <div class="block">
         <div class="name">Стоп:</div>
-        <div class="value">{get_print_float(calc.stopLoss, round_count)} {trading_currency}</div>
+        <div class="value">{get_print_float(calc.newStop or calc.stopLoss, round_count)} {trading_currency}</div>
     </div>
     <div class="block">
         <div class="name">Тейк-профит:</div>

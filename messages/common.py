@@ -262,9 +262,10 @@ def msg_success_edit(lang: LANGUAGES_TYPE):
 def msg_sended_data(lang: LANGUAGES_TYPE, send_stat: Calculation):
     dop = ''
 
-    short_long = 'long'
     if send_stat.openPrice < send_stat.stopLoss:
         short_long = 'short'
+    else:
+        short_long = 'long'
 
     if lang == 'ru':
         dop = f"""#{(send_stat.tool or '').replace('/USDT', '')} - {transl_market(send_stat.market, lang)}
