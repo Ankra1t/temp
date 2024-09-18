@@ -16,7 +16,7 @@ from Classes import pay_guard, calcService, hti
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
-from messages.calc import msg_calc_list, msg_calculation, msg_channel_calculation
+from messages.calc import msg_calc_list, msg_calculation, msg_channel_calc
 from messages.errros import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
@@ -749,7 +749,7 @@ async def send_confirm_calc_send(
     info = ticker.get_info(stat.tool or '')
 
     photo = stat.photo
-    text = msg_channel_calculation(
+    text = msg_channel_calc(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
         indexPrice=info and info.indexPrice,
         description=stat.description

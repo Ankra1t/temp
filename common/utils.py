@@ -16,6 +16,7 @@ T = TypeVar('T', int, float)
 
 digit_pattern = r'^[+-]?((\d+[\.,]?\d*)|([\.,]\d+))$'
 
+
 def is_digit(val: str) -> bool:
     return re.search(digit_pattern, val) is not None
 
@@ -149,7 +150,7 @@ def get_normal_text(message: Message):
     return message.html_text or message.html_caption or ''
 
 
-def check_discount_price(tariff: Price, type: Literal['crypto', 'default']='default'):
+def check_discount_price(tariff: Price, type: Literal['crypto', 'default'] = 'default'):
     if type == 'default':
         price = tariff.price
     else:
@@ -258,10 +259,11 @@ def get_short_user_info(user: UserInfo):
 
     return user_show
 
-T = TypeVar("T")
-async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, **kwargs) -> T:
-    number_retries=5
 
+T = TypeVar("T")
+
+
+async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, number_retries=5, **kwargs) -> T:
     for _ in range(number_retries - 1):
         try:
             return await function(*args, **kwargs)

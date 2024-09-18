@@ -36,7 +36,7 @@ from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc, ticker
 
 # TODO - months в commmon файл
-from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calculation
+from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
 from messages.enter import msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 from messages.main import msg_frozen
 
@@ -601,7 +601,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 except:
                     pass
 
-            text = msg_channel_calculation(
+            text = msg_channel_calc(
                 calc, ch_lang, send_data.withoutStop, send_data.time or '', sent_today + 1,
                 indexPrice=tickerInfo and tickerInfo.indexPrice,
                 description=calc.description if ch_lang == 'ru' else None,
@@ -639,7 +639,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         live = channel_calc.getLiveInfo()
         if live:
-            await channel_post.send_live(live, calc)
+            await channel_post.send_live(live)
 
         if send_data.isVote:
             seconds = vote_timeout(calc_id)
@@ -669,7 +669,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             print(e)
             file_path = None
 
-        text = msg_channel_calculation(
+        text = msg_channel_calc(
             calc, 'ru', send_data.withoutStop, send_data.time or '',
             description=calc.description
         )

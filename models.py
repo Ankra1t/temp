@@ -338,7 +338,7 @@ class Calculation(BaseModel):
 
     profit: float | None = None
     inStat: bool = False
-    statDt: datetime | None = None
+    statDt: Optional[str] | None = None
 
     market: MARKETS_TYPE
     tradingType: TRADING_TYPE
@@ -366,6 +366,7 @@ class Calculation(BaseModel):
     openedList: bool = False
 
     createdAt: Optional[str] = None
+    dealAt: Optional[str] = None
     cancelAt: Optional[str] = None
 
 
@@ -443,19 +444,13 @@ class SendCalc(BaseModel):
     messages: Optional[SentMessages] = None
 
 
-class LiveInfo(BaseModel):
-    id: int
+class LiveDeal(BaseModel):
     tool: str
-    valueCount: Optional[float]
-    dealAt: Optional[str]
-    finishAt: Optional[str]
-    comment: Optional[str]
-    currentPrice: Optional[float]
     takeProfit: Optional[float]
     takeProfitRatio: Optional[float]
-    calc: Calculation
-    sendData: SendCalc
+    messages: Optional[SentMessages]
     indexPrice: Optional[float]
+    comment: Optional[str]
 
 
 class LiveStats(BaseModel):
@@ -464,9 +459,32 @@ class LiveStats(BaseModel):
     todayProfit: float
 
 
-class LiveWait(BaseModel):
+class LiveWaitCancel(BaseModel):
     tool: str
     messages: Optional[SentMessages]
+
+
+class LiveFinish(LiveWaitCancel):
+    valueCount: float
+
+
+class LiveToUpdate(BaseModel):
+    calc: Calculation
+    sendData: SendCalc
+    indexPrice: Optional[float]
+
+
+class Live(BaseModel):
+    wait: list[LiveWaitCancel]
+    canceled: list[LiveWaitCancel]
+    finished: list[LiveFinish]
+    deal: list[LiveDeal]
+    toUpdate: list[LiveToUpdate]
+    isNewMes: bool
+    messages: Optional[SentMessages]
+    monthValueCount: float
+    todayProfit: float
+    todayValueCount: float
 
 
 class MonthToolStats(BaseModel):

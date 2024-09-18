@@ -4,7 +4,7 @@ from pydantic.type_adapter import TypeAdapter
 
 from config_global import API_URL
 from .base_config import session_decorator, session, check_response
-from models import LiveInfo, LiveStats, LiveWait, MonthToolStats, SendCalc, CalcSentMessages, SentMessages, LANGUAGES_TYPE
+from models import Live, MonthToolStats, SendCalc, CalcSentMessages, SentMessages, LANGUAGES_TYPE
 
 
 @session_decorator
@@ -147,19 +147,7 @@ def getLiveInfo():
     if not check_response(res):
         return
 
-    res = res.json()
-    messages = res.get('messages')
-    data: list[dict] = res.get('data')
-    wait: list[dict] = res.get('wait')
-    canceled: list[dict] = res.get('canceled')
-
-    return (
-        None if messages is None else SentMessages(**messages),
-        [LiveInfo.model_validate(el) for el in data],
-        [LiveWait(**el) for el in wait],
-        [LiveWait(**el) for el in canceled],
-        LiveStats(**res)
-    )
+    return Live.model_validate_json(res.text)
 
 
 @session_decorator

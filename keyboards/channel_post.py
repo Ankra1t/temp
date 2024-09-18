@@ -142,7 +142,8 @@ def kb_channel_calc_result(
         )
     else:
         keyboard.add(
-            getButton('Сдвинуть стоп', 'new_stop', stat_id, is_calc)
+            getButton('Сдвинуть стоп', 'new_stop', stat_id, is_calc),
+            getButton('Скользящий стоп', 'trailing_stop', stat_id, is_calc)
         )
 
     keyboard.add(
@@ -238,10 +239,26 @@ def kb_channel_post_back():
     return keyboard
 
 
-def kb_channel_post_back_to_result():
+def kb_channel_post_back_to_result(calc_id: int):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        getButton(back_txt('ru'), 'result')
+        getButton(back_txt('ru'), 'result', calc_id)
+    )
+    return keyboard
+
+
+def kb_trailing_stop(calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=4)
+
+    buttons = []
+    for i in range(1, 5):
+        buttons.append(
+            getButton(f'{i}', f'trailing+{i}', calc_id)
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(
+        getButton(back_txt('ru'), 'result', calc_id)
     )
     return keyboard
 

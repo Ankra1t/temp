@@ -1,5 +1,6 @@
 import json
 from typing import Literal
+from venv import logger
 from config_global import API_URL
 from models import Calculation, ForexInfo
 from services.base_config import check_response, session_decorator, session
@@ -131,3 +132,21 @@ def updateCancelAt(
         return
 
     return Calculation(**res.json())
+
+
+@session_decorator
+def updateTrailingStop(
+    id: int, trailingStop: int
+):
+    logger.info(trailingStop)
+    res = session.post(
+        f'{API_URL}/calculations/{id}/trailingStop',
+        json.dumps({
+            "trailingStop": trailingStop
+        }).encode()
+    )
+
+    if not check_response(res):
+        return
+
+    return True

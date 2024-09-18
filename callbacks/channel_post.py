@@ -17,7 +17,7 @@ from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
-    kb_send_settings_calc_time, kb_send_settings_trading_style
+    kb_send_settings_calc_time, kb_send_settings_trading_style, kb_trailing_stop
 )
 
 from pages.calculate import (
@@ -310,7 +310,7 @@ More often: <b>{result}</b>"""
     if type == 'comment':
         await edit_message(
             bot, call.message, 'text',
-            'Введите ваш комментарий:', kb_channel_post_back_to_result()
+            'Введите ваш комментарий:', kb_channel_post_back_to_result(calc_id)
         )
         await state.set(StatsState.add_image_text)
         await state.add_data(
@@ -365,10 +365,28 @@ More often: <b>{result}</b>"""
         await bot.edit_message_text(
             'Введите новый стоп-лосс',
             chat_id, mes_id,
-            reply_markup=kb_channel_post_back_to_result()
+            reply_markup=kb_channel_post_back_to_result(calc_id)
         )
         await state.set(StatsState.new_stop)
         await state.add_data(del_mes_id=mes_id, calc_id=calc_id)
+
+    await bot.answer_callback_query(call.id)
+
+    if type == 'trailing_stop':
+        await bot.edit_message_text(
+            'Введите значение для скользящего стопа',
+            chat_id, mes_id,
+            reply_markup=kb_trailing_stop(calc_id)
+        )
+
+    if 'trailing+' in type:
+        _, value = type.split('+')
+
+        calculation.updateTrailingStop(calc_id, int(value))
+
+        await send_admin_channel_calc_item(
+            bot, call.message, state, calc_id
+        )
 
     await bot.answer_callback_query(call.id)
 

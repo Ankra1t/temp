@@ -15,9 +15,8 @@ from callbacks.calculate import send_after_first_try
 
 from initialize import bot
 from db import db
-from models import LiveInfo, LiveStats, LiveWait, SentMessages
+from models import Live
 from registration import reg
-from services import calculation, channel_calc, ticker
 from thread_tasks import run_thread
 
 
@@ -93,45 +92,6 @@ async def first_timeout(request: web.Request):
     return web.Response()
 
 
-async def stats_post(request: web.Request):
-    access_token = db.get_access_token()
-    api_key = request.headers.get('tg-api-key')
-
-    if access_token is None or api_key is None or access_token != api_key:
-        return web.Response(status=403)
-
-    await channel_post.send_stats()
-
-    return web.Response()
-
-
-async def calc_post(request: web.Request):
-    # access_token = db.get_access_token()
-    # api_key = request.headers.get('tg-api-key')
-
-    # if access_token is None or api_key is None or access_token != api_key:
-    #     return Response(status=400)
-
-    calc_id = request.query.get('calc_id')
-    if calc_id is None or not calc_id.isnumeric():
-        return web.Response(status=403)
-
-    calc_id = int(calc_id)
-
-    calc = calculation.get(calc_id)
-    send_data = channel_calc.getByCalc(calc_id)
-
-    if not (calc and send_data):
-        return web.Response(status=403)
-
-    tickerInfo = ticker.get_info(calc.tool or '')
-    await channel_post.send_calc(
-        calc, send_data, tickerInfo and tickerInfo.indexPrice, calc.status == 'DEAL'
-    )
-
-    return web.Response()
-
-
 async def live_info(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
@@ -139,20 +99,7 @@ async def live_info(request: web.Request):
     if access_token is None or api_key is None or access_token != api_key:
         return web.Response(status=403)
 
-    res = await request.json()
-
-    messages = res.get('messages')
-    data: list[dict] = res.get('data')
-    wait: list[dict] = res.get('wait')
-    canceled: list[dict] = res.get('canceled')
-
-    live = (
-        None if messages is None else SentMessages(**messages),
-        [LiveInfo.model_validate(el) for el in data],
-        [LiveWait(**el) for el in wait],
-        [LiveWait(**el) for el in canceled],
-        LiveStats(**res)
-    )
+    live = Live.model_validate_json(await request.text())
 
     await channel_post.send_live(live)
 
@@ -184,13 +131,11 @@ async def setup():
         web.post(BASE_URL + '/AAA/', handle),
         web.post(BASE_URL + CRYPTOPAY_URL, cryptobot_updates),
         web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
-        web.post(BASE_URL + '/stats_post', stats_post),
         web.post(BASE_URL + '/live-info', live_info),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),
         web.get(BASE_URL + '/first_timeout', first_timeout),
-        web.get(BASE_URL + '/calc_post', calc_post),
     ]
 
     app.add_routes(routes)

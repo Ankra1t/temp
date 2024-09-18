@@ -1,3 +1,4 @@
+from datetime import datetime
 from common.utils import get_decimal_count, get_lang, get_print_float
 from common.dt import get_datetime_now
 
@@ -191,7 +192,7 @@ class CalculationService():
             if not calc.inStat or calc.statDt is None:
                 continue
 
-            if calc.statDt.date() == today:
+            if datetime.fromisoformat(calc.statDt.replace('Z', '')).date() == today:
                 today_profit += calc.profit or 0
 
         # Если профит положительный и меньше риска на день, отправляем предупреждение

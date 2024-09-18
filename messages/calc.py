@@ -376,7 +376,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calculation(
+def msg_channel_calc(
     calc: Calculation,
     lang: Literal['ru', 'en'] = 'ru',
     without_stop=False,
@@ -395,7 +395,7 @@ def msg_channel_calculation(
 
     if calc.profit is not None or status == 'FINISH':
         return msg_channel_calc_result(
-            calc, lang, time, count, description, week_stat_link, date, try_link
+            calc, lang, time, count, try_link
         )
 
     calc_result = calcService.get_result(calc)
@@ -545,7 +545,7 @@ def msg_channel_calculation(
             chart_link = ''
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{f" - {price_show}" if (status == "WAIT" and price_show != "") else ""} | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) \
@@ -579,11 +579,10 @@ def msg_channel_calc_result(
     lang: LANGUAGES_TYPE,
     time='',
     count=-1,
-    description: str | None = None,
-    week_stat_link: str | None = None,
-    date: str | None = None,
     try_link='',
 ):
+    description = calc.description if lang == 'ru' else None
+
     if calc.profit is None:
         return ''
 
