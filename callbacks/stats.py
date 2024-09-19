@@ -637,10 +637,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         await channel_post.send_stats()
 
-        live = channel_calc.getLiveInfo()
-        if live:
-            await channel_post.send_live(live)
-
         if send_data.isVote:
             seconds = vote_timeout(calc_id)
             new_mes = await bot.send_message(

@@ -291,7 +291,6 @@ class ChannelPost():
                     msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
 
                 try:
-                    logger.info(live)
                     if live.isNewMes or mesIds is None:
                         new_mes = await antiflood(
                             self.bot.send_message,
@@ -315,8 +314,6 @@ class ChannelPost():
                 except Exception as e:
                     logger.error(f'LIVE SEND ERROR: {e}')
 
-        logger.info(new_live_mes_ids)
-        logger.info(chIds)
         if len(new_live_mes_ids) == len(chIds):
             channel_calc.updateLiveInfo(
                 SentMessages(
@@ -642,7 +639,7 @@ class ChannelPost():
 
         if stat_id in self.loading_vote_message_ids:
             cur_chat_id, cur_mes_id = self.loading_vote_message_ids[stat_id]
-            await self.bot.edit_message_text(
+            await self.main_bot.edit_message_text(
                 '✅ Опрос отправлен', cur_chat_id, cur_mes_id
             )
             self.loading_vote_message_ids.pop(stat_id)
