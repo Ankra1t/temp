@@ -223,7 +223,10 @@ class ChannelPost():
 
                     finished += f'{tool} {result}, '
 
-                msg = msges.strip()
+                msg = f'⚡️<b>LIVE-{"сделки" if lang == "ru" else "deals"}</b>'
+
+                if msges.strip():
+                    msg += '\n\n' + msges.strip()
 
                 if msg != '':
                     msg += '\n\n<b>'
