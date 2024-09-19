@@ -291,6 +291,7 @@ class ChannelPost():
                     msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
 
                 try:
+                    logger.info(live)
                     if live.isNewMes or mesIds is None:
                         new_mes = await antiflood(
                             self.bot.send_message,
@@ -314,6 +315,8 @@ class ChannelPost():
                 except Exception as e:
                     logger.error(f'LIVE SEND ERROR: {e}')
 
+        logger.info(new_live_mes_ids)
+        logger.info(chIds)
         if len(new_live_mes_ids) == len(chIds):
             channel_calc.updateLiveInfo(
                 SentMessages(
