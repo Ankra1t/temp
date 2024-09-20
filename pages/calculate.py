@@ -6,6 +6,7 @@ from typing import Literal
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
+from config_logger import logger
 from AuthRoles import first_timeout
 from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, edit_message, get_print_float
@@ -330,7 +331,9 @@ async def send_stats(
 
     liteDb.addPagesCount(user.tgId)
 
+    logger.info(f"User {user.tgId} has viewed stats page")
     values = calculation.getWeekStats(user.id)
+    logger.info(values)
 
     if values is None:
         return
