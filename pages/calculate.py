@@ -1135,7 +1135,8 @@ async def send_admin_channel_calc_item(
 
     cancel_at = '-'
     if calc.cancelAt:
-        dt = datetime.fromisoformat(calc.cancelAt.replace('Z', '')) + timedelta(hours=3)
+        dt = datetime.fromisoformat(
+            calc.cancelAt.replace('Z', '')) + timedelta(hours=3)
         cancel_at = dt.strftime("%d.%m %H:%M")
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
@@ -1159,6 +1160,7 @@ async def send_admin_channel_calc_item(
     else:
         kb = kb_channel_calc_result(
             calc.id, calc.status == 'DEAL',
+            send_data.withoutStop
         )
         is_state = False
         info = ''

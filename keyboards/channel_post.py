@@ -109,48 +109,54 @@ def kb_send_settings_trading_style():
 
 
 def kb_channel_calc_result(
-    stat_id: int,
+    calc_id: int,
     in_deal: bool,
+    withoutStop: bool,
     is_calc=False,
     is_user=False,
 ):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     if not in_deal:
-        btn_deal = getButton('В сделке', 'result_deal', stat_id, is_calc)
+        btn_deal = getButton('В сделке', 'result_deal', calc_id, is_calc)
         btn_cancel = getButton(
-            'Отмена сделки', 'result_cancel', stat_id, is_calc
+            'Отмена сделки', 'result_cancel', calc_id, is_calc
         )
         keyboard.add(btn_cancel, btn_deal)
     else:
         keyboard.add(getButton(
-            'В ожидание', 'result_wait', stat_id=stat_id
+            'В ожидание', 'result_wait', stat_id=calc_id
         ))
 
-    btn_tp = getButton('Тейк', 'result_take', stat_id, is_calc)
-    btn_sl = getButton('Стоп', 'result_stop', stat_id, is_calc)
+    btn_tp = getButton('Тейк', 'result_take', calc_id, is_calc)
+    btn_sl = getButton('Стоп', 'result_stop', calc_id, is_calc)
     keyboard.add(btn_tp, btn_sl)
 
     keyboard.add(
-        getButton('Безубыток', 'take+0', stat_id, is_calc),
-        getButton('Комментарий', 'comment', stat_id, is_calc),
+        getButton('Безубыток', 'take+0', calc_id, is_calc),
+        getButton('Комментарий', 'comment', calc_id, is_calc),
     )
 
     if not in_deal:
         keyboard.add(
-            getButton('Время отмены', 'cancel_at', stat_id, is_calc)
+            getButton('Время отмены', 'cancel_at', calc_id, is_calc)
         )
     else:
         keyboard.add(
-            getButton('Сдвинуть стоп', 'new_stop', stat_id, is_calc),
-            getButton('Скользящий стоп', 'trailing_stop', stat_id, is_calc)
+            getButton('Сдвинуть стоп', 'new_stop', calc_id, is_calc),
+            getButton('Скользящий стоп', 'trailing_stop', calc_id, is_calc)
         )
+
+    keyboard.add(
+        'Вывести стоп' if withoutStop else 'Убрать стоп',
+        'without_stop', calc_id
+    )
 
     keyboard.add(
         getButton(
             back_txt('ru'),
             'results' if not is_user else 'go_stats',
-            stat_id, is_calc
+            calc_id, is_calc
         )
     )
 

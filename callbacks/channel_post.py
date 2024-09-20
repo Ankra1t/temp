@@ -298,6 +298,12 @@ More often: <b>{result}</b>"""
     if type == 'results':
         await send_admin_channel_calc_list(bot, call.message, state, page)
 
+    if type == 'without_stop':
+        send_data = channel_calc.getByCalc(calc_id)
+        if send_data:
+            channel_calc.update(calc_id, withoutStop=not send_data.withoutStop)
+        type = 'result'
+
     if type == 'result' or type == 'result_take' or type == 'result_stop':
         mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
 
