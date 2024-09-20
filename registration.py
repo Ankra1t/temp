@@ -1,8 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
 from telebot.states.asyncio.middleware import StateMiddleware
 
-from config_logger import logger
 from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from commands import commands_registration
