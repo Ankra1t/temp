@@ -1,5 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
+from config_logger import logger
 from AuthRoles import check_registrate
 from common.utils import delete_message
 from common.utils import get_post_from_message
@@ -18,6 +19,8 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
     chat_id = message.chat.id
     user_id = message.from_user.id
 
+    logger.info('START HANDLE')
+
     if message.content_type == 'text' and message.text is not None:
         text = message.text
 
@@ -31,6 +34,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
                 return
 
             calc_id = int(text)
+            logger.info('SEND CHANNEL ITEM')
             await send_admin_channel_calc_item(
                 bot, message, state, calc_id, is_first=True
             )
