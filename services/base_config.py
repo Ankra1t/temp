@@ -1,5 +1,6 @@
 from db import db
 import requests
+from config_logger import logger
 
 session = requests.Session()
 session.headers.update({
@@ -18,7 +19,7 @@ def session_decorator(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            print(e)
+            logger.error(e)
             return
 
         return result
@@ -28,7 +29,6 @@ def session_decorator(func):
 
 def check_response(res: requests.Response):
     if res.status_code < 200 or res.status_code > 299:
-        print(res.status_code)
-        print(res.json())
+        logger.error(f'Service error ({res.status_code}): {res.text}')
         return False
     return True
