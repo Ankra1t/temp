@@ -7,7 +7,7 @@ from telebot.asyncio_handler_backends import State
 from telebot.states import resolve_context
 
 from pydantic import BaseModel
-from typing import Literal, Union, Optional
+from typing import Literal, TypedDict, Union, Optional
 from datetime import datetime
 
 SUBSCRIBE_TYPE = Literal['trial', 'PAID']
@@ -490,3 +490,11 @@ class Live(BaseModel):
 class MonthToolStats(BaseModel):
     count: int
     value: float
+
+
+class AdvancedSettings(BaseModel):
+    userId: int
+    autoOpen: bool
+    autoStop: bool
+    autoTake: bool
+    trailingStop: Optional[float]
