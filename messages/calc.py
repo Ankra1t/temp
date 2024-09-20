@@ -387,6 +387,7 @@ def msg_channel_calc(
     try_link: str = '',
 ):
     description = calc.description if lang == 'ru' else None
+    comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
 
     monthStats = channel_calc.getMonthToolCount(calc.tool or '')
     status = calc.status
@@ -560,8 +561,9 @@ def msg_channel_calc(
     ) \
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
-        + (f'\n\n{calc.comment.strip()}' if (calc.comment and lang == 'ru') else '') \
-        + (f'\nUpdate: {"стоп изменен на" if lang == "ru" else "stop changed to"} {calc.newStop}' if (calc.newStop is not None) else '') \
+        + (f'\n\n{comment}' if comment else '') \
+        + (f'\n' if not (comment or description) else '') \
+        + (f'\nUpdate: {"стоп изменен на" if lang == "ru" else "stop changed to"} {get_print_float(calc.newStop)}' if (calc.newStop is not None) else '') \
         + (
             (
                 f'\n\n<b>{month}:</b> '
