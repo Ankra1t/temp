@@ -3,7 +3,6 @@ from math import ceil
 import math
 import os
 from typing import Literal
-from venv import logger
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
@@ -1180,16 +1179,13 @@ async def send_admin_channel_calc_item(
             reply_markup=kb
         )
 
-    logger.info('CHECK')
     if is_state:
-        logger.info('STATE')
         await state.set(ChannelCalcState.loss)
         await state.add_data(
             del_mes_id=del_mes_id,
             stat_id=calc_id,
             type=type
         )
-        logger.info('ERROR?')
 
 
 async def send_manual(
