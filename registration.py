@@ -1,7 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
+from telebot.types import Message
 from telebot.states.asyncio.middleware import StateMiddleware
 
-
+from config_logger import logger
 from Middlewares.ChatMemberHandler import chat_member_handler_registration
 from Middlewares.AuthMiddleWare import AuthMiddleWare
 from commands import commands_registration
@@ -45,50 +46,50 @@ from handlers.stats import registration as _reg_stats
 from handlers.tariff import registration as _reg_tariff
 
 def reg(bot: AsyncTeleBot):
-	bot.setup_middleware(AuthMiddleWare(bot))
+    bot.setup_middleware(AuthMiddleWare(bot))
 
-	bot.setup_middleware(StateMiddleware(bot))
+    bot.setup_middleware(StateMiddleware(bot))
 
-	commands_registration(bot)
+    commands_registration(bot)
 
-	_reg_cb_manual(bot)
-	_reg_cb_main(bot)
-	_reg_cb_calculate(bot)
-	_reg_cb_settings(bot)
-	_reg_cb_stats(bot)
-	_reg_cb_channel_post(bot)
-	_reg_cb_tariff(bot)
+    _reg_cb_manual(bot)
+    _reg_cb_main(bot)
+    _reg_cb_calculate(bot)
+    _reg_cb_settings(bot)
+    _reg_cb_stats(bot)
+    _reg_cb_channel_post(bot)
+    _reg_cb_tariff(bot)
 
-	_reg_cb_admin_main(bot)
-	_reg_cb_admin_tariffs(bot)
-	_reg_cb_admin_workers(bot)
-	_reg_cb_admin_params(bot)
-	_reg_cb_admin_posts(bot)
-	_reg_cb_admin_users(bot)
-	_reg_cb_admin_stats(bot)
+    _reg_cb_admin_main(bot)
+    _reg_cb_admin_tariffs(bot)
+    _reg_cb_admin_workers(bot)
+    _reg_cb_admin_params(bot)
+    _reg_cb_admin_posts(bot)
+    _reg_cb_admin_users(bot)
+    _reg_cb_admin_stats(bot)
 
-	_reg_cb_user_main(bot)
-	_reg_cb_education(bot)
-	_reg_cb_account(bot)
+    _reg_cb_user_main(bot)
+    _reg_cb_education(bot)
+    _reg_cb_account(bot)
 
-	_reg_cb_livepost(bot)
+    _reg_cb_livepost(bot)
 
-	_reg_admin_tariff(bot)
-	_reg_admin_statistics(bot)
-	_reg_admin_workers(bot)
-	_reg_admin_users(bot)
-	_reg_admin_params(bot)
-	_reg_admin_posts(bot)
+    _reg_admin_tariff(bot)
+    _reg_admin_statistics(bot)
+    _reg_admin_workers(bot)
+    _reg_admin_users(bot)
+    _reg_admin_params(bot)
+    _reg_admin_posts(bot)
 
-	_reg_user_account(bot)
+    _reg_user_account(bot)
 
-	_reg_calc(bot)
-	_reg_settings(bot)
-	_reg_stats(bot)
-	_reg_tariff(bot)
+    _reg_calc(bot)
+    _reg_settings(bot)
+    _reg_stats(bot)
+    _reg_tariff(bot)
 
-	_reg_livepost(bot)  # !Должен регестрироваться последним
+    _reg_livepost(bot)  # !Должен регестрироваться последним
 
-	chat_member_handler_registration(bot)
+    chat_member_handler_registration(bot)
 
-	bot.add_custom_filter(StateFilter(bot))
+    bot.add_custom_filter(StateFilter(bot))

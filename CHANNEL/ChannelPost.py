@@ -6,7 +6,7 @@ from telebot.types import InputPollOption
 
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID
+from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
@@ -45,28 +45,19 @@ class ChannelPost():
             langs = self.langs
             mesIds = None
 
+        newMesIds = []
+
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
 
             if weekMessages:
                 mesNum = weekMessages.mesNum or 1
-                date = weekMessages.date
             else:
                 mesNum = 1
-                date = ''
-
-            link = ''
-            if weekMessages and weekMessages.messages:
-                try:
-                    weekMesId = weekMessages.messages.get('mesIds', [])[0]
-                    weekChId = weekMessages.messages.get("chIds", [])[0]
-                    link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
-                except:
-                    pass
 
             msg = msg_channel_calc(
                 calc, lang, send_data.withoutStop, send_data.time or '',
-                mesNum, indexPrice, calc.description, link, date,
+                mesNum, indexPrice,
                 try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}'
             )
 
@@ -85,19 +76,32 @@ class ChannelPost():
                         )
                 else:
                     if calc.photo is None:
-                        await antiflood(
+                        new_mes = await antiflood(
                             self.bot.send_message,
                             chId, msg,
                             disable_web_page_preview=True
                         )
                     else:
-                        await antiflood(
+                        new_mes = await antiflood(
                             self.bot.send_photo,
                             chId, calc.photo, msg,
                         )
+
+                    newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
                     logger.error(f'CALC SEND ERROR: {e}')
+
+        if len(newMesIds) == len(chIds):
+            channel_calc.update(
+                send_data.id,
+                sent=True,
+                messages={
+                    'chIds': chIds,
+                    'mesIds': newMesIds,
+                    'langs': langs,
+                }
+            )
 
         if updateLive:
             await self.send_stats(calc.id)
@@ -149,7 +153,6 @@ class ChannelPost():
                     tool = f'{(calc_.tool or "").replace("/USDT", "")}'
                     if calcMesId is not None:
                         tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
-
 
                     is_shift = False
 
@@ -288,7 +291,7 @@ class ChannelPost():
                 week = channel_calc.getWeekStat()
                 if week is not None:
                     text = 'Статистика' if lang == 'ru' else 'Stats'
-                    msg += f'\n\n<a href="https://t.me/trade_res">{text}</a>'
+                    msg += f'\n\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
 
                 try:
                     if live.isNewMes or mesIds is None:
@@ -597,7 +600,6 @@ class ChannelPost():
                 await antiflood(
                     self.bot.edit_message_text,
                     msg + f'\n\n{marathon}', chId, mesIds[chId_i],
-                    number_retries=100
                 )
             except Exception as e:
                 logger.error(f'STATS SEND ERROR: {e}')

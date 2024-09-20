@@ -752,7 +752,6 @@ async def send_confirm_calc_send(
     text = msg_channel_calc(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
         indexPrice=info and info.indexPrice,
-        description=stat.description
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')

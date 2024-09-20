@@ -4,6 +4,7 @@ import requests
 
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float
+from config_global import RESULTS_CHANNEL_NAME
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
 
@@ -383,12 +384,9 @@ def msg_channel_calc(
     time: str = '',
     count=-1,
     indexPrice: float | None = None,
-    description: str | None = None,
-    week_stat_link: str | None = None,
-    date: str | None = None,
     try_link: str = '',
 ):
-    description = description if lang == 'ru' else None
+    description = calc.description if lang == 'ru' else None
 
     monthStats = channel_calc.getMonthToolCount(calc.tool or '')
     status = calc.status
@@ -516,7 +514,7 @@ def msg_channel_calc(
                     )
                 ) or i == 0
             ):
-                profit_result = f'\n<b>{texts[lang]["take"]}</b> ({get_print_float(calc.riskValue * tp_ratio, 2)}{trading_currency}): '
+                profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
                 profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
 
     count_show = ''
@@ -528,7 +526,7 @@ def msg_channel_calc(
         price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
     def link(value: str):
-        return f'<a href="https://t.me/trade_res">{value}</a>'
+        return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     current_date = get_str_by_datetime(get_datetime_now(), "day.month")
     month = ('За' if lang == 'ru' else 'For') + ' ' + \
@@ -556,13 +554,14 @@ def msg_channel_calc(
     ) \
         + (
             (
-                f'\n<b>{texts[lang]["stop"]}</b> ({get_print_float(calc.riskValue, 2)}{trading_currency}): <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}'
+                f'\n<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}'
                 + profit_result
             ) if not without_stop else ''
     ) \
-        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]} ({current_values_sum}{trading_currency})' if current_value_count is not None else '') \
+        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{calc.comment.strip()}' if (calc.comment and lang == 'ru') else '') \
+        + (f'\nUpdate: {"стоп изменен на" if lang == "ru" else "stop changed to"} {calc.newStop}' if (calc.newStop is not None) else '') \
         + (
             (
                 f'\n\n<b>{month}:</b> '
@@ -695,7 +694,7 @@ def msg_channel_calc_result(
             trading_style_type += f' ({texts[lang][time]})'
 
     def link(value: str):
-        return f'<a href="https://t.me/trade_res">{value}</a>'
+        return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     chart_link = ''
     if try_link != '':

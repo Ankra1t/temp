@@ -161,8 +161,8 @@ async def _results(message: Message, bot: AsyncTeleBot, state: StateContext, use
 
 
 async def _test(message: Message, bot: AsyncTeleBot):
-    logger.info(message.chat.id)
-    return
+    logger.info('TEST')
+    logger.info(f'CHAT ID = {message.chat.id}')
 
 
 def commands_registration(bot: AsyncTeleBot):

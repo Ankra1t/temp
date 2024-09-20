@@ -580,69 +580,20 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if send_data is None or calc is None:
             return
 
-        photo = calc.photo
+        tickerInfo = ticker.get_info(calc.tool or '')
 
-        sent_today = len(channel_calc.getSentToday() or [])
-
-        mesIds: list[int] = []
-        for i, CHANNEL_ID in enumerate(channels):
-            ch_lang = 'ru' if i == 0 else 'en'
-
-            tickerInfo = ticker.get_info(calc.tool or '')
-
-            weekStat = channel_calc.getWeekStat()
-            link = ''
-            if weekStat:
-                messages = weekStat.get('messages')
-                try:
-                    weekMesId = messages.get('mesIds', [])[0]
-                    weekСhId = messages.get('chIds', [])[0]
-                    link = f'https://t.me/c/{weekСhId.replace("-100", "")}/{weekMesId}'
-                except:
-                    pass
-
-            text = msg_channel_calc(
-                calc, ch_lang, send_data.withoutStop, send_data.time or '', sent_today + 1,
-                indexPrice=tickerInfo and tickerInfo.indexPrice,
-                description=calc.description if ch_lang == 'ru' else None,
-                week_stat_link=link,
-                try_link=f'https://t.me/{(await bot.get_me()).username}?start=calc_{calc_id}'
-            )
-
-            if photo is None:
-                new_mes = await bot.send_message(
-                    CHANNEL_ID, text,
-                    disable_web_page_preview=True
-                )
-            else:
-                new_mes = await bot.send_photo(
-                    CHANNEL_ID,
-                    photo, text,
-                )
-
-            mesIds.append(new_mes.id)
-
-        await bot.delete_message(chat_id, mes_id)
-        await bot.send_message(chat_id, '✅ Отправлено')
-
-        channel_calc.update(
-            send_data.id,
-            sent=True,
-            messages={
-                'chIds': [str(el) for el in channels],
-                'mesIds': [str(el) for el in mesIds],
-                'langs': ['ru', 'en'],
-            }
+        await channel_post.send_calc(
+            calc, send_data, tickerInfo and tickerInfo.indexPrice
         )
-
-        await channel_post.send_stats()
 
         if send_data.isVote:
             seconds = vote_timeout(calc_id)
             new_mes = await bot.send_message(
                 chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
             )
-            channel_post.loading_vote_message_ids[calc_id] = (chat_id, new_mes.id) # TODO - создать метод класса
+            channel_post.loading_vote_message_ids[calc_id] = (
+                chat_id, new_mes.id
+            )  # TODO - создать метод класса
 
         await send_main(bot, call.message, state, user, True)
 
@@ -667,7 +618,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         text = msg_channel_calc(
             calc, 'ru', send_data.withoutStop, send_data.time or '',
-            description=calc.description
         )
 
         if file_path is None:
