@@ -1148,7 +1148,8 @@ async def send_admin_channel_calc_item(
 
 <b>Тейки:</b>{take_info}
 
-<b>Время отмены:</b> {cancel_at}"""
+<b>Время отмены:</b> {cancel_at}
+<b>Вывод стопа:</b> {'❌' if send_data.withoutStop else '✅'}"""
 
     is_state = True
     if type == 'take':
