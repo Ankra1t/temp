@@ -3,6 +3,7 @@ from math import ceil
 import math
 import os
 from typing import Literal
+from venv import logger
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
@@ -1097,16 +1098,20 @@ async def send_admin_channel_calc_item(
     type: Literal['take', 'stop', ''] = '',
     is_first=False
 ):
+    logger.info('START')
     chat_id = message.chat.id
     mes_id = message.id
 
     await state.delete()
 
+    logger.info('GET DATA')
     send_data = channel_calc.getByCalc(calc_id)
     calc = calculation.get(calc_id)
+    logger.info('CHECK DATA')
     if calc is None:
         return
 
+    logger.info('NOT VALID')
     if send_data is None or (calc.status != 'WAIT' and calc.status != 'DEAL') or calc is None:
         msg = 'Расчёт не найден или не требует действий'
         if is_first:
@@ -1119,6 +1124,7 @@ async def send_admin_channel_calc_item(
             )
         return
 
+    logger.info('CREATE MESSAGE')
     link = ''
     if send_data.messages:
         try:
@@ -1150,6 +1156,7 @@ async def send_admin_channel_calc_item(
 
 <b>Время отмены:</b> {cancel_at}"""
 
+    logger.info('CHECHK MES TYPE')
     is_state = True
     if type == 'take':
         kb = kb_channel_calc_result_take(calc.tpRatio, calc_id)
@@ -1167,6 +1174,7 @@ async def send_admin_channel_calc_item(
 
     msg += info
 
+    logger.info('SEND MES')
     del_mes_id = mes_id
     if is_first:
         new_mes = await bot.send_message(
