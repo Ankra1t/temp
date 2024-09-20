@@ -712,8 +712,8 @@ def msg_channel_calc_result(
     return f"""{count_show}<b>{link(tool).replace('/USDT', '')}</b> | {'Завершено' if lang == 'ru' else 'Finished'}
 
 {texts[lang]["open"]}: {get_print_float(calc.openPrice)}{trading_currency}
-{texts[lang]["stop"]} ({get_print_float(calc.riskValue, 2)}{trading_currency}): {get_print_float(calc.newStop or calc.stopLoss)}{trading_currency}
-{texts[lang]["take"]} ({get_print_float(calc.riskValue * nearTake, 2)}{trading_currency}): {get_print_float(nearValue)}{trading_currency}
+{texts[lang]["stop"]}: {get_print_float(calc.newStop or calc.stopLoss)}{trading_currency}
+{texts[lang]["take"]}: {get_print_float(nearValue)}{trading_currency}
 
 ⚡️ {texts[lang]["close"]}: {get_print_float(close_price)}{trading_currency}
 ⚡️ {texts[lang]["result"]}: {result}""" \

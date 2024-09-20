@@ -149,7 +149,7 @@ def kb_channel_calc_result(
 
     keyboard.add(
         getButton(
-            'Вывести стоп' if withoutStop else 'Убрать стоп',
+            'Вывести стоп' if withoutStop else 'Убрать вывод стопа',
             'without_stop', calc_id
         )
     )
