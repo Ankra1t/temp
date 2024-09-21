@@ -59,7 +59,7 @@ async def send_start_by_user(
                         atr=abs(ticker_val) * abs(rate)
                     )
                     await bot.send_message(
-                        chat_id, msg_choose_direct(user.lang, ticker_val),
+                        chat_id, msg_choose_direct(user.lang, user.tgId, ticker_val),
                         reply_markup=kb_calc_direct(user.lang, True)
                     )
                 else:
