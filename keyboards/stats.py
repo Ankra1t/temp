@@ -576,7 +576,7 @@ def kb_confirm_channel_post(calc_id: int):
     btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
     add_time = getButton('Период', 'stc+time', calc_id)
 
-    tr_stop = getButton('Ск. стоп', 'stc+tr_stop', calc_id)
+    tr_stop = getButton('Ск. стоп', 'tr_stop', calc_id)
 
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
