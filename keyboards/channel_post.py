@@ -276,7 +276,7 @@ def kb_channel_cancel_at(calc_id: int):
     keyboard.add(
         getButton('1h', 'cancel_at+1h', calc_id),
         getButton('4h', 'cancel_at+4h', calc_id),
-        getButton('1d', 'cancel_at+4h', calc_id),
+        getButton('1d', 'cancel_at+1d', calc_id),
         getButton(back_txt(), 'back_calc', calc_id)
     )
     return keyboard
