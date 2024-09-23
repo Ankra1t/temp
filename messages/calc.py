@@ -420,6 +420,8 @@ def msg_channel_calc(
             'avg': 'среднесрочный',
             'day': 'внутри дня',
 
+            'breakeven': 'безубытку',
+
             'buy/sell': '<b>П</b>окупают/продают',
             'change24': '<b>И</b>зменение за 24ч',
             'turnover24': '<b>О</b>борот за 24ч',
@@ -449,6 +451,8 @@ def msg_channel_calc(
             'deal': '<b>T</b>rade',
             'avg': 'medium-term',
             'day': 'intraday',
+
+            'breakeven': 'breakeven',
 
             'buy/sell': '<b>B</b>uy/sell',
             'change24': '<b>C</b>hange in 24h',
@@ -491,18 +495,14 @@ def msg_channel_calc(
 
     diffOpSl = calc.openPrice - calc.stopLoss
     current_value_count = None
-    current_values_sum = None
     if indexPrice and status == 'DEAL':
         current_value_count = get_print_float(
             (indexPrice - calc.openPrice) / diffOpSl, 1
         )
-        current_values_sum = get_print_float(
-            calc.riskValue * float(current_value_count), 1)
 
     profit_result = ''
     if not without_stop:
         for i in range(calc_result.tp_count):
-            tp_ratio = calc.tpRatio[i]
             tp_val = calc_result.tp_values[i]
 
             if (
@@ -543,6 +543,27 @@ def msg_channel_calc(
         else:
             chart_link = ''
 
+    trailing_stops = ''
+    if calc.TrailingStops:
+        for el in calc.TrailingStops:
+            dt = datetime.fromisoformat(
+                el.createdAt.replace('Z', '')
+            ) + timedelta(hours=3)
+            time = dt.strftime("%H:%M")
+
+            trailing_stops += f'\n<b>{time}</b> - '
+            trailing_stops += 'Передвинул стоп к ' if lang == 'ru' else 'Moved the stop to '
+
+            if el.value == calc.openPrice:
+                trailing_stops += texts[lang]['breakeven']
+            else:
+                valueCount = (
+                    (el.value - calc.openPrice) /
+                    (calc.openPrice - calc.stopLoss)
+                )
+
+                trailing_stops += f'{el.value} (+{get_print_float(abs(valueCount), 1)} {texts[lang]["tp"]})'
+
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',
         '',
@@ -562,6 +583,7 @@ def msg_channel_calc(
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
+        + trailing_stops \
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
         + (f'\nUpdate: {"стоп изменен на" if lang == "ru" else "stop changed to"} {get_print_float(calc.newStop)}' if (calc.newStop is not None) else '') \
         + (

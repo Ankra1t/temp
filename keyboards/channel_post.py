@@ -62,13 +62,28 @@ def kb_send_settings(stop: bool, vote: bool):
     )
     btn_style = getButton("Изменить стиль", 'ss_style')
     btn_time = getButton("Изменить период", 'ss_time')
-    btn_back = getButton(back_txt('ru'), 'back')
+    btn_trailing_stop = getButton("Ск. стоп", 'ss_tr_stop')
+    btn_back = getButton(back_txt('ru'), 'admin_main')
 
     keyboard.add(
         btn_stop, btn_vote,
         btn_style, btn_time,
-        btn_back
+        btn_trailing_stop, btn_back
     )
+    return keyboard
+
+
+def kb_send_settings_trailing_stop():
+    keyboard = InlineKeyboardMarkup(row_width=4)
+
+    buttons = []
+    for i in range(1, 5):
+        buttons.append(
+            getButton(f'{i}', f'ss_tr_stop+{i}')
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(getButton(back_txt('ru'), 'send_settings'))
     return keyboard
 
 
@@ -276,7 +291,7 @@ def kb_channel_cancel_at(calc_id: int):
     keyboard.add(
         getButton('1h', 'cancel_at+1h', calc_id),
         getButton('4h', 'cancel_at+4h', calc_id),
-        getButton('1d', 'cancel_at+4h', calc_id),
+        getButton('1d', 'cancel_at+1d', calc_id),
         getButton(back_txt(), 'back_calc', calc_id)
     )
     return keyboard

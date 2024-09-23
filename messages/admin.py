@@ -88,7 +88,7 @@ def msg_admin_users_markets(counts: dict[str, int]):
 {POINT} США: <b>{counts.get('USA', 0)}</b>"""
 
 
-def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None):
+def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None, trailingStop: float | None):
     text_time = {
         'avg': 'Среднесрочная',
         'day': 'Внутридневная',
@@ -99,4 +99,6 @@ def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str
 Отправка стопа: {'Да' if stop else 'Нет'}
 Отправка опроса: {'Да' if vote else 'Нет'}
 Базовый стиль: {style or '-'}
-Базовый период: {text_time[time] if time is not None else '-'}"""
+Базовый период: {text_time[time] if time is not None else '-'}
+
+Скользящий стоп: {get_print_float(trailingStop, 1) if trailingStop else '-'}"""

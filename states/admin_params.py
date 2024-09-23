@@ -6,6 +6,8 @@ class AdminParamsState(StatesGroup):
 
     count_trial_days = State()
 
+    trailing_stop = State()
+
 
 class AdminMainState(StatesGroup):
     turnover = State()

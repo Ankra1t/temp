@@ -28,7 +28,7 @@ from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_use
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
-from services import calculation, channel_calc, ticker, violation
+from services import calculation, channel_calc, settings, ticker, violation
 
 from keyboards.channel_post import (
     kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
@@ -962,6 +962,7 @@ async def send_admin_send_settings(  # TODO - move to admin
     bot: AsyncTeleBot,
     message: Message,
     state: StateContext,
+    user: User,
     is_first=False
 ):
     chat_id = message.chat.id
@@ -972,9 +973,11 @@ async def send_admin_send_settings(  # TODO - move to admin
     isVote = liteDb.getSendSettings('isVote')
     tradingStyle = liteDb.getSendSettings('style')
     time = liteDb.getSendSettings('time')
+    advancedSettings = settings.getAdvanced(user.id)
 
     msg = msg_admin_send_settings(
-        withoutStop == 'False', isVote == 'True', tradingStyle, time
+        withoutStop == 'False', isVote == 'True', tradingStyle, time,
+        advancedSettings and advancedSettings.trailingStop
     )
     kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
 
@@ -1139,7 +1142,8 @@ async def send_admin_channel_calc_item(
     cancel_at = '-'
     if calc.cancelAt:
         dt = datetime.fromisoformat(
-            calc.cancelAt.replace('Z', '')) + timedelta(hours=3)
+            calc.cancelAt.replace('Z', '')
+        ) + timedelta(hours=3)
         cancel_at = dt.strftime("%d.%m %H:%M")
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>

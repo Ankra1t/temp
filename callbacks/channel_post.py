@@ -11,13 +11,14 @@ from messages.enter import msg_enter_cancel_at, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
 from CHANNEL.channel_post import channel_post
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc, settings, ticker
 
+from states.admin_params import AdminParamsState
 from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
-    kb_send_settings_calc_time, kb_send_settings_trading_style, kb_trailing_stop
+    kb_send_settings_calc_time, kb_send_settings_trading_style, kb_send_settings_trailing_stop, kb_trailing_stop
 )
 
 from pages.calculate import (
@@ -47,6 +48,19 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'main':
         await send_main(bot, call.message, state, user)
+
+    if type == 'admin_main':
+        chat_id = call.message.chat.id
+
+        await state.delete()
+
+        msg = 'Отправка сообщений в канал'
+        kb = kb_channel_post()
+
+        await bot.edit_message_text(
+            msg, chat_id, mes_id,
+            reply_markup=kb
+        )
 
     if type == 'back':
         chat_id = call.message.chat.id
@@ -163,17 +177,17 @@ More often: <b>{result}</b>"""
                 )
 
     if type == 'send_settings':
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_stop':
         current = liteDb.getSendSettings('withoutStop')
         liteDb.updateSendSettings('withoutStop', f'{current != "True"}')
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_vote':
         current = liteDb.getSendSettings('isVote')
         liteDb.updateSendSettings('isVote', f'{current != "True"}')
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_time':
         await edit_message(
@@ -188,7 +202,7 @@ More often: <b>{result}</b>"""
             time = None
 
         liteDb.updateSendSettings('time', time)
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_style':
         await bot.edit_message_text(
@@ -204,7 +218,28 @@ More often: <b>{result}</b>"""
             value = None
 
         liteDb.updateSendSettings('style', value)
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
+
+    if type == 'ss_tr_stop':
+        await bot.edit_message_text(
+            '👉 Введите значение для скользящего стопа', chat_id, mes_id,
+            reply_markup=kb_send_settings_trailing_stop()
+        )
+        await state.set(AdminParamsState.trailing_stop)
+        await state.add_data(
+            del_mes_id=mes_id
+        )
+
+    if 'ss_tr_stop+' in type:
+        _, value = type.split('+')
+        value = float(value)
+
+        settings.updateAdvanced(
+            user.id,
+            trailingStop=value
+        )
+
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'result_cancel':
         calculation.update(
@@ -301,7 +336,8 @@ More often: <b>{result}</b>"""
     if type == 'without_stop':
         send_data = channel_calc.getByCalc(calc_id)
         if send_data:
-            channel_calc.update(send_data.id, withoutStop=not send_data.withoutStop)
+            channel_calc.update(
+                send_data.id, withoutStop=not send_data.withoutStop)
         type = 'result'
 
     if type == 'result' or type == 'result_take' or type == 'result_stop':
@@ -380,7 +416,7 @@ More often: <b>{result}</b>"""
 
     if type == 'trailing_stop':
         await bot.edit_message_text(
-            'Введите значение для скользящего стопа',
+            '👉 Введите значение для скользящего стопа',
             chat_id, mes_id,
             reply_markup=kb_trailing_stop(calc_id)
         )

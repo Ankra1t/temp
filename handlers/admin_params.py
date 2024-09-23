@@ -1,12 +1,15 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from keyboards.admin_main import kb_tools_list_back
-from models import Message, StateContext
+from messages.errros import msg_digit_error
+from models import Message, StateContext, User
 from Classes import pay_guard
 
 from common.utils import digit_accept, get_print_float, get_normal_text
 
 from pages.admin import send_admin_tools_list
+from pages.calculate import send_admin_send_settings
+from services import settings
 from states.admin_params import AdminMainState, AdminParamsState
 from keyboards.admin_params import kb_params_choice, kb_params_back
 
@@ -65,6 +68,23 @@ async def handle_turnover(message: Message, bot: AsyncTeleBot, state: StateConte
     await send_admin_tools_list(bot, message, turnover, True)
 
 
+async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    chat_id = message.chat.id
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = await bot.send_message(
+            chat_id, msg_digit_error('ru')
+        )
+        await state.add_data(
+            del_mes_id=new_mes.id
+        )
+        return
+
+    settings.updateAdvanced(user.id, trailingStop=round(value, 1))
+    await send_admin_send_settings(bot, message, state, user, True)
+
+
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -72,5 +92,7 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_other_text, state=AdminParamsState.text)
 
     reg_mes(handle_count_trial_days, state=AdminParamsState.count_trial_days)
+
+    reg_mes(handle_trailing_stop, state=AdminParamsState.trailing_stop)
 
     reg_mes(handle_turnover, state=AdminMainState.turnover)

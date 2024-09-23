@@ -7,7 +7,7 @@ from telebot.asyncio_handler_backends import State
 from telebot.states import resolve_context
 
 from pydantic import BaseModel
-from typing import Literal, TypedDict, Union, Optional
+from typing import Literal, Union, Optional
 from datetime import datetime
 
 SUBSCRIBE_TYPE = Literal['trial', 'PAID']
@@ -332,6 +332,11 @@ class ForexInfo(BaseModel):
     cross_prices: dict[str, float]
 
 
+class CalcTrailingStop(BaseModel):
+    value: float
+    createdAt: str
+
+
 class Calculation(BaseModel):
     id: int = 0
     userId: int
@@ -364,6 +369,8 @@ class Calculation(BaseModel):
     photo: Optional[str] = None
     comment: Optional[str] = None
     openedList: bool = False
+
+    TrailingStops: Optional[list[CalcTrailingStop]] = None
 
     createdAt: Optional[str] = None
     dealAt: Optional[str] = None
