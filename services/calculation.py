@@ -137,7 +137,6 @@ def updateCancelAt(
 def updateTrailingStop(
     id: int, trailingStop: float
 ):
-    print(trailingStop)
     res = session.post(
         f'{API_URL}/calculations/{id}/trailingStop',
         json.dumps({
