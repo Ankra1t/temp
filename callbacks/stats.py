@@ -596,9 +596,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 chat_id, new_mes.id
             )  # TODO - создать метод класса
 
-        await bot.edit_message_text(
-            '✅ Отправлено', chat_id, mes_id
-        )
+
+        await bot.delete_message(chat_id, mes_id)
+        await bot.send_message(chat_id, '✅ Отправлено')
         await send_main(bot, call.message, state, user, True)
 
     if type == 'stc+rescreen':
