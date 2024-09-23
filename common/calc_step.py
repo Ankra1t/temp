@@ -205,7 +205,7 @@ async def choose_calculate_step(
                     atr=abs(value) * abs(rate)
                 )
                 await bot.send_message(
-                    chat_id, msg_choose_direct(user.lang, value),
+                    chat_id, msg_choose_direct(user.lang, user.tgId, value),
                     reply_markup=kb_calc_direct(user.lang)
                 )
                 return
