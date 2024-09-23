@@ -642,15 +642,15 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
     return keyboard
 
 
-def kb_channel_trailing_stop():
+def kb_channel_trailing_stop(calc_id: int):
     keyboard = InlineKeyboardMarkup(row_width=4)
 
     buttons = []
     for i in range(1, 5):
         buttons.append(
-            getButton(f'{i}', f'tr_stop+{i}')
+            getButton(f'{i}', f'tr_stop+{i}', calc_id)
         )
 
     keyboard.add(*buttons)
-    keyboard.add(getButton(back_txt('ru'), 'send_settings'))
+    keyboard.add(getButton(back_txt('ru'), 'stc+back', calc_id))
     return keyboard
