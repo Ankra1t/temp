@@ -585,7 +585,11 @@ def kb_confirm_channel_post(calc_id: int):
         add_photo, add_text,
         btn_vote, add_stop,
         add_time, btn_style,
-        [tr_stop],
+    )
+    keyboard.add(
+        tr_stop,
+    )
+    keyboard.add(
         cancel, send,
     )
     return keyboard
