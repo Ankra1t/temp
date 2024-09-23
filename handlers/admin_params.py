@@ -8,7 +8,7 @@ from Classes import pay_guard
 from common.utils import digit_accept, get_print_float, get_normal_text
 
 from pages.admin import send_admin_tools_list
-from pages.calculate import send_admin_send_settings
+from pages.calculate import send_admin_send_settings, send_confirm_calc_send
 from services import calculation, settings
 from states.admin_params import AdminMainState, AdminParamsState
 from keyboards.admin_params import kb_params_choice, kb_params_back
@@ -93,7 +93,7 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         calculation.updateTrailingStop(
             calc_id, value
         )
-        await send_admin_send_settings(bot, message, state, user, True)
+        await send_confirm_calc_send(bot, message, calc_id, True)
 
 
 
