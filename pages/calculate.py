@@ -758,6 +758,7 @@ async def send_confirm_calc_send(
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
+    text += f'\nСк. стоп: {stat.ActiveCalc.trailingStopCount if stat.ActiveCalc else "-"}'
 
     kb = kb_confirm_channel_post(
         stat_id

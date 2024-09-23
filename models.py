@@ -337,6 +337,10 @@ class CalcTrailingStop(BaseModel):
     createdAt: str
 
 
+class CalcActiveInfo(BaseModel):
+    trailingStopCount: Optional[float]
+
+
 class Calculation(BaseModel):
     id: int = 0
     userId: int
@@ -371,6 +375,7 @@ class Calculation(BaseModel):
     openedList: bool = False
 
     TrailingStops: Optional[list[CalcTrailingStop]] = None
+    ActiveCalc: Optional[CalcActiveInfo] = None
 
     createdAt: Optional[str] = None
     dealAt: Optional[str] = None
