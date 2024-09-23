@@ -585,7 +585,7 @@ def kb_confirm_channel_post(calc_id: int):
         add_photo, add_text,
         btn_vote, add_stop,
         add_time, btn_style,
-        tr_stop,
+        [tr_stop],
         cancel, send,
     )
     return keyboard
@@ -636,6 +636,7 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
         getButton(back_txt(), 'back_calc', calc_id)
     )
     return keyboard
+
 
 def kb_channel_trailing_stop():
     keyboard = InlineKeyboardMarkup(row_width=4)
