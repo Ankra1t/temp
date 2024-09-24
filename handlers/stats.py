@@ -331,13 +331,13 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    value = round(value, 2)
+    value = int(value * 60)
 
     if action == 'send_settings':
         settings.updateAdvanced(user.id, cancelMinutes=value)
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        calc = calculation.updateCancelAt(calc_id, int(value * 60))
+        calc = calculation.updateCancelAt(calc_id, value)
 
         if calc:
             send_data = channel_calc.getByCalc(calc.id)
