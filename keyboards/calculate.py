@@ -2,6 +2,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
+from common.utils import get_print_float
 from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
 from db import db
@@ -136,6 +137,13 @@ def kb_calc_atr(lang: LANGUAGES_TYPE, user_id: int, avg_atr: float | None = None
         )
 
     keyboard.add(
+        getButton(
+            'Свой стоп' if lang == 'ru' else 'Own stop',
+            'stop_loss'
+        ),
+    )
+
+    keyboard.add(
         getButton(back_txt(lang), 'calc_back'),
         get_settings_from_calc_button(),
         getButton(cancel_txt(lang), 'go_main')
@@ -143,17 +151,32 @@ def kb_calc_atr(lang: LANGUAGES_TYPE, user_id: int, avg_atr: float | None = None
     return keyboard
 
 
-def kb_calc_direct(lang: LANGUAGES_TYPE, start_calc=False):
+def kb_calc_direct(lang: LANGUAGES_TYPE, open_price: float, atr: float, start_calc=False):
     start_calc_show = ''
     if start_calc:
         start_calc_show = 'f'
 
+    if open_price < 100:
+        round_count = 4
+    else:
+        round_count = 2
+
+    long_pirce = get_print_float(open_price - atr, round_count)
+    short_price = get_print_float(open_price + atr, round_count)
+
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('Long', f'{start_calc_show}_direct+long'),
-        getButton('Short', f'{start_calc_show}_direct+short'),
+        getButton(f'Long {long_pirce}', f'{start_calc_show}_direct+long'),
+        getButton(f'Short {short_price}', f'{start_calc_show}_direct+short'),
     )
+
     if not start_calc:
+        keyboard.add(
+            getButton(
+                'Свой стоп' if lang == 'ru' else 'Own stop',
+                'stop_loss'
+            ),
+        )
         keyboard.add(
             getButton(back_txt(lang), 'calc_back'),
         )

@@ -401,6 +401,7 @@ async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateConte
 
     async with state.data() as data:
         stop_type = data.get('stop_type', 'default')
+        open_price = data.get('open_price')
         action = data.get('action', '')
 
     rate = 1
@@ -408,14 +409,16 @@ async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateConte
         _, percent = stop_type.split('+')
         rate = float(percent) * 0.01
 
+    atr = abs(stop_atr) * abs(rate)
+
     new_mes = await bot.send_message(
         chat_id, msg_choose_direct(user.lang, user.tgId),
-        reply_markup=kb_calc_direct(user.lang, action == 'send_calc')
+        reply_markup=kb_calc_direct(user.lang, open_price, atr, action == 'send_calc')
     )
 
     await state.add_data(
         del_mes_id=new_mes.id,
-        atr=abs(stop_atr) * abs(rate)
+        atr=atr
     )
 
 
@@ -456,6 +459,7 @@ async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContex
 
     async with state.data() as data:
         max_bar = data.get('max_bar', 0)
+        open_price = data.get('open_price')
         stop_type = data.get('stop_type', 'default')
         action = data.get('action', '')
 
@@ -464,14 +468,16 @@ async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContex
         _, percent = stop_type.split('+')
         rate = float(percent) * 0.01
 
+    atr = abs(max_bar - min_bar) * abs(rate)
+
     new_mes = await bot.send_message(
         chat_id, msg_choose_direct(user.lang, user.tgId),
-        reply_markup=kb_calc_direct(user.lang, action == 'send_calc')
+        reply_markup=kb_calc_direct(user.lang, open_price, atr, action == 'send_calc')
     )
 
     await state.add_data(
         del_mes_id=new_mes.id,
-        atr=abs(max_bar - min_bar) * abs(rate)
+        atr=atr
     )
 
 

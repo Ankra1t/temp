@@ -978,7 +978,8 @@ async def send_admin_send_settings(  # TODO - move to admin
 
     msg = msg_admin_send_settings(
         withoutStop == 'False', isVote == 'True', tradingStyle, time,
-        advancedSettings and advancedSettings.trailingStop
+        advancedSettings and advancedSettings.trailingStop,
+        advancedSettings and advancedSettings.cancelMinutes,
     )
     kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
 
@@ -1157,6 +1158,7 @@ async def send_admin_channel_calc_item(
 <b>Тейки:</b>{take_info}
 
 <b>Время отмены:</b> {cancel_at}
+<b>Ск. стоп:</b> {get_print_float(calc.ActiveCalc.trailingStopCount, 1) if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else '-'}
 <b>Вывод стопа:</b> {'❌' if send_data.withoutStop else '✅'}"""
 
     is_state = True

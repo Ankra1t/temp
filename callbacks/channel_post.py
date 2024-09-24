@@ -11,6 +11,7 @@ from messages.enter import msg_enter_cancel_at, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
 from CHANNEL.channel_post import channel_post
+from pages.admin import send_admin_main
 from services import calculation, channel_calc, settings, ticker
 
 from states.admin_params import AdminParamsState
@@ -18,7 +19,7 @@ from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
     kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
-    kb_send_settings_calc_time, kb_send_settings_trading_style, kb_send_settings_trailing_stop, kb_trailing_stop
+    kb_send_settings_calc_time, kb_send_settings_cancel_hours, kb_send_settings_trading_style, kb_send_settings_trailing_stop, kb_trailing_stop
 )
 
 from pages.calculate import (
@@ -50,17 +51,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_main(bot, call.message, state, user)
 
     if type == 'admin_main':
-        chat_id = call.message.chat.id
-
-        await state.delete()
-
-        msg = 'Отправка сообщений в канал'
-        kb = kb_channel_post()
-
-        await bot.edit_message_text(
-            msg, chat_id, mes_id,
-            reply_markup=kb
-        )
+        await send_admin_main(bot, call.message, state)
 
     if type == 'back':
         chat_id = call.message.chat.id
@@ -412,8 +403,6 @@ More often: <b>{result}</b>"""
         await state.set(StatsState.new_stop)
         await state.add_data(del_mes_id=mes_id, calc_id=calc_id)
 
-    await bot.answer_callback_query(call.id)
-
     if type == 'trailing_stop':
         await bot.edit_message_text(
             '👉 Введите значение для скользящего стопа',
@@ -429,6 +418,31 @@ More often: <b>{result}</b>"""
         await send_admin_channel_calc_item(
             bot, call.message, state, calc_id
         )
+
+    if type == 'ss_cancel_min':
+        new_mes_id = await edit_message(
+            bot, call.message, 'text',
+            msg_enter_cancel_at(user.lang),
+            kb_send_settings_cancel_hours()
+        )
+        await state.set(StatsState.cancel_at)
+        await state.add_data(
+            del_mes_id=new_mes_id,
+            action='send_settings'
+        )
+
+    if 'ss_cancel_min+' in type:
+        _, time = type.split('+')
+
+        if time == '1h':
+            time = 60
+        elif time == '4h':
+            time = 60 * 4
+        else:
+            time = 60 * 24
+
+        calc = settings.updateAdvanced(user.id, cancelMinutes=time)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     await bot.answer_callback_query(call.id)
 

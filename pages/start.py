@@ -48,24 +48,29 @@ async def send_start_by_user(
                 await state.set(CalculateState.stop_atr)
 
                 ticker_val = ticker.get_atr(
-                    calc.tool or '', period, int(count)) or None
+                    calc.tool or '', period, int(count)
+                ) or None
 
                 if atr_settings[0] and ticker_val is not None:
                     rate = 1
                     if 'atr_percent' in stop_type:
                         _, percent = stop_type.split('+')
                         rate = float(percent) * 0.01
+
+                    atr = abs(ticker_val) * abs(rate)
                     await state.add_data(
-                        atr=abs(ticker_val) * abs(rate)
+                        atr=atr
                     )
                     await bot.send_message(
-                        chat_id, msg_choose_direct(user.lang, user.tgId, ticker_val),
-                        reply_markup=kb_calc_direct(user.lang, True)
+                        chat_id,
+                        msg_choose_direct(user.lang, user.tgId, ticker_val),
+                        reply_markup=kb_calc_direct(user.lang, atr,  True)
                     )
                 else:
                     await bot.send_message(
                         chat_id, msg_enter_atr(user.lang, calc),
-                        reply_markup=kb_calc_atr(user.lang, user.tgId, ticker_val)
+                        reply_markup=kb_calc_atr(
+                            user.lang, user.tgId, ticker_val)
                     )
             else:
                 await bot.send_message(

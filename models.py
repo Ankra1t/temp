@@ -510,3 +510,4 @@ class AdvancedSettings(BaseModel):
     autoStop: bool
     autoTake: bool
     trailingStop: Optional[float]
+    cancelMinutes: Optional[float]

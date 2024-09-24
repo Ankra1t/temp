@@ -361,7 +361,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         comment = f'<b>{texts[lang]["comment"]}</b>: {calc.comment}\n'
 
     return '\n'.join((
-        f'#<b><u>{tool.replace("/USDT", "").upper()}</u></b>{demo_show} | {status}',
+        f'#<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
@@ -551,7 +551,8 @@ def msg_channel_calc(
             ) + timedelta(hours=3)
             time = dt.strftime("%H:%M")
 
-            trailing_stops += f'\n<b>{time}</b> - '
+            trailing_stops += f'\n{time} - '
+            # trailing_stops += 'Стоп к ' if lang == 'ru' else 'Stop to '
             trailing_stops += 'Передвинул стоп к ' if lang == 'ru' else 'Moved the stop to '
 
             if el.value == calc.openPrice:

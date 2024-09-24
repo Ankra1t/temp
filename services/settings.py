@@ -11,6 +11,7 @@ class UpdateAdvancedSettings(TypedDict):
     autoStop: NotRequired[Optional[bool]]
     autoTake: NotRequired[Optional[bool]]
     trailingStop: NotRequired[Optional[float]]
+    cancelMinutes: NotRequired[Optional[float]]
 
 @session_decorator
 def getAdvanced(userId: int):
