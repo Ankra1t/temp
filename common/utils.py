@@ -1,4 +1,5 @@
 import asyncio
+from math import floor
 import re
 from typing import Coroutine, Literal, TypeVar, Any, Callable
 from telebot.async_telebot import AsyncTeleBot
@@ -274,3 +275,30 @@ async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, numb
                 raise
     else:
         return await function(*args, **kwargs)
+
+
+def getNounByNumber(count: float, one: str, two: str, five: str):
+    if count > 0 and count < 1:
+        return two
+
+    n = floor(abs(count))
+    n %= 100
+    if n >= 5 and n <= 20:
+        return five
+
+    n %= 10
+    if n == 1:
+        return one
+
+    if n >= 2 and n <= 4:
+        return two
+
+    return five
+
+
+def getRuWordEnd(count: float, word: Literal['тейк', 'стоп'] | str):
+    if word == 'тейк':
+        return getNounByNumber(count, 'тейк', 'тейка', 'тейков')
+    if word == 'стоп':
+        return getNounByNumber(count, 'стоп', 'стопа', 'стопов')
+    return word

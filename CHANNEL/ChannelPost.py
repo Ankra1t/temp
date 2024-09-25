@@ -12,7 +12,7 @@ from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
 from services import calculation, channel_calc
 
-from common.utils import antiflood, get_print_float
+from common.utils import antiflood, get_print_float, getRuWordEnd
 from messages.calc import msg_channel_calc, months
 
 
@@ -333,44 +333,38 @@ class ChannelPost():
 
                 'title2': '⚡️ Результаты',
                 'from': 'с',
-                        'to': 'по',
+                'to': 'по',
 
-                        'stop': 'стоп',
-                        'count to': 'к',
+                'canceled': 'Отменённые',
 
-                        'canceled': 'Отменённые',
+                'tp': 'тейк',
+                'sl': 'стоп',
+                'prices': 'Купил/Продал',
+                'result': 'Итого за неделю',
+                'long': 'Лонг',
+                'short': 'Шорт',
+                'success': 'Процент успешных сделок',
 
-                        'tp': 'тейков',
-                        'sl': 'стопов',
-                        'prices': 'Купил/Продал',
-                        'result': 'Итого за неделю',
-                        'long': 'Лонг',
-                        'short': 'Шорт',
-                        'success': 'Процент успешных сделок',
-
-                        'breakeven': 'безубыток',
+                'breakeven': 'безубыток',
             },
             'en': {
                 'title': '⚡️ <b>Results for this week</b>',
 
                 'title2': '⚡️ Results',
                 'from': 'from',
-                        'to': 'to',
+                'to': 'to',
 
-                        'stop': 'stop',
-                        'count to': 'to',
+                'canceled': 'Cancelled',
 
-                        'canceled': 'Cancelled',
+                'tp': 'takes',
+                'sl': 'stops',
+                'prices': 'Bought/Sold',
+                'result': 'Total for the week',
+                'long': 'Long',
+                'short': 'Short',
+                'success': 'Success deals percent',
 
-                        'tp': 'takes',
-                        'sl': 'stops',
-                        'prices': 'Bought/Sold',
-                        'result': 'Total for the week',
-                        'long': 'Long',
-                        'short': 'Short',
-                        'success': 'Success deals percent',
-
-                        'breakeven': 'breakeven',
+                'breakeven': 'breakeven',
             },
         }
 
@@ -399,7 +393,7 @@ class ChannelPost():
         marathon_data: list[float | None] = data.get('marathon')
         marathon = ''
 
-        if marathon_data is not None and len(marathon_data) > 0:
+        if False and marathon_data is not None and len(marathon_data) > 0:
             week_num = 0
             week_value = 0
 
@@ -485,7 +479,7 @@ class ChannelPost():
                         tp_count += 1
                         sl_count += 1
                     elif valueCount > 0:
-                        tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
+                        tp_sl = f'{valueCount} {getRuWordEnd(valueCount, texts[lang]["tp"])}'
                         tp_count += valueCount
                         success_count += 1
 
@@ -494,7 +488,7 @@ class ChannelPost():
                         else:
                             short_count += 1
                     else:
-                        tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
+                        tp_sl = f'{abs(valueCount)} {getRuWordEnd(valueCount, texts[lang]["sl"])}'
                         sl_count += abs(valueCount)
                         fail_count += 1
 
@@ -527,17 +521,12 @@ class ChannelPost():
                         date_msg += f'\n{num}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
 
                 tp_sl_result = round(tp_count - sl_count, 1)
-                tp_sl_show = ''
-                if tp_sl_result > 0:
-                    tp_sl_show = f'{texts[lang]["tp"]}'
-                else:
-                    tp_sl_show = f'{texts[lang]["sl"]}'
-
                 tp_sl_msg = ''
                 if tp_count != 0 or sl_count != 0:
                     if tp_sl_result == 0:
                         tp_sl_msg = f'{texts[lang]["breakeven"]}'
                     else:
+                        tp_sl_show = getRuWordEnd(tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
                         tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
                     tp_sl_msg = f' ({tp_sl_msg})'
 
@@ -565,12 +554,6 @@ class ChannelPost():
 
             tp_sl_result = round(all_tp_count - all_sl_count, 1)
 
-            tp_sl_show = ''
-            if tp_sl_result > 0:
-                tp_sl_show = f'{texts[lang]["tp"]}'
-            else:
-                tp_sl_show = f'{texts[lang]["sl"]}'
-
             if all_tp_count == 0 and all_sl_count == 0:
                 if lang == 'ru':
                     msg += f'\n\nОжидаются ближайшие сделки'
@@ -582,6 +565,7 @@ class ChannelPost():
                 if tp_sl_result == 0:
                     msg += f'{texts[lang]["breakeven"]}'
                 else:
+                    tp_sl_show = getRuWordEnd(tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
                     msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
                 msg += '\n'
 

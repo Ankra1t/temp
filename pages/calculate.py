@@ -347,7 +347,6 @@ async def send_stats(
             'to': 'по',
 
             'stop': 'стоп',
-            'count to': 'к',
 
             'canceled': 'Отменённые',
 
@@ -369,7 +368,6 @@ async def send_stats(
             'to': 'to',
 
             'stop': 'stop',
-            'count to': 'to',
 
             'canceled': 'Cancelled',
 
@@ -416,7 +414,7 @@ async def send_stats(
             elif valueCount == 0:
                 tp_sl = texts[lang]['breakeven']
             elif valueCount > 0:
-                tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
+                tp_sl = f'{valueCount} {texts[lang]["tp"]}'
                 tp_count += valueCount
                 success_count += 1
                 if closePrice > openPrice:

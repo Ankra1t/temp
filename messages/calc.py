@@ -3,7 +3,7 @@ from typing import Literal
 import requests
 
 from common.dt import get_datetime_now, get_str_by_datetime
-from common.utils import get_decimal_count, get_print_float
+from common.utils import get_decimal_count, get_print_float, getRuWordEnd
 from config_global import RESULTS_CHANNEL_NAME
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
@@ -145,7 +145,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'акций',
             'lot': 'лота',
 
-            'sl': 'стоп лосс',
+            'tp': 'тейк',
+            'sl': 'стоп',
             'breakeven': 'безубыток',
 
             'to': 'к',
@@ -176,7 +177,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'shares',
             'lot': 'lots',
 
-            'sl': 'stop loss',
+            'tp': 'take',
+            'sl': 'stop',
             'breakeven': 'breakeven',
 
             'to': 'to',
@@ -207,7 +209,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'ulushlar',
             'lot': 'juda ko\'p',
 
-            'sl': "Yo'qotishni to'xtating",
+            'tp': 'olmoq',
+            'sl': "stop",
             'breakeven': 'beziyon',
 
             'to': 'ga',
@@ -238,7 +241,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'hisse senetleri',
             'lot': 'çok',
 
-            'sl': 'durdurma kaybı',
+            'tp': 'almak',
+            'sl': "durmak",
             'breakeven': 'başa baş',
 
             'to': 'ile',
@@ -348,7 +352,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         if tp_sl_count == 0:
             status = f'{texts[lang]["breakeven"]}'
         elif tp_sl_count > 0:
-            status = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1'
+            status = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["tp"]}'
         else:
             status = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
 
@@ -694,9 +698,9 @@ def msg_channel_calc_result(
     if calc.profit == 0:
         result = f'{texts[lang]["breakeven"]}'
     elif take_or_stop == 'take':
-        result = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["to"]} 1'
+        result = f'{get_print_float(tp_sl_count, 1)} {getRuWordEnd(tp_sl_count, texts[lang]["tp"])}'
     else:
-        result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
+        result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{getRuWordEnd(tp_sl_count, texts[lang]["sl"])}'
 
     nearTake = calc.tpRatio[0]
     nearValue = calc_result.tp_values[0]
