@@ -1,12 +1,15 @@
+from math import ceil
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
+from messages.admin import msg_admin_subs_list
 from models import CallbackQuery, StateContext, User
 
 from keyboards.admin_subs import (
-    admin_subs_factory, AdminSubsCallbackFilter, kb_admin_subs_choose_type, kb_admin_subs_choose_user,
+    admin_subs_factory, AdminSubsCallbackFilter, kb_admin_subs_back, kb_admin_subs_choose_type, kb_admin_subs_choose_user, kb_admin_subs_list,
 )
 from pages.admin import send_admin_main, send_admin_subs
+from services import subscribe
 from states.admin_tariff import AdminSubsState
 
 
@@ -46,10 +49,26 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             sub_type=value
         )
 
-    if type == 'list':
-        msg = ''
+    if 'list' in type:
+        LIMIT = 15
+        if 'list+' in type:
+            _, page = type.split('+')
+            page = int(page)
+        else:
+            page = 1
+
+        subs = subscribe.getAll(LIMIT, page)
+
+        if subs is None or len(subs.data) == 0:
+            msg = 'Подписок нет'
+            kb = kb_admin_subs_back()
+        else:
+            msg = msg_admin_subs_list(subs.data)
+            kb = kb_admin_subs_list(page, ceil(subs.count / LIMIT))
+
         await bot.edit_message_text(
             msg, chat_id, mes_id,
+            reply_markup=kb
         )
 
     await bot.answer_callback_query(call.id)

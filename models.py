@@ -511,3 +511,23 @@ class AdvancedSettings(BaseModel):
     autoTake: Optional[float]
     trailingStop: Optional[float]
     cancelMinutes: Optional[float]
+
+
+class UserSmall(BaseModel):
+    id: int
+    tgId: int
+    tgUsername: Optional[str]
+    username: Optional[str]
+
+
+class SubscribeInfo(BaseModel):
+    id: int
+    active: bool
+    finishDt: Optional[str]
+    productType: PRODUCT_TYPE
+    user: UserSmall
+
+
+class GetAllSubscribes(BaseModel):
+    data: list[SubscribeInfo]
+    count: int

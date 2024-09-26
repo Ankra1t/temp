@@ -1,7 +1,7 @@
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_print_float
 from messages.common import POINT
-from models import LANGUAGES_TYPE, Price
+from models import LANGUAGES_TYPE, Price, SubscribeInfo
 
 
 def msg_admin_main(
@@ -110,3 +110,17 @@ def msg_admin_send_settings(
 
 Скользящий стоп: {get_print_float(trailingStop, 1) if trailingStop else '-'}
 Отмена через: {f'{get_print_float(cancelMinutes / 60, 1)} ч' if cancelMinutes else '-'}"""
+
+
+def msg_admin_subs_list(data: list[SubscribeInfo]):
+    data_show = ''
+
+    if len(data) > 0:
+        data_show = '\n'
+        for el in data:
+            name = f'@{el.user.tgUsername}' if el.user.tgUsername else f'id={el.user.tgId}'
+            data_show += f'\n{el.id}. '
+            data_show += '"Активация расчёта"' if el.productType == 'active_calc' else 'Кальулятор'
+            data_show += f' ({name})'
+
+    return f"""<b><u>Список подписок</u></b>{data_show}"""

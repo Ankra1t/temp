@@ -2,7 +2,7 @@ import json
 from typing import TypedDict
 from typing_extensions import Unpack, NotRequired
 
-from models import PRODUCT_TYPE
+from models import PRODUCT_TYPE, GetAllSubscribes
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL
 
@@ -11,6 +11,26 @@ class CreateSub(TypedDict):
     userId: int
     productType: PRODUCT_TYPE
     finishMinutes: NotRequired[int]
+
+
+@session_decorator
+def getAll(limit: int | None = None, page: int | None = None):
+    params = ''
+    if limit:
+        params += f'limit={limit}'
+    if limit and page:
+        params += '&'
+    if page:
+        params += f'page={page}'
+
+    res = session.get(
+        f'{API_URL}/subscribe?{params}',
+    )
+
+    if not check_response(res):
+        return
+
+    return GetAllSubscribes.model_validate_json(res.text)
 
 
 @session_decorator
