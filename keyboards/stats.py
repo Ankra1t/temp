@@ -9,7 +9,7 @@ from common.keyboard import back_txt, cancel_txt
 from db import db
 from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
-from services import calculation, channel_calc
+from services import calculation, channel_calc, subscribe
 
 
 stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
@@ -169,6 +169,7 @@ def kb_calc_list(lang: LANGUAGES_TYPE, page: int, count: int, list_type: str):
 
 def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isResult=False):
     isAdmin = db.get_worker_role(user_db_id)
+    isActiveCalc = subscribe.check(user_db_id, 'active_calc')
     send_data = channel_calc.getByCalc(calc.id)
 
     texts = {
@@ -339,6 +340,11 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
         if isAdmin and send_data is None:
             keyboard.add(
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
+            )
+
+        if isActiveCalc and calc.ActiveCalc is None and calc.status == 'WAIT':
+            keyboard.add(
+                getButton('Активировать сделку', 'activate_calc', calc.id)
             )
 
     return keyboard
