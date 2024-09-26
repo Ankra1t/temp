@@ -737,9 +737,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'tr_stop':
-        await bot.edit_message_text(
-            '👉 Введите значение для скользящего стопа', chat_id, mes_id,
-            reply_markup=kb_channel_trailing_stop(calc_id)
+        await edit_message(
+            bot, call.message, 'text',
+            '👉 Введите значение для скользящего стопа',
+            kb_channel_trailing_stop(calc_id)
         )
         await state.set(AdminParamsState.trailing_stop)
         await state.add_data(
