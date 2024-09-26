@@ -18,6 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from AuthRoles import vote_timeout
 from CHANNEL.channel_post import channel_post
 
+from states.admin_params import AdminParamsState
 from states.calculate import CalculateState, ForexCalcState
 from states.stats import ChannelCalcState, StatsState
 
@@ -44,7 +45,7 @@ from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from keyboards.main import kb_main
 from keyboards.stats import (
-    kb_cancel_at, stats_factory, StatsCallbackFilter,
+    kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
@@ -595,6 +596,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 chat_id, new_mes.id
             )  # TODO - создать метод класса
 
+
+        await bot.delete_message(chat_id, mes_id)
+        await bot.send_message(chat_id, '✅ Отправлено')
         await send_main(bot, call.message, state, user, True)
 
     if type == 'stc+rescreen':
@@ -730,6 +734,28 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_confirm_calc_send(bot, call.message, calc_id, True)
 
     if type == 'stc+back':
+        await send_confirm_calc_send(bot, call.message, calc_id)
+
+    if type == 'tr_stop':
+        await bot.edit_message_text(
+            '👉 Введите значение для скользящего стопа', chat_id, mes_id,
+            reply_markup=kb_channel_trailing_stop(calc_id)
+        )
+        await state.set(AdminParamsState.trailing_stop)
+        await state.add_data(
+            del_mes_id=mes_id,
+            calc_id=calc_id
+        )
+
+    if 'tr_stop+' in type:
+        _, value = type.split('+')
+        value = float(value)
+
+        calculation.updateTrailingStop(
+            calc_id,
+            value
+        )
+
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'result_cancel':

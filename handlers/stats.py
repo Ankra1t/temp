@@ -14,14 +14,14 @@ from db import db
 from common.utils import delete_message, digit_accept, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
+from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
 from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
 from messages.errros import msg_digit_error, msg_freeze_error, msg_text_error
 from messages.main import msg_frozen
-from services import calculation, channel_calc, ticker, violation
+from services import calculation, channel_calc, settings, ticker, violation
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -172,7 +172,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
             now = get_datetime_now() + timedelta(hours=3)
             data['comment'] = (
                 (calc.comment or '') +
-                f'\n<b>{now.strftime("%H:%M")}</b> - '
+                f'\n{now.strftime("%H:%M")} - '
                 + text
             ).strip()
         else:
@@ -323,7 +323,7 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
         calc_id = data.get('calc_id', 0)
         action = data.get('action', '')
 
-    value = digit_accept(message, int)
+    value = digit_accept(message)
     if value is None:
         new_mes = await bot.send_message(
             chat_id, msg_digit_error(user.lang),
@@ -331,16 +331,22 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    calc = calculation.updateCancelAt(calc_id, value * 60)
+    value = int(value * 60)
 
-    if calc:
-        send_data = channel_calc.getByCalc(calc.id)
-        if action == 'send_data' and send_data is not None:
-            await send_admin_channel_calc_item(
-                bot, message, state, calc.id, is_first=True
-            )
-        else:
-            await send_calculation(bot, message, state, user, calc, True)
+    if action == 'send_settings':
+        settings.updateAdvanced(user.id, cancelMinutes=value)
+        await send_admin_send_settings(bot, message, state, user, True)
+    else:
+        calc = calculation.updateCancelAt(calc_id, value)
+
+        if calc:
+            send_data = channel_calc.getByCalc(calc.id)
+            if action == 'send_data' and send_data is not None:
+                await send_admin_channel_calc_item(
+                    bot, message, state, calc.id, is_first=True
+                )
+            else:
+                await send_calculation(bot, message, state, user, calc, True)
 
 
 async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -372,10 +378,12 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
-    reg_mes(handle_calc_image_text, state=StatsState.add_image_text, content_types=['message', 'photo'])
+    reg_mes(handle_calc_image_text, state=StatsState.add_image_text,
+            content_types=['message', 'photo'])
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
-    reg_mes(handle_send_photo, state=StatsState.send_add_photo, content_types=['message', 'photo'])
+    reg_mes(handle_send_photo, state=StatsState.send_add_photo,
+            content_types=['message', 'photo'])
 
     reg_mes(handle_cancel_at, state=StatsState.cancel_at)
     reg_mes(handle_new_stop, state=StatsState.new_stop)

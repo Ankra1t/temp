@@ -28,7 +28,7 @@ from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_use
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
-from services import calculation, channel_calc, ticker, violation
+from services import calculation, channel_calc, settings, ticker, violation
 
 from keyboards.channel_post import (
     kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
@@ -347,7 +347,6 @@ async def send_stats(
             'to': 'по',
 
             'stop': 'стоп',
-            'count to': 'к',
 
             'canceled': 'Отменённые',
 
@@ -369,7 +368,6 @@ async def send_stats(
             'to': 'to',
 
             'stop': 'stop',
-            'count to': 'to',
 
             'canceled': 'Cancelled',
 
@@ -416,7 +414,7 @@ async def send_stats(
             elif valueCount == 0:
                 tp_sl = texts[lang]['breakeven']
             elif valueCount > 0:
-                tp_sl = f'{valueCount} {texts[lang]["count to"]} 1'
+                tp_sl = f'{valueCount} {texts[lang]["tp"]}'
                 tp_count += valueCount
                 success_count += 1
                 if closePrice > openPrice:
@@ -758,6 +756,7 @@ async def send_confirm_calc_send(
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
+    text += f'\nСк. стоп: {stat.ActiveCalc.trailingStopCount if stat.ActiveCalc and stat.ActiveCalc.trailingStopCount else "-"}'
 
     kb = kb_confirm_channel_post(
         stat_id
@@ -962,6 +961,7 @@ async def send_admin_send_settings(  # TODO - move to admin
     bot: AsyncTeleBot,
     message: Message,
     state: StateContext,
+    user: User,
     is_first=False
 ):
     chat_id = message.chat.id
@@ -972,9 +972,12 @@ async def send_admin_send_settings(  # TODO - move to admin
     isVote = liteDb.getSendSettings('isVote')
     tradingStyle = liteDb.getSendSettings('style')
     time = liteDb.getSendSettings('time')
+    advancedSettings = settings.getAdvanced(user.id)
 
     msg = msg_admin_send_settings(
-        withoutStop == 'False', isVote == 'True', tradingStyle, time
+        withoutStop == 'False', isVote == 'True', tradingStyle, time,
+        advancedSettings and advancedSettings.trailingStop,
+        advancedSettings and advancedSettings.cancelMinutes,
     )
     kb = kb_send_settings(withoutStop == 'False', isVote == 'True')
 
@@ -1139,7 +1142,8 @@ async def send_admin_channel_calc_item(
     cancel_at = '-'
     if calc.cancelAt:
         dt = datetime.fromisoformat(
-            calc.cancelAt.replace('Z', '')) + timedelta(hours=3)
+            calc.cancelAt.replace('Z', '')
+        ) + timedelta(hours=3)
         cancel_at = dt.strftime("%d.%m %H:%M")
 
     msg = f"""<b>{f'<a href="{link}">' if link != '' else ''}{calc.tool}{'</a>' if link != '' else ''}</b>
@@ -1152,6 +1156,7 @@ async def send_admin_channel_calc_item(
 <b>Тейки:</b>{take_info}
 
 <b>Время отмены:</b> {cancel_at}
+<b>Ск. стоп:</b> {get_print_float(calc.ActiveCalc.trailingStopCount, 1) if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else '-'}
 <b>Вывод стопа:</b> {'❌' if send_data.withoutStop else '✅'}"""
 
     is_state = True

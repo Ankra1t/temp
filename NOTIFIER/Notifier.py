@@ -114,7 +114,7 @@ class Notifier():
         refer_user = db.get_user_by_id(new_user.refer_id or -1)
 
         message = self._get_user_mes(new_user, sent_messages.firstLang, sent_messages.num, refer_user)
-        message += f'\nВыбранный язык: ({getLangByCode(lang)})'
+        message += f'\nВыбранный язык: {getLangByCode(lang)}'
 
         for i in range(len(sent_messages.chIds)):
             try:

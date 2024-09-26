@@ -223,7 +223,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
                     if sent_messages:
                         await notifier.change_user_choosed_lang(
-                            user.tgId, langg, sent_messages
+                            user.id, langg, sent_messages
                         )
                 else:
                     await send_settings(bot, call.message, state, user)

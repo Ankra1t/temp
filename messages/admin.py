@@ -34,7 +34,7 @@ def msg_admin_main(
 Количество по рефералке: {count_refs}"""
 
 
-def msg_admin_users(count_all: int, count_with_sub: int, count_blocked: int, lang_counts:dict[LANGUAGES_TYPE, int]):
+def msg_admin_users(count_all: int, count_with_sub: int, count_blocked: int, lang_counts: dict[LANGUAGES_TYPE, int]):
     return f"""👨 <b><u>Пользователи</u></b>
 
 Всего: {count_all}
@@ -88,7 +88,14 @@ def msg_admin_users_markets(counts: dict[str, int]):
 {POINT} США: <b>{counts.get('USA', 0)}</b>"""
 
 
-def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str | None):
+def msg_admin_send_settings(
+    stop: bool,
+    vote: bool,
+    style: str | None,
+    time: str | None,
+    trailingStop: float | None,
+    cancelMinutes: float | None
+):
     text_time = {
         'avg': 'Среднесрочная',
         'day': 'Внутридневная',
@@ -99,4 +106,7 @@ def msg_admin_send_settings(stop: bool, vote: bool, style: str | None, time: str
 Отправка стопа: {'Да' if stop else 'Нет'}
 Отправка опроса: {'Да' if vote else 'Нет'}
 Базовый стиль: {style or '-'}
-Базовый период: {text_time[time] if time is not None else '-'}"""
+Базовый период: {text_time[time] if time is not None else '-'}
+
+Скользящий стоп: {get_print_float(trailingStop, 1) if trailingStop else '-'}
+Отмена через: {f'{get_print_float(cancelMinutes / 60, 1)} ч' if cancelMinutes else '-'}"""

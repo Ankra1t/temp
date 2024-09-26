@@ -11,3 +11,6 @@ class AdminTariffState(StatesGroup):
 
     discount_percent = State()
     discount_datetime = State()
+
+class AdminSubsState(StatesGroup):
+    user_id_name = State()

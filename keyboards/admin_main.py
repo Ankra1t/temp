@@ -26,6 +26,7 @@ def kb_admin_main():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_users = getButton("Пользователи", 'users')
+    btn_subs = getButton("Подписки", 'subs')
     btn_workers = getButton("Работники", 'workers')
     btn_posts = getButton("Отложенные посты", 'fut_posts')
     btn_payments = getButton("Оплата", 'payment')
@@ -35,10 +36,10 @@ def kb_admin_main():
     btn_get_tickers = getButton("Список монет", 'tools')
     btn_site_code = getButton("Войти на сайт", 'site_code')
 
-    keyboard.add(btn_users, btn_workers)
-    keyboard.add(btn_posts, btn_payments)
+    keyboard.add(btn_users, btn_subs)
+    keyboard.add(btn_workers, btn_payments)
     keyboard.add(btn_params, btn_tariffs)
-    keyboard.add(btn_send_settings)
+    keyboard.add(btn_posts, btn_send_settings)
     keyboard.add(btn_get_tickers, btn_site_code)
     return keyboard
 

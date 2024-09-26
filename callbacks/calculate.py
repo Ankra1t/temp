@@ -157,6 +157,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         async with state.data() as data:
             cur_tool: str = data.get('tool', '')
             stop_type: str = data.get('stop_type', '')
+            op: float = data.get('open_price', 0)
 
         atr_settings = liteDb.getUserAtrSettings(user.tgId)
         period, count = atr_settings[1].split('+')
@@ -165,18 +166,20 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if not value:
             return
 
-        await bot.edit_message_text(
-            msg_choose_direct(user.lang, user.tgId), chat_id, mes_id,
-            reply_markup=kb_calc_direct(user.lang)
-        )
-
         rate = 1
         if 'atr_percent' in stop_type:
             _, percent = stop_type.split('+')
             rate = float(percent) * 0.01
 
+        atr = abs(value) * abs(rate)
+
+        await bot.edit_message_text(
+            msg_choose_direct(user.lang, user.tgId), chat_id, mes_id,
+            reply_markup=kb_calc_direct(user.lang, op, atr)
+        )
+
         await state.add_data(
-            atr=abs(value) * abs(rate)
+            atr=atr
         )
 
     if 'direct+' in type:
@@ -283,6 +286,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 await send_calculation(bot, call.message, state, user, new_calc, True)
             else:
                 await create_and_send_calc(bot, call.message, state, user, stop_loss)
+
+    if type == 'stop_loss':
+        await state.add_data(
+            stop_type='default'
+        )
+        await choose_calculate_step(bot, call.message, state, user, True)
 
     await bot.answer_callback_query(call.id)
 

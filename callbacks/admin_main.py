@@ -10,7 +10,7 @@ from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter, kb
 from pages.calculate import send_admin_send_settings
 from pages.user import send_site_code
 from pages.admin import (
-    send_admin_main, send_admin_tools_list, send_admin_users, send_admin_fut_posts, send_admin_workers,
+    send_admin_main, send_admin_subs, send_admin_tools_list, send_admin_users, send_admin_fut_posts, send_admin_workers,
     send_admin_params, send_admin_payment, send_admin_tariffs
 )
 from services import ticker
@@ -52,8 +52,11 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if type == 'back':
         await send_admin_main(bot, call.message, state)
 
+    if type == 'subs':
+        await send_admin_subs(bot, call.message)
+
     if type == 'send_settings':
-        await send_admin_send_settings(bot, call.message, state)
+        await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'tools':
         await send_admin_tools_list(bot, call.message, value)

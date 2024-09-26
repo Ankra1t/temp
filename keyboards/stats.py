@@ -545,7 +545,6 @@ def kb_confirm_channel_post(calc_id: int):
     calc = calculation.get(calc_id)
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)
-    rescreen = getButton('Повтор скрина', f'stc+rescreen', calc_id)
 
     is_text = is_photo = is_vote = without_stop = False
     if send_data is not None and calc is not None:
@@ -576,14 +575,21 @@ def kb_confirm_channel_post(calc_id: int):
 
     btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
     add_time = getButton('Период', 'stc+time', calc_id)
+
+    tr_stop = getButton('Ск. стоп', 'tr_stop', calc_id)
+
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        add_photo, add_text,  # rescreen,
+        add_photo, add_text,
         btn_vote, add_stop,
         add_time, btn_style,
-
+    )
+    keyboard.add(
+        tr_stop,
+    )
+    keyboard.add(
         cancel, send,
     )
     return keyboard
@@ -633,4 +639,18 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
         getButton('1d', 'cancel_at+4h', calc_id),
         getButton(back_txt(), 'back_calc', calc_id)
     )
+    return keyboard
+
+
+def kb_channel_trailing_stop(calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=4)
+
+    buttons = []
+    for i in range(1, 5):
+        buttons.append(
+            getButton(f'{i}', f'tr_stop+{i}', calc_id)
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(getButton(back_txt('ru'), 'stc+back', calc_id))
     return keyboard

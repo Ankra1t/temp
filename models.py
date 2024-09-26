@@ -16,7 +16,7 @@ SORT_BY_TYPE = Literal['new', 'old']
 
 TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
-PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
+PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'active_calc']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
@@ -332,6 +332,15 @@ class ForexInfo(BaseModel):
     cross_prices: dict[str, float]
 
 
+class CalcTrailingStop(BaseModel):
+    value: float
+    createdAt: str
+
+
+class CalcActiveInfo(BaseModel):
+    trailingStopCount: Optional[float]
+
+
 class Calculation(BaseModel):
     id: int = 0
     userId: int
@@ -364,6 +373,9 @@ class Calculation(BaseModel):
     photo: Optional[str] = None
     comment: Optional[str] = None
     openedList: bool = False
+
+    TrailingStops: Optional[list[CalcTrailingStop]] = None
+    ActiveCalc: Optional[CalcActiveInfo] = None
 
     createdAt: Optional[str] = None
     dealAt: Optional[str] = None
@@ -490,3 +502,12 @@ class Live(BaseModel):
 class MonthToolStats(BaseModel):
     count: int
     value: float
+
+
+class AdvancedSettings(BaseModel):
+    userId: int
+    autoOpen: bool
+    autoStop: bool
+    autoTake: Optional[float]
+    trailingStop: Optional[float]
+    cancelMinutes: Optional[float]

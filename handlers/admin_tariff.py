@@ -4,16 +4,16 @@ from telebot.async_telebot import AsyncTeleBot
 from db import db
 from models import Price, Message, StateContext
 
-from common.utils import digit_accept, text_accept
+from common.utils import digit_accept, is_digit, text_accept
 from common.dt import get_datetime_by_str, get_str_by_datetime
 
 from keyboards.admin_tariffs import (
     kb_admin_tariffs_list_back, kb_admin_tariffs_back
 )
 
-from states.admin_tariff import AdminTariffState
-from pages.admin import send_admin_tariffs, send_admin_tariffs_list_item
-
+from services import subscribe
+from states.admin_tariff import AdminSubsState, AdminTariffState
+from pages.admin import send_admin_subs, send_admin_tariffs, send_admin_tariffs_list_item
 
 
 async def handle_name(message: Message, bot: AsyncTeleBot, state: StateContext):
@@ -291,6 +291,56 @@ async def handle_discount_datetime(message: Message, bot: AsyncTeleBot, state: S
     await state.delete()
 
 
+async def handle_user_id_name(message: Message, bot: AsyncTeleBot, state: StateContext):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    value = message.text
+    if value is None:
+        await bot.send_message(
+            chat_id, 'Введите тг id или ник текстом'
+        )
+        return
+
+    async with state.data() as data:
+        type = data.get('sub_type')
+
+    if is_digit(value):
+        value = int(value)
+        user = db.get_user_by_tg_id(value)
+    else:
+        user = db.get_user_by_name(value)
+
+    if user is None:
+        await bot.send_message(
+            chat_id, '❗️Пользователь не найден\nПовторите ввод данных:'
+        )
+    else:
+        name = f'@{user.tg_username}' if user.tg_username else f'id = {user.tg_id}'
+
+        check_user_sub = subscribe.check(userId=user.id, productType=type)
+        if check_user_sub:
+            await bot.send_message(
+                chat_id, f'У пользователя {name} есть "Активация сделок"'
+            )
+            await state.delete()
+            await send_admin_subs(bot, message, True)
+            return
+
+        res = subscribe.create(userId=user.id, productType=type)
+        if res:
+            await bot.send_message(
+                chat_id, f'✅ Пользователю {name} выдана "Активация сделок"'
+            )
+            await state.delete()
+            await send_admin_subs(bot, message, True)
+            return
+
+        await bot.send_message(
+            chat_id, f'❗️Ошибка сервера\nПовторите ввод данных:'
+        )
+
+
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -304,3 +354,5 @@ def registration(bot: AsyncTeleBot):
 
     reg_mes(handle_discount_percent, state=AdminTariffState.discount_percent)
     reg_mes(handle_discount_datetime, state=AdminTariffState.discount_datetime)
+
+    reg_mes(handle_user_id_name, state=AdminSubsState.user_id_name)

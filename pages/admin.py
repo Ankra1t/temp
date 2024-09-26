@@ -5,6 +5,7 @@ from telebot.types import InputMediaPhoto
 from db import db
 from data.data import liteDb
 from Classes import base_statis
+from keyboards.admin_subs import kb_admin_subs
 from models import Post, LANGUAGES_TYPE, Message, StateContext
 
 from common.utils import delete_message, get_lang, get_print_float, get_print_signal_info
@@ -554,6 +555,30 @@ async def send_admin_tools_list(
 
     kb = kb_admin_tools_list(turnover)
     msg = f'Какие инстурменты вы хотите получить?{turnover_show}'
+
+    if is_first:
+        await bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
+    else:
+        await bot.edit_message_text(
+            msg,
+            chat_id, mes_id,
+            reply_markup=kb
+        )
+
+
+async def send_admin_subs(
+    bot: AsyncTeleBot,
+    message: Message,
+    is_first=False,
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    kb = kb_admin_subs()
+    msg = msg_admin_menu('Подписки')
 
     if is_first:
         await bot.send_message(

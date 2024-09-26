@@ -98,6 +98,7 @@ async def choose_calculate_step(
         is_try = data.get('is_try', False)
         stop_type = data.get('stop_type', 'default')
         stop_loss = data.get('stop_loss')
+        atr = data.get('atr')
 
     is_style_change = liteDb.getStyleChange(
         user.tgId) and trading_style is None
@@ -181,7 +182,7 @@ async def choose_calculate_step(
     elif stop_loss == -1:
         await bot.send_message(
             chat_id, msg_choose_direct(user.lang, user.tgId),
-            reply_markup=kb_calc_direct(user.lang)
+            reply_markup=kb_calc_direct(user.lang, open_price, atr)
         )
         return
     else:
@@ -194,6 +195,7 @@ async def choose_calculate_step(
             period, count = atr_settings[1].split('+')
 
             value = ticker.get_atr(tool, period, int(count)) or None
+            print(value)
 
             if atr_settings[0] and value is not None:
                 rate = 1
@@ -201,12 +203,13 @@ async def choose_calculate_step(
                     _, percent = stop_type.split('+')
                     rate = float(percent) * 0.01
 
+                new_atr = abs(value) * abs(rate)
                 await state.add_data(
-                    atr=abs(value) * abs(rate)
+                    atr=new_atr
                 )
                 await bot.send_message(
                     chat_id, msg_choose_direct(user.lang, user.tgId, value),
-                    reply_markup=kb_calc_direct(user.lang)
+                    reply_markup=kb_calc_direct(user.lang, open_price, new_atr)
                 )
                 return
 
