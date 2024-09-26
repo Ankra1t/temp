@@ -567,7 +567,7 @@ def msg_channel_calc(
                     (calc.openPrice - calc.stopLoss)
                 )
 
-                trailing_stops += f'{el.value} (+{get_print_float(abs(valueCount), 1)} {texts[lang]["tp"]})'
+                trailing_stops += f'{get_print_float(el.value)} (+{get_print_float(abs(valueCount), 1)} {texts[lang]["tp"]})'
 
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',

@@ -409,6 +409,12 @@ More often: <b>{result}</b>"""
             chat_id, mes_id,
             reply_markup=kb_trailing_stop(calc_id)
         )
+        await state.set(AdminParamsState.trailing_stop)
+        await state.add_data(
+            del_mes_id=mes_id,
+            calc_id=calc_id,
+            type='change_sent'
+        )
 
     if 'trailing+' in type:
         _, value = type.split('+')

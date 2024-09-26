@@ -22,6 +22,7 @@ from callbacks.admin_posts import registration as _reg_cb_admin_posts
 from callbacks.admin_stats import registration as _reg_cb_admin_stats
 from callbacks.admin_tariffs import registration as _reg_cb_admin_tariffs
 from callbacks.admin_workers import registration as _reg_cb_admin_workers
+from callbacks.admin_subs import registration as _reg_cb_admin_subs
 from callbacks.admin_users import registration as _reg_cb_admin_users
 from callbacks.user_main import registration as _reg_cb_user_main
 
@@ -78,6 +79,7 @@ def reg(bot: AsyncTeleBot):
     _reg_admin_users(bot)
     _reg_admin_params(bot)
     _reg_admin_posts(bot)
+    _reg_cb_admin_subs(bot)
 
     _reg_user_account(bot)
 

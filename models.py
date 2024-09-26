@@ -16,7 +16,7 @@ SORT_BY_TYPE = Literal['new', 'old']
 
 TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
-PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals']
+PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'active_calc']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
 
@@ -508,6 +508,6 @@ class AdvancedSettings(BaseModel):
     userId: int
     autoOpen: bool
     autoStop: bool
-    autoTake: bool
+    autoTake: Optional[float]
     trailingStop: Optional[float]
     cancelMinutes: Optional[float]

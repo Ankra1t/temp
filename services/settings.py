@@ -9,7 +9,7 @@ from config_global import API_URL
 class UpdateAdvancedSettings(TypedDict):
     autoOpen: NotRequired[Optional[bool]]
     autoStop: NotRequired[Optional[bool]]
-    autoTake: NotRequired[Optional[bool]]
+    autoTake: NotRequired[Optional[float]]
     trailingStop: NotRequired[Optional[float]]
     cancelMinutes: NotRequired[Optional[float]]
 
