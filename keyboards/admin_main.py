@@ -46,8 +46,8 @@ def kb_admin_main():
 
 def kb_admin_tools_list(turnover: str = ''):
     return InlineKeyboardMarkup(row_width=2).add(
-        getButton('⬇️ Спот (.P)', 'tools_spot', turnover),
-        getButton('⬇️ Обычный', 'tools_default', turnover),
+        getButton('⬇️ Бессрочные.P', 'tools_spot', turnover),
+        getButton('⬇️ Спот', 'tools_default', turnover),
         getButton('Оборот от...', 'tools_turnover', turnover),
         getButton(back_txt(), 'back')
     )
