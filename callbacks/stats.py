@@ -236,6 +236,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if calc_info is None:
                 return
 
+            send_data = channel_calc.getByCalc(calc_id)
+
+            if calc_info.ActiveCalc is not None and send_data is None:
+                return
+
             if profit == '-':
                 await state.set(StatsState.loss)
                 await state.add_data(stat_id=calc_id)
@@ -269,7 +274,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     calculation.update(
                         calc_id, status='FINISH'
                     )
-                    send_data = channel_calc.getByCalc(calc_id)
                     if send_data is not None:
                         tickerInfo = ticker.get_info(calc_info.tool or '')
                         await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -759,15 +763,18 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'result_cancel':
-        calculation.update(
+        calc = calculation.get(calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc and calc.ActiveCalc and not send_data:
+            return
+
+        calc = calculation.update(
             calc_id, status='CANCEL'
         )
 
-        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -776,15 +783,18 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'result_deal':
-        calculation.update(
+        calc = calculation.get(calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc and calc.ActiveCalc and not send_data:
+            return
+
+        calc = calculation.update(
             calc_id, status='DEAL'
         )
 
-        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -793,15 +803,17 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_calculation(bot, call.message, state, user, calc, True)
 
     if type == 'result_wait':
-        calculation.update(
+        calc = calculation.get(calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc and calc.ActiveCalc and not send_data:
+            return
+
+        calc = calculation.update(
             calc_id, status='WAIT'
         )
-
-        calc = calculation.get(calc_id)
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -812,6 +824,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'result_take':
         calc = calculation.get(calc_id)
         if calc is None:
+            return
+
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc and calc.ActiveCalc and not send_data:
             return
 
         await bot.edit_message_reply_markup(
@@ -830,6 +846,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'result_stop':
         calc = calculation.get(calc_id)
         if calc is None:
+            return
+
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc and calc.ActiveCalc and not send_data:
             return
 
         await bot.edit_message_reply_markup(
