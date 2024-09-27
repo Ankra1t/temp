@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
+from typing import Literal, Optional
 from common.utils import get_lang, get_print_float
 
-from models import Calculation
+from models import CalcTrailingStop, Calculation
 from db import db
 
 
@@ -453,3 +455,42 @@ def get_html_from_calc_results(
     </div>
 </div>
 """
+
+
+def getTrailingStopsMessage(lang: Literal['ru', 'en'], value: Optional[list[CalcTrailingStop]], openPrice: float, stopLoss: float):
+    texts = {
+        'ru': {
+            'tp': 'тейка',
+            'sl': 'стопа',
+            'breakeven': 'безубытку',
+        },
+        'en': {
+            'tp': 'take',
+            'sl': 'stop',
+            'breakeven': 'breakeven',
+        }
+    }
+
+    trailing_stops = ''
+    if value:
+        for el in value:
+            dt = datetime.fromisoformat(
+                el.createdAt.replace('Z', '')
+            ) + timedelta(hours=3)
+            time = dt.strftime("%H:%M")
+
+            trailing_stops += f'\n{time} - '
+            trailing_stops += 'Передвинул стоп к ' if lang == 'ru' else 'Moved the stop to '
+
+            if el.value == openPrice:
+                trailing_stops += texts[lang]['breakeven']
+            else:
+                valueCount = (
+                    (el.value - openPrice) /
+                    (openPrice - stopLoss)
+                )
+
+                trailing_stops += get_print_float(el.value)
+                trailing_stops += f' ({"+" if valueCount > 0 else ""}{get_print_float(valueCount, 1)} {texts[lang]["tp" if valueCount >= 0 else "sl"]})'
+
+    return trailing_stops

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 import requests
 
+from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float, getRuWordEnd
 from config_global import RESULTS_CHANNEL_NAME
@@ -547,27 +548,9 @@ def msg_channel_calc(
         else:
             chart_link = ''
 
-    trailing_stops = ''
-    if calc.TrailingStops:
-        for el in calc.TrailingStops:
-            dt = datetime.fromisoformat(
-                el.createdAt.replace('Z', '')
-            ) + timedelta(hours=3)
-            time = dt.strftime("%H:%M")
-
-            trailing_stops += f'\n{time} - '
-            # trailing_stops += 'Стоп к ' if lang == 'ru' else 'Stop to '
-            trailing_stops += 'Передвинул стоп к ' if lang == 'ru' else 'Moved the stop to '
-
-            if el.value == calc.openPrice:
-                trailing_stops += texts[lang]['breakeven']
-            else:
-                valueCount = (
-                    (el.value - calc.openPrice) /
-                    (calc.openPrice - calc.stopLoss)
-                )
-
-                trailing_stops += f'{get_print_float(el.value)} (+{get_print_float(abs(valueCount), 1)} {texts[lang]["tp"]})'
+    trailing_stops = getTrailingStopsMessage(
+        lang, calc.TrailingStops, calc.openPrice, calc.stopLoss
+    )
 
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',

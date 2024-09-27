@@ -363,6 +363,26 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
         await state.add_data(del_mes_id=new_mes.id)
         return
 
+    calc = calculation.get(calc_id)
+    if calc is None:
+        return
+
+    ticker_info = ticker.get_info(
+        (calc.tool if calc and calc.tool else '').replace('/', '')
+    )
+
+    diffOpSl = calc.openPrice - calc.stopLoss
+
+    if ticker_info and (ticker_info.indexPrice) and (
+        (diffOpSl > 0 and value > ticker_info.indexPrice) or
+        (diffOpSl < 0 and value < ticker_info.indexPrice)
+    ):
+        new_mes = await bot.send_message(
+            chat_id, 'Цена стопа не может быть выше текущей цены инструмента\nВведите другое значение:',
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
     calc = calculation.update(calc_id, newStop=value)
 
     if calc:

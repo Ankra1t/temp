@@ -462,7 +462,10 @@ class LiveDeal(BaseModel):
     takeProfitRatio: Optional[float]
     messages: Optional[SentMessages]
     indexPrice: Optional[float]
+    openPrice: float
+    stopLoss: float
     comment: Optional[str]
+    TrailingStops: Optional[list[CalcTrailingStop]] = None
 
 
 class LiveStats(BaseModel):

@@ -554,7 +554,7 @@ async def send_admin_tools_list(
         turnover_show = f'\nОборот от {turnover}M USDT'
 
     kb = kb_admin_tools_list(turnover)
-    msg = f'Какие инстурменты вы хотите получить?{turnover_show}'
+    msg = f'Какие инструменты вы хотите получить?{turnover_show}'
 
     if is_first:
         await bot.send_message(
