@@ -164,7 +164,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     if calc is None:
         return
 
-    if photo:
+    if type != 'stats' and photo:
         data['photo'] = photo
 
     if text:
@@ -398,12 +398,16 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
-    reg_mes(handle_calc_image_text, state=StatsState.add_image_text,
-            content_types=['message', 'photo'])
+    reg_mes(
+        handle_calc_image_text, state=StatsState.add_image_text,
+        content_types=['text', 'photo']
+    )
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
-    reg_mes(handle_send_photo, state=StatsState.send_add_photo,
-            content_types=['message', 'photo'])
+    reg_mes(
+        handle_send_photo, state=StatsState.send_add_photo,
+        content_types=['text', 'photo']
+    )
 
     reg_mes(handle_cancel_at, state=StatsState.cancel_at)
     reg_mes(handle_new_stop, state=StatsState.new_stop)
