@@ -196,7 +196,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'del': 'Delete',
             'change': 'Change',
             'img': 'Description',
-            'comment': 'Сomment',
+            'comment': 'Comment',
             'result': 'Result',
 
             'calc_stats': 'Deals',
@@ -243,7 +243,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası',
-            'cancelAt': 'İptal etmek',
+            'cancelAt': 'Iptal etmek',
         },
     }
 

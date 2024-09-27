@@ -765,7 +765,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'result_cancel':
         calc = calculation.get(calc_id)
         send_data = channel_calc.getByCalc(calc_id)
-        if calc and calc.ActiveCalc and not send_data:
+        if calc and calc.status != 'WAIT' and calc.ActiveCalc and not send_data:
             return
 
         calc = calculation.update(
