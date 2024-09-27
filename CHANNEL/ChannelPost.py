@@ -84,7 +84,7 @@ class ChannelPost():
                         )
                     else:
                         new_mes = await antiflood(
-                            self.bot.send_photo,
+                            self.main_bot.send_photo,
                             chId, calc.photo, msg,
                         )
 
