@@ -164,7 +164,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     if calc is None:
         return
 
-    if type != 'stats' and photo:
+    if photo:
         data['photo'] = photo
 
     if text:
