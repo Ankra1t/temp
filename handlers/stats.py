@@ -164,7 +164,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     if calc is None:
         return
 
-    if photo:
+    if type != 'stats' and photo:
         data['photo'] = photo
 
     if text:
@@ -363,6 +363,26 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
         await state.add_data(del_mes_id=new_mes.id)
         return
 
+    calc = calculation.get(calc_id)
+    if calc is None:
+        return
+
+    ticker_info = ticker.get_info(
+        (calc.tool if calc and calc.tool else '').replace('/', '')
+    )
+
+    diffOpSl = calc.openPrice - calc.stopLoss
+
+    if ticker_info and (ticker_info.indexPrice) and (
+        (diffOpSl > 0 and value > ticker_info.indexPrice) or
+        (diffOpSl < 0 and value < ticker_info.indexPrice)
+    ):
+        new_mes = await bot.send_message(
+            chat_id, 'Цена стопа не может быть выше текущей цены инструмента\nВведите другое значение:',
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
     calc = calculation.update(calc_id, newStop=value)
 
     if calc:
@@ -378,12 +398,16 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
-    reg_mes(handle_calc_image_text, state=StatsState.add_image_text,
-            content_types=['message', 'photo'])
+    reg_mes(
+        handle_calc_image_text, state=StatsState.add_image_text,
+        content_types=['text', 'photo']
+    )
 
     reg_mes(handle_send_text, state=StatsState.send_add_text)
-    reg_mes(handle_send_photo, state=StatsState.send_add_photo,
-            content_types=['message', 'photo'])
+    reg_mes(
+        handle_send_photo, state=StatsState.send_add_photo,
+        content_types=['text', 'photo']
+    )
 
     reg_mes(handle_cancel_at, state=StatsState.cancel_at)
     reg_mes(handle_new_stop, state=StatsState.new_stop)

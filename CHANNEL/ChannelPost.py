@@ -5,6 +5,7 @@ from telebot.asyncio_helper import ApiTelegramException
 from telebot.types import InputPollOption
 
 
+from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID
 from config_logger import logger
@@ -127,195 +128,201 @@ class ChannelPost():
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
 
-            if len(live.deal) > 0:
-                msges = ''
+            msges = ''
 
-                for calc_ in live.deal:
-                    current_msg = ''
+            for calc_ in live.deal:
+                current_msg = ''
 
-                    calcMesId = None
-                    if calc_.messages is not None:
-                        calcMesId = calc_.messages.mesIds[chId_i]
+                calcMesId = None
+                if calc_.messages is not None:
+                    calcMesId = calc_.messages.mesIds[chId_i]
 
-                    comment = calc_.comment
+                comment = calc_.comment
+                trailing_stops = getTrailingStopsMessage(
+                    lang, calc_.TrailingStops, calc_.openPrice, calc_.stopLoss
+                )
 
-                    result = ''
-                    tp_sl = ''
-                    if calc_.takeProfit:
-                        result = ('<b>Тейк</b>' if lang == 'ru' else '<b>Take</b>') \
-                            + f""": {get_print_float(
-                            calc_.takeProfit, 0 if calc_.takeProfit > 100 else 4
-                        )}""" + (f' ({get_print_float(calc_.takeProfitRatio, 1)})' if calc_.takeProfitRatio else '')
-                    else:
-                        result = 'В сделке' if lang == 'ru' else 'In deal'
-                        result = f'<b>{result}</b>'
+                result = ''
+                tp_sl = ''
+                if calc_.takeProfit:
+                    result = ('<b>Тейк</b>' if lang == 'ru' else '<b>Take</b>') \
+                        + f""": {get_print_float(
+                        calc_.takeProfit, 0 if calc_.takeProfit > 100 else 4
+                    )}""" + (f' ({get_print_float(calc_.takeProfitRatio, 1)})' if calc_.takeProfitRatio else '')
+                else:
+                    result = 'В сделке' if lang == 'ru' else 'In deal'
+                    result = f'<b>{result}</b>'
 
-                    tool = f'{(calc_.tool or "").replace("/USDT", "")}'
-                    if calcMesId is not None:
-                        tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
+                tool = f'{(calc_.tool or "").replace("/USDT", "")}'
+                if calcMesId is not None:
+                    tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
 
-                    is_shift = False
+                is_shift = False
 
-                    price = ''
-                    take_profit = ''
-                    if calc_.indexPrice is not None:
-                        price = get_print_float(
-                            calc_.indexPrice, 0 if calc_.indexPrice > 100 else 4
-                        )
-                        price = f' - {price}'
+                price = ''
+                take_profit = ''
+                if calc_.indexPrice is not None:
+                    price = get_print_float(
+                        calc_.indexPrice, 0 if calc_.indexPrice > 100 else 4
+                    )
+                    price = f' - {price}'
 
-                        # if calc_.takeProfit:
-                        #     take_profit = '\n\n'
-                        #     take_profit += '<b>Б</b>лижайший тейк: ' if lang == 'ru' else '<b>T</b>he nearest take: '
-                        #     take_profit += f"""<b>{get_print_float(
-                        #         calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
-                        #     )} USDT</b>"""
-                        #     is_shift = True
+                    # if calc_.takeProfit:
+                    #     take_profit = '\n\n'
+                    #     take_profit += '<b>Б</b>лижайший тейк: ' if lang == 'ru' else '<b>T</b>he nearest take: '
+                    #     take_profit += f"""<b>{get_print_float(
+                    #         calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
+                    #     )} USDT</b>"""
+                    #     is_shift = True
 
-                    current_msg += f'\n<b>{tool}</b>{price} | {result}'
-                    current_msg += take_profit
+                current_msg += f'\n<b>{tool}</b>{price} | {result}'
+                current_msg += take_profit
 
-                    # if dealAt is not None:
-                    #     current_msg += f'\n{dealAt.strftime("%H:%M")} - '
-                    #     current_msg += 'в сделке' if lang == 'ru' else 'in deal'
+                # if dealAt is not None:
+                #     current_msg += f'\n{dealAt.strftime("%H:%M")} - '
+                #     current_msg += 'в сделке' if lang == 'ru' else 'in deal'
 
-                    if lang == 'ru' and comment is not None:
-                        current_msg += f'\n{comment.strip()}'
-                        is_shift = True
+                if lang == 'ru' and comment is not None:
+                    current_msg += f'\n{comment.strip()}'
+                    is_shift = True
 
-                    if is_shift:
-                        current_msg += '\n'
+                if trailing_stops != '':
+                    current_msg += trailing_stops
+                    is_shift = True
 
-                    # if finishAt is not None and valueCount is not None:
-                    #     current_msg += f'\n{finishAt.strftime("%H:%M")} - '
-                    #     current_msg += 'сделка закрыта' if lang == 'ru' else 'deal closed'
+                if is_shift:
+                    current_msg += '\n'
 
-                    #     tp_sl = ''
-                    #     if valueCount > 0:
-                    #         tp_sl = 'тейк' if lang == 'ru' else 'take'
-                    #     else:
-                    #         tp_sl = 'стоп' if lang == 'ru' else 'stop'
+                # if finishAt is not None and valueCount is not None:
+                #     current_msg += f'\n{finishAt.strftime("%H:%M")} - '
+                #     current_msg += 'сделка закрыта' if lang == 'ru' else 'deal closed'
 
-                    #     current_msg += f' ({get_print_float(valueCount, 1)} {tp_sl})'
+                #     tp_sl = ''
+                #     if valueCount > 0:
+                #         tp_sl = 'тейк' if lang == 'ru' else 'take'
+                #     else:
+                #         tp_sl = 'стоп' if lang == 'ru' else 'stop'
 
-                    msges += current_msg
+                #     current_msg += f' ({get_print_float(valueCount, 1)} {tp_sl})'
 
-                finished = ''
-                for calc_ in live.finished:
-                    valueCount = calc_.valueCount
+                msges += current_msg
 
-                    if valueCount > 0:
-                        tp_sl = 'тейка' if lang == 'ru' else 'takes'
-                    elif valueCount < 0:
-                        tp_sl = 'стоп' if lang == 'ru' else 'stop'
-                    else:
-                        tp_sl = 'безубыток' if lang == 'ru' else 'breakeven'
+            finished = ''
+            for calc_ in live.finished:
+                valueCount = calc_.valueCount
 
-                    if valueCount != 0:
-                        result = f'{"+" if valueCount > 0 else ""}{get_print_float(valueCount, 1)} {tp_sl}'
-                    else:
-                        result = f'{tp_sl}'
-                    tool = f'{(calc_.tool or "").replace("/USDT", "")}'
+                if valueCount > 0:
+                    tp_sl = 'тейка' if lang == 'ru' else 'takes'
+                elif valueCount < 0:
+                    tp_sl = 'стоп' if lang == 'ru' else 'stop'
+                else:
+                    tp_sl = 'безубыток' if lang == 'ru' else 'breakeven'
 
-                    calcMesId = None
-                    if calc_.messages is not None:
-                        calcMesId = calc_.messages.mesIds[chId_i]
+                if valueCount != 0:
+                    result = f'{"+" if valueCount > 0 else ""}{get_print_float(valueCount, 1)} {tp_sl}'
+                else:
+                    result = f'{tp_sl}'
+                tool = f'{(calc_.tool or "").replace("/USDT", "")}'
 
-                    if calcMesId is not None:
-                        tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
+                calcMesId = None
+                if calc_.messages is not None:
+                    calcMesId = calc_.messages.mesIds[chId_i]
 
-                    finished += f'{tool} {result}, '
+                if calcMesId is not None:
+                    tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
 
-                msg = f'⚡️<b>LIVE-{"сделки" if lang == "ru" else "deals"}</b>'
+                finished += f'{tool} {result}, '
 
-                if msges.strip():
-                    msg += '\n\n' + msges.strip()
+            msg = f'⚡️<b>LIVE-{"сделки" if lang == "ru" else "deals"}</b>'
 
-                if msg != '':
-                    msg += '\n\n<b>'
-                    msg += 'За день' if lang == 'ru' else 'Today'
-                    msg += ':</b> '
+            if msges.strip():
+                msg += '\n\n' + msges.strip()
 
-                    tp_sl_show = ''
-                    if live.todayValueCount >= 0:
-                        tp_sl_show = 'тейков' if lang == 'ru' else 'take'
-                    else:
-                        tp_sl_show = 'стопов' if lang == 'ru' else 'stop'
-                    msg += f'{"+" if live.todayValueCount > 0 else ""}{get_print_float(live.todayValueCount, 1)} {tp_sl_show} ({get_print_float(live.todayProfit)}$)'
+            if msg != '':
+                msg += '\n\n<b>'
+                msg += 'За день' if lang == 'ru' else 'Today'
+                msg += ':</b> '
 
-                    current_date = get_str_by_datetime(
-                        get_datetime_now(), "day.month"
+                tp_sl_show = ''
+                if live.todayValueCount >= 0:
+                    tp_sl_show = 'тейков' if lang == 'ru' else 'take'
+                else:
+                    tp_sl_show = 'стопов' if lang == 'ru' else 'stop'
+                msg += f'{"+" if live.todayValueCount > 0 else ""}{get_print_float(live.todayValueCount, 1)} {tp_sl_show} ({get_print_float(live.todayProfit)}$)'
+
+                current_date = get_str_by_datetime(
+                    get_datetime_now(), "day.month"
+                )
+
+                msg += '\n<b>'
+                msg += months[lang][int(current_date.split('.')
+                                        [1]) - 1].capitalize()
+                msg += ':</b> '
+
+                tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
+                msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
+
+            if finished != '':
+                msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'
+                msg += finished.strip()[:-1]
+
+            if len(live.wait) > 0:
+                msg += '\n\n<b>'
+                msg += 'В ожидании: ' if lang == 'ru' else 'In wait: '
+                msg += '</b>'
+                for i, el in enumerate(live.wait):
+                    tool = el.tool.replace('/USDT', '')
+                    if el.messages is not None:
+                        tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{el.messages.mesIds[chId_i]}">{tool}</a>'
+
+                    msg += tool
+                    if i != len(live.wait) - 1:
+                        msg += ', '
+
+            if len(live.wait) == 0 and len(live.canceled) > 0:
+                msg += '\n'
+
+            if len(live.canceled) > 0:
+                msg += '\n<b>'
+                msg += 'Отменены: ' if lang == 'ru' else 'Canceled: '
+                msg += '</b>'
+                for i, el in enumerate(live.canceled):
+                    tool = el.tool.replace('/USDT', '')
+                    if el.messages is not None:
+                        tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{el.messages.mesIds[chId_i]}">{tool}</a>'
+
+                    msg += tool
+                    if i != len(live.canceled) - 1:
+                        msg += ', '
+
+            week = channel_calc.getWeekStat()
+            if week is not None:
+                text = 'Статистика' if lang == 'ru' else 'Stats'
+                msg += f'\n\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
+
+            try:
+                if live.isNewMes or mesIds is None:
+                    new_mes = await antiflood(
+                        self.bot.send_message,
+                        chId, msg,
                     )
 
-                    msg += '\n<b>'
-                    msg += months[lang][int(current_date.split('.')
-                                            [1]) - 1].capitalize()
-                    msg += ':</b> '
-
-                    tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
-                    msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
-
-                if finished != '':
-                    msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'
-                    msg += finished.strip()[:-1]
-
-                if len(live.wait) > 0:
-                    msg += '\n\n<b>'
-                    msg += 'В ожидании: ' if lang == 'ru' else 'In wait: '
-                    msg += '</b>'
-                    for i, el in enumerate(live.wait):
-                        tool = el.tool.replace('/USDT', '')
-                        if el.messages is not None:
-                            tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{el.messages.mesIds[chId_i]}">{tool}</a>'
-
-                        msg += tool
-                        if i != len(live.wait) - 1:
-                            msg += ', '
-
-                if len(live.wait) == 0 and len(live.canceled) > 0:
-                    msg += '\n'
-
-                if len(live.canceled) > 0:
-                    msg += '\n<b>'
-                    msg += 'Отменены: ' if lang == 'ru' else 'Canceled: '
-                    msg += '</b>'
-                    for i, el in enumerate(live.canceled):
-                        tool = el.tool.replace('/USDT', '')
-                        if el.messages is not None:
-                            tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{el.messages.mesIds[chId_i]}">{tool}</a>'
-
-                        msg += tool
-                        if i != len(live.canceled) - 1:
-                            msg += ', '
-
-                week = channel_calc.getWeekStat()
-                if week is not None:
-                    text = 'Статистика' if lang == 'ru' else 'Stats'
-                    msg += f'\n\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
-
-                try:
-                    if live.isNewMes or mesIds is None:
-                        new_mes = await antiflood(
-                            self.bot.send_message,
-                            chId, msg,
+                    if mesIds is not None:
+                        await self.bot.unpin_chat_message(
+                            int(chId), int(mesIds[chId_i])
                         )
 
-                        if mesIds is not None:
-                            await self.bot.unpin_chat_message(
-                                int(chId), int(mesIds[chId_i])
-                            )
-
-                        await self.bot.pin_chat_message(
-                            chId, new_mes.id
-                        )
-                        new_live_mes_ids.append(str(new_mes.id))
-                    else:
-                        await antiflood(
-                            self.bot.edit_message_text,
-                            msg, chId, int(mesIds[chId_i])
-                        )
-                except Exception as e:
-                    logger.error(f'LIVE SEND ERROR: {e}')
+                    await self.bot.pin_chat_message(
+                        chId, new_mes.id
+                    )
+                    new_live_mes_ids.append(str(new_mes.id))
+                else:
+                    await antiflood(
+                        self.bot.edit_message_text,
+                        msg, chId, int(mesIds[chId_i])
+                    )
+            except Exception as e:
+                logger.error(f'LIVE SEND ERROR: {e}')
 
         if len(new_live_mes_ids) == len(chIds):
             channel_calc.updateLiveInfo(

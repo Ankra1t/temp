@@ -36,7 +36,7 @@ from messages.stats import msg_market_stats
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc, ticker
 
-# TODO - months в commmon файл
+# TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
 from messages.enter import msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_trading_style
 from messages.main import msg_frozen
