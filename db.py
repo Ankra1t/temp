@@ -1875,19 +1875,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_calculation_canceled(self, id: int, value: bool):
-        query = 'UPDATE "Calculation" SET "canceled" = %s, "statDt" = %s WHERE id = %s'
-        params = (value, get_datetime_now(), id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
     def get_all_calculation(self) -> list[Calculation]:
         query = 'SELECT * FROM "Calculation"'
 

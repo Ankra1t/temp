@@ -339,6 +339,9 @@ class CalcTrailingStop(BaseModel):
 
 class CalcActiveInfo(BaseModel):
     trailingStopCount: Optional[float]
+    autoStop: Optional[bool]
+    autoTake: Optional[float]
+    chMesIds: Optional[str]
 
 
 class Calculation(BaseModel):
@@ -534,3 +537,20 @@ class SubscribeInfo(BaseModel):
 class GetAllSubscribes(BaseModel):
     data: list[SubscribeInfo]
     count: int
+
+
+class MinUser(BaseModel):
+    id: int
+    tgId: int
+    tgUsername: Optional[str]
+
+
+class ActiveStats(BaseModel):
+    longCount: float
+    shortCount: float
+    profitCount: float
+
+
+class UserActiveStats(BaseModel):
+    user: MinUser
+    data: ActiveStats

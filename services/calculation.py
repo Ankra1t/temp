@@ -1,8 +1,17 @@
 import json
-from typing import Literal
+from typing import Literal, Optional, TypedDict
+from typing_extensions import Unpack, NotRequired
+
 from config_global import API_URL
-from models import Calculation, ForexInfo
+from models import Calculation, ForexInfo, UserActiveStats
 from services.base_config import check_response, session_decorator, session
+
+
+class UpdateActiveCalc(TypedDict):
+    autoStop: NotRequired[Optional[bool]]
+    autoTake: NotRequired[Optional[float]]
+    trailingStopCount: NotRequired[Optional[float]]
+    chMesIds: NotRequired[Optional[str]]
 
 
 @session_decorator
@@ -134,17 +143,57 @@ def updateCancelAt(
 
 
 @session_decorator
-def updateTrailingStop(
-    id: int, trailingStop: float
+def updateActive(
+    id: int, **data: Unpack[UpdateActiveCalc]
 ):
     res = session.post(
-        f'{API_URL}/calculations/{id}/trailingStop',
-        json.dumps({
-            "trailingStop": trailingStop
-        }).encode()
+        f'{API_URL}/calculations/{id}/updateActive',
+        json.dumps(data).encode()
     )
 
     if not check_response(res):
         return
 
     return True
+
+
+@session_decorator
+def activate(
+    id: int
+):
+    res = session.post(
+        f'{API_URL}/calculations/{id}/activate',
+    )
+
+    if not check_response(res):
+        return
+
+    return True
+
+
+@session_decorator
+def finishActive(
+    id: int
+):
+    res = session.post(
+        f'{API_URL}/calculations/{id}/finishActive',
+    )
+
+    if not check_response(res):
+        return
+
+    return Calculation.model_validate_json(res.text)
+
+
+@session_decorator
+def getActiveStatsByUser(
+    id: int
+):
+    res = session.get(
+        f'{API_URL}/calculations/userActiveStats/{id}',
+    )
+
+    if not check_response(res):
+        return
+
+    return UserActiveStats.model_validate_json(res.text)

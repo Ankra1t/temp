@@ -91,8 +91,8 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         settings.updateAdvanced(user.id, trailingStop=value)
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        calculation.updateTrailingStop(
-            calc_id, value
+        calculation.updateActive(
+            calc_id, trailingStopCount=value
         )
 
         if type == 'change_sent':

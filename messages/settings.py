@@ -1,7 +1,7 @@
 from typing import Literal
 from common.utils import get_print_float
 from messages.common import POINT, msg_atr_bars, transl_market, transl_tr_style, transl_tr_type, msg_current_value
-from models import LANGUAGES_TYPE, UserCalcSettings
+from models import LANGUAGES_TYPE, AdvancedSettings, UserCalcSettings
 
 # TODO - delete db from messages files
 from db import db
@@ -754,3 +754,44 @@ def msg_update_deposit(lang: LANGUAGES_TYPE):
     }
 
     return texts[lang]['main']
+
+
+def msg_active_settings(
+    lang: LANGUAGES_TYPE, data: AdvancedSettings | None
+):
+    texts = {
+        'ru': {
+            'main': 'Настройка активных сделок',
+            'trailing': 'Ск. стоп',
+            'cancelAt': 'Отмена через (часов)',
+            'autoStop': 'Авто стоп',
+            'autoTake': 'Авто тейк',
+        },
+        'en': {
+            'main': 'Setting of active trades',
+            'trailing': 'Tr. stop',
+            'cancelAt': 'Cancellation after (hours)',
+            'autoStop': 'Auto stop',
+            'autoTake': 'Auto take',
+        },
+        'uz': {
+            'main': 'Faol savdolarni sozlash',
+            'trailing': 'Slip stop',
+            'cancelAt': 'Bekor keyin (soat)',
+            'autoStop': 'Avtomatik to\'xtatish',
+            'autoTake': 'Avtoulov',
+        },
+        'tr': {
+            'main': 'Aktif işlemlerin ayarlanması',
+            'trailing': 'Iptal etmek',
+            'cancelAt': '(Saat) sonra iptal',
+            'autoStop': 'Otomatik durdurma',
+            'autoTake': 'Otomatik alım',
+        },
+    }
+
+    return f"""<b>{texts[lang]['main']}</b>
+{texts[lang]['trailing']}: {get_print_float(data.trailingStop, 1) if data and data.trailingStop else '-'}
+{texts[lang]['autoStop']}: {'✅' if data and data.autoStop else '❌'}
+{texts[lang]['autoTake']}: {get_print_float(data.autoTake) if data and data.autoTake else '-'}
+{texts[lang]['cancelAt']}: {get_print_float(data.cancelMinutes / 60, 1) if data and data.cancelMinutes else '-'}"""

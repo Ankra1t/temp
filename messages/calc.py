@@ -390,6 +390,7 @@ def msg_channel_calc(
     count=-1,
     indexPrice: float | None = None,
     try_link: str = '',
+    isActiveCalc=False,
 ):
     description = calc.description if lang == 'ru' else None
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
@@ -399,7 +400,7 @@ def msg_channel_calc(
 
     if calc.profit is not None or status == 'FINISH':
         return msg_channel_calc_result(
-            calc, lang, time, count, try_link
+            calc, lang, time, count, try_link, isActiveCalc
         )
 
     calc_result = calcService.get_result(calc)
@@ -532,6 +533,8 @@ def msg_channel_calc(
         price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
     def link(value: str):
+        if isActiveCalc:
+            return value
         return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     current_date = get_str_by_datetime(get_datetime_now(), "day.month")
@@ -579,7 +582,7 @@ def msg_channel_calc(
                 f"{f'торгую {monthStats.count} раз(а)' if lang == 'ru' else f'traded {monthStats.count} time(s)'}"
                 f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
                 f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
-            ) if status == 'WAIT' and monthStats else "") \
+            ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
@@ -590,6 +593,7 @@ def msg_channel_calc_result(
     time='',
     count=-1,
     try_link='',
+    isActiveCalc=False
 ):
     description = calc.description if lang == 'ru' else None
 
@@ -705,6 +709,8 @@ def msg_channel_calc_result(
             trading_style_type += f' ({texts[lang][time]})'
 
     def link(value: str):
+        if isActiveCalc:
+            return value
         return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     chart_link = ''
@@ -729,6 +735,57 @@ def msg_channel_calc_result(
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
+
+
+def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
+    data = calc.ActiveCalc
+
+    if not data:
+        return ''
+
+    texts = {
+        'ru': {
+            'main': 'Сделка активна',
+            'trailing': 'Ск. стоп',
+            'cancelAt': 'Отмена',
+            'autoStop': 'Авто стоп',
+            'autoTake': 'Авто тейк',
+        },
+        'en': {
+            'main': 'Calc is active',
+            'trailing': 'Tr. stop',
+            'cancelAt': 'Cancel',
+            'autoStop': 'Auto stop',
+            'autoTake': 'Auto take',
+        },
+        'uz': {
+            'main': 'Calc faol',
+            'trailing': 'Slip stop',
+            'cancelAt': 'Bekor qilmoq',
+            'autoStop': 'Avtomatik to\'xtatish',
+            'autoTake': 'Avtoulov',
+        },
+        'tr': {
+            'main': 'Calc aktif',
+            'trailing': 'Iptal etmek',
+            'cancelAt': 'İptal etmek',
+            'autoStop': 'Otomatik durdurma',
+            'autoTake': 'Otomatik alım',
+        },
+    }
+
+    cancelAt = '-'
+    if calc.cancelAt:
+        dt = datetime.fromisoformat(
+            calc.cancelAt.replace('Z', '')
+        ) + timedelta(hours=3)
+        cancelAt = dt.strftime("%d.%m %H:%M")
+
+    return f"""<b>{texts[lang]['main']}</b>
+{texts[lang]['trailing']}: {get_print_float(data.trailingStopCount, 1) if data.trailingStopCount else '-'}
+{texts[lang]['autoStop']}: {'✅' if data.autoStop else '❌'}
+{texts[lang]['autoTake']}: {get_print_float(data.autoTake) if data.autoTake else '-'}
+{texts[lang]['cancelAt']}: {cancelAt}"""
 
 
 def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):

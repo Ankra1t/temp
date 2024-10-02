@@ -6,7 +6,6 @@ from typing import Literal
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
-from config_logger import logger
 from AuthRoles import first_timeout
 from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, edit_message, get_print_float
@@ -17,11 +16,11 @@ from Classes import pay_guard, calcService, hti
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
-from messages.calc import msg_calc_list, msg_calculation, msg_channel_calc
+from messages.calc import msg_active_options, msg_calc_list, msg_calculation, msg_channel_calc
 from messages.errros import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
-from messages.settings import msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summury_profit_settings
+from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summury_profit_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
 from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
@@ -36,10 +35,10 @@ from keyboards.channel_post import (
 )
 from keyboards.main import kb_main, kb_violation
 from keyboards.manual import kb_manual, kb_manuals
-from keyboards.stats import kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
+from keyboards.stats import kb_calc_activation, kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
 from keyboards.tariff import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 from keyboards.settings import (
-    kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
+    kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summury_profit,
 )
 
@@ -106,7 +105,7 @@ async def send_settings(
         return
 
     msg = msg_settings(user.lang, u_base, is_risk_update)
-    markup = kb_settings(user.lang)
+    markup = kb_settings(user.lang, user.id)
 
     if is_first:
         await bot.send_message(
@@ -197,6 +196,31 @@ async def send_trading_style_settings(
         )
     else:
         await edit_message(bot, message, 'text', msg, markup)
+
+
+async def send_active_settings(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    is_first=False
+):
+    chat_id = message.chat.id
+
+    await state.delete()
+
+    advSettings = settings.getAdvanced(user.id)
+
+    msg = msg_active_settings(user.lang, advSettings)
+    kb = kb_active_settings(user.lang, bool(advSettings and advSettings.autoStop))
+
+    if is_first:
+        await bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
+    else:
+        await edit_message(bot, message, 'text', msg, kb)
 
 
 async def send_maker_or_taker(
@@ -331,9 +355,7 @@ async def send_stats(
 
     liteDb.addPagesCount(user.tgId)
 
-    logger.info(f"User {user.tgId} has viewed stats page")
     values = calculation.getWeekStats(user.id)
-    logger.info(values)
 
     if values is None:
         return
@@ -650,7 +672,8 @@ async def send_calculation(
     calc: Calculation,
     is_first=False,
     is_try=False,
-    is_list=False
+    is_list=False,
+    is_activate=False,
 ):
     chat_id = message.chat.id
     mes_id = message.id
@@ -666,6 +689,8 @@ async def send_calculation(
 
     if is_try:
         kb = None
+    if is_activate:
+        kb = kb_calc_activation(user.lang, calc)
     else:
         kb = kb_main(
             user.lang, user.tgId,
@@ -675,6 +700,10 @@ async def send_calculation(
 
     if True or calc_output == 'text' or is_try:
         text = msg_calculation(user.lang, calc, is_try)
+
+        if calc.ActiveCalc and (calc.status == 'DEAL' or calc.status == 'WAIT'):
+            text = text.strip()
+            text += '\n\n' + msg_active_options(user.lang, calc)
 
         if calc.photo is None:
             if is_first:
@@ -812,7 +841,7 @@ async def create_and_send_calc(
 
     if stat_id is not None:
         calc_info = calculation.get(stat_id)
-        if calc_info is None:
+        if calc_info is None or calc_info.ActiveCalc:
             return
 
         if calc_info.openPrice == stop_loss:

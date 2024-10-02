@@ -14,7 +14,7 @@ from db import db
 from common.utils import delete_message, digit_accept, text_accept
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from pages.calculate import send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
+from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
 from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
 
@@ -261,30 +261,32 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    calcService.set_profit(stat_id, abs(value) * (-1 if type == 'stop' else 1))
     calc = calculation.get(stat_id)
-    if calc is None:
+    send_data = channel_calc.getByCalc(stat_id)
+
+    if calc and not (calc.ActiveCalc and not send_data):
+        calcService.set_profit(stat_id, abs(
+            value) * (-1 if type == 'stop' else 1))
+        calc = calculation.update(
+            stat_id, status='FINISH'
+        )
+
+    if not calc:
         return
 
-    calculation.update(
-        stat_id, status='FINISH'
-    )
-
-    await state.delete()
-    send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc.tool or '')
         await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
-        if is_calc:
-            await send_calculation(bot, message, state, user, calc, True)
-        else:
-            await send_admin_channel_calc_list(bot, message, state, is_first=True)
+    if is_calc:
+        await send_calculation(bot, message, state, user, calc, True)
     else:
-        if is_calc:
-            await send_calculation(bot, message, state, user, calc, True)
+        if send_data is not None:
+            await send_admin_channel_calc_list(bot, message, state, is_first=True)
         else:
             await send_stats(bot, message, state, user, True)
+
+    await state.delete()
 
 
 async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -333,8 +335,12 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
 
     value = int(value * 60)
 
-    if action == 'send_settings':
+    if 'settings' in action:
         settings.updateAdvanced(user.id, cancelMinutes=value)
+
+    if action == 'settings':
+        await send_active_settings(bot, message, state, user, True)
+    elif action == 'send_settings':
         await send_admin_send_settings(bot, message, state, user, True)
     else:
         calc = calculation.updateCancelAt(calc_id, value)
@@ -346,7 +352,7 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
                     bot, message, state, calc.id, is_first=True
                 )
             else:
-                await send_calculation(bot, message, state, user, calc, True)
+                await send_calculation(bot, message, state, user, calc, True, is_activate=True)
 
 
 async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -373,7 +379,7 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
 
     diffOpSl = calc.openPrice - calc.stopLoss
 
-    if ticker_info and (ticker_info.indexPrice) and (
+    if not (ticker_info and ticker_info.indexPrice) or (
         (diffOpSl > 0 and value > ticker_info.indexPrice) or
         (diffOpSl < 0 and value < ticker_info.indexPrice)
     ):
@@ -389,6 +395,34 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
         await send_admin_channel_calc_item(
             bot, message, state, calc.id, is_first=True
         )
+
+
+async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    chat_id = message.chat.id
+
+    async with state.data() as data:
+        calc_id = data.get('calc_id', 0)
+        action = data.get('action', '')
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = await bot.send_message(
+            chat_id, msg_digit_error(user.lang),
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
+    if action == 'settings':
+        settings.updateAdvanced(user.id, trailingStop=value)
+        await send_active_settings(bot, message, state, user, True)
+    else:
+        calculation.updateActive(
+            calc_id, trailingStopCount=value
+        )
+
+        calc = calculation.get(calc_id)
+        if calc:
+            await send_calculation(bot, message, state, user, calc, True, is_activate=True)
 
 
 def registration(bot: AsyncTeleBot):
@@ -411,6 +445,7 @@ def registration(bot: AsyncTeleBot):
 
     reg_mes(handle_cancel_at, state=StatsState.cancel_at)
     reg_mes(handle_new_stop, state=StatsState.new_stop)
+    reg_mes(handle_trailing_stop, state=StatsState.trailing_stop)
 
     reg_mes(handle_channel_calc_loss, state=ChannelCalcState.loss)
     reg_mes(handle_violation_message, state=ViolationState.message)

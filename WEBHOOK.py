@@ -15,7 +15,7 @@ from callbacks.calculate import send_after_first_try
 
 from initialize import bot
 from db import db
-from models import Live
+from models import Calculation, Live
 from registration import reg
 from thread_tasks import run_thread
 
@@ -106,6 +106,22 @@ async def live_info(request: web.Request):
     return web.Response()
 
 
+async def active_calc(request: web.Request):
+    # access_token = db.get_access_token()
+    # api_key = request.headers.get('tg-api-key')
+
+    # if access_token is None or api_key is None or access_token != api_key:
+    #     return web.Response(status=403)
+
+    res = await request.text()
+    res_json = json.loads(res)
+    calc = Calculation.model_validate_json(res)
+
+    await channel_post.send_calc(calc, None, res_json.get('indexPrice'), False)
+
+    return web.Response()
+
+
 async def shutdown(app):
     logger.info('Shutting down: removing webhook')
     await bot.remove_webhook()
@@ -132,6 +148,7 @@ async def setup():
         web.post(BASE_URL + CRYPTOPAY_URL, cryptobot_updates),
         web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
         web.post(BASE_URL + '/live-info', live_info),
+        web.post(BASE_URL + '/active-calc', active_calc),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),

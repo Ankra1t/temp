@@ -285,7 +285,8 @@ More often: <b>{result}</b>"""
 
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(calc_id)
-        if calc is None:
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc is None or (calc.ActiveCalc and not send_data):
             return
 
         _, value = type.split('+')
@@ -303,7 +304,6 @@ More often: <b>{result}</b>"""
             calc_id, status='FINISH'
         )
 
-        send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
@@ -419,7 +419,7 @@ More often: <b>{result}</b>"""
     if 'trailing+' in type:
         _, value = type.split('+')
 
-        calculation.updateTrailingStop(calc_id, int(value))
+        calculation.updateActive(calc_id, trailingStopCount=int(value))
 
         await send_admin_channel_calc_item(
             bot, call.message, state, calc_id

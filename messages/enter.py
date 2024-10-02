@@ -708,3 +708,25 @@ def msg_enter_cancel_at(lang: LANGUAGES_TYPE):
     }
 
     return f'👉 {texts[lang]}'
+
+
+def msg_enter_tr_stop(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Введите значение для скользящего стопа',
+        'en': 'Enter a value for a sliding foot',
+        'tr': 'Kayan ayak için bir değer girin',
+        'uz': 'Tushunchilik oyog\'i uchun qiymatni kiriting',
+    }
+
+    return f'👉 {texts[lang]}'
+
+
+def msg_enter_auto_take(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Выберите количество тейков для авто выхода',
+        'en': 'Select a take for auto exit',
+        'tr': 'Otomatik çıkış için Al\'ı seçin',
+        'uz': 'Avtomatik chiqish uchun qabul qilishni tanlang',
+    }
+
+    return f'👉 {texts[lang]}'

@@ -61,14 +61,16 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         await state.add_data(tool=tool)
         await choose_calculate_step(bot, message, state, user, last_value='tool')
     else:
+        calc_info = calculation.get(stat_id)
+        if calc_info is None or calc_info.ActiveCalc:
+            return
+
         db.change_calculation_tool(stat_id, tool)
 
         calc_info = calculation.get(stat_id)
-        if calc_info is None:
-            return
-
-        await send_calculation(bot, message, state, user, calc_info, True)
-        await state.delete()
+        if calc_info:
+            await send_calculation(bot, message, state, user, calc_info, True)
+            await state.delete()
 
 
 async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -318,25 +320,22 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
         )
     else:
         calc = calculation.get(stat_id)
-        if calc is None:
-            return
+        send_data = channel_calc.getByCalc(stat_id)
+        if calc and not (calc.ActiveCalc and not send_data):
+            if calc.stopLoss == value:
+                new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))
+                await state.add_data(del_mes_id=new_mes.id)
+                return
 
-        if calc.stopLoss == value:
-            new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))
-            await state.add_data(del_mes_id=new_mes.id)
-            return
+            db.change_calculation_open_price(stat_id, value)
+            calc.openPrice = value
 
-        db.change_calculation_open_price(stat_id, value)
-        calc.openPrice = value
+            if send_data:
+                tickerInfo = ticker.get_info(calc.tool or '')
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
 
-        send_data = channel_calc.getByCalc(calc.id)
-
-        if send_data:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
-
-        await send_calculation(bot, message, state, user, calc, True)
-        await state.delete()
+            await send_calculation(bot, message, state, user, calc, True)
+            await state.delete()
 
 
 async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):

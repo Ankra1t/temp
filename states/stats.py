@@ -14,6 +14,7 @@ class StatsState(StatesGroup):
 
     cancel_at = State()
     new_stop = State()
+    trailing_stop = State()
 
 class ChannelCalcState(StatesGroup):
     loss = State()
