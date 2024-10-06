@@ -117,7 +117,11 @@ async def active_calc(request: web.Request):
     res_json = json.loads(res)
     calc = Calculation.model_validate_json(res)
 
-    await channel_post.send_calc(calc, None, res_json.get('indexPrice'), False)
+    await channel_post.send_calc(
+        calc, None,
+        res_json.get('indexPrice'), res_json.get('percent24h'),
+        False
+    )
 
     return web.Response()
 

@@ -1,3 +1,4 @@
+from random import randint
 from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
 
@@ -7,7 +8,7 @@ from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
-from services import auth
+from services import auth, twitter
 
 from common.utils import is_digit
 from common.calc_step import send_calc_start
@@ -161,6 +162,17 @@ async def _results(message: Message, bot: AsyncTeleBot, state: StateContext, use
 
 
 async def _test(message: Message, bot: AsyncTeleBot):
+    file = await bot.get_file('AgACAgIAAxkBAAJAgmb3HavQ2Wnsl_p_jmAjUSnkp2t5AAL84TEbJ5C4S2ZXGyiZ1TzzAQADAgADcwADNgQ')
+    file_bytes = await bot.download_file(file.file_path)
+
+    name = f'{randint(10000, 100000)}.jpg'
+    with open(name, 'wb') as new_file:
+        new_file.write(file_bytes)
+
+    with open(name, 'rb') as file:
+        data = twitter.create(file)
+        print(data)
+
     logger.info('TEST')
     logger.info(f'CHAT ID = {message.chat.id}')
 

@@ -244,7 +244,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
             type = 'results'
         else:
             await send_stats(bot, call.message, state, user)
@@ -261,7 +261,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -278,7 +278,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -306,7 +306,7 @@ More often: <b>{result}</b>"""
 
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
 
             if is_calc == 0:
                 type = 'results'

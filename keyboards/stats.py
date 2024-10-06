@@ -503,10 +503,11 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
     if not calc.ActiveCalc:
         keyboard.add(btn_op, btn_sl)
         keyboard.add(btn_tool, btn_style)
+        keyboard.add(btn_take_profit, btn_back)
     else:
-        keyboard.add(btn_style)
+        keyboard.add(btn_style, btn_take_profit)
+        keyboard.add(btn_back)
 
-    keyboard.add(btn_take_profit, btn_back)
     return keyboard
 
 

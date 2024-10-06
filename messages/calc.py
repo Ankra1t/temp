@@ -389,6 +389,7 @@ def msg_channel_calc(
     time: str = '',
     count=-1,
     indexPrice: float | None = None,
+    percent24h: float | None = None,
     try_link: str = '',
     isActiveCalc=False,
 ):
@@ -403,18 +404,27 @@ def msg_channel_calc(
             calc, lang, time, count, try_link, isActiveCalc
         )
 
+    if calc.openPrice > calc.stopLoss:
+        long_short = 'лонг' if lang == 'ru' else 'long'
+    else:
+        long_short = 'шорт' if lang == 'ru' else 'short'
+
     calc_result = calcService.get_result(calc)
 
     texts = {
         'ru': {
-            'open': 'Войду по' if status == 'WAIT' else 'Вошел по' if status == 'DEAL' else 'Вход',
+            'open': (
+                f'Войду в {long_short} по' if status == 'WAIT' else
+                f'Вошел в {long_short} по' if status == 'DEAL' else
+                f'Вход в {long_short}'
+            ),
 
             'price': 'Цена сейчас',
             'now': 'Сейчас',
 
             'stop': 'Стоп',
             'take': 'Тейк',
-            'style': '<b>С</b>тиль',
+            'style': 'Торгую',
 
             'tp': 'тейка',
             'sl': 'стопа',
@@ -423,8 +433,8 @@ def msg_channel_calc(
             'to': 'к',
 
             'deal': '<b>С</b>делка',
-            'avg': 'среднесрочный',
-            'day': 'внутри дня',
+            'avg': 'Среднесрочная сделка',
+            'day': 'Внутридневная сделка',
 
             'breakeven': 'безубытку',
 
@@ -434,19 +444,23 @@ def msg_channel_calc(
 
             'DEAL': 'В сделке',
             'CANCEL': 'Отменён',
-            'WAIT': 'В ожидании',
+            'WAIT': 'Ожидаю',
             'try': 'Рассчитать',
             'chart': 'График',
         },
         'en': {
-            'open': 'Will enter at' if status == 'WAIT' else 'Entered at' if status == 'DEAL' else 'Enter',
+            'open': (
+                f'Will enter to {long_short} at' if status == 'WAIT' else
+                f'Entered to {long_short} at' if status == 'DEAL' else
+                f'Enter to {long_short}'
+            ),
 
             'stop': 'Stop',
             'price': 'Current price',
             'now': 'Now',
 
             'take': 'Take',
-            'style': '<b>S</b>tyle',
+            'style': 'Trading',
 
             'tp': 'take',
             'sl': 'stop',
@@ -455,8 +469,8 @@ def msg_channel_calc(
             'to': 'to',
 
             'deal': '<b>T</b>rade',
-            'avg': 'medium-term',
-            'day': 'intraday',
+            'avg': 'Medium-term',
+            'day': 'Intraday',
 
             'breakeven': 'breakeven',
 
@@ -487,9 +501,9 @@ def msg_channel_calc(
     t_style = transl_tr_style(calc.tradingStyle, lang)
     trading_style_type = ''
     if t_style is not None:
-        trading_style_type += f'\n\n{t_style.capitalize()}'
+        trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}'
         if time != '':
-            trading_style_type += f' ({texts[lang][time]})'
+            trading_style_type += f'\n{texts[lang][time]}'
 
     # Округление
     round_count = calc.roundCount or 5
@@ -532,6 +546,10 @@ def msg_channel_calc(
     if indexPrice is not None:
         price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
+    percent24h_show = ''
+    if percent24h and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
+
     def link(value: str):
         if isActiveCalc:
             return value
@@ -556,7 +574,7 @@ def msg_channel_calc(
     )
 
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) \
@@ -572,10 +590,6 @@ def msg_channel_calc(
             ) if not without_stop else ''
     ) \
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
-        + (f'\n\n{description}' if description else '') \
-        + (f'\n\n{comment}' if comment else '') \
-        + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
-        + trailing_stops \
         + (
             (
                 f'\n\n<b>{month}:</b> '
@@ -583,7 +597,12 @@ def msg_channel_calc(
                 f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
                 f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
+        + ('\n' if not (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + trading_style_type \
+        + (f'\n\n{description}' if description else '') \
+        + (f'\n\n{comment}' if comment else '') \
+        + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
+        + trailing_stops \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
 

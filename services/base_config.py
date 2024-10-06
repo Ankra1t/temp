@@ -4,7 +4,6 @@ from config_logger import logger
 
 session = requests.Session()
 session.headers.update({
-    'content-type': 'application/json',
     'Accept': 'application/json, text/plain, */*'
 })
 

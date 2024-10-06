@@ -33,6 +33,7 @@ class ChannelPost():
         calc: Calculation,
         send_data: SendCalc | None,
         indexPrice: Optional[float],
+        percent24h: Optional[float],
         updateLive=True,
     ):
         if send_data is None:
@@ -81,7 +82,7 @@ class ChannelPost():
 
             msg = msg_channel_calc(
                 calc, lang, withoutStop, time or '',
-                mesNum, indexPrice,
+                mesNum, indexPrice, percent24h,
                 try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
                 isActiveCalc=send_data is None,
             )
@@ -170,7 +171,7 @@ class ChannelPost():
             mesIds = None
 
         for calc_ in live.toUpdate:
-            await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, False)
+            await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, calc_.percent24h, False)
 
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]

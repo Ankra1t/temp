@@ -490,6 +490,7 @@ class LiveToUpdate(BaseModel):
     calc: Calculation
     sendData: SendCalc
     indexPrice: Optional[float]
+    percent24h: Optional[float]
 
 
 class Live(BaseModel):

@@ -332,7 +332,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
 
             if send_data:
                 tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
 
             await send_calculation(bot, message, state, user, calc, True)
             await state.delete()
@@ -377,7 +377,7 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
 
         if calc and send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
 
         await create_and_send_calc(bot, message, state, user, stop_loss)
 
