@@ -870,16 +870,17 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 bot, call.message, state, user, calc, is_activate=True
             )
 
-    if type == 'cancel_at':
+    if type == 'cancel_at' or type == 'stc_cancel_at':
         new_mes_id = await edit_message(
             bot, call.message, 'text',
             msg_enter_cancel_at(user.lang),
-            kb_cancel_at(user.lang, calc_id)
+            kb_cancel_at(user.lang, calc_id, 'stc_' if 'stc_' in type else '')
         )
         await state.set(StatsState.cancel_at)
         await state.add_data(
             calc_id=calc_id,
-            del_mes_id=new_mes_id
+            del_mes_id=new_mes_id,
+            action='stc'
         )
 
     if 'cancel_at+' in type:
@@ -899,7 +900,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calc = calculation.updateCancelAt(calc_id, time)
 
         if calc:
-            await send_calculation(bot, call.message, state, user, calc, is_activate=True)
+            if 'stc_' in type:
+                await send_confirm_calc_send(bot, call.message, calc_id)
+            else:
+                await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if type == 'tr_stop':
         await edit_message(
@@ -913,7 +917,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             calc_id=calc_id
         )
 
-    if 'tr_stop+' in type:
+    if 'tr_stop+' in type and 'ch_tr_stop+' not in type:
         _, value = type.split('+')
         value = float(value)
 

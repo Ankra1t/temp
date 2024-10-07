@@ -8,7 +8,8 @@ from models import STYLES, CallbackQuery
 
 
 channel_post_factory = CallbackData(
-    'type', 'stat_id', 'is_calc', 'page', prefix='channel_post')
+    'type', 'stat_id', 'is_calc', 'page', prefix='channel_post'
+)
 
 
 class ChannelPostCallbackFilter(AdvancedCustomFilter):

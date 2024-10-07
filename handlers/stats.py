@@ -347,7 +347,10 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
 
         if calc:
             send_data = channel_calc.getByCalc(calc.id)
-            if action == 'send_data' and send_data is not None:
+
+            if 'stc' in action:
+                await send_confirm_calc_send(bot, message, calc_id, True)
+            elif action == 'send_data' and send_data is not None:
                 await send_admin_channel_calc_item(
                     bot, message, state, calc.id, is_first=True
                 )
