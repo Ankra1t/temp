@@ -93,7 +93,7 @@ class ChannelPost():
                     else:
                         profit = f'{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "стоп")}'
 
-                    trader_mes = f"""\n⚡️ Трейдер: {name}
+                    trader_mes = f"""⚡️ Трейдер: {name}
 За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
 {get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
 Результат сейчас: {profit}"""
