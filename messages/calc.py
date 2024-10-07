@@ -522,21 +522,28 @@ def msg_channel_calc(
 
     profit_result = ''
     if not without_stop:
-        for i in range(calc_result.tp_count):
-            tp_val = calc_result.tp_values[i]
+        if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount:
+            profit_result += f'\n<b>{texts[lang]["take"]}</b>: '
+            if lang == 'ru':
+                profit_result += f'передвигаю стоп каждые {calc.ActiveCalc.trailingStopCount} тейка'
+            else:
+                profit_result += f'trailing stop each {calc.ActiveCalc.trailingStopCount} takes'
+        else:
+            for i in range(calc_result.tp_count):
+                tp_val = calc_result.tp_values[i]
 
-            if (
-                (status == 'CANCEL' and i == 0) or
-                (
-                    indexPrice and
+                if (
+                    (status == 'CANCEL' and i == 0) or
                     (
-                        (diffOpSl > 0 and indexPrice > tp_val) or
-                        (diffOpSl < 0 and indexPrice < tp_val)
-                    )
-                ) or i == 0
-            ):
-                profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
-                profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
+                        indexPrice and
+                        (
+                            (diffOpSl > 0 and indexPrice > tp_val) or
+                            (diffOpSl < 0 and indexPrice < tp_val)
+                        )
+                    ) or i == 0
+                ):
+                    profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
+                    profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
 
     count_show = ''
     if count != -1:
@@ -573,6 +580,17 @@ def msg_channel_calc(
         lang, calc.TrailingStops, calc.openPrice, calc.stopLoss
     )
 
+    cancel_show = ''
+    if calc.status == 'WAIT' and calc.cancelAt:
+        dt = datetime.fromisoformat(
+            calc.cancelAt.replace('Z', '')
+        ) + timedelta(hours=3)
+        cancelAt = dt.strftime("%d.%m %H:%M")
+
+        cancel_show += '\n'
+        cancel_show += 'Отменю в ' if lang == 'ru' else 'Cancel at '
+        cancel_show += cancelAt
+
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {texts[lang][status]}',
         '',
@@ -599,6 +617,8 @@ def msg_channel_calc(
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + ('\n' if not (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + trading_style_type \
+        + cancel_show \
+        + (f'Отменю через' if calc.status == 'WAIT' else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
