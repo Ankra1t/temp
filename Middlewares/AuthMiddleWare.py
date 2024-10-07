@@ -1,5 +1,5 @@
 from typing import Union
-from telebot.types import Message, CallbackQuery
+from telebot.types import Message, CallbackQuery, ChatMemberUpdated
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
 from telebot.util import update_types
 
@@ -21,7 +21,10 @@ class AuthMiddleWare(BaseMiddleware):
     async def post_process(self, message, data, exception):
         pass
 
-    async def pre_process(self, message: Union[Message, CallbackQuery], data):
+    async def pre_process(self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data):
+        if isinstance(message, ChatMemberUpdated):
+            return
+
         if message.from_user is None:
             return CancelUpdate()
 

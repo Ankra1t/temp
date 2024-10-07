@@ -9,7 +9,7 @@ from config_logger import logger
 
 from common.utils import digit_accept, get_lang, is_digit, text_accept
 
-from messages.errros import msg_digit_error
+from messages.errors import msg_digit_error
 from messages.users import gift_subscribe_msg, gift_trial_subscribe_msg
 
 from states.admin_users import AdminUsersState

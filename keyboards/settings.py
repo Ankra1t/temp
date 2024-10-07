@@ -6,9 +6,11 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from common.keyboard import back_txt, cancel_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
+from db import db
 
 from keyboards.stats import getButton as getStatsButton
 from keyboards.calculate import get_settings_from_calc_button, calculate_factory
+from services import subscribe
 
 
 settings_factory = CallbackData(
@@ -43,7 +45,7 @@ def getButton(
         ))
 
 
-def kb_settings(lang: LANGUAGES_TYPE):
+def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
     texts = {
         'ru': {
             'lang': 'Язык',
@@ -57,6 +59,7 @@ def kb_settings(lang: LANGUAGES_TYPE):
 
             'exchange': 'Биржа',
             'stop': 'Вид риска',
+            'active': 'Активация',
         },
         'en': {
             'lang': 'Language',
@@ -70,6 +73,7 @@ def kb_settings(lang: LANGUAGES_TYPE):
 
             'exchange': 'Exchange',
             'stop': 'Type of risk',
+            'active': 'Activation',
         },
         'uz': {
             'lang': 'Tillar',
@@ -83,6 +87,7 @@ def kb_settings(lang: LANGUAGES_TYPE):
 
             'exchange': 'Almashish',
             'stop': 'Xavf turi',
+            'active': 'Faollashtirish',
         },
         'tr': {
             'lang': 'Dil',
@@ -96,8 +101,12 @@ def kb_settings(lang: LANGUAGES_TYPE):
 
             'exchange': 'Borsa',
             'stop': 'Risk türü',
+            'active': 'Aktivasyon',
         },
     }
+
+    isAdmin = db.get_worker_role(user_db_id)
+    isActiveCalcSub = subscribe.check(user_db_id, 'active_calc')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
@@ -115,17 +124,26 @@ def kb_settings(lang: LANGUAGES_TYPE):
     btn_dop = getButton(texts[lang]['dop'], 'dop')
     btn_stop = getButton(texts[lang]['stop'], 'stop_settings')
 
+    btn_active = getButton(texts[lang]['active'], 'active')
+
     btn_back = getButton(back_txt(lang), 'go_main')
 
     keyboard.add(btn_deposit_update)
     keyboard.add(
         btn_market, btn_exchange,
         btn_trading_type, btn_style,
-        btn_stop,
-        btn_lang, btn_dop,
-
-        btn_reset, btn_back,
+        btn_stop, btn_lang,
     )
+
+    buttons = []
+    if isActiveCalcSub or isAdmin:
+        buttons.append(btn_active)
+    buttons.append(btn_dop)
+
+    keyboard.add(*buttons)
+    buttons = []
+
+    keyboard.add(btn_reset, btn_back,)
 
     return keyboard
 
@@ -418,7 +436,7 @@ def kb_settings_confirm(lang: LANGUAGES_TYPE, action: str):
     return keyboard
 
 
-def kb_summury_profit(lang: LANGUAGES_TYPE):
+def kb_summary_profit(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'change': 'Изменить',
@@ -1099,4 +1117,107 @@ def kb_first_dep(lang: LANGUAGES_TYPE):
     keyboard.add(
         getButton('⚙️ ' + text[lang], 'first_dep')
     )
+    return keyboard
+
+
+def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
+    texts = {
+        'ru': {
+            'cancelAt': 'Время отмены',
+            'tr_stop': 'Ск. стоп',
+            'auto_stop': 'Авто стоп',
+            'auto_take': 'Авто тейк',
+            'cancel': 'Отменить сделку',
+            'profit': 'Закрыть сделку',
+        },
+        'en': {
+            'cancelAt': 'Cancel at',
+            'tr_stop': 'Trailing stop',
+            'auto_stop': 'Auto stop',
+            'auto_take': 'Auto take',
+            'cancel': 'Cancel the deal',
+            'profit': 'Close the deal ',
+        },
+        'uz': {
+            'cancelAt': 'Bekor qilish vaqti',
+            'tr_stop': 'Slip stop',
+            'auto_stop': 'Avtomatik to\'xtatish',
+            'auto_take': 'Avtoulov',
+            'cancel': 'Bitimni bekor qiling',
+            'profit': 'Bitimni yoping',
+        },
+        'tr': {
+            'cancelAt': 'Iptal etmek',
+            'tr_stop': 'Kayan durdurma',
+            'auto_stop': 'Otomatik durdurma',
+            'auto_take': 'Otomatik alım',
+            'cancel': 'Anlaşmayı iptal et',
+            'profit': 'Anlaşmayı kapat ',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    keyboard.add(
+        getButton(
+            texts[lang]['cancelAt'], 'cancel_at'
+        ),
+        getButton(
+            texts[lang]['tr_stop'], 'tr_stop'
+        ),
+        getButton(
+            ('✅' if not autoStop else '❌') +
+            ' ' + texts[lang]['auto_stop'],
+            'auto_stop'
+        ),
+        getButton(
+            texts[lang]['auto_take'],
+            'auto_take'
+        ),
+        getButton(
+            back_txt(lang), 'go_settings',
+        ),
+    )
+
+    return keyboard
+
+
+def kb_settings_cancel_at(lang: LANGUAGES_TYPE):
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    keyboard.add(
+        getButton('1h', 'cancel_at+1h'),
+        getButton('4h', 'cancel_at+4h'),
+        getButton('1d', 'cancel_at+1d'),
+        getButton(back_txt(lang), 'active')
+    )
+    return keyboard
+
+
+def kb_settings_auto_take(lang: LANGUAGES_TYPE):
+    keyboard = InlineKeyboardMarkup(row_width=5)
+
+    buttons = []
+    for i in range(1, 11):
+        buttons.append(
+            getButton(f'{i}', f'auto_take+{i}')
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(
+        getButton(back_txt(lang), 'active')
+    )
+    return keyboard
+
+
+def kb_settings_tr_stop(lang: LANGUAGES_TYPE):
+    keyboard = InlineKeyboardMarkup(row_width=4)
+
+    buttons = []
+    for i in range(1, 5):
+        buttons.append(
+            getButton(f'{i}', f'tr_stop+{i}')
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(getButton(back_txt(lang), 'active'))
     return keyboard

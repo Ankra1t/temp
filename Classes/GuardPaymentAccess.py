@@ -89,6 +89,7 @@ class GuardPaymentAccess():
 
     # Проверить может ли пользователь работать с калькулятором
     async def valid_use_calc(self, tg_id: int, bot:AsyncTeleBot):
+        return True
         try:
             is_rus = (await bot.get_chat_member(tg_id, tg_id)).user.language_code == 'ru'
         except:

@@ -9,7 +9,7 @@ from common.utils import text_accept
 from states.tariff import TariffState
 from keyboards.tariff import kb_bill
 
-from messages.errros import msg_text_error
+from messages.errors import msg_text_error
 from messages.users import msg_loading_invoice, msg_bill
 
 

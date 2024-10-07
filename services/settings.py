@@ -22,7 +22,10 @@ def getAdvanced(userId: int):
     if not check_response(res):
         return
 
-    return AdvancedSettings.model_validate_json(res.text)
+    value = res.text
+
+    if value != '':
+        return AdvancedSettings.model_validate_json(value)
 
 
 @session_decorator

@@ -8,21 +8,21 @@ from db import db
 from data.data import liteDb
 from Classes import text_editor
 from models import LANGUAGES, CallbackQuery, User, StateContext
-from services import auth, calculation
+from services import auth, calculation, settings
 
 from states.settings import FirstCalcState, SettingsState
 
 from messages.common import msg_success_edit
-from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_bars, msg_enter_bars_count, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_trading_style, msg_enter_trading_type
+from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_auto_take, msg_enter_bars, msg_enter_bars_count, msg_enter_cancel_at, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_tr_stop, msg_enter_trading_style, msg_enter_trading_type
 from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
 from messages.main import msg_success_base_set, msg_welcome
 
 from common.calc_step import choose_calculate_step
-from common.utils import delete_message, get_print_float
+from common.utils import delete_message, edit_message, get_print_float
 
 from keyboards.main import kb_first_calc
 from keyboards.settings import (
-    settings_factory, SettingsCallbackFilter,
+    kb_settings_auto_take, kb_settings_cancel_at, kb_settings_tr_stop, settings_factory, SettingsCallbackFilter,
     kb_atr_bars, kb_atr_bars_count, kb_change_base, kb_change_currency, kb_change_market, kb_choose_exchange_level,
     kb_choose_lang, kb_base_cancel, kb_enter_exchange, kb_round_count, kb_settings_confirm,
     kb_splitting, kb_splitting_last, kb_stop_type_cancel, kb_trading_style,
@@ -30,10 +30,11 @@ from keyboards.settings import (
 )
 
 from pages.calculate import (
-    send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
-    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
+    send_active_settings, send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
+    send_maker_or_taker, send_settings, send_stop_settings, send_summary_profit_settings, send_trading_style_settings,
     send_user_deposit
 )
+from states.stats import StatsState
 
 
 async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -362,7 +363,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
-        await send_summury_profit_settings(bot, call.message, state, user)
+        await send_summary_profit_settings(bot, call.message, state, user)
 
     if type == 'change_summury_profit':
         # Если summury_type не задан, то выводим страницу для выбора типа
@@ -480,7 +481,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
         # Выводим сообщения
         await bot.edit_message_text(msg_success_edit(user.lang), chat_id, mes_id)
-        await send_summury_profit_settings(bot, call.message, state, user, True)
+        await send_summary_profit_settings(bot, call.message, state, user, True)
 
     if type == 'splitting_last':
         async with state.data() as data:
@@ -715,6 +716,76 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         await send_atr_settings(bot, call.message, state, user)
 
         await bot.answer_callback_query(call.id)
+
+    if type == 'active':
+        await send_active_settings(bot, call.message, state, user)
+
+    if type == 'cancel_at':
+        await edit_message(
+            bot, call.message, 'text',
+            msg_enter_cancel_at(user.lang),
+            kb_settings_cancel_at(user.lang)
+        )
+        await state.set(StatsState.cancel_at)
+        await state.add_data(
+            del_mes_id=mes_id,
+            action='settings'
+        )
+
+    if 'cancel_at+' in type:
+        _, time = type.split('+')
+
+        if time == '1h':
+            time = 60
+        elif time == '4h':
+            time = 60 * 4
+        else:
+            time = 60 * 24
+
+        settings.updateAdvanced(user.id, cancelMinutes=time)
+        await send_active_settings(bot, call.message, state, user)
+
+    if type == 'tr_stop':
+        await edit_message(
+            bot, call.message, 'text',
+            msg_enter_tr_stop(user.lang),
+            kb_settings_tr_stop(user.lang)
+        )
+        await state.set(StatsState.trailing_stop)
+        await state.add_data(
+            del_mes_id=mes_id,
+            action='settings'
+        )
+
+    if 'tr_stop+' in type:
+        _, value = type.split('+')
+        value = float(value)
+
+        settings.updateAdvanced(
+            user.id,
+            trailingStop=value
+        )
+        await send_active_settings(bot, call.message, state, user)
+
+    if type == 'auto_take':
+        await edit_message(
+            bot, call.message, 'text',
+            msg_enter_auto_take(user.lang),
+            kb_settings_auto_take(user.lang)
+        )
+
+    if 'auto_take+' in type:
+        _, val = type.split('+')
+        settings.updateAdvanced(user.id, autoTake=float(val))
+        await send_active_settings(bot, call.message, state, user)
+
+    if type == 'auto_stop':
+        advSettings = settings.getAdvanced(user.id)
+        settings.updateAdvanced(
+            user.id,
+            autoStop=not (advSettings and advSettings.autoStop)
+        )
+        await send_active_settings(bot, call.message, state, user)
 
 
 def registration(bot: AsyncTeleBot):

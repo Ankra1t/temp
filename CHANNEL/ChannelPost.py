@@ -4,10 +4,9 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
 from telebot.types import InputPollOption
 
-
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID
+from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
@@ -24,6 +23,7 @@ class ChannelPost():
 
         self.channels = [str(el) for el in (RU_CHANNEL_ID, EN_CHANNEL_ID)]
         self.langs: list[Literal['ru', 'en']] = ['ru', 'en']
+        self.tournament_channel = TOURNAMENT_CHANNEL_ID
 
         self.stats_channel = str(RESULTS_CHANNEL_ID)
         self.loading_vote_message_ids: dict[int, tuple[int, int]] = {}
@@ -31,35 +31,79 @@ class ChannelPost():
     async def send_calc(
         self,
         calc: Calculation,
-        send_data: SendCalc,
+        send_data: SendCalc | None,
         indexPrice: Optional[float],
-        updateLive=True
+        percent24h: Optional[float],
+        updateLive=True,
     ):
-        weekMessages = channel_calc.getSentMessagesByCalc(calc.id)
-
-        if send_data.messages is not None:
-            chIds = send_data.messages.chIds
-            mesIds = send_data.messages.mesIds
-            langs = send_data.messages.langs
+        if send_data is None:
+            weekMessages = None
         else:
-            chIds = self.channels
-            langs = self.langs
-            mesIds = None
+            weekMessages = channel_calc.getSentMessagesByCalc(calc.id)
+
+        if send_data is None:
+            if calc.ActiveCalc and calc.ActiveCalc.chMesIds:
+                chId, mesId = calc.ActiveCalc.chMesIds.split('+++')
+                chIds = [int(chId)]
+                mesIds = [mesId]
+                langs = ['ru']
+            else:
+                chIds = [self.tournament_channel]
+                langs: list[Literal['ru', 'en']] = ['ru']
+                mesIds = None
+        else:
+            if send_data.messages is not None:
+                chIds = send_data.messages.chIds
+                mesIds = send_data.messages.mesIds
+                langs = send_data.messages.langs
+            else:
+                chIds = self.channels
+                langs = self.langs
+                mesIds = None
 
         newMesIds = []
 
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
 
-            if weekMessages:
+            if send_data is None:
+                mesNum = -1
+            elif weekMessages:
                 mesNum = weekMessages.mesNum or 1
             else:
                 mesNum = 1
 
+            if send_data is None:
+                withoutStop = False
+                time = None
+            else:
+                withoutStop = send_data.withoutStop
+                time = send_data.time
+
+            trader_mes = ''
+            if send_data is None:
+                stats = calculation.getActiveStatsByUser(calc.userId)
+                if stats:
+                    name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
+
+                    if stats.data.profitCount == 0:
+                        profit = 'безубыток'
+                    elif stats.data.profitCount > 0:
+                        profit = f'+{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "тейк")}'
+                    else:
+                        profit = f'{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "стоп")}'
+
+                    trader_mes = f"""⚡️ Трейдер: {name}
+За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
+{get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
+Результат сейчас: {profit}"""
+
             msg = msg_channel_calc(
-                calc, lang, send_data.withoutStop, send_data.time or '',
-                mesNum, indexPrice,
-                try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}'
+                calc, lang, withoutStop, time or '',
+                mesNum, indexPrice, percent24h,
+                try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
+                isActiveCalc=send_data is None,
+                traderMes=trader_mes
             )
 
             try:
@@ -94,17 +138,23 @@ class ChannelPost():
                     logger.error(f'CALC SEND ERROR: {e}')
 
         if len(newMesIds) == len(chIds):
-            channel_calc.update(
-                send_data.id,
-                sent=True,
-                messages={
-                    'chIds': chIds,
-                    'mesIds': newMesIds,
-                    'langs': langs,
-                }
-            )
+            if send_data is None:
+                calculation.updateActive(
+                    calc.id,
+                    chMesIds=f'{chIds[0]}+++{newMesIds[0]}'
+                )
+            else:
+                channel_calc.update(
+                    send_data.id,
+                    sent=True,
+                    messages={
+                        'chIds': chIds,
+                        'mesIds': newMesIds,
+                        'langs': langs,
+                    }
+                )
 
-        if updateLive:
+        if updateLive and send_data is not None:
             await self.send_stats(calc.id)
 
     async def send_live(
@@ -123,7 +173,7 @@ class ChannelPost():
             mesIds = None
 
         for calc_ in live.toUpdate:
-            await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, False)
+            await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, calc_.percent24h, False)
 
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
@@ -533,7 +583,8 @@ class ChannelPost():
                     if tp_sl_result == 0:
                         tp_sl_msg = f'{texts[lang]["breakeven"]}'
                     else:
-                        tp_sl_show = getRuWordEnd(tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
+                        tp_sl_show = getRuWordEnd(
+                            tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
                         tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
                     tp_sl_msg = f' ({tp_sl_msg})'
 
@@ -572,7 +623,8 @@ class ChannelPost():
                 if tp_sl_result == 0:
                     msg += f'{texts[lang]["breakeven"]}'
                 else:
-                    tp_sl_show = getRuWordEnd(tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
+                    tp_sl_show = getRuWordEnd(
+                        tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
                     msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
                 msg += '\n'
 

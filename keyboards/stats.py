@@ -9,7 +9,7 @@ from common.keyboard import back_txt, cancel_txt
 from db import db
 from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
-from services import calculation, channel_calc
+from services import calculation, channel_calc, subscribe
 
 
 stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
@@ -77,8 +77,9 @@ def kb_stats_page(lang: LANGUAGES_TYPE):
             'list_wait': 'In wait',
             'list_deal': 'In deal',
             'list_done': 'Completed',
-            'list_canceled': 'Сanceled',
+            'list_canceled': 'Canceled',
         },
+        # cSpell:disable
         'uz': {
             'list_wait': 'Kutish jarayonida',
             'list_deal': 'Bitimda',
@@ -91,6 +92,7 @@ def kb_stats_page(lang: LANGUAGES_TYPE):
             'list_done': 'Tamamlanmış',
             'list_canceled': 'İptal edildi',
         },
+        # cSpell:enable
     }
 
     keyboard.add(
@@ -169,6 +171,7 @@ def kb_calc_list(lang: LANGUAGES_TYPE, page: int, count: int, list_type: str):
 
 def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isResult=False):
     isAdmin = db.get_worker_role(user_db_id)
+    isActiveCalcSub = subscribe.check(user_db_id, 'active_calc')
     send_data = channel_calc.getByCalc(calc.id)
 
     texts = {
@@ -188,14 +191,16 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
-            'cancelAt': 'Время отмены',
+
+            'active': 'Активировать сделку',
+            'active_p': 'Параметры активации',
         },
         'en': {
             'save': 'Save to stats',
             'del': 'Delete',
             'change': 'Change',
             'img': 'Description',
-            'comment': 'Сomment',
+            'comment': 'Comment',
             'result': 'Result',
 
             'calc_stats': 'Deals',
@@ -206,7 +211,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Take',
             'stop': 'Stop',
             'breakeven': 'Breakeven',
-            'cancelAt': 'Cancel at',
+
+            'active': 'Activate the deal',
+            'active_p': 'Activation params',
         },
         'uz': {
             'save': 'Hisobni saqlash',
@@ -224,7 +231,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Olish',
             'stop': 'Toʻxtatish',
             'breakeven': 'Tenglash',
-            'cancelAt': 'Bekor qilish vaqti',
+
+            'active': 'Bitimni faollashtirish',
+            'active_p': 'Faollashtirish parametrlari',
         },
         'tr': {
             'save': 'Hesaplamayı kaydet',
@@ -242,7 +251,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası',
-            'cancelAt': 'İptal etmek',
+
+            'active': 'Anlaşmayı etkinleştir',
+            'active_p': 'Aktivasyon paramleri',
         },
     }
 
@@ -276,13 +287,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 )
             )
 
-            if calc.status == 'WAIT':
-                buttons.append(
-                    getButton(
-                        texts[lang]['cancelAt'], 'cancel_at', calc.id
-                    )
-                )
-
             if send_data is not None:
                 buttons.append(
                     getButton(
@@ -303,7 +307,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 )
             )
 
-        if calc.status == 'WAIT' or calc.status == 'DEAL':
+        if not (calc.ActiveCalc and not send_data) and (calc.status == 'WAIT' or calc.status == 'DEAL'):
             buttons.append(
                 getButton(
                     '⚡️ ' + texts[lang]['result'],
@@ -329,17 +333,26 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
         keyboard.add(*buttons)
 
-        if calc.openedList:
-            buttons.append(
-                getButton(
-                    '', ''
-                )
-            )
-
         if isAdmin and send_data is None:
             keyboard.add(
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
             )
+
+        if not isAdmin:
+            if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
+                keyboard.add(
+                    getButton(
+                        '⚡️ ' + texts[lang]['active'],
+                        'active_calc_a', calc.id
+                    )
+                )
+            elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+                keyboard.add(
+                    getButton(
+                        '⚡️ ' + texts[lang]['active_p'],
+                        'active_calc', calc.id
+                    )
+                )
 
     return keyboard
 
@@ -458,7 +471,7 @@ def kb_calculate_delete(lang: LANGUAGES_TYPE, stat_id: int):
     return keyboard
 
 
-def kb_calculate_change(lang: LANGUAGES_TYPE, stat_id: int):
+def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
     texts = {
         'ru': {
             'open_price': 'Цену входа',
@@ -490,21 +503,31 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, stat_id: int):
         },
     }
 
-    btn_op = getButton(texts[lang]["open_price"],
-                       'ch_c+open_price', stat_id)
-    btn_sl = getButton(texts[lang]["stop_loss"],
-                       'ch_c+stop_loss', stat_id)
-    btn_tool = getButton(texts[lang]["tool"], 'ch_c+tool', stat_id)
-    btn_style = getButton(texts[lang]["style"], 'ch_c+style', stat_id)
-    btn_take_profit = getButton(
-        texts[lang]["take_profit"], 'ch_c+take', stat_id
+    btn_op = getButton(
+        texts[lang]["open_price"],
+        'ch_c+open_price', calc.id
     )
-    btn_back = getButton(back_txt(lang), 'ch_c+back', stat_id)
+    btn_sl = getButton(
+        texts[lang]["stop_loss"],
+        'ch_c+stop_loss', calc.id
+    )
+    btn_tool = getButton(texts[lang]["tool"], 'ch_c+tool', calc.id)
+    btn_style = getButton(texts[lang]["style"], 'ch_c+style', calc.id)
+    btn_take_profit = getButton(
+        texts[lang]["take_profit"], 'ch_c+take', calc.id
+    )
+    btn_back = getButton(back_txt(lang), 'ch_c+back', calc.id)
 
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_op, btn_sl)
-    keyboard.add(btn_tool, btn_style)
-    keyboard.add(btn_take_profit, btn_back)
+
+    if not calc.ActiveCalc:
+        keyboard.add(btn_op, btn_sl)
+        keyboard.add(btn_tool, btn_style)
+        keyboard.add(btn_take_profit, btn_back)
+    else:
+        keyboard.add(btn_style, btn_take_profit)
+        keyboard.add(btn_back)
+
     return keyboard
 
 
@@ -576,7 +599,7 @@ def kb_confirm_channel_post(calc_id: int):
     btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
     add_time = getButton('Период', 'stc+time', calc_id)
 
-    tr_stop = getButton('Ск. стоп', 'tr_stop', calc_id)
+    tr_stop = getButton('Ск. стоп', 'ch_tr_stop', calc_id)
 
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
@@ -636,21 +659,133 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
     keyboard.add(
         getButton('1h', 'cancel_at+1h', calc_id),
         getButton('4h', 'cancel_at+4h', calc_id),
-        getButton('1d', 'cancel_at+4h', calc_id),
-        getButton(back_txt(), 'back_calc', calc_id)
+        getButton('1d', 'cancel_at+1d', calc_id),
+        getButton(back_txt(lang), 'active_calc', calc_id)
     )
     return keyboard
 
 
-def kb_channel_trailing_stop(calc_id: int):
+def kb_channel_trailing_stop(lang: LANGUAGES_TYPE, calc_id: int, is_channel=False):
+    is_channel = 'ch_' if is_channel else ''
+
     keyboard = InlineKeyboardMarkup(row_width=4)
 
     buttons = []
     for i in range(1, 5):
         buttons.append(
-            getButton(f'{i}', f'tr_stop+{i}', calc_id)
+            getButton(f'{i}', f'{is_channel}tr_stop+{i}', calc_id)
         )
 
     keyboard.add(*buttons)
-    keyboard.add(getButton(back_txt('ru'), 'stc+back', calc_id))
+    keyboard.add(getButton(back_txt(lang), 'active_calc', calc_id))
+    return keyboard
+
+
+def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
+    texts = {
+        'ru': {
+            'cancelAt': 'Время отмены',
+            'tr_stop': 'Ск. стоп',
+            'auto_stop': 'Авто стоп',
+            'auto_take': 'Авто тейк',
+            'cancel': 'Отменить сделку',
+            'profit': 'Закрыть сделку',
+        },
+        'en': {
+            'cancelAt': 'Cancel at',
+            'tr_stop': 'Trailing stop',
+            'auto_stop': 'Auto stop',
+            'auto_take': 'Auto take',
+            'cancel': 'Cancel the deal',
+            'profit': 'Close the deal ',
+        },
+        'uz': {
+            'cancelAt': 'Bekor qilish vaqti',
+            'tr_stop': 'Slip stop',
+            'auto_stop': 'Avtomatik to\'xtatish',
+            'auto_take': 'Avtoulov',
+            'cancel': 'Bitimni bekor qiling',
+            'profit': 'Bitimni yoping',
+        },
+        'tr': {
+            'cancelAt': 'Iptal etmek',
+            'tr_stop': 'Kayan durdurma',
+            'auto_stop': 'Otomatik durdurma',
+            'auto_take': 'Otomatik alım',
+            'cancel': 'Anlaşmayı iptal et',
+            'profit': 'Anlaşmayı kapat ',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+
+    buttons = []
+
+    if calc.status == 'WAIT':
+        buttons.append(
+            getButton(
+                texts[lang]['cancelAt'], 'cancel_at', calc.id
+            ),
+        )
+
+    buttons.append(
+        getButton(
+            texts[lang]['tr_stop'], 'tr_stop', calc.id
+        ),
+    )
+
+    keyboard.add(*buttons)
+    buttons = []
+
+    keyboard.add(
+        getButton(
+            ('✅' if not (calc.ActiveCalc and calc.ActiveCalc.autoStop) else '❌') +
+            ' ' + texts[lang]['auto_stop'],
+            'auto_stop', calc.id
+        ),
+        getButton(
+            texts[lang]['auto_take'],
+            'auto_take', calc.id
+        ),
+    )
+
+    if calc.status == 'WAIT':
+        buttons.append(
+            getButton(
+                texts[lang]['cancel'], 'cancel', calc.id
+            ),
+        )
+
+    if calc.status == 'DEAL':
+        buttons.append(
+            getButton(
+                texts[lang]['profit'], 'active_end', calc.id
+            ),
+        )
+
+    keyboard.add(*buttons)
+    buttons = []
+
+    keyboard.add(
+        getButton(
+            back_txt(lang), 'back_calc', calc.id
+        ),
+    )
+
+    return keyboard
+
+
+def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=5)
+
+    buttons = []
+    for i in range(1, 11):
+        buttons.append(
+            getButton(f'{i}', f'auto_take+{i}', calc_id)
+        )
+
+    keyboard.add(*buttons)
+    keyboard.add(
+        getButton(back_txt(lang), 'active_calc', calc_id)
+    )
     return keyboard

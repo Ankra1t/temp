@@ -264,7 +264,7 @@ def get_short_user_info(user: UserInfo):
 T = TypeVar("T")
 
 
-async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, number_retries=5, **kwargs) -> T:
+async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, number_retries=15, **kwargs) -> T:
     for _ in range(number_retries - 1):
         try:
             return await function(*args, **kwargs)

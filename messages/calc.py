@@ -389,7 +389,10 @@ def msg_channel_calc(
     time: str = '',
     count=-1,
     indexPrice: float | None = None,
+    percent24h: float | None = None,
     try_link: str = '',
+    isActiveCalc=False,
+    traderMes=''
 ):
     description = calc.description if lang == 'ru' else None
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
@@ -399,21 +402,30 @@ def msg_channel_calc(
 
     if calc.profit is not None or status == 'FINISH':
         return msg_channel_calc_result(
-            calc, lang, time, count, try_link
+            calc, lang, time, count, try_link, isActiveCalc
         )
+
+    if calc.openPrice > calc.stopLoss:
+        long_short = 'лонг' if lang == 'ru' else 'long'
+    else:
+        long_short = 'шорт' if lang == 'ru' else 'short'
 
     calc_result = calcService.get_result(calc)
 
     texts = {
         'ru': {
-            'open': 'Войду по' if status == 'WAIT' else 'Вошел по' if status == 'DEAL' else 'Вход',
+            'open': (
+                f'Войду в {long_short} по' if status == 'WAIT' else
+                f'Вошел в {long_short} по' if status == 'DEAL' else
+                f'Вход в {long_short}'
+            ),
 
             'price': 'Цена сейчас',
             'now': 'Сейчас',
 
             'stop': 'Стоп',
             'take': 'Тейк',
-            'style': '<b>С</b>тиль',
+            'style': 'Торгую',
 
             'tp': 'тейка',
             'sl': 'стопа',
@@ -422,8 +434,8 @@ def msg_channel_calc(
             'to': 'к',
 
             'deal': '<b>С</b>делка',
-            'avg': 'среднесрочный',
-            'day': 'внутри дня',
+            'avg': 'Среднесрочная сделка',
+            'day': 'Внутридневная сделка',
 
             'breakeven': 'безубытку',
 
@@ -433,19 +445,23 @@ def msg_channel_calc(
 
             'DEAL': 'В сделке',
             'CANCEL': 'Отменён',
-            'WAIT': 'В ожидании',
+            'WAIT': 'Ожидаю',
             'try': 'Рассчитать',
             'chart': 'График',
         },
         'en': {
-            'open': 'Will enter at' if status == 'WAIT' else 'Entered at' if status == 'DEAL' else 'Enter',
+            'open': (
+                f'Will enter to {long_short} at' if status == 'WAIT' else
+                f'Entered to {long_short} at' if status == 'DEAL' else
+                f'Enter to {long_short}'
+            ),
 
             'stop': 'Stop',
             'price': 'Current price',
             'now': 'Now',
 
             'take': 'Take',
-            'style': '<b>S</b>tyle',
+            'style': 'Trading',
 
             'tp': 'take',
             'sl': 'stop',
@@ -454,8 +470,8 @@ def msg_channel_calc(
             'to': 'to',
 
             'deal': '<b>T</b>rade',
-            'avg': 'medium-term',
-            'day': 'intraday',
+            'avg': 'Medium-term',
+            'day': 'Intraday',
 
             'breakeven': 'breakeven',
 
@@ -486,9 +502,9 @@ def msg_channel_calc(
     t_style = transl_tr_style(calc.tradingStyle, lang)
     trading_style_type = ''
     if t_style is not None:
-        trading_style_type += f'\n\n{t_style.capitalize()}'
+        trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}'
         if time != '':
-            trading_style_type += f' ({texts[lang][time]})'
+            trading_style_type += f'\n{texts[lang][time]}'
 
     # Округление
     round_count = calc.roundCount or 5
@@ -507,21 +523,28 @@ def msg_channel_calc(
 
     profit_result = ''
     if not without_stop:
-        for i in range(calc_result.tp_count):
-            tp_val = calc_result.tp_values[i]
+        if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount:
+            profit_result += f'\n<b>{texts[lang]["take"]}</b>: '
+            if lang == 'ru':
+                profit_result += f'передвигаю стоп каждые {calc.ActiveCalc.trailingStopCount} тейка'
+            else:
+                profit_result += f'trailing stop each {calc.ActiveCalc.trailingStopCount} takes'
+        else:
+            for i in range(calc_result.tp_count):
+                tp_val = calc_result.tp_values[i]
 
-            if (
-                (status == 'CANCEL' and i == 0) or
-                (
-                    indexPrice and
+                if (
+                    (status == 'CANCEL' and i == 0) or
                     (
-                        (diffOpSl > 0 and indexPrice > tp_val) or
-                        (diffOpSl < 0 and indexPrice < tp_val)
-                    )
-                ) or i == 0
-            ):
-                profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
-                profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
+                        indexPrice and
+                        (
+                            (diffOpSl > 0 and indexPrice > tp_val) or
+                            (diffOpSl < 0 and indexPrice < tp_val)
+                        )
+                    ) or i == 0
+                ):
+                    profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
+                    profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
 
     count_show = ''
     if count != -1:
@@ -531,7 +554,13 @@ def msg_channel_calc(
     if indexPrice is not None:
         price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
+    percent24h_show = ''
+    if percent24h and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h * 100, 2)}%)'
+
     def link(value: str):
+        if isActiveCalc:
+            return value
         return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     current_date = get_str_by_datetime(get_datetime_now(), "day.month")
@@ -552,8 +581,21 @@ def msg_channel_calc(
         lang, calc.TrailingStops, calc.openPrice, calc.stopLoss
     )
 
+    cancel_show = ''
+    if calc.status == 'WAIT' and calc.cancelAt:
+        cancelAt = datetime.fromisoformat(
+            calc.cancelAt.replace('Z', '')
+        )
+        createdAt = datetime.fromisoformat(
+            (calc.createdAt or '').replace('Z', '')
+        )
+        hoursToCancel = get_print_float((cancelAt.timestamp() - createdAt.timestamp()) / (60 * 60), 1)
+
+        cancel_show += '\n'
+        cancel_show += f'Отменю через {hoursToCancel} ч' if lang == 'ru' else f'Cancel after {hoursToCancel} h'
+
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b> | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) \
@@ -569,18 +611,21 @@ def msg_channel_calc(
             ) if not without_stop else ''
     ) \
         + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
-        + (f'\n\n{description}' if description else '') \
-        + (f'\n\n{comment}' if comment else '') \
-        + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
-        + trailing_stops \
         + (
             (
                 f'\n\n<b>{month}:</b> '
                 f"{f'торгую {monthStats.count} раз(а)' if lang == 'ru' else f'traded {monthStats.count} time(s)'}"
                 f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
                 f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
-            ) if status == 'WAIT' and monthStats else "") \
+            ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
+        + ('\n' if status == 'WAIT' and not monthStats and not isActiveCalc else "") \
         + trading_style_type \
+        + cancel_show \
+        + (f'\n\n{description}' if description else '') \
+        + (f'\n\n{comment}' if comment else '') \
+        + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
+        + trailing_stops \
+        + (f'\n\n{traderMes}' if traderMes else '') \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
 
@@ -590,6 +635,7 @@ def msg_channel_calc_result(
     time='',
     count=-1,
     try_link='',
+    isActiveCalc=False
 ):
     description = calc.description if lang == 'ru' else None
 
@@ -705,6 +751,8 @@ def msg_channel_calc_result(
             trading_style_type += f' ({texts[lang][time]})'
 
     def link(value: str):
+        if isActiveCalc:
+            return value
         return f'<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{value}</a>'
 
     chart_link = ''
@@ -729,6 +777,57 @@ def msg_channel_calc_result(
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
+
+
+def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
+    data = calc.ActiveCalc
+
+    if not data:
+        return ''
+
+    texts = {
+        'ru': {
+            'main': 'Сделка активна',
+            'trailing': 'Ск. стоп',
+            'cancelAt': 'Отмена',
+            'autoStop': 'Авто стоп',
+            'autoTake': 'Авто тейк',
+        },
+        'en': {
+            'main': 'Calc is active',
+            'trailing': 'Tr. stop',
+            'cancelAt': 'Cancel',
+            'autoStop': 'Auto stop',
+            'autoTake': 'Auto take',
+        },
+        'uz': {
+            'main': 'Calc faol',
+            'trailing': 'Slip stop',
+            'cancelAt': 'Bekor qilmoq',
+            'autoStop': 'Avtomatik to\'xtatish',
+            'autoTake': 'Avtoulov',
+        },
+        'tr': {
+            'main': 'Calc aktif',
+            'trailing': 'Iptal etmek',
+            'cancelAt': 'İptal etmek',
+            'autoStop': 'Otomatik durdurma',
+            'autoTake': 'Otomatik alım',
+        },
+    }
+
+    cancelAt = '-'
+    if calc.cancelAt:
+        dt = datetime.fromisoformat(
+            calc.cancelAt.replace('Z', '')
+        ) + timedelta(hours=3)
+        cancelAt = dt.strftime("%d.%m %H:%M")
+
+    return f"""<b>{texts[lang]['main']}</b>
+{texts[lang]['trailing']}: {get_print_float(data.trailingStopCount, 1) if data.trailingStopCount else '-'}
+{texts[lang]['autoStop']}: {'✅' if data.autoStop else '❌'}
+{texts[lang]['autoTake']}: {get_print_float(data.autoTake) if data.autoTake else '-'}
+{texts[lang]['cancelAt']}: {cancelAt}"""
 
 
 def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):

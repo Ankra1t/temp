@@ -339,6 +339,9 @@ class CalcTrailingStop(BaseModel):
 
 class CalcActiveInfo(BaseModel):
     trailingStopCount: Optional[float]
+    autoStop: Optional[bool]
+    autoTake: Optional[float]
+    chMesIds: Optional[str]
 
 
 class Calculation(BaseModel):
@@ -487,6 +490,7 @@ class LiveToUpdate(BaseModel):
     calc: Calculation
     sendData: SendCalc
     indexPrice: Optional[float]
+    percent24h: Optional[float]
 
 
 class Live(BaseModel):
@@ -514,3 +518,40 @@ class AdvancedSettings(BaseModel):
     autoTake: Optional[float]
     trailingStop: Optional[float]
     cancelMinutes: Optional[float]
+
+
+class UserSmall(BaseModel):
+    id: int
+    tgId: int
+    tgUsername: Optional[str]
+    username: Optional[str]
+
+
+class SubscribeInfo(BaseModel):
+    id: int
+    active: bool
+    finishDt: Optional[str]
+    productType: PRODUCT_TYPE
+    user: UserSmall
+
+
+class GetAllSubscribes(BaseModel):
+    data: list[SubscribeInfo]
+    count: int
+
+
+class MinUser(BaseModel):
+    id: int
+    tgId: int
+    tgUsername: Optional[str]
+
+
+class ActiveStats(BaseModel):
+    longCount: float
+    shortCount: float
+    profitCount: float
+
+
+class UserActiveStats(BaseModel):
+    user: MinUser
+    data: ActiveStats

@@ -11,7 +11,7 @@ from data.data import liteDb
 from common.utils import digit_accept, is_digit, text_accept
 
 from messages.common import msg_success_edit
-from messages.errros import msg_currency_error, msg_digit_error, msg_splitting_error, msg_text_error
+from messages.errors import msg_currency_error, msg_digit_error, msg_splitting_error, msg_text_error
 from messages.settings import msg_choose_exchange_level, msg_enter_exchange_not_found
 from messages.main import msg_after_first_settings, msg_success_base_set
 from messages.enter import (

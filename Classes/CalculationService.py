@@ -68,6 +68,11 @@ class CalculationService():
         self.currencyService = currencyService
 
     def set_profit(self, calc_id: int, value: float):
+        # Находим данный расчет по статистике
+        calc_info = calculation.get(calc_id)
+        if calc_info is None or calc_info.ActiveCalc is not None:
+            return
+
         # Выставляем значение профита в статистику
         self.db.set_calculation_profit(calc_id, value)
         self.db.set_calculation_in_stat(calc_id, True)
