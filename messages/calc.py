@@ -618,7 +618,7 @@ def msg_channel_calc(
                 f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
                 f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
-        + ('\n' if status == 'WAIT' and not (monthStats and not isActiveCalc) else "") \
+        + ('\n' if status == 'WAIT' and not monthStats and not isActiveCalc else "") \
         + trading_style_type \
         + cancel_show \
         + (f'\n\n{description}' if description else '') \
