@@ -601,6 +601,10 @@ def kb_confirm_channel_post(calc_id: int):
 
     tr_stop = getButton('Ск. стоп', 'ch_tr_stop', calc_id)
 
+    cancel_at = getButton(
+        'Время отмены', 'stc_cancel_at', calc_id
+    )
+
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -610,7 +614,7 @@ def kb_confirm_channel_post(calc_id: int):
         add_time, btn_style,
     )
     keyboard.add(
-        tr_stop,
+        tr_stop, cancel_at,
     )
     keyboard.add(
         cancel, send,
@@ -654,13 +658,17 @@ def kb_send_back(stat_id: int):
     return keyboard
 
 
-def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int):
+def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int, action: Literal['stc_', ''] = ''):
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(
-        getButton('1h', 'cancel_at+1h', calc_id),
-        getButton('4h', 'cancel_at+4h', calc_id),
-        getButton('1d', 'cancel_at+1d', calc_id),
-        getButton(back_txt(lang), 'active_calc', calc_id)
+        getButton('1h', f'{action}cancel_at+1h', calc_id),
+        getButton('4h', f'{action}cancel_at+4h', calc_id),
+        getButton('1d', f'{action}cancel_at+1d', calc_id),
+        getButton(
+            back_txt(lang),
+            'stc+back' if action == '_stc' else 'active_calc',
+            calc_id
+        )
     )
     return keyboard
 

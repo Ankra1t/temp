@@ -525,10 +525,12 @@ def msg_channel_calc(
     if not without_stop:
         if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount:
             profit_result += f'\n<b>{texts[lang]["take"]}</b>: '
+
+            tr_stop = get_print_float(calc.ActiveCalc.trailingStopCount, 1)
             if lang == 'ru':
-                profit_result += f'передвигаю стоп каждые {calc.ActiveCalc.trailingStopCount} тейка'
+                profit_result += f'передвигаю стоп каждые {tr_stop} тейка'
             else:
-                profit_result += f'trailing stop each {calc.ActiveCalc.trailingStopCount} takes'
+                profit_result += f'trailing stop each {tr_stop} takes'
         else:
             for i in range(calc_result.tp_count):
                 tp_val = calc_result.tp_values[i]
@@ -555,7 +557,7 @@ def msg_channel_calc(
         price_show = f'<code>{get_print_float(indexPrice, 0 if indexPrice > 100 else 4)}</code>{trading_currency}'
 
     percent24h_show = ''
-    if percent24h and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+    if percent24h and calc.status == 'WAIT':
         percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h * 100, 2)}%)'
 
     def link(value: str):
@@ -589,13 +591,18 @@ def msg_channel_calc(
         createdAt = datetime.fromisoformat(
             (calc.createdAt or '').replace('Z', '')
         )
-        hoursToCancel = get_print_float((cancelAt.timestamp() - createdAt.timestamp()) / (60 * 60), 1)
+        hoursToCancel = get_print_float(
+            (cancelAt.timestamp() - createdAt.timestamp()) / (60 * 60), 0)
 
         cancel_show += '\n'
         cancel_show += f'Отменю через {hoursToCancel} ч' if lang == 'ru' else f'Cancel after {hoursToCancel} h'
 
+    current_price = ''
+    if current_value_count is not None:
+        current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}'
+
     return '\n'.join((
-        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {texts[lang][status]}',
+        f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {current_price if current_price else texts[lang][status]}',
         '',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}',
     )) \
@@ -610,7 +617,6 @@ def msg_channel_calc(
                 + profit_result
             ) if not without_stop else ''
     ) \
-        + (f'\n\n⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}' if current_value_count is not None else '') \
         + (
             (
                 f'\n\n<b>{month}:</b> '
