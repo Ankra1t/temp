@@ -77,8 +77,9 @@ def kb_stats_page(lang: LANGUAGES_TYPE):
             'list_wait': 'In wait',
             'list_deal': 'In deal',
             'list_done': 'Completed',
-            'list_canceled': 'Сanceled',
+            'list_canceled': 'Canceled',
         },
+        # cSpell:disable
         'uz': {
             'list_wait': 'Kutish jarayonida',
             'list_deal': 'Bitimda',
@@ -91,6 +92,7 @@ def kb_stats_page(lang: LANGUAGES_TYPE):
             'list_done': 'Tamamlanmış',
             'list_canceled': 'İptal edildi',
         },
+        # cSpell:enable
     }
 
     keyboard.add(

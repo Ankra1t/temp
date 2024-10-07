@@ -436,7 +436,7 @@ def kb_settings_confirm(lang: LANGUAGES_TYPE, action: str):
     return keyboard
 
 
-def kb_summury_profit(lang: LANGUAGES_TYPE):
+def kb_summary_profit(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'change': 'Изменить',

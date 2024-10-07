@@ -17,10 +17,10 @@ from Classes import pay_guard, calcService, hti
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
 from messages.calc import msg_active_options, msg_calc_list, msg_calculation, msg_channel_calc
-from messages.errros import msg_sl_op_equal_error
+from messages.errors import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
-from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summury_profit_settings
+from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
 from messages.users import msg_choose_tariff_type, msg_no_tariffs
 from messages.common import transl_status
 from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
@@ -39,7 +39,7 @@ from keyboards.stats import kb_calc_activation, kb_calc_list, kb_confirm_channel
 from keyboards.tariff import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 from keyboards.settings import (
     kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
-    kb_maker_or_taker, kb_settings, kb_summury_profit,
+    kb_maker_or_taker, kb_settings, kb_summary_profit,
 )
 
 
@@ -312,7 +312,7 @@ async def send_manual_page(
         )
 
 
-async def send_summury_profit_settings(
+async def send_summary_profit_settings(
     bot: AsyncTeleBot,
     message: Message,
     state: StateContext,
@@ -324,8 +324,8 @@ async def send_summury_profit_settings(
 
     await state.delete()
 
-    text = msg_summury_profit_settings(user.lang, user.id)
-    kb = kb_summury_profit(user.lang)
+    text = msg_summary_profit_settings(user.lang, user.id)
+    kb = kb_summary_profit(user.lang)
 
     if is_first:
         await bot.send_message(
@@ -1073,7 +1073,7 @@ async def send_admin_channel_calc_list(
             stats_link += f'   <a href="{link}">Статистика</a>'
 
     if len(inWaitSends) == 0:
-        mes = '👉 Нет расчётов, требующих дествий'
+        mes = '👉 Нет расчётов, требующих действий'
         kb = kb_channel_post_back()
 
         if is_first:

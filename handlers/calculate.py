@@ -7,7 +7,7 @@ from CHANNEL.channel_post import channel_post
 from db import db
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
-from messages.errros import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
+from messages.errors import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
 from messages.enter import (
     msg_choose_direct, msg_enter_min_bar, msg_enter_trading_style,
 )

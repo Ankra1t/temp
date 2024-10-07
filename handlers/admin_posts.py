@@ -10,7 +10,7 @@ from config_logger import logger
 from common.utils import digit_accept, text_accept, get_post_from_message
 from common.dt import get_datetime_by_str, get_datetime_now
 
-from messages.errros import msg_digit_error
+from messages.errors import msg_digit_error
 from states.admin_posts import AdminPostsState
 
 from keyboards.admin_posts import kb_posts_back, kb_post_add_confirm, kb_post_confirm

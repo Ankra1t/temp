@@ -31,7 +31,7 @@ from keyboards.settings import (
 
 from pages.calculate import (
     send_active_settings, send_atr_settings, send_calculation, send_confirm_calc_send, send_dop_settings, send_exchange_settings, send_main,
-    send_maker_or_taker, send_settings, send_stop_settings, send_summury_profit_settings, send_trading_style_settings,
+    send_maker_or_taker, send_settings, send_stop_settings, send_summary_profit_settings, send_trading_style_settings,
     send_user_deposit
 )
 from states.stats import StatsState
@@ -363,7 +363,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'summury_profit':
         # Вывод страницы с "Выводом профита" и его изменением
-        await send_summury_profit_settings(bot, call.message, state, user)
+        await send_summary_profit_settings(bot, call.message, state, user)
 
     if type == 'change_summury_profit':
         # Если summury_type не задан, то выводим страницу для выбора типа
@@ -481,7 +481,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
         # Выводим сообщения
         await bot.edit_message_text(msg_success_edit(user.lang), chat_id, mes_id)
-        await send_summury_profit_settings(bot, call.message, state, user, True)
+        await send_summary_profit_settings(bot, call.message, state, user, True)
 
     if type == 'splitting_last':
         async with state.data() as data:

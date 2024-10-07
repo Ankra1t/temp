@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from keyboards.admin_main import kb_tools_list_back
-from messages.errros import msg_digit_error
+from messages.errors import msg_digit_error
 from models import Message, StateContext, User
 from Classes import pay_guard
 

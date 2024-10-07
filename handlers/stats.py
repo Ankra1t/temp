@@ -19,7 +19,7 @@ from keyboards.main import kb_violation_skip
 from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
-from messages.errros import msg_digit_error, msg_freeze_error, msg_text_error
+from messages.errors import msg_digit_error, msg_freeze_error, msg_text_error
 from messages.main import msg_frozen
 from services import calculation, channel_calc, settings, ticker, violation
 

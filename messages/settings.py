@@ -312,7 +312,7 @@ def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], ris
 {msg_current_value(lang)}: <b>{texts[lang]['on' if risk_upd else 'off']}</b>"""
 
 
-def msg_summury_profit_settings(lang: LANGUAGES_TYPE, user_db_id: int):
+def msg_summary_profit_settings(lang: LANGUAGES_TYPE, user_db_id: int):
     u_base = db.get_calc_user_settings(user_db_id)
     tp_ratio = u_base.tp_ratio if (u_base is not None) else []
     split_values = u_base.split_values if (u_base is not None) else None
