@@ -326,7 +326,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
         if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
             keyboard.add(
-                getButton('Активировать сделку', 'active_calc_a', calc.id)
+                getButton('⚡️ ' + 'Активировать сделку', 'active_calc_a', calc.id)
             )
         elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
             keyboard.add(

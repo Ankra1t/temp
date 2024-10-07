@@ -392,6 +392,7 @@ def msg_channel_calc(
     percent24h: float | None = None,
     try_link: str = '',
     isActiveCalc=False,
+    traderMes=''
 ):
     description = calc.description if lang == 'ru' else None
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
@@ -555,7 +556,7 @@ def msg_channel_calc(
 
     percent24h_show = ''
     if percent24h and (calc.status == 'WAIT' or calc.status == 'DEAL'):
-        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
+        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h * 100, 2)}%)'
 
     def link(value: str):
         if isActiveCalc:
@@ -582,14 +583,16 @@ def msg_channel_calc(
 
     cancel_show = ''
     if calc.status == 'WAIT' and calc.cancelAt:
-        dt = datetime.fromisoformat(
+        cancelAt = datetime.fromisoformat(
             calc.cancelAt.replace('Z', '')
-        ) + timedelta(hours=3)
-        cancelAt = dt.strftime("%d.%m %H:%M")
+        )
+        createdAt = datetime.fromisoformat(
+            (calc.createdAt or '').replace('Z', '')
+        )
+        hoursToCancel = get_print_float((cancelAt.timestamp() - createdAt.timestamp()) / (60 * 60), 1)
 
         cancel_show += '\n'
-        cancel_show += 'Отменю в ' if lang == 'ru' else 'Cancel at '
-        cancel_show += cancelAt
+        cancel_show += f'Отменю через {hoursToCancel} ч' if lang == 'ru' else f'Cancel after {hoursToCancel} h'
 
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {texts[lang][status]}',
@@ -615,14 +618,14 @@ def msg_channel_calc(
                 f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
                 f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
-        + ('\n' if not (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
+        + ('\n' if status == 'WAIT' and not (monthStats and not isActiveCalc) else "") \
         + trading_style_type \
         + cancel_show \
-        + (f'Отменю через' if calc.status == 'WAIT' else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
         + trailing_stops \
+        + (f'\n\n{traderMes}' if traderMes else '') \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
 
 

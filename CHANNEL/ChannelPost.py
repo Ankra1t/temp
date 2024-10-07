@@ -80,13 +80,7 @@ class ChannelPost():
                 withoutStop = send_data.withoutStop
                 time = send_data.time
 
-            msg = msg_channel_calc(
-                calc, lang, withoutStop, time or '',
-                mesNum, indexPrice, percent24h,
-                try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
-                isActiveCalc=send_data is None,
-            )
-
+            trader_mes = ''
             if send_data is None:
                 stats = calculation.getActiveStatsByUser(calc.userId)
                 if stats:
@@ -99,10 +93,18 @@ class ChannelPost():
                     else:
                         profit = f'{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "стоп")}'
 
-                    msg += f"""\n⚡️ Трейдер: {name}
+                    trader_mes = f"""\n⚡️ Трейдер: {name}
 За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
 {get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
 Результат сейчас: {profit}"""
+
+            msg = msg_channel_calc(
+                calc, lang, withoutStop, time or '',
+                mesNum, indexPrice, percent24h,
+                try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
+                isActiveCalc=send_data is None,
+                traderMes=trader_mes
+            )
 
             try:
                 if mesIds is not None:
