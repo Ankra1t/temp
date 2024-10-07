@@ -191,6 +191,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
+
+            'active': 'Активировать сделку',
+            'active_p': 'Параметры активации',
         },
         'en': {
             'save': 'Save to stats',
@@ -208,6 +211,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Take',
             'stop': 'Stop',
             'breakeven': 'Breakeven',
+
+            'active': 'Activate the deal',
+            'active_p': 'Activation params',
         },
         'uz': {
             'save': 'Hisobni saqlash',
@@ -225,6 +231,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Olish',
             'stop': 'Toʻxtatish',
             'breakeven': 'Tenglash',
+
+            'active': 'Bitimni faollashtirish',
+            'active_p': 'Faollashtirish parametrlari',
         },
         'tr': {
             'save': 'Hesaplamayı kaydet',
@@ -242,6 +251,9 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası',
+
+            'active': 'Anlaşmayı etkinleştir',
+            'active_p': 'Aktivasyon paramleri',
         },
     }
 
@@ -326,15 +338,21 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
             )
 
-        if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
-            keyboard.add(
-                getButton('⚡️ ' + 'Активировать сделку', 'active_calc_a', calc.id)
-            )
-        elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
-            keyboard.add(
-                getButton('⚡️ ' + 'Параметры активации',
-                          'active_calc', calc.id)
-            )
+        if not isAdmin:
+            if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
+                keyboard.add(
+                    getButton(
+                        '⚡️ ' + texts[lang]['active'],
+                        'active_calc_a', calc.id
+                    )
+                )
+            elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+                keyboard.add(
+                    getButton(
+                        '⚡️ ' + texts[lang]['active_p'],
+                        'active_calc', calc.id
+                    )
+                )
 
     return keyboard
 
