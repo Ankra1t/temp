@@ -212,7 +212,8 @@ async def send_active_settings(
     advSettings = settings.getAdvanced(user.id)
 
     msg = msg_active_settings(user.lang, advSettings)
-    kb = kb_active_settings(user.lang, bool(advSettings and advSettings.autoStop))
+    kb = kb_active_settings(user.lang, bool(
+        advSettings and advSettings.autoStop))
 
     if is_first:
         await bot.send_message(
@@ -1058,19 +1059,15 @@ async def send_admin_channel_calc_list(
     weekStat = channel_calc.getWeekStat()
     stats_link = ''
     if weekStat is not None:
-        stats_link = 'Ссылки на статистику:'
         messages = weekStat.get('messages')
         chIds = messages.get('chIds')
         mesIds = messages.get('mesIds')
-        langs = messages.get('langs')
-        link = ''
-        for i in range(1):
-            try:
-                link = f'https://t.me/c/{chIds[i].replace("-100", "")}/{mesIds[i]}'
-            except:
-                pass
 
-            stats_link += f'   <a href="{link}">Статистика</a>'
+        try:
+            link = f'https://t.me/c/{chIds[0].replace("-100", "")}/{mesIds[0]}'
+            stats_link = f'<a href="{link}">Канал статистики</a>'
+        except:
+            pass
 
     if len(inWaitSends) == 0:
         mes = '👉 Нет расчётов, требующих действий'
@@ -1088,21 +1085,31 @@ async def send_admin_channel_calc_list(
 
         return
 
-    inWaitSends.reverse()
     result_list = inWaitSends[page * N: (page + 1) * N]
 
     msg = '<b><u>Отправленные расчёты</u></b>'
     if stats_link != '':
         msg += f'\n{stats_link}'
-    msg += '\n👇 Нажмите на номер для действий'
+    msg += '\n\n👇 Нажмите на номер для действий'
     for send_data in result_list:
-        calc = calculation.get(send_data.calcId)
-        if calc is None:
-            continue
+        if send_data.calculation.status == 'DEAL':
+            status = 'В сделке'
+        else:
+            status = 'Ожидает'
 
-        msg += f'\n\n/{send_data.calcId} <b>{(calc.tool or "").replace("/USDT", "")}</b>'
-        msg += f' ({datetime.fromisoformat(send_data.createdAt.replace("Z", "")).strftime("%d.%m %H:%M")})'
-        msg += f'\nВход/Стоп: <b>{get_print_float(calc.openPrice)} / {get_print_float(calc.newStop or calc.stopLoss)}</b>'
+        msg += f'\n\n/{send_data.calcId} <b>{(send_data.calculation.tool or "").replace("/USDT", "")}</b> | {status}'
+
+        if send_data.calculation.status == 'DEAL' and send_data.calculation.dealAt:
+            dt = send_data.calculation.dealAt
+        else:
+            dt = send_data.createdAt
+
+        msg += f' ({datetime.fromisoformat(dt.replace("Z", "")).strftime("%d.%m %H:%M")})'
+
+        open_price = send_data.calculation.openPrice
+        stop_loss = send_data.calculation.newStop or send_data.calculation.stopLoss
+
+        msg += f'\nВход/Стоп: <b>{get_print_float(open_price)} / {get_print_float(stop_loss)}</b>'
 
     del_mes_id = mes_id
 

@@ -4,7 +4,7 @@ from pydantic.type_adapter import TypeAdapter
 
 from config_global import API_URL
 from .base_config import session_decorator, session, check_response
-from models import Live, MonthToolStats, SendCalc, CalcSentMessages, SentMessages, LANGUAGES_TYPE
+from models import Live, MonthToolStats, SendCalc, CalcSentMessages, SendCalcWithCalc, SentMessages, LANGUAGES_TYPE
 
 
 @session_decorator
@@ -57,7 +57,7 @@ def getInWait():
     if not check_response(res):
         return
 
-    return TypeAdapter(list[SendCalc]).validate_json(res.text)
+    return TypeAdapter(list[SendCalcWithCalc]).validate_json(res.text)
 
 
 @session_decorator

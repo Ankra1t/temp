@@ -459,6 +459,10 @@ class SendCalc(BaseModel):
     messages: Optional[SentMessages] = None
 
 
+class SendCalcWithCalc(SendCalc):
+    calculation: Calculation
+
+
 class LiveDeal(BaseModel):
     tool: str
     takeProfit: Optional[float]
