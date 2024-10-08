@@ -52,15 +52,15 @@ def msg_enter_save_calc(lang: LANGUAGES_TYPE):
 def msg_enter_calc_img_text(lang: LANGUAGES_TYPE, calc: Calculation):
     texts = {
         'ru': {
-            'main': 'Опишите сделку и прикрепите картинку',
-            'change': 'Отправьте новое описание и картинку для <u>изменения</u>',
-            'comment': 'Напишите комментарий и добавьте график',
-            'info': 'При отправке фото с комментарием предыдующая картинка будет утерена',
+            'main': 'Опишите сделку и/или прикрепите картинку',
+            'change': 'Отправьте новое описание и/или картинку для <u>изменения</u>',
+            'comment': 'Напишите комментарий и/или добавьте график',
+            'info': 'При отправке фото с комментарием предыдущая картинка будет утеряна',
         },
         'en': {
-            'main': 'Describe the deal and attach the picture',
-            'change': 'Send a new description and picture for <u>changes</u>',
-            'comment': 'Write a comment and add a schedule',
+            'main': 'Describe the deal and/or attach the picture',
+            'change': 'Send a new description and/or picture for <u>changes</u>',
+            'comment': 'Write a comment and/or add a schedule',
             'info': 'When sending a photo with a comment, the previous picture will be lost',
         },
         'uz': {

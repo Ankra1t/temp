@@ -48,13 +48,12 @@ from keyboards.stats import (
     kb_auto_take, kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_send_back, kb_send_calc_time, kb_stats,
+    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
 from pages.calculate import send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
 
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
-
 
 
 def createScreen(
@@ -513,19 +512,23 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                         user.lang, calc.tpRatio, calc.id)
                 )
 
-    if type == 'remove_img_text':
+    if 'del_img_txt' in type:
         calc = calculation.update(calc_id, photo=None, description=None)
         if calc is None:
             return
-        await send_calculation(bot, call.message, state, user, calc)
 
-    if type == 'add_img_text':
+        if 'stc+' in type:
+            await send_confirm_calc_send(bot, call.message, calc_id)
+        else:
+            await send_calculation(bot, call.message, state, user, calc)
+
+    if 'add_img_text' in type:
         calc = calculation.get(calc_id)
         if calc is None:
             return
 
         text = msg_enter_calc_img_text(user.lang, calc)
-        kb = kb_calc_image_text(user.lang, calc)
+        kb = kb_calc_image_text(user.lang, calc, 'stc+')
 
         new_mes_id = await edit_message(bot, call.message, 'text', text, kb)
 
@@ -534,6 +537,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             stat_id=calc_id,
             calc_text=text,
             del_mes_id=new_mes_id,
+            type='stc' if 'stc+' in type else ''
         )
 
     if type == 'comment':
@@ -663,30 +667,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calculation.update(calc_id, photo=photo_str)
         await bot.delete_message(chat_id, mes_id)
 
-    if type == 'stc+text':
-        new_mes_id = await edit_message(
-            bot, call.message, 'text',
-            '👉 Введите <b>доп текст</b>:',
-            kb_send_back(calc_id)
-        )
-
-        await state.set(StatsState.send_add_text)
-        await state.add_data(
-            del_mes_id=new_mes_id, stat_id=calc_id
-        )
-
-    if type == 'stc+photo':
-        new_mes_id = await edit_message(
-            bot, call.message, 'text',
-            '👉 Отправьте <b>новое фото</b>:',
-            kb_send_back(calc_id)
-        )
-
-        await state.set(StatsState.send_add_photo)
-        await state.add_data(
-            del_mes_id=new_mes_id, stat_id=calc_id
-        )
-
     if type == 'stc+time':
         await edit_message(
             bot, call.message, 'text',
@@ -723,24 +703,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         channel_calc.update(send_data.id, isVote=not send_data.isVote)
         await send_confirm_calc_send(bot, call.message, calc_id)
-
-    if type == 'stc-photo':
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is None:
-            return
-
-        calculation.update(calc_id, photo=None)
-        await bot.delete_message(chat_id, mes_id)
-        await send_confirm_calc_send(bot, call.message, calc_id, True)
-
-    if type == 'stc-text':
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is None:
-            return
-
-        calculation.update(calc_id, description=None)
-        await bot.delete_message(chat_id, mes_id)
-        await send_confirm_calc_send(bot, call.message, calc_id, True)
 
     if type == 'stc+back':
         await send_confirm_calc_send(bot, call.message, calc_id)

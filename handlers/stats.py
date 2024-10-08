@@ -142,6 +142,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         calc_text = data.get('calc_text', 'J')
         stat_id = data.get('stat_id', 0)
         type = data.get('type', '')
+        action = data.get('action', '')
 
     await delete_message(bot, chat_id, message.id)
 
@@ -187,7 +188,9 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
 
     await state.delete()
 
-    if type != 'stats':
+    if type == 'stc':
+        await send_confirm_calc_send(bot, message, calc.id, True)
+    elif type != 'stats':
         await send_calculation(bot, message, state, user, calc, True)
     else:
         send_data = channel_calc.getByCalc(calc.id)

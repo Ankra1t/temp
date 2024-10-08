@@ -531,7 +531,7 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
     return keyboard
 
 
-def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation):
+def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['stc+', ''] = ''):
     isReset = False
     if calc.status != 'FINISH' and (calc.photo is not None or calc.description is not None):
         isReset = True
@@ -554,10 +554,10 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation):
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     if isReset:
-        btn_reset = getButton(texts[lang]['reset'], 'remove_img_text', calc.id)
+        btn_reset = getButton(texts[lang]['reset'], f'{type}del_img_txt', calc.id)
         keyboard.add(btn_reset)
 
-    btn_back = getButton(back_txt(lang), 'back_calc', calc.id)
+    btn_back = getButton(back_txt(lang), 'stc+back' if type == 'stc+' else 'back_calc', calc.id)
     keyboard.add(btn_back)
 
     return keyboard
@@ -576,15 +576,7 @@ def kb_confirm_channel_post(calc_id: int):
         without_stop = send_data.withoutStop
         is_vote = send_data.isVote
 
-    if is_text:
-        add_text = getButton('❌ Убрать описание', 'stc-text', calc_id)
-    else:
-        add_text = getButton('📝 Описание', 'stc+text', calc_id)
-
-    if is_photo:
-        add_photo = getButton('❌ Убрать скрин', 'stc-photo', calc_id)
-    else:
-        add_photo = getButton('🖼 Скрин', 'stc+photo', calc_id)
+    add_description = getButton('🖼 Описание', 'stc+add_img_text', calc_id)
 
     if without_stop:
         add_stop = getButton('Вернуть стоп', 'stc+stop', calc_id)
@@ -609,7 +601,10 @@ def kb_confirm_channel_post(calc_id: int):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        add_photo, add_text,
+        add_description,
+    )
+
+    keyboard.add(
         btn_vote, add_stop,
         add_time, btn_style,
     )

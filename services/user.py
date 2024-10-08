@@ -1,4 +1,3 @@
-from pydantic import TypeAdapter
 from models import RefUser
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL

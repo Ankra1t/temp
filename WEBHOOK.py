@@ -9,6 +9,7 @@ from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 from CHANNEL.channel_post import channel_post
 
+from common.utils import get_print_float
 from config_global import BASE_HOST, CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, BASE_URL
 from config_logger import logger
 
@@ -16,7 +17,7 @@ from callbacks.calculate import send_after_first_try
 
 from initialize import bot
 from db import db
-from models import Calculation, Live
+from models import Calculation, Live, UserCalcNot
 from registration import reg
 from thread_tasks import run_thread
 
@@ -127,6 +128,43 @@ async def active_calc(request: web.Request):
     return web.Response()
 
 
+async def user_not(request: web.Request):
+    # access_token = db.get_access_token()
+    # api_key = request.headers.get('tg-api-key')
+
+    # if access_token is None or api_key is None or access_token != api_key:
+    #     return web.Response(status=403)
+
+    value = await request.text()
+    data = UserCalcNot.model_validate_json(value)
+
+    print(data)
+
+    tool = f'<a href="https://t.me/c/{str(data.chId).replace("-100", "")}/{data.mesId}">{data.tool}</a>'
+
+    user = db.get_user_by_id(data.userId)
+
+    if not user:
+        return web.Response()
+
+    if data.type == 'cancel':
+        await bot.send_message(
+            user.tg_id, f'⚡️ Сделка {tool} отменена!'
+        )
+    elif data.trStop is not None:
+        tr_info = 'стоп передвинут '
+        if data.trStop == 'breakeven':
+            tr_info += 'к <b>безубытку</b>'
+        else:
+            tr_info += f'c {get_print_float(data.trStop[0])} к {get_print_float(data.trStop[1])}'
+
+        await bot.send_message(
+            user.tg_id, f'⚡️ По сделке {tool} {tr_info}!'
+        )
+
+    return web.Response()
+
+
 async def shutdown(app):
     logger.info('Shutting down: removing webhook')
     await bot.remove_webhook()
@@ -154,6 +192,7 @@ async def setup():
         web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
         web.post(BASE_URL + '/live-info', live_info),
         web.post(BASE_URL + '/active-calc', active_calc),
+        web.post(BASE_URL + '/user-not', user_not),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),

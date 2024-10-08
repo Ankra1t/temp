@@ -447,6 +447,13 @@ class UserNotification(SentMessages):
     firstLang: str
     num: int
 
+class UserCalcNot(BaseModel):
+    userId: int
+    type: Literal['cancel', 'tr_stop']
+    tool: str
+    chId: str
+    mesId: str
+    trStop: tuple[float, float] | Literal['breakeven'] | None = None
 
 class CalcSentMessages(BaseModel):
     mesNum: Optional[int] = None
