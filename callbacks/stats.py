@@ -56,12 +56,14 @@ from pages.calculate import send_calc_list, send_calculation, send_confirm_calc_
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
 
 
+
 def createScreen(
     tool: str,
     time: Literal['1h', '4h', '1d'] = '1h',
     type: Literal['bars', 'candles'] = 'bars',
     scale=0
 ):
+    # cSpell: disable
     print('START')
     options = Options()
     options.add_argument('--no-sandbox')
@@ -126,12 +128,12 @@ def createScreen(
         if el.text == time:
             el.click()
 
-    fulscreen_btn = WebDriverWait(browser, 5).until(
+    fullscreen_btn = WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
             (By.CLASS_NAME, 'iconicon_fullscreen_on')
         )
     )
-    fulscreen_btn.click()
+    fullscreen_btn.click()
 
     bars_select = WebDriverWait(browser, 5).until(
         EC.presence_of_element_located(
@@ -183,6 +185,7 @@ def createScreen(
     browser.close()
 
     return file_path
+    # cSpell: enable
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):

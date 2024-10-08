@@ -5,7 +5,7 @@ from common.dt import get_datetime_now
 from data.data import liteDb
 from db import Database
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
-from services import calculation
+from services import calculation, channel_calc
 
 from .CurrencyService import CurrencyService
 
@@ -70,7 +70,8 @@ class CalculationService():
     def set_profit(self, calc_id: int, value: float):
         # Находим данный расчет по статистике
         calc_info = calculation.get(calc_id)
-        if calc_info is None or calc_info.ActiveCalc is not None:
+        send_data = channel_calc.getByCalc(calc_id)
+        if calc_info is None or (calc_info.ActiveCalc is not None and send_data is None):
             return
 
         # Выставляем значение профита в статистику

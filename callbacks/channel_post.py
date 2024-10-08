@@ -300,9 +300,11 @@ More often: <b>{result}</b>"""
             calc.riskValue * value * spot_rate
         )
 
-        calculation.update(
+        calc = calculation.update(
             calc_id, status='FINISH'
         )
+        if not calc:
+            return
 
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')

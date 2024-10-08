@@ -666,7 +666,7 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int, action: Literal['stc_', '']
         getButton('1d', f'{action}cancel_at+1d', calc_id),
         getButton(
             back_txt(lang),
-            'stc+back' if action == '_stc' else 'active_calc',
+            'stc+back' if action == 'stc_' else 'active_calc',
             calc_id
         )
     )

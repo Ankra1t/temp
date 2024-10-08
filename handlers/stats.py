@@ -265,8 +265,10 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
     send_data = channel_calc.getByCalc(stat_id)
 
     if calc and not (calc.ActiveCalc and not send_data):
-        calcService.set_profit(stat_id, abs(
-            value) * (-1 if type == 'stop' else 1))
+        calcService.set_profit(
+            stat_id,
+            abs(value) * (-1 if type == 'stop' else 1)
+        )
         calc = calculation.update(
             stat_id, status='FINISH'
         )
