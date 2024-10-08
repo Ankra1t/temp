@@ -46,7 +46,6 @@ from handlers.tariff import registration as _reg_tariff
 
 def reg(bot: AsyncTeleBot):
     bot.setup_middleware(AuthMiddleWare(bot))
-
     bot.setup_middleware(StateMiddleware(bot))
 
     commands_registration(bot)
@@ -88,7 +87,7 @@ def reg(bot: AsyncTeleBot):
     _reg_stats(bot)
     _reg_tariff(bot)
 
-    _reg_livepost(bot)  # !Должен регестрироваться последним
+    _reg_livepost(bot)  # !Должен регистрироваться последним
 
     chat_member_handler_registration(bot)
 

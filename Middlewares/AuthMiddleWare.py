@@ -1,9 +1,9 @@
 from typing import Union
 from telebot.types import Message, CallbackQuery, ChatMemberUpdated
-from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate
+from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate, ContinueHandling
 from telebot.util import update_types
 
-from AuthRoles import check_registrate
+from AuthRoles import check_registration
 from common.utils import delete_message, get_lang
 
 from db import db
@@ -23,7 +23,7 @@ class AuthMiddleWare(BaseMiddleware):
 
     async def pre_process(self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data):
         if isinstance(message, ChatMemberUpdated):
-            return
+            return ContinueHandling()
 
         if message.from_user is None:
             return CancelUpdate()
@@ -71,5 +71,5 @@ class AuthMiddleWare(BaseMiddleware):
             id=user_db_id,
             tgId=tgId,
             lang=lang,
-            role=check_registrate(tgId) or 0
+            role=check_registration(tgId) or 0
         )

@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import telebot
+from telebot.util import update_types
 from aiohttp import web
 
 from Classes.CryptoBot import cryptoPay_payment_updates
@@ -141,7 +142,7 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/')
+    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types)
 
     reg(bot)
 

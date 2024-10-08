@@ -1,6 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from AuthRoles import check_registrate
+from AuthRoles import check_registration
 from common.utils import delete_message
 from common.utils import get_post_from_message
 from states.admin_posts import AdminPostsState
@@ -91,7 +91,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
             return
 
     # livepost
-    user_role = check_registrate(user_id)
+    user_role = check_registration(user_id)
     if user_role != 1 and user_role != 2:
         return
 

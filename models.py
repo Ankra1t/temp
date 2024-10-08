@@ -247,6 +247,13 @@ class UserInfo(BaseModel):
     block: bool = False
 
 
+class RefUser(BaseModel):
+    id: int
+    tgId: int
+    tgUsername: Optional[str]
+    refsCount: int
+
+
 class Client(BaseModel):
     user: UserInfo | None = None
 

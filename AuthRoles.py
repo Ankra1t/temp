@@ -34,7 +34,7 @@ def first_timeout(user_id: int):
         return False
 
 
-def check_registrate(tg_id: int):
+def check_registration(tg_id: int):
     """Возвращает роль"""
     user_db_id = db.get_user_id_by_tg_id(tg_id)
     worker_role = db.get_worker_role(user_db_id)
