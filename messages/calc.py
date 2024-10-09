@@ -4,7 +4,9 @@ import requests
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from common.utils import get_decimal_count, get_print_float, getRuWordEnd
+from common.utils import get_decimal_count, get_print_float
+from common.calculation import getStrValueCount
+
 from config_global import RESULTS_CHANNEL_NAME
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
@@ -146,10 +148,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'акций',
             'lot': 'лота',
 
-            'tp': 'тейк',
-            'sl': 'стоп',
-            'breakeven': 'безубыток',
-
             'to': 'к',
 
             'fee': 'Комиссия биржи',
@@ -177,10 +175,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'coin': 'coins',
             'paper': 'shares',
             'lot': 'lots',
-
-            'tp': 'take',
-            'sl': 'stop',
-            'breakeven': 'breakeven',
 
             'to': 'to',
 
@@ -210,10 +204,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'paper': 'ulushlar',
             'lot': 'juda ko\'p',
 
-            'tp': 'olmoq',
-            'sl': "stop",
-            'breakeven': 'beziyon',
-
             'to': 'ga',
 
             'fee': 'BIRJA BERISH',
@@ -241,10 +231,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             'coin': 'madeni para',
             'paper': 'hisse senetleri',
             'lot': 'çok',
-
-            'tp': 'almak',
-            'sl': "durmak",
-            'breakeven': 'başa baş',
 
             'to': 'ile',
 
@@ -349,17 +335,11 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         status = f'{transl_status(calc.status, lang)}'
     else:
         tp_sl_count = (calc.profit or 0) / calc.riskValue
+        status = getStrValueCount(tp_sl_count, lang)
 
-        if tp_sl_count == 0:
-            status = f'{texts[lang]["breakeven"]}'
-        elif tp_sl_count > 0:
-            status = f'{get_print_float(tp_sl_count, 1)} {texts[lang]["tp"]}'
-        else:
-            status = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{texts[lang]["sl"]}'
-
-    decription = ''
+    description = ''
     if calc.description is not None:
-        decription = f'<b>{texts[lang]["description"]}</b>: {calc.description}\n'
+        description = f'<b>{texts[lang]["description"]}</b>: {calc.description}\n'
 
     comment = ''
     if calc.comment is not None:
@@ -378,7 +358,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
         fee_text + trading_style_type,
-        decription + comment
+        description + comment
     ))
 
 
@@ -427,17 +407,12 @@ def msg_channel_calc(
             'take': 'Тейк',
             'style': 'Торгую',
 
-            'tp': 'тейка',
-            'sl': 'стопа',
-
             'direct': 'Направление',
             'to': 'к',
 
             'deal': '<b>С</b>делка',
             'avg': 'Среднесрочная сделка',
             'day': 'Внутридневная сделка',
-
-            'breakeven': 'безубытку',
 
             'buy/sell': '<b>П</b>окупают/продают',
             'change24': '<b>И</b>зменение за 24ч',
@@ -463,17 +438,12 @@ def msg_channel_calc(
             'take': 'Take',
             'style': 'Trading',
 
-            'tp': 'take',
-            'sl': 'stop',
-
             'direct': 'Direction',
             'to': 'to',
 
             'deal': '<b>T</b>rade',
             'avg': 'Medium-term',
             'day': 'Intraday',
-
-            'breakeven': 'breakeven',
 
             'buy/sell': '<b>B</b>uy/sell',
             'change24': '<b>C</b>hange in 24h',
@@ -517,9 +487,7 @@ def msg_channel_calc(
     diffOpSl = calc.openPrice - calc.stopLoss
     current_value_count = None
     if indexPrice and status == 'DEAL':
-        current_value_count = get_print_float(
-            (indexPrice - calc.openPrice) / diffOpSl, 1
-        )
+        current_value_count = (indexPrice - calc.openPrice) / diffOpSl
 
     profit_result = ''
     if not without_stop:
@@ -599,7 +567,7 @@ def msg_channel_calc(
 
     current_price = ''
     if current_value_count is not None:
-        current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {"+" if float(current_value_count) > 0 else ""}{current_value_count} {texts[lang]["tp" if float(current_value_count) >= 0 else "sl"]}'
+        current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {getStrValueCount(current_value_count, lang)}'
 
     return '\n'.join((
         f'{count_show}<b>{link(tool.replace("/USDT", "").upper())}</b>{percent24h_show} | {current_price if current_price else texts[lang][status]}',
@@ -621,8 +589,7 @@ def msg_channel_calc(
             (
                 f'\n\n<b>{month}:</b> '
                 f"{f'торгую {monthStats.count} раз(а)' if lang == 'ru' else f'traded {monthStats.count} time(s)'}"
-                f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {"+" if monthStats.value > 0 else ""}{get_print_float(monthStats.value, 1)} '
-                f'{("тейков" if lang == "ru" else "take") if monthStats.value > 0 else ("стопов" if lang == "ru" else "stop") }'
+                f'\n<b>{"Результат" if lang == "ru" else "Results"}</b>: {getStrValueCount(monthStats.value, lang)}'
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + ('\n' if status == 'WAIT' and not monthStats and not isActiveCalc else "") \
         + trading_style_type \
@@ -658,8 +625,6 @@ def msg_channel_calc_result(
 
             'stop': '<b>Стоп</b>',
             'take': '<b>Тейк</b>',
-            'tp': 'тейка',
-            'sl': 'стопа',
 
             'style': '<b>С</b>тиль торговли',
             'deal': '<b>С</b>делка',
@@ -675,7 +640,6 @@ def msg_channel_calc_result(
             'date': 'Дата',
             'try': 'Рассчитать',
 
-            'breakeven': 'безубыток',
             'chart': 'График',
         },
         'en': {
@@ -685,8 +649,6 @@ def msg_channel_calc_result(
 
             'stop': '<b>Stop</b>',
             'take': '<b>Take</b>',
-            'tp': 'take',
-            'sl': 'stop',
 
             'style': '<b>T</b>rading style',
             'deal': '<b>T</b>rade',
@@ -702,7 +664,6 @@ def msg_channel_calc_result(
             'date': 'Date',
             'try': 'Calculate',
 
-            'breakeven': 'breakeven',
             'chart': 'Chart',
         }
     }
@@ -730,12 +691,7 @@ def msg_channel_calc_result(
     if count != -1:
         count_show = f'{count}. '
 
-    if calc.profit == 0:
-        result = f'{texts[lang]["breakeven"]}'
-    elif take_or_stop == 'take':
-        result = f'{get_print_float(tp_sl_count, 1)} {getRuWordEnd(tp_sl_count, texts[lang]["tp"])}'
-    else:
-        result = f'{(get_print_float(tp_sl_count, 1) + " ") if tp_sl_count != 1 else ""}{getRuWordEnd(tp_sl_count, texts[lang]["sl"])}'
+    result = getStrValueCount(tp_sl_count, lang)
 
     nearTake = calc.tpRatio[0]
     nearValue = calc_result.tp_values[0]

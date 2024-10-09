@@ -1534,7 +1534,7 @@ class Database:
             return False
 
     def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
-        """Установить коэфициенты тейк-профит на показ"""
+        """Установить коэффициенты тейк-профит на показ"""
         market = self.get_user_current_market(user_id)
 
         query = 'UPDATE "CalcSettings" SET "tpRatio" = %s WHERE "userId" = %s AND market = %s'

@@ -7,6 +7,7 @@ from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
 from AuthRoles import first_timeout
+from common.calculation import getStrValueCount
 from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, edit_message, get_print_float
 from data.data import liteDb
@@ -373,15 +374,11 @@ async def send_stats(
 
             'canceled': 'Отменённые',
 
-            'tp': 'тейков',
-            'sl': 'стопов',
             'prices': 'Купил/Продал',
             'result': 'Итого за неделю',
             'long': 'Лонг',
             'short': 'Шорт',
             'success': 'Процент успешных сделок',
-
-            'breakeven': 'безубыток',
         },
         'en': {
             'title': '⚡️ <b>Results for this week</b>',
@@ -394,15 +391,11 @@ async def send_stats(
 
             'canceled': 'Cancelled',
 
-            'tp': 'takes',
-            'sl': 'stops',
             'prices': 'Bought/Sold',
             'result': 'Total for the week',
             'long': 'Long',
             'short': 'Short',
             'success': 'Success deals percent',
-
-            'breakeven': 'breakeven',
         },
     }
 
@@ -413,9 +406,10 @@ async def send_stats(
 
     tool_counts: dict[str, int] = {}
 
-    for valueDate_i, valueDate in enumerate(values):
-        date_msg = ''
+    for valueDate in values:
+        date_msg = '\n'
 
+        all_finished = 0
         tp_count = 0
         sl_count = 0
 
@@ -424,20 +418,21 @@ async def send_stats(
 
         canceled = ''
 
-        for value_i, value in enumerate(valueDate.get('calcs', [])):
+        for value in valueDate.get('calcs', []):
             status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
 
             valueCount = value.get('valueCount')
             openPrice = value.get('openPrice')
             closePrice = value.get('closePrice')
 
-            tp_sl = ''
+
             if valueCount is None:
                 tp_sl = transl_status(status, lang)
-            elif valueCount == 0:
-                tp_sl = texts[lang]['breakeven']
-            elif valueCount > 0:
-                tp_sl = f'{valueCount} {texts[lang]["tp"]}'
+            else:
+                tp_sl = getStrValueCount(valueCount, lang)
+                all_finished += 1
+
+            if valueCount > 0:
                 tp_count += valueCount
                 success_count += 1
                 if closePrice > openPrice:
@@ -445,7 +440,6 @@ async def send_stats(
                 else:
                     short_count += 1
             else:
-                tp_sl = f'{abs(valueCount)} {texts[lang]["stop"]}'
                 sl_count += abs(valueCount)
                 fail_count += 1
 
@@ -453,9 +447,6 @@ async def send_stats(
                     short_count += 1
                 else:
                     long_count += 1
-
-            if value_i == 0:
-                date_msg += '\n'
 
             tool = value.get("tool")
             tool_num = ''
@@ -474,19 +465,10 @@ async def send_stats(
                 date_msg += f'\n{date} /<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b> - {tp_sl}'
 
         tp_sl_result = round(tp_count - sl_count, 1)
-        tp_sl_show = ''
-        if tp_sl_result > 0:
-            tp_sl_show = f'{texts[lang]["tp"]}'
-        else:
-            tp_sl_show = f'{texts[lang]["sl"]}'
 
         tp_sl_msg = ''
-        if tp_count != 0 or sl_count != 0:
-            if tp_sl_result == 0:
-                tp_sl_msg = f'{texts[lang]["breakeven"]}'
-            else:
-                tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
-            tp_sl_msg = f' ({tp_sl_msg})'
+        if all_finished != 0:
+            tp_sl_msg = f' ({getStrValueCount(tp_sl_result, lang)})'
 
         msg += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
         msg += f'{date_msg}'
@@ -494,11 +476,10 @@ async def send_stats(
         if canceled != '':
             msg += f'\n\n{texts[lang]["canceled"]}: {canceled}'
 
-        if success_count != 0 or fail_count != 0:
-            msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (success_count + fail_count))} %'
+        if all_finished != 0:
+            msg += f'\n\n<b>{texts[lang]["success"]}</b>: {round((success_count * 100) / (all_finished))} %'
 
     text = msg
-    # text = msg_stats_page(user_id, len(calcs))
     kb = kb_stats_page(lang)
 
     new_mes_id = mes_id

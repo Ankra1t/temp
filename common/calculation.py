@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Literal, Optional
-from common.utils import get_lang, get_print_float
+from common.utils import get_lang, get_print_float, getNounByNumber
 
-from models import CalcTrailingStop, Calculation
+from models import LANGUAGES_TYPE, CalcTrailingStop, Calculation
 from db import db
 
 
@@ -458,19 +458,6 @@ def get_html_from_calc_results(
 
 
 def getTrailingStopsMessage(lang: Literal['ru', 'en'], value: Optional[list[CalcTrailingStop]], openPrice: float, stopLoss: float):
-    texts = {
-        'ru': {
-            'tp': 'тейка',
-            'sl': 'стопа',
-            'breakeven': 'безубытку',
-        },
-        'en': {
-            'tp': 'take',
-            'sl': 'stop',
-            'breakeven': 'breakeven',
-        }
-    }
-
     trailing_stops = ''
     if value:
         for el in value:
@@ -483,7 +470,7 @@ def getTrailingStopsMessage(lang: Literal['ru', 'en'], value: Optional[list[Calc
             trailing_stops += 'Передвинул стоп к ' if lang == 'ru' else 'Moved the stop to '
 
             if el.value == openPrice:
-                trailing_stops += texts[lang]['breakeven']
+                trailing_stops += 'безубытку' if lang == 'ru' else 'breakeven'
             else:
                 valueCount = (
                     (el.value - openPrice) /
@@ -491,6 +478,37 @@ def getTrailingStopsMessage(lang: Literal['ru', 'en'], value: Optional[list[Calc
                 )
 
                 trailing_stops += get_print_float(el.value)
-                trailing_stops += f' ({"+" if valueCount > 0 else ""}{get_print_float(valueCount, 1)} {texts[lang]["tp" if valueCount >= 0 else "sl"]})'
+                trailing_stops += f' ({getStrValueCount(valueCount, lang)})'
 
     return trailing_stops
+
+
+def getStrValueCount(count: float, lang: LANGUAGES_TYPE = 'ru'):
+    if count == 0:
+        if lang == 'ru':
+            return 'безубыток'
+        else:
+            return 'breakeven'
+
+    plus = ''
+    if count > 0:
+        plus = '+'
+
+    tp_sl = ''
+
+    if lang == 'ru':
+        if count > 0:
+            tp_sl = getNounByNumber(count, 'тейк', 'тейка', 'тейков')
+        else:
+            tp_sl = getNounByNumber(count, 'стоп', 'стопа', 'стопов')
+    else:
+        if count <= 1:
+            tp_sl = 'take'
+        elif count > 1:
+            tp_sl = 'takes'
+        elif count >= -1:
+            tp_sl = 'stop'
+        else:
+            tp_sl = 'stops'
+
+    return f'{plus}{get_print_float(count, 1)} {tp_sl}'

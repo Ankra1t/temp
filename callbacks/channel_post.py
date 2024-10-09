@@ -1,6 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
+from common.calculation import getStrValueCount
 from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, get_print_float
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
@@ -297,19 +298,19 @@ More often: <b>{result}</b>"""
             return
 
         diffOpSl = calc.openPrice - calc.stopLoss
-        countValue = (ticker_info.indexPrice - calc.openPrice) / diffOpSl
+        valueCount = (ticker_info.indexPrice - calc.openPrice) / diffOpSl
 
         await bot.edit_message_text(
             f"""{calc.tool}
 Закрываете по цене: {get_print_float(ticker_info.indexPrice)}
-Результат: {"+" if countValue > 0 else ""}{get_print_float(countValue, 1)} {"тейка" if countValue > 0 else "стопа"}""",
+Результат: {getStrValueCount(valueCount)}""",
             chat_id, mes_id,
             reply_markup=kb_result_end(calc_id)
         )
 
         await state.set('temp')
         await state.add_data(
-            countValue=countValue
+            countValue=valueCount
         )
 
     if type == 'result_end_yes':
@@ -319,12 +320,12 @@ More often: <b>{result}</b>"""
             return
 
         async with state.data() as data:
-            countValue: float = data.get('countValue', 0)
+            valueCount: float = data.get('countValue', 0)
 
         await state.delete()
 
         calcService.set_profit(
-            calc_id, calc.riskValue * countValue
+            calc_id, calc.riskValue * valueCount
         )
         calc = calculation.update(
             calc_id, status='FINISH'

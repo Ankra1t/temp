@@ -278,6 +278,8 @@ async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, numb
 
 
 def getNounByNumber(count: float, one: str, two: str, five: str):
+    count = abs(count)
+
     if count > 0 and count < 1:
         return two
 
@@ -290,15 +292,8 @@ def getNounByNumber(count: float, one: str, two: str, five: str):
     if n == 1:
         return one
 
-    if n >= 2 and n <= 4:
+    if n > 1 and n <= 4:
         return two
 
     return five
 
-
-def getRuWordEnd(count: float, word: Literal['тейк', 'стоп'] | str):
-    if word == 'тейк':
-        return getNounByNumber(count, 'тейк', 'тейка', 'тейков')
-    if word == 'стоп':
-        return getNounByNumber(count, 'стоп', 'стопа', 'стопов')
-    return word

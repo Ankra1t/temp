@@ -12,7 +12,8 @@ from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
 from services import calculation, channel_calc
 
-from common.utils import antiflood, get_print_float, getRuWordEnd
+from common.utils import antiflood, get_print_float
+from common.calculation import getStrValueCount
 from messages.calc import msg_channel_calc, months
 
 
@@ -86,12 +87,7 @@ class ChannelPost():
                 if stats:
                     name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
 
-                    if stats.data.profitCount == 0:
-                        profit = 'безубыток'
-                    elif stats.data.profitCount > 0:
-                        profit = f'+{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "тейк")}'
-                    else:
-                        profit = f'{get_print_float(stats.data.profitCount, 1)} {getRuWordEnd(stats.data.profitCount, "стоп")}'
+                    profit = getStrValueCount(stats.data.profitCount, lang)
 
                     trader_mes = f"""⚡️ Трейдер: {name}
 За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
@@ -196,15 +192,7 @@ class ChannelPost():
                 result = ''
                 tp_sl = ''
                 if calc_.takeProfitRatio:
-                    if calc_.takeProfitRatio == 0:
-                        result = 'безубыток' if lang == 'ru' else 'breakeven'
-                    else:
-                        result = f'{get_print_float(calc_.takeProfitRatio, 1)} '
-                        if calc_.takeProfitRatio > 0:
-                            result = f'+{result}'
-                            result += 'тейка' if lang == 'ru' else 'takes'
-                        else:
-                            result += 'стопа' if lang == 'ru' else 'stops'
+                    result = getStrValueCount(calc_.takeProfitRatio, lang)
                 else:
                     result = 'В сделке' if lang == 'ru' else 'In deal'
                     result = f'<b>{result}</b>'
@@ -267,17 +255,8 @@ class ChannelPost():
             for calc_ in live.finished:
                 valueCount = calc_.valueCount
 
-                if valueCount > 0:
-                    tp_sl = 'тейка' if lang == 'ru' else 'takes'
-                elif valueCount < 0:
-                    tp_sl = 'стоп' if lang == 'ru' else 'stop'
-                else:
-                    tp_sl = 'безубыток' if lang == 'ru' else 'breakeven'
+                result = getStrValueCount(valueCount, lang)
 
-                if valueCount != 0:
-                    result = f'{"+" if valueCount > 0 else ""}{get_print_float(valueCount, 1)} {tp_sl}'
-                else:
-                    result = f'{tp_sl}'
                 tool = f'{(calc_.tool or "").replace("/USDT", "")}'
 
                 calcMesId = None
@@ -299,12 +278,7 @@ class ChannelPost():
                 msg += 'За день' if lang == 'ru' else 'Today'
                 msg += ':</b> '
 
-                tp_sl_show = ''
-                if live.todayValueCount >= 0:
-                    tp_sl_show = 'тейков' if lang == 'ru' else 'take'
-                else:
-                    tp_sl_show = 'стопов' if lang == 'ru' else 'stop'
-                msg += f'{"+" if live.todayValueCount > 0 else ""}{get_print_float(live.todayValueCount, 1)} {tp_sl_show} ({get_print_float(live.todayProfit)}$)'
+                msg += f'{getStrValueCount(live.todayValueCount, lang)} ({get_print_float(live.todayProfit)}$)'
 
                 current_date = get_str_by_datetime(
                     get_datetime_now(), "day.month"
@@ -397,15 +371,11 @@ class ChannelPost():
 
                 'canceled': 'Отменённые',
 
-                'tp': 'тейк',
-                'sl': 'стоп',
                 'prices': 'Купил/Продал',
                 'result': 'Итого за неделю',
                 'long': 'Лонг',
                 'short': 'Шорт',
                 'success': 'Процент успешных сделок',
-
-                'breakeven': 'безубыток',
             },
             'en': {
                 'title': '⚡️ <b>Results for this week</b>',
@@ -416,15 +386,11 @@ class ChannelPost():
 
                 'canceled': 'Cancelled',
 
-                'tp': 'takes',
-                'sl': 'stops',
                 'prices': 'Bought/Sold',
                 'result': 'Total for the week',
                 'long': 'Long',
                 'short': 'Short',
                 'success': 'Success deals percent',
-
-                'breakeven': 'breakeven',
             },
         }
 
@@ -445,7 +411,7 @@ class ChannelPost():
         if data is None:
             return
 
-        ch_mes: dict = data.get('messages', {})
+        ch_mes = data.get('messages', {})
         chIds: list[str] = ch_mes.get('chIds', [])
         mesIds: list[str] = ch_mes.get('mesIds', [])
         langs: list[Literal['ru', 'en']] = ch_mes.get('langs', [])
@@ -468,20 +434,16 @@ class ChannelPost():
 
                         if week_value is None:
                             marathon += 'нет сделок'
-                        elif week_value >= 0:
-                            marathon += f'{get_print_float(week_value, 1)} тейков'
                         else:
-                            marathon += f'{get_print_float(abs(week_value), 1)} стоп'
+                            marathon += getStrValueCount(week_value)
                         week_value = 0
                     continue
 
                 marathon += f'\n{i + 1} день - '
                 if el is None:
                     marathon += 'нет сделок'
-                elif el >= 0:
-                    marathon += f'{get_print_float(el, 1)} тейков'
                 else:
-                    marathon += f'{get_print_float(abs(el), 1)} стоп'
+                    marathon += getStrValueCount(el)
 
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
@@ -534,12 +496,13 @@ class ChannelPost():
                     tp_sl = ''
                     if valueCount is None:
                         tp_sl = transl_status(status, lang)
-                    elif valueCount == 0:
-                        tp_sl = texts[lang]['breakeven']
+                    else:
+                        tp_sl = getStrValueCount(valueCount, lang)
+
+                    if valueCount == 0:
                         tp_count += 1
                         sl_count += 1
                     elif valueCount > 0:
-                        tp_sl = f'{valueCount} {getRuWordEnd(valueCount, texts[lang]["tp"])}'
                         tp_count += valueCount
                         success_count += 1
 
@@ -548,7 +511,6 @@ class ChannelPost():
                         else:
                             short_count += 1
                     else:
-                        tp_sl = f'{abs(valueCount)} {getRuWordEnd(valueCount, texts[lang]["sl"])}'
                         sl_count += abs(valueCount)
                         fail_count += 1
 
@@ -583,13 +545,7 @@ class ChannelPost():
                 tp_sl_result = round(tp_count - sl_count, 1)
                 tp_sl_msg = ''
                 if tp_count != 0 or sl_count != 0:
-                    if tp_sl_result == 0:
-                        tp_sl_msg = f'{texts[lang]["breakeven"]}'
-                    else:
-                        tp_sl_show = getRuWordEnd(
-                            tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
-                        tp_sl_msg = f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
-                    tp_sl_msg = f' ({tp_sl_msg})'
+                    tp_sl_msg = f' ({getStrValueCount(tp_sl_result, lang)})'
 
                 if date_msg.lstrip() != '' or canceled != '':
                     msg_dates += f'\n\n<b><u>{valueDate.get("date")}</u></b>{tp_sl_msg}'
@@ -623,12 +579,7 @@ class ChannelPost():
 
             if all_tp_count != 0 or all_sl_count != 0:
                 msg += f'\n\n<b>{texts[lang]["result"]}</b>: '
-                if tp_sl_result == 0:
-                    msg += f'{texts[lang]["breakeven"]}'
-                else:
-                    tp_sl_show = getRuWordEnd(
-                        tp_sl_result, texts[lang]["tp" if tp_sl_result > 0 else "sl"])
-                    msg += f'{"+" if tp_sl_result > 0 else "-"}{abs(tp_sl_result)} {tp_sl_show}'
+                msg += f'{getStrValueCount(tp_sl_result, lang)}'
                 msg += '\n'
 
             if long_count != 0 or short_count != 0:
