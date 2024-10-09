@@ -432,21 +432,21 @@ async def send_stats(
                 tp_sl = getStrValueCount(valueCount, lang)
                 all_finished += 1
 
-            if valueCount > 0:
-                tp_count += valueCount
-                success_count += 1
-                if closePrice > openPrice:
-                    long_count += 1
+                if valueCount > 0:
+                    tp_count += valueCount
+                    success_count += 1
+                    if closePrice > openPrice:
+                        long_count += 1
+                    else:
+                        short_count += 1
                 else:
-                    short_count += 1
-            else:
-                sl_count += abs(valueCount)
-                fail_count += 1
+                    sl_count += abs(valueCount)
+                    fail_count += 1
 
-                if closePrice > openPrice:
-                    short_count += 1
-                else:
-                    long_count += 1
+                    if closePrice > openPrice:
+                        short_count += 1
+                    else:
+                        long_count += 1
 
             tool = value.get("tool")
             tool_num = ''

@@ -502,11 +502,11 @@ def getStrValueCount(count: float, lang: LANGUAGES_TYPE = 'ru'):
         else:
             tp_sl = getNounByNumber(count, 'стоп', 'стопа', 'стопов')
     else:
-        if count <= 1:
+        if count > 0 and count <= 1:
             tp_sl = 'take'
         elif count > 1:
             tp_sl = 'takes'
-        elif count >= -1:
+        elif count >= -1 and count < 0:
             tp_sl = 'stop'
         else:
             tp_sl = 'stops'

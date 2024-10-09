@@ -469,7 +469,7 @@ class ChannelPost():
             msg_in_deal = ''
             msg_dates = ''
 
-            for valueDate_i, valueDate in enumerate(values):
+            for valueDate in values:
                 date_msg = ''
 
                 tp_count = 0
@@ -481,8 +481,7 @@ class ChannelPost():
                 canceled = ''
 
                 num = 0
-
-                for value_i, value in enumerate(valueDate.get('calcs', [])):
+                for value in valueDate.get('calcs', []):
                     status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
                     if status == 'WAIT':
                         continue
@@ -499,25 +498,25 @@ class ChannelPost():
                     else:
                         tp_sl = getStrValueCount(valueCount, lang)
 
-                    if valueCount == 0:
-                        tp_count += 1
-                        sl_count += 1
-                    elif valueCount > 0:
-                        tp_count += valueCount
-                        success_count += 1
+                        if valueCount == 0:
+                            tp_count += 1
+                            sl_count += 1
+                        elif valueCount > 0:
+                            tp_count += valueCount
+                            success_count += 1
 
-                        if closePrice > openPrice:
-                            long_count += 1
+                            if closePrice > openPrice:
+                                long_count += 1
+                            else:
+                                short_count += 1
                         else:
-                            short_count += 1
-                    else:
-                        sl_count += abs(valueCount)
-                        fail_count += 1
+                            sl_count += abs(valueCount)
+                            fail_count += 1
 
-                        if closePrice > openPrice:
-                            short_count += 1
-                        else:
-                            long_count += 1
+                            if closePrice > openPrice:
+                                short_count += 1
+                            else:
+                                long_count += 1
 
                     calc_chId = calc_messages.get('chIds', [None])[0]
                     calc_mesId = calc_messages.get('mesIds', [None])[0]
