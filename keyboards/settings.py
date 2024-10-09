@@ -3,7 +3,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from common.keyboard import back_txt, cancel_txt
+from common.keyboard import back_txt, cancel_txt, reset_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
 from db import db
@@ -1188,6 +1188,9 @@ def kb_settings_cancel_at(lang: LANGUAGES_TYPE):
         getButton('1h', 'cancel_at+1h'),
         getButton('4h', 'cancel_at+4h'),
         getButton('1d', 'cancel_at+1d'),
+    )
+    keyboard.add(
+        getButton(reset_txt(lang), 'cancel_at+0'),
         getButton(back_txt(lang), 'active')
     )
     return keyboard
@@ -1219,5 +1222,8 @@ def kb_settings_tr_stop(lang: LANGUAGES_TYPE):
         )
 
     keyboard.add(*buttons)
-    keyboard.add(getButton(back_txt(lang), 'active'))
+    keyboard.add(
+        getButton(reset_txt(lang), 'tr_stop+0'),
+        getButton(back_txt(lang), 'active')
+    )
     return keyboard

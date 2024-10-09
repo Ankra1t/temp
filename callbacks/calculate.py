@@ -221,7 +221,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 db.change_calculation_style(stat_id, style)
                 channel_calc.update(send_data.id, tradingStyle=style)
             if time:
-                channel_calc.update(send_data.id, time=time)
+                channel_calc.update(send_data.id, time=time or 'avg')
 
             await send_confirm_calc_send(bot, call.message, stat_id)
             await state.delete()

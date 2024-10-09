@@ -735,7 +735,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if 'cancel_at+' in type:
         _, time = type.split('+')
 
-        if time == '1h':
+        if time == '0':
+            time = None
+        elif time == '1h':
             time = 60
         elif time == '4h':
             time = 60 * 4
@@ -759,7 +761,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'tr_stop+' in type:
         _, value = type.split('+')
-        value = float(value)
+
+        if value == '0':
+            value = None
+        else:
+            value = float(value)
 
         settings.updateAdvanced(
             user.id,

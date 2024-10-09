@@ -15,6 +15,17 @@ def back_txt(lang: LANGUAGES_TYPE = 'ru'):
     return f'🔙 {txt[lang]}'
 
 
+def reset_txt(lang: LANGUAGES_TYPE = 'ru'):
+    txt: dict[LANGUAGES_TYPE, str] = {
+        'ru': 'Сбросить',
+        'en': 'Reset',
+        'uz': 'Qayta o\'rnatmoq',
+        'tr': 'Sıfırlamak',
+    }
+
+    return f'{txt[lang]}'
+
+
 def cancel_txt(lang: LANGUAGES_TYPE = 'ru'):
     txt: dict[LANGUAGES_TYPE, str] = {
         'ru': 'Отмена',

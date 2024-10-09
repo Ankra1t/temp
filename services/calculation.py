@@ -127,7 +127,7 @@ def update(
 
 @session_decorator
 def updateCancelAt(
-    id: int, minutes: int
+    id: int, minutes: int | None
 ):
     res = session.post(
         f'{API_URL}/calculations/{id}/cancelAt',

@@ -2,7 +2,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from common.keyboard import back_txt
+from common.keyboard import back_txt, reset_txt
 
 from models import STYLES, CallbackQuery
 
@@ -86,7 +86,10 @@ def kb_send_settings_trailing_stop():
         )
 
     keyboard.add(*buttons)
-    keyboard.add(getButton(back_txt('ru'), 'send_settings'))
+    keyboard.add(
+        getButton(reset_txt('ru'), 'ss_tr_stop+0'),
+        getButton(back_txt('ru'), 'send_settings')
+    )
     return keyboard
 
 
@@ -96,7 +99,10 @@ def kb_send_settings_cancel_hours():
         getButton('1h', 'ss_cancel_min+1h'),
         getButton('4h', 'ss_cancel_min+4h'),
         getButton('1d', 'ss_cancel_min+1d'),
-        getButton(back_txt(), 'send_settings')
+    )
+    keyboard.add(
+        getButton(reset_txt(), 'ss_cancel_min+0'),
+        getButton(back_txt(), 'send_settings'),
     )
     return keyboard
 
@@ -182,6 +188,11 @@ def kb_channel_calc_result(
             'without_stop', calc_id
         )
     )
+
+    if in_deal:
+        keyboard.add(
+            getButton('Закрыть сделку', 'result_end', calc_id)
+        )
 
     keyboard.add(
         getButton(
@@ -306,6 +317,18 @@ def kb_channel_cancel_at(calc_id: int):
         getButton('1h', 'cancel_at+1h', calc_id),
         getButton('4h', 'cancel_at+4h', calc_id),
         getButton('1d', 'cancel_at+1d', calc_id),
-        getButton(back_txt(), 'back_calc', calc_id)
+    )
+    keyboard.add(
+        getButton(reset_txt(), 'cancel_at+0', calc_id),
+        getButton(back_txt(), 'back_calc', calc_id),
+    )
+    return keyboard
+
+
+def kb_result_end(calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton('❌ Нет', 'result', calc_id),
+        getButton('✅ Да', 'result_end_yes', calc_id),
     )
     return keyboard

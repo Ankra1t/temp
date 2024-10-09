@@ -111,7 +111,6 @@ class CalculationService():
             user_db_id, True,
             market=market
         )
-        canceled_stats = ''
 
         tp_count = 0
         sl_count = 0

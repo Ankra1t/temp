@@ -579,7 +579,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             db.change_calculation_style(calc_id, style)
             channel_calc.update(send_data.id, tradingStyle=style)
         if time:
-            channel_calc.update(send_data.id, time=time)
+            channel_calc.update(send_data.id, time=time or 'avg')
 
         await bot.edit_message_reply_markup(
             chat_id, mes_id,
@@ -721,7 +721,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if 'ch_tr_stop+' in type:
         _, value = type.split('+')
-        value = float(value)
+
+        if value == '0':
+            value = None
+        else:
+            value = float(value)
 
         calculation.updateActive(
             calc_id,
@@ -855,7 +859,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         _, time = type.split('+')
 
-        if time == '1h':
+        if time == '0':
+            time = None
+        elif time == '1h':
             time = 60
         elif time == '4h':
             time = 60 * 4
@@ -884,7 +890,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if 'tr_stop+' in type and 'ch_tr_stop+' not in type:
         _, value = type.split('+')
-        value = float(value)
+
+        if value == '0':
+            value = None
+        else:
+            value = float(value)
 
         calculation.updateActive(
             calc_id,

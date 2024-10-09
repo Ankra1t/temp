@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from messages.common import transl_tr_style
-from common.utils import delete_message, edit_message
+from common.utils import delete_message, edit_message, get_print_float
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
@@ -18,7 +18,7 @@ from states.admin_params import AdminParamsState
 from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
-    kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat,
+    kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_result_end,
     kb_send_settings_calc_time, kb_send_settings_cancel_hours, kb_send_settings_trading_style, kb_send_settings_trailing_stop, kb_trailing_stop
 )
 
@@ -223,7 +223,11 @@ More often: <b>{result}</b>"""
 
     if 'ss_tr_stop+' in type:
         _, value = type.split('+')
-        value = float(value)
+
+        if value == '0':
+            value = None
+        else:
+            value = float(value)
 
         settings.updateAdvanced(
             user.id,
@@ -283,6 +287,54 @@ More often: <b>{result}</b>"""
         else:
             await send_stats(bot, call.message, state, user)
 
+    if type == 'result_end':
+        calc = calculation.get(calc_id)
+        if not calc:
+            return
+
+        ticker_info = ticker.get_info(calc.tool or '')
+        if not ticker_info or not ticker_info.indexPrice:
+            return
+
+        diffOpSl = calc.openPrice - calc.stopLoss
+        countValue = (ticker_info.indexPrice - calc.openPrice) / diffOpSl
+
+        await bot.edit_message_text(
+            f"""{calc.tool}
+Закрываете по цене: {get_print_float(ticker_info.indexPrice)}
+Результат: {"+" if countValue > 0 else ""}{get_print_float(countValue, 1)} {"тейка" if countValue > 0 else "стопа"}""",
+            chat_id, mes_id,
+            reply_markup=kb_result_end(calc_id)
+        )
+
+        await state.set('temp')
+        await state.add_data(
+            countValue=countValue
+        )
+
+    if type == 'result_end_yes':
+        calc = calculation.get(calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
+        if not send_data or not calc or calc.status != 'DEAL':
+            return
+
+        async with state.data() as data:
+            countValue: float = data.get('countValue', 0)
+
+        await state.delete()
+
+        calcService.set_profit(
+            calc_id, calc.riskValue * countValue
+        )
+        calc = calculation.update(
+            calc_id, status='FINISH'
+        )
+
+        if calc:
+            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            type = 'results'
+
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(calc_id)
         send_data = channel_calc.getByCalc(calc_id)
@@ -329,8 +381,16 @@ More often: <b>{result}</b>"""
     if type == 'without_stop':
         send_data = channel_calc.getByCalc(calc_id)
         if send_data:
-            channel_calc.update(
-                send_data.id, withoutStop=not send_data.withoutStop)
+            send_data = channel_calc.update(
+                send_data.id, withoutStop=not send_data.withoutStop
+            )
+
+        calc = calculation.get(calc_id)
+
+        if send_data and calc:
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+
         type = 'result'
 
     if type == 'result' or type == 'result_take' or type == 'result_stop':
@@ -380,7 +440,9 @@ More often: <b>{result}</b>"""
     if 'cancel_at+' in type:
         _, time = type.split('+')
 
-        if time == '1h':
+        if time == '0':
+            time = None
+        elif time == '1h':
             time = 60
         elif time == '4h':
             time = 60 * 4
@@ -396,9 +458,12 @@ More often: <b>{result}</b>"""
                     bot, call.message, state, calc_id
                 )
 
+                tickerInfo = ticker.get_info(calc.tool or '')
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+
     if type == 'new_stop':
         await bot.edit_message_text(
-            'Введите новый стоп-лосс',
+            'Введите новый стоп лосс',
             chat_id, mes_id,
             reply_markup=kb_channel_post_back_to_result(calc_id)
         )
@@ -442,7 +507,9 @@ More often: <b>{result}</b>"""
     if 'ss_cancel_min+' in type:
         _, time = type.split('+')
 
-        if time == '1h':
+        if time == '0':
+            time = None
+        elif time == '1h':
             time = 60
         elif time == '4h':
             time = 60 * 4

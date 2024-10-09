@@ -4,7 +4,7 @@ from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.channel_post import getButton as getChannelButton
-from common.keyboard import back_txt, cancel_txt
+from common.keyboard import back_txt, cancel_txt, reset_txt
 
 from db import db
 from messages.common import transl_market
@@ -554,10 +554,12 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     if isReset:
-        btn_reset = getButton(texts[lang]['reset'], f'{type}del_img_txt', calc.id)
+        btn_reset = getButton(texts[lang]['reset'],
+                              f'{type}del_img_txt', calc.id)
         keyboard.add(btn_reset)
 
-    btn_back = getButton(back_txt(lang), 'stc+back' if type == 'stc+' else 'back_calc', calc.id)
+    btn_back = getButton(back_txt(lang), 'stc+back' if type ==
+                         'stc+' else 'back_calc', calc.id)
     keyboard.add(btn_back)
 
     return keyboard
@@ -659,6 +661,9 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int, action: Literal['stc_', '']
         getButton('1h', f'{action}cancel_at+1h', calc_id),
         getButton('4h', f'{action}cancel_at+4h', calc_id),
         getButton('1d', f'{action}cancel_at+1d', calc_id),
+    )
+    keyboard.add(
+        getButton(reset_txt(lang), f'{action}cancel_at+0', calc_id),
         getButton(
             back_txt(lang),
             'stc+back' if action == 'stc_' else 'active_calc',
@@ -680,7 +685,10 @@ def kb_channel_trailing_stop(lang: LANGUAGES_TYPE, calc_id: int, is_channel=Fals
         )
 
     keyboard.add(*buttons)
-    keyboard.add(getButton(back_txt(lang), 'active_calc', calc_id))
+    keyboard.add(
+        getButton(reset_txt(lang), f'{is_channel}tr_stop+0', calc_id),
+        getButton(back_txt(lang), 'active_calc', calc_id),
+    )
     return keyboard
 
 
