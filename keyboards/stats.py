@@ -333,10 +333,10 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
         keyboard.add(*buttons)
 
-        if isAdmin and send_data is None:
-            keyboard.add(
-                getButton('Выложить в каналах', 'send_to_channels', calc.id)
-            )
+        # if isAdmin and send_data is None:
+        #     keyboard.add(
+        #         getButton('Выложить в каналах', 'send_to_channels', calc.id)
+        #     )
 
         if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
             keyboard.add(

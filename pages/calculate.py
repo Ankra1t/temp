@@ -36,7 +36,7 @@ from keyboards.channel_post import (
 )
 from keyboards.main import kb_main, kb_violation
 from keyboards.manual import kb_manual, kb_manuals
-from keyboards.stats import kb_calc_activation, kb_calc_list, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
+from keyboards.stats import kb_calc_activation, kb_calc_list, kb_calc_result, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
 from keyboards.tariff import kb_choose_products, kb_tariff_list, kb_user_tariff_back
 from keyboards.settings import (
     kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
@@ -680,6 +680,8 @@ async def send_calculation(
             is_first=is_try
         )
 
+    new_mes_id = None
+
     if True or calc_output == 'text' or is_try:
         text = msg_calculation(user.lang, calc, is_try)
 
@@ -689,12 +691,12 @@ async def send_calculation(
 
         if calc.photo is None:
             if is_first:
-                await bot.send_message(chat_id, text, reply_markup=kb)
+                new_mes_id = (await bot.send_message(chat_id, text, reply_markup=kb)).id
             else:
                 await edit_message(bot, message, 'text', text, kb)
         else:
             if is_first:
-                await bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)
+                new_mes_id = (await bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)).id
             else:
                 await edit_message(bot, message, 'photo', text, kb, calc.photo)
 
@@ -714,6 +716,8 @@ async def send_calculation(
 
     if is_try:
         first_timeout(user.tgId)
+
+    return new_mes_id
 
 
 async def send_freeze(
@@ -897,10 +901,9 @@ async def create_and_send_calc(
         liteDb.setFirstTry(user.tgId)
 
     if is_send:
-        await send_calculation(bot, message, state, user, calc_info, True, is_try)
-
+        new_mes_id = await send_calculation(bot, message, state, user, calc_info, True, is_try)
         if db.get_worker_role(user.id):
-            pass
+            await create_and_send_channel_calc(bot, message, calc_info.id, new_mes_id or 0, user)
 
     await state.delete()
     return new_id
@@ -1313,10 +1316,10 @@ async def create_and_send_channel_calc(
     bot: AsyncTeleBot,
     message: Message,
     calc_id: int,
+    calc_mes_id: int,
     user: User
 ):
     chat_id = message.chat.id
-    mes_id = message.id
 
     calc = calculation.get(calc_id)
     if calc is None:
@@ -1341,10 +1344,14 @@ async def create_and_send_channel_calc(
     if time:
         channel_calc.update(send_data.id, time=time or 'avg')
 
-    await bot.edit_message_reply_markup(
-        chat_id, mes_id,
-        reply_markup=kb_calc_result(
-            user.lang, user.id, calc
+    try:
+        await bot.edit_message_reply_markup(
+            chat_id, calc_mes_id,
+            reply_markup=kb_calc_result(
+                user.lang, user.id, calc
+            )
         )
-    )
+    except:
+        pass
+
     await send_confirm_calc_send(bot, message, calc_id, True)

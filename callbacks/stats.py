@@ -26,7 +26,6 @@ from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from data.data import liteDb
 from config_global import EN_CHANNEL_ID, PROD, RU_CHANNEL_ID
 from config_logger import logger
 
@@ -50,7 +49,7 @@ from keyboards.stats import (
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
-from pages.calculate import send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+from pages.calculate import create_and_send_channel_calc, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
 
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
@@ -558,7 +557,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'send_to_channels':
-        pass
+        await create_and_send_channel_calc(bot, call.message, calc_id, mes_id, user)
 
     if type == 'stc+send':
         send_data = channel_calc.getByCalc(calc_id)
