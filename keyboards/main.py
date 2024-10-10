@@ -85,7 +85,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
     saved = False
     if stat is not None:
         stat_id = stat.id or stat_id
-        saved = stat.inStat
+        saved = stat.status == 'FINISH'
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     buttons = []

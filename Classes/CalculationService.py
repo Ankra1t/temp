@@ -194,7 +194,7 @@ class CalculationService():
 
         # Считаем профит за день
         for calc in user_calculations:
-            if not calc.inStat or calc.statDt is None:
+            if calc.status != 'FINISH' or calc.statDt is None:
                 continue
 
             if datetime.fromisoformat(calc.statDt.replace('Z', '')).date() == today:
@@ -340,7 +340,7 @@ class CalculationService():
     ):
         lang = get_lang(user_id)
 
-        is_saved = calc.inStat
+        is_saved = calc.status == 'FINISH'
         calc_result = self.get_result(calc)
 
         texts = {

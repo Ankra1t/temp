@@ -899,6 +899,9 @@ async def create_and_send_calc(
     if is_send:
         await send_calculation(bot, message, state, user, calc_info, True, is_try)
 
+        if db.get_worker_role(user.id):
+            pass
+
     await state.delete()
     return new_id
 
@@ -1304,3 +1307,44 @@ async def send_violation(
             chat_id, mes_id,
             reply_markup=kb
         )
+
+
+async def create_and_send_channel_calc(
+    bot: AsyncTeleBot,
+    message: Message,
+    calc_id: int,
+    user: User
+):
+    chat_id = message.chat.id
+    mes_id = message.id
+
+    calc = calculation.get(calc_id)
+    if calc is None:
+        return
+
+    withoutStop = liteDb.getSendSettings('withoutStop')
+    style = liteDb.getSendSettings('style')
+    isVote = liteDb.getSendSettings('isVote')
+    time = liteDb.getSendSettings('time')
+
+    send_data = channel_calc.create(calc_id)
+    if send_data is None:
+        return
+
+    if withoutStop == 'True' or calc.stopLoss == -1:
+        channel_calc.update(send_data.id, withoutStop=True)
+    if isVote == 'False':
+        channel_calc.update(send_data.id, isVote=False)
+    if style:
+        db.change_calculation_style(calc_id, style)
+        channel_calc.update(send_data.id, tradingStyle=style)
+    if time:
+        channel_calc.update(send_data.id, time=time or 'avg')
+
+    await bot.edit_message_reply_markup(
+        chat_id, mes_id,
+        reply_markup=kb_calc_result(
+            user.lang, user.id, calc
+        )
+    )
+    await send_confirm_calc_send(bot, message, calc_id, True)

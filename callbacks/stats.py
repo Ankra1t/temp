@@ -558,36 +558,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'send_to_channels':
-        calc = calculation.get(calc_id)
-        if calc is None:
-            return
-
-        withoutStop = liteDb.getSendSettings('withoutStop')
-        style = liteDb.getSendSettings('style')
-        isVote = liteDb.getSendSettings('isVote')
-        time = liteDb.getSendSettings('time')
-
-        send_data = channel_calc.create(calc_id)
-        if send_data is None:
-            return
-
-        if withoutStop == 'True' or calc.stopLoss == -1:
-            channel_calc.update(send_data.id, withoutStop=True)
-        if isVote == 'False':
-            channel_calc.update(send_data.id, isVote=False)
-        if style:
-            db.change_calculation_style(calc_id, style)
-            channel_calc.update(send_data.id, tradingStyle=style)
-        if time:
-            channel_calc.update(send_data.id, time=time or 'avg')
-
-        await bot.edit_message_reply_markup(
-            chat_id, mes_id,
-            reply_markup=kb_calc_result(
-                user.lang, user.id, calc
-            )
-        )
-        await send_confirm_calc_send(bot, call.message, calc_id, True)
+        pass
 
     if type == 'stc+send':
         send_data = channel_calc.getByCalc(calc_id)

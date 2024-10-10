@@ -119,7 +119,7 @@ async def msg_calculate(state: StateContext, user: User, is_try=False):
 
 
 def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
-    is_saved = calc.inStat
+    is_saved = calc.status == 'FINISH'
     calc_result = calcService.get_result(calc)
 
     if calc.openPrice > calc.stopLoss:

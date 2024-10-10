@@ -115,7 +115,7 @@ def get_html_from_crypto_calc(
 
     tool = calc.tool or 'BTC/USDT'
     trading_type = 'buy' if calc.openPrice < calc.stopLoss else 'sell'
-    saved = '' if not calc.inStat else """
+    saved = '' if calc.status != 'FINISH' else """
 <svg
     width="20"
     height="20"
@@ -334,7 +334,7 @@ def get_html_from_forex_calc(
         """
 
     trading_type = 'buy' if calc.openPrice > calc.stopLoss else 'sell'
-    saved = '' if not calc.inStat else """
+    saved = '' if calc.status != 'FINISH' else """
 <svg
     width="20"
     height="20"

@@ -1,5 +1,4 @@
 import asyncio
-from math import floor
 import re
 from typing import Coroutine, Literal, TypeVar, Any, Callable
 from telebot.async_telebot import AsyncTeleBot
@@ -280,19 +279,15 @@ async def antiflood(function: Callable[..., Coroutine[Any, Any, T]], *args, numb
 def getNounByNumber(count: float, one: str, two: str, five: str):
     count = abs(count)
 
-    if count > 0 and count < 1:
-        return two
-
-    n = floor(abs(count))
-    n %= 100
-    if n >= 5 and n <= 20:
+    count %= 100
+    if count >= 5 and count <= 20:
         return five
 
-    n %= 10
-    if n == 1:
+    count %= 10
+    if count == 1:
         return one
 
-    if n > 1 and n <= 4:
+    if count > 0 and count <= 4:
         return two
 
     return five
