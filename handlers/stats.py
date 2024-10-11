@@ -52,7 +52,7 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc_info.tool or '')
-        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -86,7 +86,7 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
     send_data = channel_calc.getByCalc(stat_id)
     if send_data is not None:
         tickerInfo = ticker.get_info(calc_info.tool or '')
-        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
@@ -196,7 +196,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         send_data = channel_calc.getByCalc(calc.id)
         if send_data:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         await send_admin_channel_calc_item(
             bot, message, state, stat_id, is_first=True
@@ -281,7 +281,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
 
     if send_data is not None:
         tickerInfo = ticker.get_info(calc.tool or '')
-        await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+        await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
     if is_calc:
         await send_calculation(bot, message, state, user, calc, True)

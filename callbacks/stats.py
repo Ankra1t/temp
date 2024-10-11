@@ -277,7 +277,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     )
                     if send_data is not None:
                         tickerInfo = ticker.get_info(calc_info.tool or '')
-                        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+                        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
                     await send_freeze(
                         bot, call.message, state, user,
                         calc_info.market, True
@@ -568,7 +568,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         tickerInfo = ticker.get_info(calc.tool or '')
 
         await channel_post.send_calc(
-            calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt
+            calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h
         )
 
         if send_data.isVote:
@@ -717,7 +717,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             if send_data:
                 tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
@@ -732,7 +732,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             if calc and send_data:
                 tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
@@ -749,7 +749,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
             if send_data:
                 tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
@@ -798,7 +798,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calc = calculation.get(calc_id)
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         type = 'active_calc'
 
@@ -909,7 +909,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'cancel':
@@ -924,7 +924,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             await send_calculation(bot, call.message, state, user, calc)
 
     await bot.answer_callback_query(call.id)

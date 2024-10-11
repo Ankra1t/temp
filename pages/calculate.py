@@ -767,7 +767,7 @@ async def send_confirm_calc_send(
     photo = stat.photo
     text = msg_channel_calc(
         stat, 'ru', send_data.withoutStop, send_data.time or '',
-        indexPrice=info and info.indexPrice, percent24h=info and info.price24hPcnt
+        indexPrice=info and info.indexPrice, percent24h=info and info.percent24h
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')

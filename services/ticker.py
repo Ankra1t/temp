@@ -11,6 +11,7 @@ def get_info(ticker: str):
     res = session.get(
         f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
     )
+
     if not check_response(res):
         return
 

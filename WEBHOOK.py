@@ -3,6 +3,7 @@ import json
 import logging
 import telebot
 from telebot.util import update_types
+from telebot.types import BotCommand
 from aiohttp import web
 
 from Classes.CryptoBot import cryptoPay_payment_updates
@@ -182,6 +183,21 @@ async def setup():
     logger.info('Starting up: setting webhook')
     await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types)
 
+    commands = [
+        ('start', 'restart'),
+        ('menu', 'menu'),
+        ('calculator', 'calc'),
+        ('settings', 'settings'),
+        ('referral', 'partner'),
+    ]
+
+    await bot.set_my_commands([
+        BotCommand(
+            command=el[0],
+            description=el[1],
+        ) for el in commands
+    ])
+
     reg(bot)
 
     app = web.Application()
@@ -200,9 +216,7 @@ async def setup():
     ]
 
     app.add_routes(routes)
-
     app.on_cleanup.append(shutdown)
-
     return app
 
 run_thread(bot)

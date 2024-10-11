@@ -249,7 +249,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             type = 'results'
         else:
             await send_stats(bot, call.message, state, user)
@@ -266,7 +266,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -283,7 +283,7 @@ More often: <b>{result}</b>"""
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             type = 'result'
         else:
             await send_stats(bot, call.message, state, user)
@@ -333,7 +333,7 @@ More often: <b>{result}</b>"""
 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             type = 'results'
 
     if 'stop+' in type or 'take+' in type:
@@ -361,7 +361,7 @@ More often: <b>{result}</b>"""
 
         if send_data is not None:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
             if is_calc == 0:
                 type = 'results'
@@ -390,7 +390,7 @@ More often: <b>{result}</b>"""
 
         if send_data and calc:
             tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         type = 'result'
 
@@ -460,7 +460,7 @@ More often: <b>{result}</b>"""
                 )
 
                 tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.price24hPcnt)
+                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
     if type == 'new_stop':
         await bot.edit_message_text(
