@@ -1,3 +1,4 @@
+import os
 from telebot.async_telebot import AsyncTeleBot
 
 from AuthRoles import check_registration
@@ -9,7 +10,7 @@ from keyboards.admin_posts import kb_posts_back
 from keyboards.livepost import kb_livepost_type
 from pages.calculate import send_admin_channel_calc_item, send_calculation
 
-from services import calculation
+from services import calculation, twitter
 from models import Message, StateContext, User
 from db import db
 
@@ -89,6 +90,22 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
 
             await send_calculation(bot, message, state, user, calc, is_first=True, is_list=True)
             return
+
+    if message.photo:
+        file_id = message.photo[-1].file_id
+        file = await bot.get_file(file_id)
+        file_bytes = await bot.download_file(file.file_path)
+
+        name = f'{file_id}.png'
+        with open(name, 'wb') as new_file:
+            new_file.write(file_bytes)
+
+        with open(name, 'rb') as file:
+            data = twitter.create(file)
+            print(data)
+
+        os.remove(name)
+
 
     # livepost
     user_role = check_registration(user_id)

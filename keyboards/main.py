@@ -48,6 +48,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             'link': 'Сигналы',
             'info': 'Инструкция',
             'violations': 'Нарушения',
+            'active': 'Активные сделки',
         },
         'en': {
             'calc': 'Make a calculation',
@@ -58,6 +59,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             'link': 'Signals',
             'info': 'Manual',
             'violations': 'Violations',
+            'active': 'Active calcs',
         },
         'uz': {
             'calc': 'Hisoblash',
@@ -68,6 +70,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             'link': 'Signallar',
             'info': 'Qo\'llanma',
             'violations': 'Buzish',
+            'active': 'Faol bitimlar',
         },
         'tr': {
             'calc': 'Hesaplama',
@@ -78,6 +81,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             'link': 'Sinyaller',
             'info': 'Manuel',
             'violations': 'İhlaller',
+            'active': 'Aktif fırsatlar',
         },
     }
 
@@ -134,6 +138,13 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
 
             buttons.append(
                 getButton(texts[lang]['violations'], 'violations')
+            )
+
+            keyboard.add(*buttons)
+            buttons = []
+
+            keyboard.add(
+                getButton(f'⚡️ {texts[lang]["active"]}', 'active')
             )
 
             if isAdmin:

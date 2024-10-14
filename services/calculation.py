@@ -1,3 +1,4 @@
+from io import BufferedReader
 import json
 from typing import Literal, Optional, TypedDict
 from typing_extensions import Unpack, NotRequired
@@ -197,3 +198,35 @@ def getActiveStatsByUser(
         return
 
     return UserActiveStats.model_validate_json(res.text)
+
+
+@session_decorator
+def getActiveCalcsByUser(
+    id: int, finished=False
+):
+    res = session.get(
+        f'{API_URL}/calculations/activeByUser/{id}?finished={"true" if finished else "false"}',
+    )
+
+    if not check_response(res):
+        return
+
+    return UserActiveStats.model_validate_json(res.text)
+
+
+@session_decorator
+def sendPhoto(
+    file: BufferedReader
+):
+    res = session.post(
+        f'{API_URL}/calculations/photo',
+        files={'file': file},
+        headers={
+            'content-type': None
+        }
+    )
+
+    if not check_response(res):
+        return
+
+    return True

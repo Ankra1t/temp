@@ -101,6 +101,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'violations':
         await send_violation(bot, call.message, state, user)
 
+    if type == 'active':
+        pass
+
     await bot.answer_callback_query(call.id)
 
 

@@ -1,4 +1,4 @@
-from random import randint
+import asyncio
 from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
 
@@ -162,19 +162,12 @@ async def _results(message: Message, bot: AsyncTeleBot, state: StateContext, use
 
 
 async def _test(message: Message, bot: AsyncTeleBot):
-    file = await bot.get_file('AgACAgIAAxkBAAJAgmb3HavQ2Wnsl_p_jmAjUSnkp2t5AAL84TEbJ5C4S2ZXGyiZ1TzzAQADAgADcwADNgQ')
-    file_bytes = await bot.download_file(file.file_path)
+    # print(1)
 
-    name = f'{randint(10000, 100000)}.jpg'
-    with open(name, 'wb') as new_file:
-        new_file.write(file_bytes)
+    # await asyncio.sleep('5')
 
-    with open(name, 'rb') as file:
-        data = twitter.create(file)
-        print(data)
-
-    logger.info('TEST')
-    logger.info(f'CHAT ID = {message.chat.id}')
+    # print(2)
+    pass
 
 
 def commands_registration(bot: AsyncTeleBot):

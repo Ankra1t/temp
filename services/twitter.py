@@ -10,7 +10,10 @@ def create(
 ):
     res = session.post(
         f'{API_URL}/twitter',
-        files={'file':  ('file.jpg', file, 'image/jpg')},
+        files={'file':  file},
+        headers={
+            'content-type': None
+        }
     )
 
     if not check_response(res):

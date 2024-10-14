@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
@@ -21,7 +22,7 @@ from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_freeze_error, msg_text_error
 from messages.main import msg_frozen
-from services import calculation, channel_calc, settings, ticker, violation
+from services import calculation, channel_calc, settings, ticker, twitter, violation
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -144,7 +145,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         type = data.get('type', '')
         action = data.get('action', '')
 
-    await delete_message(bot, chat_id, message.id)
+    # await delete_message(bot, chat_id, message.id)
 
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = await bot.send_message(
@@ -157,7 +158,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     text = message.html_caption or message.html_text
     photo = None
     if message.photo is not None:
-        photo = message.photo[0].file_id
+        photo = message.photo[-1].file_id
 
     data = {}
 
@@ -185,6 +186,20 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     )
     if calc is None:
         return
+
+    if calc.photo and calc.ActiveCalc:
+        file_id = calc.photo
+        file = await bot.get_file(file_id)
+        file_bytes = await bot.download_file(file.file_path)
+
+        name = f'{file_id}.png'
+        with open(name, 'wb') as new_file:
+            new_file.write(file_bytes)
+
+        with open(name, 'rb') as file:
+            data = twitter.create(file)
+
+        os.remove(name)
 
     await state.delete()
 

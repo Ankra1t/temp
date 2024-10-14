@@ -796,7 +796,22 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calculation.activate(calc_id)
 
         calc = calculation.get(calc_id)
+
         if calc:
+            if calc.photo:
+                file_id = calc.photo
+                file = await bot.get_file(file_id)
+                file_bytes = await bot.download_file(file.file_path)
+
+                name = f'{file_id}.png'
+                with open(name, 'wb') as new_file:
+                    new_file.write(file_bytes)
+
+                with open(name, 'rb') as file:
+                    data = calculation.sendPhoto(file)
+
+                os.remove(name)
+
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
             await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
