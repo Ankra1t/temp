@@ -527,7 +527,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             return
 
         text = msg_enter_calc_img_text(user.lang, calc)
-        kb = kb_calc_image_text(user.lang, calc, 'stc+')
+        kb = kb_calc_image_text(user.lang, calc, 'stc+' if 'stc+' in type else '')
 
         new_mes_id = await edit_message(bot, call.message, 'text', text, kb)
 

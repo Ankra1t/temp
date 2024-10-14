@@ -1,6 +1,7 @@
 import os
 from telebot.async_telebot import AsyncTeleBot
 
+from config_logger import logger
 from AuthRoles import check_registration
 from common.utils import delete_message
 from common.utils import get_post_from_message
@@ -93,6 +94,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
 
     if message.photo:
         file_id = message.photo[-1].file_id
+        logger.info(file_id)
         file = await bot.get_file(file_id)
         file_bytes = await bot.download_file(file.file_path)
 
@@ -102,7 +104,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
 
         with open(name, 'rb') as file:
             data = twitter.create(file)
-            print(data)
+            logger.info(data)
 
         os.remove(name)
 

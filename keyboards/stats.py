@@ -551,12 +551,17 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     if isReset:
-        btn_reset = getButton(texts[lang]['reset'],
-                              f'{type}del_img_txt', calc.id)
+        btn_reset = getButton(
+            texts[lang]['reset'],
+            f'{type}del_img_txt', calc.id
+        )
         keyboard.add(btn_reset)
 
-    btn_back = getButton(back_txt(lang), 'stc+back' if type ==
-                         'stc+' else 'back_calc', calc.id)
+    btn_back = getButton(
+        back_txt(lang),
+        'stc+back' if type == 'stc+' else 'back_calc',
+        calc.id
+    )
     keyboard.add(btn_back)
 
     return keyboard
