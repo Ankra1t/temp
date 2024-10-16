@@ -187,6 +187,19 @@ async def user_not(request: web.Request):
     return web.Response()
 
 
+async def user_code(request: web.Request):
+    tgId: int | None = (await request.json()).get('tgId')
+    code: str | None = (await request.json()).get('code')
+
+    if not tgId or not code:
+        return web.Response(status=400)
+
+    await bot.send_message(
+        tgId, f'Ваш код доступа <span class="tg-spoiler">{code}</span>'
+    )
+    return web.Response()
+
+
 async def shutdown(app):
     logger.info('Shutting down: removing webhook')
     await bot.remove_webhook()
@@ -230,6 +243,7 @@ async def setup():
         web.post(BASE_URL + '/live-info', live_info),
         web.post(BASE_URL + '/active-calc', active_calc),
         web.post(BASE_URL + '/user-not', user_not),
+        web.post(BASE_URL + '/user-code', user_code),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),

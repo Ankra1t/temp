@@ -16,6 +16,7 @@ from models import Message, StateContext, User
 from db import db
 
 async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    print(message.html_text)
     mes_id = message.id
     chat_id = message.chat.id
     user_id = message.from_user.id
