@@ -5,7 +5,6 @@ from telebot.async_telebot import AsyncTeleBot
 
 # TODO - each state import from states
 from common.vars import DATETIME_PATTERN
-from keyboards.calculate import kb_calc_cancel
 from states.settings import ViolationState
 from states.stats import ChannelCalcState
 
@@ -79,7 +78,8 @@ async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateCo
     logger.info(f'callback "handle_close_price" user_tg_id={user.tgId} value={value}')
 
     calc = calculation.get(calc_id)
-    if calc is None:
+    send_data = channel_calc.getByCalc(calc_id)
+    if calc is None or (calc.ActiveCalc and not send_data):
         return
 
     value_count = (value - calc.openPrice) / (calc.openPrice - calc.stopLoss)
