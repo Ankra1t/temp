@@ -193,6 +193,7 @@ class ChannelPost():
                 result = ''
                 if calc_.takeProfitRatio:
                     result = getStrValueCount(calc_.takeProfitRatio, lang)
+                    in_deal_value_count += calc_.takeProfitRatio
                 else:
                     result = 'В сделке' if lang == 'ru' else 'In deal'
                     result = f'<b>{result}</b>'
@@ -236,7 +237,6 @@ class ChannelPost():
             for calc_ in live.finished:
                 valueCount = calc_.valueCount
 
-                in_deal_value_count += valueCount
                 result = getStrValueCount(valueCount, lang)
 
                 tool = f'{(calc_.tool or "").replace("/USDT", "")}'
