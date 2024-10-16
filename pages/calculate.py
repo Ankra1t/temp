@@ -902,8 +902,8 @@ async def create_and_send_calc(
 
     if is_send:
         new_mes_id = await send_calculation(bot, message, state, user, calc_info, True, is_try)
-        if db.get_worker_role(user.id):
-            await create_and_send_channel_calc(bot, message, calc_info.id, new_mes_id or 0, user)
+        # if db.get_worker_role(user.id):
+        #     await create_and_send_channel_calc(bot, message, calc_info.id, new_mes_id or 0, user)
 
     await state.delete()
     return new_id

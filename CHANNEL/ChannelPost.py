@@ -176,6 +176,7 @@ class ChannelPost():
             lang = langs[chId_i]
 
             msges = ''
+            in_deal_value_count = 0
 
             for calc_ in live.deal:
                 current_msg = ''
@@ -190,7 +191,6 @@ class ChannelPost():
                 )
 
                 result = ''
-                tp_sl = ''
                 if calc_.takeProfitRatio:
                     result = getStrValueCount(calc_.takeProfitRatio, lang)
                 else:
@@ -201,8 +201,6 @@ class ChannelPost():
                 if calcMesId is not None:
                     tool = f'<a href="https://t.me/c/{str(chId).replace("-100", "")}/{calcMesId}">{tool}</a>'
 
-                is_shift = False
-
                 price = ''
                 take_profit = ''
                 if calc_.indexPrice is not None:
@@ -211,31 +209,14 @@ class ChannelPost():
                     )
                     price = f' {price}'
 
-                    # if calc_.takeProfit:
-                    #     take_profit = '\n\n'
-                    #     take_profit += '<b>Б</b>лижайший тейк: ' if lang == 'ru' else '<b>T</b>he nearest take: '
-                    #     take_profit += f"""<b>{get_print_float(
-                    #         calc_.takeProfit, 0 if calc_.takeProfit > 10 else 2
-                    #     )} USDT</b>"""
-                    #     is_shift = True
-
                 current_msg += f'\n<b>{tool}</b>{price} | {result}'
                 current_msg += take_profit
 
-                # if dealAt is not None:
-                #     current_msg += f'\n{dealAt.strftime("%H:%M")} - '
-                #     current_msg += 'в сделке' if lang == 'ru' else 'in deal'
-
                 if lang == 'ru' and comment is not None:
                     current_msg += f'\n{comment.strip()}'
-                    is_shift = True
 
                 if trailing_stops != '':
                     current_msg += trailing_stops
-                    is_shift = True
-
-                if is_shift:
-                    current_msg += '\n'
 
                 # if finishAt is not None and valueCount is not None:
                 #     current_msg += f'\n{finishAt.strftime("%H:%M")} - '
@@ -255,6 +236,7 @@ class ChannelPost():
             for calc_ in live.finished:
                 valueCount = calc_.valueCount
 
+                in_deal_value_count += valueCount
                 result = getStrValueCount(valueCount, lang)
 
                 tool = f'{(calc_.tool or "").replace("/USDT", "")}'
@@ -268,7 +250,7 @@ class ChannelPost():
 
                 finished += f'{tool} {result}, '
 
-            msg = f'⚡️<b>{"Текущие сделки" if lang == "ru" else "Current deals"}:</b>'
+            msg = f'⚡️<b>{"Текущие сделки" if lang == "ru" else "Current deals"}</b> ({getStrValueCount(in_deal_value_count, lang)}):'
 
             if msges.strip():
                 msg += '\n\n' + msges.strip()

@@ -36,7 +36,7 @@ class AuthMiddleWare(BaseMiddleware):
         isText = False
         if isinstance(message, Message):
             chat_id = message.chat.id
-            isText = message.content_type == 'text'
+            isText = message.content_type == 'text' or message.content_type == 'photo'
         else:
             chat_id = message.message.chat.id
 
@@ -55,6 +55,7 @@ class AuthMiddleWare(BaseMiddleware):
 
             if del_mes_id is not None:
                 if edit_mes is None:
+                    print(del_mes_id)
                     await delete_message(self.bot, chat_id, del_mes_id)
                 else:
                     try:

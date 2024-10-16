@@ -2,6 +2,8 @@ import re
 from typing import Literal
 from datetime import datetime, timedelta, timezone
 
+from common.vars import DATETIME_PATTERN
+
 
 DT_PRINT_TYPE = Literal['date', 'day.month', 'time', 'datetime']
 
@@ -34,9 +36,7 @@ def get_datetime_by_str(value: str):
         \nД, М, Ч, М - день, месяц, часы, минуты 1 или 2 значные числа
         \nГ - год 4 или 2 значный (20xx)
     """
-    datetime_pattern = r'^(0?[1-9]|[1-2]\d|3[0-1])[ .]+(0?[1-9]|1[0-2])(?:[ .]+(\d{4}|\d{2}))?(?:[ ]+([0-1]?\d|2[0-3])[: ]+([0-5]?\d))?$'
-
-    reg = re.search(datetime_pattern, value)
+    reg = re.search(DATETIME_PATTERN, value)
     if reg is None:
         return False
 

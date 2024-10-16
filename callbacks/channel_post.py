@@ -428,7 +428,7 @@ More often: <b>{result}</b>"""
     if type == 'cancel_at':
         new_mes_id = await edit_message(
             bot, call.message, 'text',
-            msg_enter_cancel_at(user.lang),
+            msg_enter_cancel_at(user.lang, True),
             kb_channel_cancel_at(calc_id)
         )
         await state.set(StatsState.cancel_at)

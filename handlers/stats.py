@@ -4,6 +4,8 @@ from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
 
 # TODO - each state import from states
+from common.vars import DATETIME_PATTERN
+from keyboards.calculate import kb_calc_cancel
 from states.settings import ViolationState
 from states.stats import ChannelCalcState
 
@@ -12,12 +14,12 @@ from Classes import calcService
 from CHANNEL.channel_post import channel_post
 from models import Message, StateContext, User
 from db import db
-from common.utils import delete_message, digit_accept, text_accept
-from common.dt import get_datetime_now, get_str_by_datetime
+from common.utils import delete_message, digit_accept, is_digit, text_accept
+from common.dt import get_datetime_by_str, get_datetime_now, get_str_by_datetime
 
 from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
-from keyboards.stats import kb_deal_profit_minus, kb_calc_image_text
+from keyboards.stats import kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_freeze_error, msg_text_error
@@ -57,6 +59,38 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
 
     await send_calculation(bot, message, state, user, calc_info, True)
     await send_freeze(bot, message, state, user, calc_info.market, True)
+
+
+async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
+    chat_id = message.chat.id
+
+    async with state.data() as data:
+        calc_id = data.get('calc_id', 0)
+
+    value = digit_accept(message)
+    if value is None:
+        new_mes = await bot.send_message(
+            chat_id, msg_digit_error(user.lang),
+            reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
+        )
+        await state.add_data(del_mes_id=new_mes.id)
+        return
+
+    logger.info(f'callback "handle_close_price" user_tg_id={user.tgId} value={value}')
+
+    calc = calculation.get(calc_id)
+    if calc is None:
+        return
+
+    value_count = (value - calc.openPrice) / (calc.openPrice - calc.stopLoss)
+
+    calcService.set_profit(calc_id, calc.riskValue * value_count)
+    calc = calculation.update(
+        calc_id, status='FINISH'
+    )
+
+    if calc:
+        await send_calculation(bot, message, state, user, calc, True)
 
 
 async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -145,7 +179,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         type = data.get('type', '')
         action = data.get('action', '')
 
-    # await delete_message(bot, chat_id, message.id)
+    await delete_message(bot, chat_id, message.id)
 
     if message.content_type != 'photo' and message.content_type != 'text':
         new_mes = await bot.send_message(
@@ -345,17 +379,37 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
         calc_id = data.get('calc_id', 0)
         action = data.get('action', '')
 
-    value = digit_accept(message)
-    if value is None:
+    is_settings = 'settings' in action
+
+    value = message.text
+    if (
+        (value is None) or
+        (is_settings and not is_digit(value)) or
+        (
+            not is_settings and not (
+                re.search(DATETIME_PATTERN, value) is not None or
+                is_digit(value)
+            )
+        )
+    ):
         new_mes = await bot.send_message(
             chat_id, msg_digit_error(user.lang),
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    value = int(value * 60)
+    if is_digit(value):
+        value = int(float(value) * 60)
+    else:
+        dt = get_datetime_by_str(value) or datetime.now()
 
-    if 'settings' in action:
+        print(dt)
+        value = int(
+            abs((int(datetime.now().timestamp()) - int(dt.timestamp())) / 60)
+        )
+        print(value)
+
+    if is_settings:
         settings.updateAdvanced(user.id, cancelMinutes=value)
 
     if action == 'settings':
@@ -376,6 +430,8 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
                 )
             else:
                 await send_calculation(bot, message, state, user, calc, True, is_activate=True)
+
+    await state.delete()
 
 
 async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -419,6 +475,8 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
             bot, message, state, calc.id, is_first=True
         )
 
+    await state.delete()
+
 
 async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
@@ -447,6 +505,8 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         if calc:
             await send_calculation(bot, message, state, user, calc, True, is_activate=True)
 
+    await state.delete()
+
 
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
@@ -454,6 +514,7 @@ def registration(bot: AsyncTeleBot):
 
     reg_mes(handle_sum, state=StatsState.sum)
     reg_mes(handle_loss, state=StatsState.loss)
+    reg_mes(handle_close_price, state=StatsState.close_price)
     reg_mes(handle_freeze_dt, state=StatsState.freeze)
     reg_mes(
         handle_calc_image_text, state=StatsState.add_image_text,

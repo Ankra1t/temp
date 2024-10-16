@@ -1,4 +1,3 @@
-import asyncio
 from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
 
@@ -8,7 +7,7 @@ from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
-from services import auth, twitter
+from services import auth
 
 from common.utils import is_digit
 from common.calc_step import send_calc_start

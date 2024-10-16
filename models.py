@@ -455,7 +455,13 @@ class UserCalcNot(BaseModel):
     tool: str
     chId: str
     mesId: str
-    trStop: tuple[float, float] | Literal['breakeven'] | None = None
+    trStop: tuple[float | Literal['breakeven'], float] | None = None
+
+
+class AdminCalcNot(BaseModel):
+    userIds: list[int]
+    userName: str
+    calc: Calculation
 
 
 class CalcSentMessages(BaseModel):

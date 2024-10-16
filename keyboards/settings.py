@@ -54,7 +54,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
             'trading_type': 'Тип торговли',
             'reset': 'Сброс',
             'deposit': 'Настроить торговлю',
-            'summury_profit': 'Деление профита',
             'dop': 'Дополнительно',
 
             'exchange': 'Биржа',
@@ -68,7 +67,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
             'trading_type': 'Trading type',
             'reset': 'Reset',
             'deposit': 'Configure trading',
-            'summury_profit': 'Profit division',
             'dop': 'Extra',
 
             'exchange': 'Exchange',
@@ -82,7 +80,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
             'trading_type': 'Savdo turi',
             'reset': 'Qayta o\'rnatish',
             'deposit': 'Savdolarni sozlash',
-            'summury_profit': 'Foyda taqsimoti',
             'dop': 'Bundan tashqari',
 
             'exchange': 'Almashish',
@@ -96,7 +93,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
             'trading_type': 'Ticaret türü',
             'reset': 'Sıfırla',
             'deposit': 'Ticareti yapılandırın',
-            'summury_profit': 'Kâr bölümü',
             'dop': 'Ek',
 
             'exchange': 'Borsa',
@@ -1128,7 +1124,6 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
             'auto_stop': 'Авто стоп',
             'auto_take': 'Авто тейк',
             'cancel': 'Отменить сделку',
-            'profit': 'Закрыть сделку',
         },
         'en': {
             'cancelAt': 'Cancel at',
@@ -1136,7 +1131,6 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
             'auto_stop': 'Auto stop',
             'auto_take': 'Auto take',
             'cancel': 'Cancel the deal',
-            'profit': 'Close the deal ',
         },
         'uz': {
             'cancelAt': 'Bekor qilish vaqti',
@@ -1144,7 +1138,6 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
             'auto_stop': 'Avtomatik to\'xtatish',
             'auto_take': 'Avtoulov',
             'cancel': 'Bitimni bekor qiling',
-            'profit': 'Bitimni yoping',
         },
         'tr': {
             'cancelAt': 'Iptal etmek',
@@ -1152,7 +1145,6 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
             'auto_stop': 'Otomatik durdurma',
             'auto_take': 'Otomatik alım',
             'cancel': 'Anlaşmayı iptal et',
-            'profit': 'Anlaşmayı kapat ',
         },
     }
 

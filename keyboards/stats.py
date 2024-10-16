@@ -3,6 +3,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from db import db
 from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, reset_txt
 
@@ -169,6 +170,7 @@ def kb_calc_list(lang: LANGUAGES_TYPE, page: int, count: int, list_type: str):
 
 
 def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isResult=False):
+    isAdmin = db.get_worker_role(user_db_id)
     isActiveCalcSub = subscribe.check(user_db_id, 'active_calc')
     send_data = channel_calc.getByCalc(calc.id)
 
@@ -189,6 +191,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
+            'close_price': 'Цена закрытия',
 
             'active': 'Активировать сделку',
             'active_p': 'Параметры активации',
@@ -209,6 +212,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Take',
             'stop': 'Stop',
             'breakeven': 'Breakeven',
+            'close_price': 'Close price',
 
             'active': 'Activate the deal',
             'active_p': 'Activation params',
@@ -229,6 +233,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Olish',
             'stop': 'Toʻxtatish',
             'breakeven': 'Tenglash',
+            'close_price': 'Yopish narxi',
 
             'active': 'Bitimni faollashtirish',
             'active_p': 'Faollashtirish parametrlari',
@@ -249,6 +254,8 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası',
+            'close_price': 'Kapalı fiyat',
+
 
             'active': 'Anlaşmayı etkinleştir',
             'active_p': 'Aktivasyon paramleri',
@@ -282,6 +289,12 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 getChannelButton(
                     texts[lang]['breakeven'],
                     'take+0', calc.id, True
+                )
+            )
+            buttons.append(
+                getButton(
+                    texts[lang]['close_price'],
+                    'close_price', calc.id,
                 )
             )
 
@@ -331,10 +344,10 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
         keyboard.add(*buttons)
 
-        # if isAdmin and send_data is None:
-        #     keyboard.add(
-        #         getButton('Выложить в каналах', 'send_to_channels', calc.id)
-        #     )
+        if isAdmin and send_data is None:
+            keyboard.add(
+                getButton('Выложить в каналах', 'send_to_channels', calc.id)
+            )
 
         if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
             keyboard.add(

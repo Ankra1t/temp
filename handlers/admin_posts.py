@@ -196,8 +196,6 @@ async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot, state: S
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    datetime_pattern = r'^(0?[1-9]|[1-2]\d|3[0-1])[ .]+(0?[1-9]|1[0-2])(?:[ .]+(\d{4}|\d{2}))?(?:[ ]+([0-1]?\d|2[0-3])[: ]+([0-5]?\d))?$'
-
     mes_text = text_accept(message) or '-'
 
     if mes_text != '-':

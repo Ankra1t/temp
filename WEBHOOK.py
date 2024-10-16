@@ -10,6 +10,7 @@ from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 from CHANNEL.channel_post import channel_post
 
+from common.calculation import getStrValueCount
 from common.utils import get_print_float
 from config_global import BASE_HOST, CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, BASE_URL
 from config_logger import logger
@@ -18,7 +19,7 @@ from callbacks.calculate import send_after_first_try
 
 from initialize import bot
 from db import db
-from models import Calculation, Live, UserCalcNot
+from models import AdminCalcNot, Calculation, Live, UserCalcNot
 from registration import reg
 from thread_tasks import run_thread
 
@@ -137,31 +138,48 @@ async def user_not(request: web.Request):
     #     return web.Response(status=403)
 
     value = await request.text()
-    data = UserCalcNot.model_validate_json(value)
 
-    print(data)
+    if 'userIds' in value:
+        data = AdminCalcNot.model_validate_json(value)
 
-    tool = f'<a href="https://t.me/c/{str(data.chId).replace("-100", "")}/{data.mesId}">{data.tool}</a>'
+        msg = f'⚡️ Сделка {data.calc.tool} пользователь {data.userName} '
 
-    user = db.get_user_by_id(data.userId)
+        if data.calc.status == 'CANCEL':
+            msg += f'<b>отменена!</b>'
+        elif data.calc.status == 'DEAL':
+            msg += f'<b>в сделке!</b>\nВошел по {get_print_float(data.calc.openPrice)} USDT'
+        elif data.calc.status == 'FINISH':
+            valueCount = (data.calc.profit or 0) / data.calc.riskValue
+            msg += f'<b>завершена!</b>\nРезультат {getStrValueCount(valueCount)}'
 
-    if not user:
-        return web.Response()
+        for el in data.userIds:
+            await bot.send_message(
+                el, msg
+            )
+    else:
+        data = UserCalcNot.model_validate_json(value)
 
-    if data.type == 'cancel':
-        await bot.send_message(
-            user.tg_id, f'⚡️ Сделка {tool} отменена!'
-        )
-    elif data.trStop is not None:
-        tr_info = 'стоп передвинут '
-        if data.trStop == 'breakeven':
-            tr_info += 'к <b>безубытку</b>'
-        else:
-            tr_info += f'c {get_print_float(data.trStop[0])} к {get_print_float(data.trStop[1])}'
+        tool = f'<a href="https://t.me/c/{str(data.chId).replace("-100", "")}/{data.mesId}">{data.tool}</a>'
 
-        await bot.send_message(
-            user.tg_id, f'⚡️ По сделке {tool} {tr_info}!'
-        )
+        user = db.get_user_by_id(data.userId)
+
+        if not user:
+            return web.Response()
+
+        if data.type == 'cancel':
+            await bot.send_message(
+                user.tg_id, f'⚡️ Сделка {tool} отменена!'
+            )
+        elif data.trStop is not None:
+            tr_info = 'стоп передвинут '
+            if data.trStop[0] == 'breakeven':
+                tr_info += f'к <b>безубытку</b> ({get_print_float(data.trStop[1])})'
+            else:
+                tr_info += f'c {get_print_float(data.trStop[0])} к {get_print_float(data.trStop[1])}'
+
+            await bot.send_message(
+                user.tg_id, f'⚡️ По сделке {tool} {tr_info}!'
+            )
 
     return web.Response()
 

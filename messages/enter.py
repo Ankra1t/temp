@@ -688,6 +688,19 @@ def msg_enter_profit_sum(lang: LANGUAGES_TYPE):
     return f'👉 {text}'
 
 
+def msg_enter_close_price(lang: LANGUAGES_TYPE):
+    if lang == 'ru':
+        text = 'Введите <b>цену закрытия</b> сделки'
+    elif lang == 'uz':
+        text = 'Bitimni yopish narxini kiriting'
+    elif lang == 'tr':
+        text = 'İşlemi kapatma fiyatını girin'
+    else:
+        text = 'Enter <b>close price</b> of this deal'
+
+    return f'👉 {text}'
+
+
 def msg_choose_lang(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Выберите язык',
@@ -699,15 +712,31 @@ def msg_choose_lang(lang: LANGUAGES_TYPE):
     return f'🌐 {texts[lang]}'
 
 
-def msg_enter_cancel_at(lang: LANGUAGES_TYPE):
+def msg_enter_cancel_at(lang: LANGUAGES_TYPE, with_datetime=False):
     texts = {
-        'ru': 'Выберите время, через которое сделка будет отменена, либо введите <u>количество часов</u>',
-        'en': 'Select the time after which the transaction will be canceled, or enter the number of hours',
-        'tr': 'İşlemin iptal edileceği süreyi seçin veya saat sayısını girin',
-        'uz': 'Tranzaksiya bekor qilinadigan vaqtni tanlang yoki soat sonini kiriting',
+        'ru': {
+            'main': 'Выберите время, через которое сделка будет отменена, либо введите <u>количество часов</u>',
+            'datetime': 'или <u>дату</u> в формате ДД.ММ ММ:ЧЧ по МСК',
+        },
+        'en': {
+            'main': 'Select the time after which the transaction will be canceled, or enter the number of hours',
+            'datetime': 'or <u>the date</u> in DD.MM MM:HH Moscow Time',
+        },
+        'tr': {
+            'main': 'İşlemin iptal edileceği süreyi seçin veya saat sayısını girin',
+            'datetime': 'veya Moskova Saat biçimindeki tarih DD.MM MM:HH',
+        },
+        'uz': {
+            'main': 'Tranzaksiya bekor qilinadigan vaqtni tanlang yoki soat sonini kiriting',
+            'datetime': 'yoki Moskva vaqt formatidagi sana DD.MM MM:HH',
+        }
     }
 
-    return f'👉 {texts[lang]}'
+    message = f'👉 {texts[lang]["main"]}'
+    if with_datetime:
+        message += f' {texts[lang]["datetime"]}'
+
+    return message
 
 
 def msg_enter_tr_stop(lang: LANGUAGES_TYPE):

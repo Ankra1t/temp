@@ -7,7 +7,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float
 from common.calculation import getStrValueCount
 
-from config_global import RESULTS_CHANNEL_NAME
+from config_global import CHAT_CHANNEL_NAME, RESULTS_CHANNEL_NAME
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
 
@@ -421,8 +421,10 @@ def msg_channel_calc(
             'DEAL': 'В сделке',
             'CANCEL': 'Отменён',
             'WAIT': 'Ожидаю',
+
             'try': 'Рассчитать',
             'chart': 'График',
+            'chat': 'Чат',
         },
         'en': {
             'open': (
@@ -452,8 +454,10 @@ def msg_channel_calc(
             'DEAL': 'In deal',
             'CANCEL': 'Cancel',
             'WAIT': 'Waiting',
+
             'try': 'Calculate',
             'chart': 'Chart',
+            'chat': 'Chat',
         }
     }
 
@@ -547,6 +551,10 @@ def msg_channel_calc(
         else:
             chart_link = ''
 
+    chat_link = ''
+    if lang == 'ru':
+        chat_link = f' | <a href="https://t.me/{CHAT_CHANNEL_NAME}">{texts[lang]["chat"]}</a>'
+
     trailing_stops = getTrailingStopsMessage(
         lang, calc.TrailingStops, calc.openPrice, calc.stopLoss
     )
@@ -599,7 +607,7 @@ def msg_channel_calc(
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
         + trailing_stops \
         + (f'\n\n{traderMes}' if traderMes else '') \
-        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}{chat_link}\n' if try_link != '' else '')
 
 
 def msg_channel_calc_result(
@@ -638,9 +646,10 @@ def msg_channel_calc_result(
             'long': 'лонг',
 
             'date': 'Дата',
-            'try': 'Рассчитать',
 
+            'try': 'Рассчитать',
             'chart': 'График',
+            'chat': 'Чат',
         },
         'en': {
             'open': '<b>Entered by</b>',
@@ -662,9 +671,10 @@ def msg_channel_calc_result(
             'long': 'long',
 
             'date': 'Date',
-            'try': 'Calculate',
 
+            'try': 'Calculate',
             'chart': 'Chart',
+            'chat': 'Chat',
         }
     }
 
@@ -727,6 +737,10 @@ def msg_channel_calc_result(
         else:
             chart_link = ''
 
+    chat_link = ''
+    if lang == 'ru':
+        chat_link = f' | <a href="https://t.me/{CHAT_CHANNEL_NAME}">{texts[lang]["chat"]}</a>'
+
 # <b>{texts[lang]["date"]}</b>: {date}
     return f"""{count_show}<b>{link(tool).replace('/USDT', '')}</b> | {'Завершено' if lang == 'ru' else 'Finished'}
 
@@ -738,7 +752,7 @@ def msg_channel_calc_result(
 ⚡️ {texts[lang]["result"]}: {result}""" \
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
-        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}\n' if try_link != '' else '')
+        + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}{chat_link}\n' if try_link != '' else '')
 
 
 def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):

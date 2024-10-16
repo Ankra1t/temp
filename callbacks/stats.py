@@ -37,7 +37,7 @@ from services import calculation, channel_calc, ticker
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
-from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
+from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_close_price, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
 from messages.main import msg_frozen
 
 from keyboards.settings import kb_take_profit, kb_trading_style
@@ -291,6 +291,15 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             chat_id, mes_id,
             reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
         )
+
+    if type == 'close_price':
+        await state.set(StatsState.close_price)
+        await bot.edit_message_text(
+            msg_enter_close_price(user.lang),
+            chat_id, mes_id,
+            reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
+        )
+        await state.add_data(calc_id=calc_id, del_mes_id=mes_id)
 
     if type == 'go_main':
         await send_main(bot, call.message, state, user)
@@ -581,7 +590,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             )  # TODO - создать метод класса
 
         await bot.delete_message(chat_id, mes_id)
-        await bot.send_message(chat_id, '✅ Отправлено')
+        # await bot.send_message(chat_id, '✅ Отправлено')
         await send_main(bot, call.message, state, user, True)
 
     if type == 'stc+rescreen':
@@ -827,14 +836,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'cancel_at' or type == 'stc_cancel_at':
         new_mes_id = await edit_message(
             bot, call.message, 'text',
-            msg_enter_cancel_at(user.lang),
+            msg_enter_cancel_at(user.lang, True),
             kb_cancel_at(user.lang, calc_id, 'stc_' if 'stc_' in type else '')
         )
         await state.set(StatsState.cancel_at)
         await state.add_data(
             calc_id=calc_id,
             del_mes_id=new_mes_id,
-            action='stc'
+            action='stc' if 'stc_' in type else ''
         )
 
     if 'cancel_at+' in type:
