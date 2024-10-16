@@ -153,9 +153,12 @@ async def user_not(request: web.Request):
             msg += f'<b>завершена!</b>\nРезультат {getStrValueCount(valueCount)}'
 
         for el in data.userIds:
-            await bot.send_message(
-                el, msg
-            )
+            try:
+                await bot.send_message(
+                    el, msg
+                )
+            except:
+                pass
     else:
         data = UserCalcNot.model_validate_json(value)
 
