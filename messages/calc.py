@@ -530,7 +530,7 @@ def msg_channel_calc(
 
     percent24h_show = ''
     if percent24h and calc.status == 'WAIT':
-        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h * 100, 2)}%)'
+        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
 
     def link(value: str):
         if isActiveCalc:
