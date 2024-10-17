@@ -12,7 +12,7 @@ from messages.enter import (
     msg_choose_direct, msg_enter_min_bar, msg_enter_trading_style,
 )
 
-from pages.calculate import send_calculation, create_and_send_calc
+from pages.calculate import send_calculation
 from keyboards.calculate import kb_tool, kb_calc_direct, kb_calc_cancel
 from keyboards.stats import kb_deal_profit_cancel
 from keyboards.settings import kb_change_currency, kb_trading_style

@@ -62,8 +62,8 @@ async def msg_calculate(state: StateContext, user: User, is_try=False):
         'en': {
             'ticker': 'Ticker',
             'dep': 'Deposit',
-            'risk': 'Deal risk',
-            'open': 'Open price',
+            'risk': 'Risk per deal',
+            'open': 'Entry price',
             'pair': 'Currency pair',
 
             'trading_type': 'Trading type',
@@ -158,7 +158,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
-            'risk': 'Deal risk',
+            'risk': 'Risk per deal',
             'open': 'Price',
             'stop': 'Stop loss',
 

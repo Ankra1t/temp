@@ -491,7 +491,7 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
             'take_profit': 'Тейки',
         },
         'en': {
-            'open_price': 'Open price',
+            'open_price': 'Entry price',
             'stop_loss': 'Stop loss',
             'tool': 'Tool',
             'style': 'Style',

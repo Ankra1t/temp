@@ -690,28 +690,49 @@ def msg_enter_min_bar(lang: LANGUAGES_TYPE):
 
 
 def msg_choose_direct(lang: LANGUAGES_TYPE, tg_id: int, value: float | None = None):
+    stop = (liteDb.getUserStop(tg_id) or '').split('+')
+    percent = ''
+
+    if len(stop) == 2:
+        _, percent = stop
+
     atr_settings = liteDb.getUserAtrSettings(tg_id)
     period, count = atr_settings[1].split('+')
 
     texts = {
-        'ru': "Выберите направление",
+        'ru': "Выберите направление или свой стоп лосс",
         'en': "Select the direction",
         'uz': "Yo'nalishni tanlang",
         'tr': "Yönü seçin",
     }
 
+    info = {
+        'ru': "⚡️<b>Предложенные</b> цены стоп лоссов при торговле в лонг/шорт",
+        'en': "⚡️<b>Suggested</b> stop loss prices when trading in long/short",
+        'uz': "⚡️uzoq/qisqa savdo paytida <b>taklif</b> stop loss narxlar",
+        'tr': "⚡️<b>Önerilen</b> uzun/kısa işlemlerde zararı durdur fiyatları",
+    }
+
     atr_info = {
-        'ru': f'ATR <b>{count} баров</b> ({period.upper()})',
-        'en': f'ATR <b>{count} bars</b> ({period.upper()})',
-        'uz': f'ATR <b>{count} bar</b> ({period.upper()})',
-        'tr': f'ATR <b>{count} çubukları</b> ({period.upper()})'
+        'ru': f'ATR <b>{count} баров</b>',
+        'en': f'ATR <b>{count} bars</b>',
+        'uz': f'ATR <b>{count} bar</b>',
+        'tr': f'ATR <b>{count} çubukları</b>'
     }
 
     avg_atr = ''
     if value is not None:
-        avg_atr = f'{atr_info[lang]} ~ <b>{get_print_float(value, 5)} USDT</b>\n\n'
+        if percent:
+            percent = float(percent)
+            percent = f' {get_print_float(percent, 1)}%'
 
-    return f'{avg_atr}👇 {texts[lang]}'
+        avg_atr = f'{atr_info[lang]} ({period.upper()}){percent} ~ <b>{get_print_float(value, 5)} USDT</b>'
+
+    return f"""{avg_atr}
+
+{info[lang]}
+
+👇 {texts[lang]}"""
 
 
 def msg_enter_profit_minus(lang: LANGUAGES_TYPE):

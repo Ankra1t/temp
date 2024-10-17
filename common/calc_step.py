@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from Classes import pay_guard
-from common.utils import delete_message
 from data.data import liteDb
 from db import db
 from messages.calc import msg_calc_buttons_info
@@ -40,7 +39,7 @@ names = {
         'pair': 'Pair',
         'tool': 'Tool',
         'style': 'Style',
-        'op': 'Open price',
+        'op': 'Entry price',
         'sl': 'Stop loss',
         'atr': 'ATR',
     },
@@ -175,8 +174,10 @@ async def choose_calculate_step(
         if calc_type == 'forex' and forex is not None:
             op_value = round(forex.price, 5)
 
-        keyboard = kb_price(user.lang, user.tgId,
-                            updated_risk is None, op_value)
+        keyboard = kb_price(
+            user.lang, user.tgId,
+            updated_risk is None, op_value
+        )
     elif stop_loss == -1:
         await bot.send_message(
             chat_id, msg_choose_direct(user.lang, user.tgId),
