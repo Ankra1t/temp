@@ -13,7 +13,7 @@ from services import auth, calculation, settings
 from states.settings import FirstCalcState, SettingsState
 
 from messages.common import msg_success_edit
-from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_auto_take, msg_enter_bars, msg_enter_bars_count, msg_enter_cancel_at, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_tr_stop, msg_enter_trading_style, msg_enter_trading_type
+from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_auto_take, msg_enter_bars, msg_enter_bars_count, msg_enter_cancel_at, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_first_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_tr_stop, msg_enter_trading_style, msg_enter_trading_type
 from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
 from messages.main import msg_success_base_set, msg_welcome
 
@@ -319,7 +319,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if type == 'first_dep':
         await state.set(FirstCalcState.deposit)
         await bot.edit_message_text(
-            msg_enter_deposit(user.lang), chat_id, mes_id
+            msg_enter_first_deposit(user.lang), chat_id, mes_id
         )
 
     if 'welcome_confirm' in type:

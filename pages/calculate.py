@@ -671,7 +671,7 @@ async def send_calculation(
 
     if is_try:
         kb = None
-    if is_activate:
+    elif is_activate:
         kb = kb_calc_activation(user.lang, calc)
     else:
         kb = kb_main(
@@ -823,8 +823,6 @@ async def create_and_send_calc(
         updated_risk = data.get('updated_risk') or 1.
         is_from_deposit = data.get('is_from_deposit') or False
 
-        is_try = data.get('is_try', False)
-
     if stat_id is not None:
         calc_info = calculation.get(stat_id)
         if calc_info is None or calc_info.ActiveCalc:
@@ -881,29 +879,23 @@ async def create_and_send_calc(
         isFromDeposit=is_from_deposit
     )
 
-    new_id = None
-    if not is_try:
-        new_id = db.add_calculation(calc_info)
-        calc_info.id = new_id
+    new_id = db.add_calculation(calc_info)
+    calc_info.id = new_id
 
-        userExchange = liteDb.getUserExchange(user.tgId)
-        if userExchange is not None:
-            liteDb.addCalc(new_id, userExchange[0], userExchange[1])
+    userExchange = liteDb.getUserExchange(user.tgId)
+    if userExchange is not None:
+        liteDb.addCalc(new_id, userExchange[0], userExchange[1])
 
-        db.minus_calculator_uses_count(user.id)
-        db.delete_unfinished_calc_by_user(user.id)
+    db.minus_calculator_uses_count(user.id)
+    db.delete_unfinished_calc_by_user(user.id)
 
-        db.set_user_base(user.id, 'risk', risk[0])
-        db.set_user_risk_is_percent(user.id, risk[1])
-        db.set_user_base(user.id, 'deposit', deposit)
-        db.set_user_currency(user.id, currency)
-    else:
-        liteDb.setFirstTry(user.tgId)
+    db.set_user_base(user.id, 'risk', risk[0])
+    db.set_user_risk_is_percent(user.id, risk[1])
+    db.set_user_base(user.id, 'deposit', deposit)
+    db.set_user_currency(user.id, currency)
 
     if is_send:
-        new_mes_id = await send_calculation(bot, message, state, user, calc_info, True, is_try)
-        # if db.get_worker_role(user.id):
-        #     await create_and_send_channel_calc(bot, message, calc_info.id, new_mes_id or 0, user)
+        await send_calculation(bot, message, state, user, calc_info, True)
 
     await state.delete()
     return new_id

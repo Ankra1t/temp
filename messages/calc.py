@@ -928,3 +928,26 @@ def msg_calculation_deleted(lang: LANGUAGES_TYPE):
     }
 
     return f'⭕️ {texts[lang]}!'
+
+
+def msg_calc_buttons_info(lang: LANGUAGES_TYPE):
+    if lang == 'ru':
+        return """Вы можете изменить параметры текущей сделки, нажав Изменить, удалить сделку, нажав Удалить, или сохранить ее, нажав Сохранить в статистику.
+
+Нажмите на Сделать расчёт, чтобы начать новый расчёт на основе ваших данных.
+Нажмите на Настройки, чтобы задать более детальные параметры торговли."""
+    elif lang == 'en':
+        return """You can change the parameters of the current deal by clicking Change, delete the deal by clicking Delete or save it by clicking Save to stats.
+
+Click on Make a calculation to start a new calculation based on your data.
+Click on Settings to set the in-depth trading criteria."""
+    elif lang == 'uz':
+        return """Siz bosish orqali joriy bitim parametrlarini o'zgartirishingiz mumkin o'zgartirish, bosish orqali bitimni o'chirish o'chirish yoki bosish orqali saqlang statistikaga saqlash.
+
+Ustiga bosing hisob-kitob qiling ma'lumotlaringiz asosida yangi hisoblashni boshlash uchun.
+Chuqur savdo mezonlarini o'rnatish uchun Sozlamalar - ni bosing."""
+    elif lang == 'tr':
+        return """Geçerli anlaşmanın parametrelerini Değiştir'i tıklatarak değiştirebilir, anlaşmayı Sil'i tıklatarak silebilir veya İstatistiklere kaydet'i tıklatarak kaydedebilirsiniz.
+
+Verilerinize dayalı yeni bir hesaplama başlatmak için Hesaplama yap'a tıklayın.
+Derinlemesine işlem kriterlerini belirlemek için Ayarlar'a tıklayın."""

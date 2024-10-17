@@ -372,6 +372,8 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
     if action == 'send_calc':
         await start_with_calc(bot, message, state, user, stat_id, stop_loss)
     else:
+        await state.add_data(stop_loss=stop_loss)
+
         calc = calculation.get(stat_id)
         send_data = channel_calc.getByCalc(stat_id)
 
@@ -379,7 +381,7 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
             tickerInfo = ticker.get_info(calc.tool or '')
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
-        await create_and_send_calc(bot, message, state, user, stop_loss)
+        await choose_calculate_step(bot, message, state, user)
 
 
 async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):

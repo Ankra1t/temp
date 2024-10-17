@@ -3,6 +3,7 @@ from telebot.types import InaccessibleMessage
 
 from CHANNEL.channel_post import channel_post
 from config_logger import logger
+from pages.start import first_start_with_calc
 from services import calculation, violation
 from models import CallbackQuery, StateContext, User
 
@@ -48,13 +49,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if 'calc' in type:
         await send_calc_start(
             bot, call.message, state, user,
-            is_continue='_continue' in type, is_channel_calc='ch_calc' in type
+            is_continue='_continue' in type, is_channel_calc='ch_calc' in type,
+            is_try=(stat_id == -111)
         )
 
     if type == 'first_try':
-        await send_calc_start(
+        await first_start_with_calc(
             bot, call.message, state, user,
-            is_continue='_continue' in type, is_edit=True, is_try=True
         )
 
     if type == 'settings':

@@ -1103,15 +1103,15 @@ def kb_atr_bars_count(lang: LANGUAGES_TYPE):
 
 def kb_first_dep(lang: LANGUAGES_TYPE):
     text = {
-        'ru': 'Настроить',
-        'en': 'Settings',
-        'uz': 'Sozlamoq',
-        'tr': 'Ayarlamak',
+        'ru': 'Рассчитаем первую сделку',
+        'en': 'Let’s make your first calculation',
+        'uz': 'Biz birinchi kelishuvni hisoblaymiz',
+        'tr': 'İlk anlaşmayı hesaplıyoruz',
     }
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        getButton('⚙️ ' + text[lang], 'first_dep')
+        getButton(text[lang], 'first_dep')
     )
     return keyboard
 

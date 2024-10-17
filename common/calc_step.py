@@ -1,8 +1,10 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from Classes import pay_guard
+from common.utils import delete_message
 from data.data import liteDb
 from db import db
+from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 from services import ticker
 
@@ -103,7 +105,6 @@ async def choose_calculate_step(
     is_style_change = liteDb.getStyleChange(
         user.tgId) and trading_style is None
 
-    # text = msg_calculate(bot, user_id, chat_id, is_try)
     text = ''
     keyboard = kb_calc_cancel(user.lang)
 
@@ -120,14 +121,11 @@ async def choose_calculate_step(
         keyboard = kb_pair(user.lang)
 
     elif calc_type != 'forex' and tool is None:
-        text += msg_enter_tool(user.lang, calc_type)
+        text += msg_enter_tool(user.lang, calc_type, is_try)
         edit_to = names[user.lang]['tool']
         new_state = CalculateState.tool
 
-        if is_try:
-            last_tools = ['BTC', 'ETH', 'TON']
-        else:
-            last_tools = db.get_last_tools(user.id, calc_type)
+        last_tools = db.get_last_tools(user.id, calc_type)
 
         keyboard = kb_tool(user.lang, last_tools)
 
@@ -195,7 +193,6 @@ async def choose_calculate_step(
             period, count = atr_settings[1].split('+')
 
             value = ticker.get_atr(tool, period, int(count)) or None
-            print(value)
 
             if atr_settings[0] and value is not None:
                 rate = 1
@@ -220,11 +217,18 @@ async def choose_calculate_step(
                 edit_to = names[user.lang]['sl']
                 new_state = CalculateState.stop_loss
             else:
-                await bot.delete_message(chat_id, mes_id)
                 await create_and_send_calc(bot, message, state, user, stop_loss)
+                if is_try:
+                    await bot.send_message(
+                        chat_id, msg_calc_buttons_info(user.lang)
+                    )
+                    liteDb.setFirstTry(user.tgId)
                 return
 
     await state.set(new_state)
+
+    if is_try:
+        keyboard = None
 
     if is_edit:
         await bot.edit_message_text(
@@ -311,18 +315,18 @@ async def choose_first_calculate_step(
     liteDb.addStartCalcCount(user.tgId)
 
     state_data = {
-        'tool': None if not is_try else 'BTC/USDT',
-        'open_price': None if not is_try else 62000,
-        'stop_loss': (-1 if is_channel_calc else None) if not is_try else 61800,
+        'tool': None,
+        'open_price': None,
+        'stop_loss': -1 if is_channel_calc else None,
 
         'calc_type': type if not is_try else 'crypto',
         'stop_type': (stop_type or '') if not is_try else 'default',
 
-        'trading_style': style,
-        'trading_type': trading_type,
-        'deposit': deposit if not is_try else 10000,
-        'currency': currency if not is_try else 'USDT',
-        'risk': risk if not is_try else (1, True),
+        'trading_style': style if not is_try else None,
+        'trading_type': trading_type if not is_try else None,
+        'deposit': deposit,
+        'currency': currency,
+        'risk': risk,
         'is_try': is_try,
         'is_from_deposit': is_from_deposit,
     } | prev_values

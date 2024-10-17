@@ -15,7 +15,7 @@ from messages.errors import msg_currency_error, msg_digit_error, msg_splitting_e
 from messages.settings import msg_choose_exchange_level, msg_enter_exchange_not_found
 from messages.main import msg_after_first_settings, msg_success_base_set
 from messages.enter import (
-    msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
+    msg_enter_first_risk_percent, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting,
     msg_enter_trading_style, msg_enter_day_risk, msg_enter_deposit,
 )
 
@@ -287,9 +287,8 @@ async def handle_first_deposit(message: Message, bot: AsyncTeleBot, state: State
     db.set_user_risk_is_percent(user_db_id, True)
 
     await bot.send_message(
-        chat_id, msg_enter_risk_percent(
-            user.lang, True
-        ),
+        chat_id,
+        msg_enter_first_risk_percent(user.lang),
     )
     await state.set(FirstCalcState.risk)
 

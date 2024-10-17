@@ -64,7 +64,7 @@ async def send_start_by_user(
                     await bot.send_message(
                         chat_id,
                         msg_choose_direct(user.lang, user.tgId, ticker_val),
-                        reply_markup=kb_calc_direct(user.lang, atr,  True)
+                        reply_markup=kb_calc_direct(user.lang, atr, True)
                     )
                 else:
                     await bot.send_message(
@@ -86,10 +86,13 @@ async def send_start_by_user(
                 deposit=u_base.deposit,
                 risk=u_base.risk
             )
+        elif has_registered_now:
+            await first_start_with_calc(
+                bot, message, state, user
+            )
         else:
             await start_with_calc(
                 bot, message, state, user, int(id),
-                is_try=has_registered_now
             )
 
     elif user.role == 0:
@@ -115,7 +118,6 @@ async def start_with_calc(
     user: User,
     stat_id: int,
     stop_loss: float | None = None,
-    is_try=False
 ):
     await state.delete()
 
@@ -165,4 +167,31 @@ async def start_with_calc(
 
     new_id = db.add_calculation(new_calc)
     new_calc.id = new_id or -1
-    await send_calculation(bot, message, state, user, new_calc, True, is_try=is_try)
+    await send_calculation(bot, message, state, user, new_calc, True)
+
+
+async def first_start_with_calc(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+):
+    new_calc = Calculation(
+        id=-1,
+        userId=user.id,
+        currency='USDT',
+        deposit=10000,
+        riskValue=100,
+        market='crypto',
+        openPrice=62000,
+        stopLoss=61500,
+        tradingStyle=None,
+        tradingType='margin',
+        roundCount=None,
+        tool='BTC/USDT',
+        tpRatio=[3, 4, 5],
+        splitValues=None,
+        isFromDeposit=False,
+    )
+
+    await send_calculation(bot, message, state, user, new_calc, is_try=True)

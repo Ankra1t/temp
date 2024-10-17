@@ -336,39 +336,49 @@ def msg_enter_email(lang: LANGUAGES_TYPE):
     return f'👉 {texts[lang]}:'
 
 
-def msg_enter_tool(lang: LANGUAGES_TYPE, market: MARKETS_TYPE = 'crypto'):
-    texts = {
-        'ru': {
-            'main': 'Напишите Ваш <b>инструмент</b>',
-            'crypto': '<i>(например BTC или DOGE)</i>',
-            'RF': '<i>(например GAZP или SBER)</i>',
-            'USA': '<i>(например MCD или AMZN)</i>',
-        },
-        'en': {
-            'main': 'Enter Your <b>tool</b>',
-            'crypto': '<i>(ex. BTC or DOGE)</i>',
-            'RF': '<i>(ex. GAZP or SBER)</i>',
-            'USA': '<i>(ex. MCD or AMZN)</i>',
-        },
-        'uz': {
-            'main': 'Asbobingizni kiriting',
-            'crypto': '<i>(misol BTC yoki DOGE)</i>',
-            'RF': '<i>(misol GAZP yoki SBER)</i>',
-            'USA': '<i>(misol MCD yoki AMZN)</i>',
-        },
-        'tr': {
-            'main': 'Enstrümanınızı girin',
-            'crypto': '<i>(örnek BTC veya DOGE)</i>',
-            'RF': '<i>(örnek GAZP veya SBER)</i>',
-            'USA': '<i>(örnek MCD veya AMZN)</i>',
-        },
-    }
+def msg_enter_tool(lang: LANGUAGES_TYPE, market: MARKETS_TYPE = 'crypto', is_try=False):
+    if is_try:
+        texts = {
+            'ru': 'Ваш инструмент (например, BTC или DOGE)\n<u>Введите</u> SOL',
+            'en': 'Your tool (e.g. BTC or DOGE)\n<u>Enter</u> SOL',
+            'uz': 'Sizning vositangiz (masalan BTC yoki DOGE)\n<u>Kirmoq</u> SOL',
+            'tr': 'Aracın (örneğin BTC veya DOGE)\n<u>Girmek</u> SOL',
+        }
 
-    info = ''
-    if market in ('crypto', 'RF', 'USA'):
-        info = '\n' + texts[lang][market]
+        return texts[lang]
+    else:
+        texts = {
+            'ru': {
+                'main': 'Напишите Ваш <b>инструмент</b>',
+                'crypto': '<i>(например BTC или DOGE)</i>',
+                'RF': '<i>(например GAZP или SBER)</i>',
+                'USA': '<i>(например MCD или AMZN)</i>',
+            },
+            'en': {
+                'main': 'Enter Your <b>tool</b>',
+                'crypto': '<i>(ex. BTC or DOGE)</i>',
+                'RF': '<i>(ex. GAZP or SBER)</i>',
+                'USA': '<i>(ex. MCD or AMZN)</i>',
+            },
+            'uz': {
+                'main': 'Asbobingizni kiriting',
+                'crypto': '<i>(misol BTC yoki DOGE)</i>',
+                'RF': '<i>(misol GAZP yoki SBER)</i>',
+                'USA': '<i>(misol MCD yoki AMZN)</i>',
+            },
+            'tr': {
+                'main': 'Enstrümanınızı girin',
+                'crypto': '<i>(örnek BTC veya DOGE)</i>',
+                'RF': '<i>(örnek GAZP veya SBER)</i>',
+                'USA': '<i>(örnek MCD veya AMZN)</i>',
+            },
+        }
 
-    return f'👉 {texts[lang]["main"]}:  {info}'
+        info = ''
+        if market in ('crypto', 'RF', 'USA'):
+            info = '\n' + texts[lang][market]
+
+        return f'👉 {texts[lang]["main"]}:  {info}'
 
 
 def msg_enter_pair_price(lang: LANGUAGES_TYPE, pair: str):
@@ -397,6 +407,17 @@ def msg_enter_deposit(lang: LANGUAGES_TYPE, current: str | None = None):
     return f'👉 {texts[lang]}?' + current_value
 
 
+def msg_enter_first_deposit(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Первым делом, выставите размер депозита для торговли.\n<u>Введите</u> 1000',
+        'en': 'First, indicate your deposit, the sum you’re going to spend on the deal.\n<u>Enter</u> 1000',
+        'uz': 'Birinchidan, sizning omonatingizni ko\'rsating, siz shartnomada o\'tkazmoqchi bo\'lgan summani.\n1000 <u>kiriting</u>',
+        'tr': 'İlk olarak, depozitonuzu, anlaşmaya harcayacağınız toplamı belirtin.\n1000 <u>girin</u>',
+    }
+
+    return texts[lang]
+
+
 def msg_enter_market(lang: LANGUAGES_TYPE):
     info = {
         'ru': '<b>Выбирая</b> один из рынков, расчеты, функционал, статистика сделок - меняются.\n\nДля каждого рынка можете настроить свой <b>функционал</b> управления.',
@@ -415,7 +436,7 @@ def msg_enter_market(lang: LANGUAGES_TYPE):
         return "👉 Select trading <b>market</b>" + f'\n\n{info[lang]}'
 
 
-def msg_enter_risk_percent(lang: LANGUAGES_TYPE, is_first=False):
+def msg_enter_risk_percent(lang: LANGUAGES_TYPE):
     info = {
         'ru': """Трейдер заранее знает о убытках.
 Выберите <b>% или сумму риска</b> на каждую сделку, система возьмет на себя расчеты.
@@ -442,21 +463,32 @@ Her ticaret için risk % veya risk miktarını seçin, sistem hesaplamalarla ilg
         'tr': 'İşlem başına <b>riski</b> girin',
     }
 
-    dop = ''
-    if is_first:
-        if lang == 'ru':
-            dop = '<i>(проф трейдеры рискуют на каждую сделку не более 1% от депозита)</i>'
-        elif lang == 'en':
-            dop = '<i>(Professor traders risk for each transaction no more than 1% of the deposit)</i>'
-        elif lang == 'uz':
-            dop = '<i>(Har bir savdo uchun xavfni 1% dan oshirib bo\'lmaydi)</i>'
-        elif lang == 'tr':
-            dop = '<i>(Her işlem için risk %1\'den fazla olamaz)</i>'
-
     return f"""👉 {texts[lang]}
-{dop}
-{'' if is_first else f'{info[lang]}{ENTER}{ENTER}{msg_risk_info(lang)}'}
+
+{info[lang]}{ENTER}{ENTER}{msg_risk_info(lang)}
 """
+
+
+def msg_enter_first_risk_percent(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Риск на сделку (Проф. трейдеры рискуют на каждую сделку не более 1% от депозита)\n<u>Введите</u> 1%',
+        'en': 'Risk per deal (Professional traders risk no more than 1% of the deposit per deal)\n<u>Enter</u> 1%',
+        'uz': 'Bitim uchun xavf (professional savdogarlar bitimning 1% omonatning 1% dan ko\'pi xavf ostida)\n<u>Kirmoq</u> 1%',
+        'tr': 'Anlaşma başına risk (profesyonel tüccarlar, anlaşma başına depozitonun% 1\'inden fazlası yok)\n<u>Girmek</u> 1%',
+    }
+
+    return texts[lang]
+
+
+def msg_enter_first_currency(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Введите валюту (Выберите USDT для тестового расчета, затем вы сможете изменить валюту, зайдя в Настройки – Настроить торговлю)\n<u>Введите</u> USDT',
+        'en': 'Enter the currency (Choose USDT for the example calculation, then you can change it in the Settings – Configure trading)\n<u>Enter</u> USDT',
+        'uz': 'Valyutani kiriting (misol hisoblash uchun USDT-ni tanlang – keyin uni sozlamalarda o\'zgartirishingiz mumkin-savdoni Sozlash) \nUSDT <u>kiriting</u>',
+        'tr': 'Para birimini girin (Örnek hesaplama için usdt\'yi seçin, ardından Ayarlarda değiştirebilirsiniz - Ticareti yapılandır)\nUSDT <u>Girin</u>',
+    }
+
+    return texts[lang]
 
 
 def msg_enter_day_risk(lang: LANGUAGES_TYPE):
@@ -573,31 +605,51 @@ def msg_enter_pair(lang: LANGUAGES_TYPE):
 
 
 def msg_enter_open_price(lang: LANGUAGES_TYPE, is_try=False):
-    texts = {
-        'ru': 'По какой цене <b>войдёте</b> в сделку',
-        'en': 'Enter the <b>opening price</b> of the deal',
-        'uz': 'Savdoning ochilish narxini tanlang',
-        'tr': 'İşlem açılış fiyatını girin',
-    }
+    if is_try:
+        texts = {
+            'ru': 'Цена входа в сделку (цена, по которой вы войдете в сделку согласно графику)\n<u>Введите</u> 156.04',
+            'en': 'The entry price of the deal (the price at which you enter the deal according to the chart)\n<u>Enter</u> 156.04',
+            'uz': 'Bitimning kirish narxi (jadvalga muvofiq bitimni kiritgan narx)\n156.04 <u>kiriting</u>',
+            'tr': 'Anlaşmanın giriş fiyatı (anlaşmaya grafiğe göre girdiğiniz fiyat)\n156.04 <u>Girin</u>',
+        }
 
-    return f"""👉 {texts[lang]}:"""
+        return texts[lang]
+    else:
+        texts = {
+            'ru': 'По какой цене <b>войдёте</b> в сделку',
+            'en': 'Enter the <b>opening price</b> of the deal',
+            'uz': 'Savdoning ochilish narxini tanlang',
+            'tr': 'İşlem açılış fiyatını girin',
+        }
+
+        return f"""👉 {texts[lang]}:"""
 
 
 def msg_enter_stop_loss(lang: LANGUAGES_TYPE, is_try=False, send_stat: Calculation | None = None):
-    dop = ''
-    if send_stat:
-        dop = msg_sended_data(lang, send_stat)
+    if is_try:
+        texts = {
+            'ru': 'Цена стол-лосса сделки (цена, ниже или выше которой ваша сделка не будет активна, фиксация убытка)\n<u>Введите</u> 152.74',
+            'en': 'The stop loss price of the deal (the price achieving which you leave the deal as not to lose your money)\n<u>Enter</u> 152.74',
+            'uz': 'Bitimning stop loss narxi (pulingizni yo\'qotmaslik uchun bitimni qoldirgan narx)\n152.74 <u>kiriting</u>',
+            'tr': 'Anlaşmanın stop loss fiyatı (paranızı kaybetmemek için anlaşmadan ayrıldığınız fiyat)\n152.74 <u>Girin</u>',
+        }
 
-    if lang == 'ru':
-        text = 'По какой цене будете <b>фиксировать</b> убыток:'
-    elif lang == 'uz':
-        text = 'Stop loss narxini tanlang:'
-    elif lang == 'tr':
-        text = 'Stop loss fiyatını girin:'
+        return texts[lang]
     else:
-        text = 'Enter the <b>stop loss</b> price'
+        dop = ''
+        if send_stat:
+            dop = msg_sended_data(lang, send_stat)
 
-    return f'{dop}👉 {text}'
+        if lang == 'ru':
+            text = 'По какой цене будете <b>фиксировать</b> убыток:'
+        elif lang == 'uz':
+            text = 'Stop loss narxini tanlang:'
+        elif lang == 'tr':
+            text = 'Stop loss fiyatını girin:'
+        else:
+            text = 'Enter the <b>stop loss</b> price'
+
+        return f'{dop}👉 {text}'
 
 
 def msg_enter_atr(lang: LANGUAGES_TYPE, send_stat: Calculation | None = None):

@@ -103,7 +103,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             buttons.append(btn_continue_calc)
         btn_calc = getButton(
             '⌨️ ' + texts[lang]['calc'],
-            'calc', saved, stat_id,
+            'calc', saved, stat_id if not is_first else -111,
         )
         buttons.append(btn_calc)
 
