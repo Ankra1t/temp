@@ -767,14 +767,14 @@ def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
             'trailing': 'Ск. стоп',
             'cancelAt': 'Отмена',
             'autoStop': 'Авто стоп',
-            'autoTake': 'Авто тейк',
+            'autoTake': 'Свой тейк',
         },
         'en': {
             'main': 'Calc is active',
             'trailing': 'Tr. stop',
             'cancelAt': 'Cancel',
             'autoStop': 'Auto stop',
-            'autoTake': 'Auto take',
+            'autoTake': 'Your take',
         },
         'uz': {
             'main': 'Calc faol',

@@ -1122,14 +1122,14 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
             'cancelAt': 'Время отмены',
             'tr_stop': 'Ск. стоп',
             'auto_stop': 'Авто стоп',
-            'auto_take': 'Авто тейк',
+            'auto_take': 'Свой тейк',
             'cancel': 'Отменить сделку',
         },
         'en': {
             'cancelAt': 'Cancel at',
             'tr_stop': 'Trailing stop',
             'auto_stop': 'Auto stop',
-            'auto_take': 'Auto take',
+            'auto_take': 'Your take',
             'cancel': 'Cancel the deal',
         },
         'uz': {

@@ -765,14 +765,14 @@ def msg_active_settings(
             'trailing': 'Ск. стоп',
             'cancelAt': 'Отмена через (часов)',
             'autoStop': 'Авто стоп',
-            'autoTake': 'Авто тейк',
+            'autoTake': 'Свой тейк',
         },
         'en': {
             'main': 'Setting of active trades',
             'trailing': 'Tr. stop',
             'cancelAt': 'Cancellation after (hours)',
             'autoStop': 'Auto stop',
-            'autoTake': 'Auto take',
+            'autoTake': 'Your take',
         },
         'uz': {
             'main': 'Faol savdolarni sozlash',

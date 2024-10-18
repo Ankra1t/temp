@@ -194,6 +194,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'close_price': 'Цена закрытия',
 
             'active': 'Активировать сделку',
+            'refresh': 'Обновить',
             'active_p': 'Параметры активации',
         },
         'en': {
@@ -215,6 +216,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'close_price': 'Close price',
 
             'active': 'Activate the deal',
+            'refresh': 'Refresh',
             'active_p': 'Activation params',
         },
         'uz': {
@@ -236,6 +238,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'close_price': 'Yopish narxi',
 
             'active': 'Bitimni faollashtirish',
+            'refresh': 'Yangilamoq',
             'active_p': 'Faollashtirish parametrlari',
         },
         'tr': {
@@ -258,6 +261,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
 
             'active': 'Anlaşmayı etkinleştir',
+            'refresh': 'Yenilemek',
             'active_p': 'Aktivasyon paramleri',
         },
     }
@@ -361,6 +365,10 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 getButton(
                     '⚡️ ' + texts[lang]['active_p'],
                     'active_calc', calc.id
+                ),
+                getButton(
+                    '🔄',
+                    'refresh', calc.id
                 )
             )
 
@@ -713,7 +721,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Время отмены',
             'tr_stop': 'Ск. стоп',
             'auto_stop': 'Авто стоп',
-            'auto_take': 'Авто тейк',
+            'auto_take': 'Свой тейк',
             'cancel': 'Отменить сделку',
             'profit': 'Закрыть сделку',
         },
@@ -721,7 +729,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Cancel at',
             'tr_stop': 'Trailing stop',
             'auto_stop': 'Auto stop',
-            'auto_take': 'Auto take',
+            'auto_take': 'Your take',
             'cancel': 'Cancel the deal',
             'profit': 'Close the deal ',
         },
