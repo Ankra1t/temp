@@ -143,9 +143,9 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             keyboard.add(*buttons)
             buttons = []
 
-            keyboard.add(
-                getButton(f'⚡️ {texts[lang]["active"]}', 'active')
-            )
+            # keyboard.add(
+            #     getButton(f'⚡️ {texts[lang]["active"]}', 'active')
+            # )
 
             if isAdmin:
                 btn_stats = getButton('Расчёты канaла', 'channels')

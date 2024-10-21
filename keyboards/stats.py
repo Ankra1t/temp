@@ -353,24 +353,24 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
             )
 
-        if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
-            keyboard.add(
-                getButton(
-                    '⚡️ ' + texts[lang]['active'],
-                    'active_calc_a', calc.id
-                )
-            )
-        elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
-            keyboard.add(
-                getButton(
-                    '⚡️ ' + texts[lang]['active_p'],
-                    'active_calc', calc.id
-                ),
-                getButton(
-                    '🔄',
-                    'refresh', calc.id
-                )
-            )
+        # if isActiveCalcSub and calc.ActiveCalc is None and calc.status == 'WAIT':
+        #     keyboard.add(
+        #         getButton(
+        #             '⚡️ ' + texts[lang]['active'],
+        #             'active_calc_a', calc.id
+        #         )
+        #     )
+        # elif calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+        #     keyboard.add(
+        #         getButton(
+        #             '⚡️ ' + texts[lang]['active_p'],
+        #             'active_calc', calc.id
+        #         ),
+        #         getButton(
+        #             '🔄',
+        #             'refresh', calc.id
+        #         )
+        #     )
 
     return keyboard
 
