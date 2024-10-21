@@ -139,6 +139,18 @@ def getWeekStat(calcId: int | None = None):
 
 
 @session_decorator
+def getActiveStats(calcId: int):
+    res = session.get(
+        f'{API_URL}/calculations/activeStatsByCalc/{calcId}',
+    )
+
+    if not check_response(res):
+        return
+
+    return res.json()
+
+
+@session_decorator
 def getLiveInfo():
     res = session.get(
         f'{API_URL}/channelCalc/live-info',
@@ -161,6 +173,7 @@ def updateLiveInfo(data: SentMessages):
         return
 
     return True
+
 
 @session_decorator
 def getMonthToolCount(tool: str):

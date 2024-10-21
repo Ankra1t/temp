@@ -1,3 +1,4 @@
+from operator import is_
 from random import randint
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
@@ -151,8 +152,8 @@ class ChannelPost():
                     }
                 )
 
-        if updateLive and send_data is not None:
-            await self.send_stats(calc.id)
+        if updateLive:
+            await self.send_stats(calc.id, send_data is None)
 
     async def send_live(
         self,
@@ -342,7 +343,7 @@ class ChannelPost():
                 )
             )
 
-    async def send_stats(self, calcId: int | None = None):
+    async def send_stats(self, calcId: int | None = None, is_active=False):
         texts = {
             'ru': {
                 'title': '⚡️ <b>Результаты на эту неделю</b>',
@@ -376,27 +377,33 @@ class ChannelPost():
             },
         }
 
-        lang = 'ru'
-        data = channel_calc.getWeekStat(calcId)
-        if data is None:
-            msg = texts[lang]["title"]
+        if not is_active:
+            lang = 'ru'
+            data = channel_calc.getWeekStat(calcId)
+            if data is None:
+                msg = texts[lang]["title"]
 
-            mes = await self.bot.send_message(
-                RESULTS_CHANNEL_ID, msg,
-            )
+                mes = await self.bot.send_message(
+                    RESULTS_CHANNEL_ID, msg,
+                )
 
-            channel_calc.createWeekStat(
-                [RESULTS_CHANNEL_ID], [mes.id], [lang]
-            )
+                channel_calc.createWeekStat(
+                    [RESULTS_CHANNEL_ID], [mes.id], [lang]
+                )
 
-        data = channel_calc.getWeekStat(calcId)
-        if data is None:
-            return
+        if not is_active:
+            data = channel_calc.getWeekStat(calcId)
+            if data is None:
+                return
+        else:
+            data = channel_calc.getActiveStats(calcId or 0)
+            if data is None:
+                return
 
         ch_mes = data.get('messages', {})
-        chIds: list[str] = ch_mes.get('chIds', [])
-        mesIds: list[str] = ch_mes.get('mesIds', [])
-        langs: list[Literal['ru', 'en']] = ch_mes.get('langs', [])
+        chIds: list[str] = ch_mes.get('chIds', []) if not is_active else [str(TOURNAMENT_CHANNEL_ID)]
+        mesIds: list[str] = ch_mes.get('mesIds', []) if not is_active else [str(1231)]
+        langs: list[Literal['ru', 'en']] = ch_mes.get('langs', []) if not is_active else ['ru']
 
         marathon_data: list[float | None] = data.get('marathon')
         marathon = ''
@@ -430,12 +437,16 @@ class ChannelPost():
         for chId_i, chId in enumerate(chIds):
             lang = langs[chId_i]
 
-            startDate = data.get('startDate')
-            endDate = data.get('endDate')
-
             values: list[dict] = data.get('values')
 
-            msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
+            if not is_active:
+                startDate = data.get('startDate')
+                endDate = data.get('endDate')
+
+
+                msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
+            else:
+                msg = 'Статистика трейдера'
 
             all_tp_count = 0
             all_sl_count = 0
@@ -500,10 +511,14 @@ class ChannelPost():
                             else:
                                 long_count += 1
 
-                    calc_chId = calc_messages.get('chIds', [None])[0]
-                    calc_mesId = calc_messages.get('mesIds', [None])[0]
-                    link_start = f'<a href="https://t.me/c/{calc_chId.replace("-100", "")}/{calc_mesId}">' if calc_mesId is not None else ''
-                    link_end = '</a>' if calc_mesId is not None else ''
+                    link_start = ''
+                    link_end = ''
+
+                    if calc_messages:
+                        calc_chId = calc_messages.get('chIds', [None])[0]
+                        calc_mesId = calc_messages.get('mesIds', [None])[0]
+                        link_start = f'<a href="https://t.me/c/{calc_chId.replace("-100", "")}/{calc_mesId}">' if calc_mesId is not None else ''
+                        link_end = '</a>' if calc_mesId is not None else ''
 
                     tool = value.get("tool")
                     tool_num = ''
