@@ -200,7 +200,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if not stat_id:
                 return
 
-            stat = calculation.get(stat_id)
+            stat = calculation.get(userId=user.id, calcId=stat_id)
             if stat is None:
                 return
 
@@ -236,7 +236,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if 'f_direct' in type:
                 await state.delete()
 
-                calc = calculation.get(int(stat_id))
+                calc = calculation.get(userId=user.id, calcId=int(stat_id))
                 if calc is None:
                     return
 

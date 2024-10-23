@@ -6,7 +6,7 @@ from config_global import API_URL
 
 
 @session_decorator
-def registration(userId: int, username: str | None = None, referId: int | None = None):
+def registration(*, userId: int, username: str | None = None, referId: int | None = None):
     data = {
         'tgId': userId,
         'tgUsername': username,
@@ -25,7 +25,7 @@ def registration(userId: int, username: str | None = None, referId: int | None =
 
 
 @session_decorator
-def addUserNotificationMessages(userId: int, value: SentMessages, lang: str, num: int):
+def addUserNotificationMessages(*, userId: int, value: SentMessages, lang: str, num: int):
     data = {
         'chIds': value.chIds,
         'mesIds': value.mesIds,
@@ -46,7 +46,7 @@ def addUserNotificationMessages(userId: int, value: SentMessages, lang: str, num
 
 
 @session_decorator
-def getUserNotificationMessages(userId: int):
+def getUserNotificationMessages(*, userId: int):
     res = session.get(f'{API_URL}/users/{userId}/notMessages')
 
     if not check_response(res):
@@ -56,9 +56,9 @@ def getUserNotificationMessages(userId: int):
 
 
 @session_decorator
-def change_password(id: int, password: str):
+def change_password(*, userId: int, password: str):
     data = {
-        'id_telegram': id,
+        'id_telegram': userId,
         'password': password,
     }
 
@@ -74,7 +74,7 @@ def change_password(id: int, password: str):
 
 
 @session_decorator
-def get_site_code(userId: int):
+def get_site_code(*, userId: int):
     data: dict[str, str | int] = {
         'id': userId,
     }

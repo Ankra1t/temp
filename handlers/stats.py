@@ -43,12 +43,12 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
     logger.info(f'callback "handle_loss" user_tg_id={user.tgId} value={value}')
 
     calcService.set_profit(stat_id, -abs(value))
-    calc_info = calculation.get(stat_id)
+    calc_info = calculation.get(userId=user.id, calcId=stat_id)
     if calc_info is None:
         return
 
     calculation.update(
-        stat_id, status='FINISH'
+        userId=user.id, calcId=stat_id, status='FINISH'
     )
 
     send_data = channel_calc.getByCalc(stat_id)
@@ -75,9 +75,10 @@ async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateCo
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    logger.info(f'callback "handle_close_price" user_tg_id={user.tgId} value={value}')
+    logger.info(
+        f'callback "handle_close_price" user_tg_id={user.tgId} value={value}')
 
-    calc = calculation.get(calc_id)
+    calc = calculation.get(userId=user.id, calcId=calc_id)
     send_data = channel_calc.getByCalc(calc_id)
     if calc is None or (calc.ActiveCalc and not send_data):
         return
@@ -86,7 +87,7 @@ async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateCo
 
     calcService.set_profit(calc_id, calc.riskValue * value_count)
     calc = calculation.update(
-        calc_id, status='FINISH'
+        userId=user.id, calcId=calc_id, status='FINISH'
     )
 
     if calc:
@@ -110,12 +111,12 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
     logger.info(f'callback "handle_sum" user_tg_id={user.tgId} value={value}')
 
     calcService.set_profit(stat_id, value)
-    calc_info = calculation.get(stat_id)
+    calc_info = calculation.get(userId=user.id, calcId=stat_id)
     if calc_info is None:
         return
 
     calculation.update(
-        stat_id, status='FINISH'
+        userId=user.id, calcId=stat_id, status='FINISH'
     )
 
     send_data = channel_calc.getByCalc(stat_id)
@@ -196,7 +197,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
 
     data = {}
 
-    calc = calculation.get(stat_id)
+    calc = calculation.get(userId=user.id, calcId=stat_id)
     if calc is None:
         return
 
@@ -215,7 +216,8 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
             data['description'] = text
 
     calc = calculation.update(
-        stat_id,
+        userId=user.id,
+        calcId=stat_id,
         **data
     )
     if calc is None:
@@ -252,7 +254,7 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
         )
 
 
-async def handle_send_text(message: Message, bot: AsyncTeleBot, state: StateContext):
+async def handle_send_text(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -267,13 +269,13 @@ async def handle_send_text(message: Message, bot: AsyncTeleBot, state: StateCont
     async with state.data() as data:
         stat_id = data['stat_id']
 
-    calculation.update(stat_id, description=new_text)
+    calculation.update(userId=user.id, calcId=stat_id, description=new_text)
 
     await state.delete()
     await send_confirm_calc_send(bot, message, stat_id, True)
 
 
-async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateContext):
+async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -291,7 +293,7 @@ async def handle_send_photo(message: Message, bot: AsyncTeleBot, state: StateCon
     async with state.data() as data:
         stat_id = data.get('stat_id', 0)
 
-    calculation.update(stat_id, photo=new_photo.file_id)
+    calculation.update(userId=user.id, calcId=stat_id, photo=new_photo.file_id)
 
     await state.delete()
     await send_confirm_calc_send(bot, message, stat_id, True)
@@ -313,7 +315,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    calc = calculation.get(stat_id)
+    calc = calculation.get(userId=user.id, calcId=stat_id)
     send_data = channel_calc.getByCalc(stat_id)
 
     if calc and not (calc.ActiveCalc and not send_data):
@@ -322,7 +324,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
             abs(value) * (-1 if type == 'stop' else 1)
         )
         calc = calculation.update(
-            stat_id, status='FINISH'
+            userId=user.id, calcId=stat_id, status='FINISH'
         )
 
     if not calc:
@@ -417,7 +419,7 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
     elif action == 'send_settings':
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        calc = calculation.updateCancelAt(calc_id, value)
+        calc = calculation.updateCancelAt(userId=user.id, id=calc_id, minutes=value)
 
         if calc:
             send_data = channel_calc.getByCalc(calc.id)
@@ -448,7 +450,7 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    calc = calculation.get(calc_id)
+    calc = calculation.get(userId=user.id, calcId=calc_id)
     if calc is None:
         return
 
@@ -468,7 +470,7 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    calc = calculation.update(calc_id, newStop=value)
+    calc = calculation.update(userId=user.id, calcId=calc_id, newStop=value)
 
     if calc:
         await send_admin_channel_calc_item(
@@ -498,10 +500,10 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         await send_active_settings(bot, message, state, user, True)
     else:
         calculation.updateActive(
-            calc_id, trailingStopCount=value
+            userId=user.id, id=calc_id, trailingStopCount=value
         )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc:
             await send_calculation(bot, message, state, user, calc, True, is_activate=True)
 

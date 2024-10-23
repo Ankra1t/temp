@@ -124,7 +124,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 async with state.data() as data:
                     stat_id = data.get('stat_id', 0)
 
-                calc_info = calculation.get(stat_id)
+                calc_info = calculation.get(userId=user.id, calcId=stat_id)
                 if calc_info is None:
                     return
 
@@ -219,7 +219,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     )
 
                     sent_messages = auth.getUserNotificationMessages(
-                        user.id
+                        userId=user.id
                     )
 
                     if sent_messages:

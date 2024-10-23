@@ -233,7 +233,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         else:
             is_cancel = False
 
-            calc_info = calculation.get(calc_id)
+            calc_info = calculation.get(userId=user.id, calcId=calc_id)
             if calc_info is None:
                 return
 
@@ -265,7 +265,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 else:
                     is_cancel = True
 
-                calc_info = calculation.get(calc_id)
+                calc_info = calculation.get(userId=user.id, calcId=calc_id)
                 if calc_info is None:
                     return
 
@@ -273,7 +273,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
                 if not is_cancel:
                     calculation.update(
-                        calc_id, status='FINISH'
+                        userId=user.id, calcId=calc_id, status='FINISH'
                     )
                     if send_data is not None:
                         tickerInfo = ticker.get_info(calc_info.tool or '')
@@ -305,7 +305,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_main(bot, call.message, state, user)
 
     if type == 'go_stats':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is not None and not calc.openedList:
             try:
                 await bot.edit_message_reply_markup(
@@ -330,7 +330,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'back_calc' or type == 'refresh':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
 
         if calc is not None:
             if type != 'refresh' or calc.status != 'WAIT':
@@ -340,7 +340,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     pass
 
     if type == 'result_calc':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is not None:
             is_access = await pay_guard.valid_use_calc(user.tgId, bot)
             await bot.edit_message_reply_markup(
@@ -368,7 +368,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             media = call.message.photo[-1].file_id if call.message.photo else None
 
             is_valid = await pay_guard.valid_use_calc(user.tgId, bot)
-            calc_info = calculation.get(calc_id)
+            calc_info = calculation.get(userId=user.id, calcId=calc_id)
 
             await edit_message(
                 bot, call.message, prev_type,  # type: ignore
@@ -394,7 +394,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             )
 
     if 'ch_c' in type:
-        calc_info = calculation.get(calc_id)
+        calc_info = calculation.get(userId=user.id, calcId=calc_id)
         type_arr = type.split('+')
         kind = ''
 
@@ -460,7 +460,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 del_mes_id=call.message.id
             )
         elif kind == 'tool':
-            calc = calculation.get(calc_id)
+            calc = calculation.get(userId=user.id, calcId=calc_id)
             if calc is None or calc.ActiveCalc:
                 return
 
@@ -493,7 +493,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 del_mes_id=call.message.id
             )
         elif 'take' in kind:
-            calc = calculation.get(calc_id)
+            calc = calculation.get(userId=user.id, calcId=calc_id)
 
             if calc:
                 await bot.edit_message_text(
@@ -508,7 +508,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         _, rate = type.split('+')
         rate = int(rate)
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc and len(calc.tpRatio) != 1:
             if rate in calc.tpRatio:
                 calc.tpRatio.remove(rate)
@@ -516,7 +516,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 calc.tpRatio.append(rate)
                 calc.tpRatio.sort()
 
-            calc = calculation.update(calc.id, tpRatio=calc.tpRatio)
+            calc = calculation.update(userId=user.id, calcId=calc.id, tpRatio=calc.tpRatio)
             if calc:
                 await bot.edit_message_text(
                     msg_calculation(user.lang, calc),
@@ -526,7 +526,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 )
 
     if 'del_img_txt' in type:
-        calc = calculation.update(calc_id, photo=None, description=None)
+        calc = calculation.update(userId=user.id, calcId=calc_id, photo=None, description=None)
         if calc is None:
             return
 
@@ -536,7 +536,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc)
 
     if 'add_img_text' in type:
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -555,7 +555,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'comment':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -576,7 +576,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'stc+send':
         send_data = channel_calc.getByCalc(calc_id)
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if send_data is None or calc is None:
             return
 
@@ -601,7 +601,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'stc+rescreen':
         send_data = channel_calc.getByCalc(calc_id)
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None or send_data is None:
             return
 
@@ -649,7 +649,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if main_mes.photo is not None and len(main_mes.photo) > 0:
             photo_str = main_mes.photo[-1].file_id
 
-        calculation.update(calc_id, photo=photo_str)
+        calculation.update(userId=user.id, calcId=calc_id, photo=photo_str)
         await bot.delete_message(chat_id, mes_id)
 
     if type == 'stc+time':
@@ -671,7 +671,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'stc+stop':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is None or calc is None or calc.stopLoss == -1:
             return
@@ -713,18 +713,18 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             value = float(value)
 
         calculation.updateActive(
-            calc_id,
+            userId=user.id, id=calc_id,
             trailingStopCount=value
         )
 
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'result_cancel':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc and not (calc.ActiveCalc and not send_data and calc.status == 'WAIT'):
             calc = calculation.update(
-                calc_id, status='CANCEL'
+                userId=user.id, calcId=calc_id, status='CANCEL'
             )
 
             if calc is None:
@@ -738,11 +738,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_deal':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc and not (calc.ActiveCalc and not send_data):
             calc = calculation.update(
-                calc_id, status='DEAL'
+                userId=user.id, calcId=calc_id, status='DEAL'
             )
 
             if calc and send_data:
@@ -753,11 +753,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_wait':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc and not (calc.ActiveCalc and not send_data):
             calc = calculation.update(
-                calc_id, status='WAIT'
+                userId=user.id, calcId=calc_id, status='WAIT'
             )
             if calc is None:
                 return
@@ -770,7 +770,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_take':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc and not (calc.ActiveCalc and not send_data):
             await bot.edit_message_reply_markup(
@@ -787,7 +787,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             )
 
     if type == 'result_stop':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc and not (calc.ActiveCalc and not send_data):
             await bot.edit_message_reply_markup(
@@ -808,9 +808,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_calc_list(bot, call.message, state, user, list_type, page)
 
     if type == 'active_calc_a':
-        calculation.activate(calc_id)
+        calculation.activate(userId=user.id, id=calc_id)
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
 
         if calc:
             if calc.photo:
@@ -823,7 +823,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     new_file.write(file_bytes)
 
                 with open(name, 'rb') as file:
-                    data = calculation.sendPhoto(file)
+                    data = calculation.sendPhoto(userId=user.id, file=file)
 
                 os.remove(name)
 
@@ -833,7 +833,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         type = 'active_calc'
 
     if type == 'active_calc':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc:
             await send_calculation(
                 bot, call.message, state, user, calc, is_activate=True
@@ -853,7 +853,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if 'cancel_at+' in type:
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if not calc or calc.status != 'WAIT':
             return
 
@@ -868,7 +868,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         else:
             time = 60 * 24
 
-        calc = calculation.updateCancelAt(calc_id, time)
+        calc = calculation.updateCancelAt(userId=user.id, id=calc_id, minutes=time)
 
         if calc:
             if 'stc_' in type:
@@ -897,20 +897,20 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             value = float(value)
 
         calculation.updateActive(
-            calc_id,
+            userId=user.id, id=calc_id,
             trailingStopCount=value
         )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc:
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if type == 'auto_stop':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
 
         if calc and calc.ActiveCalc:
             new_val = not calc.ActiveCalc.autoStop
-            calculation.updateActive(calc_id, autoStop=new_val)
+            calculation.updateActive(userId=user.id, id=calc_id, autoStop=new_val)
             calc.ActiveCalc.autoStop = new_val
 
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
@@ -925,17 +925,17 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if 'auto_take+' in type:
         _, val = type.split('+')
 
-        calculation.updateActive(calc_id, autoTake=float(val))
-        calc = calculation.get(calc_id)
+        calculation.updateActive(userId=user.id, id=calc_id, autoTake=float(val))
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc:
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if type == 'active_end':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if not calc or calc.status != 'DEAL':
             return
 
-        calc = calculation.finishActive(calc_id)
+        calc = calculation.finishActive(userId=user.id, id=calc_id)
 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
@@ -943,12 +943,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'cancel':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if not calc or calc.status != 'WAIT':
             return
 
         calc = calculation.update(
-            calc_id,
+            userId=user.id, calcId=calc_id,
             status='CANCEL'
         )
 

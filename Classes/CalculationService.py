@@ -66,10 +66,10 @@ class CalculationService():
     def __init__(self, db: Database, currencyService: CurrencyService) -> None:
         self.db = db
         self.currencyService = currencyService
-
+    # !deprecated
     def set_profit(self, calc_id: int, value: float):
         # Находим данный расчет по статистике
-        calc_info = calculation.get(calc_id)
+        calc_info = calculation.get(userId=1, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc_info is None or (calc_info.ActiveCalc is not None and send_data is None):
             return
@@ -79,7 +79,7 @@ class CalculationService():
         self.db.set_calculation_in_stat(calc_id, True)
 
         # Находим данный расчет по статистике
-        calc_info = calculation.get(calc_id)
+        calc_info = calculation.get(userId=1, calcId=calc_id)
         if calc_info is None:
             return
 

@@ -11,7 +11,7 @@ async def _handler(member: ChatMemberUpdated):
     if member.new_chat_member.status == 'kicked':
         db.set_user_tg_block(user_db_id, True)
 
-        sent_messages = auth.getUserNotificationMessages(user_db_id)
+        sent_messages = auth.getUserNotificationMessages(userId=user_db_id)
 
         if sent_messages:
             await notifier.change_user_blocked(user_db_id, sent_messages)

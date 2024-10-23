@@ -32,7 +32,7 @@ async def send_start_by_user(
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
         send_data = channel_calc.getByCalc(int(id))
-        calc = calculation.get(int(id))
+        calc = calculation.get(userId=user.id, calcId=int(id))
 
         u_base = db.get_calc_user_settings(user.id)
         if send_data is None or calc is None or u_base is None:
@@ -121,7 +121,7 @@ async def start_with_calc(
 ):
     await state.delete()
 
-    calc = calculation.get(int(stat_id))
+    calc = calculation.get(userId=user.id, calcId=int(stat_id))
     if calc is None:
         return
 

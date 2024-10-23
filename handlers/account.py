@@ -14,7 +14,6 @@ from messages.common import msg_success_edit
 from messages.profile import msg_enter_nickname
 
 
-
 async def handle_new_password(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -30,7 +29,7 @@ async def handle_new_password(message: Message, bot: AsyncTeleBot, state: StateC
         )
         return
 
-    response = auth.change_password(user_id, new_pass)
+    response = auth.change_password(userId=user_id, password=new_pass)
 
     if response:
         await bot.send_message(chat_id, 'Пароль успешно изменен')

@@ -421,7 +421,7 @@ def kb_deal_result(lang: LANGUAGES_TYPE, stat_id: int):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    calc_info = calculation.get(stat_id)
+    calc_info = calculation.get(userId=1, calcId=stat_id)
     tp: list[int] = getattr(calc_info, 'tpRatio', [])
 
     buttons = []
@@ -590,7 +590,7 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
 
 def kb_confirm_channel_post(calc_id: int):
     send_data = channel_calc.getByCalc(calc_id)
-    calc = calculation.get(calc_id)
+    calc = calculation.get(userId=1, calcId=calc_id)
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)
 

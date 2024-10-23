@@ -54,7 +54,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
 
             user_db_id = db.get_user_id_by_tg_id(user_id)
             if 'live' in type:
-                data = calculation.getWeekStats(user_db_id)
+                data = calculation.getWeekStats(userId=user_db_id)
                 if not data:
                     return
                 num = 0
@@ -86,7 +86,7 @@ async def handle_livepost(message: Message, bot: AsyncTeleBot, state: StateConte
                             break
 
             calc_id = int(res_id)
-            calc = calculation.get(calc_id)
+            calc = calculation.get(userId=user.id, calcId=calc_id)
             if calc is None:
                 return
 

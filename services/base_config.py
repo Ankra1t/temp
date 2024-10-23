@@ -13,8 +13,14 @@ def session_decorator(func):
     def wrapper(*args, **kwargs):
         access_token = db.get_access_token() or ''
         session.headers.update({
-            'tg-api-key': access_token
+            'tg-api-key': access_token,
         })
+
+        userId = kwargs.get('userId') or 1
+        if userId:
+            session.headers.update({
+                'tg-user-id': str(userId)
+            })
 
         try:
             result = func(*args, **kwargs)

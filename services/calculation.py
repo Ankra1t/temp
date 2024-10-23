@@ -16,7 +16,7 @@ class UpdateActiveCalc(TypedDict):
 
 
 @session_decorator
-def getByUser(userId: int):
+def getByUser(*, userId: int):
     data = {
         'userId': userId
     }
@@ -31,7 +31,7 @@ def getByUser(userId: int):
 
 
 @session_decorator
-def getByUserList(userId: int, type: Literal['deal', 'wait', 'done', 'canceled']):
+def getByUserList(*, userId: int, type: Literal['deal', 'wait', 'done', 'canceled']):
     data = {
         'userId': userId
     }
@@ -73,8 +73,8 @@ def getByUserList(userId: int, type: Literal['deal', 'wait', 'done', 'canceled']
 
 
 @session_decorator
-def get(id: int):
-    res = session.get(f'{API_URL}/calculations/{id}')
+def get(*, userId: int, calcId: int):
+    res = session.get(f'{API_URL}/calculations/{calcId}')
     if not check_response(res):
         return
 
@@ -96,7 +96,7 @@ def get(id: int):
 
 
 @session_decorator
-def getWeekStats(userId: int):
+def getWeekStats(*, userId: int):
     data = {
         'userId': userId
     }
@@ -113,10 +113,13 @@ def getWeekStats(userId: int):
 
 @session_decorator
 def update(
-    id: int, **kwargs
+    *,
+    userId: int,
+    calcId: int,
+    **kwargs
 ):
     res = session.post(
-        f'{API_URL}/calculations/{id}',
+        f'{API_URL}/calculations/{calcId}',
         json.dumps(kwargs).encode()
     )
 
@@ -128,7 +131,7 @@ def update(
 
 @session_decorator
 def updateCancelAt(
-    id: int, minutes: int | None
+    *, userId: int, id: int, minutes: int | None
 ):
     res = session.post(
         f'{API_URL}/calculations/{id}/cancelAt',
@@ -145,7 +148,7 @@ def updateCancelAt(
 
 @session_decorator
 def updateActive(
-    id: int, **data: Unpack[UpdateActiveCalc]
+    *, userId: int, id: int, **data: Unpack[UpdateActiveCalc]
 ):
     res = session.post(
         f'{API_URL}/calculations/{id}/updateActive',
@@ -160,7 +163,7 @@ def updateActive(
 
 @session_decorator
 def activate(
-    id: int
+    *, userId: int, id: int
 ):
     res = session.post(
         f'{API_URL}/calculations/{id}/activate',
@@ -174,7 +177,7 @@ def activate(
 
 @session_decorator
 def finishActive(
-    id: int
+    *, userId: int, id: int
 ):
     res = session.post(
         f'{API_URL}/calculations/{id}/finishActive',
@@ -188,7 +191,7 @@ def finishActive(
 
 @session_decorator
 def getActiveStatsByUser(
-    id: int
+    *, userId: int, id: int
 ):
     res = session.get(
         f'{API_URL}/calculations/userActiveStats/{id}',
@@ -202,7 +205,7 @@ def getActiveStatsByUser(
 
 @session_decorator
 def getActiveCalcsByUser(
-    id: int, finished=False
+    *, userId: int, id: int, finished=False
 ):
     res = session.get(
         f'{API_URL}/calculations/activeByUser/{id}?finished={"true" if finished else "false"}',
@@ -216,7 +219,7 @@ def getActiveCalcsByUser(
 
 @session_decorator
 def sendPhoto(
-    file: BufferedReader
+    *, userId: int, file: BufferedReader
 ):
     res = session.post(
         f'{API_URL}/calculations/photo',

@@ -21,6 +21,7 @@ from initialize import bot
 from db import db
 from models import AdminCalcNot, Calculation, Live, UserCalcNot
 from registration import reg
+from services import channel_calc, ticker
 from thread_tasks import run_thread
 
 
@@ -125,6 +126,27 @@ async def active_calc(request: web.Request):
         calc, None,
         res_json.get('indexPrice'), res_json.get('percent24h'),
         False
+    )
+
+    return web.Response()
+
+
+async def send_calc(request: web.Request):
+    # access_token = db.get_access_token()
+    # api_key = request.headers.get('tg-api-key')
+
+    # if access_token is None or api_key is None or access_token != api_key:
+    #     return web.Response(status=403)
+
+    res = await request.text()
+    calc = Calculation.model_validate_json(res)
+    send_data = channel_calc.getByCalc(calc.id)
+    tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
+
+    await channel_post.send_calc(
+        calc, send_data,
+        tickerInfo and tickerInfo.indexPrice,
+        tickerInfo and tickerInfo.percent24h,
     )
 
     return web.Response()
@@ -242,6 +264,7 @@ async def setup():
         web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
         web.post(BASE_URL + '/live-info', live_info),
         web.post(BASE_URL + '/active-calc', active_calc),
+        web.post(BASE_URL + '/send-calc', send_calc),
         web.post(BASE_URL + '/user-not', user_not),
         web.post(BASE_URL + '/user-code', user_code),
         web.get(BASE_URL + '/icon.png', get_icon),

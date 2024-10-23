@@ -34,7 +34,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     )
 
     if 'calc' in type or type == 'settings':
-        calc = calculation.get(stat_id)
+        calc = calculation.get(userId=user.id, calcId=stat_id)
         if calc is not None:
             try:
                 await bot.edit_message_reply_markup(

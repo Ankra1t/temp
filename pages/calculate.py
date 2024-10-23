@@ -357,7 +357,7 @@ async def send_stats(
 
     liteDb.addPagesCount(user.tgId)
 
-    values = calculation.getWeekStats(user.id)
+    values = calculation.getWeekStats(userId = user.id)
 
     if values is None:
         return
@@ -518,13 +518,13 @@ async def send_calc_list(
 
     calc_list = None
     if list_type == 'deal':
-        calc_list = calculation.getByUserList(user.id, list_type)
+        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
     elif list_type == 'canceled':
-        calc_list = calculation.getByUserList(user.id, list_type)
+        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
     elif list_type == 'wait':
-        calc_list = calculation.getByUserList(user.id, list_type)
+        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
     elif list_type == 'done':
-        calc_list = calculation.getByUserList(user.id, list_type)
+        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
     else:
         return
 
@@ -667,7 +667,7 @@ async def send_calculation(
     calc_output = db.get_user_calc_output(user.id)
 
     if is_list:
-        calculation.update(calc.id, openedList=True)
+        calculation.update(userId=user.id, calcId=calc.id, openedList=True)
 
     if is_try:
         kb = None
@@ -757,7 +757,7 @@ async def send_confirm_calc_send(
 ):
     chat_id = message.chat.id
 
-    stat = calculation.get(stat_id)
+    stat = calculation.get(userId=1, calcId=stat_id)
     send_data = channel_calc.getByCalc(stat_id)
     if stat is None or send_data is None:
         return
@@ -824,7 +824,7 @@ async def create_and_send_calc(
         is_from_deposit = data.get('is_from_deposit') or False
 
     if stat_id is not None:
-        calc_info = calculation.get(stat_id)
+        calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info is None or calc_info.ActiveCalc:
             return
 
@@ -1124,7 +1124,7 @@ async def send_admin_channel_calc_item(
     await state.delete()
 
     send_data = channel_calc.getByCalc(calc_id)
-    calc = calculation.get(calc_id)
+    calc = calculation.get(userId=1, calcId=calc_id)
     if calc is None:
         return
 
@@ -1313,7 +1313,7 @@ async def create_and_send_channel_calc(
 ):
     chat_id = message.chat.id
 
-    calc = calculation.get(calc_id)
+    calc = calculation.get(userId=user.id, calcId=calc_id)
     if calc is None:
         return
 

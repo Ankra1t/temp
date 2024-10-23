@@ -1,4 +1,3 @@
-from operator import is_
 from random import randint
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
@@ -84,7 +83,8 @@ class ChannelPost():
 
             trader_mes = ''
             if send_data is None:
-                stats = calculation.getActiveStatsByUser(calc.userId)
+                stats = calculation.getActiveStatsByUser(
+                    userId=calc.userId, id=calc.userId)
                 if stats:
                     name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
 
@@ -137,7 +137,8 @@ class ChannelPost():
         if len(newMesIds) == len(chIds):
             if send_data is None:
                 a = calculation.updateActive(
-                    calc.id,
+                    userId=1,
+                    id=calc.id,
                     chMesIds=f'{chIds[0]}+++{newMesIds[0]}'
                 )
                 print(a)
@@ -401,9 +402,12 @@ class ChannelPost():
                 return
 
         ch_mes = data.get('messages', {})
-        chIds: list[str] = ch_mes.get('chIds', []) if not is_active else [str(TOURNAMENT_CHANNEL_ID)]
-        mesIds: list[str] = ch_mes.get('mesIds', []) if not is_active else [str(1231)]
-        langs: list[Literal['ru', 'en']] = ch_mes.get('langs', []) if not is_active else ['ru']
+        chIds: list[str] = ch_mes.get('chIds', []) if not is_active else [
+            str(TOURNAMENT_CHANNEL_ID)]
+        mesIds: list[str] = ch_mes.get(
+            'mesIds', []) if not is_active else [str(1231)]
+        langs: list[Literal['ru', 'en']] = ch_mes.get(
+            'langs', []) if not is_active else ['ru']
 
         marathon_data: list[float | None] = data.get('marathon')
         marathon = ''
@@ -442,7 +446,6 @@ class ChannelPost():
             if not is_active:
                 startDate = data.get('startDate')
                 endDate = data.get('endDate')
-
 
                 msg = f"<b>{texts[lang]['title2']} {texts[lang]['from']} {startDate} {texts[lang]['to']} {endDate}</b>"
             else:
@@ -598,7 +601,7 @@ class ChannelPost():
                 logger.error(f'STATS SEND ERROR: {e}')
 
     async def send_vote(self, stat_id: int):
-        stat = calculation.get(stat_id)
+        stat = calculation.get(userId=1, calcId=stat_id)
         if stat is None:
             return
 

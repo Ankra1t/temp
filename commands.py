@@ -33,7 +33,11 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
 
         username = message.from_user.username
 
-        is_registered = auth.registration(user.tgId, username, ref_id)
+        is_registered = auth.registration(
+            userId=user.tgId,
+            username=username,
+            referId=ref_id
+        )
         new_user = db.get_user_by_tg_id(user.tgId)
 
         if new_user is not None and is_registered == True:
@@ -55,7 +59,10 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
 
             if sentMessages:
                 auth.addUserNotificationMessages(
-                    new_user.id, sentMessages, user_lang, num
+                    userId=new_user.id,
+                    value=sentMessages,
+                    lang=user_lang,
+                    num=num
                 )
 
             is_registered = True

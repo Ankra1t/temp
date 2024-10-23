@@ -239,10 +239,10 @@ More often: <b>{result}</b>"""
 
     if type == 'result_cancel':
         calculation.update(
-            calc_id, status='CANCEL'
+            userId=user.id, calcId=calc_id, status='CANCEL'
         )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -256,10 +256,10 @@ More often: <b>{result}</b>"""
 
     if type == 'result_deal':
         calculation.update(
-            calc_id, status='DEAL'
+            userId=user.id, calcId=calc_id, status='DEAL'
         )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -273,10 +273,10 @@ More often: <b>{result}</b>"""
 
     if type == 'result_wait':
         calculation.update(
-            calc_id, status='WAIT'
+            userId=user.id, calcId=calc_id, status='WAIT'
         )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -289,7 +289,7 @@ More often: <b>{result}</b>"""
             await send_stats(bot, call.message, state, user)
 
     if type == 'result_end':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if not calc:
             return
 
@@ -314,7 +314,7 @@ More often: <b>{result}</b>"""
         )
 
     if type == 'result_end_yes':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if not send_data or not calc or calc.status != 'DEAL':
             return
@@ -328,7 +328,7 @@ More often: <b>{result}</b>"""
             calc_id, calc.riskValue * valueCount
         )
         calc = calculation.update(
-            calc_id, status='FINISH'
+            userId=user.id, calcId=calc_id, status='FINISH'
         )
 
         if calc:
@@ -337,7 +337,7 @@ More often: <b>{result}</b>"""
             type = 'results'
 
     if 'stop+' in type or 'take+' in type:
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc is None or (calc.ActiveCalc and not send_data):
             return
@@ -354,7 +354,7 @@ More often: <b>{result}</b>"""
         )
 
         calc = calculation.update(
-            calc_id, status='FINISH'
+            userId=user.id, calcId=calc_id, status='FINISH'
         )
         if not calc:
             return
@@ -370,7 +370,7 @@ More often: <b>{result}</b>"""
                 await send_stats(bot, call.message, state, user)
 
         if is_calc == 1:
-            calc = calculation.get(calc_id)
+            calc = calculation.get(userId=user.id, calcId=calc_id)
             if calc is None:
                 return
             await delete_message(bot, chat_id, mes_id)
@@ -386,7 +386,7 @@ More often: <b>{result}</b>"""
                 send_data.id, withoutStop=not send_data.withoutStop
             )
 
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
 
         if send_data and calc:
             tickerInfo = ticker.get_info(calc.tool or '')
@@ -416,7 +416,7 @@ More often: <b>{result}</b>"""
         )
 
     if type == 'calc':
-        calc = calculation.get(calc_id)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is None:
             return
 
@@ -450,7 +450,8 @@ More often: <b>{result}</b>"""
         else:
             time = 60 * 24
 
-        calc = calculation.updateCancelAt(calc_id, time)
+        calc = calculation.updateCancelAt(
+            userId=user.id, id=calc_id, minutes=time)
 
         if calc:
             send_data = channel_calc.getByCalc(calc_id)
@@ -487,7 +488,9 @@ More often: <b>{result}</b>"""
     if 'trailing+' in type:
         _, value = type.split('+')
 
-        calculation.updateActive(calc_id, trailingStopCount=int(value))
+        calculation.updateActive(
+            userId=user.id, id=calc_id, trailingStopCount=int(value)
+        )
 
         await send_admin_channel_calc_item(
             bot, call.message, state, calc_id

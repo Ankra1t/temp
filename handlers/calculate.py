@@ -61,13 +61,13 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         await state.add_data(tool=tool)
         await choose_calculate_step(bot, message, state, user, last_value='tool')
     else:
-        calc_info = calculation.get(stat_id)
+        calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info is None or calc_info.ActiveCalc:
             return
 
         db.change_calculation_tool(stat_id, tool)
 
-        calc_info = calculation.get(stat_id)
+        calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info:
             await send_calculation(bot, message, state, user, calc_info, True)
             await state.delete()
@@ -135,7 +135,7 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
     else:
         db.change_calculation_forex(stat_id, forex)
 
-        calc_info = calculation.get(stat_id)
+        calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info is None:
             return
 
@@ -281,7 +281,7 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
             last_value='trading_style'
         )
     else:
-        calc_info = calculation.get(stat_id)
+        calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info is None:
             return
 
@@ -319,7 +319,7 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             bot, message, state, user, last_value='open_price'
         )
     else:
-        calc = calculation.get(stat_id)
+        calc = calculation.get(userId=user.id, calcId=stat_id)
         send_data = channel_calc.getByCalc(stat_id)
         if calc and not (calc.ActiveCalc and not send_data):
             if calc.stopLoss == value:
@@ -374,7 +374,7 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
     else:
         await state.add_data(stop_loss=stop_loss)
 
-        calc = calculation.get(stat_id)
+        calc = calculation.get(userId=user.id, calcId=stat_id)
         send_data = channel_calc.getByCalc(stat_id)
 
         if calc and send_data:

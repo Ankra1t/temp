@@ -143,7 +143,7 @@ async def send_site_code(
 
     await state.delete()
 
-    new_code = prev_code or auth.get_site_code(user.id)
+    new_code = prev_code or auth.get_site_code(userId=user.id)
 
     text = msg_site_login(user.lang)
     keyboard = kb_site_login(user.lang, new_code or '', is_reset)
