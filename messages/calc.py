@@ -12,7 +12,7 @@ from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
 
 from Classes import calcService
-from services import channel_calc
+from services import calculation, channel_calc
 
 
 months = {'ru': [
@@ -121,6 +121,8 @@ async def msg_calculate(state: StateContext, user: User, is_try=False):
 def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     is_saved = calc.status == 'FINISH'
     calc_result = calcService.get_result(calc)
+
+    num = calculation.getMonthNumber(userId=calc.userId, calcId=calc.id)
 
     if calc.openPrice > calc.stopLoss:
         long_short = 'long'
@@ -295,9 +297,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         profit = calc.profit or 0.
         profit_result = f"""<b>{texts[lang]['profit']}: </b>{get_print_float(profit, round_count)} {calc.currency}"""
     else:
-        saved_mes = ''
-
-        p_show = ''
         conclusion = ''
         for i in range(calc_result.tp_count):
             tp_ratio = calc.tpRatio[i]
@@ -345,8 +344,60 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     if calc.comment is not None:
         comment = f'<b>{texts[lang]["comment"]}</b>: {calc.comment}\n'
 
+    time = ''
+    if calc.status == 'WAIT':
+        try:
+            dt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.createdAt or '').replace('Z', '')
+                ),
+                'd.m h.m'
+            )
+            time = f'Создана: {dt}'
+        except:
+            pass
+    elif calc.status == 'DEAL':
+        try:
+            dt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.dealAt or '').replace('Z', '')
+                ),
+                'd.m h.m'
+            )
+            time = f'В сделке с {dt}'
+        except:
+            pass
+    elif calc.status == 'FINISH':
+        try:
+            dealDt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.dealAt or '').replace('Z', '')
+                ),
+                'datetime'
+            )
+            statDt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.statDt or '').replace('Z', '')
+                ),
+                'd.m h.m'
+            )
+            time = f'В сделке с {dealDt}\nЗавершена {statDt}'
+        except:
+            pass
+    else:
+        try:
+            dt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.cancelAt or '').replace('Z', '')
+                ),
+                'd.m h.m'
+            )
+            time = f'Отменена <b>{dt}</b>'
+        except:
+            pass
+
     return '\n'.join((
-        f'#<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status}',
+        f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
@@ -358,7 +409,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
         fee_text + trading_style_type,
-        description + comment
+        description + comment + time,
     ))
 
 

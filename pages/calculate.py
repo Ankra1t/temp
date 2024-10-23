@@ -880,7 +880,7 @@ async def create_and_send_calc(
     )
 
     new_id = db.add_calculation(calc_info)
-    calc_info.id = new_id
+    calc_info = calculation.get(userId=user.id, calcId=new_id or -1)
 
     userExchange = liteDb.getUserExchange(user.tgId)
     if userExchange is not None:
@@ -894,7 +894,7 @@ async def create_and_send_calc(
     db.set_user_base(user.id, 'deposit', deposit)
     db.set_user_currency(user.id, currency)
 
-    if is_send:
+    if is_send and calc_info:
         await send_calculation(bot, message, state, user, calc_info, True)
 
     await state.delete()

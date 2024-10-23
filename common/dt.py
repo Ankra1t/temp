@@ -5,11 +5,11 @@ from datetime import datetime, timedelta, timezone
 from common.vars import DATETIME_PATTERN
 
 
-DT_PRINT_TYPE = Literal['date', 'day.month', 'time', 'datetime']
+DT_PRINT_TYPE = Literal['date', 'day.month', 'time', 'datetime', 'd.m h.m']
 
 
 def get_datetime_now():
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(timezone.utc)
 
 def get_str_by_datetime(dt: datetime, type: DT_PRINT_TYPE = 'datetime') -> str:
     """
@@ -21,6 +21,7 @@ def get_str_by_datetime(dt: datetime, type: DT_PRINT_TYPE = 'datetime') -> str:
         'day.month': '%d.%m',
         'time': '%H:%M',
         'datetime': '%d.%m.%Y %H:%M',
+        'd.m h.m': '%d.%m %H:%M',
     }
 
     return (dt + timedelta(hours=3)).strftime(formats[type])
