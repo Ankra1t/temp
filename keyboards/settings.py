@@ -1199,6 +1199,7 @@ def kb_settings_auto_take(lang: LANGUAGES_TYPE):
 
     keyboard.add(*buttons)
     keyboard.add(
+        getButton(reset_txt(lang), 'auto_take+null'),
         getButton(back_txt(lang), 'active')
     )
     return keyboard

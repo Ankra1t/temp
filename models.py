@@ -458,12 +458,6 @@ class UserCalcNot(BaseModel):
     trStop: tuple[float | Literal['breakeven'], float] | None = None
 
 
-class AdminCalcNot(BaseModel):
-    userIds: list[int]
-    userName: str
-    calc: Calculation
-
-
 class CalcSentMessages(BaseModel):
     mesNum: Optional[int] = None
     messages: Optional[dict] = None
@@ -574,11 +568,19 @@ class MinUser(BaseModel):
 
 
 class ActiveStats(BaseModel):
-    longCount: float
-    shortCount: float
+    longCount: int
+    shortCount: int
     profitCount: float
 
 
 class UserActiveStats(BaseModel):
     user: MinUser
     data: ActiveStats
+
+
+class AdminCalcNot(BaseModel):
+    userIds: list[int]
+    userName: str
+    calc: Calculation
+    userTgId: int
+    userStats: ActiveStats

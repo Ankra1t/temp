@@ -130,6 +130,22 @@ def update(
 
 
 @session_decorator
+def closeActive(
+    *,
+    userId: int,
+    calcId: int,
+):
+    res = session.post(
+        f'{API_URL}/calculations/{calcId}/closeActive',
+    )
+
+    if not check_response(res):
+        return
+
+    return Calculation(**res.json())
+
+
+@session_decorator
 def updateCancelAt(
     *, userId: int, id: int, minutes: int | None
 ):

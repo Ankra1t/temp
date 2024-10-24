@@ -814,32 +814,32 @@ def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
 
     texts = {
         'ru': {
-            'main': 'Сделка активна',
+            'main': 'Настройки',
             'trailing': 'Ск. стоп',
             'cancelAt': 'Отмена',
             'autoStop': 'Авто стоп',
-            'autoTake': 'Свой тейк',
+            'take': 'Тейк',
         },
         'en': {
-            'main': 'Calc is active',
+            'main': 'Settings',
             'trailing': 'Tr. stop',
             'cancelAt': 'Cancel',
             'autoStop': 'Auto stop',
-            'autoTake': 'Your take',
+            'take': 'Take',
         },
         'uz': {
-            'main': 'Calc faol',
+            'main': 'Sozlamalar',
             'trailing': 'Slip stop',
             'cancelAt': 'Bekor qilmoq',
             'autoStop': 'Avtomatik to\'xtatish',
-            'autoTake': 'Avtoulov',
+            'take': 'Take',
         },
         'tr': {
-            'main': 'Calc aktif',
+            'main': 'Ayarlar',
             'trailing': 'Iptal etmek',
             'cancelAt': 'İptal etmek',
             'autoStop': 'Otomatik durdurma',
-            'autoTake': 'Otomatik alım',
+            'take': 'Take',
         },
     }
 
@@ -850,10 +850,15 @@ def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
         ) + timedelta(hours=3)
         cancelAt = dt.strftime("%d.%m %H:%M")
 
+    take = '-'
+    if data.trailingStopCount:
+        take = f'скользящий стоп каждые {get_print_float(data.trailingStopCount, 1)} тейка'
+    elif data.autoTake:
+        take = f'выход при {get_print_float(data.autoTake)} тейках'
+
     return f"""<b>{texts[lang]['main']}</b>
-{texts[lang]['trailing']}: {get_print_float(data.trailingStopCount, 1) if data.trailingStopCount else '-'}
 {texts[lang]['autoStop']}: {'✅' if data.autoStop else '❌'}
-{texts[lang]['autoTake']}: {get_print_float(data.autoTake) if data.autoTake else '-'}
+{texts[lang]['take']}: {take}
 {texts[lang]['cancelAt']}: {cancelAt}"""
 
 

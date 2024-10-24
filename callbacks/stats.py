@@ -205,6 +205,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         f'callback "stats_factory" user_tg_id={user.tgId} type={type} ({stats_market} {calc_id})'
     )
 
+    if type == 'get_calc':
+        await bot.edit_message_reply_markup(chat_id, mes_id, reply_markup=None)
+
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+
+        if calc:
+            await send_calculation(bot, call.message, state, user, calc, True)
+
     if 'time+' in type:
         _, time = type.split('+')
         date = get_datetime_now() + timedelta(hours=int(time))
@@ -516,7 +524,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 calc.tpRatio.append(rate)
                 calc.tpRatio.sort()
 
-            calc = calculation.update(userId=user.id, calcId=calc.id, tpRatio=calc.tpRatio)
+            calc = calculation.update(
+                userId=user.id, calcId=calc.id, tpRatio=calc.tpRatio)
             if calc:
                 await bot.edit_message_text(
                     msg_calculation(user.lang, calc),
@@ -526,7 +535,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 )
 
     if 'del_img_txt' in type:
-        calc = calculation.update(userId=user.id, calcId=calc_id, photo=None, description=None)
+        calc = calculation.update(
+            userId=user.id, calcId=calc_id, photo=None, description=None)
         if calc is None:
             return
 
@@ -714,7 +724,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         calculation.updateActive(
             userId=user.id, id=calc_id,
-            trailingStopCount=value
+            trailingStopCount=value,
+            autoTake=None
         )
 
         await send_confirm_calc_send(bot, call.message, calc_id)
@@ -868,7 +879,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         else:
             time = 60 * 24
 
-        calc = calculation.updateCancelAt(userId=user.id, id=calc_id, minutes=time)
+        calc = calculation.updateCancelAt(
+            userId=user.id, id=calc_id, minutes=time)
 
         if calc:
             if 'stc_' in type:
@@ -898,7 +910,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         calculation.updateActive(
             userId=user.id, id=calc_id,
-            trailingStopCount=value
+            trailingStopCount=value,
+            autoTake=None
         )
 
         calc = calculation.get(userId=user.id, calcId=calc_id)
@@ -910,7 +923,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         if calc and calc.ActiveCalc:
             new_val = not calc.ActiveCalc.autoStop
-            calculation.updateActive(userId=user.id, id=calc_id, autoStop=new_val)
+            calculation.updateActive(
+                userId=user.id, id=calc_id, autoStop=new_val)
             calc.ActiveCalc.autoStop = new_val
 
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
@@ -925,7 +939,14 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if 'auto_take+' in type:
         _, val = type.split('+')
 
-        calculation.updateActive(userId=user.id, id=calc_id, autoTake=float(val))
+        if val == 'null':
+            val = None
+        else:
+            val = float(val)
+
+        calculation.updateActive(
+            userId=user.id, id=calc_id, autoTake=val, trailingStopCount=None
+        )
         calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc:
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)

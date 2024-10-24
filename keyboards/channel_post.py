@@ -328,7 +328,7 @@ def kb_channel_cancel_at(calc_id: int):
 def kb_result_end(calc_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        getButton('❌ Нет', 'result', calc_id),
+        getButton('❌ Нет', 'result_end_no', calc_id),
         getButton('✅ Да', 'result_end_yes', calc_id),
     )
     return keyboard

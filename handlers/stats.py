@@ -419,7 +419,8 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
     elif action == 'send_settings':
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        calc = calculation.updateCancelAt(userId=user.id, id=calc_id, minutes=value)
+        calc = calculation.updateCancelAt(
+            userId=user.id, id=calc_id, minutes=value)
 
         if calc:
             send_data = channel_calc.getByCalc(calc.id)
@@ -496,11 +497,13 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         return
 
     if action == 'settings':
-        settings.updateAdvanced(user.id, trailingStop=value)
+        settings.updateAdvanced(user.id, trailingStop=value, autoTake=None)
         await send_active_settings(bot, message, state, user, True)
     else:
         calculation.updateActive(
-            userId=user.id, id=calc_id, trailingStopCount=value
+            userId=user.id, id=calc_id,
+            trailingStopCount=value,
+            autoTake=None
         )
 
         calc = calculation.get(userId=user.id, calcId=calc_id)

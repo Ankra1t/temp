@@ -769,7 +769,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
         settings.updateAdvanced(
             user.id,
-            trailingStop=value
+            trailingStop=value,
+            autoTake=None
         )
         await send_active_settings(bot, call.message, state, user)
 
@@ -782,7 +783,13 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'auto_take+' in type:
         _, val = type.split('+')
-        settings.updateAdvanced(user.id, autoTake=float(val))
+
+        if val == 'null':
+            val = None
+        else:
+            val = float(val)
+
+        settings.updateAdvanced(user.id, autoTake=val, trailingStop=None)
         await send_active_settings(bot, call.message, state, user)
 
     if type == 'auto_stop':

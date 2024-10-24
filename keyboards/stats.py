@@ -195,7 +195,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
             'active': 'Активировать сделку',
             'refresh': 'Обновить',
-            'active_p': 'Параметры активации',
+            'active_p': 'Управление',
         },
         'en': {
             'save': 'Save to stats',
@@ -217,7 +217,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
             'active': 'Activate the deal',
             'refresh': 'Refresh',
-            'active_p': 'Activation params',
+            'active_p': 'Management',
         },
         'uz': {
             'save': 'Hisobni saqlash',
@@ -239,7 +239,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
             'active': 'Bitimni faollashtirish',
             'refresh': 'Yangilamoq',
-            'active_p': 'Faollashtirish parametrlari',
+            'active_p': 'Boshqaruv',
         },
         'tr': {
             'save': 'Hesaplamayı kaydet',
@@ -262,7 +262,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
 
             'active': 'Anlaşmayı etkinleştir',
             'refresh': 'Yenilemek',
-            'active_p': 'Aktivasyon paramleri',
+            'active_p': 'Yönetim',
         },
     }
 
@@ -792,8 +792,9 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
 
     if calc.status == 'DEAL':
         buttons.append(
-            getButton(
-                texts[lang]['profit'], 'active_end', calc.id
+            getChannelButton(
+                # texts[lang]['profit'], 'active_end', calc.id
+                texts[lang]['profit'], 'result_end', calc.id
             ),
         )
 
@@ -820,6 +821,21 @@ def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
 
     keyboard.add(*buttons)
     keyboard.add(
+        getButton(reset_txt(lang), 'auto_take+null', calc_id),
         getButton(back_txt(lang), 'active_calc', calc_id)
+    )
+    return keyboard
+
+
+def kb_calc_not(lang: LANGUAGES_TYPE, calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+
+    if lang == 'ru':
+        text = 'К сделке'
+    else:
+        text = 'Go to the deal'
+
+    keyboard.add(   
+        getButton(text, 'get_calc', calc_id)
     )
     return keyboard

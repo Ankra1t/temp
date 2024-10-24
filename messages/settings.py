@@ -765,33 +765,38 @@ def msg_active_settings(
             'trailing': 'Ск. стоп',
             'cancelAt': 'Отмена через (часов)',
             'autoStop': 'Авто стоп',
-            'autoTake': 'Свой тейк',
+            'take': 'Тейк',
         },
         'en': {
             'main': 'Setting of active trades',
             'trailing': 'Tr. stop',
             'cancelAt': 'Cancellation after (hours)',
             'autoStop': 'Auto stop',
-            'autoTake': 'Your take',
+            'take': 'Take',
         },
         'uz': {
             'main': 'Faol savdolarni sozlash',
             'trailing': 'Slip stop',
             'cancelAt': 'Bekor keyin (soat)',
             'autoStop': 'Avtomatik to\'xtatish',
-            'autoTake': 'Avtoulov',
+            'take': 'Take',
         },
         'tr': {
             'main': 'Aktif işlemlerin ayarlanması',
             'trailing': 'Iptal etmek',
             'cancelAt': '(Saat) sonra iptal',
             'autoStop': 'Otomatik durdurma',
-            'autoTake': 'Otomatik alım',
+            'take': 'Take',
         },
     }
 
+    take = '-'
+    if data and data.trailingStop:
+        take = f'скользящий стоп каждые {get_print_float(data.trailingStop, 1)} тейка'
+    elif data and data.autoTake:
+        take = f'выход при {get_print_float(data.autoTake)} тейках'
+
     return f"""<b>{texts[lang]['main']}</b>
-{texts[lang]['trailing']}: {get_print_float(data.trailingStop, 1) if data and data.trailingStop else '-'}
 {texts[lang]['autoStop']}: {'✅' if data and data.autoStop else '❌'}
-{texts[lang]['autoTake']}: {get_print_float(data.autoTake) if data and data.autoTake else '-'}
+{texts[lang]['take']}: {take}
 {texts[lang]['cancelAt']}: {get_print_float(data.cancelMinutes / 60, 1) if data and data.cancelMinutes else '-'}"""

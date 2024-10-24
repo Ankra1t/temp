@@ -484,6 +484,8 @@ def getTrailingStopsMessage(lang: Literal['ru', 'en'], value: Optional[list[Calc
 
 
 def getStrValueCount(count: float, lang: LANGUAGES_TYPE = 'ru'):
+    count = float(get_print_float(count, 1))
+
     if count == 0:
         if lang == 'ru':
             return 'безубыток'

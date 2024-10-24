@@ -232,7 +232,8 @@ More often: <b>{result}</b>"""
 
         settings.updateAdvanced(
             user.id,
-            trailingStop=value
+            trailingStop=value,
+            autoTake=None
         )
 
         await send_admin_send_settings(bot, call.message, state, user)
@@ -308,33 +309,41 @@ More often: <b>{result}</b>"""
             reply_markup=kb_result_end(calc_id)
         )
 
-        await state.set('temp')
-        await state.add_data(
-            countValue=valueCount
-        )
-
     if type == 'result_end_yes':
         calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
-        if not send_data or not calc or calc.status != 'DEAL':
+        if not calc or calc.status != 'DEAL':
             return
 
-        async with state.data() as data:
-            valueCount: float = data.get('countValue', 0)
+        ticker_info = ticker.get_info(calc.tool or '')
+        if not ticker_info or not ticker_info.indexPrice:
+            return
 
-        await state.delete()
+        diffOpSl = calc.openPrice - calc.stopLoss
+        valueCount = (ticker_info.indexPrice - calc.openPrice) / diffOpSl
 
-        calcService.set_profit(
-            calc_id, calc.riskValue * valueCount
-        )
-        calc = calculation.update(
-            userId=user.id, calcId=calc_id, status='FINISH'
+        calc = calculation.closeActive(
+            userId=user.id, calcId=calc_id
         )
 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
             await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-            type = 'results'
+
+            if send_data:
+                type = 'results'
+            else:
+                await send_calculation(bot, call.message, state, user, calc)
+
+    if type == 'result_end_no':
+        send_data = channel_calc.getByCalc(calc_id)
+
+        if send_data:
+            type = 'result'
+        else:
+            calc = calculation.get(userId=user.id, calcId=calc_id)
+            if calc:
+                await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(userId=user.id, calcId=calc_id)
@@ -489,7 +498,8 @@ More often: <b>{result}</b>"""
         _, value = type.split('+')
 
         calculation.updateActive(
-            userId=user.id, id=calc_id, trailingStopCount=int(value)
+            userId=user.id, id=calc_id, trailingStopCount=int(value),
+            autoTake=None
         )
 
         await send_admin_channel_calc_item(

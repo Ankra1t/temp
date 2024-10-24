@@ -19,6 +19,7 @@ from callbacks.calculate import send_after_first_try
 
 from initialize import bot
 from db import db
+from keyboards.stats import kb_calc_not
 from models import AdminCalcNot, Calculation, Live, UserCalcNot
 from registration import reg
 from services import channel_calc, ticker
@@ -164,23 +165,37 @@ async def user_not(request: web.Request):
     if 'userIds' in value:
         data = AdminCalcNot.model_validate_json(value)
 
-        msg = f'⚡️ Сделка {data.calc.tool} пользователь {data.userName} '
+        deal = f'⚡️ {data.calc.tool}'
+        result = ''
 
         if data.calc.status == 'CANCEL':
-            msg += f'<b>отменена!</b>'
+            result = f'<b>отменена!</b>'
         elif data.calc.status == 'DEAL':
-            msg += f'<b>в сделке!</b>\nВошел по {get_print_float(data.calc.openPrice)} USDT'
+            result = f'<b>в сделке!</b>\nВошел по {get_print_float(data.calc.openPrice)} USDT'
         elif data.calc.status == 'FINISH':
             valueCount = (data.calc.profit or 0) / data.calc.riskValue
-            msg += f'<b>завершена!</b>\nРезультат {getStrValueCount(valueCount)}'
+            result = f'<b>завершена!</b>\nРезультат {getStrValueCount(valueCount)}'
 
         for el in data.userIds:
             try:
                 await bot.send_message(
-                    el, msg
+                    el, deal + f' пользователя {data.userName} ' + result
                 )
             except:
                 pass
+
+        try:
+            stats = '\n\n<b>Всего за текущий месяц:</b>'
+            stats += f'\n{data.userStats.longCount + data.userStats.shortCount} сделок ({data.userStats.longCount} лонг / {data.userStats.shortCount} шорт)'
+            stats += f'\nРезультат: {getStrValueCount(data.userStats.profitCount)}'
+
+            await bot.send_message(
+                data.userTgId, deal + ' ' + result + stats,
+                reply_markup=kb_calc_not('ru', data.calc.id)
+            )
+        except:
+            pass
+
     else:
         data = UserCalcNot.model_validate_json(value)
 
