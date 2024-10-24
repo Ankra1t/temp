@@ -187,7 +187,7 @@ async def user_not(request: web.Request):
         try:
             stats = '\n\n<b>Всего за текущий месяц:</b>'
             stats += f'\n{data.userStats.longCount + data.userStats.shortCount} сделок ({data.userStats.longCount} лонг / {data.userStats.shortCount} шорт)'
-            stats += f'\nРезультат: {getStrValueCount(data.userStats.profitCount)}'
+            stats += f'\nОбщий результат: {getStrValueCount(data.userStats.profitCount)}'
 
             await bot.send_message(
                 data.userTgId, deal + ' ' + result + stats,
