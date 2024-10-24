@@ -262,15 +262,14 @@ class ChannelPost():
                 msg += 'За день' if lang == 'ru' else 'Today'
                 msg += ':</b> '
 
-                msg += f'{getStrValueCount(live.todayValueCount, lang)} ({get_print_float(live.todayProfit)}$)'
+                msg += f'{getStrValueCount(live.todayValueCount, lang)}'
 
                 current_date = get_str_by_datetime(
                     get_datetime_now(), "day.month"
                 )
 
                 msg += '\n<b>'
-                msg += months[lang][int(current_date.split('.')
-                                        [1]) - 1].capitalize()
+                msg += months[lang][int(current_date.split('.')[1]) - 1].capitalize()
                 msg += ':</b> '
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
