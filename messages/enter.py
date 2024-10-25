@@ -820,7 +820,38 @@ def msg_enter_tr_stop(lang: LANGUAGES_TYPE):
         'uz': 'Tushunchilik oyog\'i uchun qiymatni kiriting',
     }
 
-    return f'👉 {texts[lang]}'
+    info = {
+        'ru': """Изменить фиксированный стоп лосс на скользящий.
+
+<b>Выбери шаг стоп лосса</b>, а система автоматически будет изменять цену и подтягивать стоп лосс по мере движения цены инструмента.
+
+Классический тейк профит, указанный ранее, не будет работать.
+
+Тейк профит также будет меняться автоматически, <b>пока сделка не выбьет по стоп лоссу.</b>""",
+        'en': """Change the fixed stop loss to a moving one.
+
+<b>Select the stop loss stop</b>, and the system will automatically change the price and tighten the stop loss as the price of the instrument moves.
+
+The classic take profit specified earlier will not work.
+
+The take profit will also change automatically, <b>until the trade hits the stop loss.</b>""",
+        'uz': """Bir harakat biriga sobit stop loss o'zgartirish.
+
+<b>stop loss stop</b> ni tanlang va tizim avtomatik ravishda narxni o'zgartiradi va asbobning narxi harakat qilganda stop loss-ni tortadi.
+
+Ilgari ko'rsatilgan klassik foyda ishlamaydi.
+
+Savdo stop loss xitlar qadar take foyda ham avtomatik ravishda, <b>o'zgaradi.</b>""",
+        'tr': """Sabit durma kaybını hareketli olana değiştirin.
+
+<b>Kaybı durdur durağını seçin</b> ve sistem fiyatı otomatik olarak değiştirecek ve enstrümanın fiyatı hareket ettikçe kaybı durduracaktır.
+
+Daha önce belirtilen klasik kar elde etmek işe yaramaz.
+
+Alım karı da otomatik olarak değişecektir, <b>ticaret stop loss'a ulaşana kadar.</b>""",
+    }
+
+    return f'{info[lang]}\n\n👉 {texts[lang]}'
 
 
 def msg_enter_auto_take(lang: LANGUAGES_TYPE):

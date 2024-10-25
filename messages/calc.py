@@ -313,19 +313,27 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
         if calc.ActiveCalc:
             if calc.ActiveCalc.trailingStopCount:
-                conclusion += f'{texts[lang]["tr_stop"]}: +{calc.ActiveCalc.trailingStopCount} тейка'
+                conclusion += f'{texts[lang]["tr_stop"]}: +{get_print_float(calc.ActiveCalc.trailingStopCount, 1)} тейка'
 
-                near_trailing = (calc.newStop or calc.stopLoss) \
+
+                shift = 0
+                if calc.newStop:
+                    currentValueCount = (calc.newStop - calc.openPrice) / (calc.openPrice - calc.stopLoss)
+                    while True:
+                        if currentValueCount < calc.ActiveCalc.trailingStopCount * shift:
+                            break
+                        shift += 1
+
+                near_trailing = calc.openPrice \
                     + (calc.openPrice - calc.stopLoss) * \
-                    calc.ActiveCalc.trailingStopCount * 2
+                    calc.ActiveCalc.trailingStopCount * (shift + 1)
 
-                conclusion += f'\n{texts[lang]["near_tr"]}: <code>{near_trailing}</code> {trading_currency}'
+                conclusion += f'\n{texts[lang]["near_tr"]}: <code>{get_print_float(near_trailing)}</code> {trading_currency}'
 
-                trailing_stops = getTrailingStopsMessage(
+                conclusion += getTrailingStopsMessage(
                     'ru' if lang == 'ru' else 'en',
                     calc.TrailingStops, calc.openPrice, calc.stopLoss
                 )
-                conclusion += f'\n{trailing_stops}'
 
             elif calc.ActiveCalc.autoTake:
                 take = calc.ActiveCalc.autoTake
@@ -335,6 +343,16 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
                 conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
                 conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({take} {texts[lang]["to"]} 1)'
+
+            else:
+                if lang == 'ru':
+                    conclusion += 'Выберите тейк или скользящий стоп'
+                elif lang == 'uz':
+                    conclusion += 'Take yoki slip stop-ni o\'rnating'
+                elif lang == 'tr':
+                    conclusion += 'Bir alma veya kayan durdurma ayarlayın'
+                else:
+                    conclusion += 'Set a take or a sliding stop'
         else:
             for i in range(calc_result.tp_count):
                 tp_ratio = calc.tpRatio[i]

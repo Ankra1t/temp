@@ -269,7 +269,8 @@ class ChannelPost():
                 )
 
                 msg += '\n<b>'
-                msg += months[lang][int(current_date.split('.')[1]) - 1].capitalize()
+                msg += months[lang][int(current_date.split('.')
+                                        [1]) - 1].capitalize()
                 msg += ':</b> '
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
@@ -317,6 +318,8 @@ class ChannelPost():
                         chId, msg,
                     )
 
+                    new_live_mes_ids.append(str(new_mes.id))
+
                     if mesIds is not None:
                         await self.bot.unpin_chat_message(
                             int(chId), int(mesIds[chId_i])
@@ -325,7 +328,6 @@ class ChannelPost():
                     await self.bot.pin_chat_message(
                         chId, new_mes.id
                     )
-                    new_live_mes_ids.append(str(new_mes.id))
                 else:
                     await antiflood(
                         self.bot.edit_message_text,
