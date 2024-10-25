@@ -322,7 +322,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 )
             )
 
-        if not isActiveCalcSub and (calc.status == 'WAIT' or calc.status == 'DEAL'):
+        if not calc.ActiveCalc and (calc.status == 'WAIT' or calc.status == 'DEAL'):
             buttons.append(
                 getButton(
                     '⚡️ ' + texts[lang]['result'],

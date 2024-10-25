@@ -157,6 +157,9 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'description': 'Описание',
             'comment': 'Комментарий',
+
+            'tr_stop': 'Скользящий стоп',
+            'near_tr': 'Ближайший сдвиг',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -185,6 +188,9 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'description': 'Description',
             'comment': 'Сomment',
+
+            'tr_stop': 'Trailing stop',
+            'near_tr': 'The nearest shift',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -213,6 +219,9 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'description': 'Tavsif',
             'comment': 'Sanktsiya',
+
+            'tr_stop': 'Orqadagi to\'xtash',
+            'near_tr': 'Eng yaqin siljish',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -241,6 +250,9 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'description': 'Tanım',
             'comment': 'Comment',
+
+            'tr_stop': 'Sondaki durak',
+            'near_tr': 'En yakın vardiya',
         },
     }
 
@@ -251,7 +263,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             count_zero += 1
 
     if count_zero > calc_result.tp_count // 2:
-        attention = '\n⚠️ При текущих значениях стоп-лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
+        attention = '\n⚠️ При текущих значениях стоп лосса и цены входа, тейк‑профит равен нулю, что делает сделку некорректной.'
         attention += '\n<b>Рекомендуем</b> изменить цену входа или стоп-лосс\n'
 
     if calc.market == 'crypto':
@@ -298,30 +310,56 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         profit_result = f"""<b>{texts[lang]['profit']}: </b>{get_print_float(profit, round_count)} {calc.currency}"""
     else:
         conclusion = ''
-        for i in range(calc_result.tp_count):
-            tp_ratio = calc.tpRatio[i]
-            tp_val = calc_result.tp_values[i]
-            p_val = calc_result.profit_values[i]
 
-            if tp_val == 0:
-                if lang == 'ru':
-                    conclusion += f'Тейк-профит ({tp_ratio} {texts[lang]["to"]} 1) не может быть рассчитан'
-                elif lang == 'uz':
-                    conclusion += f'Foyda oling ({tp_ratio} {texts[lang]["to"]} 1) hisoblab bo\'lmaydi'
-                elif lang == 'tr':
-                    conclusion += f'Fayda ({tp_ratio} {texts[lang]["to"]} 1) sayılmaz'
-                elif lang == 'en':
-                    conclusion += f'Take profit ({tp_ratio} {texts[lang]["to"]} 1) cannot be calculated'
-            else:
-                conclusion += f' <code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency}'
-                conclusion += f' | {get_print_float(p_val, round_count if p_val < 10 else 1)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+        if calc.ActiveCalc:
+            if calc.ActiveCalc.trailingStopCount:
+                conclusion += f'{texts[lang]["tr_stop"]}: +{calc.ActiveCalc.trailingStopCount} тейка'
 
-                if calc_result.profit_rate_values is not None:
-                    rate = calc_result.profit_rate_values[i]
-                    conclusion += f' -- (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) {get_print_float(rate * 100, round_count)}%'
+                near_trailing = (calc.newStop or calc.stopLoss) \
+                    + (calc.openPrice - calc.stopLoss) * \
+                    calc.ActiveCalc.trailingStopCount * 2
 
-            if i != calc_result.tp_count - 1:
-                conclusion += '\n'
+                conclusion += f'\n{texts[lang]["near_tr"]}: <code>{near_trailing}</code> {trading_currency}'
+
+                trailing_stops = getTrailingStopsMessage(
+                    'ru' if lang == 'ru' else 'en',
+                    calc.TrailingStops, calc.openPrice, calc.stopLoss
+                )
+                conclusion += f'\n{trailing_stops}'
+
+            elif calc.ActiveCalc.autoTake:
+                take = calc.ActiveCalc.autoTake
+                close_price = calc.openPrice + \
+                    (calc.openPrice - calc.stopLoss) * take
+                profit = close_price * count_bet
+
+                conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
+                conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({take} {texts[lang]["to"]} 1)'
+        else:
+            for i in range(calc_result.tp_count):
+                tp_ratio = calc.tpRatio[i]
+                tp_val = calc_result.tp_values[i]
+                p_val = calc_result.profit_values[i]
+
+                if tp_val == 0:
+                    if lang == 'ru':
+                        conclusion += f'Тейк-профит ({tp_ratio} {texts[lang]["to"]} 1) не может быть рассчитан'
+                    elif lang == 'uz':
+                        conclusion += f'Foyda oling ({tp_ratio} {texts[lang]["to"]} 1) hisoblab bo\'lmaydi'
+                    elif lang == 'tr':
+                        conclusion += f'Fayda ({tp_ratio} {texts[lang]["to"]} 1) sayılmaz'
+                    elif lang == 'en':
+                        conclusion += f'Take profit ({tp_ratio} {texts[lang]["to"]} 1) cannot be calculated'
+                else:
+                    conclusion += f' <code>{get_print_float(tp_val, price_round_count)}</code> {trading_currency}'
+                    conclusion += f' | {get_print_float(p_val, round_count if p_val < 10 else 1)} {calc.currency} ({tp_ratio} {texts[lang]["to"]} 1)'
+
+                    if calc_result.profit_rate_values is not None:
+                        rate = calc_result.profit_rate_values[i]
+                        conclusion += f' -- (<b>{get_print_float(count_bet * rate, 2)} {tool_name}</b>) {get_print_float(rate * 100, round_count)}%'
+
+                if i != calc_result.tp_count - 1:
+                    conclusion += '\n'
 
         profit_result = f"""<b>{texts[lang]['conclusion']} | {texts[lang]["profit"]}</b>:
 {conclusion}"""
@@ -345,18 +383,18 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         comment = f'<b>{texts[lang]["comment"]}</b>: {calc.comment}\n'
 
     time = ''
-    if calc.status == 'WAIT':
-        try:
-            dt = get_str_by_datetime(
-                datetime.fromisoformat(
-                    (calc.createdAt or '').replace('Z', '')
-                ),
-                'd.m h.m'
-            )
-            time = f'Создана: {dt}'
-        except:
-            pass
-    elif calc.status == 'DEAL':
+    try:
+        dt = get_str_by_datetime(
+            datetime.fromisoformat(
+                (calc.createdAt or '').replace('Z', '')
+            ),
+            'd.m h.m'
+        )
+        time += f'Создана: <b>{dt}</b>'
+    except:
+        pass
+
+    if calc.status == 'DEAL':
         try:
             dt = get_str_by_datetime(
                 datetime.fromisoformat(
@@ -364,7 +402,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 ),
                 'd.m h.m'
             )
-            time = f'В сделке с {dt}'
+            time += f'\nВ сделке с <b>{dt}</b>'
         except:
             pass
     elif calc.status == 'FINISH':
@@ -373,7 +411,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 datetime.fromisoformat(
                     (calc.dealAt or '').replace('Z', '')
                 ),
-                'datetime'
+                'd.m h.m'
             )
             statDt = get_str_by_datetime(
                 datetime.fromisoformat(
@@ -381,7 +419,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 ),
                 'd.m h.m'
             )
-            time = f'В сделке с {dealDt}\nЗавершена {statDt}'
+            time += f'\nВ сделке с <b>{dealDt}</b>\nЗавершена <b>{statDt}</b>'
         except:
             pass
     else:
@@ -392,24 +430,27 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 ),
                 'd.m h.m'
             )
-            time = f'Отменена <b>{dt}</b>'
+            time += f'\nОтменена <b>{dt}</b>'
         except:
             pass
 
+    if time:
+        time = f'\n{time}'
+
     return '\n'.join((
-        f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status}',
+        f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status} {time}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
         '',
         profit_result,
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
         fee_text + trading_style_type,
-        description + comment + time,
+        description + comment,
     ))
 
 
