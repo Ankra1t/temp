@@ -160,6 +160,13 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'tr_stop': 'Скользящий стоп',
             'near_tr': 'Ближайший сдвиг',
+
+            'created_at': 'Создана',
+            'deal_at': 'В сделке с',
+            'finished_at': 'Завершена',
+            'cancelled_at': 'Отменена',
+
+            'cancel': 'Отмена в',
         },
         'en': {
             'dep': 'Deposit' if not is_saved else 'Final deposit',
@@ -191,6 +198,13 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'tr_stop': 'Trailing stop',
             'near_tr': 'The nearest shift',
+
+            'created_at': 'Created at',
+            'deal_at': 'Deal at',
+            'finished_at': 'Finished at',
+            'cancelled_at': 'Cancelled at',
+
+            'cancel': 'Cancellation in',
         },
         'uz': {
             'dep': 'Depozit' if not is_saved else 'Yakuniy depozit',
@@ -222,6 +236,13 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'tr_stop': 'Orqadagi to\'xtash',
             'near_tr': 'Eng yaqin siljish',
+
+            'created_at': 'Yaratilgan',
+            'deal_at': 'Shartnoma',
+            'finished_at': 'Tugadi',
+            'cancelled_at': 'Bekor qilindi',
+
+            'cancel': 'Bekor qilish',
         },
         'tr': {
             'dep': 'Depozito' if not is_saved else 'Son depozito',
@@ -253,6 +274,13 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
             'tr_stop': 'Sondaki durak',
             'near_tr': 'En yakın vardiya',
+
+            'created_at': 'Oluşturuldu',
+            'deal_at': 'Anlaşma',
+            'finished_at': 'Bitirdim',
+            'cancelled_at': 'İptal edildi',
+
+            'cancel': 'İptal',
         },
     }
 
@@ -315,10 +343,10 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             if calc.ActiveCalc.trailingStopCount:
                 conclusion += f'{texts[lang]["tr_stop"]}: +{get_print_float(calc.ActiveCalc.trailingStopCount, 1)} тейка'
 
-
                 shift = 0
                 if calc.newStop:
-                    currentValueCount = (calc.newStop - calc.openPrice) / (calc.openPrice - calc.stopLoss)
+                    currentValueCount = (
+                        calc.newStop - calc.openPrice) / (calc.openPrice - calc.stopLoss)
                     while True:
                         if currentValueCount < calc.ActiveCalc.trailingStopCount * shift:
                             break
@@ -343,7 +371,6 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
                 conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
                 conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({take} {texts[lang]["to"]} 1)'
-
             else:
                 if lang == 'ru':
                     conclusion += 'Выберите тейк или скользящий стоп'
@@ -408,7 +435,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             ),
             'd.m h.m'
         )
-        time += f'Создана: <b>{dt}</b>'
+        time += f'{texts[lang]["created_at"]} <b>{dt}</b>'
     except:
         pass
 
@@ -437,7 +464,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 ),
                 'd.m h.m'
             )
-            time += f'\nВ сделке с <b>{dealDt}</b>\nЗавершена <b>{statDt}</b>'
+            time += f'\n{texts[lang]["deal_at"]} <b>{dealDt}</b>\n{texts[lang]["finished_at"]} <b>{statDt}</b>'
         except:
             pass
     else:
@@ -448,12 +475,25 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 ),
                 'd.m h.m'
             )
-            time += f'\nОтменена <b>{dt}</b>'
+            time += f'\n{texts[lang]["cancelled_at"]} <b>{dt}</b>'
         except:
             pass
 
     if time:
         time = f'\n{time}'
+
+    cancel_at = ''
+    if calc.status == 'WAIT' and calc.cancelAt:
+        try:
+            dt = get_str_by_datetime(
+                datetime.fromisoformat(
+                    (calc.cancelAt or '').replace('Z', '')
+                ),
+                'd.m h.m'
+            )
+            cancel_at = f'<b>{texts[lang]["cancel"]}</b>: {dt}\n'
+        except:
+            pass
 
     return '\n'.join((
         f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status} {time}',
@@ -467,7 +507,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         '',
         f'<b>{texts[lang]["dep"]}</b>: {get_print_float(calc.deposit + (calc.profit or 0.))} {calc.currency}',
         f"""<b>{texts[lang]["risk"]}</b>: {get_print_float(calc.riskValue)} {calc.currency} {f"{ENTER}<b>{texts[lang]['risk_percent']}</b>: {get_print_float(calc.riskValue / calc.deposit * 100, 1)}%" if is_try else ""}""",
-        fee_text + trading_style_type,
+        fee_text + trading_style_type + cancel_at,
         description + comment,
     ))
 
@@ -863,62 +903,6 @@ def msg_channel_calc_result(
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}{chat_link}\n' if try_link != '' else '')
-
-
-def msg_active_options(lang: LANGUAGES_TYPE, calc: Calculation):
-    data = calc.ActiveCalc
-
-    if not data:
-        return ''
-
-    texts = {
-        'ru': {
-            'main': 'Настройки',
-            'trailing': 'Ск. стоп',
-            'cancelAt': 'Отмена',
-            'autoStop': 'Авто стоп',
-            'take': 'Тейк',
-        },
-        'en': {
-            'main': 'Settings',
-            'trailing': 'Tr. stop',
-            'cancelAt': 'Cancel',
-            'autoStop': 'Auto stop',
-            'take': 'Take',
-        },
-        'uz': {
-            'main': 'Sozlamalar',
-            'trailing': 'Slip stop',
-            'cancelAt': 'Bekor qilmoq',
-            'autoStop': 'Avtomatik to\'xtatish',
-            'take': 'Take',
-        },
-        'tr': {
-            'main': 'Ayarlar',
-            'trailing': 'Iptal etmek',
-            'cancelAt': 'İptal etmek',
-            'autoStop': 'Otomatik durdurma',
-            'take': 'Take',
-        },
-    }
-
-    cancelAt = '-'
-    if calc.cancelAt:
-        dt = datetime.fromisoformat(
-            calc.cancelAt.replace('Z', '')
-        ) + timedelta(hours=3)
-        cancelAt = dt.strftime("%d.%m %H:%M")
-
-    take = '-'
-    if data.trailingStopCount:
-        take = f'скользящий стоп каждые {get_print_float(data.trailingStopCount, 1)} тейка'
-    elif data.autoTake:
-        take = f'выход при {get_print_float(data.autoTake)} тейках'
-
-    return f"""<b>{texts[lang]['main']}</b>
-{texts[lang]['autoStop']}: {'✅' if data.autoStop else '❌'}
-{texts[lang]['take']}: {take}
-{texts[lang]['cancelAt']}: {cancelAt}"""
 
 
 def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):

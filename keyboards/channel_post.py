@@ -217,13 +217,22 @@ def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=Fals
             keyboard.add(*buttons)
             buttons = []
 
-    keyboard.add(
+    if is_calc:
+        buttons.append(
+            getButton(
+                'Своя цена',
+                'close_price', stat_id
+            ),
+        )
+
+    buttons.append(
         getButton(
             back_txt('ru'),
             'calc' if is_calc else 'go_stats' if is_user else 'result', stat_id, is_calc
         )
     )
 
+    keyboard.add(*buttons)
     return keyboard
 
 
@@ -241,14 +250,22 @@ def kb_channel_calc_result_stop(stat_id: int, is_calc=False, is_user=False):
             keyboard.add(*buttons)
             buttons = []
 
-    keyboard.add(
+    if is_calc:
+        buttons.append(
+            getButton(
+                'Своя цена',
+                'close_price', stat_id
+            ),
+        )
+
+    buttons.append(
         getButton(
             back_txt('ru'),
-            'calc' if is_calc else 'go_stats' if is_user else 'result',
-            stat_id, is_calc
+            'calc' if is_calc else 'go_stats' if is_user else 'result', stat_id, is_calc
         )
     )
 
+    keyboard.add(*buttons)
     return keyboard
 
 

@@ -191,7 +191,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Тейк',
             'stop': 'Стоп',
             'breakeven': 'Безубыток',
-            'close_price': 'Цена закрытия',
 
             'active': 'Активировать сделку',
             'refresh': 'Обновить',
@@ -213,7 +212,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Take',
             'stop': 'Stop',
             'breakeven': 'Breakeven',
-            'close_price': 'Close price',
 
             'active': 'Activate the deal',
             'refresh': 'Refresh',
@@ -235,7 +233,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Olish',
             'stop': 'Toʻxtatish',
             'breakeven': 'Tenglash',
-            'close_price': 'Yopish narxi',
 
             'active': 'Bitimni faollashtirish',
             'refresh': 'Yangilamoq',
@@ -257,7 +254,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
             'take': 'Al',
             'stop': 'Durdur',
             'breakeven': 'Kâr-zarar noktası',
-            'close_price': 'Kapalı fiyat',
 
 
             'active': 'Anlaşmayı etkinleştir',
@@ -293,12 +289,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isR
                 getChannelButton(
                     texts[lang]['breakeven'],
                     'take+0', calc.id, True
-                )
-            )
-            buttons.append(
-                getButton(
-                    texts[lang]['close_price'],
-                    'close_price', calc.id,
                 )
             )
 

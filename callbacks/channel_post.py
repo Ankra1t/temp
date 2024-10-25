@@ -2,13 +2,14 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from common.calculation import getStrValueCount
+from keyboards.stats import kb_deal_profit_cancel
 from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, get_print_float
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
 from db import db
-from messages.enter import msg_enter_cancel_at, msg_enter_trading_style
+from messages.enter import msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
 from CHANNEL.channel_post import channel_post
@@ -433,6 +434,15 @@ More often: <b>{result}</b>"""
 
     if type == 'go_stats':
         await send_stats(bot, call.message, state, user)
+
+    if type == 'close_price':
+        await state.set(StatsState.close_price)
+        await bot.edit_message_text(
+            msg_enter_close_price(user.lang),
+            chat_id, mes_id,
+            reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
+        )
+        await state.add_data(calc_id=calc_id, del_mes_id=mes_id)
 
     if type == 'cancel_at':
         new_mes_id = await edit_message(

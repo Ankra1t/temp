@@ -17,7 +17,7 @@ from Classes import pay_guard, calcService, hti
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
-from messages.calc import msg_active_options, msg_calc_list, msg_calculation, msg_channel_calc
+from messages.calc import msg_calc_list, msg_calculation, msg_channel_calc
 from messages.errors import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
@@ -684,10 +684,6 @@ async def send_calculation(
 
     if True or calc_output == 'text' or is_try:
         text = msg_calculation(user.lang, calc, is_try)
-
-        if calc.ActiveCalc and (calc.status == 'DEAL' or calc.status == 'WAIT'):
-            text = text.strip()
-            text += '\n\n' + msg_active_options(user.lang, calc)
 
         if calc.photo is None:
             if is_first:

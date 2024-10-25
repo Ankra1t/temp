@@ -37,7 +37,7 @@ from services import calculation, channel_calc, ticker
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
-from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_close_price, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
+from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
 from messages.main import msg_frozen
 
 from keyboards.settings import kb_take_profit, kb_trading_style
@@ -299,15 +299,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             chat_id, mes_id,
             reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
         )
-
-    if type == 'close_price':
-        await state.set(StatsState.close_price)
-        await bot.edit_message_text(
-            msg_enter_close_price(user.lang),
-            chat_id, mes_id,
-            reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
-        )
-        await state.add_data(calc_id=calc_id, del_mes_id=mes_id)
 
     if type == 'go_main':
         await send_main(bot, call.message, state, user)
@@ -820,10 +811,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'active_calc_a':
         calculation.activate(userId=user.id, id=calc_id)
-
         calc = calculation.get(userId=user.id, calcId=calc_id)
 
-        if calc:
+        if calc and calc.ActiveCalc:
             if calc.photo:
                 file_id = calc.photo
                 file = await bot.get_file(file_id)
@@ -841,7 +831,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
             await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
-        type = 'active_calc'
+            type = 'active_calc'
 
     if type == 'active_calc':
         calc = calculation.get(userId=user.id, calcId=calc_id)

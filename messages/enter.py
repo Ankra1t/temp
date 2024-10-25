@@ -763,7 +763,7 @@ def msg_enter_profit_sum(lang: LANGUAGES_TYPE):
 
 def msg_enter_close_price(lang: LANGUAGES_TYPE):
     if lang == 'ru':
-        text = 'Введите <b>цену закрытия</b> сделки'
+        text = 'Введите Вашу <b>цену закрытия</b> сделки'
     elif lang == 'uz':
         text = 'Bitimni yopish narxini kiriting'
     elif lang == 'tr':
