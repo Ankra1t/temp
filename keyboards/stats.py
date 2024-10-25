@@ -721,7 +721,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Время отмены',
             'tr_stop': 'Ск. стоп',
             'auto_stop': 'Авто стоп',
-            'auto_take': 'Свой тейк',
+            'auto_take': 'Тейк',
             'cancel': 'Отменить сделку',
             'profit': 'Закрыть сделку',
         },
@@ -729,7 +729,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Cancel at',
             'tr_stop': 'Trailing stop',
             'auto_stop': 'Auto stop',
-            'auto_take': 'Your take',
+            'auto_take': 'Take',
             'cancel': 'Cancel the deal',
             'profit': 'Close the deal ',
         },
@@ -737,7 +737,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Bekor qilish vaqti',
             'tr_stop': 'Slip stop',
             'auto_stop': 'Avtomatik to\'xtatish',
-            'auto_take': 'Avtoulov',
+            'auto_take': 'Take',
             'cancel': 'Bitimni bekor qiling',
             'profit': 'Bitimni yoping',
         },
@@ -745,7 +745,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
             'cancelAt': 'Iptal etmek',
             'tr_stop': 'Kayan durdurma',
             'auto_stop': 'Otomatik durdurma',
-            'auto_take': 'Otomatik alım',
+            'auto_take': 'Take',
             'cancel': 'Anlaşmayı iptal et',
             'profit': 'Anlaşmayı kapat ',
         },
@@ -789,8 +789,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
                 texts[lang]['cancel'], 'cancel', calc.id
             ),
         )
-
-    if calc.status == 'DEAL':
+    elif calc.status == 'DEAL':
         buttons.append(
             getChannelButton(
                 # texts[lang]['profit'], 'active_end', calc.id

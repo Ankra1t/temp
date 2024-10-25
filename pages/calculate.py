@@ -1322,6 +1322,7 @@ async def create_and_send_channel_calc(
     isVote = liteDb.getSendSettings('isVote')
     time = liteDb.getSendSettings('time')
 
+    print(1)
     send_data = channel_calc.create(calc_id)
     if send_data is None:
         return
