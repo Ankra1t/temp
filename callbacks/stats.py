@@ -37,14 +37,14 @@ from services import calculation, channel_calc, ticker
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
-from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
+from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_new_stop, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_take_price, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
 from messages.main import msg_frozen
 
 from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from keyboards.main import kb_main
 from keyboards.stats import (
-    kb_auto_take, kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
+    kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
@@ -920,9 +920,16 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if type == 'auto_take':
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        takes = []
+        if calc:
+            diffOpSl = calc.openPrice - calc.stopLoss
+            for el in range(1, 11):
+                takes.append(calc.openPrice + diffOpSl * el)
+
         await edit_message(
             bot, call.message, 'text',
-            msg_enter_auto_take(user.lang),
+            msg_enter_auto_take(user.lang, takes),
             kb_auto_take(user.lang, calc_id)
         )
 
@@ -966,6 +973,49 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if calc:
             tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
             await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
+            await send_calculation(bot, call.message, state, user, calc)
+
+    if type == 'new_stop':
+        await bot.edit_message_text(
+            msg_enter_new_stop(user.lang),
+            chat_id, mes_id,
+            reply_markup=kb_calc_back(user.lang, calc_id)
+        )
+        await state.set(StatsState.new_stop)
+        await state.add_data(del_mes_id=mes_id, calc_id=calc_id, type='active_calc')
+
+    if type == 'take_price':
+        await state.delete()
+
+        await bot.edit_message_text(
+            msg_enter_take_price(user.lang), chat_id, mes_id,
+            reply_markup=kb_calc_back(user.lang, calc_id)
+        )
+        await state.set(StatsState.take_price)
+        await state.add_data(
+            calc_id=calc_id
+        )
+
+    if type == 'take_price_yes':
+        async with state.data() as data:
+            value = data.get('value')
+
+        await state.delete()
+
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        if not calc:
+            return
+
+        value_count = (value - calc.openPrice) / (calc.openPrice - calc.stopLoss)
+
+        calculation.updateActive(
+            userId=user.id, id=calc_id,
+            trailingStopCount=None,
+            autoTake=value_count
+        )
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+
+        if calc:
             await send_calculation(bot, call.message, state, user, calc)
 
     await bot.answer_callback_query(call.id)

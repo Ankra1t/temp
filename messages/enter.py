@@ -774,6 +774,28 @@ def msg_enter_close_price(lang: LANGUAGES_TYPE):
     return f'👉 {text}'
 
 
+def msg_enter_new_stop(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Введите цену, куда передвигаете стоп',
+        'en': 'Enter the price where you move the stop',
+        'uz': 'To\'xtash joyini ko\'chiradigan narxni kiriting',
+        'tr': 'Durağı taşıdığınız fiyatı girin',
+    }
+
+    return f'👉 {texts[lang]}'
+
+
+def msg_enter_take_price(lang: LANGUAGES_TYPE):
+    texts = {
+        'ru': 'Введите цену тейка',
+        'en': 'Enter the take price',
+        'uz': 'Teik narxini kiriting',
+        'tr': 'Alma fiyatını girin',
+    }
+
+    return f'👉 {texts[lang]}'
+
+
 def msg_choose_lang(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Выберите язык',
@@ -854,7 +876,7 @@ Alım karı da otomatik olarak değişecektir, <b>ticaret stop loss'a ulaşana k
     return f'{info[lang]}\n\n👉 {texts[lang]}'
 
 
-def msg_enter_auto_take(lang: LANGUAGES_TYPE):
+def msg_enter_auto_take(lang: LANGUAGES_TYPE, takes: list[float] = []):
     texts = {
         'ru': 'Выберите количество тейков для авто выхода',
         'en': 'Select a take for auto exit',
@@ -862,4 +884,9 @@ def msg_enter_auto_take(lang: LANGUAGES_TYPE):
         'uz': 'Avtomatik chiqish uchun qabul qilishni tanlang',
     }
 
-    return f'👉 {texts[lang]}'
+    takes_show = ''
+    if len(takes) > 0:
+        for i, el in enumerate(takes):
+            takes_show += f'\n{i + 1} {"к" if lang == "ru" else "to"} 1 {" " if i + 1 >= 10 else ""}| {get_print_float(el)}'
+
+    return f'👉 {texts[lang]}{takes_show}'

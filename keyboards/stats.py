@@ -5,7 +5,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from db import db
 from keyboards.channel_post import getButton as getChannelButton
-from common.keyboard import back_txt, cancel_txt, reset_txt
+from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
 from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
@@ -606,7 +606,7 @@ def kb_confirm_channel_post(calc_id: int):
     btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
     add_time = getButton('Период', 'stc+time', calc_id)
 
-    tr_stop = getButton('Ск. стоп', 'ch_tr_stop', calc_id)
+    tr_stop = getButton('Скользящий стоп', 'ch_tr_stop', calc_id)
 
     cancel_at = getButton(
         'Время отмены', 'stc_cancel_at', calc_id
@@ -676,7 +676,7 @@ def kb_cancel_at(lang: LANGUAGES_TYPE, calc_id: int, action: Literal['stc_', '']
         getButton('1d', f'{action}cancel_at+1d', calc_id),
     )
     keyboard.add(
-        getButton(reset_txt(lang), f'{action}cancel_at+0', calc_id),
+        getButton(not_specify_txt(lang), f'{action}cancel_at+0', calc_id),
         getButton(
             back_txt(lang),
             'stc+back' if action == 'stc_' else 'active_calc',
@@ -699,7 +699,7 @@ def kb_channel_trailing_stop(lang: LANGUAGES_TYPE, calc_id: int, is_channel=Fals
 
     keyboard.add(*buttons)
     keyboard.add(
-        getButton(reset_txt(lang), f'{is_channel}tr_stop+0', calc_id),
+        getButton(not_specify_txt(lang), f'{is_channel}tr_stop+0', calc_id),
         getButton(back_txt(lang), 'active_calc', calc_id),
     )
     return keyboard
@@ -709,8 +709,8 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
     texts = {
         'ru': {
             'cancelAt': 'Время отмены',
-            'tr_stop': 'Ск. стоп',
-            'auto_stop': 'Авто стоп',
+            'tr_stop': 'Скользящий стоп',
+            'new_stop': 'Сдвинуть стоп',
             'auto_take': 'Тейк',
             'cancel': 'Отменить сделку',
             'profit': 'Закрыть сделку',
@@ -718,7 +718,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
         'en': {
             'cancelAt': 'Cancel at',
             'tr_stop': 'Trailing stop',
-            'auto_stop': 'Auto stop',
+            'new_stop': 'Move the stop',
             'auto_take': 'Take',
             'cancel': 'Cancel the deal',
             'profit': 'Close the deal ',
@@ -726,7 +726,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
         'uz': {
             'cancelAt': 'Bekor qilish vaqti',
             'tr_stop': 'Slip stop',
-            'auto_stop': 'Avtomatik to\'xtatish',
+            'new_stop': 'To\'xtashni harakatga keltiring',
             'auto_take': 'Take',
             'cancel': 'Bitimni bekor qiling',
             'profit': 'Bitimni yoping',
@@ -734,7 +734,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
         'tr': {
             'cancelAt': 'Iptal etmek',
             'tr_stop': 'Kayan durdurma',
-            'auto_stop': 'Otomatik durdurma',
+            'new_stop': 'Durumu hareket et',
             'auto_take': 'Take',
             'cancel': 'Anlaşmayı iptal et',
             'profit': 'Anlaşmayı kapat ',
@@ -754,7 +754,8 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
 
     buttons.append(
         getButton(
-            texts[lang]['tr_stop'], 'tr_stop', calc.id
+            texts[lang]['auto_take'],
+            'auto_take', calc.id
         ),
     )
 
@@ -763,13 +764,10 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
 
     keyboard.add(
         getButton(
-            ('✅' if not (calc.ActiveCalc and calc.ActiveCalc.autoStop) else '❌') +
-            ' ' + texts[lang]['auto_stop'],
-            'auto_stop', calc.id
+            texts[lang]['tr_stop'], 'tr_stop', calc.id
         ),
         getButton(
-            texts[lang]['auto_take'],
-            'auto_take', calc.id
+            texts[lang]['new_stop'], 'new_stop', calc.id
         ),
     )
 
@@ -782,7 +780,6 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
     elif calc.status == 'DEAL':
         buttons.append(
             getChannelButton(
-                # texts[lang]['profit'], 'active_end', calc.id
                 texts[lang]['profit'], 'result_end', calc.id
             ),
         )
@@ -810,8 +807,39 @@ def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
 
     keyboard.add(*buttons)
     keyboard.add(
-        getButton(reset_txt(lang), 'auto_take+null', calc_id),
+        getButton('Указать свою цену', 'take_price', calc_id)
+    )
+    keyboard.add(
+        getButton(not_specify_txt(lang), 'auto_take+null', calc_id),
         getButton(back_txt(lang), 'active_calc', calc_id)
+    )
+    return keyboard
+
+
+def kb_confirm_take_price(lang: LANGUAGES_TYPE, calc_id: int):
+    texts = {
+        'ru': {
+            'yes': 'Да',
+            'no': 'Нет',
+        },
+        'en': {
+            'yes': 'Yes',
+            'no': 'No',
+        },
+        'uz': {
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+        },
+        'tr': {
+            'yes': 'Evet',
+            'no': 'HAYIR',
+        },
+    }
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        getButton(texts[lang]['no'], 'take_price', calc_id),
+        getButton(texts[lang]['yes'], 'take_price_yes', calc_id),
     )
     return keyboard
 
@@ -824,7 +852,16 @@ def kb_calc_not(lang: LANGUAGES_TYPE, calc_id: int):
     else:
         text = 'Go to the deal'
 
-    keyboard.add(   
+    keyboard.add(
         getButton(text, 'get_calc', calc_id)
+    )
+    return keyboard
+
+
+def kb_calc_back(lang: LANGUAGES_TYPE, calc_id: int):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+
+    keyboard.add(
+        getButton(back_txt(lang), 'get_calc', calc_id)
     )
     return keyboard

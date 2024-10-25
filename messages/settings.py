@@ -762,30 +762,26 @@ def msg_active_settings(
     texts = {
         'ru': {
             'main': 'Настройка активных сделок',
-            'trailing': 'Ск. стоп',
+            'trailing': 'Скользящий стоп',
             'cancelAt': 'Отмена через (часов)',
-            'autoStop': 'Авто стоп',
             'take': 'Тейк',
         },
         'en': {
             'main': 'Setting of active trades',
             'trailing': 'Tr. stop',
             'cancelAt': 'Cancellation after (hours)',
-            'autoStop': 'Auto stop',
             'take': 'Take',
         },
         'uz': {
             'main': 'Faol savdolarni sozlash',
             'trailing': 'Slip stop',
             'cancelAt': 'Bekor keyin (soat)',
-            'autoStop': 'Avtomatik to\'xtatish',
             'take': 'Take',
         },
         'tr': {
             'main': 'Aktif işlemlerin ayarlanması',
             'trailing': 'Iptal etmek',
             'cancelAt': '(Saat) sonra iptal',
-            'autoStop': 'Otomatik durdurma',
             'take': 'Take',
         },
     }
@@ -797,6 +793,5 @@ def msg_active_settings(
         take = f'выход при {get_print_float(data.autoTake)} тейках'
 
     return f"""<b>{texts[lang]['main']}</b>
-{texts[lang]['autoStop']}: {'✅' if data and data.autoStop else '❌'}
 {texts[lang]['take']}: {take}
 {texts[lang]['cancelAt']}: {get_print_float(data.cancelMinutes / 60, 1) if data and data.cancelMinutes else '-'}"""

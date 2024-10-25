@@ -370,7 +370,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 profit = close_price * count_bet
 
                 conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
-                conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({take} {texts[lang]["to"]} 1)'
+                conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({get_print_float(take, 1)} {texts[lang]["to"]} 1)'
             else:
                 if lang == 'ru':
                     conclusion += 'Выберите тейк или скользящий стоп'
@@ -467,7 +467,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
             time += f'\n{texts[lang]["deal_at"]} <b>{dealDt}</b>\n{texts[lang]["finished_at"]} <b>{statDt}</b>'
         except:
             pass
-    else:
+    elif calc.status != 'WAIT':
         try:
             dt = get_str_by_datetime(
                 datetime.fromisoformat(
@@ -495,13 +495,18 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         except:
             pass
 
+    stop_show = get_print_float(
+        calc.stopLoss if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else (calc.newStop or calc.stopLoss),
+        price_round_count
+    )
+
     return '\n'.join((
         f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status} {time}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
         f'<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code> {trading_currency}',
-        f'<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.stopLoss, price_round_count)}</code> {trading_currency}',
+        f'<b>{texts[lang]["stop"]}</b>: <code>{stop_show}</code> {trading_currency}',
         '',
         profit_result,
         '',

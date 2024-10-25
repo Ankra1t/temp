@@ -213,8 +213,7 @@ async def send_active_settings(
     advSettings = settings.getAdvanced(user.id)
 
     msg = msg_active_settings(user.lang, advSettings)
-    kb = kb_active_settings(user.lang, bool(
-        advSettings and advSettings.autoStop))
+    kb = kb_active_settings(user.lang)
 
     if is_first:
         await bot.send_message(
@@ -767,7 +766,7 @@ async def send_confirm_calc_send(
     )
 
     text += '\n\nОпрос: ' + ('✅' if send_data.isVote else '❌')
-    text += f'\nСк. стоп: {stat.ActiveCalc.trailingStopCount if stat.ActiveCalc and stat.ActiveCalc.trailingStopCount else "-"}'
+    text += f'\nСкользящий стоп: {stat.ActiveCalc.trailingStopCount if stat.ActiveCalc and stat.ActiveCalc.trailingStopCount else "-"}'
 
     kb = kb_confirm_channel_post(
         stat_id
@@ -1167,7 +1166,7 @@ async def send_admin_channel_calc_item(
 <b>Тейки:</b>{take_info}
 
 <b>Время отмены:</b> {cancel_at}
-<b>Ск. стоп:</b> {get_print_float(calc.ActiveCalc.trailingStopCount, 1) if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else '-'}
+<b>Скользящий стоп:</b> {get_print_float(calc.ActiveCalc.trailingStopCount, 1) if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else '-'}
 <b>Вывод стопа:</b> {'❌' if send_data.withoutStop else '✅'}"""
 
     is_state = True

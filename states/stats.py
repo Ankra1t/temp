@@ -17,5 +17,7 @@ class StatsState(StatesGroup):
     trailing_stop = State()
     close_price = State()
 
+    take_price = State()
+
 class ChannelCalcState(StatesGroup):
     loss = State()

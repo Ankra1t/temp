@@ -3,7 +3,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from common.keyboard import back_txt, cancel_txt, reset_txt
+from common.keyboard import back_txt, cancel_txt, not_specify_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
 from db import db
@@ -1116,33 +1116,29 @@ def kb_first_dep(lang: LANGUAGES_TYPE):
     return keyboard
 
 
-def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
+def kb_active_settings(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
             'cancelAt': 'Время отмены',
-            'tr_stop': 'Ск. стоп',
-            'auto_stop': 'Авто стоп',
+            'tr_stop': 'Скользящий стоп',
             'auto_take': 'Свой тейк',
             'cancel': 'Отменить сделку',
         },
         'en': {
             'cancelAt': 'Cancel at',
             'tr_stop': 'Trailing stop',
-            'auto_stop': 'Auto stop',
             'auto_take': 'Your take',
             'cancel': 'Cancel the deal',
         },
         'uz': {
             'cancelAt': 'Bekor qilish vaqti',
             'tr_stop': 'Slip stop',
-            'auto_stop': 'Avtomatik to\'xtatish',
             'auto_take': 'Avtoulov',
             'cancel': 'Bitimni bekor qiling',
         },
         'tr': {
             'cancelAt': 'Iptal etmek',
             'tr_stop': 'Kayan durdurma',
-            'auto_stop': 'Otomatik durdurma',
             'auto_take': 'Otomatik alım',
             'cancel': 'Anlaşmayı iptal et',
         },
@@ -1156,11 +1152,6 @@ def kb_active_settings(lang: LANGUAGES_TYPE, autoStop: bool):
         ),
         getButton(
             texts[lang]['tr_stop'], 'tr_stop'
-        ),
-        getButton(
-            ('✅' if not autoStop else '❌') +
-            ' ' + texts[lang]['auto_stop'],
-            'auto_stop'
         ),
         getButton(
             texts[lang]['auto_take'],
@@ -1182,7 +1173,7 @@ def kb_settings_cancel_at(lang: LANGUAGES_TYPE):
         getButton('1d', 'cancel_at+1d'),
     )
     keyboard.add(
-        getButton(reset_txt(lang), 'cancel_at+0'),
+        getButton(not_specify_txt(lang), 'cancel_at+0'),
         getButton(back_txt(lang), 'active')
     )
     return keyboard
@@ -1199,7 +1190,7 @@ def kb_settings_auto_take(lang: LANGUAGES_TYPE):
 
     keyboard.add(*buttons)
     keyboard.add(
-        getButton(reset_txt(lang), 'auto_take+null'),
+        getButton(not_specify_txt(lang), 'auto_take+null'),
         getButton(back_txt(lang), 'active')
     )
     return keyboard
@@ -1216,7 +1207,7 @@ def kb_settings_tr_stop(lang: LANGUAGES_TYPE):
 
     keyboard.add(*buttons)
     keyboard.add(
-        getButton(reset_txt(lang), 'tr_stop+0'),
+        getButton(not_specify_txt(lang), 'tr_stop+0'),
         getButton(back_txt(lang), 'active')
     )
     return keyboard
