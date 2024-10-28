@@ -660,22 +660,10 @@ def msg_channel_calc(
                 profit_result += f'передвигаю стоп каждые {tr_stop} тейка'
             else:
                 profit_result += f'trailing stop each {tr_stop} takes'
-        else:
-            for i in range(calc_result.tp_count):
-                tp_val = calc_result.tp_values[i]
-
-                if (
-                    (status == 'CANCEL' and i == 0) or
-                    (
-                        indexPrice and
-                        (
-                            (diffOpSl > 0 and indexPrice > tp_val) or
-                            (diffOpSl < 0 and indexPrice < tp_val)
-                        )
-                    ) or i == 0
-                ):
-                    profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
-                    profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
+        elif calc.ActiveCalc and calc.ActiveCalc.autoTake:
+            tp_val = calc.openPrice + (calc.openPrice - calc.stopLoss) * calc.ActiveCalc.autoTake
+            profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
+            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
 
     count_show = ''
     if count != -1:

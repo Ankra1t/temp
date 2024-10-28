@@ -881,7 +881,7 @@ def kb_calc_back(lang: LANGUAGES_TYPE, calc_id: int):
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     keyboard.add(
-        getButton(back_txt(lang), 'get_calc', calc_id)
+        getButton(back_txt(lang), 'active_calc', calc_id)
     )
     return keyboard
 

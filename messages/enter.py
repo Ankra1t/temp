@@ -887,6 +887,6 @@ def msg_enter_auto_take(lang: LANGUAGES_TYPE, takes: list[float] = []):
     takes_show = ''
     if len(takes) > 0:
         for i, el in enumerate(takes):
-            takes_show += f'\n{i + 1} {"к" if lang == "ru" else "to"} 1 {" " if i + 1 >= 10 else ""}| {get_print_float(el)}'
+            takes_show += f'\n{i + 1} {"к" if lang == "ru" else "to"} 1 {" " if i + 1 >= 10 else ""}| <b>{get_print_float(el)} USDT</b>'
 
     return f'👉 {texts[lang]}{takes_show}'
