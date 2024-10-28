@@ -482,6 +482,8 @@ def kb_calculate_delete(lang: LANGUAGES_TYPE, stat_id: int):
 def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
     texts = {
         'ru': {
+            'dep': 'Депозит',
+            'risk': 'Риск',
             'open_price': 'Цену входа',
             'stop_loss': 'Стоп-лосс',
             'tool': 'Инструмент',
@@ -489,6 +491,8 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
             'take_profit': 'Тейки',
         },
         'en': {
+            'dep': 'Deposit',
+            'risk': 'Risk',
             'open_price': 'Entry price',
             'stop_loss': 'Stop loss',
             'tool': 'Tool',
@@ -496,6 +500,8 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
             'take_profit': 'Takes',
         },
         'uz': {
+            'dep': 'Depozit',
+            'risk': 'Xavf',
             'open_price': 'Ochiq narx',
             'stop_loss': 'Stop loss',
             'tool': 'Asbob',
@@ -503,6 +509,8 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
             'take_profit': 'Davom etadi',
         },
         'tr': {
+            'dep': 'Depozito',
+            'risk': 'Risk',
             'open_price': 'açılış fiyatını',
             'stop_loss': 'Stop loss',
             'tool': 'Enstrüman',
@@ -528,12 +536,22 @@ def kb_calculate_change(lang: LANGUAGES_TYPE, calc: Calculation):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 
+    if calc.status != 'FINISH':
+        keyboard.add(
+            getButton(
+                texts[lang]['dep'], 'ch_c+dep', calc.id
+            ),
+            getButton(
+                texts[lang]['risk'], 'ch_c+risk', calc.id
+            ),
+        )
+
     if not calc.ActiveCalc:
         keyboard.add(btn_op, btn_sl)
         keyboard.add(btn_tool, btn_style)
         keyboard.add(btn_take_profit, btn_back)
     else:
-        keyboard.add(btn_style, btn_take_profit)
+        keyboard.add(btn_style)
         keyboard.add(btn_back)
 
     return keyboard
@@ -796,13 +814,13 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
     return keyboard
 
 
-def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
+def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: bool):
     keyboard = InlineKeyboardMarkup(row_width=5)
 
     buttons = []
     for i in range(1, 11):
         buttons.append(
-            getButton(f'{i}', f'auto_take+{i}', calc_id)
+            getButton(f'{i}', f'kb_auto_take+{i}', calc_id)
         )
 
     keyboard.add(*buttons)
@@ -811,7 +829,8 @@ def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
     )
     keyboard.add(
         getButton(not_specify_txt(lang), 'auto_take+null', calc_id),
-        getButton(back_txt(lang), 'active_calc', calc_id)
+        getButton(back_txt(lang),
+                  'channel_item' if send_data else 'active_calc', calc_id)
     )
     return keyboard
 
@@ -863,5 +882,13 @@ def kb_calc_back(lang: LANGUAGES_TYPE, calc_id: int):
 
     keyboard.add(
         getButton(back_txt(lang), 'get_calc', calc_id)
+    )
+    return keyboard
+
+
+def kb_channel_item_back(calc_id: int):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        getButton(back_txt('ru'), 'channel_item', calc_id)
     )
     return keyboard

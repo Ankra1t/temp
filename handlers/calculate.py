@@ -217,8 +217,22 @@ async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContex
     logger.info(
         f'callback "handle_deposit" user_tg_id={user.tgId} value={value}')
 
-    await state.add_data(deposit=value)
-    await choose_calculate_step(bot, message, state, user, last_value='deposit')
+    async with state.data() as data:
+        calc_id = data.get('calc_id')
+
+    if calc_id:
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        if not calc or calc.status == 'FINISH':
+            return
+
+        calc = calculation.update(
+            userId=user.id, calcId=calc_id, deposit=value
+        )
+        if calc:
+            await send_calculation(bot, message, state, user, calc, True)
+    else:
+        await state.add_data(deposit=value)
+        await choose_calculate_step(bot, message, state, user, last_value='deposit')
 
 
 async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -238,7 +252,8 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
         return
 
     logger.info(
-        f'callback "handle_risk_percent" user_tg_id={user.tgId} value={value}')
+        f'callback "handle_risk_percent" user_tg_id={user.tgId} value={value}'
+    )
 
     # if value <= 0 or value >= 100:
     #     bot.send_message(
@@ -248,8 +263,23 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
     #     )
     #     return
 
-    await state.add_data(risk=[value, is_percent])
-    await choose_calculate_step(bot, message, state, user, last_value='risk')
+    async with state.data() as data:
+        calc_id = data.get('calc_id')
+
+    if calc_id:
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        if not calc or calc.status == 'FINISH':
+            return
+
+        calc = calculation.update(
+            userId=user.id, calcId=calc_id,
+            riskValue=value if not is_percent else calc.deposit * value / 100
+        )
+        if calc:
+            await send_calculation(bot, message, state, user, calc, True)
+    else:
+        await state.add_data(risk=[value, is_percent])
+        await choose_calculate_step(bot, message, state, user, last_value='risk')
 
 
 async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -414,7 +444,8 @@ async def handle_stop_atr(message: Message, bot: AsyncTeleBot, state: StateConte
 
     new_mes = await bot.send_message(
         chat_id, msg_choose_direct(user.lang, user.tgId),
-        reply_markup=kb_calc_direct(user.lang, open_price, atr, action == 'send_calc')
+        reply_markup=kb_calc_direct(
+            user.lang, open_price, atr, action == 'send_calc')
     )
 
     await state.add_data(
@@ -473,7 +504,8 @@ async def handle_min_bar(message: Message, bot: AsyncTeleBot, state: StateContex
 
     new_mes = await bot.send_message(
         chat_id, msg_choose_direct(user.lang, user.tgId),
-        reply_markup=kb_calc_direct(user.lang, open_price, atr, action == 'send_calc')
+        reply_markup=kb_calc_direct(
+            user.lang, open_price, atr, action == 'send_calc')
     )
 
     await state.add_data(

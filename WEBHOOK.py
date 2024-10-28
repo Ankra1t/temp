@@ -251,8 +251,8 @@ async def setup():
     logger.info('Starting up: removing old webhook')
     await bot.remove_webhook()
 
-    logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types)
+    # logger.info('Starting up: setting webhook')
+    # await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types)
 
     commands = [
         ('start', 'restart'),
@@ -287,6 +287,8 @@ async def setup():
         web.get(BASE_URL + '/vote_timeout', vote_timeout),
         web.get(BASE_URL + '/first_timeout', first_timeout),
     ]
+
+    await bot.infinity_polling()
 
     app.add_routes(routes)
     app.on_cleanup.append(shutdown)

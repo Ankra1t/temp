@@ -371,15 +371,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
                 conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
                 conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({get_print_float(take, 1)} {texts[lang]["to"]} 1)'
-            else:
-                if lang == 'ru':
-                    conclusion += 'Выберите тейк или скользящий стоп'
-                elif lang == 'uz':
-                    conclusion += 'Take yoki slip stop-ni o\'rnating'
-                elif lang == 'tr':
-                    conclusion += 'Bir alma veya kayan durdurma ayarlayın'
-                else:
-                    conclusion += 'Set a take or a sliding stop'
+
         else:
             for i in range(calc_result.tp_count):
                 tp_ratio = calc.tpRatio[i]
@@ -406,8 +398,18 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 if i != calc_result.tp_count - 1:
                     conclusion += '\n'
 
-        profit_result = f"""<b>{texts[lang]['conclusion']} | {texts[lang]["profit"]}</b>:
-{conclusion}"""
+        profit_result = f"<b>{texts[lang]['conclusion']} | {texts[lang]['profit']}</b>: "
+        if conclusion == '':
+            if lang == 'ru':
+                profit_result += 'не установлен'
+            elif lang == 'uz':
+                profit_result += 'o\'rnatilmagan'
+            elif lang == 'tr':
+                profit_result += 'yüklü değil'
+            else:
+                profit_result += 'not installed'
+        else:
+            profit_result += f'\n{conclusion}'
 
     demo_show = ''
     if is_try:

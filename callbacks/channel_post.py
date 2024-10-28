@@ -2,14 +2,14 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from common.calculation import getStrValueCount
-from keyboards.stats import kb_deal_profit_cancel
+from keyboards.stats import kb_auto_take, kb_deal_profit_cancel
 from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, get_print_float
 from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
 from db import db
-from messages.enter import msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
+from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import Calculation, CallbackQuery, StateContext, User
 from Classes import calcService
 from CHANNEL.channel_post import channel_post
@@ -404,14 +404,28 @@ More often: <b>{result}</b>"""
 
         type = 'result'
 
-    if type == 'result' or type == 'result_take' or type == 'result_stop':
-        mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else ''
+    if type == 'result' or type == 'result_take' or type == 'result_stop' or type == 'result_result':
+        mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else 'result' if type == 'result_result' else ''
 
         send_data = channel_calc.getByCalc(calc_id)
         if send_data is not None:
             await send_admin_channel_calc_item(
                 bot, call.message, state, calc_id, mes_type
             )
+
+    if type == 'auto_take':
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        takes = []
+        if calc:
+            diffOpSl = calc.openPrice - calc.stopLoss
+            for el in range(1, 11):
+                takes.append(calc.openPrice + diffOpSl * el)
+
+        await edit_message(
+            bot, call.message, 'text',
+            msg_enter_auto_take(user.lang, takes),
+            kb_auto_take(user.lang, calc_id, True)
+        )
 
     if type == 'comment':
         await edit_message(

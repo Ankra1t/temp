@@ -31,7 +31,7 @@ from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Mes
 from services import calculation, channel_calc, settings, ticker, violation
 
 from keyboards.channel_post import (
-    kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
+    kb_channel_calc, kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
     kb_channel_post_back, kb_channel_post_list, kb_send_settings, kb_channel_post
 )
 from keyboards.main import kb_main, kb_violation
@@ -356,7 +356,7 @@ async def send_stats(
 
     liteDb.addPagesCount(user.tgId)
 
-    values = calculation.getWeekStats(userId = user.id)
+    values = calculation.getWeekStats(userId=user.id)
 
     if values is None:
         return
@@ -423,7 +423,6 @@ async def send_stats(
             valueCount = value.get('valueCount')
             openPrice = value.get('openPrice')
             closePrice = value.get('closePrice')
-
 
             if valueCount is None:
                 tp_sl = transl_status(status, lang)
@@ -1110,7 +1109,7 @@ async def send_admin_channel_calc_item(
     message: Message,
     state: StateContext,
     calc_id: int,
-    type: Literal['take', 'stop', ''] = '',
+    type: Literal['result', 'take', 'stop', ''] = '',
     is_first=False
 ):
     chat_id = message.chat.id
@@ -1145,9 +1144,18 @@ async def send_admin_channel_calc_item(
             print(e)
 
     calc_result = calcService.get_result(calc)
+
     take_info = ''
-    for i in range(calc_result.tp_count):
-        take_info += f'\n <b>({calc.tpRatio[i]} к 1)</b>: {get_print_float(calc_result.tp_values[i], 5)} USDT'
+    if calc.ActiveCalc:
+        if calc.ActiveCalc.autoTake:
+            price = calc.openPrice + \
+                (calc.openPrice - calc.stopLoss) * calc.ActiveCalc.autoTake
+
+            take_info += f'<b>({get_print_float(calc.ActiveCalc.autoTake, 1)} к 1)</b> - '
+            take_info += f'{get_print_float(price)} USDT'
+        elif calc.ActiveCalc.trailingStopCount:
+            take_info += f' ск. стоп каждые <b>{get_print_float(calc.ActiveCalc.trailingStopCount, 1)}</b> тейка'
+
 
     cancel_at = '-'
     if calc.cancelAt:
@@ -1163,7 +1171,7 @@ async def send_admin_channel_calc_item(
 <b>Стоп-лосс</b>: {get_print_float(calc.newStop or calc.stopLoss, 5)} USDT
 <b>Риск</b>: {get_print_float(calc.riskValue, 5)} USDT
 
-<b>Тейки:</b>{take_info}
+<b>Тейк:</b> {take_info}
 
 <b>Время отмены:</b> {cancel_at}
 <b>Скользящий стоп:</b> {get_print_float(calc.ActiveCalc.trailingStopCount, 1) if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount else '-'}
@@ -1176,8 +1184,11 @@ async def send_admin_channel_calc_item(
     elif type == 'stop':
         kb = kb_channel_calc_result_stop(calc_id)
         info = '\n\n<i>Либо введите <b>убыток</b></i> со сделки'
+    elif type == 'result':
+        kb = kb_channel_calc_result(calc_id, calc.status == 'DEAL')
+        info = ''
     else:
-        kb = kb_channel_calc_result(
+        kb = kb_channel_calc(
             calc.id, calc.status == 'DEAL',
             send_data.withoutStop
         )
@@ -1317,7 +1328,6 @@ async def create_and_send_channel_calc(
     isVote = liteDb.getSendSettings('isVote')
     time = liteDb.getSendSettings('time')
 
-    print(1)
     send_data = channel_calc.create(calc_id)
     if send_data is None:
         return

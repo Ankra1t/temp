@@ -37,19 +37,19 @@ from services import calculation, channel_calc, ticker
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
-from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_new_stop, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_take_price, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
+from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_deposit, msg_enter_new_stop, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_risk_percent, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_take_price, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
 from messages.main import msg_frozen
 
 from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from keyboards.main import kb_main
 from keyboards.stats import (
-    kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
+    kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_item_back, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
-from pages.calculate import create_and_send_channel_calc, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
 
 channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
@@ -478,6 +478,30 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             await state.add_data(
                 stat_id=calc_id,
                 del_mes_id=call.message.id
+            )
+        elif kind == 'dep':
+            await edit_message(
+                bot, call.message, 'text',
+                msg_enter_deposit(user.lang),
+                kb_deal_profit_cancel(user.lang, calc_id)
+            )
+            await state.set(CalculateState.deposit)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id,
+                calc_id=calc_id,
+            )
+        elif kind == 'risk':
+            await edit_message(
+                bot, call.message, 'text',
+                msg_enter_risk_percent(user.lang),
+                kb_deal_profit_cancel(user.lang, calc_id)
+            )
+            await state.set(CalculateState.risk_percent)
+            await state.add_data(
+                stat_id=calc_id,
+                del_mes_id=call.message.id,
+                calc_id=calc_id,
             )
         elif 'style' in kind:
             stc = '+stc' if '_stc' in type else ''
@@ -930,7 +954,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await edit_message(
             bot, call.message, 'text',
             msg_enter_auto_take(user.lang, takes),
-            kb_auto_take(user.lang, calc_id)
+            kb_auto_take(user.lang, calc_id, False)
         )
 
     if 'auto_take+' in type:
@@ -945,8 +969,23 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             userId=user.id, id=calc_id, autoTake=val, trailingStopCount=None
         )
         calc = calculation.get(userId=user.id, calcId=calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if calc:
-            await send_calculation(bot, call.message, state, user, calc, is_activate=True)
+            tickerInfo = ticker.get_info(calc.tool or '')
+            await channel_post.send_calc(
+                calc, send_data,
+                tickerInfo and tickerInfo.indexPrice,
+                tickerInfo and tickerInfo.percent24h,
+                False
+            )
+
+            if send_data:
+                await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
+            else:
+                await send_calculation(bot, call.message, state, user, calc, is_activate=True)
+
+    if type == 'channel_item':
+        await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
 
     if type == 'active_end':
         calc = calculation.get(userId=user.id, calcId=calc_id)
@@ -987,9 +1026,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'take_price':
         await state.delete()
 
+        send_data = channel_calc.getByCalc(calc_id)
+
         await bot.edit_message_text(
             msg_enter_take_price(user.lang), chat_id, mes_id,
-            reply_markup=kb_calc_back(user.lang, calc_id)
+            reply_markup=(
+                kb_channel_item_back(calc_id) if send_data
+                else kb_calc_back(user.lang, calc_id))
         )
         await state.set(StatsState.take_price)
         await state.add_data(
@@ -1006,17 +1049,30 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if not calc:
             return
 
-        value_count = (value - calc.openPrice) / (calc.openPrice - calc.stopLoss)
+        value_count = (value - calc.openPrice) / \
+            (calc.openPrice - calc.stopLoss)
 
         calculation.updateActive(
             userId=user.id, id=calc_id,
             trailingStopCount=None,
             autoTake=value_count
         )
-        calc = calculation.get(userId=user.id, calcId=calc_id)
 
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
         if calc:
-            await send_calculation(bot, call.message, state, user, calc)
+            if send_data:
+                tickerInfo = ticker.get_info(calc.tool or '')
+                await channel_post.send_calc(
+                    calc, send_data,
+                    tickerInfo and tickerInfo.indexPrice,
+                    tickerInfo and tickerInfo.percent24h,
+                    False
+                )
+
+                await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
+            else:
+                await send_calculation(bot, call.message, state, user, calc)
 
     await bot.answer_callback_query(call.id)
 

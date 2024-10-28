@@ -143,7 +143,7 @@ def kb_send_settings_trading_style():
     return keyboard
 
 
-def kb_channel_calc_result(
+def kb_channel_calc(
     calc_id: int,
     in_deal: bool,
     withoutStop: bool,
@@ -152,41 +152,61 @@ def kb_channel_calc_result(
 ):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
-    if not in_deal:
-        btn_deal = getButton('В сделке', 'result_deal', calc_id, is_calc)
-        btn_cancel = getButton(
-            'Отмена сделки', 'result_cancel', calc_id, is_calc
-        )
-        keyboard.add(btn_cancel, btn_deal)
-    else:
-        keyboard.add(getButton(
-            'В ожидание', 'result_wait', stat_id=calc_id
-        ))
+    btn_take = getButton('Тейк', 'auto_take', calc_id)
 
-    btn_tp = getButton('Тейк', 'result_take', calc_id, is_calc)
-    btn_sl = getButton('Стоп', 'result_stop', calc_id, is_calc)
-    keyboard.add(btn_tp, btn_sl)
+    if not in_deal:
+        keyboard.add(
+            getButton('В сделке', 'result_deal', calc_id, is_calc),
+            btn_take
+        )
+    else:
+        keyboard.add(
+            getButton('В ожидание', 'result_wait', stat_id=calc_id),
+            btn_take
+        )
 
     keyboard.add(
-        getButton('Безубыток', 'take+0', calc_id, is_calc),
-        getButton('Комментарий', 'comment', calc_id, is_calc),
+        getButton('Сдвинуть стоп', 'new_stop', calc_id, is_calc),
+        getButton('Скользящий стоп', 'trailing_stop', calc_id, is_calc)
     )
 
     if not in_deal:
         keyboard.add(
-            getButton('Время отмены', 'cancel_at', calc_id, is_calc)
-        )
-    else:
-        keyboard.add(
-            getButton('Сдвинуть стоп', 'new_stop', calc_id, is_calc),
-            getButton('Скользящий стоп', 'trailing_stop', calc_id, is_calc)
+            getButton(
+                'Отмена сделки', 'result_cancel', calc_id, is_calc
+            ),
+            getButton('Время отмены', 'cancel_at', calc_id, is_calc),
         )
 
     keyboard.add(
+        getButton('Комментарий', 'comment', calc_id),
         getButton(
-            'Вывести стоп' if withoutStop else 'Убрать вывод стопа',
+            'Вывести стоп' if withoutStop else 'Не выводить стоп',
             'without_stop', calc_id
         )
+    )
+
+    keyboard.add(
+        getButton('⚡️Завершение', 'result_result', calc_id),
+        getButton(
+            back_txt('ru'),
+            'results' if not is_user else 'go_stats',
+            calc_id, is_calc
+        )
+    )
+
+    return keyboard
+
+
+def kb_channel_calc_result(
+    calc_id: int, in_deal: bool
+):
+    keyboard = InlineKeyboardMarkup(row_width=3)
+
+    keyboard.add(
+        getButton('Тейк', 'result_take', calc_id),
+        getButton('Безубыток', 'take+0', calc_id),
+        getButton('Стоп', 'result_stop', calc_id)
     )
 
     if in_deal:
@@ -196,9 +216,7 @@ def kb_channel_calc_result(
 
     keyboard.add(
         getButton(
-            back_txt('ru'),
-            'results' if not is_user else 'go_stats',
-            calc_id, is_calc
+            back_txt('ru'), 'result', calc_id
         )
     )
 
@@ -228,7 +246,7 @@ def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=Fals
     buttons.append(
         getButton(
             back_txt('ru'),
-            'calc' if is_calc else 'go_stats' if is_user else 'result', stat_id, is_calc
+            'calc' if is_calc else 'go_stats' if is_user else 'result_result', stat_id, is_calc
         )
     )
 
@@ -261,7 +279,7 @@ def kb_channel_calc_result_stop(stat_id: int, is_calc=False, is_user=False):
     buttons.append(
         getButton(
             back_txt('ru'),
-            'calc' if is_calc else 'go_stats' if is_user else 'result', stat_id, is_calc
+            'calc' if is_calc else 'go_stats' if is_user else 'result_result', stat_id, is_calc
         )
     )
 
