@@ -153,8 +153,8 @@ class ChannelPost():
                     }
                 )
 
-        if updateLive:
-            await self.send_stats(calc.id, send_data is None)
+        if updateLive and send_data:
+            await self.send_stats(calc.id)
 
     async def send_live(
         self,
