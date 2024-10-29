@@ -19,7 +19,7 @@ from common.dt import get_datetime_by_str, get_datetime_now, get_str_by_datetime
 
 from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
-from keyboards.stats import kb_channel_item_back, kb_confirm_take_price, kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
+from keyboards.stats import kb_channel_confirm_back, kb_channel_item_back, kb_confirm_take_price, kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_freeze_error, msg_text_error
@@ -108,9 +108,9 @@ async def handle_take_price(message: Message, bot: AsyncTeleBot, state: StateCon
         new_mes = await bot.send_message(
             chat_id, msg_digit_error(user.lang),
             reply_markup=(
-                kb_channel_item_back(calc_id) if send_data
-                else kb_deal_profit_cancel(user.lang, calc_id)
-            )
+                kb_channel_item_back(calc_id) if send_data.sent
+                else kb_channel_confirm_back(calc_id)
+            ) if send_data else kb_deal_profit_cancel(user.lang, calc_id)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
