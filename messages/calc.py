@@ -367,7 +367,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
                 take = calc.ActiveCalc.autoTake
                 close_price = calc.openPrice + \
                     (calc.openPrice - calc.stopLoss) * take
-                profit = close_price * count_bet
+                profit = abs(close_price - calc.openPrice) * count_bet
 
                 conclusion += f' <code>{get_print_float(close_price, price_round_count)}</code> {trading_currency}'
                 conclusion += f' | {get_print_float(profit, round_count if profit < 10 else 1)} {calc.currency} ({get_print_float(take, 1)} {texts[lang]["to"]} 1)'
