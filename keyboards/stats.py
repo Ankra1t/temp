@@ -8,7 +8,7 @@ from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
 from messages.common import transl_market
-from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
+from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery, SendCalc
 from services import calculation, channel_calc, subscribe
 
 
@@ -612,9 +612,9 @@ def kb_confirm_channel_post(calc_id: int):
     add_description = getButton('🖼 Описание', 'stc+add_img_text', calc_id)
 
     if without_stop:
-        add_stop = getButton('Вернуть стоп', 'stc+stop', calc_id)
+        add_stop = getButton('Выводить стоп', 'stc+stop', calc_id)
     else:
-        add_stop = getButton('Убрать стоп', 'stc+stop', calc_id)
+        add_stop = getButton('Не выводить стоп', 'stc+stop', calc_id)
 
     if is_vote:
         btn_vote = getButton('Убрать опрос', 'stc+vote', calc_id)
@@ -624,6 +624,7 @@ def kb_confirm_channel_post(calc_id: int):
     btn_style = getButton('Стиль', 'ch_c+style_stc', calc_id)
     add_time = getButton('Период', 'stc+time', calc_id)
 
+    takes = getButton('Тейки', 'auto_take', calc_id)
     tr_stop = getButton('Скользящий стоп', 'ch_tr_stop', calc_id)
 
     cancel_at = getButton(
@@ -633,15 +634,13 @@ def kb_confirm_channel_post(calc_id: int):
     cancel = getButton(cancel_txt('ru'), 'go_main')
 
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        add_description,
-    )
 
     keyboard.add(
-        btn_vote, add_stop,
+        add_description, btn_vote,
         add_time, btn_style,
     )
     keyboard.add(
+        add_stop, takes,
         tr_stop, cancel_at,
     )
     keyboard.add(
@@ -814,7 +813,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
     return keyboard
 
 
-def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: bool):
+def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: SendCalc | None):
     keyboard = InlineKeyboardMarkup(row_width=5)
 
     buttons = []
@@ -829,8 +828,10 @@ def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: bool):
     )
     keyboard.add(
         getButton(not_specify_txt(lang), 'auto_take+null', calc_id),
-        getButton(back_txt(lang),
-                  'channel_item' if send_data else 'active_calc', calc_id)
+        getButton(
+            back_txt(lang),
+            ('channel_item' if send_data.sent else 'stc+back') if send_data else 'active_calc', calc_id
+        )
     )
     return keyboard
 
@@ -890,5 +891,13 @@ def kb_channel_item_back(calc_id: int):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         getButton(back_txt('ru'), 'channel_item', calc_id)
+    )
+    return keyboard
+
+
+def kb_channel_confirm_back(calc_id: int):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        getButton(back_txt('ru'), 'stc+back', calc_id)
     )
     return keyboard

@@ -415,6 +415,8 @@ More often: <b>{result}</b>"""
 
     if type == 'auto_take':
         calc = calculation.get(userId=user.id, calcId=calc_id)
+        send_data = channel_calc.getByCalc(calc_id)
+
         takes = []
         if calc:
             diffOpSl = calc.openPrice - calc.stopLoss
@@ -424,7 +426,7 @@ More often: <b>{result}</b>"""
         await edit_message(
             bot, call.message, 'text',
             msg_enter_auto_take(user.lang, takes),
-            kb_auto_take(user.lang, calc_id, True)
+            kb_auto_take(user.lang, calc_id, send_data)
         )
 
     if type == 'comment':

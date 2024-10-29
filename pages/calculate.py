@@ -746,13 +746,13 @@ async def send_freeze(
 async def send_confirm_calc_send(
     bot: AsyncTeleBot,
     message: Message,
-    stat_id: int,
+    calc_id: int,
     is_first=False
 ):
     chat_id = message.chat.id
 
-    stat = calculation.get(userId=1, calcId=stat_id)
-    send_data = channel_calc.getByCalc(stat_id)
+    stat = calculation.get(userId=1, calcId=calc_id)
+    send_data = channel_calc.getByCalc(calc_id)
     if stat is None or send_data is None:
         return
 
@@ -768,7 +768,7 @@ async def send_confirm_calc_send(
     text += f'\nСкользящий стоп: {stat.ActiveCalc.trailingStopCount if stat.ActiveCalc and stat.ActiveCalc.trailingStopCount else "-"}'
 
     kb = kb_confirm_channel_post(
-        stat_id
+        calc_id
     )
 
     if is_first:
