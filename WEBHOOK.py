@@ -59,7 +59,7 @@ async def get_ton_manifest(request: web.Request):
         body=json.dumps({
             "url": "https://github.com/XaBbl4/pytonconnect",
             "name": "Calc",
-            "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
+            "iconUrl": "https://proriski.com/_prodbots/icon.png",
         }),
     )
 
@@ -287,8 +287,6 @@ async def setup():
         web.get(BASE_URL + '/vote_timeout', vote_timeout),
         web.get(BASE_URL + '/first_timeout', first_timeout),
     ]
-
-    # await bot.infinity_polling()
 
     app.add_routes(routes)
     app.on_cleanup.append(shutdown)
