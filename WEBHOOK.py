@@ -59,7 +59,7 @@ async def get_ton_manifest(request: web.Request):
         body=json.dumps({
             "url": "https://github.com/XaBbl4/pytonconnect",
             "name": "Calc",
-            "iconUrl": "https://proriski.com/_prodbots/icon.png",
+            "iconUrl": "https://profmarkets.ai/_prodbots/icon.png",
         }),
     )
 
@@ -252,7 +252,7 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types)
+    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types, drop_pending_updates=True)
 
     commands = [
         ('start', 'restart'),

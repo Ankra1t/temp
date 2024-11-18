@@ -95,14 +95,12 @@ async def send_start_by_user(
                 bot, message, state, user, int(id),
             )
 
+    elif message.text is not None and len(message.text.split()) == 2 and 'site' in message.text:
+        await send_site_code(bot, message, state, user, is_first=True)
+        return
+
     elif user.role == 0:
         await send_user_main(bot, message, state, user, has_registered_now, True)
-
-    elif message.text is not None and len(message.text.split()) == 2:
-        _, code = message.text.split()
-        if code == 'site':
-            await send_site_code(bot, message, state, user, is_first=True)
-            return
 
     elif user.role == 1:
         await send_admin_main(bot, message, state, True)
