@@ -5,7 +5,7 @@ from telebot.types import InaccessibleMessage, InputFile
 from common.utils import delete_message
 from models import CallbackQuery, StateContext, User
 
-from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter, kb_tools_list_back
+from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter, kb_admin_back, kb_tools_list_back
 
 from pages.calculate import send_admin_send_settings
 from pages.user import send_site_code
@@ -99,6 +99,17 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
         await state.set(AdminMainState.turnover)
         await state.add_data(del_mes_id=mes_id)
+
+    if type == 'notification':
+        await bot.edit_message_text(
+            'Отправьте уведомление (с картинкой или без):',
+            chat_id, mes_id,
+            reply_markup=kb_admin_back()
+        )
+        await state.set(AdminMainState.notification)
+        await state.add_data(
+            del_mes_id=mes_id
+        )
 
     await bot.answer_callback_query(call.id)
 

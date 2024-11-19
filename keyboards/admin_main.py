@@ -35,12 +35,14 @@ def kb_admin_main():
     btn_send_settings = getButton("Настройки отправки", 'send_settings')
     btn_get_tickers = getButton("Список монет", 'tools')
     btn_site_code = getButton("Войти на сайт", 'site_code')
+    btn_notifications = getButton("Уведомление на сайт", 'notification')
 
     keyboard.add(btn_users, btn_subs)
     keyboard.add(btn_workers, btn_payments)
     keyboard.add(btn_params, btn_tariffs)
     keyboard.add(btn_posts, btn_send_settings)
     keyboard.add(btn_get_tickers, btn_site_code)
+    keyboard.add(btn_notifications)
     return keyboard
 
 
@@ -49,6 +51,12 @@ def kb_admin_tools_list(turnover: str = ''):
         getButton('⬇️ Бессрочные.P', 'tools_spot', turnover),
         getButton('⬇️ Спот', 'tools_default', turnover),
         getButton('Оборот от...', 'tools_turnover', turnover),
+        getButton(back_txt(), 'back')
+    )
+
+
+def kb_admin_back():
+    return InlineKeyboardMarkup().add(
         getButton(back_txt(), 'back')
     )
 
