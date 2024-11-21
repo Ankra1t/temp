@@ -14,9 +14,10 @@ MESSAGE_TYPE = Literal['text', 'photo', 'video']
 
 
 class Notifier():
-    def __init__(self, bot: AsyncTeleBot, bot_users: AsyncTeleBot) -> None:
+    def __init__(self, bot: AsyncTeleBot, bot_users: AsyncTeleBot, bot_site_user: AsyncTeleBot) -> None:
         self.bot = bot
         self.bot_users = bot_users
+        self.bot_site_user = bot_site_user
         self.users = (156045434, 7159306363)
 
     async def _send_by_type(self, bot: AsyncTeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
@@ -124,3 +125,16 @@ class Notifier():
                 )
             except:
                 pass
+
+    async def send_site_visited(self, userId: int):
+        user = db.get_user_by_id(userId)
+
+        if not user:
+            return
+
+        name = f"@{user.tg_username}" if user.tg_username else f"id: {user.tg_id}"
+
+        await self._send(
+            self.bot_site_user, 'text',
+            f"""{name} на сайте"""
+        )

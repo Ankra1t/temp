@@ -10,6 +10,7 @@ from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
 from CHANNEL.channel_post import channel_post
 
+from NOTIFIER import notifier
 from common.calculation import getStrValueCount
 from common.utils import get_print_float
 from config_global import BASE_HOST, CRYPTOPAY_URL, PROD, YOOKASSA_URL, flask_port, BASE_URL
@@ -224,6 +225,14 @@ async def user_not(request: web.Request):
     return web.Response()
 
 
+async def site_visited(request: web.Request):
+    value = await request.json()
+
+    await notifier.send_site_visited(value.get('userId'))
+
+    return web.Response()
+
+
 async def user_code(request: web.Request):
     tgId: int | None = (await request.json()).get('tgId')
     code: str | None = (await request.json()).get('code')
@@ -281,6 +290,7 @@ async def setup():
         web.post(BASE_URL + '/active-calc', active_calc),
         web.post(BASE_URL + '/send-calc', send_calc),
         web.post(BASE_URL + '/user-not', user_not),
+        web.post(BASE_URL + '/site-visited', site_visited),
         web.post(BASE_URL + '/user-code', user_code),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),

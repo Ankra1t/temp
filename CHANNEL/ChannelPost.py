@@ -132,7 +132,7 @@ class ChannelPost():
                     newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
-                    logger.error(f'CALC SEND ERROR: {e}')
+                    logger.error(f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description}')
 
         if len(newMesIds) == len(chIds):
             if send_data is None:
