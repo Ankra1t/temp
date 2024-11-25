@@ -7,6 +7,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float
 from common.calculation import getStrValueCount
 
+from config_logger import logger
 from config_global import CHAT_CHANNEL_NAME, RESULTS_CHANNEL_NAME
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
@@ -848,6 +849,7 @@ def msg_channel_calc_result(
 
     result = getStrValueCount(tp_sl_count, lang)
 
+    logger.info(calc.tpRatio)
     nearTake = calc.tpRatio[0]
     nearValue = calc_result.tp_values[0]
     for i in range(len(calc_result.tp_values)):
