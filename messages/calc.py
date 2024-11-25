@@ -536,6 +536,7 @@ def msg_channel_calc(
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
 
     monthStats = channel_calc.getMonthToolCount(calc.tool or '')
+    logger.info(calc)
     status = calc.status
 
     if calc.profit is not None or status == 'FINISH':
@@ -547,8 +548,6 @@ def msg_channel_calc(
         long_short = 'лонг' if lang == 'ru' else 'long'
     else:
         long_short = 'шорт' if lang == 'ru' else 'short'
-
-    calc_result = calcService.get_result(calc)
 
     texts = {
         'ru': {
