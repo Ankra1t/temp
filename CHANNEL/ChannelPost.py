@@ -132,7 +132,8 @@ class ChannelPost():
                     newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
-                    logger.error(f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description}')
+                    logger.error(
+                        f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description}')
 
         if len(newMesIds) == len(chIds):
             if send_data is None:
@@ -306,10 +307,16 @@ class ChannelPost():
                     if i != len(live.canceled) - 1:
                         msg += ', '
 
+            msg += '\n'
+
             week = channel_calc.getWeekStat()
             if week is not None:
                 text = 'Статистика' if lang == 'ru' else 'Stats'
-                msg += f'\n\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
+                msg += f'\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
+
+            msg += '\n'
+            msg += 'Сайт' if lang == 'ru' else 'Site'
+            msg += ': proriski.com'
 
             try:
                 if live.isNewMes or mesIds is None:
