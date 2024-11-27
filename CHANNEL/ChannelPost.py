@@ -131,7 +131,7 @@ class ChannelPost():
 
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
-                            chId, calc.photo, msg,
+                            chId, photo, msg,
                         )
 
                     newMesIds.append(str(new_mes.id))
