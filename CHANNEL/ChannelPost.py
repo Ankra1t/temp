@@ -125,7 +125,7 @@ class ChannelPost():
                         )
                     else:
                         if '_calc_' in calc.photo:
-                            photo = SITE_URL + '/uploads/' + calc.photo
+                            photo = SITE_URL + '/uploads/' + calc.photo + '.png'
                         else:
                             photo = calc.photo
 
