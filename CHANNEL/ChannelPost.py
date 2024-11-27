@@ -6,7 +6,7 @@ from telebot.types import InputPollOption
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, TOURNAMENT_CHANNEL_ID
+from config_global import EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
@@ -124,6 +124,11 @@ class ChannelPost():
                             disable_web_page_preview=True
                         )
                     else:
+                        if '_calc_' in calc.photo:
+                            photo = SITE_URL + '/uploads/' + calc.photo
+                        else:
+                            photo = calc.photo
+
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
                             chId, calc.photo, msg,
