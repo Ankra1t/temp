@@ -129,8 +129,6 @@ class ChannelPost():
                         else:
                             photo = calc.photo
 
-                        logger.info(photo)
-
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
                             chId, photo, msg,

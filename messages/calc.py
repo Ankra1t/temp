@@ -536,7 +536,6 @@ def msg_channel_calc(
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
 
     monthStats = channel_calc.getMonthToolCount(calc.tool or '')
-    logger.info(calc)
     status = calc.status
 
     if calc.profit is not None or status == 'FINISH':
@@ -663,7 +662,7 @@ def msg_channel_calc(
         elif calc.ActiveCalc and calc.ActiveCalc.autoTake:
             tp_val = calc.openPrice + (calc.openPrice - calc.stopLoss) * calc.ActiveCalc.autoTake
             profit_result = f'\n<b>{texts[lang]["take"]}</b>: '
-            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency}'
+            profit_result += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency} ({get_print_float(calc.ActiveCalc.autoTake, 1)} {texts[lang]["to"]} 1)'
 
     count_show = ''
     if count != -1:
@@ -744,6 +743,7 @@ def msg_channel_calc(
             ) if (status == 'WAIT' and monthStats and not isActiveCalc) else "") \
         + ('\n' if status == 'WAIT' and not monthStats and not isActiveCalc else "") \
         + trading_style_type \
+        + ('\n' + 'Сделка' if lang == 'ru' else 'Deal') + f': #{calc.id}' \
         + cancel_show \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
@@ -846,16 +846,12 @@ def msg_channel_calc_result(
 
     result = getStrValueCount(tp_sl_count, lang)
 
-    logger.info(calc.tpRatio)
-    nearTake = calc.tpRatio[0]
     nearValue = calc_result.tp_values[0]
     for i in range(len(calc_result.tp_values)):
-        tp_ratio = calc.tpRatio[i]
         tp_val = calc_result.tp_values[i]
 
         if (abs(close_price - tp_val) < abs(close_price - nearValue)):
             nearValue = tp_val
-            nearTake = tp_ratio
 
     trading_style_type = ''
     t_style = transl_tr_style(calc.tradingStyle, lang)
@@ -894,6 +890,7 @@ def msg_channel_calc_result(
 ⚡️ {texts[lang]["result"]}: {result}""" \
         + (f'\n\n{description}' if description else '') \
         + trading_style_type \
+        + ('\n' + 'Сделка' if lang == 'ru' else 'Deal') + f': #{calc.id}' \
         + (f'\n\n<a href="{try_link}">{texts[lang]["try"]}</a>{chart_link}{site_link}\n' if try_link != '' else '')
 
 
