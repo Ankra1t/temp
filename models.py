@@ -584,3 +584,10 @@ class AdminCalcNot(BaseModel):
     calc: Calculation
     userTgId: int
     userStats: ActiveStats
+
+
+class Mean(BaseModel):
+    tool: str
+    description: str
+    photo: str | None
+

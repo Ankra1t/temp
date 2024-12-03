@@ -9,7 +9,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
-from models import CALC_STATUS_TYPE, Calculation, Live, SendCalc, SentMessages
+from models import CALC_STATUS_TYPE, Calculation, Live, Mean, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
 from common.utils import antiflood, get_print_float
@@ -161,6 +161,25 @@ class ChannelPost():
 
         if updateLive and send_data:
             await self.send_stats(calc.id)
+
+    async def send_mean(self, mean: Mean, tickerInfo: TickerInfo | None = None):
+        percents = ''
+        if tickerInfo is not None:
+            percents = f'({"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%)'
+
+        msg = f'{mean.tool.replace("/", "").replace("USDT", "")} {percents}'
+        msg += f'\n\n{mean.description}'
+        msg += f'\n\nРассмотрим?'
+
+        if mean.photo:
+            await antiflood(
+                self.bot.send_photo, RU_CHANNEL_ID, API_URL +
+                '/uploads/' + mean.photo + '.png', msg
+            )
+        else:
+            await antiflood(
+                self.bot.send_message, RU_CHANNEL_ID, msg
+            )
 
     async def send_live(
         self,

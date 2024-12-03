@@ -21,7 +21,7 @@ from callbacks.calculate import send_after_first_try
 from initialize import bot
 from db import db
 from keyboards.stats import kb_calc_not
-from models import AdminCalcNot, Calculation, Live, UserCalcNot
+from models import AdminCalcNot, Calculation, Live, Mean, UserCalcNot
 from registration import reg
 from services import channel_calc, ticker
 from thread_tasks import run_thread
@@ -149,6 +149,18 @@ async def send_calc(request: web.Request):
         calc, send_data,
         tickerInfo and tickerInfo.indexPrice,
         tickerInfo and tickerInfo.percent24h,
+    )
+
+    return web.Response()
+
+
+async def send_mean(request: web.Request):
+    res = await request.text()
+    mean = Mean.model_validate_json(res)
+    tickerInfo = ticker.get_info((mean.tool or '').replace('/', ''))
+
+    await channel_post.send_mean(
+        mean, tickerInfo,
     )
 
     return web.Response()
@@ -292,6 +304,7 @@ async def setup():
         web.post(BASE_URL + '/user-not', user_not),
         web.post(BASE_URL + '/site-visited', site_visited),
         web.post(BASE_URL + '/user-code', user_code),
+        web.post(BASE_URL + '/send-mean', send_mean),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),
