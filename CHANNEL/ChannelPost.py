@@ -1,4 +1,5 @@
 from random import randint
+import random
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
@@ -169,7 +170,20 @@ class ChannelPost():
 
         msg = f'{mean.tool.replace("/", "").replace("USDT", "")} {percents}'
         msg += f'\n\n{mean.description}'
-        msg += f'\n\nРассмотрим?'
+
+        phrases = [
+            'Рассмотрим? <b>Да/Нет</b>',
+            'Подходит нам? <b>Да/Нет</b>',
+            'Отторгуете? <b>Да/Нет</b>',
+            'Как вам? <b>Нравится/Не нравится</b>',
+            'Берём? <b>Да/Нет</b>',
+            'Рассмотрим как сделку? <b>Да/Нет</b>',
+            'Как вам уровень на графике?',
+            'Что скажете по графику?',
+        ]
+        msg += f'\n\n{random.choices(phrases)}'
+
+        msg += f'\n#мнениетрейдеров'
 
         if mean.photo:
             await antiflood(
