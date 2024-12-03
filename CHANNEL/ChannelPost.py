@@ -181,7 +181,7 @@ class ChannelPost():
             'Как вам уровень на графике?',
             'Что скажете по графику?',
         ]
-        msg += f'\n\n{random.choices(phrases)}'
+        msg += f'\n\n{random.choice(phrases)}'
 
         msg += f'\n#мнениетрейдеров'
 
