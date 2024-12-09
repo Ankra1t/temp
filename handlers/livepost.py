@@ -1,7 +1,6 @@
 import os
 from telebot.async_telebot import AsyncTeleBot
 
-from config_logger import logger
 from AuthRoles import check_registration
 from common.utils import delete_message
 from common.utils import get_post_from_message

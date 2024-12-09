@@ -382,7 +382,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             # Получаем текущие данные
             async with state.data() as data:
-                current_tp_ratio: list[int] = data.get('take_profit', [])
+                current_tp_ratio: list[float] = data.get('take_profit', [])
                 current_split: list[float] = data.get('split', [])
 
             # Проверяем задано ли кол-во на добавление/удаление
@@ -458,7 +458,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'save' in type:
         async with state.data() as data:
-            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_tp_ratio: list[float] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
 
         # При сохранении тейк-профита без разделения
@@ -485,7 +485,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'splitting_last':
         async with state.data() as data:
-            current_tp_ratio: list[int] = data.get('take_profit', [])
+            current_tp_ratio: list[float] = data.get('take_profit', [])
             current_split: list[float] = data.get('split', [])
 
         await bot.edit_message_text(

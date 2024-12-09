@@ -90,7 +90,7 @@ def msg_enter_calc_img_text(lang: LANGUAGES_TYPE, calc: Calculation):
     return f'👉 {text}' + info
 
 
-def msg_enter_take_profit(lang: LANGUAGES_TYPE, tp_ratio: list[int]):
+def msg_enter_take_profit(lang: LANGUAGES_TYPE, tp_ratio: list[float]):
     current_tp = tp_ratio.copy()
     current_tp.sort()
 
@@ -159,7 +159,7 @@ def msg_enter_take_profit(lang: LANGUAGES_TYPE, tp_ratio: list[int]):
     return text
 
 
-def msg_enter_splitting(lang: LANGUAGES_TYPE, tp_ratio: list[int], split: list[float], is_last=False):
+def msg_enter_splitting(lang: LANGUAGES_TYPE, tp_ratio: list[float], split: list[float], is_last=False):
     texts = {
         'ru': {
             'name': 'Установка разделения профита',

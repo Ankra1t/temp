@@ -323,7 +323,7 @@ class UserCalcSettings(BaseModel):
     risk: tuple[float, bool] | None
     currency: str | None
     market: MARKETS_TYPE
-    tp_ratio: list[int]
+    tp_ratio: list[float]
     split_values: list[float] | None
     trading_style: str | None
     round_count: int | None

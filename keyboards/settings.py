@@ -498,7 +498,7 @@ def kb_summury_profit_type(lang: LANGUAGES_TYPE):
     return keyboard
 
 
-def kb_take_profit(lang: LANGUAGES_TYPE, current_tp: list[int], stat_id: int | None = None):
+def kb_take_profit(lang: LANGUAGES_TYPE, current_tp: list[float], stat_id: int | None = None):
     """
         Выбор значения коэфицента для тейк-профита
     """
@@ -576,7 +576,7 @@ def kb_take_profit(lang: LANGUAGES_TYPE, current_tp: list[int], stat_id: int | N
     return keyboard
 
 
-def kb_splitting(lang: LANGUAGES_TYPE, current_tp: list[int], current_split: list[float], added_count=0):
+def kb_splitting(lang: LANGUAGES_TYPE, current_tp: list[float], current_split: list[float], added_count=0):
     """
         Выбор значения коэфицента для тейк-профита, для выставления процентов
     """

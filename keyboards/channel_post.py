@@ -223,7 +223,7 @@ def kb_channel_calc_result(
     return keyboard
 
 
-def kb_channel_calc_result_take(tp_values: list[int], stat_id: int, is_calc=False, is_user=False):
+def kb_channel_calc_result_take(tp_values: list[float], stat_id: int, is_calc=False, is_user=False):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 

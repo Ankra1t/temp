@@ -1533,7 +1533,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_calculator_tp_ratio(self, user_id: int, tp: list[int]):
+    def set_calculator_tp_ratio(self, user_id: int, tp: list[float]):
         """Установить коэффициенты тейк-профит на показ"""
         market = self.get_user_current_market(user_id)
 

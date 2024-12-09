@@ -124,7 +124,7 @@ async def handle_splitting(message: Message, bot: AsyncTeleBot, state: StateCont
     chat_id = message.chat.id
 
     async with state.data() as data:
-        current_tp: list[int] = data.get('take_profit', [])
+        current_tp: list[float] = data.get('take_profit', [])
         current_split: list[float] = data.get('split', [])
 
     enter_mes = msg_enter_splitting(user.lang, current_tp, current_split)
