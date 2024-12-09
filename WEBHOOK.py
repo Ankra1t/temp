@@ -21,7 +21,7 @@ from callbacks.calculate import send_after_first_try
 from initialize import bot
 from db import db
 from keyboards.stats import kb_calc_not
-from models import AdminCalcNot, Calculation, Live, Mean, UserCalcNot
+from models import AdminCalcNot, Calculation, Live, Mean, Poll, UserCalcNot
 from registration import reg
 from services import channel_calc, ticker
 from thread_tasks import run_thread
@@ -166,6 +166,15 @@ async def send_mean(request: web.Request):
     return web.Response()
 
 
+async def send_poll(request: web.Request):
+    res = await request.text()
+    poll = Poll.model_validate_json(res)
+
+    await channel_post.send_poll(poll)
+
+    return web.Response()
+
+
 async def user_not(request: web.Request):
     # access_token = db.get_access_token()
     # api_key = request.headers.get('tg-api-key')
@@ -305,6 +314,7 @@ async def setup():
         web.post(BASE_URL + '/site-visited', site_visited),
         web.post(BASE_URL + '/user-code', user_code),
         web.post(BASE_URL + '/send-mean', send_mean),
+        web.post(BASE_URL + '/send_poll', send_poll),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),

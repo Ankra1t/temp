@@ -10,7 +10,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
-from models import CALC_STATUS_TYPE, Calculation, Live, Mean, SendCalc, SentMessages, TickerInfo
+from models import CALC_STATUS_TYPE, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
 from common.utils import antiflood, get_print_float
@@ -196,6 +196,17 @@ class ChannelPost():
             await antiflood(
                 self.bot.send_message, RU_CHANNEL_ID, msg
             )
+
+    async def send_poll(self, poll: Poll):
+        ans: list[InputPollOption] = []
+        for el in poll.ans:
+            ans.append(InputPollOption(el))
+
+        await self.main_bot.send_poll(
+            RU_CHANNEL_ID,
+            poll.title,
+            ans
+        )
 
     async def send_live(
         self,

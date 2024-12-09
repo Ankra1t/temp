@@ -591,3 +591,7 @@ class Mean(BaseModel):
     description: str | None
     photo: str | None
 
+
+class Poll(BaseModel):
+    title: str
+    ans: list[str]
