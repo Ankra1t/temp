@@ -372,7 +372,7 @@ class Calculation(BaseModel):
     stopLoss: float
     newStop: Optional[float] = None
 
-    tpRatio: list[int]
+    tpRatio: list[float]
     splitValues: list[float] | None
 
     forexInfo: ForexInfo | None = None
