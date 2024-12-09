@@ -169,7 +169,9 @@ class ChannelPost():
             percents = f'({"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%)'
 
         msg = f'{mean.tool.replace("/", "").replace("USDT", "")} {percents}'
-        msg += f'\n\n{mean.description}'
+
+        if mean.description:
+            msg += f'\n\n{mean.description}'
 
         phrases = [
             'Рассмотрим? <b>Да/Нет</b>',

@@ -588,6 +588,6 @@ class AdminCalcNot(BaseModel):
 
 class Mean(BaseModel):
     tool: str
-    description: str
+    description: str | None
     photo: str | None
 
