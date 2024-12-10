@@ -570,6 +570,7 @@ def msg_channel_calc(
             'DEAL': 'В сделке',
             'CANCEL': 'Отменён',
             'WAIT': 'Ожидаю',
+            'FINISH': 'Завершена',
 
             'close': '<b>Закрыл по</b>',
             'result': '<b>Результат</b>',
@@ -607,6 +608,7 @@ def msg_channel_calc(
             'DEAL': 'In deal',
             'CANCEL': 'Cancel',
             'WAIT': 'Waiting',
+            'FINISH': 'Finished',
 
             'close': '<b>Closed</b>',
             'result': '<b>Result</b>',
