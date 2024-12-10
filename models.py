@@ -16,6 +16,7 @@ SORT_BY_TYPE = Literal['new', 'old']
 
 TRADING_TYPE = Literal['margin', 'spot']
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
+EXCHANGE_TYPE = Literal['BYBIT', 'BINANCE']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'active_calc']
 ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
 CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
@@ -349,6 +350,7 @@ class CalcActiveInfo(BaseModel):
     autoStop: Optional[bool]
     autoTake: Optional[float]
     chMesIds: Optional[str]
+    exchange: EXCHANGE_TYPE = 'BYBIT'
 
 
 class Calculation(BaseModel):

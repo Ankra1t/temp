@@ -85,7 +85,8 @@ class ChannelPost():
             trader_mes = ''
             if send_data is None:
                 stats = calculation.getActiveStatsByUser(
-                    userId=calc.userId, id=calc.userId)
+                    userId=calc.userId, id=calc.userId
+                )
                 if stats:
                     name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
 
@@ -97,7 +98,7 @@ class ChannelPost():
 Результат сейчас: {profit}"""
 
             msg = msg_channel_calc(
-                calc, lang, withoutStop, time or '',
+                calc, lang, withoutStop,
                 mesNum, indexPrice, percent24h,
                 try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
                 isActiveCalc=send_data is None,
@@ -327,6 +328,9 @@ class ChannelPost():
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
                 msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
+
+                msg += '\n\n'
+                msg += '* данные меняются в режиме реального времени' if lang == 'ru' else '* data is changing in real time mode'
 
             if finished != '':
                 msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'

@@ -1734,7 +1734,7 @@ class Database:
             tradingType=data.get('tradingType'),
             isFromDeposit=data.get('isFromDeposit'),
             createdAt=str(data.get('createdAt')),
-            status=data.get('status')
+            status=data.get('status'),
         )
 
     def add_calculation(self, value: Calculation):

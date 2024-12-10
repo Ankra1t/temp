@@ -644,7 +644,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             file_path = None
 
         text = msg_channel_calc(
-            calc, 'ru', send_data.withoutStop, send_data.time or '',
+            calc, 'ru', send_data.withoutStop,
         )
 
         if file_path is None:
