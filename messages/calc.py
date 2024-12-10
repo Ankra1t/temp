@@ -739,9 +739,9 @@ def msg_channel_calc(
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \
         + trailing_stops \
         + trading_style_type \
-        + cancel_show \
         + (f'\n\n{traderMes}' if traderMes else '') \
         + (f'\n\n{first_link}{chart_link}\n' if try_link != '' else '')
+    # + cancel_show \
 
 
 def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):
