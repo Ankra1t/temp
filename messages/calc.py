@@ -632,7 +632,7 @@ def msg_channel_calc(
 
     t_style = transl_tr_style(calc.tradingStyle, lang)
     trading_style_type = ''
-    if t_style is not None:
+    if t_style:
         trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}'
 
     # Округление
