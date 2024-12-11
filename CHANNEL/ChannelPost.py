@@ -3,11 +3,11 @@ import random
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
-from telebot.types import InputPollOption
+from telebot.types import InputPollOption, InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RESULTS_CHANNEL_NAME, RU_CHANNEL_ID, TOURNAMENT_CHANNEL_ID
+from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
@@ -29,6 +29,14 @@ class ChannelPost():
 
         self.stats_channel = str(RESULTS_CHANNEL_ID)
         self.loading_vote_message_ids: dict[int, tuple[int, int]] = {}
+
+    def kb_site_link(self, lang: Literal['ru', 'en']):
+        if lang == 'ru':
+            text = 'Сайт'
+        else:
+            text = 'Site'
+
+        return InlineKeyboardMarkup().add(InlineKeyboardButton(text, f'{SITE_URL}/signals'))
 
     async def send_calc(
         self,
@@ -362,22 +370,12 @@ class ChannelPost():
                     if i != len(live.canceled) - 1:
                         msg += ', '
 
-            msg += '\n'
-
-            week = channel_calc.getWeekStat()
-            if week is not None:
-                text = 'Статистика' if lang == 'ru' else 'Stats'
-                msg += f'\n<a href="https://t.me/{RESULTS_CHANNEL_NAME}">{text}</a>'
-
-            msg += '\n'
-            msg += 'Сайт' if lang == 'ru' else 'Site'
-            msg += ': proriski.com'
-
             try:
                 if live.isNewMes or mesIds is None:
                     new_mes = await antiflood(
                         self.bot.send_message,
                         chId, msg,
+                        reply_markup=self.kb_site_link(lang)
                     )
 
                     new_live_mes_ids.append(str(new_mes.id))
@@ -393,7 +391,8 @@ class ChannelPost():
                 else:
                     await antiflood(
                         self.bot.edit_message_text,
-                        msg, chId, int(mesIds[chId_i])
+                        msg, chId, int(mesIds[chId_i]),
+                        reply_markup=self.kb_site_link(lang)
                     )
             except Exception as e:
                 logger.error(f'LIVE SEND ERROR: {e}')
