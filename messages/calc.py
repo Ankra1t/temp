@@ -736,7 +736,6 @@ def msg_channel_calc(
     current_price = ''
     if current_value_count is not None:
         current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {getStrValueCount(current_value_count, lang)}'
-        current_price += f' ({"+" if current_value_count > 0 else ""}{get_print_float(calc.riskValue * current_value_count, 1)}$)'
 
     return f'{count_show}<b>{link(tool)}</b>{percent24h_show} | {current_price if current_price else texts[lang][status]}' \
         + f'\n\n<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}' \
