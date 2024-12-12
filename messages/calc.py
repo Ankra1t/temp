@@ -657,7 +657,7 @@ def msg_channel_calc(
     profit_or_take = ''
 
     if status == 'FINISH':
-        tp_sl_count = (calc.profit or 0 / calc.riskValue)
+        tp_sl_count = ((calc.profit or 0) / calc.riskValue)
         result = getStrValueCount(tp_sl_count, lang)
         close_price = calc.openPrice + \
             (calc.openPrice - calc.stopLoss) * \
