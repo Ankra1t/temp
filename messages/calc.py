@@ -552,6 +552,8 @@ def msg_channel_calc(
             'price': 'Цена сейчас',
             'now': 'Сейчас',
 
+            'profit': 'В деньгах сейчас' if status == 'DEAL' else 'Результат в деньгах',
+
             'stop': 'Стоп',
             'take': 'Тейк',
             'style': 'Торгую',
@@ -590,6 +592,8 @@ def msg_channel_calc(
             'stop': 'Stop',
             'price': 'Current price',
             'now': 'Now',
+
+            'profit': 'In money now' if status == 'DEAL' else 'Result in money',
 
             'take': 'Take',
             'style': 'Trading',
@@ -660,7 +664,7 @@ def msg_channel_calc(
             tp_sl_count
 
         profit_or_take = f'\n\n⚡️ {texts[lang]["close"]}: {get_print_float(close_price)}{trading_currency}'
-        profit_or_take += f'\n⚡️ {texts[lang]["result"]}: {result} ({"+" if (calc.profit or 0) > 0 else ""}{get_print_float(calc.profit or 0, 1)}$)'
+        profit_or_take += f'\n⚡️ {texts[lang]["result"]}: {result}'
 
     elif not without_stop:
         if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount:
@@ -676,7 +680,12 @@ def msg_channel_calc(
                 (calc.openPrice - calc.stopLoss) * calc.ActiveCalc.autoTake
             profit_or_take = f'\n<b>{texts[lang]["take"]}</b>: '
             profit_or_take += f'<code>{get_print_float(tp_val, price_round_count)}</code>{trading_currency} ({get_print_float(calc.ActiveCalc.autoTake, 1)} {texts[lang]["to"]} 1)'
-            profit_or_take += f' ({"+" if (calc.ActiveCalc.autoTake or 0) > 0 else ""}{get_print_float(calc.ActiveCalc.autoTake * calc.riskValue, 1)}$)'
+
+    if status == 'DEAL' and current_value_count and float(get_print_float(current_value_count, 1)) != 0:
+        profit_or_take += f'{texts[lang]["profit"]}: {"+" if (current_value_count) > 0 else ""}{get_print_float(current_value_count * calc.riskValue, 1)}$'
+
+    elif status == 'FINISH' and (calc.profit or 0 / calc.riskValue) and float(get_print_float(calc.profit or 0 / calc.riskValue, 1)) != 0:
+        profit_or_take += f'{texts[lang]["profit"]}: {"+" if (calc.profit or 0) > 0 else ""}{get_print_float(calc.profit or 0, 1)}$'
 
     count_show = ''
     if count != -1:
