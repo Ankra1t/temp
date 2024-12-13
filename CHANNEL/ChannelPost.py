@@ -335,6 +335,7 @@ class ChannelPost():
                 msg += ':</b> '
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
+                logger.info(f'MONTH: {live.monthValueCount}')
                 msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
 
                 msg += '\n\n'
