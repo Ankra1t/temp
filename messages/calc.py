@@ -639,7 +639,7 @@ def msg_channel_calc(
     t_style = transl_tr_style(calc.tradingStyle, lang)
     trading_style_type = ''
     if t_style:
-        trading_style_type += f'\n<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}'
+        trading_style_type += f'\n\n<b>{texts[lang]["style"]}</b>: {t_style.capitalize()}'
 
     # Округление
     round_count = calc.roundCount or 5
@@ -683,7 +683,7 @@ def msg_channel_calc(
 
     if status == 'DEAL' and current_value_count and float(get_print_float(current_value_count, 1)) != 0:
         profit_or_take += f'\n<b>{texts[lang]["profit"]}</b>: {"+" if (current_value_count) > 0 else ""}{get_print_float(current_value_count * calc.riskValue, 1)}$'
-        profit_or_take += f'\n{profit_or_take}'
+        profit_or_take = f'\n{profit_or_take}'
 
     elif status == 'FINISH' and (calc.profit or 0 / calc.riskValue) and float(get_print_float(calc.profit or 0 / calc.riskValue, 1)) != 0:
         profit_or_take += f'\n\n<b>{texts[lang]["profit"]}</b>: {"+" if (calc.profit or 0) > 0 else ""}{get_print_float(calc.profit or 0, 1)}$'
