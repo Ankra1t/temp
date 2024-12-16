@@ -459,11 +459,9 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
     else:
         dt = get_datetime_by_str(value) or datetime.now()
 
-        print(dt)
         value = int(
             abs((int(datetime.now().timestamp()) - int(dt.timestamp())) / 60)
         )
-        print(value)
 
     if is_settings:
         settings.updateAdvanced(user.id, cancelMinutes=value)

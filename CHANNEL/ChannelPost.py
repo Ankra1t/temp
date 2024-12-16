@@ -177,7 +177,10 @@ class ChannelPost():
         if tickerInfo is not None:
             percents = f'({"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%)'
 
-        msg = f'{mean.tool.replace("/", "").replace("USDT", "")} {percents}'
+        msg = f'<a href="{SITE_URL}?tool=BYBIT:{mean.tool.replace("/", "")}">{mean.tool.replace("/", "").replace("USDT", "")}</a> {percents}'
+
+        if tickerInfo is not None:
+            msg += f'\n\n<b>Цена сейчас</b>: {get_print_float(tickerInfo.indexPrice)}$'
 
         if mean.description:
             msg += f'\n\n{mean.description}'
@@ -335,7 +338,6 @@ class ChannelPost():
                 msg += ':</b> '
 
                 tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
-                logger.info(f'MONTH: {live.monthValueCount}')
                 msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
 
                 msg += '\n\n'

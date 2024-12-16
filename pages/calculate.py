@@ -893,7 +893,7 @@ async def create_and_send_calc(
         calculation.activate(userId=user.id, id=new_id)
         calc = calculation.get(userId=user.id, calcId=new_id)
 
-        if calc and calc.ActiveCalc:
+        if calc and calc.ActiveCalc and False:
             if calc.photo:
                 file_id = calc.photo
                 file = await bot.get_file(file_id)

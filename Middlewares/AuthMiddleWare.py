@@ -55,7 +55,6 @@ class AuthMiddleWare(BaseMiddleware):
 
             if del_mes_id is not None:
                 if edit_mes is None:
-                    print(del_mes_id)
                     await delete_message(self.bot, chat_id, del_mes_id)
                 else:
                     try:
