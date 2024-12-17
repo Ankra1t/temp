@@ -596,5 +596,5 @@ class Mean(BaseModel):
 
 class Poll(BaseModel):
     title: str
-    ans: list[str]
+    ans: Optional[list[str]] = None
     rightAns: Optional[str] = None

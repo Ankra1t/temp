@@ -210,6 +210,23 @@ class ChannelPost():
             )
 
     async def send_poll(self, poll: Poll):
+        if poll.ans is None or len(poll.ans) == 0:
+            title = poll.title
+
+            firstBracketIndex = title.find('"')
+            lastBracketIndex = title.rfind('"')
+
+            title = title[:firstBracketIndex] + \
+                '<i>' + title[firstBracketIndex:]
+            title = title[:lastBracketIndex + 4] + \
+                '</i>' + title[lastBracketIndex + 4:]
+
+            logger.info(title)
+
+            await self.main_bot.send_message(156045434, title)
+
+            return
+
         ans: list[InputPollOption] = []
         for el in poll.ans:
             ans.append(InputPollOption(el))
