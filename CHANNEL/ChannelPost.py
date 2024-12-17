@@ -214,10 +214,22 @@ class ChannelPost():
         for el in poll.ans:
             ans.append(InputPollOption(el))
 
+        type = 'regular'
+        correct = None
+        if poll.rightAns:
+            try:
+                correct = poll.ans.index(poll.rightAns)
+                type = 'quiz'
+            except:
+                pass
+
         await self.main_bot.send_poll(
-            RU_CHANNEL_ID,
-            poll.title,
-            ans
+            chat_id=RU_CHANNEL_ID,
+            question=poll.title,
+            options=ans,
+            is_anonymous=True,
+            type=type,
+            correct_option_id=correct,
         )
 
     async def send_live(

@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import telebot
-from telebot.util import update_types
 from telebot.types import BotCommand
 from aiohttp import web
 
@@ -282,7 +281,16 @@ async def setup():
     await bot.remove_webhook()
 
     logger.info('Starting up: setting webhook')
-    await bot.set_webhook(f'{BASE_HOST}{BASE_URL}/AAA/', allowed_updates=update_types, drop_pending_updates=True)
+    await bot.set_webhook(
+        f'{BASE_HOST}{BASE_URL}/AAA/',
+        allowed_updates=[
+            "message", "edited_message", "channel_post", "edited_channel_post", "inline_query", "chosen_inline_result",
+            "callback_query", "shipping_query", "pre_checkout_query", "my_chat_member", "chat_member",
+                              "chat_join_request", "chat_boost", "removed_chat_boost",
+                              "business_connection", "business_message", "edited_business_message", "deleted_business_messages"
+        ],
+        drop_pending_updates=True
+    )
 
     commands = [
         ('start', 'restart'),
