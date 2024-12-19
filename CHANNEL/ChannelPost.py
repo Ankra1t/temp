@@ -223,7 +223,7 @@ class ChannelPost():
 
             logger.info(title)
 
-            await self.main_bot.send_message(156045434, title)
+            await self.main_bot.send_message(RU_CHANNEL_ID, title)
 
             return
 
