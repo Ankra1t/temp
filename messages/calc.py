@@ -535,6 +535,8 @@ def msg_channel_calc(
 
     status = calc.status
 
+    results = calcService.get_result(calc)
+
     if calc.openPrice > calc.stopLoss:
         long_short = 'лонг' if lang == 'ru' else 'long'
     else:
@@ -582,6 +584,7 @@ def msg_channel_calc(
             'chart': 'График',
 
             'price_changed': 'Цена входа была изменена',
+            'count': 'Кол-во монет',
         },
         'en': {
             'open': (
@@ -624,6 +627,7 @@ def msg_channel_calc(
             'chart': 'Chart',
 
             'price_changed': 'Price of entry was changed',
+            'count': 'Coins count',
         }
     }
 
@@ -744,6 +748,7 @@ def msg_channel_calc(
 
     return f'{count_show}<b>{link(tool)}</b>{percent24h_show} | {current_price if current_price else texts[lang][status]}' \
         + f'\n\n<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}' \
+        + f'\n<b>{texts[lang]["count"]}</b>: {get_print_float(results.count_bet)}' \
         + (f'\n<b>{texts[lang]["price"]}</b>: {price_show}' if status == 'DEAL' else '') \
         + (
             (
