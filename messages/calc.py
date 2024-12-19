@@ -580,6 +580,8 @@ def msg_channel_calc(
             'try': 'Рассчитать',
             'stats': 'Статистика',
             'chart': 'График',
+
+            'price_changed': 'Цена входа была изменена',
         },
         'en': {
             'open': (
@@ -620,6 +622,8 @@ def msg_channel_calc(
             'try': 'Calculate',
             'stats': 'Stats',
             'chart': 'Chart',
+
+            'price_changed': 'Price of entry was changed',
         }
     }
 
@@ -747,6 +751,7 @@ def msg_channel_calc(
                 + profit_or_take
             ) if not without_stop or status == 'FINISH' else ''
         ) \
+        + (f'\n\n⚠️ {texts[lang]["price_changed"]}!' if calc.isOpenPriceChanged else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
         + (f'\n' if not (comment or description) and calc.newStop is not None else '') \

@@ -374,6 +374,8 @@ class Calculation(BaseModel):
     stopLoss: float
     newStop: Optional[float] = None
 
+    isOpenPriceChanged: Optional[bool] = False
+
     tpRatio: list[float]
     splitValues: list[float] | None
 
