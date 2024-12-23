@@ -677,7 +677,7 @@ def msg_channel_calc(
         profit_or_take = f'\n\n⚡️ {texts[lang]["close"]}: {get_print_float(close_price)}{trading_currency}'
         profit_or_take += f'\n⚡️ {texts[lang]["result"]}: {result}'
 
-    elif not without_stop:
+    else:
         if calc.ActiveCalc and calc.ActiveCalc.trailingStopCount:
             profit_or_take += f'\n<b>{texts[lang]["take"]}</b>: '
 
@@ -754,7 +754,7 @@ def msg_channel_calc(
         + f'\n<b>{texts[lang]["count"]}</b>: {get_print_float(results.count_bet)}' \
         + (f'\n<b>{texts[lang]["price"]}</b>: {price_show}' if status == 'DEAL' else '') \
         + (f'\n<b>{texts[lang]["stop" if not without_stop or status == "FINISH" else "pre_stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}' if not without_stop or isPreStop or status == 'FINISH' else '') \
-        + (profit_or_take if not without_stop or status == 'FINISH' else '') \
+        + profit_or_take \
         + (f'\n\n⚠️ {texts[lang]["price_changed"]}!' if calc.isOpenPriceChanged else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
