@@ -85,10 +85,10 @@ class ChannelPost():
 
             if send_data is None:
                 withoutStop = False
-                time = None
+                isPreStop = False
             else:
                 withoutStop = send_data.withoutStop
-                time = send_data.time
+                isPreStop = send_data.isPreStop
 
             trader_mes = ''
             if send_data is None:
@@ -106,7 +106,7 @@ class ChannelPost():
 Результат сейчас: {profit}"""
 
             msg = msg_channel_calc(
-                calc, lang, withoutStop,
+                calc, lang, withoutStop, isPreStop,
                 mesNum, indexPrice, percent24h,
                 try_link=f'https://t.me/{(await self.main_bot.get_me()).username}?start=calc_{calc.id}',
                 isActiveCalc=send_data is None,

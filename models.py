@@ -473,6 +473,7 @@ class SendCalc(BaseModel):
     calcId: int
     sent: bool
     withoutStop: bool
+    isPreStop: bool
     tradingStyle: Optional[str]
     time: Optional[str]
     isVote: bool

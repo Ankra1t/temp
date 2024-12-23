@@ -523,6 +523,7 @@ def msg_channel_calc(
     calc: Calculation,
     lang: Literal['ru', 'en'] = 'ru',
     without_stop=False,
+    isPreStop=False,
     count=-1,
     indexPrice: float | None = None,
     percent24h: float | None = None,
@@ -557,6 +558,7 @@ def msg_channel_calc(
             'profit': 'В деньгах сейчас' if status == 'DEAL' else 'Результат в деньгах',
 
             'stop': 'Стоп',
+            'pre_stop': 'Предварительный стоп',
             'take': 'Тейк',
             'style': 'Торгую',
 
@@ -595,6 +597,7 @@ def msg_channel_calc(
             ),
 
             'stop': 'Stop',
+            'pre_stop': 'Preliminary стоп',
             'price': 'Current price',
             'now': 'Now',
 
@@ -750,12 +753,8 @@ def msg_channel_calc(
         + f'\n\n<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}' \
         + f'\n<b>{texts[lang]["count"]}</b>: {get_print_float(results.count_bet)}' \
         + (f'\n<b>{texts[lang]["price"]}</b>: {price_show}' if status == 'DEAL' else '') \
-        + (
-            (
-                f'\n<b>{texts[lang]["stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}'
-                + profit_or_take
-            ) if not without_stop or status == 'FINISH' else ''
-        ) \
+        + (f'\n<b>{texts[lang]["stop" if not without_stop or status == "FINISH" else "pre_stop"]}</b>: <code>{get_print_float(calc.newStop or calc.stopLoss, price_round_count)}</code>{trading_currency}' if not without_stop or isPreStop or status == 'FINISH' else '') \
+        + (profit_or_take if not without_stop or status == 'FINISH' else '') \
         + (f'\n\n⚠️ {texts[lang]["price_changed"]}!' if calc.isOpenPriceChanged else '') \
         + (f'\n\n{description}' if description else '') \
         + (f'\n\n{comment}' if comment else '') \
