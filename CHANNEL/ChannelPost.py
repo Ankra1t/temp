@@ -119,19 +119,21 @@ class ChannelPost():
                         await antiflood(
                             self.bot.edit_message_text,
                             msg, chId, int(mesIds[chId_i]),
-                            disable_web_page_preview=True
+                            disable_web_page_preview=True,
+                            number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
                         )
                     else:
                         await antiflood(
                             self.bot.edit_message_caption,
-                            msg, chId, int(mesIds[chId_i])
+                            msg, chId, int(mesIds[chId_i]),
+                            number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
                         )
                 else:
                     if calc.photo is None:
                         new_mes = await antiflood(
                             self.bot.send_message,
                             chId, msg,
-                            disable_web_page_preview=True
+                            disable_web_page_preview=True,
                         )
                     else:
                         if '_calc_' in calc.photo:
