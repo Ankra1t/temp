@@ -347,32 +347,35 @@ class ChannelPost():
 
                 finished += f'{tool} {result}, '
 
-            msg = f'⚡️<b>{"Текущие сделки" if lang == "ru" else "Current deals"}</b> ({getStrValueCount(in_deal_value_count, lang)}):'
+            msg = ''
 
             if msges.strip():
+                msg = f'⚡️<b>{"Текущие сделки" if lang == "ru" else "Current deals"}</b> ({getStrValueCount(in_deal_value_count, lang)}):'
                 msg += '\n\n' + msges.strip()
 
-            if msg != '':
-                msg += '\n\n<b>'
-                msg += 'За день' if lang == 'ru' else 'Today'
-                msg += ':</b> '
+            msg += '\n\n<b>'
+            msg += 'За день' if lang == 'ru' else 'Today'
+            msg += ':</b> '
 
+            if live.todayValueCount is None:
+                msg += 'нет сделок' if lang == 'ru' else 'no deals'
+            else:
                 msg += f'{getStrValueCount(live.todayValueCount, lang)}'
 
-                current_date = get_str_by_datetime(
-                    get_datetime_now(), "day.month"
-                )
+            current_date = get_str_by_datetime(
+                get_datetime_now(), "day.month"
+            )
 
-                msg += '\n<b>'
-                msg += months[lang][int(current_date.split('.')
-                                        [1]) - 1].capitalize()
-                msg += ':</b> '
+            msg += '\n<b>'
+            msg += months[lang][int(current_date.split('.')
+                                    [1]) - 1].capitalize()
+            msg += ':</b> '
 
-                tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
-                msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
+            tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
+            msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
 
-                msg += '\n\n'
-                msg += '* данные меняются в режиме реального времени' if lang == 'ru' else '* data is changing in real time mode'
+            msg += '\n\n'
+            msg += '* данные меняются в режиме реального времени' if lang == 'ru' else '* data is changing in real time mode'
 
             if finished != '':
                 msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'

@@ -528,8 +528,8 @@ class Live(BaseModel):
     isNewMes: bool
     messages: Optional[SentMessages]
     monthValueCount: float
-    todayProfit: float
-    todayValueCount: float
+    todayProfit: Optional[float]
+    todayValueCount: Optional[float]
 
 
 class MonthToolStats(BaseModel):
