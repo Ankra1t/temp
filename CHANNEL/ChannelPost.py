@@ -215,18 +215,16 @@ class ChannelPost():
         if poll.ans is None or len(poll.ans) == 0:
             title = poll.title
 
-            firstBracketIndex = title.find('"')
-            lastBracketIndex = title.rfind('"')
+            if '<b>' not in title:
+                firstBracketIndex = title.find('"')
+                lastBracketIndex = title.rfind('"')
 
-            title = title[:firstBracketIndex] + \
-                '<i>' + title[firstBracketIndex:]
-            title = title[:lastBracketIndex + 4] + \
-                '</i>' + title[lastBracketIndex + 4:]
-
-            logger.info(title)
+                title = title[:firstBracketIndex] + \
+                    '<i>' + title[firstBracketIndex:]
+                title = title[:lastBracketIndex + 4] + \
+                    '</i>' + title[lastBracketIndex + 4:]
 
             await self.main_bot.send_message(RU_CHANNEL_ID, title)
-
             return
 
         ans: list[InputPollOption] = []
