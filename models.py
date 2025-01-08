@@ -597,6 +597,13 @@ class Mean(BaseModel):
     photo: str | None
 
 
+class CalcChannelNotification(BaseModel):
+    calcId: int
+    chIds: list[str]
+    mesIds: list[str]
+    langs: list[LANGUAGES_TYPE]
+
+
 class Poll(BaseModel):
     title: str
     ans: Optional[list[str]] = None

@@ -1,4 +1,3 @@
-from random import randint
 import random
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
@@ -10,7 +9,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
-from models import CALC_STATUS_TYPE, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
+from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
 from common.utils import antiflood, get_print_float
@@ -210,6 +209,26 @@ class ChannelPost():
             await antiflood(
                 self.bot.send_message, RU_CHANNEL_ID, msg
             )
+
+    async def send_notification(self, calcId: int, chIds: list[str], mesIds: list[str], langs: list[LANGUAGES_TYPE]):
+        newMes: list[str] = []
+
+        for i in range(len(chIds)):
+            chId = chIds[i]
+            mesId = mesIds[i]
+            lang = langs[i]
+
+            emoji = random.choice(['🔥', '⚡️', '❗️'])
+
+            if lang == 'ru':
+                text = f'{emoji} В сделке!'
+            else:
+                text = f'{emoji} In deal!'
+
+            message = await antiflood(self.main_bot.send_message, chId, text, reply_to_message_id=int(mesId))
+            newMes.append(str(message.message_id))
+
+        channel_calc.createCalcChannelNotification(calcId, chIds, newMes, langs)
 
     async def send_poll(self, poll: Poll):
         if poll.ans is None or len(poll.ans) == 0:
@@ -702,7 +721,7 @@ class ChannelPost():
         if stat is None:
             return
 
-        rand = randint(1, 3)
+        rand = random.randint(1, 3)
         for i, CHANNEL_ID in enumerate(self.channels):
             lang = 'ru' if i == 0 else 'en'
 

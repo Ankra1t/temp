@@ -20,7 +20,7 @@ from callbacks.calculate import send_after_first_try
 from initialize import bot
 from db import db
 from keyboards.stats import kb_calc_not
-from models import AdminCalcNot, Calculation, Live, Mean, Poll, UserCalcNot
+from models import AdminCalcNot, CalcChannelNotification, Calculation, Live, Mean, Poll, UserCalcNot
 from registration import reg
 from services import channel_calc, ticker
 from thread_tasks import run_thread
@@ -161,6 +161,27 @@ async def send_mean(request: web.Request):
     await channel_post.send_mean(
         mean, tickerInfo,
     )
+
+    return web.Response()
+
+
+async def send_notification(request: web.Request):
+    res = await request.text()
+    data = CalcChannelNotification.model_validate_json(res)
+
+    await channel_post.send_notification(
+        data.calcId, data.chIds, data.mesIds, data.langs
+    )
+
+    return web.Response()
+
+
+async def del_notification(request: web.Request):
+    res = await request.text()
+    data = CalcChannelNotification.model_validate_json(res)
+
+    for i in range(len(data.chIds)):
+        await channel_post.main_bot.delete_message(data.chIds[i], int(data.mesIds[i]))
 
     return web.Response()
 
@@ -323,6 +344,8 @@ async def setup():
         web.post(BASE_URL + '/user-code', user_code),
         web.post(BASE_URL + '/send-mean', send_mean),
         web.post(BASE_URL + '/send_poll', send_poll),
+        web.post(BASE_URL + '/send_notification', send_notification),
+        web.post(BASE_URL + '/del_notification', del_notification),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
         web.get(BASE_URL + '/vote_timeout', vote_timeout),

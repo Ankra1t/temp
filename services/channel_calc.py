@@ -41,6 +41,22 @@ def getSentMessagesByCalc(calcId: int):
 
 
 @session_decorator
+def createCalcChannelNotification(calcId: int, chId: list[str], mesId: list[str], lang: list[LANGUAGES_TYPE]):
+    data = {
+        'chId': chId,
+        'mesId': mesId,
+        'lang': lang
+    }
+
+    res = session.post(f'{API_URL}/channelCalc/calcId/{calcId}/notification', json.dumps(data).encode())
+
+    if not check_response(res):
+        return
+
+    return True
+
+
+@session_decorator
 def getSentToday():
     res = session.get(f'{API_URL}/channelCalc/sentToday')
 
