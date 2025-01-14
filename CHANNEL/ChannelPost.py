@@ -9,7 +9,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
-from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
+from models import CALC_STATUS_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
 from common.utils import antiflood, get_print_float
@@ -215,7 +215,7 @@ class ChannelPost():
 
         for i in range(len(data.chIds)):
             chId = data.chIds[i]
-            mesId =data.mesIds[i]
+            mesId = data.mesIds[i]
             lang = data.langs[i]
 
             emoji = random.choice(['🔥', '⚡️', '❗️'])
@@ -228,7 +228,8 @@ class ChannelPost():
             message = await antiflood(self.main_bot.send_message, chId, text, reply_to_message_id=int(mesId))
             newMes.append(str(message.message_id))
 
-        channel_calc.createCalcChannelNotification(data.calcId, data.chIds, newMes, data.langs)
+        channel_calc.createCalcChannelNotification(
+            data.calcId, data.chIds, newMes, data.langs)
 
     async def send_poll(self, poll: Poll):
         if poll.ans is None or len(poll.ans) == 0:
