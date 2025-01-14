@@ -9,7 +9,7 @@ from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
-from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
+from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
 from common.utils import antiflood, get_print_float
@@ -210,25 +210,25 @@ class ChannelPost():
                 self.bot.send_message, RU_CHANNEL_ID, msg
             )
 
-    async def send_notification(self, calcId: int, chIds: list[str], mesIds: list[str], langs: list[LANGUAGES_TYPE]):
+    async def send_notification(self, data: CalcChannelNotification):
         newMes: list[str] = []
 
-        for i in range(len(chIds)):
-            chId = chIds[i]
-            mesId = mesIds[i]
-            lang = langs[i]
+        for i in range(len(data.chIds)):
+            chId = data.chIds[i]
+            mesId =data.mesIds[i]
+            lang = data.langs[i]
 
             emoji = random.choice(['🔥', '⚡️', '❗️'])
 
             if lang == 'ru':
-                text = f'{emoji} В сделке!'
+                text = f'{emoji} В сделке {data.tool}!'
             else:
-                text = f'{emoji} In deal!'
+                text = f'{emoji} In deal {data.tool}!'
 
             message = await antiflood(self.main_bot.send_message, chId, text, reply_to_message_id=int(mesId))
             newMes.append(str(message.message_id))
 
-        channel_calc.createCalcChannelNotification(calcId, chIds, newMes, langs)
+        channel_calc.createCalcChannelNotification(data.calcId, data.chIds, newMes, data.langs)
 
     async def send_poll(self, poll: Poll):
         if poll.ans is None or len(poll.ans) == 0:

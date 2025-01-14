@@ -599,6 +599,7 @@ class Mean(BaseModel):
 
 class CalcChannelNotification(BaseModel):
     calcId: int
+    tool: str
     chIds: list[str]
     mesIds: list[str]
     langs: list[LANGUAGES_TYPE]

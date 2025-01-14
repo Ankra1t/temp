@@ -169,9 +169,7 @@ async def send_notification(request: web.Request):
     res = await request.text()
     data = CalcChannelNotification.model_validate_json(res)
 
-    await channel_post.send_notification(
-        data.calcId, data.chIds, data.mesIds, data.langs
-    )
+    await channel_post.send_notification(data)
 
     return web.Response()
 
