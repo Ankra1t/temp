@@ -527,6 +527,8 @@ class Live(BaseModel):
     toUpdate: list[LiveToUpdate]
     isNewMes: bool
     messages: Optional[SentMessages]
+
+    monthProfit: float
     monthValueCount: float
     todayProfit: Optional[float]
     todayValueCount: Optional[float]

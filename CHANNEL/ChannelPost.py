@@ -378,7 +378,8 @@ class ChannelPost():
             if live.todayValueCount is None:
                 msg += 'нет сделок' if lang == 'ru' else 'no deals'
             else:
-                msg += f'{getStrValueCount(live.todayValueCount, lang)}'
+                profit = live.todayProfit or 0
+                msg += f'{"+" if profit > 0 else ""}{get_print_float(profit, 1)}$ ({getStrValueCount(live.todayValueCount, lang)})'
 
             current_date = get_str_by_datetime(
                 get_datetime_now(), "day.month"
@@ -389,8 +390,9 @@ class ChannelPost():
                                     [1]) - 1].capitalize()
             msg += ':</b> '
 
+            msg += f'{"+" if live.monthProfit > 0 else ""}{get_print_float(live.monthProfit, 1)}$'
             tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
-            msg += f'{"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show}'
+            msg += f' ({"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show})'
 
             msg += '\n\n'
             msg += '* данные меняются в режиме реального времени' if lang == 'ru' else '* data is changing in real time mode'
