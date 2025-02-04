@@ -5,6 +5,7 @@ from telebot.util import update_types
 
 from AuthRoles import check_registration
 from common.utils import delete_message, get_lang
+from services import user as userService
 
 from db import db
 from models import User, StateContext
@@ -29,8 +30,8 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         tgId = message.from_user.id
-        user_db_id = db.get_user_id_by_tg_id(tgId)
-        if db.check_ban_user(user_db_id):
+        user = db.get_user_by_tg_id(tgId)
+        if user and user.ban:
             return CancelUpdate()
 
         isText = False
@@ -39,7 +40,6 @@ class AuthMiddleWare(BaseMiddleware):
             isText = message.content_type == 'text' or message.content_type == 'photo'
         else:
             chat_id = message.message.chat.id
-
 
         state = StateContext(message, self.bot)  # type: ignore
 
@@ -66,9 +66,16 @@ class AuthMiddleWare(BaseMiddleware):
 
         lang = get_lang(tgId)
 
+        try:
+            current_tg_username = message.from_user.username
+            if user and current_tg_username and (user.tg_username != current_tg_username):
+                userService.update(userId=user.id, tgUsername=current_tg_username)
+        except:
+            pass
+
         data["state"] = state
         data["user"] = User(
-            id=user_db_id,
+            id=user.id if user else 0,
             tgId=tgId,
             lang=lang,
             role=check_registration(tgId) or 0

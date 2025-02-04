@@ -17,7 +17,6 @@ from keyboards.calculate import kb_calc_atr, kb_calc_direct
 from models import Calculation, Message, StateContext, User
 from services import calculation, channel_calc, ticker
 
-
 async def send_start_by_user(
     bot: AsyncTeleBot,
     message: Message,
@@ -28,7 +27,6 @@ async def send_start_by_user(
     chat_id = message.chat.id
 
     await state.delete()
-
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
         send_data = channel_calc.getByCalc(int(id))

@@ -1,3 +1,4 @@
+import json
 from models import RefUser
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL
@@ -14,3 +15,23 @@ def getReferralOfUser(userId: int):
 
     if res.text != '':
         return RefUser.model_validate_json(res.text)
+
+
+@session_decorator
+def update(
+    *,
+    userId: int,
+    tgUsername: str
+):
+    data = {
+        "tgUsername": tgUsername
+    }
+
+    res = session.post(
+        f'{API_URL}/users/{userId}',
+        json.dumps(data).encode()
+    )
+    if not check_response(res):
+        return
+
+    return True

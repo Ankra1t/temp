@@ -88,3 +88,21 @@ def get_site_code(*, userId: int):
         return
 
     return res.json().get('code')
+
+
+@session_decorator
+def send_site_code(*, userId: int, code: str):
+    data: dict[str, str | int] = {
+        'userId': userId,
+        'code': code,
+    }
+
+    res = session.get(
+        f'{API_URL}/tg/auth/code_user',
+        params=data
+    )
+
+    if not check_response(res):
+        return
+
+    return res.json().get('code')
