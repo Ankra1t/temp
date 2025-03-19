@@ -135,10 +135,7 @@ class ChannelPost():
                             disable_web_page_preview=True,
                         )
                     else:
-                        if '_calc_' in calc.photo:
-                            photo = API_UPLOADS + calc.photo
-                        else:
-                            photo = calc.photo
+                        photo = API_UPLOADS + calc.photo
 
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
