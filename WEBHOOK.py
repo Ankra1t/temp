@@ -133,16 +133,10 @@ async def active_calc(request: web.Request):
 
 
 async def send_calc(request: web.Request):
-    # access_token = db.get_access_token()
-    # api_key = request.headers.get('tg-api-key')
-
-    # if access_token is None or api_key is None or access_token != api_key:
-    #     return web.Response(status=403)
-
     res = await request.text()
     calc = Calculation.model_validate_json(res)
     send_data = channel_calc.getByCalc(calc.id)
-    tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
+    tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType)
 
     await channel_post.send_calc(
         calc, send_data,

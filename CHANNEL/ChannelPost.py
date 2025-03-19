@@ -203,7 +203,7 @@ class ChannelPost():
         if mean.photo:
             await antiflood(
                 self.bot.send_photo, RU_CHANNEL_ID, API_URL +
-                '/uploads/' + mean.photo + '.png', msg
+                API_UPLOADS + mean.photo, msg
             )
         else:
             await antiflood(

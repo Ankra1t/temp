@@ -3,19 +3,46 @@ import json
 from typing import Optional
 from models import TickerInfo
 from services.base_config import check_response, session_decorator, session
-from config_global import API_URL
+from config_global import API_URL, NEW_API_URL
 
 
 @session_decorator
-def get_info(ticker: str):
+def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
+    spot = 'spot-' if type == 'spot' else ''
+
+    # return {
+    #   exchange:
+    #     ticker.exchange.toLowerCase() === 'binance'
+    #       ? ExchangeEnum.BINANCE
+    #       : ExchangeEnum.BYBIT,
+    #   indexPrice: ticker.price,
+    #   type: type,
+    #   name: ticker.symbol,
+    #   percent24h: ticker.percent,
+    #   turnover24h: ticker.turnover,
+    #   createdAt: new Date(ticker.updated).toISOString(),
+    # };
+
     res = session.get(
-        f'{API_URL}/tg/getTicker/{ticker.replace("/", "").upper()}',
+        f'{NEW_API_URL}//${spot}tickers/${(exchange or "bybit").lower()}-recent?symbol=${ticker.replace("/", "")}',
     )
 
     if not check_response(res):
         return
 
-    return TickerInfo(**res.json())
+    result = res.json()
+
+    if len(result) == 0:
+        return
+
+    tickerData = result[0]
+
+    return TickerInfo(
+        indexPrice=tickerData.price,
+        percent24h=tickerData.percent,
+        turnover24h=tickerData.turnover,
+        updatedAt=''
+    )
 
 
 @session_decorator
