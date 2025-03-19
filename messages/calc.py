@@ -713,7 +713,7 @@ def msg_channel_calc(
         percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
 
     def link(value: str):
-        value = value.lower().replace("/USDT", "").upper()
+        value = value.lower().replace("/usdt", "").upper()
         if isActiveCalc:
             return value
         return f'<a href="{SITE_URL}/signals?calc={calc.id}">{value}</a>'

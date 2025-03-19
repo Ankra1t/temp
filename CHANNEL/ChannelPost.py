@@ -658,7 +658,7 @@ class ChannelPost():
                         canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
                     else:
                         num += 1
-                        date_msg += f'\n{num}. {link_start}<b>{(tool or "-").lower().replace("/USDT", "").upper()}{tool_num}</b>{link_end} - {tp_sl}'
+                        date_msg += f'\n{num}. {link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end} - {tp_sl}'
 
                 tp_sl_result = round(tp_count - sl_count, 1)
                 tp_sl_msg = ''
