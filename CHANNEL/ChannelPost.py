@@ -284,6 +284,7 @@ class ChannelPost():
             mesIds = None
 
         for calc_ in live.toUpdate:
+            logger.info(calc_.calc.id)
             await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, calc_.percent24h, False)
 
         for chId_i, chId in enumerate(chIds):
