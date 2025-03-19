@@ -493,7 +493,6 @@ class LiveDeal(BaseModel):
     indexPrice: Optional[float]
     openPrice: float
     stopLoss: float
-    comment: Optional[str]
     TrailingStops: Optional[list[CalcTrailingStop]] = None
 
 

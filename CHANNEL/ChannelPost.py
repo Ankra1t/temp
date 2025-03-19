@@ -300,7 +300,7 @@ class ChannelPost():
                 if calc_.messages is not None:
                     calcMesId = calc_.messages.mesIds[chId_i]
 
-                comment = calc_.comment
+                # comment = calc_.comment
                 trailing_stops = getTrailingStopsMessage(
                     lang, calc_.TrailingStops, calc_.openPrice, calc_.stopLoss
                 )
@@ -328,8 +328,8 @@ class ChannelPost():
                 current_msg += f'\n<b>{tool}</b>{price} | {result}'
                 current_msg += take_profit
 
-                if lang == 'ru' and comment is not None:
-                    current_msg += f'\n{comment.strip()}'
+                # if lang == 'ru' and comment is not None:
+                #     current_msg += f'\n{comment.strip()}'
 
                 if trailing_stops != '':
                     current_msg += trailing_stops
