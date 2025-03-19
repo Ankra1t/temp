@@ -6,7 +6,7 @@ from telebot.types import InputPollOption, InlineKeyboardMarkup, InlineKeyboardB
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
+from config_global import API_UPLOADS, API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
@@ -90,19 +90,19 @@ class ChannelPost():
                 isPreStop = send_data.isPreStop
 
             trader_mes = ''
-            if send_data is None:
-                stats = calculation.getActiveStatsByUser(
-                    userId=calc.userId, id=calc.userId
-                )
-                if stats:
-                    name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
+#             if send_data is None:
+#                 stats = calculation.getActiveStatsByUser(
+#                     userId=calc.userId, id=calc.userId
+#                 )
+#                 if stats:
+#                     name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
 
-                    profit = getStrValueCount(stats.data.profitCount, lang)
+#                     profit = getStrValueCount(stats.data.profitCount, lang)
 
-                    trader_mes = f"""⚡️ Трейдер: {name}
-За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
-{get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
-Результат сейчас: {profit}"""
+#                     trader_mes = f"""⚡️ Трейдер: {name}
+# За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
+# {get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
+# Результат сейчас: {profit}"""
 
             msg = msg_channel_calc(
                 calc, lang, withoutStop, isPreStop,
@@ -136,7 +136,7 @@ class ChannelPost():
                         )
                     else:
                         if '_calc_' in calc.photo:
-                            photo = API_URL + '/uploads/' + calc.photo + '.png'
+                            photo = API_UPLOADS + calc.photo + '.png'
                         else:
                             photo = calc.photo
 
@@ -658,7 +658,7 @@ class ChannelPost():
                         canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
                     else:
                         num += 1
-                        date_msg += f'\n{num}. {link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end} - {tp_sl}'
+                        date_msg += f'\n{num}. {link_start}<b>{(tool or "-").lower().replace("/USDT", "").upper()}{tool_num}</b>{link_end} - {tp_sl}'
 
                 tp_sl_result = round(tp_count - sl_count, 1)
                 tp_sl_msg = ''

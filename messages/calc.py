@@ -6,6 +6,7 @@ from common.dt import get_str_by_datetime
 from common.utils import get_decimal_count, get_print_float
 from common.calculation import getStrValueCount
 
+from config_logger import logger
 from config_global import SITE_URL
 from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
@@ -635,7 +636,7 @@ def msg_channel_calc(
     }
 
     # Валюта торговли
-    trading_currency = calc.currency
+    trading_currency = calc.currency.upper()
     tool = calc.tool or ''
 
     if calc.forexInfo is not None and calc.market == 'forex':
@@ -712,7 +713,7 @@ def msg_channel_calc(
         percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
 
     def link(value: str):
-        value = value.replace("/USDT", "").upper()
+        value = value.lower().replace("/USDT", "").upper()
         if isActiveCalc:
             return value
         return f'<a href="{SITE_URL}/signals?calc={calc.id}">{value}</a>'
