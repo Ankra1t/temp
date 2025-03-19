@@ -651,11 +651,11 @@ class ChannelPost():
                         tool_num = f'({tool_counts[tool]})'
 
                     if status == 'DEAL':
-                        msg_in_deal += f'\n{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                        msg_in_deal += f'\n{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     elif status == 'CANCEL':
                         if canceled != '':
                             canceled += ', '
-                        canceled += f'{link_start}<b>{(tool or "-").replace("/USDT", "")}{tool_num}</b>{link_end}'
+                        canceled += f'{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     else:
                         num += 1
                         date_msg += f'\n{num}. {link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end} - {tp_sl}'
