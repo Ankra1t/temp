@@ -136,7 +136,7 @@ class ChannelPost():
                         )
                     else:
                         if '_calc_' in calc.photo:
-                            photo = API_UPLOADS + calc.photo + '.png'
+                            photo = API_UPLOADS + calc.photo
                         else:
                             photo = calc.photo
 
