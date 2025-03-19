@@ -649,7 +649,7 @@ class ChannelPost():
                     else:
                         tool_counts[tool] += 1
                         tool_num = f'({tool_counts[tool]})'
-
+                    logger.info((tool or "-").lower().replace("/usdt", "").upper())
                     if status == 'DEAL':
                         msg_in_deal += f'\n{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     elif status == 'CANCEL':
