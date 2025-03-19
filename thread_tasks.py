@@ -88,7 +88,7 @@ def _check_tariff():
 
 # Проверка рассылок каждые 30 сек - в отдельном потоке
 def _check_infinite_tasks(bot: AsyncTeleBot):
-    sleep_time_check = 30
+    sleep_time_check = 60
     while True:
         # _check_finish_paid_subscribe(bot)
         # _check_finish_trial_subscribe(bot)

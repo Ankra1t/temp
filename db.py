@@ -892,26 +892,6 @@ class Database:
             self.connection.rollback()
             return []
 
-    def check_tg_user_tables(self, id: int):
-        query = 'SELECT * FROM \"BotSettings\" WHERE "userId" = %s'
-        query2 = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s'
-        params = id,
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            self.curs.execute(query2, params)
-            data2 = self.curs.fetchone()
-
-            if (data is None) or (data2 is None):
-                return False
-            else:
-                return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
     def create_tg_user_settings(self, id: int, market: MARKETS_TYPE):
         currency = None
         if market == 'crypto':
