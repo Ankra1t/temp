@@ -200,6 +200,7 @@ class ChannelPost():
         msg += f'\n#мнениетрейдеров'
 
         if mean.photo:
+            logger.info(API_UPLOADS + mean.photo)
             await antiflood(
                 self.bot.send_photo, RU_CHANNEL_ID, API_URL +
                 API_UPLOADS + mean.photo, msg
