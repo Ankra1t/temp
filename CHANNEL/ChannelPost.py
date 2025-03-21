@@ -200,9 +200,8 @@ class ChannelPost():
         msg += f'\n#мнениетрейдеров'
 
         if mean.photo:
-            logger.info(API_UPLOADS + mean.photo)
             await antiflood(
-                self.bot.send_photo, RU_CHANNEL_ID, API_URL +
+                self.bot.send_photo, RU_CHANNEL_ID,
                 API_UPLOADS + mean.photo, msg
             )
         else:
@@ -650,7 +649,8 @@ class ChannelPost():
                     else:
                         tool_counts[tool] += 1
                         tool_num = f'({tool_counts[tool]})'
-                    logger.info((tool or "-").lower().replace("/usdt", "").upper())
+                    logger.info(
+                        (tool or "-").lower().replace("/usdt", "").upper())
                     if status == 'DEAL':
                         msg_in_deal += f'\n{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     elif status == 'CANCEL':
