@@ -11,10 +11,8 @@ from config_logger import logger
 def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
     spot = 'spot-' if type == 'spot' else ''
 
-    url = f'{NEW_API_URL}/${spot}tickers/${(exchange or "bybit").lower()}-recent?symbol=${ticker.replace("/", "")}'
-    logger.info(url)
     res = session.get(
-        url,
+        f'{NEW_API_URL}/{spot}tickers/{(exchange or "bybit").lower()}-recent?symbol={ticker.replace("/", "")}',
     )
 
     if not check_response(res):
