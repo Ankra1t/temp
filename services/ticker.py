@@ -20,12 +20,10 @@ def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
 
     result = res.json()
 
-    logger.info(result)
-
-    if len(result) == 0:
+    if len(result.response) == 0:
         return
 
-    tickerData = result[0]
+    tickerData = result.response[0]
 
     return TickerInfo(
         indexPrice=tickerData.price,
