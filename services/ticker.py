@@ -19,16 +19,17 @@ def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
         return
 
     result = res.json()
+    tickers = result.get('response')
 
-    if len(result.response) == 0:
+    if len(tickers) == 0:
         return
 
-    tickerData = result.response[0]
+    tickerData = tickers[0]
 
     return TickerInfo(
-        indexPrice=tickerData.price,
-        percent24h=tickerData.percent,
-        turnover24h=tickerData.turnover,
+        indexPrice=tickerData.get('price'),
+        percent24h=tickerData.get('percent'),
+        turnover24h=tickerData.get('turnover'),
         updatedAt=''
     )
 
