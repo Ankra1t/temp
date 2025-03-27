@@ -9,11 +9,13 @@ from config_logger import logger
 
 @session_decorator
 def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
-    logger.info(ticker, exchange, type)
+    logger.info(ticker)
+    logger.info(exchange)
+    logger.info(type)
     spot = 'spot-' if type == 'spot' else ''
 
     res = session.get(
-        f'{NEW_API_URL}//${spot}tickers/${(exchange or "bybit").lower()}-recent?symbol=${ticker.replace("/", "")}',
+        f'{NEW_API_URL}/${spot}tickers/${(exchange or "bybit").lower()}-recent?symbol=${ticker.replace("/", "")}',
     )
 
     if not check_response(res):
