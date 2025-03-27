@@ -4,10 +4,12 @@ from typing import Optional
 from models import TickerInfo
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL, NEW_API_URL
+from config_logger import logger
 
 
 @session_decorator
 def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
+    logger.info(ticker, exchange, type)
     spot = 'spot-' if type == 'spot' else ''
 
     res = session.get(
@@ -18,6 +20,8 @@ def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
         return
 
     result = res.json()
+
+    logger.info(result)
 
     if len(result) == 0:
         return

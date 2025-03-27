@@ -176,7 +176,7 @@ class ChannelPost():
         percents = ''
         if tickerInfo is not None:
             percents = f'({"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%)'
-        logger.info(tickerInfo)
+
         msg = f'<a href="{SITE_URL}?tool=BYBIT:{mean.tool.replace("/", "")}">{mean.tool.replace("/", "").replace("USDT", "")}</a> {percents}'
 
         if tickerInfo is not None:
