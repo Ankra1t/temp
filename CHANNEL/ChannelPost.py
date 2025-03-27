@@ -176,13 +176,11 @@ class ChannelPost():
         percents = ''
         turnover = ''
 
-        logger.info(tickerInfo)
-
         if tickerInfo is not None:
             percents = f'{"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%'
 
         if tickerInfo is not None:
-            percents = format_number(tickerInfo.turnover24h)
+            turnover = format_number(tickerInfo.turnover24h)
 
         info = ''
         if (percents or turnover):
@@ -191,7 +189,7 @@ class ChannelPost():
             if percents:
                 info += percents
             if percents and turnover:
-                info += f' | '
+                info += f'  '
             if turnover:
                 info += turnover
 

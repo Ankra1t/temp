@@ -732,7 +732,7 @@ def msg_channel_calc(
         if percent24h_show:
             info += percent24h_show
         if percent24h_show and turnover24h_show:
-            info += f' | '
+            info += f'  '
         if turnover24h_show:
             info += turnover24h_show
 
