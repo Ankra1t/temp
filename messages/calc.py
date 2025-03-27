@@ -3,7 +3,7 @@ from typing import Literal
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_str_by_datetime
-from common.utils import get_decimal_count, get_print_float
+from common.utils import format_number, get_decimal_count, get_print_float
 from common.calculation import getStrValueCount
 
 from config_logger import logger
@@ -528,6 +528,7 @@ def msg_channel_calc(
     count=-1,
     indexPrice: float | None = None,
     percent24h: float | None = None,
+    turnover24h: float | None = None,
     try_link: str = '',
     isActiveCalc=False,
     traderMes=''
@@ -710,7 +711,24 @@ def msg_channel_calc(
 
     percent24h_show = ''
     if percent24h and calc.status == 'WAIT':
-        percent24h_show = f' ({"+" if percent24h > 0 else ""}{get_print_float(percent24h, 2)}%)'
+        percent24h_show = f'{"+" if percent24h > 0 else ""}{get_print_float(percent24h, 1)}%'
+
+    turnover24h_show = ''
+    if turnover24h is not None:
+        turnover24h_show = format_number(turnover24h)
+
+    info = ''
+    if (percent24h_show or turnover24h_show):
+        info += ' ('
+
+        if percent24h_show:
+            info += percent24h_show
+        if percent24h_show and turnover24h_show:
+            info += f' | '
+        if turnover24h_show:
+            info += turnover24h_show
+
+        info += ')'
 
     def link(value: str):
         value = value.lower().replace("/usdt", "").upper()
@@ -750,7 +768,7 @@ def msg_channel_calc(
     if current_value_count is not None:
         current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {getStrValueCount(current_value_count, lang)}'
 
-    return f'{count_show}<b>{link(tool)}</b>{percent24h_show} | {current_price if current_price else texts[lang][status]}' \
+    return f'{count_show}<b>{link(tool)}</b>{info} | {current_price if current_price else texts[lang][status]}' \
         + f'\n\n<b>{texts[lang]["open"]}</b>: <code>{get_print_float(calc.openPrice, price_round_count)}</code>{trading_currency}' \
         + f'\n<b>{texts[lang]["count"]}</b>: {get_print_float(results.count_bet)}' \
         + (f'\n<b>{texts[lang]["price"]}</b>: {price_show}' if status == 'DEAL' else '') \

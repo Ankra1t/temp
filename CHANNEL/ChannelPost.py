@@ -12,7 +12,7 @@ from messages.common import transl_status
 from models import CALC_STATUS_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
 
-from common.utils import antiflood, get_print_float
+from common.utils import antiflood, format_number, get_print_float
 from common.calculation import getStrValueCount
 from messages.calc import msg_channel_calc, months
 
@@ -174,10 +174,28 @@ class ChannelPost():
 
     async def send_mean(self, mean: Mean, tickerInfo: TickerInfo | None = None):
         percents = ''
-        if tickerInfo is not None:
-            percents = f'({"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%)'
+        turnover = ''
 
-        msg = f'<a href="{SITE_URL}?tool=BYBIT:{mean.tool.replace("/", "")}">{mean.tool.replace("/", "").replace("USDT", "")}</a> {percents}'
+        if tickerInfo is not None:
+            percents = f'{"+" if tickerInfo.percent24h > 0 else ""}{get_print_float(tickerInfo.percent24h, 1)}%'
+
+        if tickerInfo is not None:
+            percents = format_number(tickerInfo.turnover24h)
+
+        info = ''
+        if (percents or turnover):
+            info += '('
+
+            if percents:
+                info += percents
+            if percents and turnover:
+                info += f' | '
+            if turnover:
+                info += turnover
+
+            info += ')'
+
+        msg = f'<a href="{SITE_URL}?tool=BYBIT:{mean.tool.replace("/", "")}">{mean.tool.replace("/", "").replace("USDT", "")}</a> {info}'
 
         if tickerInfo is not None:
             msg += f'\n\n<b>Цена сейчас</b>: {get_print_float(tickerInfo.indexPrice)}$'

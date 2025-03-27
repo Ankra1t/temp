@@ -292,3 +292,13 @@ def getNounByNumber(count: float, one: str, two: str, five: str):
 
     return five
 
+
+def format_number(n: float | int):
+    if n < 1000:
+        return get_print_float(n, 0)
+    elif n < 1000000:
+        return "{:.1f}K".format(n / 1000)
+    elif n < 1000000000:
+        return "{:.1f}M".format(n / 1000000)
+    else:
+        return "{:.1f}B".format(n / 1000000000)
