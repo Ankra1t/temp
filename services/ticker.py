@@ -10,19 +10,6 @@ from config_global import API_URL, NEW_API_URL
 def get_info(ticker: str, exchange: str | None = None, type: str | None = None):
     spot = 'spot-' if type == 'spot' else ''
 
-    # return {
-    #   exchange:
-    #     ticker.exchange.toLowerCase() === 'binance'
-    #       ? ExchangeEnum.BINANCE
-    #       : ExchangeEnum.BYBIT,
-    #   indexPrice: ticker.price,
-    #   type: type,
-    #   name: ticker.symbol,
-    #   percent24h: ticker.percent,
-    #   turnover24h: ticker.turnover,
-    #   createdAt: new Date(ticker.updated).toISOString(),
-    # };
-
     res = session.get(
         f'{NEW_API_URL}//${spot}tickers/${(exchange or "bybit").lower()}-recent?symbol=${ticker.replace("/", "")}',
     )
