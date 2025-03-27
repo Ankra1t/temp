@@ -12,7 +12,7 @@ from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_
 from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
 
 from Classes import calcService
-from services import calculation
+from services import calculation, ticker
 
 
 months = {'ru': [
@@ -528,11 +528,19 @@ def msg_channel_calc(
     count=-1,
     indexPrice: float | None = None,
     percent24h: float | None = None,
-    turnover24h: float | None = None,
     try_link: str = '',
     isActiveCalc=False,
     traderMes=''
 ):
+    tickerInfo = None
+    try:
+        tickerInfo = ticker.get_info(
+            (calc.tool or '').replace(
+                '/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType
+        )
+    except:
+        pass
+
     description = calc.description if lang == 'ru' else None
     comment = calc.comment.strip() if calc.comment and lang == 'ru' else None
 
@@ -714,8 +722,8 @@ def msg_channel_calc(
         percent24h_show = f'{"+" if percent24h > 0 else ""}{get_print_float(percent24h, 1)}%'
 
     turnover24h_show = ''
-    if turnover24h is not None:
-        turnover24h_show = format_number(turnover24h)
+    if tickerInfo is not None:
+        turnover24h_show = format_number(tickerInfo.turnover24h)
 
     info = ''
     if (percent24h_show or turnover24h_show):
