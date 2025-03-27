@@ -107,6 +107,8 @@ async def live_info(request: web.Request):
 
     live = Live.model_validate_json(await request.text())
 
+    logger.info(await request.text())
+
     await channel_post.send_live(live)
 
     return web.Response()
@@ -136,7 +138,8 @@ async def send_calc(request: web.Request):
     res = await request.text()
     calc = Calculation.model_validate_json(res)
     send_data = channel_calc.getByCalc(calc.id)
-    tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType)
+    tickerInfo = ticker.get_info((calc.tool or '').replace(
+        '/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType)
 
     await channel_post.send_calc(
         calc, send_data,
