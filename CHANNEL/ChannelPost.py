@@ -444,7 +444,7 @@ class ChannelPost():
                     msg += tool
                     if i != len(live.canceled) - 1:
                         msg += ', '
-
+            logger.info(msg)
             try:
                 if live.isNewMes or mesIds is None:
                     new_mes = await antiflood(
