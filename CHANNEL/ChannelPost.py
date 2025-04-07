@@ -8,6 +8,7 @@ from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
 from config_global import API_UPLOADS, API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
+from db import db
 from messages.common import transl_status
 from models import CALC_STATUS_TYPE, CalcChannelNotification, Calculation, Live, Mean, Poll, SendCalc, SentMessages, TickerInfo
 from services import calculation, channel_calc
@@ -412,8 +413,17 @@ class ChannelPost():
             tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
             msg += f' ({"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show})'
 
+            settings = db.get_calc_user_settings(14782, 'crypto', False)
+            if settings:
+                msg += '\n'
+                if settings.deposit:
+                    msg += f'\n\n<b>Депозит:</b> {get_print_float(settings.deposit)} USDT'
+
+                if settings.risk:
+                    msg += f'\n\n<b>Риск на сделку:</b> {get_print_float(settings.risk[0])} {"%" if settings.risk else "USDT"}'
+
             msg += '\n\n'
-            msg += '* данные меняются в режиме реального времени' if lang == 'ru' else '* data is changing in real time mode'
+            msg += '! данные меняются в live-режиме' if lang == 'ru' else '! data is changing in live'
 
             if finished != '':
                 msg += f'\n\n<b>Завершено:</b>\n' if lang == 'ru' else f'\n\n<b>Closed:</b>\n'

@@ -2281,8 +2281,8 @@ class Database:
             self.connection.rollback()
             return False
 
-
     # Unfinished calculation
+
     def _data_to_unfinished_calc(self, data: DictRow):
         pair = data.get('pair')
         pair_price = data.get('pairPrice')
