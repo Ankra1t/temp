@@ -18,7 +18,7 @@ class Notifier():
         self.bot = bot
         self.bot_users = bot_users
         self.bot_site_user = bot_site_user
-        self.users = (156045434, 7159306363)
+        self.users = (7159306363)
 
     async def _send_by_type(self, bot: AsyncTeleBot, user_id: int, type: MESSAGE_TYPE, text: str, media_id: str | None = None):
         mes = None

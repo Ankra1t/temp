@@ -151,7 +151,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
                 btn_stats = getButton('Расчёты канaла', 'channels')
                 buttons.append(btn_stats)
 
-            if user_id == 156045434:
+            if user_id == -111:
                 buttons.append(
                     getButton(
                         'Обновить недельюную статистику',
