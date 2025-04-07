@@ -26,6 +26,7 @@ MANUAL_TYPE = Literal[
     'trading_type', 'trading_style', 'calc'
 ]
 
+# Языки вывода
 LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
 LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
 
@@ -99,7 +100,7 @@ class CallbackQuery(_CallbackQuery):
 
 
 class Invoice(BaseModel):
-    """Структура чека"""
+    """Структура чека (deprecated)"""
     invoice_id: int
     status: str
     asset: str
@@ -111,6 +112,7 @@ class Invoice(BaseModel):
 
 
 class InvoiceBBanker(BaseModel):
+    """(deprecated)"""
     invoice_id: Optional[int] = None
     status: Optional[str] = None
     asset: Optional[str] = None
@@ -120,6 +122,7 @@ class InvoiceBBanker(BaseModel):
 
 
 class Update(BaseModel):
+    """(deprecated)"""
     update_id: int
     update_type: str
     request_date: datetime
@@ -127,10 +130,12 @@ class Update(BaseModel):
 
 
 class UpdateBBanker(BaseModel):
+    """(deprecated)"""
     payload: InvoiceBBanker | None = None
 
 
 class Subscribe(BaseModel):
+    """(deprecated)"""
     id: int
     user_id: int
     finish_dt: datetime
@@ -140,6 +145,7 @@ class Subscribe(BaseModel):
 
 
 class User(BaseModel):
+    """Пользователь кратко"""
     id: int
     tgId: int
     lang: LANGUAGES_TYPE
@@ -147,11 +153,13 @@ class User(BaseModel):
 
 
 class Discount(BaseModel):
+    """(deprecated)"""
     percent: float
     findate: datetime
 
 
 class Price:
+    """(deprecated)"""
     type_product: PRODUCT_TYPE
 
     def __init__(
@@ -195,6 +203,7 @@ class Price:
 
 
 class Transactions(BaseModel):
+    """(deprecated)"""
     id: int
     user_id: int
     code: str
@@ -209,6 +218,8 @@ class Transactions(BaseModel):
 
 
 class Purchase:
+    """(deprecated)"""
+
     def __init__(
         self,
         user_id: int | None,
