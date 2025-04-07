@@ -417,10 +417,10 @@ class ChannelPost():
             if settings:
                 msg += '\n'
                 if settings.deposit:
-                    msg += f'\n\n<b>Депозит:</b> {get_print_float(settings.deposit)} USDT'
+                    msg += f'\n<b>Депозит:</b> {get_print_float(settings.deposit)} USDT'
 
                 if settings.risk:
-                    msg += f'\n\n<b>Риск на сделку:</b> {get_print_float(settings.risk[0])} {"%" if settings.risk else "USDT"}'
+                    msg += f'\n<b>Риск на сделку:</b> {get_print_float(settings.risk[0])} {"%" if settings.risk else "USDT"}'
 
             msg += '\n\n'
             msg += '! данные меняются в live-режиме' if lang == 'ru' else '! data is changing in live'
