@@ -115,7 +115,7 @@ class ChannelPost():
 
             try:
                 if mesIds is not None:
-                    if calc.photo is None:
+                    if not calc.photo:
                         await antiflood(
                             self.bot.edit_message_text,
                             msg, chId, int(mesIds[chId_i]),
@@ -129,7 +129,7 @@ class ChannelPost():
                             number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
                         )
                 else:
-                    if calc.photo is None:
+                    if not calc.photo:
                         new_mes = await antiflood(
                             self.bot.send_message,
                             chId, msg,
@@ -247,7 +247,8 @@ class ChannelPost():
             newMes.append(str(message.message_id))
 
         channel_calc.createCalcChannelNotification(
-            data.calcId, data.chIds, newMes, data.langs)
+            data.calcId, data.chIds, newMes, data.langs
+        )
 
     async def send_poll(self, poll: Poll):
         if poll.ans is None or len(poll.ans) == 0:
@@ -413,7 +414,7 @@ class ChannelPost():
             tp_sl_show = 'к капиталу' if lang == 'ru' else 'to the capital'
             msg += f' ({"+" if live.monthValueCount > 0 else ""}{get_print_float(live.monthValueCount, 1)}% {tp_sl_show})'
 
-            settings = db.get_calc_user_settings(14782, 'crypto', False)
+            settings = db.get_calc_user_settings(14781, 'crypto', False)
             if settings:
                 msg += '\n'
                 if settings.deposit:
