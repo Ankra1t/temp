@@ -115,7 +115,7 @@ class ChannelPost():
 
             try:
                 if mesIds is not None:
-                    if not calc.photo:
+                    if calc.photo is None:
                         await antiflood(
                             self.bot.edit_message_text,
                             msg, chId, int(mesIds[chId_i]),
@@ -129,7 +129,7 @@ class ChannelPost():
                             number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
                         )
                 else:
-                    if not calc.photo:
+                    if calc.photo is None:
                         new_mes = await antiflood(
                             self.bot.send_message,
                             chId, msg,
