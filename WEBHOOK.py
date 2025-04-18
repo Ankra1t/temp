@@ -181,10 +181,13 @@ async def del_notification(request: web.Request):
             logger.info(f"Deleting message {data.mesIds[i]} from chat {data.chIds[i]}")
             await bot.delete_message(data.chIds[i], int(data.mesIds[i]))
         except ApiTelegramException as e:
-            if "message to delete not found" in str(e):
+            error_msg = str(e)
+            if "message to delete not found" in error_msg:
                 logger.info(f"Message {data.mesIds[i]} in chat {data.chIds[i]} was already deleted")
+            elif "message can't be deleted" in error_msg:
+                logger.warning(f"Message {data.mesIds[i]} in chat {data.chIds[i]} cannot be deleted (possibly no permissions)")
             else:
-                logger.error(f"Error deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
+                logger.error(f"Telegram API error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
 
