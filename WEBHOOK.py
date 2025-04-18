@@ -4,6 +4,7 @@ import logging
 import telebot
 from telebot.types import BotCommand
 from aiohttp import web
+from telebot.apihelper import ApiTelegramException
 
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
@@ -174,7 +175,11 @@ async def del_notification(request: web.Request):
     data = CalcChannelNotification.model_validate_json(res)
 
     for i in range(len(data.chIds)):
-        await channel_post.main_bot.delete_message(data.chIds[i], int(data.mesIds[i]))
+        try:
+            await bot.delete_message(data.chIds[i], int(data.mesIds[i]))
+        except ApiTelegramException as e:
+            if "message to delete not found" not in str(e):
+                logger.error(f"Error deleting message: {e}")
 
     return web.Response()
 
