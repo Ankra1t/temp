@@ -173,13 +173,20 @@ async def send_notification(request: web.Request):
 async def del_notification(request: web.Request):
     res = await request.text()
     data = CalcChannelNotification.model_validate_json(res)
-
+    
+    logger.info(f"Attempting to delete notifications for calcId: {data.calcId}")
+    
     for i in range(len(data.chIds)):
         try:
+            logger.info(f"Deleting message {data.mesIds[i]} from chat {data.chIds[i]}")
             await bot.delete_message(data.chIds[i], int(data.mesIds[i]))
         except ApiTelegramException as e:
-            if "message to delete not found" not in str(e):
-                logger.error(f"Error deleting message: {e}")
+            if "message to delete not found" in str(e):
+                logger.info(f"Message {data.mesIds[i]} in chat {data.chIds[i]} was already deleted")
+            else:
+                logger.error(f"Error deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
 
     return web.Response()
 
