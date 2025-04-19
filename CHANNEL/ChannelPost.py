@@ -115,21 +115,30 @@ class ChannelPost():
 
             try:
                 if mesIds is not None:
-                    if calc.photo is None or calc.photo == '':
-                        await antiflood(
-                            self.bot.edit_message_text,
-                            msg, chId, int(mesIds[chId_i]),
-                            disable_web_page_preview=True,
-                            number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
-                        )
+                    logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
+            
+                    # Проверяем, есть ли фото и есть ли текст
+                    if calc.photo is None or calc.photo.strip() == '':
+                        if msg.strip() == '':
+                            logger.warning(f"SKIP: Message text is empty, can't edit text in message_id={mesIds[chId_i]}")
+                        else:
+                            await antiflood(
+                                self.bot.edit_message_text,
+                                msg, chId, int(mesIds[chId_i]),
+                                disable_web_page_preview=True,
+                                number_retries=100 if calc.status in ('FINISH', 'CANCEL') else 15
+                            )
                     else:
-                        await antiflood(
-                            self.bot.edit_message_caption,
-                            msg, chId, int(mesIds[chId_i]),
-                            number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
-                        )
+                        if msg.strip() == '':
+                            logger.warning(f"SKIP: Message caption is empty, can't edit caption in message_id={mesIds[chId_i]}")
+                        else:
+                            await antiflood(
+                                self.bot.edit_message_caption,
+                                msg, chId, int(mesIds[chId_i]),
+                                number_retries=100 if calc.status in ('FINISH', 'CANCEL') else 15
+                            )
                 else:
-                    if calc.photo is None or calc.photo == '':
+                    if calc.photo is None or calc.photo.strip() == '':
                         new_mes = await antiflood(
                             self.bot.send_message,
                             chId, msg,
@@ -137,9 +146,8 @@ class ChannelPost():
                         )
                     else:
                         photo = API_UPLOADS + calc.photo
-
-                        logger.info(photo)
-
+                        logger.info(f"Sending new photo message: {photo}")
+            
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
                             chId, photo, msg,
@@ -147,9 +155,48 @@ class ChannelPost():
 
                     newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
-                if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
+                if e.error_code != 400 or 'message is not modified' not in e.result_json.get("description", ""):
                     logger.error(
-                        f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description}')
+                        f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description} | photo: {calc.photo} | msg: {msg}')
+
+            # try:
+            #     if mesIds is not None:
+            #         logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
+            #         if calc.photo is None or calc.photo == '':
+            #             await antiflood(
+            #                 self.bot.edit_message_text,
+            #                 msg, chId, int(mesIds[chId_i]),
+            #                 disable_web_page_preview=True,
+            #                 number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
+            #             )
+            #         else:
+            #             await antiflood(
+            #                 self.bot.edit_message_caption,
+            #                 msg, chId, int(mesIds[chId_i]),
+            #                 number_retries=100 if calc.status == 'FINISH' or calc.status == 'CANCEL' else 15
+            #             )
+            #     else:
+            #         if calc.photo is None or calc.photo == '':
+            #             new_mes = await antiflood(
+            #                 self.bot.send_message,
+            #                 chId, msg,
+            #                 disable_web_page_preview=True,
+            #             )
+            #         else:
+            #             photo = API_UPLOADS + calc.photo
+
+            #             logger.info(photo)
+
+            #             new_mes = await antiflood(
+            #                 self.main_bot.send_photo,
+            #                 chId, photo, msg,
+            #             )
+
+            #         newMesIds.append(str(new_mes.id))
+            # except ApiTelegramException as e:
+            #     if e.error_code != 400 or 'message is not modified' not in e.result_json["description"]:
+            #         logger.error(
+            #             f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description}')
 
         if len(newMesIds) == len(chIds):
             if send_data is None:
