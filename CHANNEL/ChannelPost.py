@@ -1,4 +1,5 @@
 import random
+import re
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
@@ -17,6 +18,9 @@ from common.utils import antiflood, format_number, get_print_float
 from common.calculation import getStrValueCount
 from messages.calc import msg_channel_calc, months
 
+def has_visible_text(text):
+    plain = re.sub(r'<[^>]+>', '', text)  # удаляем все HTML-теги
+    return plain.strip() != ''
 
 class ChannelPost():
     def __init__(self, bot: AsyncTeleBot, main_bot: AsyncTeleBot):
@@ -116,10 +120,8 @@ class ChannelPost():
             try:
                 if mesIds is not None:
                     logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
-            
-                    # Проверяем, есть ли фото и есть ли текст
                     if calc.photo is None or calc.photo.strip() == '':
-                        if msg.strip() == '':
+                        if not has_visible_text(msg):
                             logger.warning(f"SKIP: Message text is empty, can't edit text in message_id={mesIds[chId_i]}")
                         else:
                             await antiflood(
@@ -129,7 +131,7 @@ class ChannelPost():
                                 number_retries=100 if calc.status in ('FINISH', 'CANCEL') else 15
                             )
                     else:
-                        if msg.strip() == '':
+                        if not has_visible_text(msg):
                             logger.warning(f"SKIP: Message caption is empty, can't edit caption in message_id={mesIds[chId_i]}")
                         else:
                             await antiflood(
@@ -139,26 +141,30 @@ class ChannelPost():
                             )
                 else:
                     if calc.photo is None or calc.photo.strip() == '':
-                        new_mes = await antiflood(
-                            self.bot.send_message,
-                            chId, msg,
-                            disable_web_page_preview=True,
-                        )
+                        if not has_visible_text(msg):
+                            logger.warning(f"SKIP: Message text is empty, can't send new message to chat_id={chId}")
+                        else:
+                            new_mes = await antiflood(
+                                self.bot.send_message,
+                                chId, msg,
+                                disable_web_page_preview=True,
+                            )
                     else:
                         photo = API_UPLOADS + calc.photo
-                        logger.info(f"Sending new photo message: {photo}")
-            
-                        new_mes = await antiflood(
-                            self.main_bot.send_photo,
-                            chId, photo, msg,
-                        )
-
-                    newMesIds.append(str(new_mes.id))
+                        logger.info(f"Sending new photo message, calc.id={calc.id}, photo={photo}")
+                        if not has_visible_text(msg):
+                            logger.warning(f"SKIP: Message caption is empty, can't send photo with caption to chat_id={chId}")
+                        else:
+                            new_mes = await antiflood(
+                                self.main_bot.send_photo,
+                                chId, photo, msg,
+                            )
+                    if mesIds is None and 'new_mes' in locals():
+                        newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json.get("description", ""):
-                    logger.error(
-                        f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description} | photo: {calc.photo} | msg: {msg}')
-
+                    logger.error(f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description} | photo: {calc.photo} | msg: {msg}')
+            
             # try:
             #     if mesIds is not None:
             #         logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
