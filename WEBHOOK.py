@@ -108,6 +108,8 @@ async def live_info(request: web.Request):
 
     live = Live.model_validate_json(await request.text())
 
+    logger.info(f"[live-info] Received: {await request.text()}")
+    
     await channel_post.send_live(live)
 
     return web.Response()

@@ -456,6 +456,7 @@ class ChannelPost():
                     if i != len(live.canceled) - 1:
                         msg += ', '
             logger.info(msg)
+            logger.info(f'isNewMes: {live.isNewMes}, mesIds: {mesIds}')
             try:
                 if live.isNewMes or mesIds is None:
                     new_mes = await antiflood(
@@ -475,6 +476,7 @@ class ChannelPost():
                         chId, new_mes.id
                     )
                 else:
+                    logger.info(f'Editing message {mesIds[chId_i]} in chat {chId}')
                     await antiflood(
                         self.bot.edit_message_text,
                         msg, chId, int(mesIds[chId_i]),
