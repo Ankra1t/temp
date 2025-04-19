@@ -18,9 +18,15 @@ from common.utils import antiflood, format_number, get_print_float
 from common.calculation import getStrValueCount
 from messages.calc import msg_channel_calc, months
 
-def has_visible_text(text):
-    plain = re.sub(r'<[^>]+>', '', text)  # удаляем все HTML-теги
-    return plain.strip() != ''
+def has_visible_text(text: str) -> bool:
+    from html import unescape
+    import re
+
+    # Убираем HTML-теги
+    plain = re.sub(r'<[^>]+>', '', text)
+    # Удаляем невидимые символы и пробелы
+    cleaned = re.sub(r'[\s\u200b\xa0\u2060]+', '', unescape(plain))
+    return cleaned != ''
 
 class ChannelPost():
     def __init__(self, bot: AsyncTeleBot, main_bot: AsyncTeleBot):
