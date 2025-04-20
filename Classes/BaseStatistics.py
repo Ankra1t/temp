@@ -15,7 +15,7 @@ class BaseStatistics(object):
         self.db = db
 
     # # # # # # Вывод пользователей
-    async def show_paid_users(self, bot: AsyncTeleBot, message : Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
+    async def show_paid_users(self, bot: AsyncTeleBot, message: Message, period: str | None = None, product: str | None = None, start_to_fin: str | None = None):
         chat_id = message.chat.id
 
         if period:
@@ -51,16 +51,13 @@ class BaseStatistics(object):
                 price_name=trans_item.name,
                 sum=trans_item.sum,
                 currency=trans_item.currency,
-                payment_date=trans_item.payment_date, # type: ignore
+                payment_date=trans_item.payment_date,  # type: ignore
             )
             purchase_text = self.temp_client_purchase(purchase)
             full_purchases_text = clients[user_id] if clients.get(
                 user_id) else ''
             clients[user_id] = "{}{}".format(
                 full_purchases_text, purchase_text)
-
-        logger.info(
-            f"Выводим список клиентов кол-во tg_clients [{len(clients)}]")
 
         # Выводим список клиентов
         for i, el in enumerate(clients):
@@ -118,9 +115,9 @@ class BaseStatistics(object):
         """Кол-во плативших пользователей по транзакциям"""
         return self.db.get_paid_users_count()
 
-
     # # # # # # Специализированные показателей
     # # # # # # Шаблоны вывода
+
     def temp_client(self, user: UserInfo, purchases: str):
         """Вывести одного пользователя"""
         template = """

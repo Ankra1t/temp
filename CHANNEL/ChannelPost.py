@@ -18,6 +18,7 @@ from common.utils import antiflood, format_number, get_print_float
 from common.calculation import getStrValueCount
 from messages.calc import msg_channel_calc, months
 
+
 def has_visible_text(text: str) -> bool:
     from html import unescape
     import re
@@ -27,6 +28,7 @@ def has_visible_text(text: str) -> bool:
     # Удаляем невидимые символы и пробелы
     cleaned = re.sub(r'[\s\u200b\xa0\u2060]+', '', unescape(plain))
     return cleaned != ''
+
 
 class ChannelPost():
     def __init__(self, bot: AsyncTeleBot, main_bot: AsyncTeleBot):
@@ -125,30 +127,36 @@ class ChannelPost():
 
             try:
                 if mesIds is not None:
-                    logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
+                    logger.info(
+                        f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
                     if calc.photo is None or calc.photo.strip() == '':
                         if not has_visible_text(msg):
-                            logger.warning(f"SKIP: Message text is empty, can't edit text in message_id={mesIds[chId_i]}")
+                            logger.warning(
+                                f"SKIP: Message text is empty, can't edit text in message_id={mesIds[chId_i]}")
                         else:
                             await antiflood(
                                 self.bot.edit_message_text,
                                 msg, chId, int(mesIds[chId_i]),
                                 disable_web_page_preview=True,
-                                number_retries=100 if calc.status in ('FINISH', 'CANCEL') else 15
+                                number_retries=100 if calc.status in (
+                                    'FINISH', 'CANCEL') else 15
                             )
                     else:
                         if not has_visible_text(msg):
-                            logger.warning(f"SKIP: Message caption is empty, can't edit caption in message_id={mesIds[chId_i]}")
+                            logger.warning(
+                                f"SKIP: Message caption is empty, can't edit caption in message_id={mesIds[chId_i]}")
                         else:
                             await antiflood(
                                 self.bot.edit_message_caption,
                                 msg, chId, int(mesIds[chId_i]),
-                                number_retries=100 if calc.status in ('FINISH', 'CANCEL') else 15
+                                number_retries=100 if calc.status in (
+                                    'FINISH', 'CANCEL') else 15
                             )
                 else:
                     if calc.photo is None or calc.photo.strip() == '':
                         if not has_visible_text(msg):
-                            logger.warning(f"SKIP: Message text is empty, can't send new message to chat_id={chId}")
+                            logger.warning(
+                                f"SKIP: Message text is empty, can't send new message to chat_id={chId}")
                         else:
                             new_mes = await antiflood(
                                 self.bot.send_message,
@@ -157,9 +165,11 @@ class ChannelPost():
                             )
                     else:
                         photo = API_UPLOADS + calc.photo
-                        logger.info(f"Sending new photo message, calc.id={calc.id}, photo={photo}")
+                        logger.info(
+                            f"Sending new photo message, calc.id={calc.id}, photo={photo}")
                         if not has_visible_text(msg):
-                            logger.warning(f"SKIP: Message caption is empty, can't send photo with caption to chat_id={chId}")
+                            logger.warning(
+                                f"SKIP: Message caption is empty, can't send photo with caption to chat_id={chId}")
                         else:
                             new_mes = await antiflood(
                                 self.main_bot.send_photo,
@@ -169,8 +179,9 @@ class ChannelPost():
                         newMesIds.append(str(new_mes.id))
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json.get("description", ""):
-                    logger.error(f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description} | photo: {calc.photo} | msg: {msg}')
-            
+                    logger.error(
+                        f'CALC SEND ERROR (ID {calc.id}): {e.error_code} {e.description} | photo: {calc.photo} | msg: {msg}')
+
             # try:
             #     if mesIds is not None:
             #         logger.info(f"Trying to edit message, calc.id={calc.id}, calc.photo={calc.photo}, chId={chId}, mesId={mesIds[chId_i]}")
@@ -363,7 +374,6 @@ class ChannelPost():
             mesIds = None
 
         for calc_ in live.toUpdate:
-            logger.info(calc_.calc.id)
             await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, calc_.percent24h, False)
 
         for chId_i, chId in enumerate(chIds):
@@ -535,7 +545,8 @@ class ChannelPost():
                         chId, new_mes.id
                     )
                 else:
-                    logger.info(f'Editing message {mesIds[chId_i]} in chat {chId}')
+                    logger.info(
+                        f'Editing message {mesIds[chId_i]} in chat {chId}')
                     await antiflood(
                         self.bot.edit_message_text,
                         msg, chId, int(mesIds[chId_i]),
@@ -739,8 +750,7 @@ class ChannelPost():
                     else:
                         tool_counts[tool] += 1
                         tool_num = f'({tool_counts[tool]})'
-                    logger.info(
-                        (tool or "-").lower().replace("/usdt", "").upper())
+
                     if status == 'DEAL':
                         msg_in_deal += f'\n{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     elif status == 'CANCEL':
