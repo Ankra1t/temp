@@ -143,14 +143,10 @@ async def send_site_code(
 
     await state.delete()
 
-    logger.info(message.text)
     if message.text:
         _, param = message.text.split()
-        logger.info(param)
         if '_' in param:
             _, code = param.split('_')
-            logger.info(code)
-
             auth.send_site_code(userId=user.id, code=code)
             await bot.send_message(
                 chat_id, '✅ Вы успешно авторизированны.\nВозвращайтесь на сайт, чтобы продолжить работу.'
