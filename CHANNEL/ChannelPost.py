@@ -116,7 +116,6 @@ class ChannelPost():
             try:
                 if mesIds is not None:
                     logger.info(f'{calc.id} {calc.photo}')
-                    logger.info(f'{calc.id} {calc.photo}')
                     if calc.photo is None or calc.photo == '':
                         await antiflood(
                             self.bot.edit_message_text,
