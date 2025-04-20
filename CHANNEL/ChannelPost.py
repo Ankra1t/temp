@@ -115,6 +115,7 @@ class ChannelPost():
 
             try:
                 if mesIds is not None:
+                    logger.info(f'{calc.id} {calc.photo}')
                     if calc.photo is None or calc.photo == '':
                         await antiflood(
                             self.bot.edit_message_text,
@@ -137,8 +138,6 @@ class ChannelPost():
                         )
                     else:
                         photo = API_UPLOADS + calc.photo
-
-                        logger.info(photo)
 
                         new_mes = await antiflood(
                             self.main_bot.send_photo,
@@ -304,7 +303,6 @@ class ChannelPost():
             mesIds = None
 
         for calc_ in live.toUpdate:
-            logger.info(calc_.calc.id)
             await self.send_calc(calc_.calc, calc_.sendData, calc_.indexPrice, calc_.percent24h, False)
 
         for chId_i, chId in enumerate(chIds):
@@ -455,7 +453,7 @@ class ChannelPost():
                     msg += tool
                     if i != len(live.canceled) - 1:
                         msg += ', '
-            logger.info(msg)
+
             try:
                 if live.isNewMes or mesIds is None:
                     new_mes = await antiflood(
@@ -678,8 +676,7 @@ class ChannelPost():
                     else:
                         tool_counts[tool] += 1
                         tool_num = f'({tool_counts[tool]})'
-                    logger.info(
-                        (tool or "-").lower().replace("/usdt", "").upper())
+
                     if status == 'DEAL':
                         msg_in_deal += f'\n{link_start}<b>{(tool or "-").lower().replace("/usdt", "").upper()}{tool_num}</b>{link_end}'
                     elif status == 'CANCEL':
