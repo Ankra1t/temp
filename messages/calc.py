@@ -339,7 +339,12 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     else:
         conclusion = ''
 
+        print("ActiveCalc:", calc.ActiveCalc)
+
         if calc.ActiveCalc:
+            logger.info(f"ActiveCalc: {calc.ActiveCalc.__dict__}")
+            logger.info(f"autoTake: {getattr(calc.ActiveCalc, 'autoTake', None)}")
+
             if calc.ActiveCalc.trailingStopCount:
                 conclusion += f'{texts[lang]["tr_stop"]}: +{get_print_float(calc.ActiveCalc.trailingStopCount, 1)} тейка'
 
