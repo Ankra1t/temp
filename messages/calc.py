@@ -540,6 +540,16 @@ def msg_channel_calc(
     isActiveCalc=False,
     traderMes=''
 ):
+    print('=== msg_channel_calc START ===')
+    print('calc:', calc)
+    print('calc.ActiveCalc:', getattr(calc, 'ActiveCalc', None))
+    print('calc.ActiveCalc as dict:', getattr(calc, 'ActiveCalc', {}).__dict__ if hasattr(getattr(calc, 'ActiveCalc', {}), '__dict__') else getattr(calc, 'ActiveCalc', {}))
+
+    logger.info(f"msg_channel_calc START: status={calc.status}, tool={calc.tool}")
+    logger.info(f"ActiveCalc: {calc.ActiveCalc}")
+    if calc.ActiveCalc:
+        logger.info(f"ActiveCalc.__dict__: {getattr(calc.ActiveCalc, '__dict__', calc.ActiveCalc)}")
+
     tickerInfo = None
     try:
         tickerInfo = ticker.get_info(
