@@ -119,6 +119,9 @@ async def msg_calculate(state: StateContext, user: User, is_try=False):
 
 
 def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
+    print('msg_calculation called, status:', calc.status)
+    print('ActiveCalc:', calc.ActiveCalc)
+
     is_saved = calc.status == 'FINISH'
     calc_result = calcService.get_result(calc)
 
