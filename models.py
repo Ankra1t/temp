@@ -14,7 +14,7 @@ SUBSCRIBE_TYPE = Literal['trial', 'PAID']
 BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
 SORT_BY_TYPE = Literal['new', 'old']
 
-TRADING_TYPE = Literal['margin', 'spot']
+TRADING_TYPE = Literal["margin", "spot", "future"]
 MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
 EXCHANGE_TYPE = Literal['BYBIT', 'BINANCE']
 PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'active_calc']
