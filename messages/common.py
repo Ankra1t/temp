@@ -123,7 +123,7 @@ def transl_tr_style(trading_style: str | None, lang: LANGUAGES_TYPE = 'ru'):
                 result = str(
                     text_editor.translator.translate(
                         trading_style, 'en', 'ru'
-                    ).text
+                    )
                 )
             except:
                 pass

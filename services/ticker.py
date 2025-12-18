@@ -4,7 +4,6 @@ from typing import Optional
 from models import TickerInfo
 from services.base_config import check_response, session_decorator, session
 from config_global import API_URL, NEW_API_URL
-from config_logger import logger
 
 
 @session_decorator

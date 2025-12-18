@@ -1,5 +1,4 @@
 import random
-import re
 from typing import Literal, Optional
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
@@ -7,7 +6,7 @@ from telebot.types import InputPollOption, InlineKeyboardMarkup, InlineKeyboardB
 
 from common.calculation import getTrailingStopsMessage
 from common.dt import get_datetime_now, get_str_by_datetime
-from config_global import API_UPLOADS, API_URL, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
+from config_global import API_UPLOADS, EN_CHANNEL_ID, RESULTS_CHANNEL_ID, RU_CHANNEL_ID, SITE_URL, TOURNAMENT_CHANNEL_ID
 from config_logger import logger
 from db import db
 from messages.common import transl_status
@@ -153,6 +152,7 @@ class ChannelPost():
                                     'FINISH', 'CANCEL') else 15
                             )
                 else:
+                    new_mes = {"id": 1}
                     if calc.photo is None or calc.photo.strip() == '':
                         if not has_visible_text(msg):
                             logger.warning(
@@ -176,7 +176,7 @@ class ChannelPost():
                                 chId, photo, msg,
                             )
                     if mesIds is None and 'new_mes' in locals():
-                        newMesIds.append(str(new_mes.id))
+                        newMesIds.append(str(new_mes.id))  # type: ignore
             except ApiTelegramException as e:
                 if e.error_code != 400 or 'message is not modified' not in e.result_json.get("description", ""):
                     logger.error(
