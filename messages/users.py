@@ -1,28 +1,6 @@
 from models import LANGUAGES_TYPE
 
 
-def end_trial_subscribe_msg(lang: LANGUAGES_TYPE):
-    text = {
-        'ru': 'Ваша пробная подписка закончилась. Вы можете оформить платную подписку.',
-        'en': 'Your trial subscription has expired. You can sign up for a paid subscription.',
-        'uz': 'Sinov obunangiz tugadi. Siz pullik obuna uchun ro\'yxatdan o\'tishingiz mumkin.',
-        'tr': 'Maalesef deneme aboneliğinizin süresi doldu. Ücretli bir abonelik satın alabilir ve hizmeti kullanmaya devam edebilirsiniz.',
-    }
-
-    return f'❗️ {text[lang]}'
-
-
-def end_paid_subscribe_msg(lang: LANGUAGES_TYPE):
-    text = {
-        'ru': 'Ваша платная подписка закончилась. Пожалуйста, продлите подписку, чтобы снова пользоваться сервисом.',
-        'en': 'Your paid subscription has expired. Please renew your subscription to have access to the service again.',
-        'uz': 'Pulli obuna muddati tugadi, xizmatlardan qayta foydalanish uchun obunangizni yangilang.',
-        'tr': 'Hizmetlerimizden yararlanmak istiyorsanız lütfen aboneliğinizi yenileyin.',
-    }
-
-    return f'❗️ {text[lang]}'
-
-
 def gift_subscribe_msg(lang: LANGUAGES_TYPE, end_date: str):
     texts = {
         'ru': 'Поздравляем, админ подарил вам платную подписку до',
@@ -67,27 +45,6 @@ def paid_subscribe_refer_msg(lang: LANGUAGES_TYPE, user: str, sum: str):
     return texts[lang]
 
 
-def welcome_msg():
-    return f"""
-<b>«Для Людей»</b> - проект, в котором собраны обычные, простые, добрые люди. 
-
-<b>Задача</b> проста - научиться вместе делать деньги. 
-<b>Помочь</b> друг другу быть полезными. 
-
-Теперь <b>мы вместе.</b> 
-Добро пожаловать!
-
-На <b>бесплатной</b> основе в этом чате Вы будете получать ежедневно рекомендации и информацию по торговле. 
-"""
-
-
-def welcome_trial_subscribe_msg(days: int = 2):
-    return f"""
-Поздравляем, за вашу регистрацию в боте вы получаете {str(days)} дн бесплатных рекомендаций! Пользуйтесь, и если понравиться можете
-купить подписку на месяц
-"""
-
-
 def msg_start(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
@@ -109,18 +66,6 @@ def msg_start(lang: LANGUAGES_TYPE):
     }
 
     return f"""⚡️ <b><u>{texts[lang]['name']}</u></b>"""
-# {texts[lang]['action']}
-
-
-def msg_choose_tariff_type(lang: LANGUAGES_TYPE):
-    text = {
-        'ru': 'Какой продукт вас интересует?',
-        'en': 'Which product interests you?',
-        'uz': 'Qaysi mahsulot sizni qiziqtiradi?',
-        'tr': 'Hangi ürünle ilgileniyorsunuz?',
-    }
-
-    return text[lang]
 
 
 def msg_loading_invoice(lang: LANGUAGES_TYPE):

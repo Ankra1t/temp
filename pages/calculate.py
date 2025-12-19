@@ -23,7 +23,7 @@ from messages.errors import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.profile import msg_user_tariff
 from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
-from messages.users import msg_choose_tariff_type, msg_no_tariffs
+from messages.users import msg_no_tariffs
 from messages.common import transl_status
 from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
 
@@ -38,7 +38,7 @@ from keyboards.channel_post import (
 from keyboards.main import kb_main, kb_violation
 from keyboards.manual import kb_manual, kb_manuals
 from keyboards.stats import kb_calc_activation, kb_calc_list, kb_calc_result, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
-from keyboards.tariff import kb_choose_products, kb_tariff_list, kb_user_tariff_back
+from keyboards.tariff import kb_tariff_list, kb_user_tariff_back
 from keyboards.settings import (
     kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summary_profit,
@@ -556,32 +556,6 @@ async def send_calc_list(
     await state.add_data(
         del_mes_id=new_mes_id,
     )
-
-
-async def send_user_tariffs(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    user: User,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    text = msg_choose_tariff_type(user.lang)
-    keyboard = kb_choose_products(user.lang)
-
-    if is_first:
-        await bot.send_message(
-            chat_id, text,
-            reply_markup=keyboard
-        )
-    else:
-        await edit_message(
-            bot, message, 'text', text, keyboard
-        )
 
 
 async def send_tariffs_list_item(

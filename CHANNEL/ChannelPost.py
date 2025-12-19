@@ -102,20 +102,6 @@ class ChannelPost():
                 isPreStop = send_data.isPreStop
 
             trader_mes = ''
-#             if send_data is None:
-#                 stats = calculation.getActiveStatsByUser(
-#                     userId=calc.userId, id=calc.userId
-#                 )
-#                 if stats:
-#                     name = f'@{stats.user.tgUsername}' if stats.user.tgUsername else stats.user.tgId
-
-#                     profit = getStrValueCount(stats.data.profitCount, lang)
-
-#                     trader_mes = f"""⚡️ Трейдер: {name}
-# За марафон: {get_print_float(stats.data.longCount + stats.data.shortCount)} сделок
-# {get_print_float(stats.data.longCount)} long / {get_print_float(stats.data.shortCount)} short
-# Результат сейчас: {profit}"""
-
             msg = msg_channel_calc(
                 calc, lang, withoutStop, isPreStop,
                 mesNum, indexPrice, percent24h,

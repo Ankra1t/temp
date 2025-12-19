@@ -51,14 +51,6 @@ def handle_new_value(type: BASE_VALUE_TYPE):
         logger.info(
             f'callback "handle_new_value" user_tg_id={user.tgId} value={value}')
 
-        # if type == 'risk' and (value <= 0 or value >= 100):
-        #     bot.send_message(
-        #         chat_id,
-        #         msg_percent_error(user.tgId),
-        #         reply_markup=kb_base_cancel(user.tgId)
-        #     )
-        #     return
-
         db.set_user_base(user.id, type, value)
         if type == 'risk':
             db.set_user_risk_is_percent(user.id, is_percent)

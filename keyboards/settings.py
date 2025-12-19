@@ -779,21 +779,6 @@ def kb_trading_type(lang: LANGUAGES_TYPE):
     return keyboard
 
 
-def kb_first_calc_info(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Настроить свой калькулятор',
-        'en': 'Set up your calculator',
-        'uz': 'Kalkulyatoringizni sozlang',
-        'tr': 'Hesap makinenizi özelleştirin',
-    }
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        getButton(f'⚙️ {texts[lang]}', 'set_first_settings'),
-    )
-    return keyboard
-
-
 def kb_exchange(lang: LANGUAGES_TYPE, is_exchange: bool = False):
     texts = {
         'ru': {

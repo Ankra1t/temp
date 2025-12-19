@@ -13,7 +13,7 @@ from common.utils import is_digit
 from common.calc_step import send_calc_start
 
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_main, send_manual_page, send_settings
-from pages.user import send_referral, send_site_code
+from pages.user import send_referral
 from pages.start import send_start_by_user
 
 from keyboards.account import kb_support
@@ -128,10 +128,6 @@ async def _support(message: Message, bot: AsyncTeleBot, state: StateContext, use
 
 async def _manual(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     await send_manual_page(bot, message, state, user, 1, True)
-
-
-async def _site(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    await send_site_code(bot, message, state, user, is_first=True)
 
 
 async def _settings(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):

@@ -3,31 +3,6 @@ from messages.common import transl_market, POINT
 from models import LANGUAGES_TYPE, MARKETS_TYPE, CalculatorStats
 
 
-def msg_stats_page(lang: LANGUAGES_TYPE, count: int):
-    texts = {
-        'ru': {
-            'main': 'Статистика',
-            'count': 'Всего расчетов',
-        },
-        'en': {
-            'main': 'Stats',
-            'count': 'All calculations done',
-        },
-        'uz': {
-            'main': 'Statistika',
-            'count': 'Jami hisob-kitoblar',
-        },
-        'tr': {
-            'main': 'İstatistikler',
-            'count': 'Toplam hesaplamalar',
-        },
-    }
-
-    return f"""📊 <b><u>{texts[lang]['main']}</u></b>
-
-{texts[lang]['count']}: <b>{count}</b>"""
-
-
 def msg_market_stats(lang: LANGUAGES_TYPE, market: MARKETS_TYPE, stats: CalculatorStats):
     texts = {
         'ru': {

@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.stats import kb_calc_result
 
-from common.keyboard import back_txt, cancel_txt
+from common.keyboard import back_txt
 from models import LANGUAGES_TYPE, Calculation, CallbackQuery
 from db import db
 
@@ -28,10 +28,6 @@ def getButton(text: str, type: str, is_saved=False, stat_id=-1):
             is_saved=str(is_saved)
         )
     )
-
-
-def cancel_btn(lang: LANGUAGES_TYPE):
-    return getButton(cancel_txt(lang), 'go_main')
 
 
 def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
@@ -119,8 +115,6 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
 
     if not is_first:
         if stat is None:
-            btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
-
             btn_stats = getButton(
                 '📊 ' + texts[lang]['stats'], 'stats', saved, stat_id
             )
@@ -142,10 +136,6 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
 
             keyboard.add(*buttons)
             buttons = []
-
-            # keyboard.add(
-            #     getButton(f'⚡️ {texts[lang]["active"]}', 'active')
-            # )
 
             if isAdmin:
                 btn_stats = getButton('Расчёты канaла', 'channels')
@@ -191,14 +181,6 @@ def kb_first_calc(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         getButton('⌨️ ' + texts[lang]['calc'] + '!', 'first_try'),
-    )
-    return keyboard
-
-
-def kb_menu_back(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        getButton(back_txt(lang), 'go_main'),
     )
     return keyboard
 

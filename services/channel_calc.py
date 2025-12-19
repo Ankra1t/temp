@@ -4,7 +4,7 @@ from pydantic.type_adapter import TypeAdapter
 
 from config_global import API_URL
 from .base_config import session_decorator, session, check_response
-from models import Live, MonthToolStats, SendCalc, CalcSentMessages, SendCalcWithCalc, SentMessages, LANGUAGES_TYPE
+from models import SendCalc, CalcSentMessages, SendCalcWithCalc, SentMessages, LANGUAGES_TYPE
 
 
 @session_decorator
@@ -48,22 +48,13 @@ def createCalcChannelNotification(calcId: int, chId: list[str], mesId: list[str]
         'lang': lang
     }
 
-    res = session.post(f'{API_URL}/channelCalc/calcId/{calcId}/notification', json.dumps(data).encode())
+    res = session.post(
+        f'{API_URL}/channelCalc/calcId/{calcId}/notification', json.dumps(data).encode())
 
     if not check_response(res):
         return
 
     return True
-
-
-@session_decorator
-def getSentToday():
-    res = session.get(f'{API_URL}/channelCalc/sentToday')
-
-    if not check_response(res):
-        return
-
-    return TypeAdapter(list[SendCalc]).validate_json(res.text)
 
 
 @session_decorator
@@ -167,18 +158,6 @@ def getActiveStats(calcId: int):
 
 
 @session_decorator
-def getLiveInfo():
-    res = session.get(
-        f'{API_URL}/channelCalc/live-info',
-    )
-
-    if not check_response(res):
-        return
-
-    return Live.model_validate_json(res.text)
-
-
-@session_decorator
 def updateLiveInfo(data: SentMessages):
     res = session.post(
         f'{API_URL}/channelCalc/live-info',
@@ -189,15 +168,3 @@ def updateLiveInfo(data: SentMessages):
         return
 
     return True
-
-
-@session_decorator
-def getMonthToolCount(tool: str):
-    res = session.get(
-        f'{API_URL}/channelCalc/monthCount/{tool.replace("/", "")}',
-    )
-
-    if not check_response(res):
-        return
-
-    return MonthToolStats.model_validate_json(res.text)

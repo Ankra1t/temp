@@ -7,7 +7,6 @@ from common.utils import delete_message
 from models import CallbackQuery, StateContext, User
 from db import db
 
-from states.tariff import TariffState
 from messages.users import msg_is_subscribed, msg_loading_invoice, msg_bill
 
 from keyboards.tariff import (
@@ -43,23 +42,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_tariffs_list_item(
             bot, call.message, state, user, 'calc', page, is_rus
         )
-
-    elif type == 'pay_tariff_yoo':
-        return
-        await delete_message(bot, chat_id, mes_id)
-
-        user_sub = db.get_current_subscribe_user(user.id)
-
-        if user_sub is not None:
-            bot.send_message(
-                chat_id, msg_is_subscribed(user.tgId),
-                reply_markup=kb_user_tariff_back(user.tgId)
-            )
-            return
-
-        bot.send_message(chat_id, msg_enter_email(user.tgId))
-        state.set(TariffState.email)
-        state.add_data(tariff_id=target_id)
 
     elif type == 'pay_tariff_cb':
         if is_rus:

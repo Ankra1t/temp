@@ -507,12 +507,6 @@ class LiveDeal(BaseModel):
     TrailingStops: Optional[list[CalcTrailingStop]] = None
 
 
-class LiveStats(BaseModel):
-    todayValueCount: float
-    monthValueCount: float
-    todayProfit: float
-
-
 class LiveWaitCancel(BaseModel):
     tool: str
     messages: Optional[SentMessages]
@@ -542,11 +536,6 @@ class Live(BaseModel):
     monthValueCount: float
     todayProfit: Optional[float]
     todayValueCount: Optional[float]
-
-
-class MonthToolStats(BaseModel):
-    count: int
-    value: float
 
 
 class AdvancedSettings(BaseModel):

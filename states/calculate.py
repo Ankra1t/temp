@@ -21,5 +21,3 @@ class CalculateState(StatesGroup):
 class ForexCalcState(StatesGroup):
     pair = State()
     pair_price = State()
-
-    val_dep = State()

@@ -584,17 +584,6 @@ def msg_choose_exchange_level(lang: LANGUAGES_TYPE, fees: list[tuple[str, float,
     return f'👉 {texts[lang]["main"]}' + levels
 
 
-def msg_enter_fee(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': f'Введите значение <b>комисии</b>',
-        'en': f'Enter value of <b>fee</b>',
-        'uz': f'Komissiya qiymatini kiriting',
-        'tr': f'Komisyon değerini girin',
-    }
-
-    return f'👉 {texts[lang]}:'
-
-
 def msg_stop_page(
     lang: LANGUAGES_TYPE,
     atr_settings: tuple[bool, str],
@@ -735,25 +724,6 @@ def msg_confirm_reset(lang: LANGUAGES_TYPE):
     }
 
     return f'⚠️ {texts[lang]}?'
-
-
-def msg_update_deposit(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': {
-            'main': 'Хотите изменять свой депозит при сохранении расчета?'
-        },
-        'en': {
-            'main': 'Do you want to change your deposit after saving the calculation?'
-        },
-        'uz': {
-            'main': 'Hisob-kitobni saqlagan holda omonatingizni o\'zgartirmoqchimisiz?'
-        },
-        'tr': {
-            'main': 'Hesaplamayı kaydederken depozitonuzu değiştirmek ister misiniz?'
-        },
-    }
-
-    return texts[lang]['main']
 
 
 def msg_active_settings(

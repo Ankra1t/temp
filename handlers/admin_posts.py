@@ -280,26 +280,6 @@ async def handle_action_post(action: Literal['send', 'delete']):
     return r_func
 
 
-async def handle_edit_text(message: Message, bot: AsyncTeleBot, state: StateContext):
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-
-    text = text_accept(message)
-    if text is None:
-        await bot.send_message(
-            chat_id, 'Введите контент текстом:',
-            reply_markup=kb_posts_back()
-        )
-        return
-
-    async with state.data() as data:
-        name = data.get('name', '')
-
-    db.update_text(name, text)
-    await state.delete()
-    await send_admin_params(bot, message, state)
-
-
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)

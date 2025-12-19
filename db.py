@@ -229,7 +229,7 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
 
-    def deactive_price(self, id: int):
+    def deactivate_price(self, id: int):
         """Установить цену не активной"""
         query = "UPDATE \"Tariff\" set active = 0 WHERE id = %s"
         params = (id,)
@@ -271,41 +271,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_first_tariff_by_product(self, product='signals', active=1, switch_active=1):
-        """Получить первый активный включенный тариф по продукту"""
-        query = "SELECT * FROM \"Tariff\" WHERE \"productType\" = %s AND active = %s AND \"switchActive\" = %s"
-        params = (product, active, switch_active,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return None
-
-            return self._data_to_price(data)
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
     def switch_tariff(self, tariff_id: int, switch_active: bool):
         """Включить или выключить тариф"""
         query = "UPDATE \"Tariff\" set \"switchActive\" = %s WHERE id = %s"
         params = (switch_active, tariff_id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_findate_tariff(self, tariff_id: int, fin_date: datetime | None):
-        """Установить дату окончания тарифа"""
-        query = "UPDATE \"Tariff\" set \"tariffFindate\" = %s WHERE id = %s"
-        params = (fin_date, tariff_id)
 
         try:
             self.curs.execute(query, params)
@@ -336,7 +305,7 @@ class Database:
             return False
 
     # # # # # # # # Subscribes # # # # # # # #
-    def _data_to_subsbscribe(self, data: DictRow):
+    def _data_to_subscribe(self, data: DictRow):
         return Subscribe(
             id=data.get('id'),
             user_id=data.get('userId'),
@@ -346,7 +315,7 @@ class Database:
             transactions_payed_id=data.get('transactionsId'),
         )
 
-    def add_subsbscribe(self, sub: Subscribe):
+    def add_subscribe(self, sub: Subscribe):
         query = ('INSERT INTO '
                  '"Subscribe" ("userId", "finishDt", "productType", active, "transactionsId") '
                  'VALUES (%s, %s, %s, %s, %s)')
@@ -370,21 +339,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchone()
-            return None if data is None else self._data_to_subsbscribe(data)
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def get_user_trial_subscribe(self, user_id: int):
-        query = 'SELECT * FROM "Subscribe" WHERE "userId" = %s AND "productType" = %s'
-        params = (user_id, 'trial')
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-
-            return data if (data is None) else self._data_to_subsbscribe(data)
+            return None if data is None else self._data_to_subscribe(data)
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
@@ -437,19 +392,6 @@ class Database:
     def set_trial_subscribe_unactive_by_user(self, user_id: int):
         query = 'UPDATE "Subscribe" set active = %s WHERE "userId" = %s AND "productType" = %s'
         params = (False, user_id, 'trial')
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_subscribe_findate(self, subscribe_id: int, finish_date: datetime):
-        query = 'UPDATE "Subscribe" set "finishDt" = %s WHERE id = %s'
-        params = (finish_date, subscribe_id,)
 
         try:
             self.curs.execute(query, params)
@@ -515,7 +457,7 @@ class Database:
         try:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_subsbscribe(el), data))
+            return list(map(lambda el: self._data_to_subscribe(el), data))
 
         except Exception as e:
             self._log_error(e)
@@ -546,8 +488,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return []
-
-        pass
 
     # # # # # # # #  Transactions
     def _data_to_transaction(self, data: DictRow):
@@ -784,29 +724,6 @@ class Database:
             data.get('create_date'),
         )
 
-    def get_purchases_all_users(self) -> list[Purchase]:
-        query = ('SELECT t."userId", p.id AS price_id, p.name AS price_name, p.type_product AS product, '
-                 "t.sum AS real_sum, p.price AS tariff_price, "
-                 "t.currency AS currency, p.duration_days AS duration, t.payment_date AS date, "
-                 "t.created_at AS create_date "
-                 'FROM "Transaction" t, "Tariff" p '
-                 "WHERE "
-                 "t.status = %s "
-                 "AND t.price_id = p.id"
-                 )
-        status = 'PAID'
-        params = (status,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-
-            return list(map(lambda el: self._data_to_purchase(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
     def success_transaction(self, id: int):
         datetime_now = get_datetime_now()
         query = 'UPDATE "Transaction" set status = %s, "boughtAt" = %s WHERE id = %s'
@@ -912,23 +829,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return
-
-    def create_tg_user_tables(self, id: int):
-        if id == 0:
-            return False
-
-        query = 'INSERT INTO "BotSettings" ("userId") VALUES (%s)'
-        params = id,
-
-        try:
-            self.curs.execute(query, params)
-            self.create_tg_user_settings(id, 'crypto')
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     def get_paginated_users(
         self, limit: int | None = None, page: int | None = None,
@@ -1266,21 +1166,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return 1
-
-    # Users - Ban
-    def check_ban_user(self, id: int):
-        """Проверка на бан"""
-        query = "SELECT ban FROM \"User\" WHERE id = %s"
-        params = (id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return data == 1
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     def set_user_ban(self, id: int, ban: bool):
         query = 'UPDATE \"User\" set ban = %s WHERE id = %s'
@@ -1855,18 +1740,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def get_all_calculation(self) -> list[Calculation]:
-        query = 'SELECT * FROM "Calculation"'
-
-        try:
-            self.curs.execute(query)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_calculations(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
     def get_calculations_by_user(
         self,
         user_id: int,
@@ -2044,16 +1917,6 @@ class Database:
     def get_support_name(self) -> str:
         """Получение тех. поддержки"""
         return 'calcsup'
-        query = self.WORKER_QUERY + 'WHERE w.role = 3'
-
-        try:
-            self.curs.execute(query)
-            data = self.curs.fetchone()
-            return data.get('tgUsername', '') if (data is not None) else ''
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return ''
 
     def update_support(self, id: int):
         """Изменение тех. поддержки"""

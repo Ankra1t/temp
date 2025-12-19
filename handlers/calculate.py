@@ -110,14 +110,6 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
 
     prices = currencyService.getPairsPrice(pairs)
 
-    # if prices == False and len(pairs) == 3:
-    #     new_mes = bot.send_message(
-    #         chat_id, msg_pair_not_found(user_id, pair),
-    #         reply_markup=kb_pair(user_id)
-    #     )
-    #     state.add_data(del_mes_id=new_mes.id)
-    #     return
-
     forex = ForexInfo(
         pair=(pair_arr[0], pair_arr[1]),
         price=(prices or {}).get(pair, 1),
@@ -254,14 +246,6 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
     logger.info(
         f'callback "handle_risk_percent" user_tg_id={user.tgId} value={value}'
     )
-
-    # if value <= 0 or value >= 100:
-    #     bot.send_message(
-    #         chat_id,
-    #         msg_percent_error(user.tgId),
-    #         reply_markup=kb_calc_cancel(user.tgId)
-    #     )
-    #     return
 
     async with state.data() as data:
         calc_id = data.get('calc_id')

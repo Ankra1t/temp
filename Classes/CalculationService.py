@@ -67,6 +67,7 @@ class CalculationService():
         self.db = db
         self.currencyService = currencyService
     # !deprecated
+
     def set_profit(self, calc_id: int, value: float):
         # Находим данный расчет по статистике
         calc_info = calculation.get(userId=1, calcId=calc_id)
@@ -212,26 +213,6 @@ class CalculationService():
         diff = get_print_float(diff)
 
         return f'{diff} {unit}'
-
-    def check_deposit(self, user_id: int, market: MARKETS_TYPE):
-        user_db_id = self.db.get_user_id_by_tg_id(user_id)
-        u_settings = self.db.get_calc_user_settings(user_db_id, market)
-        if u_settings is None or not u_settings.is_updating_deposit:
-            return False
-
-        if u_settings.deposit is None or u_settings.risk is None:
-            return False
-
-        risk_value = u_settings.risk[0]
-        if u_settings.risk[1]:
-            risk_value *= u_settings.deposit
-
-        if u_settings.deposit < risk_value:
-            # bot.send_message(
-            #     user_id, msg_deposit_risk(user_id, market),
-            #     reply_markup=kb_deposit_risk(user_id, market)
-            # )
-            pass
 
     def get_count_value_bet(self, calc: Calculation, lot=pow(10, 5)):
         spot_rate = 1.

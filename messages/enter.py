@@ -325,17 +325,6 @@ def msg_enter_summury_profit_type(lang: LANGUAGES_TYPE):
 *Separation - the sale of a trading position is divided into several take profites </i>"""
 
 
-def msg_enter_email(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Введите <b>почту</b> для получения чека после оплаты',
-        'en': 'Enter <b>email</b> to receive the receipt after payment',
-        'uz': 'To\'lovdan keyin kvitansiyani olish uchun <b> elektron pochta</​​b> kiring',
-        'tr': 'Ödemeden sonra makbuzu almak için <b>e-posta</b> girin',
-    }
-
-    return f'👉 {texts[lang]}:'
-
-
 def msg_enter_tool(lang: LANGUAGES_TYPE, market: MARKETS_TYPE = 'crypto', is_try=False):
     if is_try:
         texts = {
@@ -475,17 +464,6 @@ def msg_enter_first_risk_percent(lang: LANGUAGES_TYPE):
         'en': 'Risk per deal (Professional traders risk no more than 1% of the deposit per deal)\n<u>Enter</u> 1%',
         'uz': 'Bitim uchun xavf (professional savdogarlar bitimning 1% omonatning 1% dan ko\'pi xavf ostida)\n<u>Kirmoq</u> 1%',
         'tr': 'Anlaşma başına risk (profesyonel tüccarlar, anlaşma başına depozitonun% 1\'inden fazlası yok)\n<u>Girmek</u> 1%',
-    }
-
-    return texts[lang]
-
-
-def msg_enter_first_currency(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Введите валюту (Выберите USDT для тестового расчета, затем вы сможете изменить валюту, зайдя в Настройки – Настроить торговлю)\n<u>Введите</u> USDT',
-        'en': 'Enter the currency (Choose USDT for the example calculation, then you can change it in the Settings – Configure trading)\n<u>Enter</u> USDT',
-        'uz': 'Valyutani kiriting (misol hisoblash uchun USDT-ni tanlang – keyin uni sozlamalarda o\'zgartirishingiz mumkin-savdoni Sozlash) \nUSDT <u>kiriting</u>',
-        'tr': 'Para birimini girin (Örnek hesaplama için usdt\'yi seçin, ardından Ayarlarda değiştirebilirsiniz - Ticareti yapılandır)\nUSDT <u>Girin</u>',
     }
 
     return texts[lang]

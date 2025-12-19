@@ -12,6 +12,7 @@ class GuardPaymentAccess():
     """
     Класс защитник платного доступа, рассылки и бана
     """
+
     def __init__(self) -> None:
         pass
 
@@ -30,7 +31,7 @@ class GuardPaymentAccess():
             active=True,
         )
 
-        db.add_subsbscribe(subscribe)
+        db.add_subscribe(subscribe)
 
         return finish_date
 
@@ -66,7 +67,7 @@ class GuardPaymentAccess():
             active=True,
         )
 
-        db.add_subsbscribe(subscribe)
+        db.add_subscribe(subscribe)
 
         return finish_date
 
@@ -88,12 +89,12 @@ class GuardPaymentAccess():
         return db.get_subsribed_users(2)
 
     # Проверить может ли пользователь работать с калькулятором
-    async def valid_use_calc(self, tg_id: int, bot:AsyncTeleBot):
+    async def valid_use_calc(self, tg_id: int, bot: AsyncTeleBot):
         return True
         try:
             is_rus = (await bot.get_chat_member(tg_id, tg_id)).user.language_code == 'ru'
         except:
-            is_rus=True
+            is_rus = True
 
         user_db_id = db.get_user_id_by_tg_id(tg_id)
 

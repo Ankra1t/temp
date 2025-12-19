@@ -38,17 +38,6 @@ def msg_pair_error(lang: LANGUAGES_TYPE):
     return f'❗️ {texts[lang]}:'
 
 
-def msg_pair_not_found(lang: LANGUAGES_TYPE, pair: str):
-    texts = {
-        'ru': 'Извините. Кросс валютные расчеты сейчас недоступны',
-        'en': 'Sorry. Cross currency calculations are not available now',
-        'uz': 'Kechirasiz. Xoch valyuta hisob-kitoblari endi mavjud emas',
-        'tr': 'Affedersiniz. Çapraz döviz işlemleri şu anda kullanılamıyor',
-    }
-
-    return f'❗️ {texts[lang]} {pair}:'
-
-
 def msg_digit_error(lang: LANGUAGES_TYPE, value_from: int | None = None, value_to: int | None = None):
     texts = {
         'ru': {
@@ -101,17 +90,6 @@ def msg_latin_error(lang: LANGUAGES_TYPE):
         'en': 'Only latin characters are allowed',
         'uz': 'Faqat lotin belgilariga ruxsat beriladi',
         'tr': 'Yalnızca Latin karakterlerine izin verilir',
-    }
-
-    return f'❗️ {texts[lang]}:'
-
-
-def msg_percent_error(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Введите число (от 0 до 100)',
-        'en': 'Enter a number (from 0 to 100)',
-        'uz': '(0 dan 100 gacha) raqam kiriting',
-        'tr': 'Bir sayı girin (0\'dan 100\'e kadar)',
     }
 
     return f'❗️ {texts[lang]}:'

@@ -6,7 +6,8 @@ from common.keyboard import back_txt
 from models import LANGUAGES_TYPE, CallbackQuery
 
 
-user_tariff_factory = CallbackData('type', 'tariff_id', 'page', 'tariff_type', prefix='user_tariff')
+user_tariff_factory = CallbackData(
+    'type', 'tariff_id', 'page', 'tariff_type', prefix='user_tariff')
 
 
 class UserTariffCallbackFilter(AdvancedCustomFilter):
@@ -84,9 +85,6 @@ def kb_tariff_list(lang: LANGUAGES_TYPE, tariff_id: int, count: int, tariff_type
         counter = getButton(f'{page + 1}/{count}', 'counter')
         keyboard.add(btn_prev, counter, btn_next)
 
-    pay_yookassa = getButton(
-        f'💵 {texts[lang]["buy_yoo"]}', 'pay_tariff_yoo', tariff_id, tariff_type, page
-    )
     pay_cb = getButton(
         f'💵 {texts[lang]["buy_cb"]}', 'pay_tariff_cb', tariff_id, tariff_type, page
     )
@@ -113,47 +111,4 @@ def kb_bill(lang: LANGUAGES_TYPE, url: str):
         ),
         getButton(back_txt(lang), 'go_tariff')
     )
-    return keyboard
-
-
-def kb_choose_products(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    texts = {
-        'ru': {
-            'signals': 'Рекомендации',
-            'calc': 'Калькулятор',
-            'pro': 'PRO'
-        },
-        'en': {
-            'signals': 'Recommendations',
-            'calc': 'Calculator',
-            'pro': 'PRO'
-        },
-        'uz': {
-            'signals': 'Tavsiyalar',
-            'calc': 'Kalkulyator',
-            'pro': 'PRO'
-        },
-        'tr': {
-            'signals': 'Öneriler',
-            'calc': 'Hesap makinesi',
-            'pro': 'PRO'
-        },
-    }
-
-    btn_signal = getButton(
-        texts[lang]['signals'], 'get_tariff', tariff_type='signals'
-    )
-    btn_calc = getButton(
-        texts[lang]['calc'], 'get_tariff', tariff_type='calc'
-    )
-    btn_calc_signals = getButton(
-        texts[lang]['pro'], 'get_tariff', tariff_type='calc_signals'
-    )
-    btn_back = getButton(back_txt(lang), 'go_main')
-
-    # keyboard.add(btn_signal, btn_calc)
-    # keyboard.add(btn_calc_signals, btn_back)
-    keyboard.add(btn_calc, btn_back)
     return keyboard

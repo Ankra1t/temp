@@ -87,15 +87,3 @@ Within a month you can score up to <b>150 points</b>.""",
 {mes}
 
 {texts[lang]['today'] if not isToday else ''}"""
-
-
-def msg_violation_message(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Можете описать нарушение и прикрепть фото',
-        'en': 'You can describe the violation and attach a photo',
-        'uz': 'Siz qoidabuzarlikni tasvirlashingiz va fotosuratni biriktirishingiz mumkin',
-        'tr': 'İhlali tanımlayabilir ve bir fotoğraf ekleyebilirsiniz',
-    }
-
-    return texts[lang]
-

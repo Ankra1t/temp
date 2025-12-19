@@ -24,7 +24,6 @@ from keyboards.stats import kb_calc_not
 from models import AdminCalcNot, CalcChannelNotification, Calculation, Live, Mean, Poll, UserCalcNot
 from registration import reg
 from services import channel_calc, ticker
-from thread_tasks import run_thread
 
 
 async def handle(request: web.Request):
@@ -109,7 +108,7 @@ async def live_info(request: web.Request):
     live = Live.model_validate_json(await request.text())
 
     logger.info(f"[live-info] Received: {await request.text()}")
-    
+
     await channel_post.send_live(live)
 
     return web.Response()
@@ -175,23 +174,29 @@ async def send_notification(request: web.Request):
 async def del_notification(request: web.Request):
     res = await request.text()
     data = CalcChannelNotification.model_validate_json(res)
-    
-    logger.info(f"Attempting to delete notifications for calcId: {data.calcId}")
-    
+
+    logger.info(
+        f"Attempting to delete notifications for calcId: {data.calcId}")
+
     for i in range(len(data.chIds)):
         try:
-            logger.info(f"Deleting message {data.mesIds[i]} from chat {data.chIds[i]}")
+            logger.info(
+                f"Deleting message {data.mesIds[i]} from chat {data.chIds[i]}")
             await bot.delete_message(data.chIds[i], int(data.mesIds[i]))
         except ApiTelegramException as e:
             error_msg = str(e)
             if "message to delete not found" in error_msg:
-                logger.info(f"Message {data.mesIds[i]} in chat {data.chIds[i]} was already deleted")
+                logger.info(
+                    f"Message {data.mesIds[i]} in chat {data.chIds[i]} was already deleted")
             elif "message can't be deleted" in error_msg:
-                logger.warning(f"Message {data.mesIds[i]} in chat {data.chIds[i]} cannot be deleted (possibly no permissions)")
+                logger.warning(
+                    f"Message {data.mesIds[i]} in chat {data.chIds[i]} cannot be deleted (possibly no permissions)")
             else:
-                logger.error(f"Telegram API error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
+                logger.error(
+                    f"Telegram API error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
+            logger.error(
+                f"Unexpected error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
 
     return web.Response()
 
@@ -365,8 +370,6 @@ async def setup():
     app.add_routes(routes)
     app.on_cleanup.append(shutdown)
     return app
-
-run_thread(bot)
 
 if __name__ == '__main__':
     web.run_app(

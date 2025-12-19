@@ -5,7 +5,6 @@ from telebot.asyncio_filters import AdvancedCustomFilter
 from config_global import SITE_URL
 from models import LANGUAGES_TYPE, CallbackQuery
 
-from common.utils import get_calculator_btn_link
 from common.keyboard import back_txt
 
 
@@ -62,7 +61,6 @@ def kb_user_main(lang: LANGUAGES_TYPE, new_user=False):
     }
 
     # btn1 = getButton("Рекомендации", 'signals')
-    # btn_buy = getButton(f"💰 {texts[lang]['buy']}", 'buy')
     btn_try = getButton(f"✏️ {texts[lang]['try']}", 'try')
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
@@ -80,12 +78,6 @@ def kb_user_main(lang: LANGUAGES_TYPE, new_user=False):
         keyboard.add(btn_calc)
         keyboard.add(btn_channel, btn_account)
 
-    return keyboard
-
-
-def kb_user_calculator(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(get_calculator_btn_link(lang))
     return keyboard
 
 

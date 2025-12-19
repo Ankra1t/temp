@@ -4,7 +4,7 @@ from typing import Literal, Optional, TypedDict
 from typing_extensions import Unpack, NotRequired
 
 from config_global import API_URL
-from models import Calculation, ForexInfo, UserActiveStats
+from models import Calculation, ForexInfo
 from services.base_config import check_response, session_decorator, session
 
 
@@ -13,21 +13,6 @@ class UpdateActiveCalc(TypedDict):
     autoTake: NotRequired[Optional[float]]
     trailingStopCount: NotRequired[Optional[float]]
     chMesIds: NotRequired[Optional[str]]
-
-
-@session_decorator
-def getByUser(*, userId: int):
-    data = {
-        'userId': userId
-    }
-
-    res = session.get(
-        f'{API_URL}/calculations', params=data
-    )
-    if not check_response(res):
-        return
-
-    return [Calculation(**el) for el in res.json()]
 
 
 @session_decorator
@@ -203,34 +188,6 @@ def finishActive(
         return
 
     return Calculation.model_validate_json(res.text)
-
-
-@session_decorator
-def getActiveStatsByUser(
-    *, userId: int, id: int
-):
-    res = session.get(
-        f'{API_URL}/calculations/userActiveStats/{id}',
-    )
-
-    if not check_response(res):
-        return
-
-    return UserActiveStats.model_validate_json(res.text)
-
-
-@session_decorator
-def getActiveCalcsByUser(
-    *, userId: int, id: int, finished=False
-):
-    res = session.get(
-        f'{API_URL}/calculations/activeByUser/{id}?finished={"true" if finished else "false"}',
-    )
-
-    if not check_response(res):
-        return
-
-    return UserActiveStats.model_validate_json(res.text)
 
 
 @session_decorator

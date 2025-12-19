@@ -49,17 +49,6 @@ def get_atr(ticker: str, period: str, count: int):
 
 
 @session_decorator
-def get_delivery_fee(ticker: str):
-    res = session.get(
-        f'{API_URL}/tg/{ticker.replace("/", "").upper()}/deliveryFee',
-    )
-    if not check_response(res):
-        return
-
-    return float(res.json())
-
-
-@session_decorator
 def get_text(isSpot: Optional[bool] = None, turnover: Optional[float] = None) -> Optional[str]:
     data = {
         "isSpot": isSpot,

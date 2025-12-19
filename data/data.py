@@ -127,15 +127,6 @@ class Data:
         except Exception as e:
             print(e)
 
-    def getFirstTriesCount(self) -> int:
-        try:
-            data = self.curs.execute(
-                "SELECT COUNT(*) FROM Users WHERE first_try = ?", (True,)).fetchone()
-            return data[0] if data is not None else 0
-        except Exception as e:
-            print(e)
-            return 0
-
     def getFirstTryUser(self, tgId: int) -> int:
         try:
             data = self.curs.execute(
@@ -181,15 +172,6 @@ class Data:
             self.connection.commit()
         except Exception as e:
             print(e)
-
-    def getFirstLangsCount(self) -> int:
-        try:
-            data = self.curs.execute(
-                "SELECT COUNT(*) FROM Users WHERE first_lang = ?", (True,)).fetchone()
-            return data[0] if data is not None else 0
-        except Exception as e:
-            print(e)
-            return 0
 
     def getFirstLang(self, tgId: int) -> int:
         try:
@@ -257,7 +239,7 @@ class Data:
         self.addUser(tgId)
         try:
             self.curs.execute(
-                'UPDATE Users SET first_market = ? WHERE id = ?', 
+                'UPDATE Users SET first_market = ? WHERE id = ?',
                 (market, tgId)
             )
             self.connection.commit()
@@ -293,51 +275,6 @@ class Data:
         except Exception as e:
             print(e)
             return False
-
-    # FEES
-    def createFeeTable(self):
-        try:
-            self.curs.execute("""
-DROP TABLE Exchanges;
-""")
-            self.curs.execute("""
-CREATE TABLE IF NOT EXISTS Exchanges (
-    id INTEGER PRIMARY KEY,
-    name STRING NOT NULL,
-    maker_fee FLOAT NOT NULL,
-    taker_fee FLOAT NOT NULL,
-    fees STRING
-);
-""")
-        except Exception as e:
-            print(e)
-
-    def addExchange(self, id: int, name: str, maker_fee: float, taker_fee: float, fees: list[tuple[str, float, float]]):
-        try:
-            data = self.curs.execute(
-                'SELECT id, name, maker_fee, taker_fee, fees FROM Exchanges WHERE id = ?', (
-                    id,)
-            ).fetchone()
-
-            if len(fees) == 0:
-                fees_str = None
-            else:
-                fees_str = json.dumps(fees)
-
-            if data is None:
-                self.curs.execute(
-                    'INSERT INTO Exchanges (id, name, maker_fee, taker_fee, fees) VALUES (?, ?, ?, ?, ?)',
-                    (id, name, maker_fee, taker_fee, fees_str)
-                )
-            else:
-                self.curs.execute(
-                    'UPDATE Exchanges SET name = ?, maker_fee = ?, taker_fee = ?, fees = ? WHERE id = ?',
-                    (name, maker_fee, taker_fee, fees_str or data[4], id)
-                )
-
-            self.connection.commit()
-        except Exception as e:
-            print(e)
 
     def getExchanges(self) -> list[Exchange]:
         try:
@@ -446,7 +383,6 @@ CREATE TABLE IF NOT EXISTS TonStorage (
         except Exception as e:
             print(e)
             return False
-            pass
 
     def getTonStorage(self, key: str) -> str | None:
         try:
@@ -471,10 +407,7 @@ CREATE TABLE IF NOT EXISTS TonStorage (
         except Exception as e:
             print(e)
             return False
-            pass
 
-
-    # SendSettings
     def createSendSettings(self):
         try:
             # self.curs.execute("""DROP TABLE SendSettings""")

@@ -62,7 +62,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if 'delete' in type:
         if 'yes' in type:
-            if db.deactive_price(tariff_id):
+            if db.deactivate_price(tariff_id):
                 await delete_message(bot, chat_id, mes_id)
                 await bot.send_message(chat_id, msg_success_edit(user.lang))
                 await send_admin_tariffs(bot, call.message, state, True)

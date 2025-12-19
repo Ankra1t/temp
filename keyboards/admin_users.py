@@ -163,26 +163,6 @@ def kb_admin_users_confirm(type_info: str, client_db_id: int):
     return keyboard
 
 
-def kb_admin_choose_periods():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    week = getButton('Неделя', 'choose_periods_for_tariffs', sort_by='week')
-    week2 = getButton(
-        '2 Недели', 'choose_periods_for_tariffs', sort_by='week2')
-    month = getButton('Месяц', 'choose_periods_for_tariffs', sort_by='month')
-    month6 = getButton('6 мес', 'choose_periods_for_tariffs', sort_by='month6')
-    year = getButton('Год', 'choose_periods_for_tariffs', sort_by='year')
-    lifetime = getButton(
-        'Пожизненно', 'choose_periods_for_tariffs', sort_by='lifetime')
-    back = getButton(back_txt(), 'go_users')
-
-    keyboard.add(week, week2)
-    keyboard.add(month, month6)
-    keyboard.add(year, lifetime)
-    keyboard.add(back)
-    return keyboard
-
-
 def kb_admin_users_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
 

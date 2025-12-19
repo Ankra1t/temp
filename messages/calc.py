@@ -8,8 +8,8 @@ from common.calculation import getStrValueCount
 
 from config_logger import logger
 from config_global import SITE_URL
-from messages.common import ENTER, TAB, transl_market, transl_status, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, TRADING_TYPE, Calculation, ForexInfo, StateContext, User
+from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_tr_type
+from models import LANGUAGES_TYPE, Calculation
 
 from Classes import calcService
 from services import calculation, ticker
@@ -22,100 +22,6 @@ months = {'ru': [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
 ]}
-
-
-async def msg_calculate(state: StateContext, user: User, is_try=False):
-    async with state.data() as data:
-        updated_risk = data.get('updated_risk') or 1.
-        type = data.get('calc_type', '')
-        ticker = data.get('ticker')
-        open_price = data.get('open_price')
-        forex: ForexInfo | None = data.get('forex')
-        tool: str = data.get('tool') or ''
-        deposit: float | None = data.get('deposit')
-        risk: tuple[float, bool] | None = data.get('risk')
-        currency: str | None = data.get('currency')
-        trading_type: TRADING_TYPE = data.get('trading_type', 'margin')
-
-    risk_value = risk[0] if (risk is not None) else None
-    if (risk is not None) and risk[1] and (deposit is not None):
-        risk_value = risk[0] * deposit * 0.01 * updated_risk
-
-    type_list = ['ticker', 'dep', 'risk', 'open']
-    vars_dict = {
-        'ticker': ticker,
-        'dep': deposit,
-        'risk': risk_value,
-        'open': open_price,
-    }
-
-    point = {
-        'ru': {
-            'ticker': 'Тикер',
-            'dep': 'Депозит',
-            'risk': 'Риск на сделку',
-            'open': 'Цена входа',
-            'pair': 'Валютная пара',
-
-            'trading_type': 'Тип торговли',
-        },
-        'en': {
-            'ticker': 'Ticker',
-            'dep': 'Deposit',
-            'risk': 'Risk per deal',
-            'open': 'Entry price',
-            'pair': 'Currency pair',
-
-            'trading_type': 'Trading type',
-        },
-        'uz': {
-            'ticker': 'Ticker',
-            'dep': 'Depozit',
-            'risk': 'Risk',
-            'open': 'Narxi',
-            'pair': 'Valyuta juftligi',
-
-            'trading_type': 'Savdo turi',
-        },
-        'en': {
-            'ticker': 'Ticker',
-            'dep': 'Depozito',
-            'risk': 'Risk',
-            'open': 'Fiyat',
-            'pair': 'Para çifti',
-
-            'trading_type': 'Ticaret türü',
-        },
-    }
-
-    pair = '/'.join(forex.pair) if (forex is not None) else ''
-    text = ''
-
-    if type == 'forex' and pair != '':
-        text += f'<b><u>{pair}</u></b>'
-    elif type == 'crypto' and tool != '':
-        text += f'<b><u>{tool}</u></b>'
-    text += f' - {transl_market(type, user.lang)} {"(demo)" if is_try else ""}\n\n'
-
-    for el in type_list:
-        item = vars_dict[el]
-        if item is not None:
-            if item == 'ticker':
-                text += f'<b>{point[user.lang][el]}</b>: {item}\n'
-            else:
-                text += ''.join((
-                    f'<b>{point[user.lang][el]}</b>: ',
-                    f'{item} ',
-                    (currency or '') if (
-                        type != 'forex' or forex is None) else forex.pair[1],
-                    '\n'
-                ))
-
-    if not is_try:
-        text += f'\n<b>{point[user.lang]["trading_type"]}</b>: {transl_tr_type(trading_type, user.lang)}\n'
-
-    text += '\n'
-    return text
 
 
 def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
@@ -346,7 +252,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
 
         if calc.ActiveCalc:
             logger.info(f"ActiveCalc: {calc.ActiveCalc.__dict__}")
-            logger.info(f"autoTake: {getattr(calc.ActiveCalc, 'autoTake', None)}")
+            logger.info(
+                f"autoTake: {getattr(calc.ActiveCalc, 'autoTake', None)}")
 
             if calc.ActiveCalc.trailingStopCount:
                 conclusion += f'{texts[lang]["tr_stop"]}: +{get_print_float(calc.ActiveCalc.trailingStopCount, 1)} тейка'
@@ -543,12 +450,15 @@ def msg_channel_calc(
     print('=== msg_channel_calc START ===')
     print('calc:', calc)
     print('calc.ActiveCalc:', getattr(calc, 'ActiveCalc', None))
-    print('calc.ActiveCalc as dict:', getattr(calc, 'ActiveCalc', {}).__dict__ if hasattr(getattr(calc, 'ActiveCalc', {}), '__dict__') else getattr(calc, 'ActiveCalc', {}))
+    print('calc.ActiveCalc as dict:', getattr(calc, 'ActiveCalc', {}).__dict__ if hasattr(
+        getattr(calc, 'ActiveCalc', {}), '__dict__') else getattr(calc, 'ActiveCalc', {}))
 
-    logger.info(f"msg_channel_calc START: status={calc.status}, tool={calc.tool}")
+    logger.info(
+        f"msg_channel_calc START: status={calc.status}, tool={calc.tool}")
     logger.info(f"ActiveCalc: {calc.ActiveCalc}")
     if calc.ActiveCalc:
-        logger.info(f"ActiveCalc.__dict__: {getattr(calc.ActiveCalc, '__dict__', calc.ActiveCalc)}")
+        logger.info(
+            f"ActiveCalc.__dict__: {getattr(calc.ActiveCalc, '__dict__', calc.ActiveCalc)}")
 
     tickerInfo = None
     try:
@@ -776,20 +686,6 @@ def msg_channel_calc(
         lang, calc.TrailingStops, calc.openPrice, calc.stopLoss
     )
 
-    cancel_show = ''
-    if calc.status == 'WAIT' and calc.cancelAt:
-        cancelAt = datetime.fromisoformat(
-            calc.cancelAt.replace('Z', '')
-        )
-        createdAt = datetime.fromisoformat(
-            (calc.createdAt or '').replace('Z', '')
-        )
-        hoursToCancel = get_print_float(
-            (cancelAt.timestamp() - createdAt.timestamp()) / (60 * 60), 0)
-
-        cancel_show += '\n'
-        cancel_show += f'Отменю через {hoursToCancel} ч' if lang == 'ru' else f'Cancel after {hoursToCancel} h'
-
     current_price = ''
     if current_value_count is not None:
         current_price = f'⚡️ <b>{texts[lang]["now"]}</b>: {getStrValueCount(current_value_count, lang)}'
@@ -808,7 +704,6 @@ def msg_channel_calc(
         + trading_style_type \
         + (f'\n\n{traderMes}' if traderMes else '') \
         + (f'\n\n{first_link}{chart_link}\n' if try_link != '' else '')
-    # + cancel_show \
 
 
 def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):
@@ -911,17 +806,6 @@ def msg_calculate_change(lang: LANGUAGES_TYPE, prev_message: str):
     return f"""{prev_message.strip()}
 
 {TAB}<b>{texts[lang]}?</b>"""
-
-
-def msg_calculation_saved(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': 'Расчет сохранен',
-        'en': 'The calculation has been saved',
-        'uz': 'Hisoblash saqlandi',
-        'tr': 'Hesaplama kaydedildi',
-    }
-
-    return f'✅ {texts[lang]}!'
 
 
 def msg_calculation_deleted(lang: LANGUAGES_TYPE):
