@@ -13,6 +13,8 @@ from keyboards.stats import kb_calc_result
 from keyboards.main import main_factory, MainCallbackFilter
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
 
+from service.calc import calc_service
+
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
@@ -33,7 +35,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     )
 
     if 'calc' in type or type == 'settings':
-        calc = calculation.get(userId=user.id, calcId=stat_id)
+        # TODO
+        # calc = calculation.get(userId=user.id, calcId=stat_id)
+        calc = None
         if calc is not None:
             try:
                 await bot.edit_message_reply_markup(

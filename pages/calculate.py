@@ -43,6 +43,8 @@ from keyboards.settings import (
     kb_maker_or_taker, kb_settings, kb_summary_profit,
 )
 
+from service.calc import CalcCreateRequest, calc_service
+
 
 async def send_main(
     bot: AsyncTeleBot,
@@ -634,7 +636,7 @@ async def send_calculation(
 
     is_access = await pay_guard.valid_use_calc(user.tgId, bot)
 
-    calc_output = db.get_user_calc_output(user.id)
+    calc_output = 'text'
 
     if is_list:
         calculation.update(userId=user.id, calcId=calc.id, openedList=True)
@@ -845,29 +847,31 @@ async def create_and_send_calc(
         isFromDeposit=is_from_deposit
     )
 
-    new_id = db.add_calculation(calc_info)
-    calc_info = calculation.get(userId=user.id, calcId=new_id or -1)
+    # new_id = db.add_calculation(calc_info)
+    # calc_info = calculation.get(userId=user.id, calcId=new_id or -1)
+    calc = calc_service.create_calculation(user.tgId, calc_data=CalcCreateRequest(
+        open_price=open_price, deposit=F'{deposit}', risk_value=f'{risk_value * updated_risk}', stop_loss=stop_loss, market=calc_type, symbol=tool))
 
-    userExchange = liteDb.getUserExchange(user.tgId)
-    if userExchange is not None:
-        liteDb.addCalc(new_id, userExchange[0], userExchange[1])
+    # userExchange = liteDb.getUserExchange(user.tgId)
+    # if userExchange is not None:
+    #     liteDb.addCalc(new_id, userExchange[0], userExchange[1])
 
-    db.minus_calculator_uses_count(user.id)
-    db.delete_unfinished_calc_by_user(user.id)
+    # db.minus_calculator_uses_count(user.id)
+    # db.delete_unfinished_calc_by_user(user.id)
 
-    db.set_user_base(user.id, 'risk', risk[0])
-    db.set_user_risk_is_percent(user.id, risk[1])
-    db.set_user_base(user.id, 'deposit', deposit)
-    db.set_user_currency(user.id, currency)
+    # db.set_user_base(user.id, 'risk', risk[0])
+    # db.set_user_risk_is_percent(user.id, risk[1])
+    # db.set_user_base(user.id, 'deposit', deposit)
+    # db.set_user_currency(user.id, currency)
 
     if is_send and calc_info:
-        calculation.activate(userId=user.id, id=new_id)
-        calc = calculation.get(userId=user.id, calcId=new_id)
+        # calculation.activate(userId=user.id, id=new_id)
+        # calc = calculation.get(userId=user.id, calcId=new_id)
 
         await send_calculation(bot, message, state, user, calc_info, True)
 
     await state.delete()
-    return new_id
+    return 1
 
 
 async def send_stop_settings(

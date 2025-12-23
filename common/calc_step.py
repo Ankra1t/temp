@@ -267,7 +267,7 @@ async def choose_first_calculate_step(
     # TODO
     # unfinished_calc = db.get_unfinished_calc_by_user(user.id)
     unfinished_calc = None
-    db.delete_unfinished_calc_by_user(user.id)
+    # db.delete_unfinished_calc_by_user(user.id)
 
     is_from_deposit = False
     style = deposit = risk = currency = trading_type = None

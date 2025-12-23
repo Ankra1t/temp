@@ -39,6 +39,29 @@ from service.middleware import (
     request_with_auth,
     get_valid_access_token,
 )
+from service.calc import (
+    # Calc models
+    DealPrice,
+    TrailingStopItem,
+    SplitFees,
+    SplitValue,
+    StopItem,
+    ActiveCalcInfo,
+    ChannelCalcInfo,
+    CalcDetails,
+    CreateSplitValue,
+    CalcCreateRequest,
+    CalcCreateResponse,
+    # Calc response types
+    CalcListResponse,
+    CalcCreateFullResponse,
+    # Calc service
+    CalcService,
+    calc_service,
+    # Calc functions
+    get_calculations,
+    create_calculation,
+)
 
 __all__ = [
     # Base models
@@ -75,4 +98,24 @@ __all__ = [
     "RefreshTokenMiddleware",
     "request_with_auth",
     "get_valid_access_token",
+    # Calc models
+    "DealPrice",
+    "TrailingStopItem",
+    "SplitFees",
+    "SplitValue",
+    "StopItem",
+    "ActiveCalcInfo",
+    "ChannelCalcInfo",
+    "CalcDetails",
+    "CreateSplitValue",
+    "CalcCreateRequest",
+    "CalcCreateResponse",
+    # Calc response types
+    "CalcListResponse",
+    "CalcCreateFullResponse",
+    # Calc service
+    "CalcService",
+    "calc_service",
+    "get_calculations",
+    "create_calculation",
 ]

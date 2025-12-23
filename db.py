@@ -1241,25 +1241,40 @@ class Database:
             return default
 
     def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None, is_create=True) -> UserCalcSettings | None:
-        market = market or self.get_user_current_market(user_id)
+        # market = market or self.get_user_current_market(user_id)
 
-        query = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s AND market = %s'
-        params = user_id, market
+        # query = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s AND market = %s'
+        # params = user_id, market
 
-        try:
-            self.curs.execute(query, params)
+        # try:
+        #     self.curs.execute(query, params)
 
-            data = self.curs.fetchone()
-            if is_create and data is None:
-                self.create_tg_user_settings(user_id, market)
-                self.curs.execute(query, params)
-                data = self.curs.fetchone()
+        #     data = self.curs.fetchone()
+        #     if is_create and data is None:
+        #         self.create_tg_user_settings(user_id, market)
+        #         self.curs.execute(query, params)
+        #         data = self.curs.fetchone()
 
-            return self._data_to_user_calc(data) if data is not None else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
+        #     return self._data_to_user_calc(data) if data is not None else None
+        # except Exception as e:
+        #     self._log_error(e)
+        #     self.connection.rollback()
+        #     return None
+        return UserCalcSettings(
+            currency='USDT',
+            day_risk=(1, True),
+            deposit=10000,
+            is_from_deposit=False,
+            is_updating_deposit=False,
+            market='crypto',
+            risk=(1, True),
+            round_count=None,
+            split_values=[],
+            tp_ratio=[3],
+            trading_style='',
+            trading_type='margin',
+            user_id=1
+        )
 
     def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
         """Установить значения для автозаполения пользователя"""

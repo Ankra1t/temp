@@ -173,7 +173,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE,
                    calc: Calculation, isResult=False):
     # isAdmin = db.get_worker_role(user_db_id)
     isAdmin = False
-    send_data = channel_calc.getByCalc(calc.id)
+    # send_data = channel_calc.getByCalc(calc.id)
 
     texts = {
         'ru': {
@@ -293,13 +293,13 @@ def kb_calc_result(lang: LANGUAGES_TYPE,
                 )
             )
 
-            if send_data is not None:
-                buttons.append(
-                    getButton(
-                        f'{texts[lang]["comment"]}',
-                        'comment', calc.id
-                    )
-                )
+            # if send_data is not None:
+            #     buttons.append(
+            #         getButton(
+            #             f'{texts[lang]["comment"]}',
+            #             'comment', calc.id
+            #         )
+            #     )
         buttons.append(getButton(back_txt(lang), 'back_calc', calc.id))
         keyboard.add(*buttons)
     else:
@@ -339,7 +339,7 @@ def kb_calc_result(lang: LANGUAGES_TYPE,
 
         keyboard.add(*buttons)
 
-        if isAdmin and send_data is None:
+        if isAdmin:
             keyboard.add(
                 getButton('Выложить в каналах', 'send_to_channels', calc.id)
             )

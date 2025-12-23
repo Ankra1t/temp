@@ -31,7 +31,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     is_saved = calc.status == 'FINISH'
     calc_result = calcService.get_result(calc)
 
-    num = calculation.getMonthNumber(userId=calc.userId, calcId=calc.id)
+    # num = calculation.getMonthNumber(userId=calc.userId, calcId=calc.id)
 
     if calc.openPrice > calc.stopLoss:
         long_short = 'long'
@@ -419,7 +419,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     )
 
     return '\n'.join((
-        f'{num}. #<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status} {time}',
+        f'#<b>{tool.replace("/USDT", "").upper()}</b>{demo_show} | {status} {time}',
         attention,
         f'<b>{texts[lang]["buy" if long_short == "long" else "sell"]}</b>: <code>{get_print_float(count_bet, 0 if count_bet > 10 else 2)}</code> {tool_name}',
         f'<b>{texts[lang]["sum"]}</b>: {get_print_float(value_bet, price_round_count if value_bet < 10 else 1)} {calc.currency}',
