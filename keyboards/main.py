@@ -6,7 +6,6 @@ from keyboards.stats import kb_calc_result
 
 from common.keyboard import back_txt
 from models import LANGUAGES_TYPE, Calculation, CallbackQuery
-from db import db
 
 
 main_factory = CallbackData('type', 'stat_id', 'is_saved', prefix='main')
@@ -31,8 +30,10 @@ def getButton(text: str, type: str, is_saved=False, stat_id=-1):
 
 
 def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    isAdmin = db.get_worker_role(user_db_id)
+    # TODO
+    # user_db_id = db.get_user_id_by_tg_id(user_id)
+    # isAdmin = db.get_worker_role(user_db_id)
+    isAdmin = False
 
     texts = {
         'ru': {
@@ -141,7 +142,7 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
                 btn_stats = getButton('Расчёты канaла', 'channels')
                 buttons.append(btn_stats)
         else:
-            kb = kb_calc_result(lang, user_db_id, stat)
+            kb = kb_calc_result(lang, stat)
             buttons_rows = kb.keyboard
 
             for row in buttons_rows:

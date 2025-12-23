@@ -2,7 +2,6 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
 
 from config_logger import logger
-from AuthRoles import check_registration
 from NOTIFIER import notifier
 from db import db
 from messages.main import msg_support
@@ -20,7 +19,7 @@ from keyboards.account import kb_support
 
 
 async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    user_role = check_registration(user.tgId)
+    user_role = 0
     is_registered = False
 
     if user_role is None:

@@ -25,6 +25,7 @@ from pages.user import send_referral, send_user_account, send_user_main, send_us
 
 connector = get_connector(6919899538)
 
+
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
@@ -125,7 +126,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 async def walletPage(bot: AsyncTeleBot, chat_id: int, user_id: int):
     connected = await connector.restore_connection()
 
-    lang = get_lang(user_id)
+    lang = get_lang()
 
     if connected:
         # mk_b.button(text='Send Transaction', callback_data='send_tr')
@@ -183,7 +184,7 @@ async def check_wallet(bot: AsyncTeleBot, chat_id: int, user_id: int, mes_id: in
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserAccountCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         user_account=user_account_factory.filter()
     )

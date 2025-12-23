@@ -4,26 +4,7 @@ from models import LANGUAGES_TYPE, MARKETS_TYPE
 from common.dt import get_str_by_datetime
 
 
-def msg_uses_count(lang: LANGUAGES_TYPE, count: int):
-    text = {
-        'ru': {
-            'uses': 'Бесплатных расчетов',
-        },
-        'en': {
-            'uses': 'Free calculations left',
-        },
-        'uz': {
-            'uses': 'Bepul hisob-kitoblar',
-        },
-        'tr': {
-            'uses': 'Kalan ücretsiz hesaplama',
-        },
-    }
-
-    return f'{text[lang]["uses"]}: <b>{count}</b>'
-
-
-def msg_main(lang: LANGUAGES_TYPE, uses_count: int, is_rus=False):
+def msg_main(lang: LANGUAGES_TYPE, is_rus=False):
     texts = {
         'ru': {
             'name': 'Меню',
@@ -55,8 +36,7 @@ def msg_main(lang: LANGUAGES_TYPE, uses_count: int, is_rus=False):
 ⚡️ <b><u>{texts[lang]["name"]}</u></b>
 
 1. <b>{texts[lang]["1"]}</b>
-2. <b>{texts[lang]["2"]}</b>""" \
-    + (f'\n\n{msg_uses_count(lang, uses_count)}' if not is_rus else '')
+2. <b>{texts[lang]["2"]}</b>"""
 
 
 def msg_no_uses(lang: LANGUAGES_TYPE):

@@ -263,7 +263,10 @@ async def choose_first_calculate_step(
     u_base = db.get_calc_user_settings(user.id)
 
     stop_type = liteDb.getUserStop(user.tgId)
-    unfinished_calc = db.get_unfinished_calc_by_user(user.id)
+
+    # TODO
+    # unfinished_calc = db.get_unfinished_calc_by_user(user.id)
+    unfinished_calc = None
     db.delete_unfinished_calc_by_user(user.id)
 
     is_from_deposit = False

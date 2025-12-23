@@ -24,7 +24,7 @@ from messages.profile import msg_user_tariff
 from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
 from messages.users import msg_no_tariffs
 from messages.common import transl_status
-from messages.main import msg_freeze_calc, msg_main, msg_main_freeze, msg_no_uses
+from messages.main import msg_freeze_calc, msg_main, msg_no_uses
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
@@ -59,14 +59,12 @@ async def send_main(
 
     is_valid_use = await pay_guard.valid_use_calc(user.tgId, bot)
 
-    uses_count = db.get_calculator_uses_count(user.id) or 0
-    freeze_dt = db.get_user_calc_freeze(user.id)
-    unfinished_calc = db.get_unfinished_calc_by_user(user.id)
+    # TODO
+    # unfinished_calc = db.get_unfinished_calc_by_user(user.id)
+    unfinished_calc = None
 
     if is_valid_use:
-        text = msg_main(user.lang, uses_count, True)
-    elif freeze_dt is not None:
-        text = msg_main_freeze(user.lang, freeze_dt)
+        text = msg_main(user.lang, True)
     else:
         text = msg_no_uses(user.lang)
 
@@ -1322,7 +1320,7 @@ async def create_and_send_channel_calc(
         await bot.edit_message_reply_markup(
             chat_id, calc_mes_id,
             reply_markup=kb_calc_result(
-                user.lang, user.id, calc
+                user.lang, calc
             )
         )
     except:

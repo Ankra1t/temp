@@ -302,7 +302,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             try:
                 await bot.edit_message_reply_markup(
                     chat_id, mes_id,
-                    reply_markup=kb_calc_result(user.lang, user.id, calc)
+                    reply_markup=kb_calc_result(user.lang, calc)
                 )
             except:
                 pass
@@ -337,7 +337,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             is_access = await pay_guard.valid_use_calc(user.tgId, bot)
             await bot.edit_message_reply_markup(
                 chat_id, mes_id,
-                reply_markup=kb_calc_result(user.lang, user.id, calc, True)
+                reply_markup=kb_calc_result(user.lang, calc, True)
             )
 
     if 'delete_calc' in type:

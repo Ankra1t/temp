@@ -3,13 +3,12 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from db import db
 from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
 from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery, SendCalc
-from services import calculation, channel_calc, subscribe
+from services import calculation, channel_calc
 
 
 stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
@@ -169,9 +168,11 @@ def kb_calc_list(lang: LANGUAGES_TYPE, page: int, count: int, list_type: str):
     return keyboard
 
 
-def kb_calc_result(lang: LANGUAGES_TYPE, user_db_id: int, calc: Calculation, isResult=False):
-    isAdmin = db.get_worker_role(user_db_id)
-    isActiveCalcSub = subscribe.check(user_db_id, 'active_calc')
+def kb_calc_result(lang: LANGUAGES_TYPE,
+                   #    user_db_id: int,
+                   calc: Calculation, isResult=False):
+    # isAdmin = db.get_worker_role(user_db_id)
+    isAdmin = False
     send_data = channel_calc.getByCalc(calc.id)
 
     texts = {

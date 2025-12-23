@@ -2,7 +2,6 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from config_logger import logger
-from AuthRoles import check_registration
 from models import CallbackQuery, StateContext, User
 
 from common.calc_step import send_calc_start
@@ -29,7 +28,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     logger.info(
         f'callback "user_main_factory" user_tg_id={user_id} type={type}')
 
-    role = check_registration(user_id) or 0
+    role = 0
 
     if type == 'main':
         if role == 1:

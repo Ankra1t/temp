@@ -98,9 +98,8 @@ async def delete_message(
         return False
 
 
-def get_lang(tg_id: int):
-    user_db_id = db.get_user_id_by_tg_id(tg_id)
-    return db.get_user_lang(user_db_id) or 'ru'
+def get_lang(tgId=1):
+    return 'ru'
 
 
 def get_print_float(value: float, round_count: int | None = None):

@@ -3,11 +3,9 @@ from telebot.types import Message, CallbackQuery, ChatMemberUpdated
 from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate, ContinueHandling
 from telebot.util import update_types
 
-from AuthRoles import check_registration
 from common.utils import delete_message, get_lang
-from services import user as userService
+from service.auth import register_user_from_tg
 
-from db import db
 from models import User, StateContext
 
 
@@ -20,9 +18,13 @@ class AuthMiddleWare(BaseMiddleware):
         self.bot = bot
 
     async def post_process(self, message, data, exception):
+        print()
+        print('Response')
         pass
 
     async def pre_process(self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data):
+        print()
+        print('Request')
         if isinstance(message, ChatMemberUpdated):
             return ContinueHandling()
 
@@ -30,9 +32,9 @@ class AuthMiddleWare(BaseMiddleware):
             return CancelUpdate()
 
         tgId = message.from_user.id
-        user = db.get_user_by_tg_id(tgId)
-        if user and user.ban:
-            return CancelUpdate()
+        user = await register_user_from_tg(tgId)
+
+        print(user.access_token)
 
         isText = False
         if isinstance(message, Message):
@@ -64,19 +66,12 @@ class AuthMiddleWare(BaseMiddleware):
                     except Exception as e:
                         pass
 
-        lang = get_lang(tgId)
-
-        try:
-            current_tg_username = message.from_user.username
-            if user and current_tg_username and (user.tg_username != current_tg_username):
-                userService.update(userId=user.id, tgUsername=current_tg_username)
-        except:
-            pass
+        lang = get_lang()
 
         data["state"] = state
         data["user"] = User(
-            id=user.id if user else 0,
+            id=0,
             tgId=tgId,
             lang=lang,
-            role=check_registration(tgId) or 0
+            role=0
         )
