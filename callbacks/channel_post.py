@@ -3,16 +3,12 @@ from telebot.types import InaccessibleMessage
 
 from common.calculation import getStrValueCount
 from keyboards.stats import kb_auto_take, kb_deal_profit_cancel
-from messages.common import transl_tr_style
 from common.utils import delete_message, edit_message, get_print_float
-from config_global import EN_CHANNEL_ID, RU_CHANNEL_ID
 from config_logger import logger
 from data.data import liteDb
-from db import db
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
-from models import Calculation, CallbackQuery, StateContext, User
+from models import CallbackQuery, StateContext, User
 from Classes import calcService
-from CHANNEL.channel_post import channel_post
 from pages.admin import send_admin_main
 from services import calculation, channel_calc, settings, ticker
 
@@ -20,7 +16,7 @@ from states.admin_params import AdminParamsState
 from states.stats import StatsState
 from keyboards.channel_post import (
     ChannelPostCallbackFilter, channel_post_factory, kb_channel_cancel_at,
-    kb_channel_post, kb_channel_post_back_to_result, kb_channel_stat, kb_result_end,
+    kb_channel_post, kb_channel_post_back_to_result, kb_result_end,
     kb_send_settings_calc_time, kb_send_settings_cancel_hours, kb_send_settings_trading_style, kb_send_settings_trailing_stop, kb_trailing_stop
 )
 
@@ -67,107 +63,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             msg, chat_id, mes_id,
             reply_markup=kb
         )
-
-    if 'ch_stats' in type:
-        send_datas = channel_calc.getSent() or []
-
-        stats: list[Calculation] = []
-        count_short = 0
-        count_long = 0
-        tools = {}
-        styles = {}
-
-        for el in send_datas:
-            stat = db.get_calculation(el.id, True)
-            if stat is None:
-                continue
-
-            if stat.openPrice > stat.stopLoss:
-                count_long += 1
-            else:
-                count_short += 1
-
-            tool = stat.tool
-            if stat.forexInfo is not None:
-                tool = '/'.join(stat.forexInfo.pair)
-
-            tool = (tool or '').replace('/USDT', '')
-
-            if tool != '':
-                if tool in tools.keys():
-                    tools[tool or ''] += 1
-                else:
-                    tools[tool or ''] = 1
-
-            if stat.tradingStyle is None or stat.tradingStyle == '':
-                pass
-            elif stat.tradingStyle in styles.keys():
-                styles[stat.tradingStyle] += 1
-            else:
-                styles[stat.tradingStyle] = 1
-
-            stats.append(stat)
-
-        max_tools: tuple[str, str] | None = None
-        max_style: str = ''
-
-        for el in tools.keys():
-            if max_tools is None:
-                max_tools = (el, '')
-            elif max_tools[1] == '':
-                max_tools = (max_tools[0], el)
-            else:
-                first_tool = max_tools[0]
-
-                if tools[first_tool] < tools[el]:
-                    max_tools = (first_tool, el)
-                if tools[max_tools[1]] < tools[first_tool]:
-                    max_tools = (max_tools[1], first_tool)
-
-        for el in styles.keys():
-            if max_style == '':
-                max_style = el
-            else:
-                if styles[max_style] < styles[el]:
-                    max_style = el
-
-        count_all = len(stats)
-
-        channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
-
-        if 'send' not in type:
-            text = f""" - {count_all} сделок
-- {count_short} в шорт
-- {count_long} в лонг
-
-Чаще всего торговал: <b>{' '.join(max_tools or [])}</b>""" + (f'\nЧаще всего: <b>{max_style}</b>' if max_style else '')
-
-            await bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=kb_channel_stat()
-            )
-        else:
-            for i, CHANNEL_ID in enumerate(channels):
-                lang = 'ru' if i == 0 else 'en'
-
-                if lang == 'ru':
-                    text = f""" - {count_all} сделок
-- {count_short} в шорт
-- {count_long} в лонг
-
-Чаще всего торговал: <b>{' '.join(max_tools or [])}</b>""" + (f'\nЧаще всего: <b>{max_style}</b>' if max_style else '')
-                else:
-                    result = transl_tr_style(max_style, 'en')
-
-                    text = f""" - {count_all} deals
-- {count_short} short
-- {count_long} long
-
-Most often traded: <b>{' '.join(max_tools or [])}</b>
-More often: <b>{result}</b>"""
-                await bot.send_message(
-                    CHANNEL_ID, text
-                )
 
     if type == 'send_settings':
         await send_admin_send_settings(bot, call.message, state, user)
@@ -248,13 +143,7 @@ More often: <b>{result}</b>"""
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is not None:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-            type = 'results'
-        else:
-            await send_stats(bot, call.message, state, user)
+        await send_stats(bot, call.message, state, user)
 
     if type == 'result_deal':
         calculation.update(
@@ -265,13 +154,7 @@ More often: <b>{result}</b>"""
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is not None:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-            type = 'result'
-        else:
-            await send_stats(bot, call.message, state, user)
+        await send_stats(bot, call.message, state, user)
 
     if type == 'result_wait':
         calculation.update(
@@ -282,13 +165,7 @@ More often: <b>{result}</b>"""
         if calc is None:
             return
 
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is not None:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-            type = 'result'
-        else:
-            await send_stats(bot, call.message, state, user)
+        await send_stats(bot, call.message, state, user)
 
     if type == 'result_end':
         calc = calculation.get(userId=user.id, calcId=calc_id)
@@ -328,13 +205,7 @@ More often: <b>{result}</b>"""
         )
 
         if calc:
-            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-
-            if send_data:
-                type = 'results'
-            else:
-                await send_calculation(bot, call.message, state, user, calc)
+            await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_end_no':
         send_data = channel_calc.getByCalc(calc_id)
@@ -369,15 +240,8 @@ More often: <b>{result}</b>"""
         if not calc:
             return
 
-        if send_data is not None:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-
-            if is_calc == 0:
-                type = 'results'
-        else:
-            if is_calc == 0:
-                await send_stats(bot, call.message, state, user)
+        if is_calc == 0:
+            await send_stats(bot, call.message, state, user)
 
         if is_calc == 1:
             calc = calculation.get(userId=user.id, calcId=calc_id)
@@ -397,10 +261,6 @@ More often: <b>{result}</b>"""
             )
 
         calc = calculation.get(userId=user.id, calcId=calc_id)
-
-        if send_data and calc:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         type = 'result'
 
@@ -487,16 +347,6 @@ More often: <b>{result}</b>"""
 
         calc = calculation.updateCancelAt(
             userId=user.id, id=calc_id, minutes=time)
-
-        if calc:
-            send_data = channel_calc.getByCalc(calc_id)
-            if send_data is not None:
-                await send_admin_channel_calc_item(
-                    bot, call.message, state, calc_id
-                )
-
-                tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
     if type == 'new_stop':
         await bot.edit_message_text(

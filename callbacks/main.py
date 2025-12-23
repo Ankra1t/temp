@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from CHANNEL.channel_post import channel_post
 from config_logger import logger
 from pages.start import first_start_with_calc
 from services import calculation, violation
@@ -71,9 +70,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_tariffs_list_item(
             bot, call.message, state, user, 'calc', 0, is_rus=is_rus
         )
-
-    if type == 'week_stat':
-        await channel_post.send_stats()
 
     if type == 'channels':
         await send_admin_channel_calc_list(bot, call.message, state)

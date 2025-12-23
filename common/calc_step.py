@@ -124,9 +124,7 @@ async def choose_calculate_step(
         edit_to = names[user.lang]['tool']
         new_state = CalculateState.tool
 
-        last_tools = db.get_last_tools(user.id, calc_type)
-
-        keyboard = kb_tool(user.lang, last_tools)
+        keyboard = kb_tool(user.lang, [])
 
     elif (
         calc_type == 'forex' and

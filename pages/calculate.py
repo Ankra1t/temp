@@ -7,7 +7,6 @@ from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
 from AuthRoles import first_timeout
-from CHANNEL.channel_post import channel_post
 from common.calculation import getStrValueCount
 from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, edit_message, get_print_float
@@ -867,25 +866,6 @@ async def create_and_send_calc(
         calculation.activate(userId=user.id, id=new_id)
         calc = calculation.get(userId=user.id, calcId=new_id)
 
-        if calc and calc.ActiveCalc and False:
-            if calc.photo:
-                file_id = calc.photo
-                file = await bot.get_file(file_id)
-                file_bytes = await bot.download_file(file.file_path)
-
-                name = f'{file_id}.png'
-                with open(name, 'wb') as new_file:
-                    new_file.write(file_bytes)
-
-                with open(name, 'rb') as file:
-                    data = calculation.sendPhoto(userId=user.id, file=file)
-
-                os.remove(name)
-
-            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-
-            type = 'active_calc'
         await send_calculation(bot, message, state, user, calc_info, True)
 
     await state.delete()

@@ -8,7 +8,6 @@ from telebot.apihelper import ApiTelegramException
 
 from Classes.CryptoBot import cryptoPay_payment_updates
 from Classes.YooKassa import yooKassa_payment_updates
-from CHANNEL.channel_post import channel_post
 
 from NOTIFIER import notifier
 from common.calculation import getStrValueCount
@@ -21,9 +20,8 @@ from callbacks.calculate import send_after_first_try
 from initialize import bot
 from db import db
 from keyboards.stats import kb_calc_not
-from models import AdminCalcNot, CalcChannelNotification, Calculation, Live, Mean, Poll, UserCalcNot
+from models import AdminCalcNot, CalcChannelNotification, UserCalcNot
 from registration import reg
-from services import channel_calc, ticker
 
 
 async def handle(request: web.Request):
@@ -64,21 +62,6 @@ async def get_ton_manifest(request: web.Request):
     )
 
 
-async def vote_timeout(request: web.Request):
-    access_token = db.get_access_token()
-    api_key = request.headers.get('tg-api-key')
-
-    if access_token is None or api_key is None or access_token != api_key:
-        return web.Response(status=403)
-
-    stat_id = request.query.get('stat_id')
-    if stat_id is None or not stat_id.isnumeric():
-        return web.Response(status=403)
-
-    await channel_post.send_vote(int(stat_id))
-    return web.Response()
-
-
 async def first_timeout(request: web.Request):
     access_token = db.get_access_token()
     api_key = request.headers.get('tg-api-key')
@@ -94,79 +77,6 @@ async def first_timeout(request: web.Request):
         await send_after_first_try(bot, int(user_id))
     except:
         return web.Response(status=403)
-
-    return web.Response()
-
-
-async def live_info(request: web.Request):
-    access_token = db.get_access_token()
-    api_key = request.headers.get('tg-api-key')
-
-    if access_token is None or api_key is None or access_token != api_key:
-        return web.Response(status=403)
-
-    live = Live.model_validate_json(await request.text())
-
-    logger.info(f"[live-info] Received: {await request.text()}")
-
-    await channel_post.send_live(live)
-
-    return web.Response()
-
-
-async def active_calc(request: web.Request):
-    # access_token = db.get_access_token()
-    # api_key = request.headers.get('tg-api-key')
-
-    # if access_token is None or api_key is None or access_token != api_key:
-    #     return web.Response(status=403)
-
-    res = await request.text()
-    res_json = json.loads(res)
-    calc = Calculation.model_validate_json(res)
-
-    await channel_post.send_calc(
-        calc, None,
-        res_json.get('indexPrice'), res_json.get('percent24h'),
-        False
-    )
-
-    return web.Response()
-
-
-async def send_calc(request: web.Request):
-    res = await request.text()
-    calc = Calculation.model_validate_json(res)
-    send_data = channel_calc.getByCalc(calc.id)
-    tickerInfo = ticker.get_info((calc.tool or '').replace(
-        '/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType)
-
-    await channel_post.send_calc(
-        calc, send_data,
-        tickerInfo and tickerInfo.indexPrice,
-        tickerInfo and tickerInfo.percent24h,
-    )
-
-    return web.Response()
-
-
-async def send_mean(request: web.Request):
-    res = await request.text()
-    mean = Mean.model_validate_json(res)
-    tickerInfo = ticker.get_info((mean.tool or '').replace('/', ''))
-
-    await channel_post.send_mean(
-        mean, tickerInfo,
-    )
-
-    return web.Response()
-
-
-async def send_notification(request: web.Request):
-    res = await request.text()
-    data = CalcChannelNotification.model_validate_json(res)
-
-    await channel_post.send_notification(data)
 
     return web.Response()
 
@@ -197,15 +107,6 @@ async def del_notification(request: web.Request):
         except Exception as e:
             logger.error(
                 f"Unexpected error while deleting message {data.mesIds[i]} from chat {data.chIds[i]}: {e}")
-
-    return web.Response()
-
-
-async def send_poll(request: web.Request):
-    res = await request.text()
-    poll = Poll.model_validate_json(res)
-
-    await channel_post.send_poll(poll)
 
     return web.Response()
 
@@ -351,19 +252,12 @@ async def setup():
         web.post(BASE_URL + '/AAA/', handle),
         web.post(BASE_URL + CRYPTOPAY_URL, cryptobot_updates),
         web.post(BASE_URL + YOOKASSA_URL, yookassa_updates),
-        web.post(BASE_URL + '/live-info', live_info),
-        web.post(BASE_URL + '/active-calc', active_calc),
-        web.post(BASE_URL + '/send-calc', send_calc),
         web.post(BASE_URL + '/user-not', user_not),
         web.post(BASE_URL + '/site-visited', site_visited),
         web.post(BASE_URL + '/user-code', user_code),
-        web.post(BASE_URL + '/send-mean', send_mean),
-        web.post(BASE_URL + '/send_poll', send_poll),
-        web.post(BASE_URL + '/send_notification', send_notification),
         web.post(BASE_URL + '/del_notification', del_notification),
         web.get(BASE_URL + '/icon.png', get_icon),
         web.get(BASE_URL + '/manifest.json', get_ton_manifest),
-        web.get(BASE_URL + '/vote_timeout', vote_timeout),
         web.get(BASE_URL + '/first_timeout', first_timeout),
     ]
 

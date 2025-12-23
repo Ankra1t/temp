@@ -35,8 +35,10 @@ class Database:
                 database=database,
             )
             self.curs = self.connection.cursor(cursor_factory=DictCursor)
-        except Exception as e:
-            self._log_error(e)
+        # except Exception as e:
+        except:
+            # self._log_error(e)
+            pass
 
     def _log_error(self, e: Exception):
         stack = traceback.extract_stack()

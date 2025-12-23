@@ -16,7 +16,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
 from AuthRoles import vote_timeout
-from CHANNEL.channel_post import channel_post
 
 from states.admin_params import AdminParamsState
 from states.calculate import CalculateState, ForexCalcState
@@ -26,7 +25,7 @@ from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message
 from common.dt import get_datetime_now, get_str_by_datetime
 
-from config_global import EN_CHANNEL_ID, PROD, RU_CHANNEL_ID
+from config_global import PROD
 from config_logger import logger
 
 from db import db
@@ -50,9 +49,6 @@ from keyboards.stats import (
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
 )
 from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
-
-
-channels = (RU_CHANNEL_ID, EN_CHANNEL_ID)
 
 
 def createScreen(
@@ -283,9 +279,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     calculation.update(
                         userId=user.id, calcId=calc_id, status='FINISH'
                     )
-                    if send_data is not None:
-                        tickerInfo = ticker.get_info(calc_info.tool or '')
-                        await channel_post.send_calc(calc_info, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
                     await send_freeze(
                         bot, call.message, state, user,
                         calc_info.market, True
@@ -607,18 +600,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
         tickerInfo = ticker.get_info(calc.tool or '')
 
-        await channel_post.send_calc(
-            calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h
-        )
-
         if send_data.isVote:
             seconds = vote_timeout(calc_id)
             new_mes = await bot.send_message(
                 chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
             )
-            channel_post.loading_vote_message_ids[calc_id] = (
-                chat_id, new_mes.id
-            )  # TODO - создать метод класса
 
         await bot.delete_message(chat_id, mes_id)
         # await bot.send_message(chat_id, '✅ Отправлено')
@@ -747,8 +733,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'result_cancel':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
-        if calc and not (calc.ActiveCalc and not send_data and calc.status == 'WAIT'):
+        if calc and not (calc.ActiveCalc and calc.status == 'WAIT'):
             calc = calculation.update(
                 userId=user.id, calcId=calc_id, status='CANCEL'
             )
@@ -756,41 +741,27 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if calc is None:
                 return
 
-            if send_data:
-                tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_deal':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
-        if calc and not (calc.ActiveCalc and not send_data):
+        if calc and not calc.ActiveCalc:
             calc = calculation.update(
                 userId=user.id, calcId=calc_id, status='DEAL'
             )
-
-            if calc and send_data:
-                tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_wait':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
-        if calc and not (calc.ActiveCalc and not send_data):
+        if calc and not calc.ActiveCalc:
             calc = calculation.update(
                 userId=user.id, calcId=calc_id, status='WAIT'
             )
             if calc is None:
                 return
-
-            if send_data:
-                tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
@@ -851,9 +822,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     data = calculation.sendPhoto(userId=user.id, file=file)
 
                 os.remove(name)
-
-            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
             type = 'active_calc'
 
@@ -973,20 +941,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calc = calculation.get(userId=user.id, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
         if calc:
-            if send_data:
-                if send_data.sent:
-                    tickerInfo = ticker.get_info(calc.tool or '')
-                    await channel_post.send_calc(
-                        calc, send_data,
-                        tickerInfo and tickerInfo.indexPrice,
-                        tickerInfo and tickerInfo.percent24h,
-                        False
-                    )
-                    await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
-                else:
-                    await send_confirm_calc_send(bot, call.message, calc_id)
-            else:
-                await send_calculation(bot, call.message, state, user, calc, is_activate=True)
+            await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if type == 'channel_item':
         await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
@@ -999,8 +954,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         calc = calculation.finishActive(userId=user.id, id=calc_id)
 
         if calc:
-            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'cancel':
@@ -1014,8 +967,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
         if calc:
-            tickerInfo = ticker.get_info((calc.tool or '').replace('/', ''))
-            await channel_post.send_calc(calc, None, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'new_stop':
@@ -1064,25 +1015,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
         if calc:
-            if send_data:
-
-                if send_data.sent:
-                    tickerInfo = ticker.get_info(calc.tool or '')
-                    await channel_post.send_calc(
-                        calc, send_data,
-                        tickerInfo and tickerInfo.indexPrice,
-                        tickerInfo and tickerInfo.percent24h,
-                        False
-                    )
-
-                    await send_admin_channel_calc_item(bot, call.message, state, calc_id, '')
-                else:
-                    await send_confirm_calc_send(bot, call.message, calc_id)
-
-            else:
-                await send_calculation(bot, call.message, state, user, calc)
+            await send_calculation(bot, call.message, state, user, calc)
 
     await bot.answer_callback_query(call.id)
 

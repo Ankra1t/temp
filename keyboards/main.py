@@ -140,14 +140,6 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
             if isAdmin:
                 btn_stats = getButton('Расчёты канaла', 'channels')
                 buttons.append(btn_stats)
-
-            if user_id == -111:
-                buttons.append(
-                    getButton(
-                        'Обновить недельюную статистику',
-                        'week_stat', saved, stat_id
-                    )
-                )
         else:
             kb = kb_calc_result(lang, user_db_id, stat)
             buttons_rows = kb.keyboard

@@ -32,12 +32,11 @@ def kb_channel_post():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_results = getButton("Результаты", 'results')
-    btn_channel_stats = getButton("Статистика", 'ch_stats')
     btn_send_settings = getButton("Настройки отправки", 'send_settings')
     btn_menu = getButton("На главную", 'main')
 
     keyboard.add(btn_results)
-    keyboard.add(btn_send_settings, btn_channel_stats)
+    keyboard.add(btn_send_settings)
     keyboard.add(btn_menu)
     return keyboard
 

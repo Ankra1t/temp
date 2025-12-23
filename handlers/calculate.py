@@ -3,7 +3,6 @@ from telebot.async_telebot import AsyncTeleBot
 
 from config_logger import logger
 from Classes import currencyService
-from CHANNEL.channel_post import channel_post
 from db import db
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
@@ -22,7 +21,7 @@ from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, is_digit, text_accept
 
 from states.calculate import CalculateState, ForexCalcState
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc
 
 
 async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -344,10 +343,6 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             db.change_calculation_open_price(stat_id, value)
             calc.openPrice = value
 
-            if send_data:
-                tickerInfo = ticker.get_info(calc.tool or '')
-                await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
-
             await send_calculation(bot, message, state, user, calc, True)
             await state.delete()
 
@@ -387,13 +382,6 @@ async def handle_stop_loss(message: Message, bot: AsyncTeleBot, state: StateCont
         await start_with_calc(bot, message, state, user, stat_id, stop_loss)
     else:
         await state.add_data(stop_loss=stop_loss)
-
-        calc = calculation.get(userId=user.id, calcId=stat_id)
-        send_data = channel_calc.getByCalc(stat_id)
-
-        if calc and send_data:
-            tickerInfo = ticker.get_info(calc.tool or '')
-            await channel_post.send_calc(calc, send_data, tickerInfo and tickerInfo.indexPrice, tickerInfo and tickerInfo.percent24h)
 
         await choose_calculate_step(bot, message, state, user)
 
