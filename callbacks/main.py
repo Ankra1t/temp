@@ -3,7 +3,7 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from pages.start import first_start_with_calc
-from services import calculation, violation
+from services import violation
 from models import CallbackQuery, StateContext, User
 
 from common.utils import delete_message
@@ -12,8 +12,6 @@ from common.calc_step import send_calc_start
 from keyboards.stats import kb_calc_result
 from keyboards.main import main_factory, MainCallbackFilter
 from pages.calculate import send_admin_channel_calc_list, send_channel_post, send_manual, send_settings, send_main, send_stats, send_tariffs_list_item, send_violation
-
-from service.calc import calc_service
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):

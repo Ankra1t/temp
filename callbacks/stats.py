@@ -15,8 +15,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
-from AuthRoles import vote_timeout
-
 from states.admin_params import AdminParamsState
 from states.calculate import CalculateState, ForexCalcState
 from states.stats import ChannelCalcState, StatsState
@@ -32,7 +30,7 @@ from db import db
 from Classes import calcService, pay_guard
 from messages.stats import msg_market_stats
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
@@ -598,12 +596,9 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if send_data is None or calc is None:
             return
 
-        tickerInfo = ticker.get_info(calc.tool or '')
-
         if send_data.isVote:
-            seconds = vote_timeout(calc_id)
             new_mes = await bot.send_message(
-                chat_id, f'Опрос будет отправлен через {round(seconds, 1)} секунд'
+                chat_id, f'Опрос будет отправлен через {5} секунд'
             )
 
         await bot.delete_message(chat_id, mes_id)

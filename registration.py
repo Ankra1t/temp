@@ -37,12 +37,11 @@ from handlers.admin_posts import registration as _reg_admin_posts
 
 from handlers.account import registration as _reg_user_account
 
-from handlers.livepost import registration as _reg_livepost
-
 from handlers.calculate import registration as _reg_calc
 from handlers.settings import registration as _reg_settings
 from handlers.stats import registration as _reg_stats
 from handlers.tariff import registration as _reg_tariff
+
 
 def reg(bot: AsyncTeleBot):
     bot.setup_middleware(AuthMiddleWare(bot))
@@ -86,8 +85,6 @@ def reg(bot: AsyncTeleBot):
     _reg_settings(bot)
     _reg_stats(bot)
     _reg_tariff(bot)
-
-    _reg_livepost(bot)  # !Должен регистрироваться последним
 
     chat_member_handler_registration(bot)
 

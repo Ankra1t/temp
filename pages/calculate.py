@@ -6,7 +6,6 @@ from typing import Literal
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
-from AuthRoles import first_timeout
 from common.calculation import getStrValueCount
 from states.stats import ChannelCalcState, StatsState
 from common.utils import delete_message, edit_message, edit_message, get_print_float
@@ -681,9 +680,6 @@ async def send_calculation(
                 reply_markup=kb,
             )
         os.remove(file_path)
-
-    if is_try:
-        first_timeout(user.tgId)
 
     return new_mes_id
 
