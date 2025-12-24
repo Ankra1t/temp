@@ -4,6 +4,7 @@ from common.dt import get_datetime_now
 
 from data.data import liteDb
 from db import Database
+from service import user_settings_storage
 from models import MARKETS_TYPE, Calculation, CalculationResult, CalculatorStats
 from services import calculation, channel_calc
 
@@ -68,7 +69,7 @@ class CalculationService():
         self.currencyService = currencyService
     # !deprecated
 
-    def set_profit(self, calc_id: int, value: float):
+    def set_profit(self, tgId: int, calc_id: int, value: float):
         # Находим данный расчет по статистике
         calc_info = calculation.get(userId=1, calcId=calc_id)
         send_data = channel_calc.getByCalc(calc_id)
@@ -86,19 +87,15 @@ class CalculationService():
 
         # Проверка настроек пользователя
         # Если не выставлен риск на день, то ничего не делаем
-        user_settings = self.db.get_calc_user_settings(
-            calc_info.userId, calc_info.market
-        )
+        user_settings = user_settings_storage.get_or_create(tgId)
 
         if user_settings and user_settings.is_updating_deposit:
-            self.db.set_user_base(
-                calc_info.userId, 'deposit',
-                (user_settings.deposit or 0.) + (calc_info.profit or 0.)
-            )
+            user_settings_storage.set_deposit(
+                tgId, (user_settings.deposit or 0.) + (calc_info.profit or 0.))
 
     def get_stats(self, tg_id: int, market: MARKETS_TYPE | None = None):
         user_db_id = self.db.get_user_id_by_tg_id(tg_id)
-        user_market_base = self.db.get_calc_user_settings(user_db_id, 'forex')
+        user_market_base = user_settings_storage.get_or_create(tg_id)
 
         base_currency = 'USDT' if market == 'crypto' else 'USD'
         if user_market_base is not None:
@@ -169,7 +166,7 @@ class CalculationService():
 
     def check_day_risk(self, user_id: int, market: MARKETS_TYPE):
         user_db_id = self.db.get_user_id_by_tg_id(user_id)
-        user_settings = self.db.get_calc_user_settings(user_db_id, market)
+        user_settings = user_settings_storage.get_or_create(user_id)
         if user_settings is None or user_settings.day_risk is None:
             return False
 

@@ -4,6 +4,7 @@ from telebot.async_telebot import AsyncTeleBot
 from config_logger import logger
 from Classes import currencyService
 from db import db
+from service import user_settings_storage
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
 from messages.errors import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
@@ -99,7 +100,7 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    user_settings = db.get_calc_user_settings(user.id)
+    user_settings = user_settings_storage.get_or_create(user.tgId)
     user_currency = getattr(user_settings, 'currency') or 'USD'
 
     pairs = [pair]

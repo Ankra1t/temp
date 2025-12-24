@@ -12,7 +12,7 @@ from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_t
 from models import LANGUAGES_TYPE, Calculation
 
 from Classes import calcService
-from services import calculation, ticker
+from services import ticker
 
 
 months = {'ru': [

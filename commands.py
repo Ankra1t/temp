@@ -4,6 +4,7 @@ from telebot.util import extract_arguments
 from config_logger import logger
 from NOTIFIER import notifier
 from db import db
+from service import user_settings_storage
 from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
 from services import auth
@@ -49,7 +50,7 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
             # Проверка языка
             user_lang = (message.from_user.language_code or 'en').lower()
             lang = user_lang if (user_lang in LANGUAGES) else 'en'
-            db.set_user_lang(new_user.id, lang)
+            user_settings_storage.set_lang(user.tgId, lang)
 
             # Уведомление о регистрации
             sentMessages = await notifier.send_user_is_registered(

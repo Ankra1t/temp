@@ -2,6 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 from data.data import liteDb
 from db import db
+from service import user_settings_storage
 
 from common.utils import send_in_development
 
@@ -32,7 +33,7 @@ async def send_start_by_user(
         send_data = channel_calc.getByCalc(int(id))
         calc = calculation.get(userId=user.id, calcId=int(id))
 
-        u_base = db.get_calc_user_settings(user.id)
+        u_base = user_settings_storage.get_or_create(user.tgId)
         if send_data is None or calc is None or u_base is None:
             return
 
@@ -123,7 +124,7 @@ async def start_with_calc(
 
     stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
-    u_base = db.get_calc_user_settings(user.id, calc.market)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     deposit = risk = None
     if u_base is None or u_base.deposit is None:

@@ -6,11 +6,9 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
-from db import db
 
 from keyboards.stats import getButton as getStatsButton
 from keyboards.calculate import get_settings_from_calc_button, calculate_factory
-from services import subscribe
 
 
 settings_factory = CallbackData(
@@ -101,9 +99,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
         },
     }
 
-    isAdmin = db.get_worker_role(user_db_id)
-    isActiveCalcSub = subscribe.check(user_db_id, 'active_calc')
-
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
@@ -132,7 +127,9 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
     )
 
     buttons = []
-    if isActiveCalcSub or isAdmin:
+
+    # TODO
+    if False:
         buttons.append(btn_active)
     buttons.append(btn_dop)
 

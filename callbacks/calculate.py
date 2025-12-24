@@ -6,6 +6,7 @@ from services import calculation, channel_calc, ticker
 from config_logger import logger
 from db import db
 from data.data import liteDb
+from service import user_settings_storage
 from Classes import currencyService
 from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery, StateContext, User
 
@@ -94,7 +95,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         _, pair = type.split('+')
         pair_arr = pair.split('/')
 
-        user_settings = db.get_calc_user_settings(user.id)
+        user_settings = user_settings_storage.get_or_create(user.tgId)
         user_currency = getattr(user_settings, 'currency') or 'USD'
 
         price = currencyService.getPrice(pair_arr[0], pair_arr[1])
@@ -242,7 +243,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
                 stop_loss = stop_loss if stop_loss is not None else calc.stopLoss
 
-                u_base = db.get_calc_user_settings(user.id, calc.market)
+                u_base = user_settings_storage.get_or_create(user.tgId)
 
                 deposit = risk_val = None
                 if u_base is None or u_base.deposit is None:

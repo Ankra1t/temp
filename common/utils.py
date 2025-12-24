@@ -8,6 +8,7 @@ from telebot.asyncio_helper import ApiTelegramException
 from common.dt import get_str_by_datetime
 from data.data import liteDb
 from db import db
+from service import user_settings_storage
 
 from models import Price, Post, UserInfo, LANGUAGES_TYPE, Message
 
@@ -230,8 +231,8 @@ def get_short_user_info(user: UserInfo):
     else:
         markets = ('forex', 'RF')
         for el in markets:
-            calc_settings = db.get_calc_user_settings(user.id, el, False)
-            if calc_settings is not None and calc_settings.deposit is not None and calc_settings.risk is not None:
+            calc_settings = user_settings_storage.get_or_create(user.tg_id)
+            if calc_settings.market == el:
                 is_set_settings = 1
                 break
 

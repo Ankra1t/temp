@@ -6,6 +6,7 @@ from NOTIFIER import notifier
 from config_logger import logger
 from db import db
 from data.data import liteDb
+from service import user_settings_storage
 from Classes import text_editor
 from models import LANGUAGES, CallbackQuery, User, StateContext
 from services import auth, calculation, settings
@@ -56,7 +57,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         f'callback "settings_factory" user_tg_id={user.tgId} type={type} ({trading_value} {summury_type} {take_profit_add} {add_count})')
 
     if type == 'set_deposit':
-        u_base = db.get_calc_user_settings(user.id)
+        u_base = user_settings_storage.get_or_create(user.tgId)
 
         current_value = ''
         if u_base is not None and u_base.deposit is not None:
@@ -87,7 +88,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'set_round_count':
         if add_count == '':
-            u_base = db.get_calc_user_settings(user.id, is_create=False)
+            u_base = user_settings_storage.get_or_create(user.tgId)
 
             current_value = -1
             if u_base is not None:
@@ -101,7 +102,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             await state.set(SettingsState.round_count)
         else:
             add_count = int(add_count)
-            db.set_user_round_count(user.id, min(max(add_count, 0), 5))
+            user_settings_storage.set_round_count(
+                user.tgId, min(max(add_count, 0), 5))
             await send_user_deposit(bot, call.message, state, user)
 
     if type == 'trading_style':
@@ -152,7 +154,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 )
 
             else:
-                db.set_user_trading_style(user.id, value)
+                user_settings_storage.set_trading_style(user.tgId, value)
 
                 if 'welcome' in type:
                     await bot.edit_message_text(
@@ -181,7 +183,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             _, currency = type.split('+')
 
             if 'welcome' in type:
-                db.set_user_currency(user.id, currency.upper())
+                user_settings_storage.set_currency(user.tgId, currency.upper())
                 await state.set(FirstCalcState.deposit)
                 await bot.edit_message_text(
                     msg_enter_deposit(user.lang), chat_id, mes_id
@@ -195,7 +197,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         bot, call.message, state, user, True, last_value='currency'
                     )
                 else:
-                    db.set_user_currency(user.id, currency.upper())
+                    user_settings_storage.set_currency(
+                        user.tgId, currency.upper())
                     await bot.edit_message_text(
                         msg_success_edit(user.lang), chat_id, mes_id
                     )
@@ -207,7 +210,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         for langg in LANGUAGES:
             if f'_{langg}' in type:
                 is_edit_lang = True
-                db.set_user_lang(user.id, langg)
+                user_settings_storage.set_lang(user.tgId, langg)
 
                 if 'first' in type:
                     liteDb.setFirstLang(user.tgId)
@@ -258,7 +261,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 user.lang if user.lang == 'ru' else 'en'
             )
 
-            market = db.get_user_current_market(user.id)
+            # market = db.get_user_current_market(user.id)
+            market = 'crypto'
 
             kb = kb_change_market(user.lang, '', market)
 
@@ -286,7 +290,6 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             db.set_calculator_user_market(user.id, market)
 
             if action == 'first':
-                db.create_tg_user_settings(user.id, market)
                 liteDb.setUserFirstMarket(user.tgId, market)
 
                 if market == 'RF':
@@ -308,7 +311,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         action='welcome'
                     )
                 else:
-                    db.set_user_currency(user.id, currency)
+                    user_settings_storage.set_currency(
+                        user.tgId, currency.upper())
                     await state.set(FirstCalcState.deposit)
                     await bot.edit_message_text(
                         msg_enter_deposit(user.lang), chat_id, mes_id
@@ -340,7 +344,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         if '_yes' in type:
             try:
                 # Сброс настроек калькулятора до начальных
-                db.reset_user_settings(user.id)
+                user_settings_storage.remove(user.tgId)
                 await send_settings(bot, call.message, state, user)
             except:
                 # Нет изменений - ничего не изменяется
@@ -355,9 +359,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'deposit_update' in type:
         if '_on' in type:
-            db.set_user_updating_deposit(user.id, True)
+            user_settings_storage.set_is_updating_deposit(user.tgId, True)
         elif '_off' in type:
-            db.set_user_updating_deposit(user.id, False)
+            user_settings_storage.set_is_updating_deposit(user.tgId, False)
 
         await send_user_deposit(bot, call.message, state, user)
 
@@ -464,8 +468,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         # При сохранении тейк-профита без разделения
         if type == 'tp_save':
             current_tp_ratio.sort()
-            db.set_calculator_tp_ratio(user.id, current_tp_ratio)
-            db.set_user_split_values(user.id, None)
+            user_settings_storage.set_tp_ratio(user.tgId, current_tp_ratio)
+            user_settings_storage.set_split_values(user.tgId, None)
 
         # При сохранении вывода с разделением
         if type == 'splitting_save':
@@ -476,8 +480,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             sorted_tp = list(sorted_tp)
             sorted_split = list(sorted_split)
 
-            db.set_calculator_tp_ratio(user.id, sorted_tp)
-            db.set_user_split_values(user.id, sorted_split)
+            user_settings_storage.set_tp_ratio(user.tgId, sorted_tp)
+            user_settings_storage.set_split_values(user.tgId, sorted_split)
 
         # Выводим сообщения
         await bot.edit_message_text(msg_success_edit(user.lang), chat_id, mes_id)
@@ -503,7 +507,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 reply_markup=kb_trading_type(user.lang)
             )
         else:
-            db.set_user_trading_type(user.id, trading_value)  # type: ignore
+            user_settings_storage.set_trading_type(
+                user.tgId, trading_value)  # type: ignore
             await send_settings(bot, call.message, state, user)
 
     if type == 'calc_output':
@@ -631,7 +636,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if 'set_stop' in type:
         _, new_stop_type = type.split('+')
 
-        db.set_user_from_deposit(user.id, False)
+        user_settings_storage.set_is_from_deposit(user.tgId, False)
         if new_stop_type == 'atr_percent':
             await bot.edit_message_text(
                 msg_enter_atr_percent(user.lang), chat_id, mes_id,
@@ -653,12 +658,12 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         await send_stop_settings(bot, call.message, state, user)
 
     if type == 'change_fr_dp':
-        u_base = db.get_calc_user_settings(user.id)
+        u_base = user_settings_storage.get_or_create(user.tgId)
         curr = False
         if u_base is not None:
             curr = u_base.is_from_deposit
 
-        db.set_user_from_deposit(user.id, not curr)
+        user_settings_storage.set_is_from_deposit(user.tgId, not curr)
         await send_stop_settings(bot, call.message, state, user)
 
     if type == 'atr_settings':

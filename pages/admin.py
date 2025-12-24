@@ -4,6 +4,7 @@ from telebot.types import InputMediaPhoto
 
 from db import db
 from data.data import liteDb
+from service import user_settings_storage
 from Classes import base_statis
 from keyboards.admin_subs import kb_admin_subs
 from models import Post, LANGUAGES_TYPE, Message, StateContext
@@ -303,7 +304,7 @@ async def send_admin_client(
 
             calcs_info += f'{POINT} {markets[market]}: <b>{count}</b>'
 
-            u_base = db.get_calc_user_settings(client.id, market)
+            u_base = user_settings_storage.get_or_create(client.tg_id)
             deposit = currency = risk = ''
             if u_base is not None:
                 deposit = u_base.deposit or deposit

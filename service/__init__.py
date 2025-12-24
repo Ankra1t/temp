@@ -34,6 +34,11 @@ from service.auth import (
     logout_user,
 )
 from service.token_storage import TokenStorage, token_storage
+from service.user_settings_storage import (
+    UserSettings,
+    UserSettingsStorage,
+    user_settings_storage,
+)
 from service.middleware import (
     RefreshTokenMiddleware,
     request_with_auth,
@@ -94,6 +99,10 @@ __all__ = [
     # Token storage
     "TokenStorage",
     "token_storage",
+    # User settings storage
+    "UserSettings",
+    "UserSettingsStorage",
+    "user_settings_storage",
     # Middleware
     "RefreshTokenMiddleware",
     "request_with_auth",

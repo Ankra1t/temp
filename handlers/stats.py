@@ -42,7 +42,9 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
 
     logger.info(f'callback "handle_loss" user_tg_id={user.tgId} value={value}')
 
-    calcService.set_profit(stat_id, -abs(value))
+    calcService.set_profit(
+        user.tgId,
+        stat_id, -abs(value))
     calc_info = calculation.get(userId=user.id, calcId=stat_id)
     if calc_info is None:
         return
@@ -80,7 +82,9 @@ async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateCo
 
     value_count = (value - calc.openPrice) / (calc.openPrice - calc.stopLoss)
 
-    calcService.set_profit(calc_id, calc.riskValue * value_count)
+    calcService.set_profit(
+        user.tgId,
+        calc_id, calc.riskValue * value_count)
     calc = calculation.update(
         userId=user.id, calcId=calc_id, status='FINISH'
     )
@@ -158,7 +162,9 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
 
     logger.info(f'callback "handle_sum" user_tg_id={user.tgId} value={value}')
 
-    calcService.set_profit(stat_id, value)
+    calcService.set_profit(
+        user.tgId,
+        stat_id, value)
     calc_info = calculation.get(userId=user.id, calcId=stat_id)
     if calc_info is None:
         return
@@ -358,6 +364,7 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
 
     if calc and not (calc.ActiveCalc and not send_data):
         calcService.set_profit(
+            user.tgId,
             stat_id,
             abs(value) * (-1 if type == 'stop' else 1)
         )

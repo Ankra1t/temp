@@ -257,13 +257,17 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     rate = float(profit.replace('loss', ''))
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     calcService.set_profit(
+                        user.tgId,
                         calc_id, -calc_info.riskValue * rate * spot_rate
                     )
                 elif profit != 'cancel':
                     _, _, spot_rate = get_count_value_bet(calc_info)
                     profit_result = calc_info.riskValue * \
                         int(profit) * spot_rate
-                    calcService.set_profit(calc_id, profit_result)
+                    calcService.set_profit(
+                        user.tgId,
+                        calc_id, profit_result
+                    )
                 else:
                     is_cancel = True
 

@@ -12,6 +12,7 @@ from common.utils import delete_message, edit_message, edit_message, get_print_f
 from data.data import liteDb
 
 from db import db
+from service import user_settings_storage
 from Classes import pay_guard, calcService, hti
 
 from messages.common import msg_manuals
@@ -99,7 +100,7 @@ async def send_settings(
     liteDb.addPagesCount(user.tgId)
 
     is_risk_update = liteDb.getRiskUpdate(user.tgId)
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     if u_base is None:
         return
@@ -178,7 +179,7 @@ async def send_trading_style_settings(
 
     await state.delete()
 
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     style = '-'
     if u_base is not None:
@@ -260,8 +261,9 @@ async def send_user_deposit(
     await state.delete()
 
     stop = liteDb.getUserStop(user.tgId)
-    market = db.get_user_current_market(user.id)
-    u_base = db.get_calc_user_settings(user.id)
+    # market = db.get_user_current_market(user.id)
+    market = 'crypto'
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     is_update = False
     if u_base is not None:
@@ -813,7 +815,7 @@ async def create_and_send_calc(
         )
         return
 
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
     if u_base is None:
         return
 
@@ -855,10 +857,9 @@ async def create_and_send_calc(
     # db.minus_calculator_uses_count(user.id)
     # db.delete_unfinished_calc_by_user(user.id)
 
-    # db.set_user_base(user.id, 'risk', risk[0])
-    # db.set_user_risk_is_percent(user.id, risk[1])
-    # db.set_user_base(user.id, 'deposit', deposit)
-    # db.set_user_currency(user.id, currency)
+    user_settings_storage.set_risk(user.tgId, (risk[0], risk[1]))
+    user_settings_storage.set_deposit(user.tgId, deposit)
+    user_settings_storage.set_currency(user.tgId, currency)
 
     if is_send and calc_info:
         # calculation.activate(userId=user.id, id=new_id)
@@ -883,7 +884,7 @@ async def send_stop_settings(
     await state.delete()
 
     stop_type = liteDb.getUserStop(user.tgId)
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     current_fd = False
     if u_base is not None:

@@ -11,10 +11,10 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from config_logger import logger
 
 from models import (
-    BASE_VALUE_TYPE, LANGUAGES_TYPE, ROLE_TYPE,
-    SORT_BY_TYPE, SUBSCRIBE_TYPE, TRADING_TYPE, Calculation,
+    ROLE_TYPE,
+    SORT_BY_TYPE, SUBSCRIBE_TYPE, Calculation,
     ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
-    UserCalcSettings, UserInfo, Price, Subscribe,
+    UserInfo, Price, Subscribe,
     Transactions, Purchase, Worker, Task, MARKETS_TYPE,
 )
 
@@ -811,27 +811,6 @@ class Database:
             self.connection.rollback()
             return []
 
-    def create_tg_user_settings(self, id: int, market: MARKETS_TYPE):
-        currency = None
-        if market == 'crypto':
-            query = (
-                'INSERT INTO "CalcSettings" '
-                '("userId", market, currency, deposit, risk, '
-                '"isRiskPercent") VALUES (%s, %s, %s, %s, %s, %s)'
-            )
-            params = id, market, 'USDT', 5000, 1, True
-        else:
-            query = 'INSERT INTO "CalcSettings" ("userId", market) VALUES (%s, %s)'
-            params = id, market
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return
-
     def get_paginated_users(
         self, limit: int | None = None, page: int | None = None,
         sort_by: SORT_BY_TYPE = 'new',
@@ -1196,33 +1175,6 @@ class Database:
             return False
 
     # Users - Settings
-    def _data_to_user_calc(self, data: DictRow):
-        risk_value = data.get('risk')
-        risk = None if (risk_value is None) else (
-            risk_value, data.get('isRiskPercent')
-        )
-
-        day_risk_value = data.get('dayRisk')
-        day_risk = None if (day_risk_value is None) else (
-            day_risk_value, data.get('isDayRiskPercent')
-        )
-
-        return UserCalcSettings(
-            user_id=data.get('userId'),
-            deposit=data.get('deposit'),
-            risk=risk,
-            currency=data.get('currency'),
-            market=data.get('market') or 'crypto',
-            tp_ratio=data.get('tpRatio'),
-            split_values=data.get('splitValues'),
-            trading_style=data.get('tradingStyle'),
-            round_count=data.get('roundCount'),
-            day_risk=day_risk,
-            is_updating_deposit=data.get('isUpdatingDeposit'),
-            trading_type=data.get('tradingType'),
-            is_from_deposit=data.get('isFromDeposit')
-        )
-
     def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
         query = 'SELECT market FROM \"BotSettings\" WHERE \"userId\" = %s'
         params = (user_id,)
@@ -1239,122 +1191,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return default
-
-    def get_calc_user_settings(self, user_id: int, market: MARKETS_TYPE | None = None, is_create=True) -> UserCalcSettings | None:
-        # market = market or self.get_user_current_market(user_id)
-
-        # query = 'SELECT * FROM "CalcSettings" WHERE "userId" = %s AND market = %s'
-        # params = user_id, market
-
-        # try:
-        #     self.curs.execute(query, params)
-
-        #     data = self.curs.fetchone()
-        #     if is_create and data is None:
-        #         self.create_tg_user_settings(user_id, market)
-        #         self.curs.execute(query, params)
-        #         data = self.curs.fetchone()
-
-        #     return self._data_to_user_calc(data) if data is not None else None
-        # except Exception as e:
-        #     self._log_error(e)
-        #     self.connection.rollback()
-        #     return None
-        return UserCalcSettings(
-            currency='USDT',
-            day_risk=(1, True),
-            deposit=10000,
-            is_from_deposit=False,
-            is_updating_deposit=False,
-            market='crypto',
-            risk=(1, True),
-            round_count=None,
-            split_values=[],
-            tp_ratio=[3],
-            trading_style='',
-            trading_type='margin',
-            user_id=1
-        )
-
-    def set_user_base(self, user_id: int, type: BASE_VALUE_TYPE, value: float):
-        """Установить значения для автозаполения пользователя"""
-        market = self.get_user_current_market(user_id)
-        value = round(value, 2)
-
-        query = f'UPDATE "CalcSettings" SET {type} = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_currency(self, user_id: int, value: str):
-        """Установить значения для автозаполения пользователя"""
-        market = self.get_user_current_market(user_id)
-
-        # if market == 'crypto' and value != 'USDT':
-        #     return False
-
-        query = 'UPDATE "CalcSettings" SET currency = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_risk_is_percent(self, user_id: int, value: bool):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "isRiskPercent" = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def get_user_lang(self, user_id: int) -> Optional[LANGUAGES_TYPE]:
-        """Получить язык пользователя"""
-        query = 'SELECT lang FROM \"User\" WHERE id = %s'
-        params = (user_id,)
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return None if (data is None) else data.get('lang')
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def set_user_lang(self, user_id: int, lang: LANGUAGES_TYPE):
-        """Установить язык пользователя"""
-        if len(lang) > 5:
-            return False
-
-        query = "UPDATE \"User\" SET lang = %s WHERE id = %s"
-        params = (lang, user_id)
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     def get_calculator_uses_count(self, user_id: int) -> int | None:
         """Получить количество использований калькулятора пользователем"""
@@ -1415,157 +1251,10 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_calculator_tp_ratio(self, user_id: int, tp: list[float]):
-        """Установить коэффициенты тейк-профит на показ"""
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "tpRatio" = %s WHERE "userId" = %s AND market = %s'
-        params = (tp, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
     def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
         """Установить рынок пользователя"""
         query = 'UPDATE \"BotSettings\" SET market = %s WHERE "userId" = %s'
         params = (market, user_id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_split_values(self, user_id: int, values: list[float] | None):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "splitValues" = %s WHERE "userId" = %s AND market = %s'
-        params = (values, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_day_risk(self, user_id: int, value: float, is_percent=False):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "dayRisk" = %s, "isDayRiskPercent" = %s WHERE "userId" = %s AND market = %s'
-        params = (value, is_percent, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_round_count(self, user_id: int, value: int):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "roundCount" = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_trading_style(self, user_id: int, value: str | None):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "tradingStyle" = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def reset_user_settings(self, user_id: int):
-        market = self.get_user_current_market(user_id)
-
-        currency = None
-        if market == 'crypto':
-            currency = 'USDT'
-
-        query = (
-            'UPDATE "CalcSettings" SET "tradingStyle" = %s, '
-            '"dayRisk" = %s, "roundCount" = %s, "isUpdatingDeposit" = %s, '
-            'currency = %s, deposit = %s, risk = %s, '
-            '"tpRatio" = %s, "splitValues" = %s '
-            'WHERE "userId" = %s AND market = %s'
-        )
-        params = (None, None, None, False, currency, None, None,
-                  [3, 4, 5], None, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_updating_deposit(self, user_id: int, value: bool):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "isUpdatingDeposit" = %s WHERE "userId" = %s AND market = %s'
-        params = value, user_id, market
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_trading_type(self, user_id: int, value: TRADING_TYPE):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "tradingType" = %s WHERE "userId" = %s AND market = %s'
-        params = value, user_id, market
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_user_from_deposit(self, user_id: int, value: bool):
-        market = self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "isFromDeposit" = %s WHERE "userId" = %s AND market = %s'
-        params = value, user_id, market
 
         try:
             self.curs.execute(query, params)

@@ -329,22 +329,6 @@ class Task(BaseModel):
     active: int = 1
 
 
-class UserCalcSettings(BaseModel):
-    user_id: int
-    deposit: float | None
-    risk: tuple[float, bool] | None
-    currency: str | None
-    market: MARKETS_TYPE
-    tp_ratio: list[float]
-    split_values: list[float] | None
-    trading_style: str | None
-    round_count: int | None
-    day_risk: tuple[float, bool] | None
-    is_updating_deposit: bool
-    trading_type: TRADING_TYPE
-    is_from_deposit: bool
-
-
 class ForexInfo(BaseModel):
     pair: tuple[str, str]
     price: float

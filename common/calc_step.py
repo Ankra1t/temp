@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 from Classes import pay_guard
 from data.data import liteDb
-from db import db
+from service import user_settings_storage
 from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 from services import ticker
@@ -260,7 +260,7 @@ async def choose_first_calculate_step(
     is_try=False,
     is_channel_calc=False
 ):
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     stop_type = liteDb.getUserStop(user.tgId)
 
@@ -349,7 +349,7 @@ async def send_calc_start(
     is_edit=False,
     is_channel_calc=False
 ):
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
     market = u_base.market if (u_base is not None) else 'crypto'
 
     await choose_first_calculate_step(

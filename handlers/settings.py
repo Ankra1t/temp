@@ -5,7 +5,7 @@ from telebot.async_telebot import AsyncTeleBot
 from states.settings import FirstCalcState, SettingsState
 
 from config_logger import logger
-from db import db
+from service import user_settings_storage
 from models import BASE_VALUE_TYPE, Message, User, StateContext
 from data.data import liteDb
 from common.utils import digit_accept, is_digit, text_accept
@@ -50,10 +50,10 @@ def handle_new_value(type: BASE_VALUE_TYPE):
 
         logger.info(
             f'callback "handle_new_value" user_tg_id={user.tgId} value={value}')
-
-        db.set_user_base(user.id, type, value)
         if type == 'risk':
-            db.set_user_risk_is_percent(user.id, is_percent)
+            user_settings_storage.set_risk(user.tgId, (value, is_percent))
+        else:
+            user_settings_storage.update(user.tgId, **{type: value})
 
         async with state.data() as data:
             action = data.get('action')
@@ -99,7 +99,7 @@ async def handle_new_currency(message: Message, bot: AsyncTeleBot, state: StateC
     #     )
     #     return
 
-    db.set_user_currency(user.id, value.upper())
+    user_settings_storage.set_currency(user.tgId, value.upper())
 
     async with state.data() as data:
         action = data.get('action')
@@ -183,7 +183,7 @@ async def handle_day_risk(message: Message, bot: AsyncTeleBot, state: StateConte
 
     value = float(value)
 
-    db.set_user_day_risk(user.id, value, is_percent)
+    user_settings_storage.set_day_risk(user.tgId, (value, is_percent))
     await bot.send_message(chat_id, msg_success_edit(user.lang))
     await send_user_deposit(bot, message, state, user, True)
 
@@ -193,7 +193,7 @@ async def handle_round_count(message: Message, bot: AsyncTeleBot, state: StateCo
 
     value = digit_accept(message, int)
 
-    u_base = db.get_calc_user_settings(user.id)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     current_value = -1
     if u_base is not None:
@@ -221,7 +221,7 @@ async def handle_round_count(message: Message, bot: AsyncTeleBot, state: StateCo
         )
         return
 
-    db.set_user_round_count(user.id, value)
+    user_settings_storage.set_round_count(user.tgId, value)
     await bot.send_message(chat_id, msg_success_edit(user.lang))
     await send_user_deposit(bot, message, state, user, True)
 
@@ -247,7 +247,7 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
     async with state.data() as data:
         action = data.get('action')
 
-    db.set_user_trading_style(user.id, value.lower())
+    user_settings_storage.set_trading_style(user.tgId, value.lower())
     await state.delete()
 
     if action == 'welcome':
@@ -272,11 +272,8 @@ async def handle_first_deposit(message: Message, bot: AsyncTeleBot, state: State
         )
         return
 
-    user_db_id = db.get_user_id_by_tg_id(user.tgId)
-
-    db.set_user_base(user_db_id, 'deposit', value)
-    db.set_user_base(user_db_id, 'risk', 1)
-    db.set_user_risk_is_percent(user_db_id, True)
+    user_settings_storage.set_deposit(user.tgId, value)
+    user_settings_storage.set_risk(user.tgId, (1, True))
 
     await bot.send_message(
         chat_id,
@@ -297,10 +294,9 @@ async def handle_first_risk(message: Message, bot: AsyncTeleBot, user: User):
         )
         return
 
-    db.set_user_base(user.id, 'risk', value)
-    db.set_user_risk_is_percent(user.id, True)
+    user_settings_storage.set_risk(user.tgId, (value, True))
 
-    u_base = db.get_calc_user_settings(user.id, 'crypto')
+    u_base = user_settings_storage.get_or_create(user.tgId)
     if u_base is None:
         return
 
@@ -404,7 +400,7 @@ async def handle_atr_percent(message: Message, bot: AsyncTeleBot, state: StateCo
 
     await state.delete()
 
-    db.set_user_from_deposit(user.id, False)
+    user_settings_storage.set_is_from_deposit(user.tgId, False)
 
     liteDb.setUserStop(user.tgId, f'atr_percent+{value}')
     try:

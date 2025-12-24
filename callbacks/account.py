@@ -13,6 +13,7 @@ from models import LANGUAGES, CallbackQuery, StateContext, User
 
 from messages.profile import msg_enter_nickname, msg_referral_list, msg_user_purchases
 
+from service import user_settings_storage
 from states.account import UserAccountState
 from keyboards.account import (
     user_account_factory, UserAccountCallbackFilter,
@@ -93,7 +94,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         for lang in LANGUAGES:
             if f'_{lang}' in type:
                 is_edit_lang = True
-                db.set_user_lang(user.id, lang)
+                user_settings_storage.set_lang(user.tgId, lang)
                 await send_user_params(bot, call.message, state, user)
 
         if not is_edit_lang:

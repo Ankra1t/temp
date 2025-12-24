@@ -229,6 +229,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         # _, _, spot_rate = get_count_value_bet(calc)
         spot_rate = 1
         calcService.set_profit(
+            user.tgId,
             calc_id,
             (-1 if 'stop+' in type else 1) *
             calc.riskValue * value * spot_rate

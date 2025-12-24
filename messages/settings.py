@@ -1,13 +1,13 @@
 from typing import Literal
 from common.utils import get_print_float
 from messages.common import POINT, msg_atr_bars, transl_market, transl_tr_style, transl_tr_type, msg_current_value
-from models import LANGUAGES_TYPE, AdvancedSettings, UserCalcSettings
+from models import LANGUAGES_TYPE, AdvancedSettings
 
 # TODO - delete db from messages files
-from db import db
+from service import user_settings_storage, UserSettings
 
 
-def msg_settings(lang: LANGUAGES_TYPE, u_base: UserCalcSettings, is_risk_update=False):
+def msg_settings(lang: LANGUAGES_TYPE, u_base: UserSettings, is_risk_update=False):
     texts = {
         'ru': {
             'name': 'Настройки',
@@ -131,7 +131,7 @@ def msg_settings(lang: LANGUAGES_TYPE, u_base: UserCalcSettings, is_risk_update=
 # {POINT} {texts[lang]["output"]}: <b>{texts[lang]['by_text'] if calc_output == 'text' else texts[lang]['by_image']}</b>
 
 
-def msg_deposit(lang: LANGUAGES_TYPE, u_base: UserCalcSettings | None, stop: str | None):
+def msg_deposit(lang: LANGUAGES_TYPE, u_base: UserSettings | None, stop: str | None):
     if stop is None:
         stop_show = '-'
     elif stop == 'default':
@@ -313,7 +313,7 @@ def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], ris
 
 
 def msg_summary_profit_settings(lang: LANGUAGES_TYPE, user_db_id: int):
-    u_base = db.get_calc_user_settings(user_db_id)
+    u_base = user_settings_storage.get_or_create(user_db_id)
     tp_ratio = u_base.tp_ratio if (u_base is not None) else []
     split_values = u_base.split_values if (u_base is not None) else None
 
