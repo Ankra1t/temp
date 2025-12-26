@@ -1,22 +1,10 @@
-import ast
-import traceback
 from httpx import request
-from telebot.async_telebot import AsyncTeleBot
-from hashlib import sha256
-from hmac import HMAC
-from aiohttp.web import Request, Response
 from aiocryptopay.const import PaidButtons, InvoiceStatus
-
-from NOTIFIER.messages import mess_user_paid
-from common.dt import get_str_by_datetime
-from Classes import pay_guard
-from NOTIFIER import notifier
 
 from config_global import CRYPTOPAY_TOKEN
 from config_logger import logger
 
-from common.utils import check_discount_price, get_lang
-from messages.users import paid_subscribe_msg, paid_subscribe_refer_msg
+from common.utils import check_discount_price
 from models import Price
 from db import db
 
@@ -76,99 +64,3 @@ def cryptoPay_create_payment(user_id: int, tariff: Price, redirect_url: str):
     )
 
     return url
-
-
-async def cryptoPay_payment_updates(bot: AsyncTeleBot, request: Request):
-    body = await request.json()
-    if body is None:
-        return Response(status=400)
-
-    crypto_pay_signature = request.headers.get(
-        "Crypto-Pay-Api-Signature", "No value"
-    )
-
-    token = sha256(string=CRYPTOPAY_TOKEN.encode("UTF-8")).digest()
-    signature = HMAC(
-        key=token, msg=body.encode("UTF-8"), digestmod=sha256
-    ).hexdigest()
-    if signature != crypto_pay_signature:
-        return Response(status=400)
-
-    payment: dict | None = body.get('payload')
-    if payment is None:
-        return Response(status=400)
-
-    code = str(payment.get('invoice_id'))
-    if code is None:
-        return Response(status=400)
-
-    transaction = db.get_wait_transaction(code)
-    if transaction is None:
-        logger.error(f'Не удалось подтвердить платеж {code}')
-        return Response(status=200)
-
-    if payment.get('status', '') == 'expired':
-        db.cancel_transaction(transaction.id)
-        return Response(status=200)
-
-    db.success_transaction(transaction.id)
-
-    # Добавить платную подписку
-    finish_date = pay_guard.set_paid_subscribe(transaction)
-    finish_date_show = get_str_by_datetime(finish_date)
-
-    # Обнуляем пробную подписку
-    pay_guard.deactivate_user_trial_subscribe(
-        transaction.user_id
-    )
-
-    # Сообщение в бот уведомлений об оплате
-    summ_full = f"{transaction.sum} {transaction.currency}"
-
-    user = db.get_user_by_id(transaction.user_id)
-    if user is not None:
-        try:
-            if user.refer_id is not None:
-                refer = db.get_user_by_id(user.refer_id)
-                if refer is not None:
-                    rub_price = ast.literal_eval(payment.get('payload', "{}"))
-                    rub_price = int(rub_price.get('rub_price', 0) * 0.2)
-
-                    db.set_user_refer_sum(
-                        refer.id,
-                        refer.refer_sum + rub_price
-                    )
-
-                    refer_lang = get_lang(refer.tg_id)
-
-                    user_show = f'@{user.tg_username}' if user.tg_username != '-' else f'{user.tg_id}'
-                    sum_show = f'{transaction.sum} {transaction.currency}'
-                    await bot.send_message(
-                        user.refer_id,
-                        text=paid_subscribe_refer_msg(
-                            refer_lang, user_show, sum_show
-                        ),
-                    )
-        except Exception as e:
-            print(e)
-            print(traceback.print_exc())
-            pass
-
-        user_lang = get_lang(user.tg_id)
-
-        await bot.send_message(
-            user.tg_id,
-            text=paid_subscribe_msg(
-                user_lang, finish_date_show, transaction.name
-            ),
-        )
-
-        await notifier.send_notification('text', mess_user_paid(
-            user_id=user.id,
-            user_nike='@' + user.tg_username if user.tg_username else user.tg_id,
-            summ_paid=summ_full,
-            tariff_name=transaction.name,
-            finish_date=finish_date_show
-        ))
-
-    return Response()

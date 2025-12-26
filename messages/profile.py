@@ -125,7 +125,7 @@ def msg_user_tariff(tariff: Price):  # TODO - переводы
 {discount}"""
 
 
-def msg_user_account(lang: LANGUAGES_TYPE, spent: float, refs: int):
+def msg_user_account(lang: LANGUAGES_TYPE, refs: int):
     texts = {
         'ru': {
             'name': 'Личный кабинет',
@@ -153,7 +153,6 @@ def msg_user_account(lang: LANGUAGES_TYPE, spent: float, refs: int):
 
 {texts[lang]['refs']}: <b>{refs}</b>
 """
-# {texts[lang]['spent']}: <b>{get_print_float(spent)}</b>
 
 
 def msg_user_params(lang: LANGUAGES_TYPE, user: UserInfo):

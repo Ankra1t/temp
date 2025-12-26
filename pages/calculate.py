@@ -13,7 +13,7 @@ from data.data import liteDb
 
 from db import db
 from service import user_settings_storage
-from Classes import pay_guard, calcService, hti
+from Classes import calcService, hti
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
@@ -24,7 +24,7 @@ from messages.profile import msg_user_tariff
 from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
 from messages.users import msg_no_tariffs
 from messages.common import transl_status
-from messages.main import msg_freeze_calc, msg_main, msg_no_uses
+from messages.main import msg_freeze_calc, msg_no_uses
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
@@ -59,19 +59,13 @@ async def send_main(
 
     liteDb.addPagesCount(user.tgId)
 
-    is_valid_use = await pay_guard.valid_use_calc(user.tgId, bot)
-
     # TODO
-    # unfinished_calc = db.get_unfinished_calc_by_user(user.id)
     unfinished_calc = None
 
-    if is_valid_use:
-        text = msg_main(user.lang, True)
-    else:
-        text = msg_no_uses(user.lang)
+    text = msg_no_uses(user.lang)
 
     keyboard = kb_main(
-        user.lang, user.tgId, is_valid_use, None,
+        user.lang, user.tgId, None,
         unfinished_calc is not None
     )
 
@@ -401,9 +395,6 @@ async def send_stats(
 
     msg = f"<b>{texts[lang]['title']}</b>"
 
-    long_count = 0
-    short_count = 0
-
     tool_counts: dict[str, int] = {}
 
     for valueDate in values:
@@ -414,7 +405,6 @@ async def send_stats(
         sl_count = 0
 
         success_count = 0
-        fail_count = 0
 
         canceled = ''
 
@@ -422,8 +412,6 @@ async def send_stats(
             status: CALC_STATUS_TYPE = value.get('status', 'WAIT')
 
             valueCount = value.get('valueCount')
-            openPrice = value.get('openPrice')
-            closePrice = value.get('closePrice')
 
             if valueCount is None:
                 tp_sl = transl_status(status, lang)
@@ -434,18 +422,8 @@ async def send_stats(
                 if valueCount > 0:
                     tp_count += valueCount
                     success_count += 1
-                    if closePrice > openPrice:
-                        long_count += 1
-                    else:
-                        short_count += 1
                 else:
                     sl_count += abs(valueCount)
-                    fail_count += 1
-
-                    if closePrice > openPrice:
-                        short_count += 1
-                    else:
-                        long_count += 1
 
             tool = value.get("tool")
             tool_num = ''
@@ -635,8 +613,6 @@ async def send_calculation(
 
     await state.delete()
 
-    is_access = await pay_guard.valid_use_calc(user.tgId, bot)
-
     calc_output = 'text'
 
     if is_list:
@@ -649,8 +625,7 @@ async def send_calculation(
     else:
         kb = kb_main(
             user.lang, user.tgId,
-            is_access, calc,
-            is_first=is_try
+            calc, is_first=is_try
         )
 
     new_mes_id = None
@@ -845,26 +820,14 @@ async def create_and_send_calc(
         isFromDeposit=is_from_deposit
     )
 
-    # new_id = db.add_calculation(calc_info)
-    # calc_info = calculation.get(userId=user.id, calcId=new_id or -1)
-    calc = calc_service.create_calculation(user.tgId, calc_data=CalcCreateRequest(
+    await calc_service.create_calculation(user.tgId, calc_data=CalcCreateRequest(
         open_price=open_price, deposit=F'{deposit}', risk_value=f'{risk_value * updated_risk}', stop_loss=stop_loss, market=calc_type, symbol=tool))
-
-    # userExchange = liteDb.getUserExchange(user.tgId)
-    # if userExchange is not None:
-    #     liteDb.addCalc(new_id, userExchange[0], userExchange[1])
-
-    # db.minus_calculator_uses_count(user.id)
-    # db.delete_unfinished_calc_by_user(user.id)
 
     user_settings_storage.set_risk(user.tgId, (risk[0], risk[1]))
     user_settings_storage.set_deposit(user.tgId, deposit)
     user_settings_storage.set_currency(user.tgId, currency)
 
     if is_send and calc_info:
-        # calculation.activate(userId=user.id, id=new_id)
-        # calc = calculation.get(userId=user.id, calcId=new_id)
-
         await send_calculation(bot, message, state, user, calc_info, True)
 
     await state.delete()

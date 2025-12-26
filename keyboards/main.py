@@ -29,7 +29,7 @@ def getButton(text: str, type: str, is_saved=False, stat_id=-1):
     )
 
 
-def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculation | None = None, is_unfinished=False, is_first=False):
+def kb_main(lang: LANGUAGES_TYPE, user_id: int, stat: Calculation | None = None, is_unfinished=False, is_first=False):
     # TODO
     # user_db_id = db.get_user_id_by_tg_id(user_id)
     # isAdmin = db.get_worker_role(user_db_id)
@@ -91,23 +91,22 @@ def kb_main(lang: LANGUAGES_TYPE, user_id: int, is_access=True, stat: Calculatio
     keyboard = InlineKeyboardMarkup(row_width=2)
     buttons = []
 
-    if is_access:
-        if is_unfinished:
-            btn_continue_calc = getButton(
-                '➡️ ' + texts[lang]['calc_continue'],
-                'calc_continue', saved, stat_id
-            )
-            buttons.append(btn_continue_calc)
-        btn_calc = getButton(
-            '⌨️ ' + texts[lang]['calc'],
-            'calc', saved, stat_id if not is_first else -111,
+    if is_unfinished:
+        btn_continue_calc = getButton(
+            '➡️ ' + texts[lang]['calc_continue'],
+            'calc_continue', saved, stat_id
         )
-        buttons.append(btn_calc)
+        buttons.append(btn_continue_calc)
+    btn_calc = getButton(
+        '⌨️ ' + texts[lang]['calc'],
+        'calc', saved, stat_id if not is_first else -111,
+    )
+    buttons.append(btn_calc)
 
     # if isAdmin:
-        # buttons.append(
-        #     getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
-        # )
+    # buttons.append(
+    #     getButton('Расчёт для канала', 'ch_calc', saved, stat_id)
+    # )
 
     btn_settings = getButton(
         '⚙️ ' + texts[lang]['settings'], 'settings', saved, stat_id

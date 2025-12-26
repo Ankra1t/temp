@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from Classes import pay_guard
 from db import db
 from models import Post, CallbackQuery, StateContext, User
 
@@ -114,7 +113,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_fut_posts(bot, call.message, state, True)
 
     if 'confirm' in type:
-        if 'no':
+        if 'no' in type:
             await bot.edit_message_text(
                 'Отправьте ID поста', chat_id, mes_id,
                 reply_markup=kb_posts_back())
@@ -129,15 +128,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
                 if post is None:
                     return
-
-                if post.direct == 'Платным':
-                    users = pay_guard.get_paid_users()
-                elif post.direct == 'Бесплатным':
-                    users = db.get_not_subscribed_users()
-                else:
-                    users = db.get_all_users()
-
-                users_id = list(map(lambda user: user.tg_id, users))
 
                 try:
                     pass

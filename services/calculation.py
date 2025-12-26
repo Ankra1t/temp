@@ -191,20 +191,6 @@ def finishActive(
 
 
 @session_decorator
-def getMonthNumber(
-    *, userId: int, calcId: int
-):
-    res = session.get(
-        f'{API_URL}/calculations/{calcId}/monthNumber',
-    )
-
-    if not check_response(res):
-        return
-
-    return int(res.text)
-
-
-@session_decorator
 def sendPhoto(
     *, userId: int, file: BufferedReader
 ):

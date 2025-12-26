@@ -603,10 +603,8 @@ def kb_confirm_channel_post(calc_id: int):
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)
 
-    is_text = is_photo = is_vote = without_stop = False
+    is_vote = without_stop = False
     if send_data is not None and calc is not None:
-        is_text = calc.description is not None
-        is_photo = calc.photo is not None
         without_stop = send_data.withoutStop
         is_vote = send_data.isVote
 
@@ -838,20 +836,6 @@ def kb_confirm_take_price(lang: LANGUAGES_TYPE, calc_id: int):
     keyboard.add(
         getButton(texts[lang]['no'], 'take_price', calc_id),
         getButton(texts[lang]['yes'], 'take_price_yes', calc_id),
-    )
-    return keyboard
-
-
-def kb_calc_not(lang: LANGUAGES_TYPE, calc_id: int):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-
-    if lang == 'ru':
-        text = 'К сделке'
-    else:
-        text = 'Go to the deal'
-
-    keyboard.add(
-        getButton(text, 'get_calc', calc_id)
     )
     return keyboard
 

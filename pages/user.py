@@ -115,7 +115,7 @@ async def send_user_account(
     for el in purchase:
         money += el.sum or 0
 
-    text = msg_user_account(user.lang, money, referals)
+    text = msg_user_account(user.lang, referals)
     keyboard = kb_user_account(user.lang, user.tgId)
 
     if is_first:

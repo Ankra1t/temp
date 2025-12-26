@@ -480,48 +480,6 @@ class SendCalcWithCalc(SendCalc):
     calculation: Calculation
 
 
-class LiveDeal(BaseModel):
-    tool: str
-    takeProfit: Optional[float]
-    takeProfitRatio: Optional[float]
-    messages: Optional[SentMessages]
-    indexPrice: Optional[float]
-    openPrice: float
-    stopLoss: float
-    TrailingStops: Optional[list[CalcTrailingStop]] = None
-
-
-class LiveWaitCancel(BaseModel):
-    tool: str
-    messages: Optional[SentMessages]
-
-
-class LiveFinish(LiveWaitCancel):
-    valueCount: float
-
-
-class LiveToUpdate(BaseModel):
-    calc: Calculation
-    sendData: SendCalc
-    indexPrice: Optional[float]
-    percent24h: Optional[float]
-
-
-class Live(BaseModel):
-    wait: list[LiveWaitCancel]
-    canceled: list[LiveWaitCancel]
-    finished: list[LiveFinish]
-    deal: list[LiveDeal]
-    toUpdate: list[LiveToUpdate]
-    isNewMes: bool
-    messages: Optional[SentMessages]
-
-    monthProfit: float
-    monthValueCount: float
-    todayProfit: Optional[float]
-    todayValueCount: Optional[float]
-
-
 class AdvancedSettings(BaseModel):
     userId: int
     autoOpen: bool
@@ -568,31 +526,9 @@ class UserActiveStats(BaseModel):
     data: ActiveStats
 
 
-class AdminCalcNot(BaseModel):
-    userIds: list[int]
-    userName: str
-    calc: Calculation
-    userTgId: int
-    userStats: ActiveStats
-
-
-class Mean(BaseModel):
-    tool: str
-    exchange: str
-    type: str
-    description: str | None
-    photo: str | None
-
-
 class CalcChannelNotification(BaseModel):
     calcId: int
     tool: str
     chIds: list[str]
     mesIds: list[str]
     langs: list[LANGUAGES_TYPE]
-
-
-class Poll(BaseModel):
-    title: str
-    ans: Optional[list[str]] = None
-    rightAns: Optional[str] = None

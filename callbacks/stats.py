@@ -27,7 +27,7 @@ from config_global import PROD
 from config_logger import logger
 
 from db import db
-from Classes import calcService, pay_guard
+from Classes import calcService
 from messages.stats import msg_market_stats
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc
@@ -336,7 +336,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'result_calc':
         calc = calculation.get(userId=user.id, calcId=calc_id)
         if calc is not None:
-            is_access = await pay_guard.valid_use_calc(user.tgId, bot)
             await bot.edit_message_reply_markup(
                 chat_id, mes_id,
                 reply_markup=kb_calc_result(user.lang, calc, True)
@@ -361,13 +360,12 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             text = '\n'.join(text.split('\n')[:-1])
             media = call.message.photo[-1].file_id if call.message.photo else None
 
-            is_valid = await pay_guard.valid_use_calc(user.tgId, bot)
             calc_info = calculation.get(userId=user.id, calcId=calc_id)
 
             await edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
-                kb_main(user.lang, user.tgId, is_valid, calc_info),
+                kb_main(user.lang, user.tgId, calc_info),
                 media
             )
         else:
@@ -423,12 +421,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             text = '\n'.join(text.split('\n')[:-1])
             media = call.message.photo[-1].file_id if call.message.photo else None
 
-            is_valid = await pay_guard.valid_use_calc(user.tgId, bot)
-
             await edit_message(
                 bot, call.message, prev_type,  # type: ignore
                 text,
-                kb_main(user.lang, user.tgId, is_valid, calc_info),
+                kb_main(user.lang, user.tgId, calc_info),
                 media
             )
         elif kind == 'open_price':

@@ -41,14 +41,6 @@ def kb_channel_post():
     return keyboard
 
 
-def kb_channel_stat():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    btn_channel_stats = getButton("Отправить", 'ch_stats_send')
-    btn_cancel = getButton("Отмена", 'back')
-    keyboard.add(btn_channel_stats, btn_cancel)
-    return keyboard
-
-
 def kb_send_settings(stop: bool, vote: bool):
     keyboard = InlineKeyboardMarkup(row_width=2)
 

@@ -1,7 +1,5 @@
-from datetime import datetime
 from messages.common import msg_freeze_info, transl_market
 from models import LANGUAGES_TYPE, MARKETS_TYPE
-from common.dt import get_str_by_datetime
 
 
 def msg_main(lang: LANGUAGES_TYPE, is_rus=False):
@@ -72,27 +70,6 @@ def msg_frozen(lang: LANGUAGES_TYPE, datetime: str):
     }
 
     return f'❄️ {text[lang]} <b>{datetime}</b>'
-
-
-def msg_main_freeze(lang: LANGUAGES_TYPE, freeze_dt: datetime):
-    texts = {
-        'ru': {
-            'name': 'Меню',
-        },
-        'en': {
-            'name': 'Menu',
-        },
-        'uz': {
-            'name': 'Menyu',
-        },
-        'tr': {
-            'name': 'Menü',
-        },
-    }
-
-    return f"""⚡️ <b><u>{texts[lang]["name"]}</u></b>
-
-{msg_frozen(lang, get_str_by_datetime(freeze_dt))}"""
 
 
 def msg_welcome(lang: LANGUAGES_TYPE):

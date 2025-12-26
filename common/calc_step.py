@@ -1,6 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from Classes import pay_guard
 from data.data import liteDb
 from service import user_settings_storage
 from messages.calc import msg_calc_buttons_info
@@ -8,7 +7,7 @@ from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 from services import ticker
 
 from states.calculate import CalculateState, ForexCalcState
-from pages.calculate import create_and_send_calc, send_main
+from pages.calculate import create_and_send_calc
 from keyboards.calculate import kb_calc_atr, kb_calc_cancel, kb_calc_direct, kb_pair, kb_price, kb_tool
 from keyboards.settings import kb_change_currency, kb_trading_style
 
@@ -265,9 +264,7 @@ async def choose_first_calculate_step(
     stop_type = liteDb.getUserStop(user.tgId)
 
     # TODO
-    # unfinished_calc = db.get_unfinished_calc_by_user(user.id)
     unfinished_calc = None
-    # db.delete_unfinished_calc_by_user(user.id)
 
     is_from_deposit = False
     style = deposit = risk = currency = trading_type = None
@@ -302,11 +299,6 @@ async def choose_first_calculate_step(
             prev_values['updated_risk'] = unfinished_calc.update_risk_rate
             risk = risk or [unfinished_calc.risk_value,
                             unfinished_calc.is_risk_percent]
-
-    # Проверяем подписку
-    if not (await pay_guard.valid_use_calc(user.tgId, bot)):
-        await send_main(bot, message, state, user, True)
-        return
 
     await state.delete()
     if type == 'forex':

@@ -15,7 +15,7 @@ from models import (
     SORT_BY_TYPE, SUBSCRIBE_TYPE, Calculation,
     ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
     UserInfo, Price, Subscribe,
-    Transactions, Purchase, Worker, Task, MARKETS_TYPE,
+    Transactions, Purchase, Worker, MARKETS_TYPE,
 )
 
 
@@ -552,24 +552,6 @@ class Database:
             self.connection.rollback()
             return None
 
-    def get_paid_transactions_by_user(self, user_id: int) -> list[Transactions]:
-        """Получить платные транзакции пользователя"""
-        query = ('SELECT * FROM "Transaction" '
-                 'WHERE "userId" = %s AND status = %s'
-                 )
-        status = 'PAID'
-        params = (user_id, status, )
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-
-            return list(map(lambda el: self._data_to_transaction(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
     def get_paid_transactions_all(self) -> list[Transactions]:
         """Получить все оплаченные транзакции"""
         query = ('SELECT * FROM "Transaction" '
@@ -1095,26 +1077,6 @@ class Database:
             return False
 
     # # # # # # # #  Users Сервисные запросы
-    def set_task(self, task: Task):
-        """Запланировать задание"""
-        datetime_now = get_datetime_now()
-        query = ("INSERT INTO tgbot_service_tasks("
-                 'type_task, "userId", date_action, type_message, text, media_id, '
-                 "active) "
-                 "VALUES(%s, %s, %s, %s, %s, %s, %s)")
-        params = (task.type_task, task.user_id, task.date_action,
-                  task.message.type_message, task.message.text, task.message.media_id,  # type: ignore
-                  task.active, datetime_now, datetime_now, )
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-        pass
 
     # Users - Lessons
     def add_lesson_count(self, id: int):
@@ -1205,21 +1167,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return None
-
-    def minus_calculator_uses_count(self, user_id: int):
-        """Минус 1 к значению использований у пользователя"""
-        query = 'UPDATE \"BotSettings\" SET "usesCount" = %s WHERE "userId" = %s'
-        uses_count = self.get_calculator_uses_count(user_id) or 1
-        params = (uses_count - 1, user_id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     def get_user_calc_freeze(self, user_id: int) -> datetime | None:
         market = self.get_user_current_market(user_id)
@@ -1467,37 +1414,6 @@ class Database:
             self.curs.execute(query, params)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_calculations(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_calculation(self, id: int, weeks=False):
-        query = 'SELECT * FROM "Calculation" WHERE id = %s'
-        params = id,
-
-        if weeks:
-            query += ' AND "createdAt" > %s AND "createdAt" < %s'
-            params = (*params, datetime.now() - timedelta(7), datetime.now())
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_calculations(data) if (data is not None) else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def get_last_tools(self, user_id: int, market: MARKETS_TYPE = 'crypto') -> list[str]:
-        query = 'SELECT tool FROM "Calculation" WHERE "userId" = %s AND market = %s AND tool is not NULL '
-        query += 'GROUP BY tool ORDER BY MAX("createdAt") DESC'
-        params = user_id, market
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: str(el.get('tool') or ''), data))
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
@@ -1907,35 +1823,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return False
-
-    def delete_unfinished_calc_by_user(self, user_id: int):
-        query = 'DELETE FROM "UnfinishedCalc" WHERE "userId" = %s'
-        params = user_id,
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def get_unfinished_calc_by_user(self, user_id: int):
-        query = 'SELECT * FROM \"UnfinishedCalc\" WHERE \"userId\" = %s'
-        params = user_id,
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return None
-
-            return self._data_to_unfinished_calc(data)
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
 
 
 db = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)
