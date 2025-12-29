@@ -1,4 +1,3 @@
-from typing import Any
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
@@ -7,7 +6,6 @@ from config_logger import logger
 from db import db
 from data.data import liteDb
 from service import user_settings_storage
-from Classes import text_editor
 from models import LANGUAGES, CallbackQuery, User, StateContext
 from services import auth, calculation, settings
 
@@ -15,11 +13,11 @@ from states.settings import FirstCalcState, SettingsState
 
 from messages.common import msg_success_edit
 from messages.enter import msg_choose_lang, msg_enter_atr_percent, msg_enter_auto_take, msg_enter_bars, msg_enter_bars_count, msg_enter_cancel_at, msg_enter_currency, msg_enter_day_risk, msg_enter_deposit, msg_enter_first_deposit, msg_enter_market, msg_enter_risk_percent, msg_enter_round_count, msg_enter_splitting, msg_enter_summury_profit_type, msg_enter_take_profit, msg_enter_tr_stop, msg_enter_trading_style, msg_enter_trading_type
-from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base, msg_settings_change_market
+from messages.settings import msg_choose_exchange_level, msg_confirm_reset, msg_enter_exchange, msg_settings_change_base
 from messages.main import msg_success_base_set, msg_welcome
 
 from common.calc_step import choose_calculate_step
-from common.utils import delete_message, edit_message, get_print_float
+from common.utils import edit_message, get_print_float
 
 from keyboards.main import kb_first_calc
 from keyboards.settings import (
@@ -213,8 +211,6 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 user_settings_storage.set_lang(user.tgId, langg)
 
                 if 'first' in type:
-                    liteDb.setFirstLang(user.tgId)
-
                     await bot.edit_message_text(
                         msg_welcome(langg), chat_id, mes_id,
                         reply_markup=kb_first_calc(langg),
@@ -251,74 +247,6 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             chat_id, mes_id,
             reply_markup=kb_change_base(user.lang)
         )
-
-    if 'market' in type:
-        type_list = type.split('_')
-
-        if len(type_list) == 1:
-            text = text_editor.get(
-                'settings_market',
-                user.lang if user.lang == 'ru' else 'en'
-            )
-
-            # market = db.get_user_current_market(user.id)
-            market = 'crypto'
-
-            kb = kb_change_market(user.lang, '', market)
-
-            if user.lang == 'ru' and text[1] != '':
-                await delete_message(bot, chat_id, mes_id)
-
-                await bot.send_animation(
-                    chat_id, text[1] or 'CgACAgIAAxkBAAIBK2aFbYeuDAM1Re96gn3ps4JUeVy3AAJaSQACYZzRSaXZeP8tB3j8NQQ',
-                    caption=text[0],
-                    reply_markup=kb
-                )
-            else:
-                await bot.edit_message_text(
-                    msg_settings_change_market(user.lang),
-                    chat_id, mes_id,
-                    reply_markup=kb
-                )
-        else:
-            market: Any = type_list[1]
-            try:
-                action = type_list[2]
-            except:
-                action = ''
-
-            db.set_calculator_user_market(user.id, market)
-
-            if action == 'first':
-                liteDb.setUserFirstMarket(user.tgId, market)
-
-                if market == 'RF':
-                    currency = 'RUB'
-                elif market == 'USA':
-                    currency = 'USD'
-                elif market == 'crypto':
-                    currency = 'USDT'
-                else:
-                    currency = ''
-
-                if currency == '':
-                    await bot.edit_message_text(
-                        msg_enter_currency(user.lang), chat_id, mes_id,
-                        reply_markup=kb_change_currency(user.lang, 'welcome')
-                    )
-                    await state.set(SettingsState.currency)
-                    await state.add_data(
-                        action='welcome'
-                    )
-                else:
-                    user_settings_storage.set_currency(
-                        user.tgId, currency.upper())
-                    await state.set(FirstCalcState.deposit)
-                    await bot.edit_message_text(
-                        msg_enter_deposit(user.lang), chat_id, mes_id
-                    )
-            else:
-                await send_settings(bot, call.message, state, user)
 
     if type == 'first_dep':
         await state.set(FirstCalcState.deposit)
@@ -512,10 +440,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             await send_settings(bot, call.message, state, user)
 
     if type == 'calc_output':
-        cur_calc_output = db.get_user_calc_output(user.id)
         db.set_user_calc_output(
             user.id,
-            'text' if cur_calc_output == 'photo' else 'photo'
+            'text'
         )
         await send_dop_settings(bot, call.message, state, user)
 
@@ -526,7 +453,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         )
 
     if type == 'set_risk_update':
-        liteDb.reverseRiskUpdate(user.tgId)
+        # TODO - Для чего это было?
+        # liteDb.reverseRiskUpdate(user.tgId)
         await send_dop_settings(bot, call.message, state, user)
 
     if type == 'exchange':

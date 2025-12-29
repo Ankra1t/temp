@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from Classes.BlockTGBotSender import send_same_message_to_users
 from db import db
 from models import Post, CallbackQuery, StateContext
 
@@ -12,6 +11,8 @@ from keyboards.livepost import (
     kb_livepost_market, kb_livepost_time
 )
 from pages.admin import send_admin_main
+
+# TODO - Удалить livepost
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):
@@ -71,9 +72,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                     post: Post = data.get('post', {})
 
                 await bot.edit_message_text('Отправка...', chat_id, mes_id)
-                await send_same_message_to_users(
-                    bot, users, post
-                )
                 await bot.edit_message_text(
                     'Успешно отправлен!', chat_id, mes_id)
                 await state.delete()
@@ -90,7 +88,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(LivepostCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         livepost=livepost_factory.filter()
     )

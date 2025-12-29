@@ -7,7 +7,6 @@ from config_logger import logger
 from db import db
 from data.data import liteDb
 from service import user_settings_storage
-from Classes import currencyService
 from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery, StateContext, User
 
 from states.calculate import CalculateState
@@ -98,22 +97,13 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         user_settings = user_settings_storage.get_or_create(user.tgId)
         user_currency = getattr(user_settings, 'currency') or 'USD'
 
-        price = currencyService.getPrice(pair_arr[0], pair_arr[1])
         pairs = [pair]
         if user_currency not in pair:
             pairs.append(f'{user_currency}/{pair_arr[1]}')
             pairs.append(f'{pair_arr[0]}/{user_currency}')
 
-        prices = currencyService.getPairsPrice(pairs) or {}
-
-        forex = ForexInfo(
-            pair=(pair_arr[0], pair_arr[1]),
-            price=prices.get(pair, 1),
-            cross_prices=prices
-        )
-
         await state.add_data(
-            forex=forex,
+            forex=ForexInfo(cross_prices={}, pair=('', ''), price=1),
         )
         await choose_calculate_step(
             bot, call.message, state, user,

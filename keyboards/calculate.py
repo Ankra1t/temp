@@ -3,9 +3,7 @@ from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
 from common.utils import get_print_float
-from data.data import liteDb
 from common.keyboard import back_txt, cancel_txt
-from db import db
 from models import LANGUAGES_TYPE, CallbackQuery
 
 
@@ -69,7 +67,7 @@ def kb_tool(lang: LANGUAGES_TYPE, prev_tools: list[str]):
 
 
 def kb_price(lang: LANGUAGES_TYPE, user_id: int, is_risk_update=False, open_price: float | None = None):
-    is_user_risk_update = liteDb.getRiskUpdate(user_id)
+    # is_user_risk_update = liteDb.getRiskUpdate(user_id)
 
     texts = {
         'ru': {
@@ -92,7 +90,7 @@ def kb_price(lang: LANGUAGES_TYPE, user_id: int, is_risk_update=False, open_pric
         btn_value = getButton(str(open_price), f'open_price+{open_price}')
         keyboard.add(btn_value)
 
-    if is_risk_update and is_user_risk_update:
+    if is_risk_update:
         btn_risk_50 = getButton(f'1/2 {texts[lang]["risk"]}', 'risk0.5')
         btn_risk_33 = getButton(f'1/3 {texts[lang]["risk"]}', 'risk0.33')
         keyboard.add(btn_risk_50, btn_risk_33)
@@ -128,8 +126,10 @@ def kb_calc_atr(lang: LANGUAGES_TYPE, user_id: int, avg_atr: float | None = None
         getButton(f'⚡️ {texts[lang]}', 'calc_atr')
     )
 
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    isAdmin = db.get_worker_role(user_db_id)
+    # TODO: Добавить проверку админа через API
+    # user_db_id = db.get_user_id_by_tg_id(user_id)
+    # isAdmin = db.get_worker_role(user_db_id)
+    isAdmin = False
 
     if isAdmin and avg_atr is not None:
         keyboard.add(

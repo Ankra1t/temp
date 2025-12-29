@@ -63,15 +63,6 @@ async def handle_nickname(message: Message, bot: AsyncTeleBot, state: StateConte
         )
         return
 
-    res = db.set_user_nickname(user.id, nickname)
-
-    if res == 'Nickname has taken':
-        await bot.send_message(
-            chat_id, msg_enter_nickname(user.lang, 'taken'),
-            reply_markup=kb_user_params_back(user.lang)
-        )
-        return
-
     await bot.send_message(chat_id, msg_success_edit(user.lang))
     await send_user_params(bot, message, state, user, True)
 

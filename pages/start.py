@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from data.data import liteDb
-from db import db
 from service import user_settings_storage
 
 from common.utils import send_in_development
@@ -17,6 +16,7 @@ from keyboards.calculate import kb_calc_atr, kb_calc_direct
 
 from models import Calculation, Message, StateContext, User
 from services import calculation, channel_calc, ticker
+
 
 async def send_start_by_user(
     bot: AsyncTeleBot,
@@ -162,8 +162,10 @@ async def start_with_calc(
         newStop=calc.newStop
     )
 
-    new_id = db.add_calculation(new_calc)
-    new_calc.id = new_id or -1
+    # TODO: Добавить создание расчёта через API
+    # new_id = db.add_calculation(new_calc)
+    # new_calc.id = new_id or -1
+    new_calc.id = -1
     await send_calculation(bot, message, state, user, new_calc, True)
 
 

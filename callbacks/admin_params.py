@@ -3,7 +3,6 @@ from telebot.types import InaccessibleMessage
 
 from db import db
 from models import CallbackQuery, StateContext, User
-from Classes import pay_guard
 
 from states.admin_params import AdminParamsState
 
@@ -76,16 +75,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             f'Отправьте новый текст для name={text_name}',
             reply_markup=kb_params_back()
         )
-
-    elif type == 'change_trial_days':
-        days = pay_guard.get_option_trial_days()
-        await bot.edit_message_text(
-            f'Сейчас для нового пользователя кол-во дней пробного периода {days}дн. '
-            f'\n\n'
-            f'Отправьте новое значение дней:', chat_id, mes_id,
-            reply_markup=kb_params_back()
-        )
-        await state.set(AdminParamsState.count_trial_days)
 
     elif type == 'change':
         await bot.edit_message_text(

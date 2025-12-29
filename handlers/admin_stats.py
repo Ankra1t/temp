@@ -8,7 +8,6 @@ from common.vars import DATE_FORMAT
 from common.dt import get_datetime_now, get_str_by_datetime
 
 from models import Message, StateContext
-from Classes import base_statis
 
 from states.admin_stats import AdminStatisticsState
 from keyboards.admin_stats import kb_statistics_back
@@ -61,10 +60,6 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot, state: StateCon
             f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
             reply_markup=None
         )
-        await base_statis.show_paid_users(
-            bot,
-            message, start_to_fin=f'{start_date_filter}|{fin_date_filter}'
-        )
         await bot.send_message(
             chat_id,
             "Вернуться:",
@@ -105,10 +100,6 @@ async def handle_fin_date(message: Message, bot: AsyncTeleBot, state: StateConte
         chat_id,
         f"Список клиентов с платежами, за выбранный период c {date_start_show} по {date_fin_show} :",
         reply_markup=None
-    )
-    await base_statis.show_paid_users(
-        bot,
-        message, start_to_fin=f'{start_date_filter}|{fin_date_filter}'
     )
     await bot.send_message(
         chat_id,

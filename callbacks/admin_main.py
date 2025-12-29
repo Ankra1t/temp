@@ -11,7 +11,7 @@ from pages.calculate import send_admin_send_settings
 from pages.user import send_site_code
 from pages.admin import (
     send_admin_main, send_admin_subs, send_admin_tools_list, send_admin_users, send_admin_fut_posts, send_admin_workers,
-    send_admin_params, send_admin_payment, send_admin_tariffs
+    send_admin_params, send_admin_payment
 )
 from services import ticker
 from states.admin_params import AdminMainState
@@ -36,9 +36,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'fut_posts':
         await send_admin_fut_posts(bot, call.message, state)
-
-    if type == 'tariffs':
-        await send_admin_tariffs(bot, call.message, state)
 
     if type == 'params':
         await send_admin_params(bot, call.message, state)

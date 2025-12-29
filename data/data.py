@@ -11,41 +11,6 @@ class Data:
         )
         self.curs = self.connection.cursor()
 
-    def createUsersTable(self):
-        try:
-            self.curs.execute('''
-                CREATE TABLE NewTemp (
-                    id INTEGER PRIMARY KEY,
-				    is_risk_update BOOLEAN NOT NULL DEFAULT(FALSE),
-				    first_try BOOLEAN NOT NULL DEFAULT(FALSE),
-				    first_lang BOOLEAN NOT NULL DEFAULT(FALSE),
-                    start_calc_count INTEGER NOT NULL DEFAULT(0),
-                    pages_count INTEGER NOT NULL DEFAULT(0),
-                    exchange STRING,
-                    fee FLOAT,
-                    stop STRING,
-                    style_change BOLLEAN NOT NULL DEFAULT(FALSE),
-                    first_market STRING,
-                    is_auto_atr BOOLEAN NOT NULL DEFAULT(FALSE),
-                    atr_bars STRING NOT NULL DEFAULT('1h+5')
-                );
-			''')
-            self.curs.execute('''
-                INSERT INTO NewTemp
- (id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change)
- SELECT id, is_risk_update, first_try, start_calc_count, pages_count, exchange, fee, stop, style_change
- FROM Users;
-			''')
-            self.curs.execute('''
-                DROP TABLE Users;
-			''')
-            self.curs.execute('''
-                ALTER TABLE NewTemp RENAME TO Users;
-			''')
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
     def addUser(self, tgId: int):
         try:
             data = self.curs.execute(
@@ -57,84 +22,6 @@ class Data:
             self.connection.commit()
         except Exception as e:
             print(e)
-
-    def getRiskUpdate(self, tgId: int) -> bool:
-        self.addUser(tgId)
-        try:
-            data = self.curs.execute(
-                "SELECT is_risk_update FROM Users WHERE id = ?",
-                (tgId,)
-            ).fetchone()
-
-            if data is None:
-                return False
-
-            return data[0] == 1
-        except Exception as e:
-            print(e)
-            return False
-
-    def reverseRiskUpdate(self, tgId: int):
-        prev_value = self.getRiskUpdate(tgId)
-        try:
-            self.curs.execute(
-                'UPDATE Users SET is_risk_update = ? WHERE id = ?',
-                (not prev_value, tgId)
-            )
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def setFirstTry(self, tgId: int):
-        self.addUser(tgId)
-        try:
-            self.curs.execute(
-                "UPDATE Users SET first_try = ? WHERE id = ?", (True, tgId,)
-            )
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def addStartCalcCount(self, tgId: int):
-        self.addUser(tgId)
-        try:
-            data = self.curs.execute(
-                "SELECT start_calc_count FROM Users WHERE id = ?", (tgId,)
-            ).fetchone()
-            data = data[0] if data is not None else 0
-
-            self.curs.execute(
-                "UPDATE Users SET start_calc_count = ? WHERE id = ?", (
-                    data + 1, tgId,)
-            )
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def addPagesCount(self, tgId: int):
-        self.addUser(tgId)
-        try:
-            data = self.curs.execute(
-                "SELECT pages_count FROM Users WHERE id = ?", (tgId,)
-            ).fetchone()
-            data = data[0] if data is not None else 0
-
-            self.curs.execute(
-                "UPDATE Users SET pages_count = ? WHERE id = ?", (
-                    data + 1, tgId,)
-            )
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def getFirstTryUser(self, tgId: int) -> int:
-        try:
-            data = self.curs.execute(
-                "SELECT first_try FROM Users WHERE id = ?", (tgId,)).fetchone()
-            return data[0] if data is not None else 0
-        except Exception as e:
-            print(e)
-            return 0
 
     def getUserExchange(self, tgId: int) -> tuple[str, float] | None:
         try:
@@ -162,25 +49,6 @@ class Data:
         except Exception as e:
             print(e)
             return False
-
-    def setFirstLang(self, tgId: int):
-        self.addUser(tgId)
-        try:
-            self.curs.execute(
-                "UPDATE Users SET first_lang = ? WHERE id = ?", (True, tgId,)
-            )
-            self.connection.commit()
-        except Exception as e:
-            print(e)
-
-    def getFirstLang(self, tgId: int) -> int:
-        try:
-            data = self.curs.execute(
-                "SELECT first_lang FROM Users WHERE id = ?", (tgId,)).fetchone()
-            return data[0] if data is not None else 0
-        except Exception as e:
-            print(e)
-            return 0
 
     def getUserStop(self, tgId: int) -> str | None:
         try:
@@ -359,83 +227,6 @@ CREATE TABLE IF NOT EXISTS Calcs (
         except Exception as e:
             print(e)
             return None
-
-    # Ton
-    def createTonStorage(self):
-        try:
-            self.curs.execute("""
-CREATE TABLE IF NOT EXISTS TonStorage (
-    key STRING PRIMARY KEY,
-    value STRING NOT NULL
-);
-""")
-        except:
-            pass
-
-    def setTonStorage(self, key: str, value: str):
-        try:
-            self.curs.execute(
-                'INSERT INTO TonStorage (key, value) VALUES (?, ?)',
-                (key, value)
-            )
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def getTonStorage(self, key: str) -> str | None:
-        try:
-            data = self.curs.execute(
-                'SELECT value FROM TonStorage WHERE key = ?',
-                (key,)
-            ).fetchone()
-
-            return data[0] if data is not None else None
-        except Exception as e:
-            print(e)
-            return None
-
-    def delTonStorage(self, key: str):
-        try:
-            self.curs.execute(
-                'DELETE FROM TonStorage WHERE key = ?',
-                (key)
-            )
-            self.connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def createSendSettings(self):
-        try:
-            # self.curs.execute("""DROP TABLE SendSettings""")
-            self.curs.execute("""CREATE TABLE IF NOT EXISTS SendSettings (
-                    name STRING NOT NULL,
-                    value STRING
-                );
-            """)
-            self.curs.execute("""
-                INSERT INTO SendSettings (name, value) VALUES (?, ?)
-            """, ('withoutStop', 'True')
-            )
-            self.curs.execute("""
-                INSERT INTO SendSettings (name, value) VALUES (?, ?)
-            """, ('isVote', 'False')
-            )
-            self.curs.execute("""
-                INSERT INTO SendSettings (name, value) VALUES (?, ?)
-            """, ('time', 'day')
-            )
-            self.curs.execute("""
-                INSERT INTO SendSettings (name, value) VALUES (?, ?)
-            """, ('style', '')
-            )
-
-            self.connection.commit()
-        except Exception as e:
-            print(e)
 
     def updateSendSettings(self, name: str, value: str | None):
         try:

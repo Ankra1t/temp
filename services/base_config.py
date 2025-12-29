@@ -1,21 +1,17 @@
-from db import db
 import requests
 from config_logger import logger
+from config_global import API_AUTH_KEY
 
 session = requests.Session()
 session.headers.update({
     'content-type': 'application/json',
-    'Accept': 'application/json, text/plain, */*'
+    'Accept': 'application/json, text/plain, */*',
+    'tg-api-key': API_AUTH_KEY,
 })
 
 
 def session_decorator(func):
     def wrapper(*args, **kwargs):
-        access_token = db.get_access_token() or ''
-        session.headers.update({
-            'tg-api-key': access_token,
-        })
-
         userId = kwargs.get('userId') or 1
         if userId:
             session.headers.update({

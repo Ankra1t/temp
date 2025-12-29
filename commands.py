@@ -84,21 +84,6 @@ async def _calc(message: Message, bot: AsyncTeleBot, state: StateContext, user: 
     await send_main(bot, message, state, user, True)
 
 
-async def _teststart(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    user_id = message.from_user.id
-
-    user_db_id = db.get_user_id_by_tg_id(user_id)
-    db.set_calculator_user_market(user_db_id, 'crypto')
-
-    await send_start_by_user(
-        bot,
-        message,
-        state,
-        user,
-        True,
-    )
-
-
 async def _faq(message: Message, bot: AsyncTeleBot, state: StateContext):
     text = db.get_text_by_name('FAQ')
     msg = text.message if (text is not None) else '*Ошибка*'
@@ -175,8 +160,6 @@ async def _test(message: Message, bot: AsyncTeleBot):
 def commands_registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
-
-    reg_mes(_teststart, commands=['teststart'])
 
     reg_mes(_start, commands=['start'])
 

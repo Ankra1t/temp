@@ -19,7 +19,6 @@ from states.admin_params import AdminParamsState
 from states.calculate import CalculateState, ForexCalcState
 from states.stats import ChannelCalcState, StatsState
 
-from common.calculation import get_count_value_bet
 from common.utils import delete_message, edit_message
 from common.dt import get_datetime_now, get_str_by_datetime
 
@@ -27,8 +26,6 @@ from config_global import PROD
 from config_logger import logger
 
 from db import db
-from Classes import calcService
-from messages.stats import msg_market_stats
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc
 
@@ -44,7 +41,7 @@ from keyboards.stats import (
     kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_confirm_back, kb_channel_item_back, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
-    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time, kb_stats,
+    kb_deal_profit_minus, kb_deal_result, kb_send_calc_time
 )
 from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
 
@@ -254,20 +251,24 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 )
             else:
                 if 'loss' in profit:
-                    rate = float(profit.replace('loss', ''))
-                    _, _, spot_rate = get_count_value_bet(calc_info)
-                    calcService.set_profit(
-                        user.tgId,
-                        calc_id, -calc_info.riskValue * rate * spot_rate
-                    )
+                    # TODO - Проверить, зачем выставлять результат отсюда
+                    pass
+                    # rate = float(profit.replace('loss', ''))
+                    # _, _, spot_rate = get_count_value_bet(calc_info)
+                    # calcService.set_profit(
+                    #     user.tgId,
+                    #     calc_id, -calc_info.riskValue * rate * spot_rate
+                    # )
                 elif profit != 'cancel':
-                    _, _, spot_rate = get_count_value_bet(calc_info)
-                    profit_result = calc_info.riskValue * \
-                        int(profit) * spot_rate
-                    calcService.set_profit(
-                        user.tgId,
-                        calc_id, profit_result
-                    )
+                    # TODO - Проверить, зачем выставлять результат отсюда
+                    pass
+                    # _, _, spot_rate = get_count_value_bet(calc_info)
+                    # profit_result = calc_info.riskValue * \
+                    #     int(profit) * spot_rate
+                    # calcService.set_profit(
+                    #     user.tgId,
+                    #     calc_id, profit_result
+                    # )
                 else:
                     is_cancel = True
 
@@ -315,12 +316,15 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if type == 'stats_market':
-        stats = calcService.get_stats(user.tgId, stats_market)
-        text = msg_market_stats(user.lang, stats_market, stats)
+        # stats = calcService.get_stats(user.tgId, stats_market)
+        # text = msg_market_stats(user.lang, stats_market, stats)
 
-        await bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=kb_stats(user.lang, 'market')
+        # await bot.edit_message_text(
+        #     text, chat_id, mes_id,
+        #     reply_markup=ww(user.lang, 'market')
+        # )
+        await bot.send_message(
+            chat_id, 'В разработке'
         )
 
     if type == 'back_calc' or type == 'refresh':

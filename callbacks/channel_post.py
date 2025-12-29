@@ -8,7 +8,6 @@ from config_logger import logger
 from data.data import liteDb
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
-from Classes import calcService
 from pages.admin import send_admin_main
 from services import calculation, channel_calc, settings, ticker
 
@@ -226,14 +225,15 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         _, value = type.split('+')
         value = float(value)
 
+        # TODO - Больше нет выставления результата вручную
         # _, _, spot_rate = get_count_value_bet(calc)
-        spot_rate = 1
-        calcService.set_profit(
-            user.tgId,
-            calc_id,
-            (-1 if 'stop+' in type else 1) *
-            calc.riskValue * value * spot_rate
-        )
+        # spot_rate = 1
+        # calcService.set_profit(
+        #     user.tgId,
+        #     calc_id,
+        #     (-1 if 'stop+' in type else 1) *
+        #     calc.riskValue * value * spot_rate
+        # )
 
         calc = calculation.update(
             userId=user.id, calcId=calc_id, status='FINISH'

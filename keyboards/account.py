@@ -27,31 +27,23 @@ def kb_user_account(lang: LANGUAGES_TYPE, user_id: int):
     texts = {
         'ru': {
             'refs': 'Рефералка',
-            'purchases': 'Мои покупки',
             'params': 'Параметры',
             'support': 'Тех. поддержка',
-            'wallet': 'Кошелёк',
         },
         'en': {
             'refs': 'Referral program',
-            'purchases': 'My purchases',
             'params': 'Params',
             'support': 'Support',
-            'wallet': 'Wallet',
         },
         'uz': {
             'refs': 'Yo\'naltirish',
-            'purchases': 'Mening xaridlarim',
             'params': 'Parametrlar',
             'support': 'Yordam',
-            'wallet': 'Hamyon',
         },
         'tr': {
             'refs': 'Referans',
-            'purchases': 'Satın alımlarım',
             'params': 'Paramler',
             'support': 'Teknik Destek',
-            'wallet': 'Cüzdan',
         },
     }
 
@@ -59,17 +51,13 @@ def kb_user_account(lang: LANGUAGES_TYPE, user_id: int):
 
     btn_support = getButton(f"{texts[lang]['support']}", 'support')
     referral = getButton(f"🌐 {texts[lang]['refs']}", 'referral')
-    purchases = getButton(f"🛍 {texts[lang]['purchases']}", 'purchases')
     params = getButton(f"🛠 {texts[lang]['params']}", 'params')
     # password = getButton('Изменить пароль', 'password')
-    wallet = getButton(texts[lang]['wallet'], 'wallet')
     back = getButton(back_txt(lang), 'main')
     # btn5 = getButton("Пополнить баланс")
 
-    keyboard.add(purchases, referral)
+    keyboard.add(referral)
     keyboard.add(params, btn_support)
-    if user_id == 6919899538:
-        keyboard.add(wallet)
 
     keyboard.add(back)
     return keyboard
@@ -107,12 +95,6 @@ def kb_user_referral(lang: LANGUAGES_TYPE, referals_count=0):
 def kb_user_referral_list(lang: LANGUAGES_TYPE):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(getButton(back_txt(lang), 'referral'))
-    return keyboard
-
-
-def kb_user_purchases(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(getButton(back_txt(lang), 'back'))
     return keyboard
 
 
@@ -227,32 +209,4 @@ def kb_support(lang: LANGUAGES_TYPE, link: str):
 
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(btn_link, btn_news, btn_back)
-    return keyboard
-
-
-def kb_wallets(lang: LANGUAGES_TYPE, wallets: list[str]):
-    row_width = 2
-
-    back = getButton(back_txt(lang), 'back')
-    wal_buttons = [getButton(el, f'connect++{el}') for el in wallets]
-
-    keyboard = InlineKeyboardMarkup(row_width=row_width)
-    keyboard.add(*wal_buttons, back)
-    return keyboard
-
-
-def kb_wallet_connect(lang: LANGUAGES_TYPE, url: str):
-    texts = {
-        'ru': 'Подключить',
-        'en': 'Connect',
-        'uz': 'Ulanmoq',
-        'tr': 'Bağlamak',
-    }
-
-    back = getButton(back_txt(lang), 'wallet')
-    url_btn = InlineKeyboardButton(texts[lang], url)
-    btn_check = getButton('CHECK', 'wallet_check')
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(url_btn, btn_check, back)
     return keyboard

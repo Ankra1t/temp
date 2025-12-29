@@ -1,5 +1,4 @@
 from models import CALC_STATUS_TYPE, LANGUAGES_TYPE, MARKETS_TYPE, TRADING_TYPE, Calculation
-from Classes import text_editor
 
 
 POINT = '•'
@@ -117,16 +116,6 @@ def transl_tr_style(trading_style: str | None, lang: LANGUAGES_TYPE = 'ru'):
         }
 
         result = texts.get(trading_style, '')
-
-        if result is None:
-            try:
-                result = str(
-                    text_editor.translator.translate(
-                        trading_style, 'en', 'ru'
-                    )
-                )
-            except:
-                pass
 
     ch_styles = ['в канале', 'В канале']
     return 'торговля внутри канала' if lang == 'ru' and trading_style in ch_styles else result

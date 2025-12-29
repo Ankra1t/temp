@@ -220,7 +220,6 @@ async def choose_calculate_step(
                     await bot.send_message(
                         chat_id, msg_calc_buttons_info(user.lang)
                     )
-                    liteDb.setFirstTry(user.tgId)
                 return
 
     await state.set(new_state)
@@ -305,8 +304,6 @@ async def choose_first_calculate_step(
         await state.set(ForexCalcState.pair)
     else:
         await state.set(CalculateState.tool)
-
-    liteDb.addStartCalcCount(user.tgId)
 
     state_data = {
         'tool': None,

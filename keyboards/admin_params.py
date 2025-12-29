@@ -28,13 +28,11 @@ def kb_params():
     btn_calc = getButton('⌨️ Калькулятор', 'calculator')
     btn_texts = getButton('✏️ Изменить тексты', 'update_texts')
     btn_change = getButton('Изменить', 'change')
-    btn_trial = getButton('🎁 Изменить пробный период', 'change_trial_days')
 
     back = getButton(back_txt(), 'go_main')
 
     keyboard.add(btn_calc, btn_texts)
     keyboard.add(btn_change)
-    keyboard.add(btn_trial)
     keyboard.add(back)
     return keyboard
 

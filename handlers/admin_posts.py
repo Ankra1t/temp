@@ -2,8 +2,6 @@ import re
 from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
 
-from Classes.BlockTGBotSender import BlockTGBotSender
-
 from db import db
 from models import Post, PostDetails, Message, StateContext, User
 from config_logger import logger
@@ -20,6 +18,7 @@ from keyboards.livepost import (
 
 from pages.admin import send_admin_post, send_admin_params
 
+# TODO - удаляем
 
 ticker_pattern = r'[a-zA-Z]+\/[a-zA-Z]+'
 
@@ -138,9 +137,6 @@ async def handle_new_post_signal(message: Message, bot: AsyncTeleBot, state: Sta
         kind = 'signal'
         new_message = await bot.send_message(chat_id, 'Отправка...')
 
-        tg_sender = BlockTGBotSender(bot, [], post)
-        tg_sender.send()
-
         await state.delete()
         await bot.edit_message_text('Успешно отправлен!', chat_id, new_message.id)
         return
@@ -225,9 +221,6 @@ async def handle_new_post_datetime(message: Message, bot: AsyncTeleBot, state: S
         )
 
     if mes_text == '-':
-        tg_sender = BlockTGBotSender(bot, [], post)
-        tg_sender.send()
-
         await state.delete()
         await send_admin_params(bot, message, state, True)
     else:

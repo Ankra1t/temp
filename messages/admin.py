@@ -1,7 +1,6 @@
-from common.dt import get_datetime_now, get_str_by_datetime
 from common.utils import get_print_float
 from messages.common import POINT
-from models import LANGUAGES_TYPE, Price, SubscribeInfo
+from models import LANGUAGES_TYPE, SubscribeInfo
 
 
 def msg_admin_main(
@@ -59,24 +58,6 @@ def msg_admin_fut_posts(posts_count: int):
     return f"""📋 <b><u>Отложенные посты</u></b>
 
 Количество: <b>{posts_count}</b>"""
-
-
-def msg_admin_tariff(tariff: Price):
-    discount = ''
-    if tariff.discount is not None:
-        now = get_datetime_now()
-        if tariff.discount.findate > now:
-            fin_date = get_str_by_datetime(tariff.discount.findate)
-            discount = f'Скидка <b>{get_print_float(tariff.discount.percent, 2)}%</b> до {fin_date}'
-
-    return f"""
-{tariff.name}
-<b>{get_print_float(tariff.price)} {tariff.currency}</b>
-{tariff.description}
-
-Продукт: <b>{tariff.type_product}</b>
-Действует <b>{tariff.duration_days}</b> дней
-""" + (f'\n{discount}' if discount != '' else '')
 
 
 def msg_admin_users_markets(counts: dict[str, int]):

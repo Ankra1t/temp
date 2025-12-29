@@ -2,8 +2,6 @@ import re
 from telebot.async_telebot import AsyncTeleBot
 
 from config_logger import logger
-from Classes import currencyService
-from db import db
 from service import user_settings_storage
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
@@ -65,7 +63,8 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         if calc_info is None or calc_info.ActiveCalc:
             return
 
-        db.change_calculation_tool(stat_id, tool)
+        # TODO: Обновить инструмент через API
+        # db.change_calculation_tool(stat_id, tool)
 
         calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info:
@@ -108,12 +107,10 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         pairs.append(f'{user_currency}/{pair_arr[1]}')
         pairs.append(f'{pair_arr[0]}/{user_currency}')
 
-    prices = currencyService.getPairsPrice(pairs)
-
     forex = ForexInfo(
-        pair=(pair_arr[0], pair_arr[1]),
-        price=(prices or {}).get(pair, 1),
-        cross_prices=prices or {}
+        pair=('', ''),
+        price=1,
+        cross_prices={}
     )
 
     async with state.data() as data:
@@ -125,7 +122,8 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
             bot, message, state, user, last_value='forex'
         )
     else:
-        db.change_calculation_forex(stat_id, forex)
+        # TODO: Обновить forex через API
+        # db.change_calculation_forex(stat_id, forex)
 
         calc_info = calculation.get(userId=user.id, calcId=stat_id)
         if calc_info is None:
@@ -180,8 +178,7 @@ async def handle_currency(message: Message, bot: AsyncTeleBot, state: StateConte
     logger.info(
         f'callback "handle_currency" user_tg_id={user.tgId} value={value}')
 
-    check = currencyService.getPrice('USD', value)
-    if not check:
+    if True:
         new_mes = await bot.send_message(
             chat_id, msg_currency_error(user.lang, 'not_found'),
             reply_markup=kb_change_currency(user.lang, 'calc')
@@ -299,7 +296,8 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
         if calc_info is None:
             return
 
-        db.change_calculation_style(stat_id, value)
+        # TODO: Обновить стиль через API
+        # db.change_calculation_style(stat_id, value)
         calc_info.tradingStyle = value
 
         await send_calculation(bot, message, state, user, calc_info, True)
@@ -341,7 +339,8 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
                 await state.add_data(del_mes_id=new_mes.id)
                 return
 
-            db.change_calculation_open_price(stat_id, value)
+            # TODO: Обновить цену открытия через API
+            # db.change_calculation_open_price(stat_id, value)
             calc.openPrice = value
 
             await send_calculation(bot, message, state, user, calc, True)

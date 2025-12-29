@@ -263,7 +263,7 @@ def msg_settings_change_market(lang: LANGUAGES_TYPE):
     return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
 
 
-def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool):
+def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool = True):
     texts = {
         'ru': {
             'main': 'Дополнительные настройки',

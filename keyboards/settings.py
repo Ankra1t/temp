@@ -47,7 +47,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
     texts = {
         'ru': {
             'lang': 'Язык',
-            'market': 'Рынок',
             'style': 'Стиль торговли',
             'trading_type': 'Тип торговли',
             'reset': 'Сброс',
@@ -60,7 +59,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
         },
         'en': {
             'lang': 'Language',
-            'market': 'Market',
             'style': 'Trading style',
             'trading_type': 'Trading type',
             'reset': 'Reset',
@@ -73,7 +71,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
         },
         'uz': {
             'lang': 'Tillar',
-            'market': 'Bozor',
             'style': 'Savdo uslubi',
             'trading_type': 'Savdo turi',
             'reset': 'Qayta o\'rnatish',
@@ -86,7 +83,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
         },
         'tr': {
             'lang': 'Dil',
-            'market': 'Pazar',
             'style': 'Ticaret tarzı',
             'trading_type': 'Ticaret türü',
             'reset': 'Sıfırla',
@@ -102,7 +98,6 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_lang = getButton('🌐 ' + texts[lang]["lang"], 'choose_lang')
-    btn_market = getButton('🏬 ' + texts[lang]["market"], 'market')
     btn_style = getButton('⚖️ ' + texts[lang]["style"], 'trading_style')
     btn_trading_type = getButton(
         '🔧 ' + texts[lang]["trading_type"], 'trading_type')
@@ -121,7 +116,7 @@ def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
 
     keyboard.add(btn_deposit_update)
     keyboard.add(
-        btn_market, btn_exchange,
+        btn_exchange,
         btn_trading_type, btn_style,
         btn_stop, btn_lang,
     )
@@ -924,7 +919,7 @@ def kb_change_fee(lang: LANGUAGES_TYPE):
     return keyboard
 
 
-def kb_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool):
+def kb_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool = True):
     texts = {
         'ru': {
             'calc_output': 'Вывод расчета: ' + ('текстом 📝' if output == 'photo' else 'картинкой 🖼'),

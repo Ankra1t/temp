@@ -6,11 +6,10 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from telebot.asyncio_helper import ApiTelegramException
 
 from common.dt import get_str_by_datetime
-from data.data import liteDb
 from db import db
 from service import user_settings_storage
 
-from models import Price, Post, UserInfo, LANGUAGES_TYPE, Message
+from models import Post, UserInfo, LANGUAGES_TYPE, Message
 
 
 T = TypeVar('T', int, float)
@@ -150,17 +149,6 @@ def get_normal_text(message: Message):
     return message.html_text or message.html_caption or ''
 
 
-def check_discount_price(tariff: Price, type: Literal['crypto', 'default'] = 'default'):
-    if type == 'default':
-        price = tariff.price
-    else:
-        price = tariff.price_crypto
-
-    if tariff.discount is None:
-        return price
-    return round(price * (1 - tariff.discount.percent / 100))
-
-
 async def get_post_from_message(bot: AsyncTeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):
     chat_id = message.chat.id
 
@@ -235,9 +223,7 @@ def get_short_user_info(user: UserInfo):
             if calc_settings.market == el:
                 is_set_settings = 1
                 break
-
-    is_tried = liteDb.getFirstTryUser(user.tg_id)
-    user_subsribe = db.get_current_subscribe_user(user.id)
+    user_subsribe = None
 
     if user_subsribe is None:
         sub_show = 'нет подписок'
@@ -252,7 +238,7 @@ def get_short_user_info(user: UserInfo):
         info = f'Подписка до: {sub_show}'
 
     user_show = (
-        f'{user.id} {nik}<b>{ban}</b> | {is_tried} | {is_set_settings}'
+        f'{user.id} {nik}<b>{ban}</b>  | {is_set_settings}'
         f'\n{info}'
         f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
     )

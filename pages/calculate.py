@@ -1,30 +1,25 @@
 from datetime import datetime, timedelta
 from math import ceil
 import math
-import os
 from typing import Literal
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
 from common.calculation import getStrValueCount
 from states.stats import ChannelCalcState, StatsState
-from common.utils import delete_message, edit_message, edit_message, get_print_float
+from common.utils import edit_message, edit_message, get_print_float
 from data.data import liteDb
 
-from db import db
 from service import user_settings_storage
-from Classes import calcService, hti
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
 from messages.calc import msg_calc_list, msg_calculation, msg_channel_calc
 from messages.errors import msg_sl_op_equal_error
 from messages.manual import msg_manual
-from messages.profile import msg_user_tariff
 from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
-from messages.users import msg_no_tariffs
 from messages.common import transl_status
-from messages.main import msg_freeze_calc, msg_no_uses
+from messages.main import msg_no_uses
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
@@ -37,13 +32,13 @@ from keyboards.channel_post import (
 from keyboards.main import kb_main, kb_violation
 from keyboards.manual import kb_manual, kb_manuals
 from keyboards.stats import kb_calc_activation, kb_calc_list, kb_calc_result, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
-from keyboards.tariff import kb_tariff_list, kb_user_tariff_back
 from keyboards.settings import (
     kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summary_profit,
 )
 
 from service.calc import CalcCreateRequest, calc_service
+from Classes import calcService
 
 
 async def send_main(
@@ -56,8 +51,6 @@ async def send_main(
     chat_id = message.chat.id
 
     await state.delete()
-
-    liteDb.addPagesCount(user.tgId)
 
     # TODO
     unfinished_calc = None
@@ -91,15 +84,12 @@ async def send_settings(
 
     await state.delete()
 
-    liteDb.addPagesCount(user.tgId)
-
-    is_risk_update = liteDb.getRiskUpdate(user.tgId)
     u_base = user_settings_storage.get_or_create(user.tgId)
 
     if u_base is None:
         return
 
-    msg = msg_settings(user.lang, u_base, is_risk_update)
+    msg = msg_settings(user.lang, u_base)
     markup = kb_settings(user.lang, user.id)
 
     if is_first:
@@ -122,11 +112,11 @@ async def send_dop_settings(
 
     await state.delete()
 
-    calc_output = db.get_user_calc_output(user.id)
-    is_risk_update = liteDb.getRiskUpdate(user.tgId)
+    # TODO: Получить формат вывода из API
+    calc_output = 'text'  # db.get_user_calc_output(user.id)
 
-    msg = msg_dop_settings(user.lang, calc_output, is_risk_update)
-    markup = kb_dop_settings(user.lang, calc_output, is_risk_update)
+    msg = msg_dop_settings(user.lang, calc_output)
+    markup = kb_dop_settings(user.lang, calc_output)
 
     if is_first:
         await bot.send_message(
@@ -349,8 +339,6 @@ async def send_stats(
 
     await state.delete()
 
-    liteDb.addPagesCount(user.tgId)
-
     values = calculation.getWeekStats(userId=user.id)
 
     if values is None:
@@ -536,6 +524,7 @@ async def send_calc_list(
     )
 
 
+# Убрано (оплата)
 async def send_tariffs_list_item(
     bot: AsyncTeleBot,
     message: Message,
@@ -547,54 +536,8 @@ async def send_tariffs_list_item(
     is_first=False,
 ):
     chat_id = message.chat.id
-    mes_id = message.id
-
-    tariffs = db.get_prices_by_product(tariff_type, True, True)
-    count = len(tariffs)
-
-    if count == 0:
-        await bot.edit_message_text(
-            msg_no_tariffs(user.lang), chat_id, mes_id,
-            reply_markup=kb_user_tariff_back(user.lang)
-        )
-    else:
-        tariff = tariffs[page]
-        tariff_id = tariff.id or 0
-
-        if user.lang == 'ru':
-            image = tariff.img
-        else:
-            image = tariff.img_en or tariff.img
-
-        text = msg_user_tariff(tariff)
-        keyboard = kb_tariff_list(
-            user.lang, tariff_id, count, tariff_type, page, is_rus
-        )
-
-        async def send():
-            if image is None:
-                await bot.send_message(chat_id, text, reply_markup=keyboard)
-            else:
-                await bot.send_photo(
-                    chat_id, image, '',
-                    reply_markup=keyboard
-                )
-
-        if is_first:
-            await send()
-        elif message.content_type == 'photo' and image is not None:
-            await bot.edit_message_media(
-                InputMediaPhoto(image, '', 'HTML'), chat_id, mes_id,
-                reply_markup=keyboard
-            )
-        elif message.content_type == 'text' and image is None:
-            await bot.edit_message_text(
-                text, chat_id, mes_id,
-                reply_markup=keyboard
-            )
-        else:
-            await delete_message(bot, chat_id, mes_id)
-            await send()
+    await state.delete()
+    await bot.send_message(chat_id, 'Тарифы недоступны')
 
 
 async def send_calculation(
@@ -609,11 +552,8 @@ async def send_calculation(
     is_activate=False,
 ):
     chat_id = message.chat.id
-    mes_id = message.id
 
     await state.delete()
-
-    calc_output = 'text'
 
     if is_list:
         calculation.update(userId=user.id, calcId=calc.id, openedList=True)
@@ -630,33 +570,18 @@ async def send_calculation(
 
     new_mes_id = None
 
-    if True or calc_output == 'text' or is_try:
-        text = msg_calculation(user.lang, calc, is_try)
+    text = msg_calculation(user.lang, calc, is_try)
 
-        if calc.photo is None:
-            if is_first:
-                new_mes_id = (await bot.send_message(chat_id, text, reply_markup=kb)).id
-            else:
-                await edit_message(bot, message, 'text', text, kb)
+    if calc.photo is None:
+        if is_first:
+            new_mes_id = (await bot.send_message(chat_id, text, reply_markup=kb)).id
         else:
-            if is_first:
-                new_mes_id = (await bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)).id
-            else:
-                await edit_message(bot, message, 'photo', text, kb, calc.photo)
-
+            await edit_message(bot, message, 'text', text, kb)
     else:
-        file_path, caption = hti.create_calculation_image(
-            user.tgId, calc
-        )
-
-        with open(file_path, 'rb') as photo:
-            if not is_first:
-                bot.delete_message(chat_id, mes_id)
-            await bot.send_photo(
-                chat_id, photo, caption=caption,
-                reply_markup=kb,
-            )
-        os.remove(file_path)
+        if is_first:
+            new_mes_id = (await bot.send_photo(chat_id, calc.photo, text, reply_markup=kb)).id
+        else:
+            await edit_message(bot, message, 'photo', text, kb, calc.photo)
 
     return new_mes_id
 
@@ -671,23 +596,21 @@ async def send_freeze(
 ):
     chat_id = message.chat.id
 
-    day_risk = calcService.check_day_risk(user.tgId, market)
-    if day_risk:
+    if False:
         await state.set(StatsState.freeze)
         await state.add_data(
             market=market,
         )
 
-        text = msg_freeze_calc(user.lang, day_risk)
         kb = kb_freeze_calc(user.lang)
 
         if is_first:
             await bot.send_message(
-                chat_id, text,
+                chat_id, '-',
                 reply_markup=kb,
             )
         else:
-            await edit_message(bot, message, 'text', text, kb)
+            await edit_message(bot, message, 'text', '-', kb)
 
 
 async def send_confirm_calc_send(
@@ -776,7 +699,8 @@ async def create_and_send_calc(
             )
             return
 
-        db.change_calculation_stop_loss(stat_id, stop_loss)
+        # TODO: Обновить стоп-лосс через API
+        # db.change_calculation_stop_loss(stat_id, stop_loss)
         calc_info.stopLoss = stop_loss
 
         await send_calculation(bot, message, state, user, calc_info, True)
@@ -1171,35 +1095,16 @@ async def send_manual(
     msg = msg_manual(user.lang, type)
     kb = kb_manual(user.lang)
 
-    text = db.get_text_by_name(type)
-    photo = None
-    if text is not None:
-        if user.lang == 'ru':
-            photo = text.media_id
-        else:
-            photo = text.media_id_en
-
     if is_first:
-        if photo is None:
-            await bot.send_photo(
-                chat_id, photo, msg,
-                reply_markup=kb
-            )
-        else:
-            await bot.send_message(
-                chat_id, msg,
-                reply_markup=kb
-            )
+        await bot.send_message(
+            chat_id, msg,
+            reply_markup=kb
+        )
     else:
-        if photo is None:
-            message_type = 'text'
-        else:
-            message_type = 'photo'
-
         try:
             await edit_message(
-                bot, message, message_type,
-                msg, kb, photo
+                bot, message, 'text',
+                msg, kb
             )
         except:
             pass
@@ -1275,7 +1180,8 @@ async def create_and_send_channel_calc(
     if isVote == 'False':
         channel_calc.update(send_data.id, isVote=False)
     if style:
-        db.change_calculation_style(calc_id, style)
+        # TODO: Обновить стиль через API
+        # db.change_calculation_style(calc_id, style)
         channel_calc.update(send_data.id, tradingStyle=style)
     if time:
         channel_calc.update(send_data.id, time=time or 'avg')
