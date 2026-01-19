@@ -45,7 +45,7 @@ parso==0.8.5
 platformdirs==4.5.1
 prompt_toolkit==3.0.52
 propcache==0.4.1
-psycopg2==2.9.11
+psycopg2-binary==2.9.11
 pure_eval==0.2.3
 pyaes==1.6.1
 pyasn1==0.6.1
