@@ -1,0 +1,51 @@
+services:
+  bot:
+    build: .
+    container_name: proriski_bot
+    restart: unless-stopped
+    environment:
+      - PROD=${PROD:-True}
+      - TOKEN_MAIN_BOT=${TOKEN_MAIN_BOT}
+      - DB_PG_NAME=${DB_PG_NAME}
+      - DB_PG_HOST=postgres
+      - DB_PG_USER=${DB_PG_USER}
+      - DB_PG_PASS=${DB_PG_PASS}
+      - DB_PG_PORT=5432
+      - API_URL=${API_URL}
+      - NEW_API_URL=${NEW_API_URL}
+      - SITE_URL=${SITE_URL}
+      - API_AUTH_URL=${API_AUTH_URL}
+      - API_AUTH_KEY=${API_AUTH_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bot_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: proriski_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_PG_NAME}
+      - POSTGRES_USER=${DB_PG_USER}
+      - POSTGRES_PASSWORD=${DB_PG_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_PG_USER} -d ${DB_PG_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
+    driver: bridge
