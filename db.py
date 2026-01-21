@@ -12,7 +12,8 @@ from config_logger import logger
 
 from models import (
     ROLE_TYPE,
-    SORT_BY_TYPE, Calculation,
+    SORT_BY_TYPE,
+    Calculation,
     ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
     UserInfo, Worker, MARKETS_TYPE,
 )
@@ -269,54 +270,11 @@ class Database:
             self.connection.rollback()
             return default
 
-    def get_calculator_uses_count(self, user_id: int) -> int | None:
-        """Получить количество использований калькулятора пользователем"""
-        query = 'SELECT "usesCount" FROM \"BotSettings\" WHERE "userId" = %s'
-        params = (user_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return None if (data is None) else data.get('usesCount')
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def get_user_calc_freeze(self, user_id: int) -> datetime | None:
-        market = self.get_user_current_market(user_id)
-
-        query = 'SELECT "freezeDt" FROM "CalcSettings" WHERE "userId" = %s AND market = %s'
-        params = (user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return None if (data is None) else data.get('freezeDt')
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
     def set_user_calc_freeze(self, user_id: int, value: datetime | None, market: Optional[MARKETS_TYPE] = None):
         market = market or self.get_user_current_market(user_id)
 
         query = 'UPDATE "CalcSettings" SET "freezeDt" = %s WHERE "userId" = %s AND market = %s'
         params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_calculator_user_market(self, user_id: int, market: MARKETS_TYPE):
-        """Установить рынок пользователя"""
-        query = 'UPDATE \"BotSettings\" SET market = %s WHERE "userId" = %s'
-        params = (market, user_id)
 
         try:
             self.curs.execute(query, params)
@@ -482,32 +440,6 @@ class Database:
             self.connection.rollback()
             return False
 
-    def set_calculation_profit(self, id: int, value: float):
-        query = 'UPDATE "Calculation" SET profit = %s WHERE id = %s'
-        params = (value, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def set_calculation_in_stat(self, id: int, value: bool):
-        query = 'UPDATE "Calculation" SET "inStat" = %s, "statDt" = %s WHERE id = %s'
-        params = (value, get_datetime_now(), id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
     def get_calculations_by_user(
         self,
         user_id: int,
@@ -533,40 +465,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return []
-
-    def get_calculations_currencies(
-        self,
-        user_id: int,
-        saved: bool | None = None,
-        market: MARKETS_TYPE | None = None
-    ) -> dict[str, int]:
-        params = user_id,
-
-        query = 'SELECT currency, COUNT(*) FROM "Calculation" WHERE "userId" = %s '
-
-        if saved is not None:
-            query += 'AND "inStat" = %s '
-            params = (*params, saved)
-
-        if market is not None:
-            query += 'AND market = %s '
-            params = (*params, market)
-
-        query += 'GROUP BY currency ORDER BY count DESC '
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-
-            result = {}
-            for el in data:
-                result[el.get('currency', '')] = el.get('max', 0)
-
-            return result
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return {}
 
     # Workers
     def _data_to_worker(self, data: DictRow):
@@ -687,34 +585,6 @@ class Database:
     def get_access_token(self) -> str | None:
         query = 'SELECT value FROM "AccessOption" WHERE name = %s'
         params = ('tg-api-key',)
-
-        try:
-            self.curs.execute(query, params)
-            res = self.curs.fetchone()
-            return res['value'] if res is not None else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    # Options
-    def set_option(self, name, value):
-        datetime_now = get_datetime_now()
-        query = "UPDATE tgbot_options set value = %s WHERE name_option = %s"
-        params = (value, name,)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def get_option(self, name):
-        query = 'SELECT value FROM tgbot_options WHERE name_option = %s'
-        params = (name,)
 
         try:
             self.curs.execute(query, params)
