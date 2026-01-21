@@ -2,7 +2,6 @@ import re
 from telebot.async_telebot import AsyncTeleBot
 from models import Message, StateContext, User
 
-from db import db
 from states.account import UserAccountState
 from common.utils import text_accept
 from services import auth

@@ -1,6 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from data.data import liteDb
 from service import user_settings_storage
 
 from common.utils import send_in_development
@@ -38,10 +37,10 @@ async def send_start_by_user(
             return
 
         if send_data.withoutStop and not has_registered_now:
-            stop_type = liteDb.getUserStop(user.tgId) or ''
+            stop_type = user_settings_storage.get_user_stop(user.tgId) or ''
 
             if 'atr' in stop_type:
-                atr_settings = liteDb.getUserAtrSettings(user.tgId)
+                atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
                 period, count = atr_settings[1].split('+')
 
                 await state.set(CalculateState.stop_atr)

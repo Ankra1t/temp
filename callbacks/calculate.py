@@ -5,7 +5,6 @@ from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation, channel_calc, ticker
 from config_logger import logger
 from db import db
-from data.data import liteDb
 from service import user_settings_storage
 from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery, StateContext, User
 
@@ -150,7 +149,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             stop_type: str = data.get('stop_type', '')
             op: float = data.get('open_price', 0)
 
-        atr_settings = liteDb.getUserAtrSettings(user.tgId)
+        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         period, count = atr_settings[1].split('+')
 
         value = ticker.get_atr(cur_tool, period, int(count))
@@ -195,10 +194,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if stat is None:
                 return
 
-            withoutStop = liteDb.getSendSettings('withoutStop')
-            style = liteDb.getSendSettings('style')
-            isVote = liteDb.getSendSettings('isVote')
-            time = liteDb.getSendSettings('time')
+            withoutStop = user_settings_storage.get_send_settings('withoutStop')
+            style = user_settings_storage.get_send_settings('style')
+            isVote = user_settings_storage.get_send_settings('isVote')
+            time = user_settings_storage.get_send_settings('time')
 
             send_data = channel_calc.create(stat_id)
             if send_data is None:

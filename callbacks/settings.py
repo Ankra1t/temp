@@ -4,7 +4,6 @@ from telebot.types import InaccessibleMessage
 from NOTIFIER import notifier
 from config_logger import logger
 from db import db
-from data.data import liteDb
 from service import user_settings_storage
 from models import LANGUAGES, CallbackQuery, User, StateContext
 from services import auth, calculation, settings
@@ -166,7 +165,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 await send_trading_style_settings(bot, call.message, state, user)
 
     if type == 'switch_style_change':
-        liteDb.switchStyleChange(user.tgId)
+        user_settings_storage.switch_style_change(user.tgId)
         await send_trading_style_settings(bot, call.message, state, user)
 
     if 'set_currency' in type:
@@ -454,11 +453,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if type == 'set_risk_update':
         # TODO - Для чего это было?
-        # liteDb.reverseRiskUpdate(user.tgId)
+        # user_settings_storage.reverseRiskUpdate(user.tgId)
         await send_dop_settings(bot, call.message, state, user)
 
     if type == 'exchange':
-        exchange = liteDb.getUserExchange(user.tgId)
+        exchange = user_settings_storage.get_user_exchange(user.tgId)
 
         if exchange is None:
             await bot.edit_message_text(
@@ -487,7 +486,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             exchange_value = type.split('++')[1]
 
-            exchange = liteDb.getExchangeByName(exchange_value)
+            exchange = user_settings_storage.get_exchange_by_name(exchange_value)
             if exchange is None:
                 return
 
@@ -509,7 +508,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if 'set_ex_lvl' in type:
         _, name, lvl_name = type.split('++')
 
-        exchange = liteDb.getExchangeByName(name)
+        exchange = user_settings_storage.get_exchange_by_name(name)
         if exchange is None:
             return
 
@@ -525,12 +524,12 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         )
 
     if type == 'set_fee':
-        user_exchange = liteDb.getUserExchange(user.tgId)
+        user_exchange = user_settings_storage.get_user_exchange(user.tgId)
 
         if user_exchange is None:
             return
 
-        exchange = liteDb.getExchangeByName(user_exchange[0])
+        exchange = user_settings_storage.get_exchange_by_name(user_exchange[0])
         if exchange is None:
             return
 
@@ -555,7 +554,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'set_ex_fee' in type:
         _, name, value = type.split('++')
-        liteDb.setUserExchange(user.tgId, (name, float(value)))
+        user_settings_storage.set_user_exchange(user.tgId, (name, float(value)))
         await send_exchange_settings(bot, call.message, state, user)
 
     if type == 'dop':
@@ -572,7 +571,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             )
             await state.set(SettingsState.atr_percent)
         else:
-            liteDb.setUserStop(user.tgId, new_stop_type)
+            user_settings_storage.set_user_stop(user.tgId, new_stop_type)
 
             if new_stop_type == 'atr':
                 await send_atr_settings(bot, call.message, state, user)
@@ -598,21 +597,21 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         await send_atr_settings(bot, call.message, state, user)
 
     if type == 'atr_auto':
-        atr_settings = liteDb.getUserAtrSettings(user.tgId)
+        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         if atr_settings[0]:
             return
 
-        liteDb.setUserAtrSettings(
+        user_settings_storage.set_user_atr_settings(
             user.tgId, (not atr_settings[0], atr_settings[1])
         )
         await send_atr_settings(bot, call.message, state, user)
 
     if type == 'atr_self':
-        atr_settings = liteDb.getUserAtrSettings(user.tgId)
+        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         if not atr_settings[0]:
             return
 
-        liteDb.setUserAtrSettings(
+        user_settings_storage.set_user_atr_settings(
             user.tgId, (not atr_settings[0], atr_settings[1])
         )
         await send_atr_settings(bot, call.message, state, user)
@@ -625,10 +624,10 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'set_atr_bars+' in type:
         _, period = type.split('+')
-        atr_settings = liteDb.getUserAtrSettings(user.tgId)
+        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         bars = atr_settings[1].split('+')
 
-        liteDb.setUserAtrSettings(
+        user_settings_storage.set_user_atr_settings(
             user.tgId, (atr_settings[0], f'{period}+{bars[1]}')
         )
 
@@ -641,9 +640,9 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
     if 'set_atr_count+' in type:
         _, count = type.split('+')
 
-        atr_settings = liteDb.getUserAtrSettings(user.tgId)
+        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         bars = atr_settings[1].split('+')
-        liteDb.setUserAtrSettings(
+        user_settings_storage.set_user_atr_settings(
             user.tgId, (atr_settings[0], f'{bars[0]}+{count}'))
 
         await send_atr_settings(bot, call.message, state, user)

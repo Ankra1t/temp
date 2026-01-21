@@ -5,7 +5,7 @@ from common.calculation import getStrValueCount
 from keyboards.stats import kb_auto_take, kb_deal_profit_cancel
 from common.utils import delete_message, edit_message, get_print_float
 from config_logger import logger
-from data.data import liteDb
+from service import user_settings_storage
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
 from pages.admin import send_admin_main
@@ -67,13 +67,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_stop':
-        current = liteDb.getSendSettings('withoutStop')
-        liteDb.updateSendSettings('withoutStop', f'{current != "True"}')
+        current = user_settings_storage.get_send_settings('withoutStop')
+        user_settings_storage.update_send_settings('withoutStop', f'{current != "True"}')
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_vote':
-        current = liteDb.getSendSettings('isVote')
-        liteDb.updateSendSettings('isVote', f'{current != "True"}')
+        current = user_settings_storage.get_send_settings('isVote')
+        user_settings_storage.update_send_settings('isVote', f'{current != "True"}')
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_time':
@@ -88,7 +88,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if time == 'none':
             time = None
 
-        liteDb.updateSendSettings('time', time)
+        user_settings_storage.update_send_settings('time', time)
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_style':
@@ -104,7 +104,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if value == '**off**':
             value = None
 
-        liteDb.updateSendSettings('style', value)
+        user_settings_storage.update_send_settings('style', value)
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_tr_stop':

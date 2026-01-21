@@ -7,7 +7,6 @@ from states.settings import FirstCalcState, SettingsState
 from config_logger import logger
 from service import user_settings_storage
 from models import BASE_VALUE_TYPE, Message, User, StateContext
-from data.data import liteDb
 from common.utils import digit_accept, is_digit, text_accept
 
 from messages.common import msg_success_edit
@@ -321,7 +320,7 @@ async def handle_exchange(message: Message, bot: AsyncTeleBot, state: StateConte
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    exchanges = liteDb.getExchanges()
+    exchanges = user_settings_storage.get_exchanges()
     names = [el.name.lower() for el in exchanges]
 
     if value.lower() not in names:
@@ -376,13 +375,13 @@ async def handle_fee(message: Message, bot: AsyncTeleBot, state: StateContext, u
         await state.add_data(del_mes_id=new_mes.id)
         return
 
-    usersExchange = liteDb.getUserExchange(user.tgId)
+    usersExchange = user_settings_storage.get_user_exchange(user.tgId)
 
     name = ''
     if usersExchange is not None:
         name = usersExchange[0]
 
-    liteDb.setUserExchange(user.tgId, (name or '', value))
+    user_settings_storage.set_user_exchange(user.tgId, (name or '', value))
     await send_exchange_settings(bot, message, state, user, True)
 
 
@@ -402,7 +401,7 @@ async def handle_atr_percent(message: Message, bot: AsyncTeleBot, state: StateCo
 
     user_settings_storage.set_is_from_deposit(user.tgId, False)
 
-    liteDb.setUserStop(user.tgId, f'atr_percent+{value}')
+    user_settings_storage.set_user_stop(user.tgId, f'atr_percent+{value}')
     try:
         await send_stop_settings(bot, message, state, user, True)
     except:
@@ -423,9 +422,9 @@ async def handle_atr_bars_count(message: Message, bot: AsyncTeleBot, state: Stat
 
     await state.delete()
 
-    atr_settings = liteDb.getUserAtrSettings(user.tgId)
+    atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
     bars = atr_settings[1].split('+')
-    liteDb.setUserAtrSettings(
+    user_settings_storage.set_user_atr_settings(
         user.tgId, (atr_settings[0], f'{bars[0]}+{value}'))
 
     await send_atr_settings(bot, message, state, user, True)

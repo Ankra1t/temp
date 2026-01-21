@@ -2,7 +2,7 @@ from common.utils import get_print_float
 from messages.common import ENTER, msg_risk_info, msg_current_value, msg_sended_data
 from models import LANGUAGES_TYPE, MARKETS_TYPE, Calculation
 
-from data.data import liteDb
+from service import user_settings_storage
 
 
 def msg_enter_bars(lang: LANGUAGES_TYPE):
@@ -668,13 +668,13 @@ def msg_enter_min_bar(lang: LANGUAGES_TYPE):
 
 
 def msg_choose_direct(lang: LANGUAGES_TYPE, tg_id: int, value: float | None = None):
-    stop = (liteDb.getUserStop(tg_id) or '').split('+')
+    stop = (user_settings_storage.get_user_stop(tg_id) or '').split('+')
     percent = ''
 
     if len(stop) == 2:
         _, percent = stop
 
-    atr_settings = liteDb.getUserAtrSettings(tg_id)
+    atr_settings = user_settings_storage.get_user_atr_settings(tg_id)
     period, count = atr_settings[1].split('+')
 
     texts = {

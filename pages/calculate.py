@@ -8,7 +8,6 @@ from telebot.async_telebot import AsyncTeleBot
 from common.calculation import getStrValueCount
 from states.stats import ChannelCalcState, StatsState
 from common.utils import edit_message, edit_message, get_print_float
-from data.data import liteDb
 
 from service import user_settings_storage
 
@@ -138,7 +137,7 @@ async def send_exchange_settings(
 
     await state.delete()
 
-    exchange = liteDb.getUserExchange(user.tgId)
+    exchange = user_settings_storage.get_user_exchange(user.tgId)
 
     msg = msg_exchange(user.lang, exchange)
     markup = kb_exchange(user.lang, exchange is not None)
@@ -169,7 +168,7 @@ async def send_trading_style_settings(
     if u_base is not None:
         style = u_base.trading_style or style
 
-    is_style_change = liteDb.getStyleChange(user.tgId)
+    is_style_change = user_settings_storage.get_style_change(user.tgId)
 
     msg = msg_change_style_settings(user.lang, style, is_style_change)
     markup = kb_change_style_settings(user.lang, is_style_change)
@@ -244,7 +243,7 @@ async def send_user_deposit(
 
     await state.delete()
 
-    stop = liteDb.getUserStop(user.tgId)
+    stop = user_settings_storage.get_user_stop(user.tgId)
     # market = db.get_user_current_market(user.id)
     market = 'crypto'
     u_base = user_settings_storage.get_or_create(user.tgId)
@@ -770,14 +769,14 @@ async def send_stop_settings(
 
     await state.delete()
 
-    stop_type = liteDb.getUserStop(user.tgId)
+    stop_type = user_settings_storage.get_user_stop(user.tgId)
     u_base = user_settings_storage.get_or_create(user.tgId)
 
     current_fd = False
     if u_base is not None:
         current_fd = u_base.is_from_deposit
 
-    atr_settings = liteDb.getUserAtrSettings(user.tgId)
+    atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
 
     mes = msg_stop_page(user.lang, atr_settings, stop_type, current_fd)
     kb = kb_choose_stop_type(user.lang)
@@ -806,7 +805,7 @@ async def send_atr_settings(
 
     await state.delete()
 
-    atr_settings = liteDb.getUserAtrSettings(user.tgId)
+    atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
 
     mes = msg_atr_settings(user.lang, atr_settings)
     kb = kb_atr_settings(user.lang, atr_settings)
@@ -834,10 +833,10 @@ async def send_admin_send_settings(  # TODO - move to admin
 
     await state.delete()
 
-    withoutStop = liteDb.getSendSettings('withoutStop')
-    isVote = liteDb.getSendSettings('isVote')
-    tradingStyle = liteDb.getSendSettings('style')
-    time = liteDb.getSendSettings('time')
+    withoutStop = user_settings_storage.get_send_settings('withoutStop')
+    isVote = user_settings_storage.get_send_settings('isVote')
+    tradingStyle = user_settings_storage.get_send_settings('style')
+    time = user_settings_storage.get_send_settings('time')
     advancedSettings = settings.getAdvanced(user.id)
 
     msg = msg_admin_send_settings(
@@ -1166,10 +1165,10 @@ async def create_and_send_channel_calc(
     if calc is None:
         return
 
-    withoutStop = liteDb.getSendSettings('withoutStop')
-    style = liteDb.getSendSettings('style')
-    isVote = liteDb.getSendSettings('isVote')
-    time = liteDb.getSendSettings('time')
+    withoutStop = user_settings_storage.get_send_settings('withoutStop')
+    style = user_settings_storage.get_send_settings('style')
+    isVote = user_settings_storage.get_send_settings('isVote')
+    time = user_settings_storage.get_send_settings('time')
 
     send_data = channel_calc.create(calc_id)
     if send_data is None:

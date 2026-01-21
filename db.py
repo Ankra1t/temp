@@ -12,10 +12,9 @@ from config_logger import logger
 
 from models import (
     ROLE_TYPE,
-    SORT_BY_TYPE, SUBSCRIBE_TYPE, Calculation,
+    SORT_BY_TYPE, Calculation,
     ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
-    UserInfo, Subscribe,
-    Transactions, Purchase, Worker, MARKETS_TYPE,
+    UserInfo, Worker, MARKETS_TYPE,
 )
 
 

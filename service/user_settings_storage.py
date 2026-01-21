@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Tuple, List
 from threading import Lock
 from pydantic import BaseModel
-from models import MARKETS_TYPE, TRADING_TYPE, LANGUAGES_TYPE
+from models import MARKETS_TYPE, TRADING_TYPE, LANGUAGES_TYPE, Exchange
 
 
 class UserSettings(BaseModel):
@@ -18,12 +18,19 @@ class UserSettings(BaseModel):
     is_updating_deposit: bool = False
     trading_type: TRADING_TYPE = "margin"
     is_from_deposit: bool = False
+    exchange: Optional[Tuple[Optional[str], Optional[float]]] = None
+    stop: Optional[str] = None
+    style_change: bool = False
+    atr_settings: Tuple[bool, str] = (False, '')
 
 
 class UserSettingsStorage:
     def __init__(self) -> None:
         self._storage: Dict[int, UserSettings] = {}
         self._lock = Lock()
+        # Global data from data.py
+        self._exchanges: List[Exchange] = []
+        self._send_settings: Dict[str, Optional[str]] = {}
 
     def _get_or_create_unlocked(self, user_id: int) -> UserSettings:
         if user_id not in self._storage:
@@ -130,6 +137,70 @@ class UserSettingsStorage:
     def remove(self, user_id: int) -> None:
         with self._lock:
             self._storage.pop(user_id, None)
+
+    def get_user_exchange(self, user_id: int) -> Optional[Tuple[str, float]]:
+        settings = self.get_or_create(user_id)
+        exchange = settings.exchange
+        if exchange is None or exchange[0] is None or exchange[1] is None:
+            return None
+        return (exchange[0], exchange[1])
+
+    def set_user_exchange(self, user_id: int, value: Tuple[Optional[str], Optional[float]]) -> None:
+        with self._lock:
+            settings = self._get_or_create_unlocked(user_id)
+            settings.exchange = value
+            self._storage[user_id] = settings
+
+    def get_user_stop(self, user_id: int) -> Optional[str]:
+        settings = self.get_or_create(user_id)
+        return settings.stop
+
+    def set_user_stop(self, user_id: int, stop: str) -> None:
+        with self._lock:
+            settings = self._get_or_create_unlocked(user_id)
+            settings.stop = stop
+            self._storage[user_id] = settings
+
+    def get_style_change(self, user_id: int) -> bool:
+        settings = self.get_or_create(user_id)
+        return settings.style_change
+
+    def switch_style_change(self, user_id: int) -> None:
+        with self._lock:
+            settings = self._get_or_create_unlocked(user_id)
+            settings.style_change = not settings.style_change
+            self._storage[user_id] = settings
+
+    def get_user_atr_settings(self, user_id: int) -> Tuple[bool, str]:
+        settings = self.get_or_create(user_id)
+        return settings.atr_settings
+
+    def set_user_atr_settings(self, user_id: int, value: Tuple[bool, str]) -> None:
+        with self._lock:
+            settings = self._get_or_create_unlocked(user_id)
+            settings.atr_settings = value
+            self._storage[user_id] = settings
+
+    def set_exchanges(self, exchanges: List[Exchange]) -> None:
+        with self._lock:
+            self._exchanges = exchanges
+
+    def get_exchanges(self) -> List[Exchange]:
+        return self._exchanges
+
+    def get_exchange_by_name(self, name: str) -> Optional[Exchange]:
+        for exchange in self._exchanges:
+            if exchange.name == name:
+                return exchange
+        return None
+
+    def get_send_settings(self, name: str) -> Optional[str]:
+        with self._lock:
+            return self._send_settings.get(name)
+
+    def update_send_settings(self, name: str, value: Optional[str]) -> None:
+        with self._lock:
+            self._send_settings[name] = value
 
 
 user_settings_storage = UserSettingsStorage()

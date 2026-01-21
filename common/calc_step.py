@@ -1,6 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from data.data import liteDb
 from service import user_settings_storage
 from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
@@ -100,7 +99,7 @@ async def choose_calculate_step(
         stop_loss = data.get('stop_loss')
         atr = data.get('atr')
 
-    is_style_change = liteDb.getStyleChange(
+    is_style_change = user_settings_storage.get_style_change(
         user.tgId) and trading_style is None
 
     text = ''
@@ -187,7 +186,7 @@ async def choose_calculate_step(
             edit_to = names[user.lang]['atr']
             new_state = CalculateState.stop_atr
 
-            atr_settings = liteDb.getUserAtrSettings(user.tgId)
+            atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
             period, count = atr_settings[1].split('+')
 
             value = ticker.get_atr(tool, period, int(count)) or None
@@ -260,7 +259,7 @@ async def choose_first_calculate_step(
 ):
     u_base = user_settings_storage.get_or_create(user.tgId)
 
-    stop_type = liteDb.getUserStop(user.tgId)
+    stop_type = user_settings_storage.get_user_stop(user.tgId)
 
     # TODO
     unfinished_calc = None
@@ -275,7 +274,7 @@ async def choose_first_calculate_step(
         trading_type = u_base.trading_type
         is_from_deposit = u_base.is_from_deposit
 
-    is_style_change = liteDb.getStyleChange(user.tgId)
+    is_style_change = user_settings_storage.get_style_change(user.tgId)
     if is_style_change:
         style = None
 
