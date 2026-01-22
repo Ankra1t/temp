@@ -9,4 +9,3 @@ class AdminParamsState(StatesGroup):
 
 class AdminMainState(StatesGroup):
     turnover = State()
-    notification = State()

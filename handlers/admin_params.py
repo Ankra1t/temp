@@ -1,5 +1,3 @@
-import asyncio
-import os
 from telebot.async_telebot import AsyncTeleBot
 
 from keyboards.admin_main import kb_tools_list_back
@@ -8,9 +6,9 @@ from models import Message, StateContext, User
 
 from common.utils import digit_accept, get_print_float, get_normal_text
 
-from pages.admin import send_admin_main, send_admin_tools_list
+from pages.admin import send_admin_tools_list
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
-from services import calculation, notifications, settings
+from services import calculation, settings
 from states.admin_params import AdminMainState, AdminParamsState
 from keyboards.admin_params import kb_params_choice
 
@@ -82,40 +80,6 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
             await send_confirm_calc_send(bot, message, calc_id, True)
 
 
-async def handle_notification(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    file_id = None
-    if message.content_type == 'photo' and message.photo:
-        file_id = message.photo[-1].file_id
-
-    if file_id is not None:
-        file = await bot.get_file(file_id)
-        file_bytes = await bot.download_file(file.file_path)
-
-        name = f'{file_id}.png'
-        with open(name, 'wb') as new_file:
-            new_file.write(file_bytes)
-
-        with open(name, 'rb') as file:
-            notifications.create(
-                userId=user.id, title='',
-                text=message.caption, file=file
-            )
-
-        os.remove(name)
-    else:
-        notifications.create(userId=user.id, title='', text=message.text)
-
-    await state.delete()
-    await bot.send_message(chat_id, 'Уведомление отправлено')
-
-    await asyncio.sleep(4)
-    await send_admin_main(bot, message, state, True)
-    await bot.delete_message(chat_id, mes_id)
-
-
 def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
@@ -123,8 +87,3 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_other_text, state=AdminParamsState.text)
     reg_mes(handle_trailing_stop, state=AdminParamsState.trailing_stop)
     reg_mes(handle_turnover, state=AdminMainState.turnover)
-    reg_mes(
-        handle_notification,
-        state=AdminMainState.notification,
-        content_types=['text', 'photo']
-    )

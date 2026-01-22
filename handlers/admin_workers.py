@@ -12,7 +12,6 @@ from pages.admin import send_admin_workers_support
 
 async def handle_add_id(message: Message, bot: AsyncTeleBot, state: StateContext):
     chat_id = message.chat.id
-    user_id = message.from_user.id
 
     id = digit_accept(message, int)
 
