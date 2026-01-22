@@ -90,14 +90,6 @@ async def handle_new_currency(message: Message, bot: AsyncTeleBot, state: StateC
         f'callback "handle_new_currency" user_tg_id={user.id} value={value}'
     )
 
-    # check = currencyService.getPrice('USD', value)
-    # if not check:
-    #     bot.send_message(
-    #         chat_id, msg_currency_error(user_id, 'not_found'),
-    #         reply_markup=kb_deposit_cancel(user_id)
-    #     )
-    #     return
-
     user_settings_storage.set_currency(user.tgId, value.upper())
 
     async with state.data() as data:

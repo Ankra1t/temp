@@ -21,18 +21,6 @@ def getButton(text: str, type: str):
     return InlineKeyboardButton(text, None, admin_subs_factory.new(type=type))
 
 
-def kb_admin_subs():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_set = getButton('Выдать', 'set')
-    btn_list = getButton('Список', 'list')
-    back = getButton(back_txt(), 'main')
-
-    keyboard.add(btn_set, btn_list)
-    keyboard.add(back)
-    return keyboard
-
-
 def kb_admin_subs_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
     back = getButton(back_txt(), 'back')

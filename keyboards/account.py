@@ -92,12 +92,6 @@ def kb_user_referral(lang: LANGUAGES_TYPE, referals_count=0):
     return keyboard
 
 
-def kb_user_referral_list(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(getButton(back_txt(lang), 'referral'))
-    return keyboard
-
-
 def kb_user_params(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {

@@ -49,9 +49,6 @@ async def handle_start_date(message: Message, bot: AsyncTeleBot, state: StateCon
         await state.set(AdminStatisticsState.fin_date)
 
     if current_state == 'AdminStatisticsState:start_date_only':
-        start_date_filter = start_date_obj.strftime(DATE_FORMAT)
-        fin_date_filter = get_datetime_now().strftime(DATE_FORMAT)
-
         date_start_show = get_str_by_datetime(start_date_obj)
         date_fin_show = get_str_by_datetime(get_datetime_now())
 
@@ -89,9 +86,6 @@ async def handle_fin_date(message: Message, bot: AsyncTeleBot, state: StateConte
 
     async with state.data() as data:
         start_date_obj: datetime = data.get('start_date_obj', {})
-
-    start_date_filter = start_date_obj.strftime(DATE_FORMAT)
-    fin_date_filter = fin_date_obj.strftime(DATE_FORMAT)
 
     date_start_show = get_str_by_datetime(start_date_obj)
     date_fin_show = get_str_by_datetime(get_datetime_now())
