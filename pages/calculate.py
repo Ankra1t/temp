@@ -51,7 +51,7 @@ async def send_main(
 
     await state.delete()
 
-    # TODO
+    # TODO: получить незавершённый расчёт
     unfinished_calc = None
 
     text = msg_no_uses(user.lang)

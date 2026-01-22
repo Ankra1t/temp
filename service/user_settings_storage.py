@@ -28,7 +28,7 @@ class UserSettingsStorage:
     def __init__(self) -> None:
         self._storage: Dict[int, UserSettings] = {}
         self._lock = Lock()
-        # Global data from data.py
+        # Глобальные данные из data.py
         self._exchanges: List[Exchange] = []
         self._send_settings: Dict[str, Optional[str]] = {}
 

@@ -18,7 +18,7 @@ from keyboards.livepost import (
 
 from pages.admin import send_admin_post, send_admin_params
 
-# TODO - удаляем
+# TODO - удалить этот код
 
 ticker_pattern = r'[a-zA-Z]+\/[a-zA-Z]+'
 

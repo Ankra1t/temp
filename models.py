@@ -55,7 +55,7 @@ class StateFilter(AdvancedCustomFilter):
         )
 
         if chat_id is None:
-            chat_id = user_id  # May change in future
+            chat_id = user_id  # Может измениться в будущем
 
         if isinstance(text, list):
             new_text = []
@@ -75,7 +75,7 @@ class StateFilter(AdvancedCustomFilter):
             message_thread_id=message_thread_id  # type: ignore
         )
 
-        # CHANGED BEHAVIOUR
+        # ИЗМЕНЁННОЕ ПОВЕДЕНИЕ
         if text == "*" and user_state is not None:
             return True
 

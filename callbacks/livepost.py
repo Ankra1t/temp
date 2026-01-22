@@ -12,7 +12,7 @@ from keyboards.livepost import (
 )
 from pages.admin import send_admin_main
 
-# TODO - Удалить livepost
+# TODO - удалить модуль livepost
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext):

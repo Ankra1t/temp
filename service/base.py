@@ -1,8 +1,8 @@
 """
-Base models and types for API responses.
+Базовые модели и типы для API ответов.
 
-This module defines the common structure for all API responses,
-including base classes and specific data models for different endpoints.
+Этот модуль определяет общую структуру для всех API ответов,
+включая базовые классы и специфические модели данных для различных endpoints.
 """
 
 from typing import Optional, Any, TypeVar, Generic
@@ -11,13 +11,13 @@ from enum import Enum
 
 
 class BaseMeta(BaseModel):
-    """Base metadata for API responses."""
+    """Базовые метаданные для API ответов."""
 
     pass
 
 
 class BaseData(BaseModel):
-    """Base data model for API responses."""
+    """Базовая модель данных для API ответов."""
 
     pass
 
@@ -49,14 +49,14 @@ class LoginData(BaseData):
 
 
 class RefreshData(BaseData):
-    """Response data for refresh token endpoint."""
+    """Данные ответа для endpoint обновления токена."""
 
     access_token: str = Field(alias="accessToken")
     refresh_token: str = Field(alias="refreshToken")
 
 
 class UserData(BaseData):
-    """User profile data from session endpoint."""
+    """Данные профиля пользователя из endpoint сессии."""
 
     id: int
     name: str
@@ -69,7 +69,7 @@ class UserData(BaseData):
 
 
 class SessionData(BaseData):
-    """Response data for session/me endpoint."""
+    """Данные ответа для endpoint session/me."""
 
     id: int
     name: str
@@ -82,12 +82,12 @@ class SessionData(BaseData):
 
 
 class LogoutData(BaseData):
-    """Response data for logout endpoint."""
+    """Данные ответа для endpoint выхода."""
 
     message: str
 
 
-# Type aliases for complete response types
+# Псевдонимы типов для полных типов ответов
 ApiResponse = BaseResponse[BaseData]
 LoginResponse = BaseResponse[LoginData]
 RefreshResponse = BaseResponse[RefreshData]
@@ -97,14 +97,14 @@ LogoutResponse = BaseResponse[LogoutData]
 
 
 class TokenType(str, Enum):
-    """Token types for storage and validation."""
+    """Типы токенов для хранения и валидации."""
 
     ACCESS = "access_token"
     REFRESH = "refresh_token"
 
 
 class TokenPair(BaseModel):
-    """Pair of access and refresh tokens."""
+    """Пара из access и refresh токенов."""
 
     access_token: str
     refresh_token: str

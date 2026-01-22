@@ -1,8 +1,8 @@
 """
-Authentication service for API auth endpoints.
+Сервис аутентификации для API auth endpoints.
 
-This module provides methods for user authentication operations including
-login, token refresh, logout, and session management.
+Этот модуль предоставляет методы для операций аутентификации пользователей, включая
+вход, обновление токена, выход и управление сессиями.
 """
 
 import logging
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthApiError(Exception):
-    """Exception raised for API authentication errors."""
+    """Исключение, возникающее при ошибках API аутентификации."""
 
     def __init__(self, message: str, status_code: Optional[int] = None) -> None:
         self.message = message
@@ -160,7 +160,7 @@ class AuthService:
             raise AuthApiError("Network error during session retrieval") from e
 
 
-# Global auth service instance
+# Глобальный экземпляр сервиса аутентификации
 auth_service = AuthService()
 
 

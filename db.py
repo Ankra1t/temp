@@ -50,7 +50,7 @@ class Database:
             retries += 1
             sleep(1)
 
-    # # # # # # # #  Users
+    # Пользователи
 
     def _data_to_user(self, data: DictRow):
         name = data.get('username')
@@ -218,9 +218,9 @@ class Database:
             self.connection.rollback()
             return False
 
-    # # # # # # # #  Users Сервисные запросы
+    # Сервисные запросы пользователей
 
-    # Users - Lessons
+    # Уроки пользователей
     def add_lesson_count(self, id: int):
         query = 'UPDATE \"BotSettings\" set "lessonCount" = %s WHERE "userId" = %s'
         count = self.get_lesson_count(id) + 1
@@ -252,7 +252,7 @@ class Database:
             self.connection.rollback()
             return 1
 
-    # Users - Settings
+    # Настройки пользователей
     def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
         query = 'SELECT market FROM \"BotSettings\" WHERE \"userId\" = %s'
         params = (user_id,)
@@ -285,7 +285,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    # Calc Stats
+    # Статистика расчётов
     def _data_to_calculations(self, data: DictRow):
         pair = data.get('pair')
         pair_price = data.get('pairPrice')
@@ -466,7 +466,7 @@ class Database:
             self.connection.rollback()
             return []
 
-    # Workers
+    # Работники
     def _data_to_worker(self, data: DictRow):
         return Worker(
             id=data.get('id'),
@@ -581,7 +581,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    # Auth
+    # Аутентификация
     def get_access_token(self) -> str | None:
         query = 'SELECT value FROM "AccessOption" WHERE name = %s'
         params = ('tg-api-key',)
@@ -595,7 +595,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    # Posts
+    # Посты
     def _data_to_post(self, data: DictRow):
         open_price, stop_loss, name, ticker = (
             data.get('openPrice'),
@@ -695,7 +695,7 @@ class Database:
             self.connection.rollback()
             return None
 
-    # Texts
+    # Тексты
     def _data_to_text(self, data: DictRow):
         return Text(
             id=data.get('id'),
@@ -751,7 +751,7 @@ class Database:
             self.connection.rollback()
             return False
 
-    # Unfinished calculation
+    # Незавершённые расчёты
 
     def _data_to_unfinished_calc(self, data: DictRow):
         pair = data.get('pair')

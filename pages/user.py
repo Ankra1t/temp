@@ -105,7 +105,7 @@ async def send_user_account(
 
     await state.delete()
 
-    # Получаем количество рефералов через API
+    # TODO: получить количество рефералов через API
     # ref_user = user_service.getReferralOfUser(user.id)
     # referals = ref_user.refsCount if ref_user else 0
     referals = 0
@@ -193,8 +193,7 @@ async def send_referral(
 
     await state.delete()
 
-    # TODO
-    # Получаем количество рефералов через API
+    # TODO: получить количество рефералов через API
     # ref_user = user_service.getReferralOfUser(user.id)
     # referals_count = ref_user.refsCount if ref_user else 0
     referals_count = 0
@@ -223,9 +222,7 @@ async def send_user_params(
 
     await state.delete()
 
-    # TODO: Получить данные пользователя через API
-    # Пока упростим - не показываем параметры
-
+    # TODO: получить данные пользователя через API
     # Временно скрываем эту функциональность
     await bot.send_message(
         chat_id, 'Функция в разработке'

@@ -45,7 +45,7 @@ from service.middleware import (
     get_valid_access_token,
 )
 from service.calc import (
-    # Calc models
+    # Модели расчётов
     DealPrice,
     TrailingStopItem,
     SplitFees,
@@ -57,19 +57,19 @@ from service.calc import (
     CreateSplitValue,
     CalcCreateRequest,
     CalcCreateResponse,
-    # Calc response types
+    # Типы ответов расчётов
     CalcListResponse,
     CalcCreateFullResponse,
-    # Calc service
+    # Сервис расчётов
     CalcService,
     calc_service,
-    # Calc functions
+    # Функции расчётов
     get_calculations,
     create_calculation,
 )
 
 __all__ = [
-    # Base models
+    # Базовые модели
     "BaseResponse",
     "BaseData",
     "BaseMeta",
@@ -77,7 +77,7 @@ __all__ = [
     "TokenPair",
     "TokenType",
     "ApiUser",
-    # Response types
+    # Типы ответов
     "LoginData",
     "RefreshData",
     "UserData",
@@ -88,7 +88,7 @@ __all__ = [
     "UserResponse",
     "SessionResponse",
     "LogoutResponse",
-    # Auth service
+    # Сервис аутентификации
     "AuthService",
     "auth_service",
     "AuthApiError",
@@ -96,10 +96,10 @@ __all__ = [
     "get_user_tokens",
     "ensure_authenticated",
     "logout_user",
-    # Token storage
+    # Хранилище токенов
     "TokenStorage",
     "token_storage",
-    # User settings storage
+    # Хранилище настроек пользователей
     "UserSettings",
     "UserSettingsStorage",
     "user_settings_storage",
@@ -107,7 +107,7 @@ __all__ = [
     "RefreshTokenMiddleware",
     "request_with_auth",
     "get_valid_access_token",
-    # Calc models
+    # Модели расчётов
     "DealPrice",
     "TrailingStopItem",
     "SplitFees",
@@ -119,10 +119,10 @@ __all__ = [
     "CreateSplitValue",
     "CalcCreateRequest",
     "CalcCreateResponse",
-    # Calc response types
+    # Типы ответов расчётов
     "CalcListResponse",
     "CalcCreateFullResponse",
-    # Calc service
+    # Сервис расчётов
     "CalcService",
     "calc_service",
     "get_calculations",

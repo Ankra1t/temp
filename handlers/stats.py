@@ -3,7 +3,7 @@ import re
 from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
 
-# TODO - each state import from states
+# TODO - импортировать все состояния из states
 from common.calculation import getStrValueCount
 from common.vars import DATETIME_PATTERN
 from states.settings import ViolationState

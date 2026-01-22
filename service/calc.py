@@ -1,8 +1,8 @@
 """
-Calculation service for API calc endpoints.
+Сервис расчётов для API calc endpoints.
 
-This module provides methods for calculation operations including
-getting calculations list and creating new calculations.
+Этот модуль предоставляет методы для операций расчётов, включая
+получение списка расчётов и создание новых расчётов.
 """
 
 import logging
@@ -20,11 +20,11 @@ from service.token_storage import token_storage
 logger = logging.getLogger(__name__)
 
 
-# Response models for calc API
+# Модели ответов для API расчётов
 
 
 class DealPrice(BaseData):
-    """Deal price information."""
+    """Информация о цене сделки."""
 
     min_price: float | None = None
     min_price_dt: int | None = None
@@ -36,14 +36,14 @@ class DealPrice(BaseData):
 
 
 class TrailingStopItem(BaseData):
-    """Trailing stop value."""
+    """Значение трейлинг-стопа."""
 
     value: float
     ts_created: int
 
 
 class SplitFees(BaseData):
-    """Split fee breakdown."""
+    """Распределение комиссий при разделении."""
 
     open_alloc: str | None = None
     funding_alloc: str | None = None
@@ -52,7 +52,7 @@ class SplitFees(BaseData):
 
 
 class SplitValue(BaseData):
-    """Split (take profit) value."""
+    """Значение разделения (take profit)."""
 
     id: str
     price: str
@@ -74,14 +74,14 @@ class SplitValue(BaseData):
 
 
 class StopItem(BaseData):
-    """Stop item."""
+    """Элемент стопа."""
 
     stop: float
     date: str
 
 
 class ActiveCalcInfo(BaseData):
-    """Active calculation info."""
+    """Информация об активном расчёте."""
 
     auto_take: float | None = None
     trailing_stop_count: float | None = None
@@ -92,7 +92,7 @@ class ActiveCalcInfo(BaseData):
 
 
 class ChannelCalcInfo(BaseData):
-    """Channel calculation info."""
+    """Информация о расчёте канала."""
 
     time: int
     without_stop: int
@@ -104,7 +104,7 @@ class ChannelCalcInfo(BaseData):
 
 
 class CalcDetails(BaseData):
-    """Full calculation details."""
+    """Полная информация о расчёте."""
 
     id: int
     vid: str
@@ -155,7 +155,7 @@ class CalcDetails(BaseData):
 
 
 class CalcListMeta(BaseData):
-    """Meta information for calc list response."""
+    """Метаинформация для ответа со списком расчётов."""
 
     page: int
     count: int
@@ -163,7 +163,7 @@ class CalcListMeta(BaseData):
 
 
 class CalcListResponse(BaseModel):
-    """Response for calculations list endpoint."""
+    """Ответ для endpoint со списком расчётов."""
 
     success: bool
     data: list[CalcDetails]
@@ -171,7 +171,7 @@ class CalcListResponse(BaseModel):
 
 
 class CreateSplitValue(BaseData):
-    """Split value for creation request."""
+    """Значение разделения для запроса создания."""
 
     price: float
     qty: float
@@ -181,7 +181,7 @@ class CreateSplitValue(BaseData):
 
 
 class CalcCreateRequest(BaseData):
-    """Request data for creating calculation."""
+    """Данные запроса для создания расчёта."""
 
     deposit: str
     risk_value: str
@@ -218,7 +218,7 @@ class CalcCreateRequest(BaseData):
 
 
 class CalcCreateResponse(BaseData):
-    """Response data for create calculation."""
+    """Данные ответа для создания расчёта."""
 
     id: int
     vid: str
@@ -259,7 +259,7 @@ class CalcCreateResponse(BaseData):
 
 
 class CalcCreateFullResponse(BaseModel):
-    """Full response for create calculation endpoint."""
+    """Полный ответ для endpoint создания расчёта."""
 
     status: str
     response: CalcCreateResponse
@@ -267,31 +267,31 @@ class CalcCreateFullResponse(BaseModel):
 
 class CalcService:
     """
-    Service for calculation API operations.
+    Сервис для операций расчётов через API.
 
-    Provides asynchronous methods for:
-    - Getting calculations list
-    - Creating new calculations
+    Предоставляет асинхронные методы для:
+    - Получения списка расчётов
+    - Создания новых расчётов
     """
 
     def __init__(self, base_url: str = API_AUTH_URL) -> None:
         """
-        Initialize calc service.
+        Инициализировать сервис расчётов.
 
         Args:
-            base_url: Base URL for the API
+            base_url: Базовый URL для API
         """
         self.base_url = base_url.rstrip("/")
 
     def _build_url(self, endpoint: str) -> str:
         """
-        Build full URL for an endpoint.
+        Построить полный URL для endpoint.
 
         Args:
-            endpoint: API endpoint path
+            endpoint: Путь к API endpoint
 
         Returns:
-            Full URL
+            Полный URL
         """
         return f"{self.base_url}{endpoint}"
 
@@ -302,18 +302,18 @@ class CalcService:
         count: int = 10,
     ) -> CalcListResponse:
         """
-        Get list of calculations for a user.
+        Получить список расчётов пользователя.
 
         Args:
-            user_id: Telegram user ID
-            sort_id: Sort direction (asc/desc)
-            count: Number of items to return
+            user_id: Telegram ID пользователя
+            sort_id: Направление сортировки (asc/desc)
+            count: Количество элементов для возврата
 
         Returns:
-            CalcListResponse with calculations list and meta
+            CalcListResponse со списком расчётов и метаинформацией
 
         Raises:
-            AuthApiError: If authentication fails
+            AuthApiError: Если аутентификация не удалась
         """
         access_token = token_storage.get_access_token(user_id)
         if not access_token:
@@ -334,7 +334,7 @@ class CalcService:
 
                 if response.status in (401, 403):
                     await session.close()
-                    # Use middleware for retry with refresh
+                    # Используем middleware для повтора с обновлением токена
                     retry_response = await request_with_auth("GET", url, user_id, headers=headers)
                     data = await retry_response.json()
                     if retry_response.status >= 400:
@@ -366,17 +366,17 @@ class CalcService:
         calc_data: CalcCreateRequest,
     ) -> CalcCreateFullResponse:
         """
-        Create a new calculation.
+        Создать новый расчёт.
 
         Args:
-            user_id: Telegram user ID
-            calc_data: Calculation data for creation
+            user_id: Telegram ID пользователя
+            calc_data: Данные расчёта для создания
 
         Returns:
-            CalcCreateFullResponse with created calculation data
+            CalcCreateFullResponse с данными созданного расчёта
 
         Raises:
-            AuthApiError: If authentication fails or creation fails
+            AuthApiError: Если аутентификация не удалась или создание не удалось
         """
         access_token = token_storage.get_access_token(user_id)
         if not access_token:
@@ -398,7 +398,7 @@ class CalcService:
 
                 if response.status in (401, 403):
                     await session.close()
-                    # Use middleware for retry with refresh
+                    # Используем middleware для повтора с обновлением токена
                     retry_response = await request_with_auth("POST", url, user_id, json=payload, headers=headers)
                     data = await retry_response.json()
                     if retry_response.status >= 400:
@@ -426,7 +426,7 @@ class CalcService:
             await session.close()
 
 
-# Global calc service instance
+# Глобальный экземпляр сервиса расчётов
 calc_service = CalcService()
 
 
@@ -436,18 +436,18 @@ async def get_calculations(
     count: int = 10,
 ) -> CalcListResponse:
     """
-    Get list of calculations for a user.
+    Получить список расчётов пользователя.
 
     Args:
-        user_id: Telegram user ID
-        sort_id: Sort direction (asc/desc)
-        count: Number of items to return
+        user_id: Telegram ID пользователя
+        sort_id: Направление сортировки (asc/desc)
+        count: Количество элементов для возврата
 
     Returns:
-        CalcListResponse with calculations list and meta
+        CalcListResponse со списком расчётов и метаинформацией
 
     Raises:
-        AuthApiError: If authentication fails
+        AuthApiError: Если аутентификация не удалась
     """
     return await calc_service.get_calculations(user_id, sort_id, count)
 
@@ -457,16 +457,16 @@ async def create_calculation(
     calc_data: CalcCreateRequest,
 ) -> CalcCreateFullResponse:
     """
-    Create a new calculation.
+    Создать новый расчёт.
 
     Args:
-        user_id: Telegram user ID
-        calc_data: Calculation data for creation
+        user_id: Telegram ID пользователя
+        calc_data: Данные расчёта для создания
 
     Returns:
-        CalcCreateFullResponse with created calculation data
+        CalcCreateFullResponse с данными созданного расчёта
 
     Raises:
-        AuthApiError: If authentication fails or creation fails
+        AuthApiError: Если аутентификация не удалась или создание не удалось
     """
     return await calc_service.create_calculation(user_id, calc_data)

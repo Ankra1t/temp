@@ -261,7 +261,7 @@ async def choose_first_calculate_step(
 
     stop_type = user_settings_storage.get_user_stop(user.tgId)
 
-    # TODO
+    # TODO: получить незавершённый расчёт
     unfinished_calc = None
 
     is_from_deposit = False

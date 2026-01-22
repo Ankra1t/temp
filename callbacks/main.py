@@ -33,7 +33,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     )
 
     if 'calc' in type or type == 'settings':
-        # TODO
+        # TODO: получить расчёт
         # calc = calculation.get(userId=user.id, calcId=stat_id)
         calc = None
         if calc is not None:

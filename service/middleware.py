@@ -1,8 +1,8 @@
 """
-Refresh token middleware for API requests.
+Middleware для обновления токена при API запросах.
 
-This module provides a middleware for handling token refresh
-during API requests, ensuring valid authentication state.
+Этот модуль предоставляет middleware для обработки обновления токена
+во время API запросов, обеспечивая корректное состояние аутентификации.
 """
 
 import logging
@@ -18,18 +18,18 @@ logger = logging.getLogger(__name__)
 
 class RefreshTokenMiddleware:
     """
-    Middleware for handling token refresh during API requests.
+    Middleware для обработки обновления токена во время API запросов.
 
-    Automatically refreshes expired tokens when receiving 401/403 errors
-    and retries failed requests with new authentication credentials.
+    Автоматически обновляет просроченные токены при получении ошибок 401/403
+    и повторяет неудачные запросы с новыми учётными данными аутентификации.
     """
 
     def __init__(self, get_user_id: Callable[[int], int]) -> None:
         """
-        Initialize refresh token middleware.
+        Инициализировать middleware для обновления токена.
 
         Args:
-            get_user_id: Function to extract user ID from request context
+            get_user_id: Функция для извлечения ID пользователя из контекста запроса
         """
         self.get_user_id = get_user_id
 
@@ -42,22 +42,22 @@ class RefreshTokenMiddleware:
         **kwargs: Any,
     ) -> ClientResponse:
         """
-        Execute request with automatic token refresh on 401/403 errors.
+        Выполнить запрос с автоматическим обновлением токена при ошибках 401/403.
 
         Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL
-            user_id: User ID for token lookup
-            *args: Additional positional arguments for request
-            **kwargs: Additional keyword arguments for request
+            method: HTTP метод (GET, POST, и т.д.)
+            url: URL запроса
+            user_id: ID пользователя для поиска токена
+            *args: Дополнительные позиционные аргументы для запроса
+            **kwargs: Дополнительные именованные аргументы для запроса
 
         Returns:
-            ClientResponse from the API
+            ClientResponse из API
 
         Raises:
-            AuthApiError: If authentication fails after refresh attempt
+            AuthApiError: Если аутентификация не удалась после попытки обновления
         """
-        # Get initial access token
+        # Получить начальный access токен
         access_token = token_storage.get_access_token(user_id)
 
         if not access_token:
@@ -77,21 +77,21 @@ class RefreshTokenMiddleware:
         **kwargs: Any,
     ) -> ClientResponse:
         """
-        Execute request with token refresh on 401/403.
+        Выполнить запрос с обновлением токена при 401/403.
 
         Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL
-            user_id: User ID for token lookup
-            access_token: Current access token
-            *args: Additional positional arguments for request
-            **kwargs: Additional keyword arguments for request
+            method: HTTP метод (GET, POST, и т.д.)
+            url: URL запроса
+            user_id: ID пользователя для поиска токена
+            access_token: Текущий access токен
+            *args: Дополнительные позиционные аргументы для запроса
+            **kwargs: Дополнительные именованные аргументы для запроса
 
         Returns:
-            ClientResponse from the API
+            ClientResponse из API
 
         Raises:
-            AuthApiError: If authentication fails after refresh attempt
+            AuthApiError: Если аутентификация не удалась после попытки обновления
         """
         headers = kwargs.get("headers", {})
         headers["Authorization"] = f"Bearer {access_token}"
@@ -100,9 +100,9 @@ class RefreshTokenMiddleware:
         session = ClientSession()
         try:
             async with session.request(method, url, *args, **kwargs) as response:
-                # Check if token expired (401 or 403)
+                # Проверить, истёк ли токен (401 или 403)
                 if response.status in (401, 403):
-                    # Try to refresh token and retry once
+                    # Попробовать обновить токен и повторить один раз
                     return await self._refresh_and_retry(
                         method, url, user_id, *args, **kwargs
                     )
@@ -121,39 +121,39 @@ class RefreshTokenMiddleware:
         **kwargs: Any,
     ) -> ClientResponse:
         """
-        Refresh token and retry request once.
+        Обновить токен и повторить запрос один раз.
 
         Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL
-            user_id: User ID for token lookup
-            *args: Additional positional arguments for request
-            **kwargs: Additional keyword arguments for request
+            method: HTTP метод (GET, POST, и т.д.)
+            url: URL запроса
+            user_id: ID пользователя для поиска токена
+            *args: Дополнительные позиционные аргументы для запроса
+            **kwargs: Дополнительные именованные аргументы для запроса
 
         Returns:
-            ClientResponse from the API
+            ClientResponse из API
 
         Raises:
-            AuthApiError: If refresh fails or retry still returns 401/403
+            AuthApiError: Если обновление не удалось или повторная попытка всё ещё возвращает 401/403
         """
         refresh_token = token_storage.get_refresh_token(user_id)
         if not refresh_token:
             raise AuthApiError("No refresh token available")
 
         try:
-            # Attempt to refresh token
+            # Попытка обновить токен
             refresh_response = await auth_service.refresh(refresh_token)
             if not refresh_response.success or not refresh_response.data:
                 raise AuthApiError("Token refresh failed")
 
-            # Update stored tokens
+            # Обновить сохранённые токены
             new_tokens = TokenPair(
                 access_token=refresh_response.data.access_token,
                 refresh_token=refresh_response.data.refresh_token,
             )
             token_storage.set(user_id, new_tokens, ttl_seconds=3600)
 
-            # Retry request with new token
+            # Повторить запрос с новым токеном
             headers = kwargs.get("headers", {})
             headers["Authorization"] = f"Bearer {new_tokens.access_token}"
             kwargs["headers"] = headers
@@ -161,7 +161,7 @@ class RefreshTokenMiddleware:
             session = ClientSession()
             try:
                 async with session.request(method, url, *args, **kwargs) as retry_response:
-                    # If still getting 401/403, authentication has failed
+                    # Если всё ещё получаем 401/403, аутентификация не удалась
                     if retry_response.status in (401, 403):
                         token_storage.remove(user_id)
                         raise AuthApiError(
@@ -186,24 +186,24 @@ async def request_with_auth(
     **kwargs: Any,
 ) -> ClientResponse:
     """
-    Make an authenticated API request with automatic token refresh on 401/403.
+    Выполнить аутентифицированный API запрос с автоматическим обновлением токена при 401/403.
 
-    This is a convenience function that handles token refresh logic
-    for individual API requests. Refresh is only attempted when
-    the server returns 401 or 403 status codes.
+    Это удобная функция, которая обрабатывает логику обновления токена
+    для отдельных API запросов. Обновление выполняется только когда
+    сервер возвращает коды статуса 401 или 403.
 
     Args:
-        method: HTTP method (GET, POST, etc.)
-        url: Request URL
-        user_id: User ID for token lookup
-        *args: Additional positional arguments for request
-        **kwargs: Additional keyword arguments for request
+        method: HTTP метод (GET, POST, и т.д.)
+        url: URL запроса
+        user_id: ID пользователя для поиска токена
+        *args: Дополнительные позиционные аргументы для запроса
+        **kwargs: Дополнительные именованные аргументы для запроса
 
     Returns:
-        ClientResponse from the API
+        ClientResponse из API
 
     Raises:
-        AuthApiError: If authentication fails
+        AuthApiError: Если аутентификация не удалась
 
     Example:
         response = await request_with_auth(
@@ -225,7 +225,7 @@ async def request_with_auth(
     session = ClientSession()
     try:
         async with session.request(method, url, *args, **kwargs) as response:
-            # Handle expired token - refresh and retry once
+            # Обработка истёкшего токена - обновить и повторить один раз
             if response.status in (401, 403):
                 await session.close()
 
@@ -234,25 +234,25 @@ async def request_with_auth(
                     raise AuthApiError("No refresh token available")
 
                 try:
-                    # Attempt to refresh token
+                    # Попытка обновить токен
                     refresh_response = await auth_service.refresh(refresh_token)
                     if not refresh_response.success or not refresh_response.data:
                         raise AuthApiError("Token refresh failed")
 
-                    # Update stored tokens
+                    # Обновить сохранённые токены
                     new_tokens = TokenPair(
                         access_token=refresh_response.data.access_token,
                         refresh_token=refresh_response.data.refresh_token,
                     )
                     token_storage.set(user_id, new_tokens, ttl_seconds=3600)
 
-                    # Retry request with new token
+                    # Повторить запрос с новым токеном
                     headers["Authorization"] = f"Bearer {new_tokens.access_token}"
                     kwargs["headers"] = headers
 
                     session = ClientSession()
                     async with session.request(method, url, *args, **kwargs) as retry_response:
-                        # If still getting 401/403, authentication has failed
+                        # Если всё ещё получаем 401/403, аутентификация не удалась
                         if retry_response.status in (401, 403):
                             token_storage.remove(user_id)
                             raise AuthApiError(
@@ -273,17 +273,17 @@ async def request_with_auth(
 
 async def get_valid_access_token(user_id: int) -> Optional[str]:
     """
-    Get a valid access token for a user.
+    Получить действующий access токен для пользователя.
 
-    Note: This only checks local expiration time. The actual request
-    may still fail with 401/403 if the server-side token has expired.
-    Use request_with_auth() for automatic token refresh on 401/403 errors.
+    Note: Эта функция проверяет только локальное время истечения. Фактический запрос
+    может всё ещё завершиться неудачей с 401/403, если токен на стороне сервера истёк.
+    Используйте request_with_auth() для автоматического обновления токена при ошибках 401/403.
 
     Args:
-        user_id: User ID for token lookup
+        user_id: ID пользователя для поиска токена
 
     Returns:
-        Valid access token string or None if no token exists
+        Действующий access токен или None, если токен не существует
     """
-    # Return current token if exists (don't pre-refresh)
+    # Вернуть текущий токен, если существует (не обновлять заранее)
     return token_storage.get_access_token(user_id)
