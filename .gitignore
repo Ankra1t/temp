@@ -18,6 +18,7 @@ _tg.py
 *.session
 *.session_journal
 venv
+.venv
 
 ecosystem.config.js
 ecosystem.config.js.save

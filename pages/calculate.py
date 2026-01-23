@@ -744,7 +744,7 @@ async def create_and_send_calc(
     )
 
     await calc_service.create_calculation(user.tgId, calc_data=CalcCreateRequest(
-        open_price=open_price, deposit=F'{deposit}', risk_value=f'{risk_value * updated_risk}', stop_loss=stop_loss, market=calc_type, symbol=tool))
+        openPrice=open_price, deposit=F'{deposit}', riskValue=f'{risk_value * updated_risk}', stopLoss=stop_loss, market=calc_type, symbol=tool))
 
     user_settings_storage.set_risk(user.tgId, (risk[0], risk[1]))
     user_settings_storage.set_deposit(user.tgId, deposit)

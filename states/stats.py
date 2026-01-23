@@ -1,4 +1,4 @@
-from telebot.asyncio_handler_backends import State, StatesGroup
+from telebot.states import State, StatesGroup
 
 
 class StatsState(StatesGroup):
@@ -18,6 +18,7 @@ class StatsState(StatesGroup):
     close_price = State()
 
     take_price = State()
+
 
 class ChannelCalcState(StatesGroup):
     loss = State()

@@ -1,6 +1,11 @@
 from typing import Union
 from telebot.types import Message, CallbackQuery, ChatMemberUpdated
-from telebot.async_telebot import AsyncTeleBot, BaseMiddleware, CancelUpdate, ContinueHandling
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_handler_backends import (
+    BaseMiddleware,
+    CancelUpdate,
+    ContinueHandling,
+)
 from telebot.util import update_types
 
 from common.utils import delete_message, get_lang
@@ -19,12 +24,14 @@ class AuthMiddleWare(BaseMiddleware):
 
     async def post_process(self, message, data, exception):
         print()
-        print('Response')
+        print("Response")
         pass
 
-    async def pre_process(self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data):
+    async def pre_process(
+        self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data
+    ):
         print()
-        print('Request')
+        print("Request")
         if isinstance(message, ChatMemberUpdated):
             return ContinueHandling()
 
@@ -39,21 +46,20 @@ class AuthMiddleWare(BaseMiddleware):
         isText = False
         if isinstance(message, Message):
             chat_id = message.chat.id
-            isText = message.content_type == 'text' or message.content_type == 'photo'
+            isText = message.content_type == "text" or message.content_type == "photo"
         else:
+            if message.message is None:
+                return CancelUpdate()
             chat_id = message.message.chat.id
 
         state = StateContext(message, self.bot)  # type: ignore
 
         if (await state.get() is not None) and isText:
             async with state.data() as state_data:
-                del_mes_id = state_data.get('del_mes_id')
-                edit_mes = state_data.get('edit_mes')
+                del_mes_id = state_data.get("del_mes_id")
+                edit_mes = state_data.get("edit_mes")
 
-            await state.add_data(
-                del_mes_id=None,
-                edit_mes=None
-            )
+            await state.add_data(del_mes_id=None, edit_mes=None)
 
             if del_mes_id is not None:
                 if edit_mes is None:
@@ -61,7 +67,9 @@ class AuthMiddleWare(BaseMiddleware):
                 else:
                     try:
                         await self.bot.edit_message_text(
-                            edit_mes, tgId, del_mes_id,
+                            edit_mes,
+                            tgId,
+                            del_mes_id,
                         )
                     except Exception as e:
                         pass
@@ -69,9 +77,4 @@ class AuthMiddleWare(BaseMiddleware):
         lang = get_lang()
 
         data["state"] = state
-        data["user"] = User(
-            id=0,
-            tgId=tgId,
-            lang=lang,
-            role=0
-        )
+        data["user"] = User(id=0, tgId=tgId, lang=lang, role=0)

@@ -184,12 +184,12 @@ class CalcCreateRequest(BaseData):
     """Данные запроса для создания расчёта."""
 
     deposit: str
-    risk_value: str
-    open_price: float
-    stop_loss: float
+    riskValue: str
+    openPrice: float
+    stopLoss: float
     # category: str | None = None
     market: str = 'crypto'
-    tp_ratio: str = '3'
+    tpRatio: str = '3'
     # round_count: int
     # trading_style: str | None = None
     symbol: str | None = None
@@ -199,19 +199,19 @@ class CalcCreateRequest(BaseData):
     photo: str | None = None
     pair: str | None = None
     reverse: bool = False
-    new_stop: float | None = None
-    is_from_deposit: str = "0"
+    newStop: float | None = None
+    isFromDeposit: str = "0"
     status: str | None = None
     opened_list: bool = False
     is_open_price_changed: bool = False
     ticker_sid: str | None = None
-    order_type: str | None = None
-    deal_time: int | None = None
-    cancel_time: int | None = None
-    stat_time: int | None = None
-    is_channel: bool = False
-    is_market: bool = False
-    split_values: list[CreateSplitValue] | None = None
+    orderType: str | None = None
+    dealTime: int | None = None
+    cancelTime: int | None = None
+    statTime: int | None = None
+    isChannel: bool = False
+    isMarket: bool = False
+    splitValues: list[CreateSplitValue] | None = None
 
     class Config:
         populate_by_name = True
@@ -222,16 +222,16 @@ class CalcCreateResponse(BaseData):
 
     id: int
     vid: str
-    user_id: int
+    userId: int
     deposit: str
-    risk_value: str
-    open_price: float
-    stop_loss: float
+    riskValue: float
+    openPrice: float
+    stopLoss: float
     category: str | None = None
     market: str
-    tp_ratio: str
-    round_count: int
-    trading_style: str | None = None
+    tpRatio: str
+    roundCount: int | None = None
+    tradingStyle: str | None = None
     symbol: str | None = None
     quote: str | None = None
     description: str | None = None
@@ -239,20 +239,20 @@ class CalcCreateResponse(BaseData):
     photo: str | None = None
     pair: str | None = None
     reverse: bool
-    new_stop: float | None = None
-    is_from_deposit: str
+    newStop: float | None = None
+    isFromDeposit: str
     status: str | None = None
-    opened_list: bool
-    is_open_price_changed: bool
+    openedList: bool
+    isOpenPriceChanged: bool
     ticker_sid: str | None = None
-    order_type: str | None = None
-    deal_time: int | None = None
-    cancel_time: int | None = None
-    stat_time: int | None = None
+    orderType: str | None = None
+    dealTime: int | None = None
+    cancelTime: int | None = None
+    statTime: int | None = None
     created: int
     updated: int
-    is_update_raiting: bool
-    split_values: list[SplitValue]
+    isUpdateRaiting: bool = False
+    splitValues: list[SplitValue]
 
     class Config:
         populate_by_name = True
@@ -325,6 +325,7 @@ class CalcService:
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
         session = aiohttp.ClientSession()
@@ -387,13 +388,16 @@ class CalcService:
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
         payload = calc_data.model_dump(by_alias=True, exclude_none=True)
 
         session = aiohttp.ClientSession()
         try:
-            async with session.post(url, json=payload, headers=headers) as response:
+            async with session.post(url, json=payload | {"category": "future", "quote": "USDT", "status": "WAIT", "openedList": False,
+                                                         "isOpenPriceChanged": False, }, headers=headers) as response:
+                print(calc_data.model_dump_json())
                 data = await response.json()
 
                 if response.status in (401, 403):
@@ -407,7 +411,7 @@ class CalcService:
                                 "message", "Failed to create calculation"),
                             status_code=retry_response.status,
                         )
-                    return CalcCreateFullResponse(**data)
+                    return CalcCreateFullResponse.model_validate_json(data)
 
                 if response.status >= 400:
                     raise AuthApiError(

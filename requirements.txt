@@ -1,6 +1,6 @@
 # Core dependencies
-pyTelegramBotAPI==4.22.1
-aiohttp==3.13.2
+pyTelegramBotAPI==4.30.0
+aiohttp==3.13.3
 aiohttp-sse-client==0.2.1
 psycopg2-binary==2.9.11
 pydantic==2.12.5
@@ -23,4 +23,4 @@ beautifulsoup4==4.14.3
 
 # Utilities
 python-dateutil==2.9.0.post0
-selenium
+selenium==4.40.0

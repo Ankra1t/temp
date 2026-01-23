@@ -1,42 +1,43 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message as _Message, User as _User, CallbackQuery as _CallbackQuery
+from telebot.types import (
+    Message as _Message,
+    User as _User,
+    CallbackQuery as _CallbackQuery,
+)
 from telebot.states.asyncio.context import StateContext as _StateContext
 from telebot.asyncio_storage.base_storage import StateDataContext as _StateDataContext
 from telebot.asyncio_filters import AdvancedCustomFilter
-from telebot.asyncio_handler_backends import State
+from telebot.states import State
 from telebot.states import resolve_context
 
 from pydantic import BaseModel
 from typing import Literal, Union, Optional
 from datetime import datetime
 
-SUBSCRIBE_TYPE = Literal['trial', 'PAID']
-BASE_VALUE_TYPE = Literal['deposit', 'risk', 'currency']
-SORT_BY_TYPE = Literal['new', 'old']
+SUBSCRIBE_TYPE = Literal["trial", "PAID"]
+BASE_VALUE_TYPE = Literal["deposit", "risk", "currency"]
+SORT_BY_TYPE = Literal["new", "old"]
 
 TRADING_TYPE = Literal["margin", "spot", "future"]
-MARKETS_TYPE = Literal['crypto', 'paper', 'forex', 'RF', 'USA']
-EXCHANGE_TYPE = Literal['BYBIT', 'BINANCE']
-PRODUCT_TYPE = Literal['signals', 'calc', 'calc_signals', 'active_calc']
-ROLE_TYPE = Literal['ADMIN', 'EDITOR', 'SUPPORT']
-CALC_STATUS_TYPE = Literal['WAIT', 'CANCEL', 'FINISH', 'DEAL']
+MARKETS_TYPE = Literal["crypto", "paper", "forex", "RF", "USA"]
+EXCHANGE_TYPE = Literal["BYBIT", "BINANCE"]
+PRODUCT_TYPE = Literal["signals", "calc", "calc_signals", "active_calc"]
+ROLE_TYPE = Literal["ADMIN", "EDITOR", "SUPPORT"]
+CALC_STATUS_TYPE = Literal["WAIT", "CANCEL", "FINISH", "DEAL"]
 
-MANUAL_TYPE = Literal[
-    'settings', 'exchange',
-    'trading_type', 'trading_style', 'calc'
-]
+MANUAL_TYPE = Literal["settings", "exchange", "trading_type", "trading_style", "calc"]
 
 # Языки вывода
-LANGUAGES_TYPE = Literal['ru', 'en', 'uz', 'tr']
-LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ('ru', 'en', 'uz', 'tr')
+LANGUAGES_TYPE = Literal["ru", "en", "uz", "tr"]
+LANGUAGES: tuple[LANGUAGES_TYPE, ...] = ("ru", "en", "uz", "tr")
 
 STYLES = {
-    'Пробой': 'пробой уровня',
-    'Отбой': 'отбой от уровня',
-    'Ложные': 'ложные пробои',
-    'Скользящие': 'скользящие средние',
-    'High/low': 'торговля на high/low',
-    'В канале': 'в канале',
+    "Пробой": "пробой уровня",
+    "Отбой": "отбой от уровня",
+    "Ложные": "ложные пробои",
+    "Скользящие": "скользящие средние",
+    "High/low": "торговля на high/low",
+    "В канале": "в канале",
 }
 
 
@@ -44,14 +45,14 @@ class StateFilter(AdvancedCustomFilter):
     def __init__(self, bot: AsyncTeleBot):
         self.bot = bot
 
-    key = 'state'
+    key = "state"
 
     async def check(self, message, text):
         if self.bot.bot_id is None or self.bot.current_states is None:
             return
 
-        chat_id, user_id, business_connection_id, bot_id, message_thread_id = resolve_context(
-            message, self.bot.bot_id
+        chat_id, user_id, business_connection_id, bot_id, message_thread_id = (
+            resolve_context(message, self.bot.bot_id)
         )
 
         if chat_id is None:
@@ -72,7 +73,7 @@ class StateFilter(AdvancedCustomFilter):
             user_id=user_id,
             business_connection_id=business_connection_id,  # type: ignore
             bot_id=bot_id,  # type: ignore
-            message_thread_id=message_thread_id  # type: ignore
+            message_thread_id=message_thread_id,  # type: ignore
         )
 
         # ИЗМЕНЁННОЕ ПОВЕДЕНИЕ
@@ -101,6 +102,7 @@ class CallbackQuery(_CallbackQuery):
 
 class Invoice(BaseModel):
     """Структура чека (deprecated)"""
+
     invoice_id: int
     status: str
     asset: str
@@ -113,6 +115,7 @@ class Invoice(BaseModel):
 
 class InvoiceBBanker(BaseModel):
     """(deprecated)"""
+
     invoice_id: Optional[int] = None
     status: Optional[str] = None
     asset: Optional[str] = None
@@ -123,6 +126,7 @@ class InvoiceBBanker(BaseModel):
 
 class Update(BaseModel):
     """(deprecated)"""
+
     update_id: int
     update_type: str
     request_date: datetime
@@ -131,11 +135,13 @@ class Update(BaseModel):
 
 class UpdateBBanker(BaseModel):
     """(deprecated)"""
+
     payload: InvoiceBBanker | None = None
 
 
 class Subscribe(BaseModel):
     """(deprecated)"""
+
     id: int
     user_id: int
     finish_dt: datetime
@@ -146,6 +152,7 @@ class Subscribe(BaseModel):
 
 class User(BaseModel):
     """Пользователь кратко"""
+
     id: int
     tgId: int
     lang: LANGUAGES_TYPE
@@ -154,12 +161,14 @@ class User(BaseModel):
 
 class Discount(BaseModel):
     """(deprecated)"""
+
     percent: float
     findate: datetime
 
 
 class Price:
     """(deprecated)"""
+
     type_product: PRODUCT_TYPE
 
     def __init__(
@@ -192,18 +201,18 @@ class Price:
         self.price_findate = price_findate
         self.type_product = type_product
 
-        self.price_crypto = price_crypto or 0.
-        self.currency_crypto = currency_crypto or 'USDT'
+        self.price_crypto = price_crypto or 0.0
+        self.currency_crypto = currency_crypto or "USDT"
 
         if discount_percent is not None and discount_findate is not None:
-            self.discount = Discount(
-                percent=discount_percent, findate=discount_findate)
+            self.discount = Discount(percent=discount_percent, findate=discount_findate)
         else:
             self.discount = None
 
 
 class Transactions(BaseModel):
     """(deprecated)"""
+
     id: int
     user_id: int
     code: str
@@ -232,7 +241,6 @@ class Purchase:
         duration: int | None = None,
         payment_date: datetime | None = None,
         create_date: datetime | None = None,
-
     ):
         self.user_id = user_id
         self.price_id = price_id
@@ -297,9 +305,9 @@ class PostDetails(BaseModel):
 
 class Post(BaseModel):
     id: int | None = None
-    content: str = ''
-    mes_type: str = 'text'
-    direct: str = 'Всем'
+    content: str = ""
+    mes_type: str = "text"
+    direct: str = "Всем"
     media: str | None = None
     date_time: datetime | None = None
     details: PostDetails | None = None
@@ -315,14 +323,14 @@ class Text(BaseModel):
 
 
 class TaskMessage(BaseModel):
-    type_message: str = 'text'
-    text: str = 'text'
+    type_message: str = "text"
+    text: str = "text"
     media_id: str | None = None
 
 
 class Task(BaseModel):
     id: int | None = None
-    type_task: str = 'send_message'
+    type_task: str = "send_message"
     user_id: int | None = None
     date_action: datetime | None = None
     message: TaskMessage | None = None
@@ -345,7 +353,7 @@ class CalcActiveInfo(BaseModel):
     autoStop: Optional[bool]
     autoTake: Optional[float]
     chMesIds: Optional[str]
-    exchange: EXCHANGE_TYPE = 'BYBIT'
+    exchange: EXCHANGE_TYPE = "BYBIT"
 
 
 class Calculation(BaseModel):
@@ -377,7 +385,7 @@ class Calculation(BaseModel):
     forexInfo: ForexInfo | None = None
     tool: Optional[str] = None
 
-    status: CALC_STATUS_TYPE = 'WAIT'
+    status: CALC_STATUS_TYPE = "WAIT"
     description: Optional[str] = None
     photo: Optional[str] = None
     comment: Optional[str] = None
@@ -440,7 +448,7 @@ class TickerInfo(BaseModel):
 class SentMessages(BaseModel):
     chIds: list[str]
     mesIds: list[str]
-    langs: list[Literal['ru', 'en']]
+    langs: list[Literal["ru", "en"]]
 
 
 class UserNotification(SentMessages):
@@ -450,11 +458,11 @@ class UserNotification(SentMessages):
 
 class UserCalcNot(BaseModel):
     userId: int
-    type: Literal['cancel', 'tr_stop']
+    type: Literal["cancel", "tr_stop"]
     tool: str
     chId: str
     mesId: str
-    trStop: tuple[float | Literal['breakeven'], float] | None = None
+    trStop: tuple[float | Literal["breakeven"], float] | None = None
 
 
 class CalcSentMessages(BaseModel):

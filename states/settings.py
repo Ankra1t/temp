@@ -1,4 +1,4 @@
-from telebot.asyncio_handler_backends import State, StatesGroup
+from telebot.states import State, StatesGroup
 
 
 class SettingsState(StatesGroup):
@@ -20,9 +20,11 @@ class SettingsState(StatesGroup):
 
     atr_bars_count = State()
 
+
 class FirstCalcState(StatesGroup):
     deposit = State()
     risk = State()
+
 
 class ViolationState(StatesGroup):
     message = State()
