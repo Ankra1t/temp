@@ -1,21 +1,12 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: proriski_bot
     restart: unless-stopped
-    environment:
-      - PROD=${PROD:-True}
-      - TOKEN_MAIN_BOT=${TOKEN_MAIN_BOT}
-      - DB_PG_NAME=${DB_PG_NAME}
-      - DB_PG_HOST=postgres
-      - DB_PG_USER=${DB_PG_USER}
-      - DB_PG_PASS=${DB_PG_PASS}
-      - DB_PG_PORT=5432
-      - API_URL=${API_URL}
-      - NEW_API_URL=${NEW_API_URL}
-      - SITE_URL=${SITE_URL}
-      - API_AUTH_URL=${API_AUTH_URL}
-      - API_AUTH_KEY=${API_AUTH_KEY}
+    env_file:
+      - .env
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
