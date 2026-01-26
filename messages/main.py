@@ -37,30 +37,6 @@ def msg_main(lang: LANGUAGES_TYPE, is_rus=False):
 2. <b>{texts[lang]["2"]}</b>"""
 
 
-def msg_no_uses(lang: LANGUAGES_TYPE):
-    text = {
-        'ru': {
-            '1': 'Тестовые 100 использований закончились',
-            '2': 'Перейдите в бота рекомендаций для покупки доступа'
-        },
-        'en': {
-            '1': '100 test uses are over',
-            '2': 'Go to the signal bot for buying access'
-        },
-        'uz': {
-            '1': 'Test 100 ta foydalanish tugadi',
-            '2': 'Kirishni sotib olish uchun bot tavsiyalariga o\'ting'
-        },
-        'tr': {
-            '1': '100 kullanımlık test erişim sona erdi',
-            '2': 'Erişim satın almak için öneri botuna gidiniz'
-        },
-    }
-
-    return f"""❗️ {text[lang]["1"]}
-{text[lang]["2"]}"""
-
-
 def msg_frozen(lang: LANGUAGES_TYPE, datetime: str):
     text = {
         'ru': 'Калькулятор заморожен до',

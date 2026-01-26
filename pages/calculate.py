@@ -18,7 +18,7 @@ from messages.errors import msg_sl_op_equal_error
 from messages.manual import msg_manual
 from messages.settings import msg_active_settings, msg_atr_settings, msg_change_style_settings, msg_deposit, msg_dop_settings, msg_exchange, msg_maker_or_taker, msg_settings, msg_stop_page, msg_summary_profit_settings
 from messages.common import transl_status
-from messages.main import msg_no_uses
+from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
@@ -54,7 +54,7 @@ async def send_main(
     # TODO: получить незавершённый расчёт
     unfinished_calc = None
 
-    text = msg_no_uses(user.lang)
+    text = msg_main(user.lang, True)
 
     keyboard = kb_main(
         user.lang, user.tgId, None,
