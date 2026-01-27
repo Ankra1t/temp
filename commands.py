@@ -32,11 +32,11 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
         # Проверяем формат монета_цена для быстрого запуска калькулятора
         if mes_args.startswith('l_'):
             parts = mes_args.split('_')
-            if len(parts) == 3:
-                _, tool_part, price_part = parts
+            if len(parts) == 4:
+                _, tool_part, price_part, float_part = parts
                 # Проверяем, что price_part - число (может быть дробным)
                 try:
-                    quick_calc_price = float(price_part)
+                    quick_calc_price = float(f'{price_part}.{float_part or 0}')
                     quick_calc_tool = tool_part  # например, BTCUSDT
                 except ValueError:
                     # Если не число, проверяем на ref_id
