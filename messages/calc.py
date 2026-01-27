@@ -9,7 +9,7 @@ from common.calculation import getStrValueCount
 from config_logger import logger
 from config_global import SITE_URL
 from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_tr_type
-from models import LANGUAGES_TYPE, Calculation
+from models import LANGUAGES_TYPE, CalcActiveInfo, Calculation
 
 from Classes import calcService
 from services import ticker
@@ -249,6 +249,8 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
         conclusion = ''
 
         print("ActiveCalc:", calc.ActiveCalc)
+        calc.ActiveCalc = CalcActiveInfo(
+            autoStop=True, trailingStopCount=None, autoTake=3, chMesIds=None, exchange='BYBIT')
 
         if calc.ActiveCalc:
             logger.info(f"ActiveCalc: {calc.ActiveCalc.__dict__}")

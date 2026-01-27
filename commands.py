@@ -22,14 +22,31 @@ from keyboards.account import kb_support
 async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
     user_role = 0
     is_registered = False
+    quick_calc_tool = None
+    quick_calc_price = None
+
+    # Проверяем реферальный id или быстрый запуск калькулятора
+    mes_args = extract_arguments(message.text or '')
+
+    if mes_args is not None:
+        # Проверяем формат монета_цена для быстрого запуска калькулятора
+        if mes_args.startswith('l_'):
+            parts = mes_args.split('_')
+            if len(parts) == 3:
+                _, tool_part, price_part = parts
+                # Проверяем, что price_part - число (может быть дробным)
+                try:
+                    quick_calc_price = float(price_part)
+                    quick_calc_tool = tool_part  # например, BTCUSDT
+                except ValueError:
+                    # Если не число, проверяем на ref_id
+                    if is_digit(mes_args):
+                        ref_id = int(mes_args)
+        elif is_digit(mes_args):
+            ref_id = int(mes_args)
 
     if user_role is None:
-        # Проверяем реферальный id
-        mes_args = extract_arguments(message.text or '')
-
         ref_id = None
-        if mes_args is not None and is_digit(mes_args):
-            ref_id = int(mes_args)
 
         username = message.from_user.username
 
@@ -77,6 +94,8 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
         state,
         user,
         is_registered or False,
+        quick_calc_tool=quick_calc_tool,
+        quick_calc_price=quick_calc_price,
     )
 
 
@@ -149,11 +168,6 @@ async def _results(message: Message, bot: AsyncTeleBot, state: StateContext, use
 
 
 async def _test(message: Message, bot: AsyncTeleBot):
-    # print(1)
-
-    # await asyncio.sleep('5')
-
-    # print(2)
     pass
 
 

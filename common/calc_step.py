@@ -186,7 +186,8 @@ async def choose_calculate_step(
             edit_to = names[user.lang]['atr']
             new_state = CalculateState.stop_atr
 
-            atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
+            atr_settings = user_settings_storage.get_user_atr_settings(
+                user.tgId)
             period, count = atr_settings[1].split('+')
 
             value = ticker.get_atr(tool, period, int(count)) or None

@@ -23,15 +23,11 @@ class AuthMiddleWare(BaseMiddleware):
         self.bot = bot
 
     async def post_process(self, message, data, exception):
-        print()
-        print("Response")
         pass
 
     async def pre_process(
         self, message: Union[Message, CallbackQuery, ChatMemberUpdated], data
     ):
-        print()
-        print("Request")
         if isinstance(message, ChatMemberUpdated):
             return ContinueHandling()
 
@@ -40,8 +36,6 @@ class AuthMiddleWare(BaseMiddleware):
 
         tgId = message.from_user.id
         user = await register_user_from_tg(tgId)
-
-        print(user.access_token)
 
         isText = False
         if isinstance(message, Message):

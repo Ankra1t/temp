@@ -22,11 +22,22 @@ async def send_start_by_user(
     message: Message,
     state: StateContext,
     user: User,
-    has_registered_now=False
+    has_registered_now=False,
+    quick_calc_tool: str | None = None,
+    quick_calc_price: float | None = None,
 ):
     chat_id = message.chat.id
 
     await state.delete()
+
+    # Обработка быстрого запуска калькулятора из start параметра
+    if quick_calc_tool is not None and quick_calc_price is not None:
+        await _start_quick_calc(
+            bot, message, state, user,
+            quick_calc_tool, quick_calc_price
+        )
+        return
+
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
         send_data = channel_calc.getByCalc(int(id))
@@ -40,7 +51,8 @@ async def send_start_by_user(
             stop_type = user_settings_storage.get_user_stop(user.tgId) or ''
 
             if 'atr' in stop_type:
-                atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
+                atr_settings = user_settings_storage.get_user_atr_settings(
+                    user.tgId)
                 period, count = atr_settings[1].split('+')
 
                 await state.set(CalculateState.stop_atr)
@@ -193,3 +205,37 @@ async def first_start_with_calc(
     )
 
     await send_calculation(bot, message, state, user, new_calc, is_try=True)
+
+
+async def _start_quick_calc(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    tool: str,
+    open_price: float,
+):
+    """Запуск калькулятора с предустановленными tool и openPrice"""
+    u_base = user_settings_storage.get_or_create(user.tgId)
+
+    tool = tool.replace('USDT', '').replace('/', '') + '/USDT'
+
+    await state.set(CalculateState.stop_loss)
+
+    await state.add_data(
+        tool=tool,
+        open_price=open_price,
+        deposit=u_base.deposit if u_base else 10000,
+        risk=u_base.risk if u_base else (100, False),
+        currency=u_base.currency if u_base else 'USDT',
+        trading_type=u_base.trading_type if u_base else 'margin',
+        calc_type='crypto',
+        stop_type='default',
+        stop_loss=-1,
+    )
+
+    await bot.send_message(
+        message.chat.id,
+        f'<b>{tool}</b>\nЦена входа: <code>{open_price}</code>$ \n' +
+        msg_enter_stop_loss(user.lang)
+    )
