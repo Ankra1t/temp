@@ -1,6 +1,5 @@
 from typing import Literal
-from messages.common import POINT
-from models import LANGUAGES_TYPE, UserInfo
+from models import LANGUAGES_TYPE
 
 
 def msg_referral(lang: LANGUAGES_TYPE, ref_count: int, bot_name: str, user_db_id: int):
@@ -33,37 +32,6 @@ def msg_referral(lang: LANGUAGES_TYPE, ref_count: int, bot_name: str, user_db_id
 {texts[lang]['3']}😉
 
 <code>https://t.me/{bot_name}/?start={user_db_id}</code>"""
-
-
-def msg_referral_list(lang: LANGUAGES_TYPE, user_db_id: int, referrals: list[UserInfo]):
-    texts = {
-        'ru': {
-            'name': 'Ник',
-            'not': 'Рефералы не найдены',
-        },
-        'en': {
-            'name': 'Nick',
-            'not': 'Referrals not found',
-        },
-        'uz': {
-            'name': 'Nik',
-            'not': 'Hech qanday havola topilmadi',
-        },
-        'tr': {
-            'name': 'Nickname',
-            'not': 'Yönlendirme bulunamadı',
-        },
-    }
-
-    res = ''
-    if len(referrals) != 0:
-        for ref in referrals:
-            name = f'@{ref.tg_username}' if ref.tg_username else '-'
-            res += f"{POINT} {texts[lang]['name']}: {name}\n\n"
-    else:
-        res = f"{texts[lang]['not']} 😔\n"
-
-    return res
 
 
 def msg_site_login(lang: LANGUAGES_TYPE):
@@ -120,31 +88,6 @@ def msg_user_account(lang: LANGUAGES_TYPE, refs: int):
 
 {texts[lang]['refs']}: <b>{refs}</b>
 """
-
-
-def msg_user_params(lang: LANGUAGES_TYPE, user: UserInfo):
-    texts = {
-        'ru': {
-            'main': 'Параметры',
-            'name': 'Никнейм',
-        },
-        'en': {
-            'main': 'Params',
-            'name': 'Nickname',
-        },
-        'uz': {
-            'main': 'Parametrlar',
-            'name': 'Nik',
-        },
-        'tr': {
-            'main': 'Paramler',
-            'name': 'Nickname',
-        },
-    }
-
-    return f"""🛠 <b><u>{texts[lang]['main']}</u></b>
-
-<b>{texts[lang]['name']}</b>: {user.nickname or '-'}"""
 
 
 def msg_enter_nickname(lang: LANGUAGES_TYPE, error: Literal['min', 'max', 'taken', 'default'] | None = None):

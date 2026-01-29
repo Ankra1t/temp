@@ -1,5 +1,4 @@
 from common.utils import get_print_float
-from messages.common import POINT
 from models import LANGUAGES_TYPE, SubscribeInfo
 
 
@@ -52,15 +51,6 @@ def msg_admin_menu(title: str):
     return f"""<b><u>{title}</u></b>
 
 Действия:"""
-
-
-def msg_admin_users_markets(counts: dict[str, int]):
-    return f"""<b><u>Клиенты по рынкам</u></b>
-
-{POINT} Крипта: <b>{counts.get('crypto', 0)}</b>
-{POINT} Форекс: <b>{counts.get('forex', 0)}</b>
-{POINT} РФ: <b>{counts.get('RF', 0)}</b>
-{POINT} США: <b>{counts.get('USA', 0)}</b>"""
 
 
 def msg_admin_send_settings(

@@ -240,29 +240,6 @@ def msg_settings_change_base(lang: LANGUAGES_TYPE):
     return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
 
 
-def msg_settings_change_market(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': {
-            'name': 'Настройки',
-            'subname': 'Изменение рынка',
-        },
-        'en': {
-            'name': 'Settings',
-            'subname': 'Change market',
-        },
-        'uz': {
-            'name': 'Sozlamalar',
-            'subname': 'Bozordagi o\'zgarishlar',
-        },
-        'tr': {
-            'name': 'Ayarlar',
-            'subname': 'Piyasa değiştirilmes',
-        },
-    }
-
-    return f'⚙️ <b>{texts[lang]["name"]}</b> > <b><u>{texts[lang]["subname"]}</u></b>'
-
-
 def msg_dop_settings(lang: LANGUAGES_TYPE, output: Literal['text', 'photo'], risk_upd: bool = True):
     texts = {
         'ru': {

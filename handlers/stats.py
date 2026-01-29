@@ -1,4 +1,3 @@
-import os
 import re
 from datetime import timedelta, datetime
 from telebot.async_telebot import AsyncTeleBot
@@ -20,7 +19,7 @@ from keyboards.stats import kb_channel_confirm_back, kb_channel_item_back, kb_co
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
-from services import calculation, channel_calc, settings, ticker, twitter, violation
+from services import calculation, channel_calc, settings, ticker, violation
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -226,20 +225,6 @@ async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: Sta
     )
     if calc is None:
         return
-
-    if calc.photo and calc.ActiveCalc:
-        file_id = calc.photo
-        file = await bot.get_file(file_id)
-        file_bytes = await bot.download_file(file.file_path)
-
-        name = f'{file_id}.png'
-        with open(name, 'wb') as new_file:
-            new_file.write(file_bytes)
-
-        with open(name, 'rb') as file:
-            data = twitter.create(file)
-
-        os.remove(name)
 
     await state.delete()
 

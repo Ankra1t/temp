@@ -11,10 +11,9 @@ from telebot.states import State
 from telebot.states import resolve_context
 
 from pydantic import BaseModel
-from typing import Literal, Union, Optional
+from typing import Literal, Optional
 from datetime import datetime
 
-SUBSCRIBE_TYPE = Literal["trial", "PAID"]
 BASE_VALUE_TYPE = Literal["deposit", "risk", "currency"]
 SORT_BY_TYPE = Literal["new", "old"]
 
@@ -25,7 +24,8 @@ PRODUCT_TYPE = Literal["signals", "calc", "calc_signals", "active_calc"]
 ROLE_TYPE = Literal["ADMIN", "EDITOR", "SUPPORT"]
 CALC_STATUS_TYPE = Literal["WAIT", "CANCEL", "FINISH", "DEAL"]
 
-MANUAL_TYPE = Literal["settings", "exchange", "trading_type", "trading_style", "calc"]
+MANUAL_TYPE = Literal["settings", "exchange",
+                      "trading_type", "trading_style", "calc"]
 
 # Языки вывода
 LANGUAGES_TYPE = Literal["ru", "en", "uz", "tr"]
@@ -100,56 +100,6 @@ class CallbackQuery(_CallbackQuery):
     message: Message
 
 
-class Invoice(BaseModel):
-    """Структура чека (deprecated)"""
-
-    invoice_id: int
-    status: str
-    asset: str
-    amount: Union[int, float]
-    pay_url: str
-    description: Optional[str] = None
-    allow_comments: bool
-    allow_anonymous: bool
-
-
-class InvoiceBBanker(BaseModel):
-    """(deprecated)"""
-
-    invoice_id: Optional[int] = None
-    status: Optional[str] = None
-    asset: Optional[str] = None
-    amount: Optional[Union[int, float]] = None
-    pay_url: Optional[str] = None
-    description: Optional[str] = None
-
-
-class Update(BaseModel):
-    """(deprecated)"""
-
-    update_id: int
-    update_type: str
-    request_date: datetime
-    payload: Invoice
-
-
-class UpdateBBanker(BaseModel):
-    """(deprecated)"""
-
-    payload: InvoiceBBanker | None = None
-
-
-class Subscribe(BaseModel):
-    """(deprecated)"""
-
-    id: int
-    user_id: int
-    finish_dt: datetime
-    product_type: PRODUCT_TYPE
-    active: bool
-    transactions_payed_id: Optional[int] = None
-
-
 class User(BaseModel):
     """Пользователь кратко"""
 
@@ -157,101 +107,6 @@ class User(BaseModel):
     tgId: int
     lang: LANGUAGES_TYPE
     role: Literal[1, 0]
-
-
-class Discount(BaseModel):
-    """(deprecated)"""
-
-    percent: float
-    findate: datetime
-
-
-class Price:
-    """(deprecated)"""
-
-    type_product: PRODUCT_TYPE
-
-    def __init__(
-        self,
-        name: str,
-        duration: int,
-        price: int,
-        currency: str,
-        switch_active: bool,
-        type_product: PRODUCT_TYPE,
-        description: str,
-        id: Optional[int] = None,
-        image: Optional[str] = None,
-        img_en: Optional[str] = None,
-        discount_percent: Optional[float] = None,
-        discount_findate: Optional[datetime] = None,
-        price_findate: Optional[datetime] = None,
-        price_crypto: Optional[float] = None,
-        currency_crypto: Optional[str] = None,
-    ):
-        self.id = id
-        self.name = name
-        self.currency = currency
-        self.price = price
-        self.duration_days = duration
-        self.description = description
-        self.img = image
-        self.img_en = img_en
-        self.switch_active = switch_active
-        self.price_findate = price_findate
-        self.type_product = type_product
-
-        self.price_crypto = price_crypto or 0.0
-        self.currency_crypto = currency_crypto or "USDT"
-
-        if discount_percent is not None and discount_findate is not None:
-            self.discount = Discount(percent=discount_percent, findate=discount_findate)
-        else:
-            self.discount = None
-
-
-class Transactions(BaseModel):
-    """(deprecated)"""
-
-    id: int
-    user_id: int
-    code: str
-    link: str | None
-    sum: float
-    currency: str
-    status: str
-    payment_date: datetime | None
-    name: str
-    duration_days: int
-    type_product: PRODUCT_TYPE
-
-
-class Purchase:
-    """(deprecated)"""
-
-    def __init__(
-        self,
-        user_id: int | None,
-        price_id: int | None = None,
-        price_name: str | None = None,
-        type_product: str | None = None,
-        sum: float | None = None,
-        tariff_price: float | None = None,
-        currency: str | None = None,
-        duration: int | None = None,
-        payment_date: datetime | None = None,
-        create_date: datetime | None = None,
-    ):
-        self.user_id = user_id
-        self.price_id = price_id
-        self.price_name = price_name
-        self.type_product = type_product
-        self.sum = sum
-        self.tariff_price = tariff_price
-        self.currency = currency
-        self.duration_days = duration
-        self.payment_date = payment_date
-        self.create_date = create_date
 
 
 class UserInfo(BaseModel):
@@ -274,10 +129,6 @@ class RefUser(BaseModel):
     refsCount: int
 
 
-class Client(BaseModel):
-    user: UserInfo | None = None
-
-
 class CalculatorStats(BaseModel):
     currency: str
     profit: float
@@ -287,13 +138,6 @@ class CalculatorStats(BaseModel):
     saved_stats_count: int
     max_profit: float
     min_loss: float
-
-
-class Worker(BaseModel):
-    id: int
-    tg_id: int
-    username: str
-    role: ROLE_TYPE
 
 
 class PostDetails(BaseModel):
@@ -311,30 +155,6 @@ class Post(BaseModel):
     media: str | None = None
     date_time: datetime | None = None
     details: PostDetails | None = None
-
-
-class Text(BaseModel):
-    id: int
-    name: str
-    message: str
-    message_type: str
-    media_id: str | None
-    media_id_en: str | None
-
-
-class TaskMessage(BaseModel):
-    type_message: str = "text"
-    text: str = "text"
-    media_id: str | None = None
-
-
-class Task(BaseModel):
-    id: int | None = None
-    type_task: str = "send_message"
-    user_id: int | None = None
-    date_action: datetime | None = None
-    message: TaskMessage | None = None
-    active: int = 1
 
 
 class ForexInfo(BaseModel):
@@ -456,21 +276,6 @@ class UserNotification(SentMessages):
     num: int
 
 
-class UserCalcNot(BaseModel):
-    userId: int
-    type: Literal["cancel", "tr_stop"]
-    tool: str
-    chId: str
-    mesId: str
-    trStop: tuple[float | Literal["breakeven"], float] | None = None
-
-
-class CalcSentMessages(BaseModel):
-    mesNum: Optional[int] = None
-    messages: Optional[dict] = None
-    date: str
-
-
 class SendCalc(BaseModel):
     id: int
     calcId: int
@@ -527,16 +332,3 @@ class ActiveStats(BaseModel):
     longCount: int
     shortCount: int
     profitCount: float
-
-
-class UserActiveStats(BaseModel):
-    user: MinUser
-    data: ActiveStats
-
-
-class CalcChannelNotification(BaseModel):
-    calcId: int
-    tool: str
-    chIds: list[str]
-    mesIds: list[str]
-    langs: list[LANGUAGES_TYPE]
