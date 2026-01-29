@@ -17,9 +17,7 @@ from callbacks.account import registration as _reg_cb_account
 
 from callbacks.admin_main import registration as _reg_cb_admin_main
 from callbacks.admin_params import registration as _reg_cb_admin_params
-from callbacks.admin_posts import registration as _reg_cb_admin_posts
 from callbacks.admin_stats import registration as _reg_cb_admin_stats
-from callbacks.admin_workers import registration as _reg_cb_admin_workers
 from callbacks.admin_subs import registration as _reg_cb_admin_subs
 from callbacks.admin_users import registration as _reg_cb_admin_users
 from callbacks.user_main import registration as _reg_cb_user_main
@@ -27,10 +25,8 @@ from callbacks.user_main import registration as _reg_cb_user_main
 from callbacks.livepost import registration as _reg_cb_livepost
 
 from handlers.admin_stats import registration as _reg_admin_statistics
-from handlers.admin_workers import registration as _reg_admin_workers
 from handlers.admin_users import registration as _reg_admin_users
 from handlers.admin_params import registration as _reg_admin_params
-from handlers.admin_posts import registration as _reg_admin_posts
 
 from handlers.account import registration as _reg_user_account
 
@@ -53,9 +49,7 @@ def reg(bot: AsyncTeleBot):
     _reg_cb_channel_post(bot)
 
     _reg_cb_admin_main(bot)
-    _reg_cb_admin_workers(bot)
     _reg_cb_admin_params(bot)
-    _reg_cb_admin_posts(bot)
     _reg_cb_admin_users(bot)
     _reg_cb_admin_stats(bot)
 
@@ -66,10 +60,8 @@ def reg(bot: AsyncTeleBot):
     _reg_cb_livepost(bot)
 
     _reg_admin_statistics(bot)
-    _reg_admin_workers(bot)
     _reg_admin_users(bot)
     _reg_admin_params(bot)
-    _reg_admin_posts(bot)
     _reg_cb_admin_subs(bot)
 
     _reg_user_account(bot)

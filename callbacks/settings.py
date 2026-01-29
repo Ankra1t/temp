@@ -3,7 +3,6 @@ from telebot.types import InaccessibleMessage
 
 from NOTIFIER import notifier
 from config_logger import logger
-from db import db
 from service import user_settings_storage
 from models import LANGUAGES, CallbackQuery, User, StateContext
 from services import auth, calculation, settings
@@ -128,7 +127,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                     return
 
                 if value != '**cancel**':
-                    db.change_calculation_style(stat_id, value)
+                    # TODO - изменить стиль через api
+                    # db.change_calculation_style(stat_id, value)
                     calc_info.tradingStyle = value
 
                 if '+stc' in type:

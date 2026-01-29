@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from db import db
 from models import CallbackQuery, StateContext, User
 
 from keyboards.admin_params import admin_params_factory, AdminParamsCallbackFilter, kb_calculator
@@ -26,11 +25,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_params(bot, call.message, state)
 
     if type == 'calculator':
-        sup = db.get_support_name()
-        sup_link = f'@{sup}' if (sup != '') else ''
-
         await bot.edit_message_text(
-            f'<b>Калькулятор расчета рисков</b>\nТех. поддержка: {sup_link}',
+            f'<b>Калькулятор расчета рисков</b>\nТех. поддержка: @calcsup',
             chat_id, mes_id,
             reply_markup=kb_calculator()
         )

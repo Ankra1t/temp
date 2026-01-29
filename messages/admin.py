@@ -54,12 +54,6 @@ def msg_admin_menu(title: str):
 Действия:"""
 
 
-def msg_admin_fut_posts(posts_count: int):
-    return f"""📋 <b><u>Отложенные посты</u></b>
-
-Количество: <b>{posts_count}</b>"""
-
-
 def msg_admin_users_markets(counts: dict[str, int]):
     return f"""<b><u>Клиенты по рынкам</u></b>
 

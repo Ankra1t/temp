@@ -5,12 +5,10 @@ from models import Post, LANGUAGES_TYPE, Message, StateContext
 from common.utils import get_lang, get_print_signal_info
 from common.dt import get_str_by_datetime
 
-from messages.admin import msg_admin_fut_posts, msg_admin_main, msg_admin_users, msg_admin_menu
+from messages.admin import msg_admin_main, msg_admin_users, msg_admin_menu
 
 from keyboards.admin_main import kb_admin_main, kb_admin_tools_list
 from keyboards.admin_users import kb_admin_users
-from keyboards.admin_workers import kb_admin_workers, kb_admin_workers_actions, kb_admin_workers_support
-from keyboards.admin_posts import kb_posts
 from keyboards.admin_params import kb_params
 
 
@@ -131,35 +129,6 @@ async def send_admin_payment(
     await bot.send_message(chat_id, 'Статистика оплат недоступна')
 
 
-async def send_admin_fut_posts(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    # TODO: Получить посты из API
-    posts_count = 0  # len(db.get_all_posts())
-
-    text = msg_admin_fut_posts(posts_count)
-    keyboard = kb_posts()
-
-    if is_first:
-        await bot.send_message(
-            chat_id, text,
-            reply_markup=keyboard
-        )
-    else:
-        await bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
-        )
-
-
 async def send_admin_params(
     bot: AsyncTeleBot,
     message: Message,
@@ -241,118 +210,6 @@ async def send_admin_client(
 
     # Временно показываем сообщение
     await bot.send_message(chat_id, 'Функция просмотра клиента временно недоступна')
-
-
-async def send_admin_workers(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    text = msg_admin_menu('Работники')
-    keyboard = kb_admin_workers()
-
-    if is_first:
-        await bot.send_message(chat_id, text, reply_markup=keyboard)
-    else:
-        await bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
-        )
-
-
-async def send_admin_workers_admin(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    # TODO: Получить админов из API
-    res = '<b>Админы</b>\n\nНет админов!'
-    # admins = db.get_admins()
-    # if len(admins) != 0:
-    #     for i in range(0, len(admins)):
-    #         res += f'\nID: {admins[i].id} | Username: @{admins[i].username}'
-    # else:
-    #     res = '\nНет админов!'
-
-    keyboard = kb_admin_workers_actions(1)
-
-    if is_first:
-        await bot.send_message(chat_id, res, reply_markup=keyboard)
-    else:
-        await bot.edit_message_text(
-            res, chat_id, mes_id,
-            reply_markup=keyboard
-        )
-
-
-async def send_admin_workers_redactors(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    # TODO: Получить редакторов из API
-    res = '<b>Редакторы</b>\n\nНет редакторов!'
-    # redactors = db.get_redactors()
-    # if len(redactors) != 0:
-    #     for i in range(0, len(redactors)):
-    #         res += f'\nID: {redactors[i].id} | Username: @{redactors[i].username}'
-    # else:
-    #     res = '\nНет редакторов!'
-
-    keyboard = kb_admin_workers_actions(2)
-
-    if is_first:
-        await bot.send_message(chat_id, res, reply_markup=keyboard)
-    else:
-        await bot.edit_message_text(
-            res, chat_id, mes_id,
-            reply_markup=keyboard
-        )
-
-
-async def send_admin_workers_support(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    is_first=False
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    await state.delete()
-
-    # TODO: Получить техподдержку из API
-    sup = 'calcsup'  # db.get_support_name()
-    sup_link = f'@{sup}' if sup != '' else '-'
-
-    text = f'Тех. поддержка: {sup_link}'
-    keyboard = kb_admin_workers_support()
-
-    if is_first:
-        await bot.send_message(chat_id, text, reply_markup=keyboard)
-    else:
-        await bot.edit_message_text(
-            text, chat_id, mes_id,
-            reply_markup=keyboard
-        )
 
 
 async def send_admin_tools_list(

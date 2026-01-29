@@ -27,8 +27,6 @@ def kb_admin_main():
 
     btn_users = getButton("Пользователи", 'users')
     btn_subs = getButton("Подписки", 'subs')
-    btn_workers = getButton("Работники", 'workers')
-    btn_posts = getButton("Отложенные посты", 'fut_posts')
     btn_payments = getButton("Оплата", 'payment')
     btn_params = getButton("Параметры", 'params')
     btn_send_settings = getButton("Настройки отправки", 'send_settings')
@@ -36,9 +34,8 @@ def kb_admin_main():
     btn_site_code = getButton("Войти на сайт", 'site_code')
 
     keyboard.add(btn_users, btn_subs)
-    keyboard.add(btn_workers, btn_payments)
-    keyboard.add(btn_params)
-    keyboard.add(btn_posts, btn_send_settings)
+    keyboard.add(btn_payments, btn_params)
+    keyboard.add(btn_send_settings)
     keyboard.add(btn_get_tickers, btn_site_code)
     return keyboard
 

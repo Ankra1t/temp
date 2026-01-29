@@ -4,7 +4,6 @@ from telebot.types import InaccessibleMessage
 from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation, channel_calc, ticker
 from config_logger import logger
-from db import db
 from service import user_settings_storage
 from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
 
@@ -211,7 +210,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if isVote == 'False':
                 channel_calc.update(send_data.id, isVote=False)
             if style:
-                db.change_calculation_style(stat_id, style)
+                # TODO - изменить стиль через api
+                # db.change_calculation_style(stat_id, style)
                 channel_calc.update(send_data.id, tradingStyle=style)
             if time:
                 channel_calc.update(send_data.id, time=time or 'avg')

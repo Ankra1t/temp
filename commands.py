@@ -3,7 +3,6 @@ from telebot.util import extract_arguments
 
 from config_logger import logger
 from NOTIFIER import notifier
-from db import db
 from service import user_settings_storage
 from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
@@ -119,7 +118,7 @@ async def _about_us(message: Message, bot: AsyncTeleBot, state: StateContext):
 
 
 async def _support(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    sup = db.get_support_name()
+    sup = 'calcsup'
     msg = msg_support(user.lang)
 
     await bot.send_message(
