@@ -14,5 +14,3 @@ class AdminPostsState(StatesGroup):
     post_delete = State()
     post_send = State()
     comfirm_send_delete = State()
-
-    edit_text = State()

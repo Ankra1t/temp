@@ -6,7 +6,6 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from telebot.asyncio_helper import ApiTelegramException
 
 from common.dt import get_str_by_datetime
-from db import db
 from service import user_settings_storage
 
 from models import Post, UserInfo, LANGUAGES_TYPE, Message
@@ -212,7 +211,8 @@ def get_short_user_info(user: UserInfo):
     ban = '| (BAN)' if user.ban else ''
 
     is_set_settings = 0
-    calcs_count = len(db.get_calculations_by_user(user.id))
+    # Поучение расчётов пользователя
+    calcs_count = 0
 
     if calcs_count > 1:
         is_set_settings = 1

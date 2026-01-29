@@ -10,7 +10,6 @@ from common.utils import delete_message, edit_message
 
 from config_logger import logger
 
-from db import db
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc
 
@@ -181,7 +180,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if 'delete_calc' in type:
         if '_yes' in type:
-            if db.delete_calculation(calc_id):
+            # TODO - Удаление расчёта
+            if False:
                 await edit_message(
                     bot, call.message, 'text',
                     msg_calculation_deleted(user.lang),

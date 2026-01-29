@@ -8,10 +8,7 @@ from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_
 from config_logger import logger
 
 from models import (
-    ROLE_TYPE,
-    Calculation,
-    ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
-    Worker, MARKETS_TYPE,
+    ROLE_TYPE, Calculation, ForexInfo, Post, PostDetails, Worker
 )
 
 
@@ -45,10 +42,6 @@ class Database:
             self._connect()
             retries += 1
             sleep(1)
-
-    # Пользователи
-
-    # Уроки пользователей
 
     def add_lesson_count(self, id: int):
         query = 'UPDATE \"BotSettings\" set "lessonCount" = %s WHERE "userId" = %s'
@@ -124,39 +117,6 @@ class Database:
             status=data.get('status'),
         )
 
-    def add_calculation(self, value: Calculation):
-        query = (
-            'INSERT INTO "Calculation" ("userId", deposit, "riskValue", "openPrice", "stopLoss", "roundCount", '
-            'currency, "tradingStyle", market, "tpRatio", "splitValues", pair, "pairPrice", "crossPrices", tool, "tradingType") '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
-        )
-
-        pair_price = pair = cross_prices = None
-        if value.forexInfo is not None:
-            pair_price = value.forexInfo.price
-            pair = '/'.join(value.forexInfo.pair)
-            cross_prices = json.dumps(value.forexInfo.cross_prices)
-
-        params = (
-            value.userId, value.deposit, value.riskValue, value.openPrice, value.stopLoss,
-            value.roundCount, value.currency, value.tradingStyle, value.market,
-            value.tpRatio, value.splitValues, pair, pair_price, cross_prices, value.tool,
-            value.tradingType
-        )
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                raise Exception('Ошибка с записью в БД')
-
-            self.connection.commit()
-            return int(data.get('id'))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
     def change_calculation_style(self, id: int, value: str | None):
         query = 'UPDATE "Calculation" SET "tradingStyle" = %s WHERE id = %s'
         params = (value, id)
@@ -169,45 +129,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return False
-
-    def delete_calculation(self, id: int):
-        query = 'DELETE FROM "Calculation" WHERE id = %s'
-        params = id,
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def get_calculations_by_user(
-        self,
-        user_id: int,
-        saved: bool | None = None,
-        market: MARKETS_TYPE | None = None
-    ) -> list[Calculation]:
-        query = 'SELECT * FROM "Calculation" WHERE "userId" = %s'
-        params = (user_id,)
-
-        if saved is not None:
-            query += ' AND "inStat" = %s'
-            params = (*params, True)
-
-        if market is not None:
-            query += ' AND market = %s'
-            params = (*params, market)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_calculations(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
 
     # Работники
     def _data_to_worker(self, data: DictRow):
@@ -409,91 +330,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return None
-
-    # Тексты
-    def _data_to_text(self, data: DictRow):
-        return Text(
-            id=data.get('id'),
-            name=data.get('name'),
-            message=data.get('message') or '',
-            message_type=data.get('messageType') or 'text',
-            media_id=data.get('mediaId') or '',
-            media_id_en=data.get('mediaIdEn')
-        )
-
-    def get_texts(self) -> list[Text]:
-        query = 'SELECT * FROM "BotText"'
-
-        try:
-            self.curs.execute(query)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_text(el), data)) if (data is not None) else []
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_text_by_name(self, name: str):
-        query = 'SELECT * FROM "BotText" WHERE name = %s'
-        params = (name,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_text(data) if (data is not None) else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def update_text(self, name: str, text: str):
-        mes_type = 'text'
-        check_text = self.get_text_by_name(name)
-
-        try:
-            if check_text is None:
-                query = 'INSERT INTO "BotText"(message, "messageType", name) VALUES(%s, %s, %s)'
-            else:
-                query = 'UPDATE "BotText" SET message = %s, "messageType" = %s WHERE name = %s'
-
-            params = (text, mes_type, name)
-
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    # Незавершённые расчёты
-
-    def add_unfinished_calc(self, value: UnfinishedCalculation):
-        query = 'INSERT INTO "UnfinishedCalc" '
-        query += '("userId", "openPrice", tool, pair, "pairPrice", "crossPrices", "tradingStyle", '
-        query += '"riskValue", "updateRiskRate", "isRiskPercent", deposit, currency, "lastValues") '
-        query += 'VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-
-        pair_price = pair = cross_prices = None
-        if value.forex is not None:
-            pair_price = value.forex.price
-            pair = '/'.join(value.forex.pair)
-            cross_prices = json.dumps(value.forex.cross_prices)
-
-        params = (
-            value.user_id, value.open_price, value.tool, pair, pair_price, cross_prices, value.trading_style,
-            value.risk_value, value.update_risk_rate, value.is_risk_percent, value.deposit, value.currency,
-            value.last_values
-        )
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
 
 db = Database(DB_PG_USER, DB_PG_PASS, DB_PG_HOST, DB_PG_PORT, DB_PG_NAME)

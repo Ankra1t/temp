@@ -6,7 +6,7 @@ from services import calculation, channel_calc, ticker
 from config_logger import logger
 from db import db
 from service import user_settings_storage
-from models import Calculation, ForexInfo, UnfinishedCalculation, CallbackQuery, StateContext, User
+from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
 
 from states.calculate import CalculateState
 
@@ -20,6 +20,8 @@ from keyboards.calculate import (
 )
 
 from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
+
+from service.calc import CalcCreateRequest, calc_service
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -51,41 +53,41 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_settings(bot, call.message, state, user)
 
     if type == 'settings_from_calc' and (await state.get()) is not None:
-        async with state.data() as data:
-            open_price: float | None = data.get('open_price')
-            tool: str | None = data.get('tool')
-            forex: ForexInfo | None = data.get('forex')
-            trading_style: str | None = data.get('trading_style')
-            risk: tuple[float, bool] | None = data.get('risk')
-            updated_risk: float | None = data.get('updated_risk')
-            deposit: float | None = data.get('deposit')
-            currency: str | None = data.get('currency')
-            last_values: list[str] = data.get('last_values') or []
+        # async with state.data() as data:
+        #     open_price: float | None = data.get('open_price')
+        #     tool: str | None = data.get('tool')
+        #     forex: ForexInfo | None = data.get('forex')
+        #     trading_style: str | None = data.get('trading_style')
+        #     risk: tuple[float, bool] | None = data.get('risk')
+        #     updated_risk: float | None = data.get('updated_risk')
+        #     deposit: float | None = data.get('deposit')
+        #     currency: str | None = data.get('currency')
+        #     last_values: list[str] = data.get('last_values') or []
 
-        if tool is not None or forex is not None:
-            update_risk_rate = updated_risk
+        # if tool is not None or forex is not None:
+        #     update_risk_rate = updated_risk
 
-            risk_value = is_risk_percent = None
-            if risk is not None:
-                risk_value = risk[0]
-                is_risk_percent = risk[1]
+        #     risk_value = is_risk_percent = None
+        #     if risk is not None:
+        #         risk_value = risk[0]
+        #         is_risk_percent = risk[1]
 
-            unfinished_calc = UnfinishedCalculation(
-                id=-1,
-                user_id=user.id,
-                tool=tool,
-                forex=forex,
-                open_price=open_price,
-                trading_style=trading_style,
-                risk_value=risk_value,
-                is_risk_percent=is_risk_percent,
-                update_risk_rate=update_risk_rate,
-                deposit=deposit,
-                currency=currency,
-                last_values=last_values
-            )
+        # unfinished_calc = UnfinishedCalculation(
+        #     id=-1,
+        #     user_id=user.id,
+        #     tool=tool,
+        #     forex=forex,
+        #     open_price=open_price,
+        #     trading_style=trading_style,
+        #     risk_value=risk_value,
+        #     is_risk_percent=is_risk_percent,
+        #     update_risk_rate=update_risk_rate,
+        #     deposit=deposit,
+        #     currency=currency,
+        #     last_values=last_values
+        # )
 
-            db.add_unfinished_calc(unfinished_calc)
+        # db.add_unfinished_calc(unfinished_calc)
 
         await send_settings(bot, call.message, state, user)
 
@@ -194,7 +196,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if stat is None:
                 return
 
-            withoutStop = user_settings_storage.get_send_settings('withoutStop')
+            withoutStop = user_settings_storage.get_send_settings(
+                'withoutStop')
             style = user_settings_storage.get_send_settings('style')
             isVote = user_settings_storage.get_send_settings('isVote')
             time = user_settings_storage.get_send_settings('time')
@@ -270,8 +273,17 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                     isFromDeposit=u_base.is_from_deposit if u_base is not None else False
                 )
 
-                new_id = db.add_calculation(new_calc)
-                new_calc.id = new_id or -1
+                await calc_service.create_calculation(
+                    user.tgId,
+                    calc_data=CalcCreateRequest(
+                        riskValue=f'{risk_val}',
+                        openPrice=calc.openPrice,
+                        deposit=F'{deposit}',
+                        stopLoss=stop_loss,
+                        market=calc.market,
+                        symbol=calc.tool
+                    )
+                )
 
                 await send_calculation(bot, call.message, state, user, new_calc, True)
             else:

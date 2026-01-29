@@ -26,13 +26,10 @@ def kb_params():
     keyboard = InlineKeyboardMarkup(row_width=2)
 
     btn_calc = getButton('⌨️ Калькулятор', 'calculator')
-    btn_texts = getButton('✏️ Изменить тексты', 'update_texts')
-    btn_change = getButton('Изменить', 'change')
 
     back = getButton(back_txt(), 'go_main')
 
-    keyboard.add(btn_calc, btn_texts)
-    keyboard.add(btn_change)
+    keyboard.add(btn_calc)
     keyboard.add(back)
     return keyboard
 
@@ -64,24 +61,4 @@ def kb_params_back():
     keyboard = InlineKeyboardMarkup(row_width=2)
     back = getButton(back_txt(), 'go_params')
     keyboard.add(back)
-    return keyboard
-
-
-def kb_params_choice(action: str):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    def getBtn(txt, type): return getButton(txt, f'{action}_choice_{type}')
-
-    yes = getBtn('✅ Да', 'yes')
-    no = getBtn('❌ Нет', 'no')
-
-    keyboard.add(yes, no)
-    return keyboard
-
-
-def kb_edit_text(text_name: str):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    edit = getButton('✏️ Редактировать', f'edit_text+{text_name}')
-
-    keyboard.add(edit)
     return keyboard

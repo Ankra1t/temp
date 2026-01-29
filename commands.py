@@ -105,16 +105,14 @@ async def _calc(message: Message, bot: AsyncTeleBot, state: StateContext, user: 
 
 
 async def _faq(message: Message, bot: AsyncTeleBot, state: StateContext):
-    text = db.get_text_by_name('FAQ')
-    msg = text.message if (text is not None) else '*Ошибка*'
+    msg = '*Ошибка*'
 
     await bot.send_message(message.chat.id, msg)
     await state.delete()
 
 
 async def _about_us(message: Message, bot: AsyncTeleBot, state: StateContext):
-    text = db.get_text_by_name('О нас')
-    msg = text.message if (text is not None) else '*Ошибка*'
+    msg = '*Ошибка*'
 
     await bot.send_message(message.chat.id, msg)
     await state.delete()

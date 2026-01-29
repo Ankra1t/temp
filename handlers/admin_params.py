@@ -4,26 +4,12 @@ from keyboards.admin_main import kb_tools_list_back
 from messages.errors import msg_digit_error
 from models import Message, StateContext, User
 
-from common.utils import digit_accept, get_print_float, get_normal_text
+from common.utils import digit_accept, get_print_float
 
 from pages.admin import send_admin_tools_list
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
 from services import calculation, settings
 from states.admin_params import AdminMainState, AdminParamsState
-from keyboards.admin_params import kb_params_choice
-
-
-async def handle_other_text(message: Message, bot: AsyncTeleBot, state: StateContext):
-    chat_id = message.chat.id
-
-    await state.add_data(
-        text=get_normal_text(message)
-    )
-
-    await bot.send_message(
-        chat_id, 'Применить изменения?',
-        reply_markup=kb_params_choice('change')
-    )
 
 
 async def handle_turnover(message: Message, bot: AsyncTeleBot, state: StateContext):
@@ -84,6 +70,5 @@ def registration(bot: AsyncTeleBot):
     def reg_mes(handler, **kwargs):
         bot.register_message_handler(handler, pass_bot=True, **kwargs)
 
-    reg_mes(handle_other_text, state=AdminParamsState.text)
     reg_mes(handle_trailing_stop, state=AdminParamsState.trailing_stop)
     reg_mes(handle_turnover, state=AdminMainState.turnover)
