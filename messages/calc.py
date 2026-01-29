@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Literal
 
-from common.calculation import getTrailingStopsMessage
+from common.calculation import get_result, getTrailingStopsMessage
 from common.dt import get_str_by_datetime
 from common.utils import format_number, get_decimal_count, get_print_float
 from common.calculation import getStrValueCount
@@ -11,7 +11,6 @@ from config_global import SITE_URL
 from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, CalcActiveInfo, Calculation
 
-from Classes import calcService
 from services import ticker
 
 
@@ -29,7 +28,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     print('ActiveCalc:', calc.ActiveCalc)
 
     is_saved = calc.status == 'FINISH'
-    calc_result = calcService.get_result(calc)
+    calc_result = get_result(calc)
 
     # num = calculation.getMonthNumber(userId=calc.userId, calcId=calc.id)
 
@@ -476,7 +475,7 @@ def msg_channel_calc(
 
     status = calc.status
 
-    results = calcService.get_result(calc)
+    results = get_result(calc)
 
     if calc.openPrice > calc.stopLoss:
         long_short = 'лонг' if lang == 'ru' else 'long'

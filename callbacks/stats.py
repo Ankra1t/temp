@@ -1,18 +1,6 @@
 import os
-from random import randint
-from time import sleep
-from typing import Literal
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
-
-from selenium import webdriver as wd
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions as EC
 
 from states.admin_params import AdminParamsState
 from states.calculate import CalculateState, ForexCalcState
@@ -20,7 +8,6 @@ from states.stats import ChannelCalcState, StatsState
 
 from common.utils import delete_message, edit_message
 
-from config_global import PROD
 from config_logger import logger
 
 from db import db
@@ -28,7 +15,7 @@ from models import MARKETS_TYPE, CallbackQuery, StateContext, User
 from services import calculation, channel_calc
 
 # TODO - months в common файл
-from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
+from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted
 from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_deposit, msg_enter_new_stop, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_risk_percent, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_take_price, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
 
 from keyboards.settings import kb_take_profit, kb_trading_style
@@ -37,141 +24,10 @@ from keyboards.main import kb_main
 from keyboards.stats import (
     kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_confirm_back, kb_channel_item_back, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
-    kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
+    kb_calculate_delete, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time
 )
 from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_main, send_stats
-
-
-def createScreen(
-    tool: str,
-    time: Literal['1h', '4h', '1d'] = '1h',
-    type: Literal['bars', 'candles'] = 'bars',
-    scale=0
-):
-    # cSpell: disable
-    print('START')
-    options = Options()
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    if PROD:
-        options.add_argument('--headless')
-        options.add_argument("--disable-blink-features")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_experimental_option(
-            "excludeSwitches", ["enable-automation"]
-        )
-        options.add_experimental_option('useAutomationExtension', False)
-        options.add_argument("start-maximized")
-
-    browser = wd.Chrome(
-        options=options,
-        service=Service(
-            executable_path='/usr/bin/chromedriver' if PROD else None,  # type:ignore
-        )
-        # service=Service(ChromeDriverManager().install())
-    )
-    browser.execute_script(
-        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    browser.execute_cdp_cmd('Network.setUserAgentOverride', {
-        "userAgent": 'Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
-    }
-    )
-    # browser.maximize_window()
-
-    browser.get(
-        f'https://www.bybit.com/trade/usdt/{tool.replace("/", "").upper()}'
-    )
-
-    print(browser.title)
-
-    print(browser.page_source)
-
-    performance_log = browser.get_log('performance')
-    print(str(performance_log).strip('[]'))
-
-    for entry in browser.get_log('performance'):
-        print(entry)
-
-    if not PROD:
-        browser.execute_script(
-            "localStorage.setItem(arguments[0], arguments[1])", 'BYBIT_THEME_KEY', 'light'
-        )
-        browser.refresh()
-
-    WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CLASS_NAME, 'self-tool--time-interval-item')
-        )
-    )
-    print('GET ELEMENT')
-    interval_buttons = browser.find_elements(
-        By.CLASS_NAME, 'self-tool--time-interval-item'
-    )
-    print('GET ELEMENTS')
-    print(interval_buttons)
-    for el in interval_buttons:
-        if el.text == time:
-            el.click()
-
-    fullscreen_btn = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CLASS_NAME, 'iconicon_fullscreen_on')
-        )
-    )
-    fullscreen_btn.click()
-
-    bars_select = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CSS_SELECTOR, '.self-tool__padding-horizen.flex-align-center.tv-self--chart-type-anchor.pointer.hover-color-white')
-        )
-    )
-    ActionChains(browser).move_to_element(bars_select).perform()
-
-    bars_btn = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CLASS_NAME, f'iconicon_ktv_{type}')
-        )
-    )
-    bars_btn.click()
-
-    click_place = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CLASS_NAME, 'self-tv_tool-header')
-        )
-    )
-    ActionChains(browser).move_to_element_with_offset(
-        click_place, randint(100, 600), 30
-    ).context_click().move_by_offset(
-        50, 250
-    ).click().perform()
-
-    scale = min(max(scale, 0), 10)
-    mas = [Keys.UP for _ in range(scale)]
-    ActionChains(browser).key_down(Keys.CONTROL).send_keys(*mas).perform()
-
-    go_away = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.CLASS_NAME, 'by-footer-derivatives__bg')
-        )
-    )
-    ActionChains(browser).move_to_element(
-        go_away
-    ).perform()
-
-    sleep(2)
-    table = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located(
-            (By.ID, "tv_chart_container")
-        )
-    )
-
-    file_path = '_calc_images/table.png'
-    table.screenshot(file_path)
-    browser.close()
-
-    return file_path
-    # cSpell: enable
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -586,59 +442,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await bot.delete_message(chat_id, mes_id)
         # await bot.send_message(chat_id, '✅ Отправлено')
         await send_main(bot, call.message, state, user, True)
-
-    if type == 'stc+rescreen':
-        send_data = channel_calc.getByCalc(calc_id)
-        calc = calculation.get(userId=user.id, calcId=calc_id)
-        if calc is None or send_data is None:
-            return
-
-        new_mes = await bot.send_message(
-            chat_id, 'Генерация изображения...',
-        )
-
-        try:
-            file_path = createScreen(
-                (calc.tool or '').replace('/', '').upper(),
-                '1h', 'candles', 6
-            )
-        except Exception as e:
-            print(e)
-            file_path = None
-
-        text = msg_channel_calc(
-            calc, 'ru', send_data.withoutStop, send_data.isPreStop
-        )
-
-        if file_path is None:
-            await bot.edit_message_text(
-                'Ошибка генерации фото', new_mes.chat.id, new_mes.id,
-            )
-
-            main_mes = await bot.send_message(
-                chat_id, text,
-                reply_markup=kb_confirm_channel_post(
-                    calc_id
-                )
-            )
-        else:
-            await bot.delete_message(new_mes.chat.id, new_mes.id)
-
-            with open(file_path, 'rb') as photo:
-                main_mes = await bot.send_photo(
-                    chat_id, photo, text,
-                    reply_markup=kb_confirm_channel_post(
-                        calc_id
-                    )
-                )
-            os.remove(file_path)
-
-        photo_str = None
-        if main_mes.photo is not None and len(main_mes.photo) > 0:
-            photo_str = main_mes.photo[-1].file_id
-
-        calculation.update(userId=user.id, calcId=calc_id, photo=photo_str)
-        await bot.delete_message(chat_id, mes_id)
 
     if type == 'stc+time':
         await edit_message(

@@ -5,7 +5,7 @@ from typing import Literal
 from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
-from common.calculation import getStrValueCount
+from common.calculation import get_result, getStrValueCount
 from states.stats import ChannelCalcState
 from common.utils import edit_message, edit_message, get_print_float
 
@@ -37,7 +37,6 @@ from keyboards.settings import (
 )
 
 from service.calc import CalcCreateRequest, calc_service
-from Classes import calcService
 
 
 async def send_main(
@@ -978,7 +977,7 @@ async def send_admin_channel_calc_item(
         except Exception as e:
             print(e)
 
-    calc_result = calcService.get_result(calc)
+    calc_result = get_result(calc)
 
     take_info = ''
     if calc.ActiveCalc:

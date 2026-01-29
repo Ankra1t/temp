@@ -10,7 +10,6 @@ aiocryptopay==0.4.8
 yookassa==3.9.0
 
 # Telegram
-Telethon==1.42.0
 aiosignal==1.4.0
 
 # Web & API
