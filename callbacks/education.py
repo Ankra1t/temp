@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from config_logger import logger
-from db import db
+from service import user_service
 from models import CallbackQuery, StateContext, User
 
 from messages.education import curs_contents, curs, termins
@@ -49,7 +49,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User, s
             await send_user_terms(bot, call.message, state, page)
 
     if 'curs' in type:
-        count_now_les = db.get_lesson_count(user.id)
+        count_now_les = user_service.get_lesson_count(user.tgId)
         if 'les' in type:
             if len(curs) + 1 == num_les:
                 await bot.edit_message_text(
@@ -61,7 +61,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User, s
                 lesson = curs[num_les - 1]
 
                 if page == len(lesson) and count_now_les == num_les and count_now_les != len(curs):
-                    db.add_lesson_count(user.id)
+                    user_service.add_lesson_count(user.tgId)
 
                 await bot.edit_message_text(
                     lesson[page - 1], chat_id, mes_id,

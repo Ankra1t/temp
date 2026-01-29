@@ -39,6 +39,10 @@ from service.user_settings_storage import (
     UserSettingsStorage,
     user_settings_storage,
 )
+from service.user_service import (
+    UserService,
+    user_service,
+)
 from service.middleware import (
     RefreshTokenMiddleware,
     request_with_auth,
@@ -103,6 +107,9 @@ __all__ = [
     "UserSettings",
     "UserSettingsStorage",
     "user_settings_storage",
+    # Сервис пользовательских данных
+    "UserService",
+    "user_service",
     # Middleware
     "RefreshTokenMiddleware",
     "request_with_auth",

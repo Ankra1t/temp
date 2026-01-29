@@ -43,36 +43,6 @@ class Database:
             retries += 1
             sleep(1)
 
-    def add_lesson_count(self, id: int):
-        query = 'UPDATE \"BotSettings\" set "lessonCount" = %s WHERE "userId" = %s'
-        count = self.get_lesson_count(id) + 1
-        params = (count, id,)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def get_lesson_count(self, id: int):
-        query = 'SELECT "lessonCount" FROM \"BotSettings\" WHERE "userId" = %s'
-        params = (id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-
-            if data == None:
-                return 1
-            else:
-                return data['lesson_count']
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return 1
 
     # Статистика расчётов
     def _data_to_calculations(self, data: DictRow):
