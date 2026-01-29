@@ -2,20 +2,16 @@ from psycopg2.extras import DictCursor, DictRow
 import psycopg2
 import json
 import traceback
-from typing import Literal, Optional
-from datetime import datetime, timedelta
 from time import sleep
 
-from common.dt import get_datetime_now
 from config_global import DB_PG_HOST, DB_PG_NAME, DB_PG_PASS, DB_PG_PORT, DB_PG_USER
 from config_logger import logger
 
 from models import (
     ROLE_TYPE,
-    SORT_BY_TYPE,
     Calculation,
     ForexInfo, Post, PostDetails, Text, UnfinishedCalculation,
-    UserInfo, Worker, MARKETS_TYPE,
+    Worker, MARKETS_TYPE,
 )
 
 
@@ -52,175 +48,8 @@ class Database:
 
     # Пользователи
 
-    def _data_to_user(self, data: DictRow):
-        name = data.get('username')
-        if name is not None and 'NewUser_' in name:
-            name = None
-
-        return UserInfo(
-            id=data.get('id'),
-            tg_id=data.get('tgId'),
-            tg_username=data.get('tgUsername'),
-            refer_id=data.get('referId'),
-            ban=data.get('ban') or False,
-            registration_dt=data.get('createdAt') or datetime(2012, 12, 12),
-            uses_count=data.get('usesCount'),
-            block=data.get('isBlocked') or False,
-            nickname=name,
-            refer_sum=data.get('referSum'),
-        )
-
-    USER_INFO_QUERY = (
-        'SELECT u.id, u.username, u."referSum", tu."isBlocked", u."tgId", u."tgUsername", '
-        'u."referId", u.ban, u."createdAt", tu."usesCount" '
-        'FROM "User" as u LEFT JOIN "BotSettings" as tu ON u.id = tu."userId" '
-    )
-
-    def get_all_users(self) -> list[UserInfo]:
-        return []
-        query = self.USER_INFO_QUERY
-
-        try:
-            self.curs.execute(query)
-            data = self.curs.fetchall()
-            return list(map(lambda u: self._data_to_user(u), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_today_users(self) -> list[DictRow]:
-        return []
-        now = get_datetime_now() + timedelta(hours=3)
-        start = datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) - timedelta(hours=3)
-        end = datetime(
-            now.year, now.month, now.day, 0, 0, 0, 0
-        ) + timedelta(days=1) - timedelta(hours=3)
-
-        query = 'SELECT * FROM "User" WHERE "createdAt" > %s AND "createdAt" < %s'
-        params = start, end
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return data
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_paginated_users(
-        self, limit: int | None = None, page: int | None = None,
-        sort_by: SORT_BY_TYPE = 'new',
-        market_filter: MARKETS_TYPE | None = None
-    ) -> list[UserInfo]:
-        return []
-        """Получить постраничный список пользователей"""
-        query = self.USER_INFO_QUERY
-        params = tuple()
-
-        if market_filter is not None:
-            query += f'WHERE tu.market = %s '
-            params = (*params, market_filter)
-
-        query += f"ORDER BY u.\"createdAt\" {'ASC' if sort_by == 'old' else 'DESC'}, u.id ASC "
-
-        if limit is not None:
-            query += "LIMIT %s OFFSET %s "
-            params = (*params, limit, ((page or 1) - 1) * limit)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_user(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_users_created_in_last(self, last_hours=2) -> list[UserInfo]:
-        return []
-        """Получить пользователей, созданных в последние 2 часа"""
-        query = self.USER_INFO_QUERY + 'WHERE u."createdAt" > %s'
-        params = (get_datetime_now() - timedelta(hours=last_hours),)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_user(el), data))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_subsribed_users(self, min_sub_count=1) -> list[UserInfo]:
-        return []
-        query = self.USER_INFO_QUERY + (
-            'WHERE u.ban = 0 '
-            f'AND '
-            f'(SELECT COUNT (*) FROM "Subscribe" as sub '
-            f'WHERE sub."userId" = u.id '
-            f'AND sub."transactionId" IS NOT NULL) >= %s '
-            'AND (SELECT COUNT (*) FROM "Subscribe" as sub WHERE sub."userId" = u.id AND sub.active = %s) > 0 '
-        )
-        params = (min_sub_count, True)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_user(el), data)) if (data is not None) else []
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_user_by_id(self, id: int):
-        """Получение пользователя"""
-        query = self.USER_INFO_QUERY + 'WHERE u.id = %s'
-        params = (id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_user(data) if (data is not None) else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def get_user_by_tg_id(self, tg_id: int):
-        """Получение пользователя"""
-        query = self.USER_INFO_QUERY + 'WHERE u.\"tgId\" = %s'
-        params = (tg_id,)
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            return self._data_to_user(data) if (data is not None) else None
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return None
-
-    def set_user_calc_output(self, id: int, value: Literal['text', 'photo']):
-        return False
-        query = 'UPDATE \"BotSettings\" SET "calcOutput" = %s WHERE "userId" = %s'
-        params = (value, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    # Сервисные запросы пользователей
-
     # Уроки пользователей
+
     def add_lesson_count(self, id: int):
         query = 'UPDATE \"BotSettings\" set "lessonCount" = %s WHERE "userId" = %s'
         count = self.get_lesson_count(id) + 1
@@ -251,39 +80,6 @@ class Database:
             self._log_error(e)
             self.connection.rollback()
             return 1
-
-    # Настройки пользователей
-    def get_user_current_market(self, user_id: int) -> MARKETS_TYPE:
-        query = 'SELECT market FROM \"BotSettings\" WHERE \"userId\" = %s'
-        params = (user_id,)
-
-        default = 'crypto'
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchone()
-            if data is None:
-                return default
-
-            return data.get('market')
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return default
-
-    def set_user_calc_freeze(self, user_id: int, value: datetime | None, market: Optional[MARKETS_TYPE] = None):
-        market = market or self.get_user_current_market(user_id)
-
-        query = 'UPDATE "CalcSettings" SET "freezeDt" = %s WHERE "userId" = %s AND market = %s'
-        params = (value, user_id, market)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
 
     # Статистика расчётов
     def _data_to_calculations(self, data: DictRow):
@@ -356,59 +152,6 @@ class Database:
 
             self.connection.commit()
             return int(data.get('id'))
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def change_calculation_open_price(self, id: int, value: float):
-        query = 'UPDATE "Calculation" SET "openPrice" = %s WHERE id = %s'
-        params = (value, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def change_calculation_stop_loss(self, id: int, value: float):
-        query = 'UPDATE "Calculation" SET "stopLoss" = %s WHERE id = %s'
-        params = (value, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def change_calculation_tool(self, id: int, value: str):
-        query = 'UPDATE "Calculation" SET tool = %s WHERE id = %s'
-        params = (value, id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return False
-
-    def change_calculation_forex(self, id: int, value: ForexInfo):
-        query = 'UPDATE "Calculation" SET pair = %s, "pairPrice" = %s, "crossPrices" = %s WHERE id = %s'
-        params = ('/'.join(value.pair), value.price,
-                  json.dumps(value.cross_prices), id)
-
-        try:
-            self.curs.execute(query, params)
-            self.connection.commit()
-            return True
         except Exception as e:
             self._log_error(e)
             self.connection.rollback()
@@ -514,34 +257,6 @@ class Database:
 
         try:
             self.curs.execute(query)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_admins(self) -> list[Worker]:
-        """Получить всех админов"""
-        query = self.WORKER_QUERY + 'WHERE w.role = %s'
-        params = 'ADMIN',
-
-        try:
-            self.curs.execute(query, params)
-            data = self.curs.fetchall()
-            return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
-        except Exception as e:
-            self._log_error(e)
-            self.connection.rollback()
-            return []
-
-    def get_redactors(self) -> list[Worker]:
-        """Получить всех редакторов"""
-        query = self.WORKER_QUERY + 'WHERE w.role = %s'
-        params = 'EDITOR',
-
-        try:
-            self.curs.execute(query, params)
             data = self.curs.fetchall()
             return list(map(lambda el: self._data_to_worker(el), data)) if (data is not None) else []
         except Exception as e:
@@ -752,35 +467,6 @@ class Database:
             return False
 
     # Незавершённые расчёты
-
-    def _data_to_unfinished_calc(self, data: DictRow):
-        pair = data.get('pair')
-        pair_price = data.get('pairPrice')
-        cross_prices = data.get('crossPrices')
-
-        forex = None
-        if (pair is not None) and (pair_price is not None) and (cross_prices is not None):
-            pairs = str(pair).split('/')
-            forex = ForexInfo(
-                pair=(pairs[0], pairs[1]),
-                price=pair_price,
-                cross_prices=json.loads(cross_prices)
-            )
-
-        return UnfinishedCalculation(
-            id=data.get('id'),
-            user_id=data.get('userId'),
-            open_price=data.get('openPrice'),
-            forex=forex,
-            tool=data.get('tool'),
-            is_risk_percent=data.get('isRiskPercent'),
-            risk_value=data.get('riskValue'),
-            update_risk_rate=data.get('updateRiskRate'),
-            trading_style=data.get('tradingStyle'),
-            deposit=data.get('deposit'),
-            currency=data.get('currency'),
-            last_values=data.get('lastValues') or []
-        )
 
     def add_unfinished_calc(self, value: UnfinishedCalculation):
         query = 'INSERT INTO "UnfinishedCalc" '

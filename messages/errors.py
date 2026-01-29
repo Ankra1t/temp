@@ -1,5 +1,4 @@
 from typing import Literal
-from messages.common import msg_freeze_info
 from models import LANGUAGES_TYPE
 
 
@@ -12,19 +11,6 @@ def msg_trading_style_error(lang: LANGUAGES_TYPE):
     }
 
     return f'❗️ {texts[lang]}:'
-
-
-def msg_freeze_error(lang: LANGUAGES_TYPE):
-    text = {
-        'ru': 'Неверный формат',
-        'en': 'Wrong format',
-        'uz': 'Noto\'gri shakl',
-        'tr': 'Yanlış biçim',
-    }
-
-    return f"""❗️ {text[lang]}
-{msg_freeze_info(lang)}
-"""
 
 
 def msg_pair_error(lang: LANGUAGES_TYPE):

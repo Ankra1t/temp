@@ -1,7 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from db import db
 from models import Post, CallbackQuery, StateContext
 
 from states.admin_posts import AdminPostsState
@@ -58,14 +57,17 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             users = []
             if value == 'all':
-                users = db.get_all_users()
+                # TODO - Добавить получение пользователей тг
+                users = []
             elif value == 'paid':
-                users = db.get_subsribed_users()
+                # TODO - Добавить получение пользователей с подпиской
+                users = []
             elif value in ('RF', 'USA', 'crypto', 'forex'):
-                users = db.get_paginated_users(market_filter=value)
+                # TODO - Добавить получение пользователей по рынку. Возможно удалить
+                users = []
             elif value in ('2h', '6h', '12h', '24h'):
-                users = db.get_users_created_in_last(
-                    int(value.replace('h', '')))
+                # TODO - Добавить получение пользователей зарегистрированных за последние часы
+                users = []
 
             if len(users) != 0:
                 async with state.data() as data:

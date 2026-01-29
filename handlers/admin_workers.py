@@ -25,7 +25,8 @@ async def handle_add_id(message: Message, bot: AsyncTeleBot, state: StateContext
         )
         return
 
-    user = db.get_user_by_id(id)
+    # TODO - Добавить получение пользователя по id
+    user = None
 
     if user is None:
         await bot.send_message(

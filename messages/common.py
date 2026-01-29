@@ -213,30 +213,6 @@ def msg_risk_info(lang: LANGUAGES_TYPE):
 {texts[lang]['2']}"""
 
 
-def msg_freeze_info(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': {
-            'time': 'Введите <i>время</i> заморозки в формате <u>ЧЧ:ММ</u>',
-            'datetime': 'Либо <i>дату до</i> в формате <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>',
-        },
-        'en': {
-            'time': 'Enter <i>time</i> frost in format <u>HH:MM</u>',
-            'datetime': 'Or <i>date to</i> in format <u>ДД.ММ.ГГГГ ЧЧ:ММ</u>',
-        },
-        'uz': {
-            'time': 'Muzlatish vaqtini HH:MM formatida kiriting',
-            'datetime': 'Yoki DD.MM.YYYY HH:MM formatida "sanagacha"',
-        },
-        'tr': {
-            'time': ' Donma <i>zamanını</i> <u>SS:DD</u> formatında girin',
-            'datetime': 'Veya <i>tarihi</i> <u>GG.AA.YYYY SS:DD</u> formatında',
-        },
-    }
-
-    return f"""✍️ {texts[lang]['time']}.
-✍️ {texts[lang]['datetime']}."""
-
-
 def msg_success_edit(lang: LANGUAGES_TYPE):
     texts = {
         'ru': 'Изменения сохранены',

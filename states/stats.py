@@ -5,8 +5,6 @@ class StatsState(StatesGroup):
     loss = State()
     sum = State()
 
-    freeze = State()
-
     add_image_text = State()
 
     send_add_text = State()

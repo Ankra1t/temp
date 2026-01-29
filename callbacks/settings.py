@@ -439,10 +439,11 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
             await send_settings(bot, call.message, state, user)
 
     if type == 'calc_output':
-        db.set_user_calc_output(
-            user.id,
-            'text'
-        )
+        # TODO - сейчас только text
+        # db.set_user_calc_output(
+        #     user.id,
+        #     'text'
+        # )
         await send_dop_settings(bot, call.message, state, user)
 
     if type == 'set_first_settings':
@@ -486,7 +487,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             exchange_value = type.split('++')[1]
 
-            exchange = user_settings_storage.get_exchange_by_name(exchange_value)
+            exchange = user_settings_storage.get_exchange_by_name(
+                exchange_value)
             if exchange is None:
                 return
 
@@ -554,7 +556,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
 
     if 'set_ex_fee' in type:
         _, name, value = type.split('++')
-        user_settings_storage.set_user_exchange(user.tgId, (name, float(value)))
+        user_settings_storage.set_user_exchange(
+            user.tgId, (name, float(value)))
         await send_exchange_settings(bot, call.message, state, user)
 
     if type == 'dop':

@@ -1,4 +1,4 @@
-from messages.common import msg_freeze_info, transl_market
+from messages.common import transl_market
 from models import LANGUAGES_TYPE, MARKETS_TYPE
 
 
@@ -35,17 +35,6 @@ def msg_main(lang: LANGUAGES_TYPE, is_rus=False):
 
 1. <b>{texts[lang]["1"]}</b>
 2. <b>{texts[lang]["2"]}</b>"""
-
-
-def msg_frozen(lang: LANGUAGES_TYPE, datetime: str):
-    text = {
-        'ru': 'Калькулятор заморожен до',
-        'en': 'The calculator is frozen until',
-        'uz': 'Kalkulyator qotib qolgan',
-        'tr': 'Hesap makinesi tarihine kadar donduruldu',
-    }
-
-    return f'❄️ {text[lang]} <b>{datetime}</b>'
 
 
 def msg_welcome(lang: LANGUAGES_TYPE):
@@ -155,35 +144,3 @@ def msg_support(lang: LANGUAGES_TYPE):
     }
 
     return f'{texts[lang]}👇'
-
-
-def msg_freeze_calc(lang: LANGUAGES_TYPE, risk_value: str):
-    texts = {
-        'ru': {
-            '1': 'Вы превысили суточный процент риска на',
-            '2': 'Желаете приостановить торговлю на некоторое время?',
-            'end': 'На это время расчеты в калькуляторе невозможно будет совершать для безопасности Вашей торговли',
-        },
-        'en': {
-            '1': 'You have exceeded the daily percentage of risk by',
-            '2': 'Would you like to suspend trading for a while?',
-            'end': 'At this time, calculations in the calculator cannot be done for the safety of your trade',
-        },
-        'uz': {
-            '1': 'Siz kunlik xavf foizidan oshib ketdingiz',
-            '2': 'Savdoni bir muddat to\'xtatmoqchimisiz?',
-            'end': 'Bu vaqt ichida kalkulyatorda hisob-kitoblar sizning savdolaringiz xavfsizligi uchun mumkin bo\'lmaydi',
-        },
-        'tr': {
-            '1': 'Günlük risk yüzdesini aştınız',
-            '2': 'İşlemleri bir süreliğine duraklatmak ister misiniz?',
-            'end': 'Bu süre zarfında işlemlerinizin güvenliği açısından hesap makinesinde hesaplama yapmak mümkün olmayacaktır',
-        }
-    }
-
-    return f"""⚠️ {texts[lang]['1']} {risk_value}.
-<b>{texts[lang]['2']}</b>
-
-{msg_freeze_info(lang)}
-
-{texts[lang]['end']}."""

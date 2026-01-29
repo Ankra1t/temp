@@ -6,7 +6,7 @@ from telebot.types import InputMediaPhoto
 from telebot.async_telebot import AsyncTeleBot
 
 from common.calculation import getStrValueCount
-from states.stats import ChannelCalcState, StatsState
+from states.stats import ChannelCalcState
 from common.utils import edit_message, edit_message, get_print_float
 
 from service import user_settings_storage
@@ -21,7 +21,7 @@ from messages.common import transl_status
 from messages.main import msg_main
 
 from messages.violation import msg_violation
-from models import CALC_STATUS_TYPE, MANUAL_TYPE, MARKETS_TYPE, Calculation, Message, StateContext, User
+from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
 from services import calculation, channel_calc, settings, ticker, violation
 
 from keyboards.channel_post import (
@@ -30,7 +30,7 @@ from keyboards.channel_post import (
 )
 from keyboards.main import kb_main, kb_violation
 from keyboards.manual import kb_manual, kb_manuals
-from keyboards.stats import kb_calc_activation, kb_calc_list, kb_calc_result, kb_confirm_channel_post, kb_freeze_calc, kb_stats_page
+from keyboards.stats import kb_calc_activation, kb_calc_list, kb_calc_result, kb_confirm_channel_post, kb_stats_page
 from keyboards.settings import (
     kb_active_settings, kb_atr_settings, kb_change_deposit, kb_change_style_settings, kb_choose_stop_type, kb_dop_settings, kb_exchange,
     kb_maker_or_taker, kb_settings, kb_summary_profit,
@@ -583,33 +583,6 @@ async def send_calculation(
             await edit_message(bot, message, 'photo', text, kb, calc.photo)
 
     return new_mes_id
-
-
-async def send_freeze(
-    bot: AsyncTeleBot,
-    message: Message,
-    state: StateContext,
-    user: User,
-    market: MARKETS_TYPE,
-    is_first=False
-):
-    chat_id = message.chat.id
-
-    if False:
-        await state.set(StatsState.freeze)
-        await state.add_data(
-            market=market,
-        )
-
-        kb = kb_freeze_calc(user.lang)
-
-        if is_first:
-            await bot.send_message(
-                chat_id, '-',
-                reply_markup=kb,
-            )
-        else:
-            await edit_message(bot, message, 'text', '-', kb)
 
 
 async def send_confirm_calc_send(

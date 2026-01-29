@@ -366,29 +366,6 @@ def kb_calc_result(lang: LANGUAGES_TYPE,
     return keyboard
 
 
-def kb_freeze_calc(lang: LANGUAGES_TYPE):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    hours = {
-        'ru': 'ч',
-        'en': 'h',
-        'uz': 'c',
-        'tr': 's',
-    }
-
-    btn_3 = getButton(f'3 {hours[lang]}', 'time+3')
-    btn_6 = getButton(f'6 {hours[lang]}', 'time+6')
-    btn_9 = getButton(f'9 {hours[lang]}', 'time+9')
-    btn_12 = getButton(f'12 {hours[lang]}', 'time+12')
-    btn_back = getButton(cancel_txt(lang), 'go_main')
-
-    keyboard.add(btn_3, btn_6)
-    keyboard.add(btn_9, btn_12)
-    keyboard.add(btn_back)
-
-    return keyboard
-
-
 def kb_deal_result(lang: LANGUAGES_TYPE, stat_id: int):
     texts = {
         'ru': {

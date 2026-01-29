@@ -1,4 +1,3 @@
-from datetime import timedelta
 import os
 from random import randint
 from time import sleep
@@ -20,7 +19,6 @@ from states.calculate import CalculateState, ForexCalcState
 from states.stats import ChannelCalcState, StatsState
 
 from common.utils import delete_message, edit_message
-from common.dt import get_datetime_now, get_str_by_datetime
 
 from config_global import PROD
 from config_logger import logger
@@ -32,7 +30,6 @@ from services import calculation, channel_calc
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted, msg_channel_calc
 from messages.enter import msg_enter_auto_take, msg_enter_calc_img_text, msg_enter_cancel_at, msg_enter_deposit, msg_enter_new_stop, msg_enter_open_price, msg_enter_pair, msg_enter_profit_minus, msg_enter_profit_sum, msg_enter_risk_percent, msg_enter_save_calc, msg_enter_stop_loss, msg_enter_take_price, msg_enter_tool, msg_enter_tr_stop, msg_enter_trading_style
-from messages.main import msg_frozen
 
 from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
@@ -43,7 +40,7 @@ from keyboards.stats import (
     kb_calculate_delete, kb_confirm_channel_post, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time
 )
-from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_freeze, send_main, send_stats
+from pages.calculate import create_and_send_channel_calc, send_admin_channel_calc_item, send_calc_list, send_calculation, send_confirm_calc_send, send_main, send_stats
 
 
 def createScreen(
@@ -204,21 +201,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if calc:
             await send_calculation(bot, call.message, state, user, calc, True)
 
-    if 'time+' in type:
-        _, time = type.split('+')
-        date = get_datetime_now() + timedelta(hours=int(time))
-
-        async with state.data() as data:
-            market: MARKETS_TYPE | None = data.get('market')
-
-        db.set_user_calc_freeze(user.id, date, market)
-
-        await bot.edit_message_text(
-            msg_frozen(user.lang, get_str_by_datetime(date)),
-            chat_id, mes_id
-        )
-        await state.delete()
-
     if 'profit' in type:
         await state.delete()
         _, profit = type.split('+')
@@ -281,10 +263,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
                 if not is_cancel:
                     calculation.update(
                         userId=user.id, calcId=calc_id, status='FINISH'
-                    )
-                    await send_freeze(
-                        bot, call.message, state, user,
-                        calc_info.market, True
                     )
 
     if type == 'sum':

@@ -5,7 +5,6 @@ from common.dt import get_str_by_datetime
 
 from common.utils import antiflood
 from config_logger import logger
-from db import db
 from models import SentMessages, UserInfo, UserNotification, LANGUAGES_TYPE
 from services import user
 
@@ -83,7 +82,8 @@ class Notifier():
         return message
 
     async def send_user_is_registered(self, userId: int, num: int):
-        new_user = db.get_user_by_id(userId)
+        # TODO - получить пользователя по id
+        new_user = None
         if new_user is None:
             return
 
@@ -93,7 +93,8 @@ class Notifier():
         )
 
     async def change_user_blocked(self, userId: int, sent_messages: UserNotification):
-        new_user = db.get_user_by_id(userId)
+        # TODO - получить пользователя по id
+        new_user = None
         if new_user is None:
             return
 
@@ -111,7 +112,8 @@ class Notifier():
                 pass
 
     async def change_user_choosed_lang(self, userId: int, lang: LANGUAGES_TYPE, sent_messages: UserNotification):
-        new_user = db.get_user_by_id(userId)
+        # TODO - получить пользователя по id
+        new_user = None
         if new_user is None:
             return
 
@@ -127,7 +129,8 @@ class Notifier():
                 pass
 
     async def send_site_visited(self, userId: int):
-        user = db.get_user_by_id(userId)
+        # TODO - получить пользователя по id
+        user = None
 
         if not user:
             return

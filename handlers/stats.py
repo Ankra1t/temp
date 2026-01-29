@@ -11,17 +11,15 @@ from states.stats import ChannelCalcState
 
 from config_logger import logger
 from models import Message, StateContext, User
-from db import db
-from common.utils import delete_message, digit_accept, get_print_float, is_digit, text_accept
-from common.dt import get_datetime_by_str, get_datetime_now, get_str_by_datetime
+from common.utils import delete_message, digit_accept, get_print_float, is_digit
+from common.dt import get_datetime_by_str, get_datetime_now
 
-from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_freeze, send_confirm_calc_send
+from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
 from keyboards.stats import kb_channel_confirm_back, kb_channel_item_back, kb_confirm_take_price, kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
-from messages.errors import msg_digit_error, msg_freeze_error, msg_text_error
-from messages.main import msg_frozen
+from messages.errors import msg_digit_error, msg_text_error
 from services import calculation, channel_calc, settings, ticker, twitter, violation
 
 
@@ -54,7 +52,6 @@ async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, 
     )
 
     await send_calculation(bot, message, state, user, calc_info, True)
-    await send_freeze(bot, message, state, user, calc_info.market, True)
 
 
 async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -176,50 +173,6 @@ async def handle_sum(message: Message, bot: AsyncTeleBot, state: StateContext, u
     )
 
     await send_calculation(bot, message, state, user, calc_info, True)
-    await send_freeze(bot, message, state, user, calc_info.market, True)
-
-
-async def handle_freeze_dt(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
-    chat_id = message.chat.id
-
-    async with state.data() as data:
-        market = data.get('market')
-
-    value = text_accept(message) or ''
-
-    logger.info(
-        f'callback "handle_freeze_dt" user_tg_id={user.tgId} value={value}')
-
-    try:
-        time_reg = r'^([0-1]?[0-9]|2[0-3]):[0-5]?[0-9]$'
-
-        if re.match(time_reg, value) is not None:
-            hours, minutes = value.split(':')
-            finish_freeze = get_datetime_now() + timedelta(hours=int(hours), minutes=int(minutes))
-        else:
-            date, time = value.split(' ')
-            day, month, year = date.split('.')
-            hours, minutes = time.split(':')
-
-            if len(year) == 2:
-                year = '20' + year
-
-            finish_freeze = datetime(
-                int(year), int(month), int(day),
-                int(hours), int(minutes)
-            ) - timedelta(hours=3)
-    except:
-        await bot.send_message(
-            chat_id, msg_freeze_error(user.lang),
-        )
-        return
-
-    db.set_user_calc_freeze(user.id, finish_freeze, market)
-    await bot.send_message(
-        chat_id,
-        msg_frozen(user.lang, get_str_by_datetime(finish_freeze))
-    )
-    await state.delete()
 
 
 async def handle_calc_image_text(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -567,7 +520,6 @@ def registration(bot: AsyncTeleBot):
     reg_mes(handle_loss, state=StatsState.loss)
     reg_mes(handle_close_price, state=StatsState.close_price)
     reg_mes(handle_take_price, state=StatsState.take_price)
-    reg_mes(handle_freeze_dt, state=StatsState.freeze)
     reg_mes(
         handle_calc_image_text, state=StatsState.add_image_text,
         content_types=['text', 'photo']

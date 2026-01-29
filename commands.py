@@ -55,14 +55,15 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
             username=username,
             referId=ref_id
         )
-        new_user = db.get_user_by_tg_id(user.tgId)
+        new_user = None  # TODO - изменить логику с проверкой из API
 
         if new_user is not None and is_registered == True:
             logger.info(
                 f'/auth/tg_register [tg_id={user.tgId} @{username}]'
             )
 
-            num = len(db.get_today_users())
+            # TODO - кол-во пользователей за сегодня
+            num = 0
 
             # Проверка языка
             user_lang = (message.from_user.language_code or 'en').lower()
