@@ -43,22 +43,3 @@ def kb_calculator():
     keyboard.add(btn_link)
     keyboard.add(back)
     return keyboard
-
-
-def kb_params_change():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn1 = getButton('FAQ', 'change_faq')
-    btn2 = getButton('О нас', 'change_about_us')
-    back = getButton(back_txt(), 'go_params')
-
-    keyboard.add(btn1, btn2)
-    keyboard.add(back)
-    return keyboard
-
-
-def kb_params_back():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    back = getButton(back_txt(), 'go_params')
-    keyboard.add(back)
-    return keyboard

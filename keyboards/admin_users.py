@@ -99,28 +99,6 @@ def kb_admin_client_list(pages: int, page: int, sort_by='', filter='', type='cli
     return keyboard
 
 
-def kb_admin_client_info(client_db_id: int, is_banned: bool, page=1, sort_by=''):
-    def getClientButton(text: str, type: str):
-        return getButton(text, type, '', 1, client_db_id)
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_ban = getClientButton(
-        '✅ Разбанить' if is_banned else '🚫 Забанить', 'client_ban'
-    )
-
-    # if sort_by != '' or page != 1:
-    #     btn_client_list = getButton(
-    #         '👨‍💻 Список клиентов', 'client_list', sort_by, page
-    #     )
-    # else:
-    #     btn_client_list = kb_inl_admin.go_users_btn
-    back = getButton(back_txt(), 'go_users')
-
-    keyboard.add(btn_ban, back)
-    return keyboard
-
-
 def kb_admin_users_cancel(sort_by='', page=1, filter=''):
     keyboard = InlineKeyboardMarkup(row_width=2)
 
@@ -136,39 +114,4 @@ def kb_admin_users_cancel(sort_by='', page=1, filter=''):
         btn_cancel = getButton(back_txt(), 'go_users')
 
     keyboard.add(btn_cancel)
-    return keyboard
-
-
-def kb_admin_users_confirm(type_info: str, client_db_id: int):
-    def getConfimButton(text: str, type: str):
-        return getButton(text, f'confirm_{type}_{type_info}', '', 1, client_db_id)
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_yes = getConfimButton('✅ Да', 'yes')
-    btn_no = getConfimButton('❌ Нет', 'no')
-
-    keyboard.add(btn_yes, btn_no)
-    return keyboard
-
-
-def kb_admin_users_back():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    back = getButton(back_txt(), 'go_users')
-    keyboard.add(back)
-
-    return keyboard
-
-
-def kb_admin_users_markets():
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    btn_crypto = getButton('Крипта', 'markets', 'new', 1, 0, 'crypto')
-    btn_forex = getButton('Форекс', 'markets', 'new', 1, 0, 'forex')
-    btn_RF = getButton('РФ', 'markets', 'new', 1, 0, 'RF')
-    btn_USA = getButton('США', 'markets', 'new', 1, 0, 'USA')
-    btn_back = getButton(back_txt(), 'go_users')
-
-    keyboard.add(btn_crypto, btn_forex, btn_RF, btn_USA, btn_back)
     return keyboard

@@ -21,7 +21,6 @@ TRADING_TYPE = Literal["margin", "spot", "future"]
 MARKETS_TYPE = Literal["crypto", "paper", "forex", "RF", "USA"]
 EXCHANGE_TYPE = Literal["BYBIT", "BINANCE"]
 PRODUCT_TYPE = Literal["signals", "calc", "calc_signals", "active_calc"]
-ROLE_TYPE = Literal["ADMIN", "EDITOR", "SUPPORT"]
 CALC_STATUS_TYPE = Literal["WAIT", "CANCEL", "FINISH", "DEAL"]
 
 MANUAL_TYPE = Literal["settings", "exchange",
@@ -258,13 +257,6 @@ class Exchange(BaseModel):
     fees: list[tuple[str, float, float]]
 
 
-class TickerInfo(BaseModel):
-    turnover24h: float
-    percent24h: float
-    indexPrice: float
-    updatedAt: str
-
-
 class SentMessages(BaseModel):
     chIds: list[str]
     mesIds: list[str]
@@ -320,15 +312,3 @@ class SubscribeInfo(BaseModel):
 class GetAllSubscribes(BaseModel):
     data: list[SubscribeInfo]
     count: int
-
-
-class MinUser(BaseModel):
-    id: int
-    tgId: int
-    tgUsername: Optional[str]
-
-
-class ActiveStats(BaseModel):
-    longCount: int
-    shortCount: int
-    profitCount: float

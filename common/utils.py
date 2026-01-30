@@ -5,10 +5,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from telebot.asyncio_helper import ApiTelegramException
 
-from common.dt import get_str_by_datetime
-from service import user_settings_storage
-
-from models import Post, UserInfo, LANGUAGES_TYPE, Message
+from models import LANGUAGES_TYPE, Message
 
 
 T = TypeVar('T', int, float)
@@ -148,31 +145,6 @@ def get_normal_text(message: Message):
     return message.html_text or message.html_caption or ''
 
 
-async def get_post_from_message(bot: AsyncTeleBot, message: Message, kb_posts_back: Callable[[], InlineKeyboardMarkup]):
-    chat_id = message.chat.id
-
-    mes_type = message.content_type
-    if mes_type != 'text' and mes_type != 'video' and mes_type != 'photo':
-        await bot.send_message(
-            chat_id, 'Отправьте пост в виде текста, картинки или видео:',
-            reply_markup=kb_posts_back()
-        )
-        return
-
-    media_id: str | None = None
-
-    if (message.content_type == 'photo') and (message.photo is not None):
-        media_id = message.photo[-1].file_id
-    elif (message.content_type == 'video') and (message.video is not None):
-        media_id = message.video.file_id
-
-    return Post(
-        content=get_normal_text(message),
-        media=media_id,
-        mes_type=mes_type
-    )
-
-
 def get_calculator_btn_link(lang: LANGUAGES_TYPE):
     text = {
         'ru': 'В калькулятор',
@@ -198,52 +170,6 @@ def get_print_signal_info(open_price: float, stop_loss: float):
         f'Цена входа: <b>{get_print_float(open_price, round_count)}</b>',
         f'Стоп-лосс: <b>{get_print_float(stop_loss, round_count)}</b>'
     ))
-
-
-def get_short_user_info(user: UserInfo):
-    if user.tg_username != '-' and user.tg_username != '':
-        nik = f'| @{user.tg_username} '
-    elif user.tg_id > 0:
-        nik = f'| {user.tg_id} '
-    else:
-        nik = ''
-
-    ban = '| (BAN)' if user.ban else ''
-
-    is_set_settings = 0
-    # Поучение расчётов пользователя
-    calcs_count = 0
-
-    if calcs_count > 1:
-        is_set_settings = 1
-    else:
-        markets = ('forex', 'RF')
-        for el in markets:
-            calc_settings = user_settings_storage.get_or_create(user.tg_id)
-            if calc_settings.market == el:
-                is_set_settings = 1
-                break
-    user_subsribe = None
-
-    if user_subsribe is None:
-        sub_show = 'нет подписок'
-    else:
-        fin_date = get_str_by_datetime(user_subsribe.finish_dt)
-        type_subscribe_show = f'({user_subsribe.product_type})'
-        sub_show = f'<b>{fin_date}</b> {type_subscribe_show}'
-
-    if user.block:
-        info = '🅱️ <b>Заблокировал бота</b>'
-    else:
-        info = f'Подписка до: {sub_show}'
-
-    user_show = (
-        f'{user.id} {nik}<b>{ban}</b>  | {is_set_settings}'
-        f'\n{info}'
-        f'\nЗарегестрирован <b>{get_str_by_datetime(user.registration_dt)}</b>'
-    )
-
-    return user_show
 
 
 T = TypeVar("T")

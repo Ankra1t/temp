@@ -6,7 +6,6 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
-from messages.common import transl_market
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery, SendCalc
 from services import calculation, channel_calc
 
@@ -31,35 +30,6 @@ def getButton(text: str, type: str, stat_id=0, stats_market: MARKETS_TYPE = 'cry
             p=page,
         )
     )
-
-
-def kb_stats(lang: LANGUAGES_TYPE, type: Literal['main', 'market'] = 'main', prev_market: MARKETS_TYPE | None = None):
-    row_width = 2
-    keyboard = InlineKeyboardMarkup(row_width=row_width)
-
-    buttons = []
-    markets_list: tuple[MARKETS_TYPE, ...] = (
-        'crypto', 'forex', 'RF', 'USA'
-    )  # 'paper', 'future',
-    for i, el in enumerate(markets_list):
-        btn = getButton(
-            transl_market(el, lang),
-            'stats_market' if el != prev_market else '',
-            -1, el
-        )
-        buttons.append(btn)
-
-        if len(buttons) == row_width or (i + 1 == len(markets_list) and len(buttons) != 0):
-            keyboard.add(*buttons)
-            buttons = []
-
-    if type == 'main':
-        btn_back = getButton(back_txt(lang), 'go_main')
-    else:
-        btn_back = getButton(back_txt(lang), 'go_stats')
-
-    keyboard.add(btn_back)
-    return keyboard
 
 
 def kb_stats_page(lang: LANGUAGES_TYPE):

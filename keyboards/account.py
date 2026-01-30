@@ -92,35 +92,6 @@ def kb_user_referral(lang: LANGUAGES_TYPE, referals_count=0):
     return keyboard
 
 
-def kb_user_params(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': {
-            'lang': 'Язык',
-            'name': 'Изменить имя'
-        },
-        'en': {
-            'lang': 'Language',
-            'name': 'Change nickname'
-        },
-        'uz': {
-            'lang': 'Tillar',
-            'name': 'Ismni o\'zgartirish'
-        },
-        'tr': {
-            'lang': 'Dil',
-            'name': 'İsmini değiştir'
-        },
-    }
-
-    btn_lang = getButton(f' {texts[lang]["lang"]}', 'set_lang')
-    btn_name = getButton(f' {texts[lang]["name"]}', 'set_name')
-    btn_back = getButton(back_txt(lang), 'back')
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(btn_lang, btn_name, btn_back)
-    return keyboard
-
-
 def kb_params_choose_lang(lang: LANGUAGES_TYPE):
     texts = {
         'ru': {
