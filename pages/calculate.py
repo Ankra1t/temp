@@ -22,7 +22,7 @@ from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
-from services import calculation, channel_calc, violation
+from services import calculation, violation
 from service import advanced_settings_storage
 
 from keyboards.channel_post import (
@@ -594,7 +594,9 @@ async def send_confirm_calc_send(
     chat_id = message.chat.id
 
     stat = calculation.get(userId=1, calcId=calc_id)
-    send_data = channel_calc.getByCalc(calc_id)
+
+    # TODO - Получение инфо о данных по каналу
+    send_data = None
     if stat is None or send_data is None:
         return
 
@@ -872,20 +874,22 @@ async def send_admin_channel_calc_list(
     chat_id = message.chat.id
     mes_id = message.id
 
-    inWaitSends = channel_calc.getInWait() or []
+    # TODO - channel_calc.getInWait()
+    inWaitSends = []
 
-    weekStat = channel_calc.getWeekStat()
+    # TODO - channel_calc.getWeekStat()
+    weekStat = None
     stats_link = ''
-    if weekStat is not None:
-        messages = weekStat.get('messages')
-        chIds = messages.get('chIds')
-        mesIds = messages.get('mesIds')
-
-        try:
-            link = f'https://t.me/c/{chIds[0].replace("-100", "")}/{mesIds[0]}'
-            stats_link = f'<a href="{link}">Канал статистики</a>'
-        except:
-            pass
+    # if weekStat is not None:
+    #     messages = weekStat.get('messages')
+    #     chIds = messages.get('chIds')
+    #     mesIds = messages.get('mesIds')
+    #
+    #     try:
+    #         link = f'https://t.me/c/{chIds[0].replace("-100", "")}/{mesIds[0]}'
+    #         stats_link = f'<a href="{link}">Канал статистики</a>'
+    #     except:
+    #         pass
 
     if len(inWaitSends) == 0:
         mes = '👉 Нет расчётов, требующих действий'
@@ -962,7 +966,8 @@ async def send_admin_channel_calc_item(
 
     await state.delete()
 
-    send_data = channel_calc.getByCalc(calc_id)
+    # TODO - Получение инфо о данных по каналу
+    send_data = None
     calc = calculation.get(userId=1, calcId=calc_id)
     if calc is None:
         return
@@ -980,13 +985,13 @@ async def send_admin_channel_calc_item(
         return
 
     link = ''
-    if send_data.messages:
-        try:
-            weekChId = send_data.messages.chIds[0]
-            weekMesId = send_data.messages.mesIds[0]
-            link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
-        except Exception as e:
-            print(e)
+    # if send_data.messages:
+    #     try:
+    #         weekChId = send_data.messages.chIds[0]
+    #         weekMesId = send_data.messages.mesIds[0]
+    #         link = f'https://t.me/c/{weekChId.replace("-100", "")}/{weekMesId}'
+    #     except Exception as e:
+    #         print(e)
 
     calc_result = get_result(calc)
 
@@ -1153,20 +1158,20 @@ async def create_and_send_channel_calc(
     isVote = user_settings_storage.get_send_settings('isVote')
     time = user_settings_storage.get_send_settings('time')
 
-    send_data = channel_calc.create(calc_id)
+    # TODO - channel_calc.create(calc_id)
+    send_data = None
     if send_data is None:
         return
 
-    if withoutStop == 'True' or calc.stopLoss == -1:
-        channel_calc.update(send_data.id, withoutStop=True)
-    if isVote == 'False':
-        channel_calc.update(send_data.id, isVote=False)
-    if style:
-        # TODO: Обновить стиль через API
-        # db.change_calculation_style(calc_id, style)
-        channel_calc.update(send_data.id, tradingStyle=style)
-    if time:
-        channel_calc.update(send_data.id, time=time or 'avg')
+    # TODO - channel_calc обновления
+    # if withoutStop == 'True' or calc.stopLoss == -1:
+    #     channel_calc.update(send_data.id, withoutStop=True)
+    # if isVote == 'False':
+    #     channel_calc.update(send_data.id, isVote=False)
+    # if style:
+    #     channel_calc.update(send_data.id, tradingStyle=style)
+    # if time:
+    #     channel_calc.update(send_data.id, time=time or 'avg')
 
     try:
         await bot.edit_message_reply_markup(

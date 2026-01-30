@@ -15,11 +15,11 @@ from common.dt import get_datetime_by_str, get_datetime_now
 
 from pages.calculate import send_active_settings, send_admin_channel_calc_item, send_admin_channel_calc_list, send_admin_send_settings, send_stats, send_violation, send_calculation, send_confirm_calc_send
 from keyboards.main import kb_violation_skip
-from keyboards.stats import kb_channel_confirm_back, kb_channel_item_back, kb_confirm_take_price, kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
+from keyboards.stats import kb_confirm_take_price, kb_deal_profit_cancel, kb_deal_profit_minus, kb_calc_image_text
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
-from services import calculation, channel_calc, violation
+from services import calculation, violation
 from service import advanced_settings_storage
 
 
@@ -73,7 +73,8 @@ async def handle_close_price(message: Message, bot: AsyncTeleBot, state: StateCo
         f'callback "handle_close_price" user_tg_id={user.tgId} value={value}')
 
     calc = calculation.get(userId=user.id, calcId=calc_id)
-    send_data = channel_calc.getByCalc(calc_id)
+    # TODO - Получение инфо о данных по каналу
+    send_data = None
     if calc is None or (calc.ActiveCalc and not send_data):
         return
 
@@ -99,14 +100,16 @@ async def handle_take_price(message: Message, bot: AsyncTeleBot, state: StateCon
 
     value = digit_accept(message)
     if value is None:
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
 
         new_mes = await bot.send_message(
             chat_id, msg_digit_error(user.lang),
-            reply_markup=(
-                kb_channel_item_back(calc_id) if send_data.sent
-                else kb_channel_confirm_back(calc_id)
-            ) if send_data else kb_deal_profit_cancel(user.lang, calc_id)
+            reply_markup=kb_deal_profit_cancel(user.lang, calc_id)
+            # reply_markup=(
+            #     kb_channel_item_back(calc_id) if send_data.sent
+            #     else kb_channel_confirm_back(calc_id)
+            # ) if send_data else kb_deal_profit_cancel(user.lang, calc_id)
         )
         await state.add_data(del_mes_id=new_mes.id)
         return
@@ -301,7 +304,8 @@ async def handle_channel_calc_loss(message: Message, bot: AsyncTeleBot, state: S
         return
 
     calc = calculation.get(userId=user.id, calcId=stat_id)
-    send_data = channel_calc.getByCalc(stat_id)
+    # TODO - channel_calc.getByCalc(stat_id)
+    send_data = None
 
     if calc and not (calc.ActiveCalc and not send_data):
         # TODO - удаляем, теперь нельзя выставлять профит
@@ -404,14 +408,15 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
             userId=user.id, id=calc_id, minutes=value)
 
         if calc:
-            send_data = channel_calc.getByCalc(calc.id)
+            # TODO - channel_calc.getByCalc(calc.id)
+            send_data = None
 
             if 'stc' in action:
                 await send_confirm_calc_send(bot, message, calc_id, True)
-            elif action == 'send_data' and send_data is not None:
-                await send_admin_channel_calc_item(
-                    bot, message, state, calc.id, is_first=True
-                )
+            # elif action == 'send_data' and send_data is not None:
+            #     await send_admin_channel_calc_item(
+            #         bot, message, state, calc.id, is_first=True
+            #     )
             else:
                 await send_calculation(bot, message, state, user, calc, True, is_activate=True)
 

@@ -11,7 +11,7 @@ from common.utils import delete_message, edit_message
 from config_logger import logger
 
 from models import MARKETS_TYPE, CallbackQuery, StateContext, User
-from services import calculation, channel_calc
+from services import calculation
 
 # TODO - months в common файл
 from messages.calc import msg_calculate_change, msg_calculate_delete, msg_calculation, msg_calculation_deleted
@@ -21,7 +21,7 @@ from keyboards.settings import kb_take_profit, kb_trading_style
 from keyboards.channel_post import kb_channel_calc_result_stop, kb_channel_calc_result_take
 from keyboards.main import kb_main
 from keyboards.stats import (
-    kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_confirm_back, kb_channel_item_back, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
+    kb_auto_take, kb_calc_back, kb_cancel_at, kb_channel_trailing_stop, stats_factory, StatsCallbackFilter,
     kb_calc_image_text, kb_calc_result, kb_calculate_change,
     kb_calculate_delete, kb_deal_profit_cancel,
     kb_deal_profit_minus, kb_deal_result, kb_send_calc_time
@@ -73,10 +73,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if calc_info is None:
                 return
 
-            send_data = channel_calc.getByCalc(calc_id)
+            # TODO - channel_calc.getByCalc(calc_id)
+            send_data = None
 
-            if calc_info.ActiveCalc is not None and send_data is None:
-                return
+            # if calc_info.ActiveCalc is not None and send_data is None:
+            #     return
 
             if profit == '-':
                 await state.set(StatsState.loss)
@@ -429,15 +430,16 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await create_and_send_channel_calc(bot, call.message, calc_id, mes_id, user)
 
     if type == 'stc+send':
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        if send_data is None or calc is None:
-            return
+        # if send_data is None or calc is None:
+        #     return
 
-        if send_data.isVote:
-            new_mes = await bot.send_message(
-                chat_id, f'Опрос будет отправлен через {5} секунд'
-            )
+        # if send_data.isVote:
+        #     new_mes = await bot.send_message(
+        #         chat_id, f'Опрос будет отправлен через {5} секунд'
+        #     )
 
         await bot.delete_message(chat_id, mes_id)
         # await bot.send_message(chat_id, '✅ Отправлено')
@@ -451,33 +453,34 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         )
 
     if 'stc+time=' in type:
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is None:
-            return
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
+        # if send_data is None:
+        #     return
 
         _, value = type.split('=')
         value = None if value == 'none' else value
 
-        channel_calc.update(send_data.id, time=value)
+        # TODO - channel_calc.update(send_data.id, time=value)
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'stc+stop':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is None or calc is None or calc.stopLoss == -1:
-            return
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
+        # if send_data is None or calc is None or calc.stopLoss == -1:
+        #     return
 
-        channel_calc.update(
-            send_data.id, withoutStop=not send_data.withoutStop
-        )
+        # TODO - channel_calc.update(send_data.id, withoutStop=not send_data.withoutStop)
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'stc+vote':
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is None:
-            return
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
+        # if send_data is None:
+        #     return
 
-        channel_calc.update(send_data.id, isVote=not send_data.isVote)
+        # TODO - channel_calc.update(send_data.id, isVote=not send_data.isVote)
         await send_confirm_calc_send(bot, call.message, calc_id)
 
     if type == 'stc+back':
@@ -548,7 +551,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'result_take':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
         if calc and not (calc.ActiveCalc and not send_data):
             await bot.edit_message_reply_markup(
                 chat_id, mes_id, reply_markup=kb_channel_calc_result_take(
@@ -565,7 +569,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'result_stop':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
         if calc and not (calc.ActiveCalc and not send_data):
             await bot.edit_message_reply_markup(
                 chat_id, mes_id, reply_markup=kb_channel_calc_result_stop(
@@ -693,7 +698,6 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'auto_take':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
 
         takes = []
         if calc:
@@ -704,7 +708,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await edit_message(
             bot, call.message, 'text',
             msg_enter_auto_take(user.lang, takes),
-            kb_auto_take(user.lang, calc_id, send_data)
+            kb_auto_take(user.lang, calc_id)
         )
 
     if 'auto_take+' in type:
@@ -719,7 +723,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             userId=user.id, id=calc_id, autoTake=val, trailingStopCount=None
         )
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
         if calc:
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
@@ -761,14 +766,16 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
     if type == 'take_price':
         await state.delete()
 
-        send_data = channel_calc.getByCalc(calc_id)
+        # TODO - channel_calc.getByCalc(calc_id)
+        send_data = None
 
         await bot.edit_message_text(
             msg_enter_take_price(user.lang), chat_id, mes_id,
-            reply_markup=(
-                kb_channel_item_back(calc_id) if send_data.sent
-                else kb_channel_confirm_back(calc_id)
-            ) if send_data else kb_calc_back(user.lang, calc_id)
+            reply_markup=kb_calc_back(user.lang, calc_id)
+            # reply_markup=(
+            #     kb_channel_item_back(calc_id) if send_data.sent
+            #     else kb_channel_confirm_back(calc_id)
+            # ) if send_data else kb_calc_back(user.lang, calc_id)
         )
         await state.set(StatsState.take_price)
         await state.add_data(

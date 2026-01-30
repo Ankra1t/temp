@@ -20,7 +20,7 @@ from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, is_digit, text_accept
 
 from states.calculate import CalculateState, ForexCalcState
-from services import calculation, channel_calc
+from services import calculation
 
 
 async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -332,7 +332,8 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
         )
     else:
         calc = calculation.get(userId=user.id, calcId=stat_id)
-        send_data = channel_calc.getByCalc(stat_id)
+        # TODO - channel_calc.getByCalc(stat_id)
+        send_data = None
         if calc and not (calc.ActiveCalc and not send_data):
             if calc.stopLoss == value:
                 new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))

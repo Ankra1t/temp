@@ -52,9 +52,9 @@ def kb_user_account(lang: LANGUAGES_TYPE, user_id: int):
     btn_support = getButton(f"{texts[lang]['support']}", 'support')
     referral = getButton(f"🌐 {texts[lang]['refs']}", 'referral')
     params = getButton(f"🛠 {texts[lang]['params']}", 'params')
+    # TODO - удалить
     # password = getButton('Изменить пароль', 'password')
     back = getButton(back_txt(lang), 'main')
-    # btn5 = getButton("Пополнить баланс")
 
     keyboard.add(referral)
     keyboard.add(params, btn_support)

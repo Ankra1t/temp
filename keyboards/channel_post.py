@@ -171,10 +171,6 @@ def kb_channel_calc(
 
     keyboard.add(
         getButton('Комментарий', 'comment', calc_id),
-        getButton(
-            'Вывести стоп' if withoutStop else 'Не выводить стоп',
-            'without_stop', calc_id
-        )
     )
 
     keyboard.add(

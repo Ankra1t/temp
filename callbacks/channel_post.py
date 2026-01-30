@@ -9,7 +9,7 @@ from service import user_settings_storage
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
 from pages.admin import send_admin_main
-from services import calculation, channel_calc
+from services import calculation
 from service import advanced_settings_storage
 
 from states.admin_params import AdminParamsState
@@ -192,7 +192,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'result_end_yes':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
         if not calc or calc.status != 'DEAL':
             return
 
@@ -212,19 +211,13 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_end_no':
-        send_data = channel_calc.getByCalc(calc_id)
-
-        if send_data:
-            type = 'result'
-        else:
-            calc = calculation.get(userId=user.id, calcId=calc_id)
-            if calc:
-                await send_calculation(bot, call.message, state, user, calc, is_activate=True)
+        calc = calculation.get(userId=user.id, calcId=calc_id)
+        if calc:
+            await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if 'stop+' in type or 'take+' in type:
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
-        if calc is None or (calc.ActiveCalc and not send_data):
+        if calc is None or calc.ActiveCalc:
             return
 
         _, value = type.split('+')
@@ -259,29 +252,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if type == 'results':
         await send_admin_channel_calc_list(bot, call.message, state, page)
 
-    if type == 'without_stop':
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data:
-            send_data = channel_calc.update(
-                send_data.id, withoutStop=not send_data.withoutStop
-            )
-
-        calc = calculation.get(userId=user.id, calcId=calc_id)
-
-        type = 'result'
-
-    if type == 'result' or type == 'result_take' or type == 'result_stop' or type == 'result_result':
-        mes_type = 'take' if type == 'result_take' else 'stop' if type == 'result_stop' else 'result' if type == 'result_result' else ''
-
-        send_data = channel_calc.getByCalc(calc_id)
-        if send_data is not None:
-            await send_admin_channel_calc_item(
-                bot, call.message, state, calc_id, mes_type
-            )
-
     if type == 'auto_take':
         calc = calculation.get(userId=user.id, calcId=calc_id)
-        send_data = channel_calc.getByCalc(calc_id)
 
         takes = []
         if calc:
@@ -292,7 +264,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await edit_message(
             bot, call.message, 'text',
             msg_enter_auto_take(user.lang, takes),
-            kb_auto_take(user.lang, calc_id, send_data)
+            kb_auto_take(user.lang, calc_id)
         )
 
     if type == 'comment':

@@ -6,8 +6,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
-from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery, SendCalc
-from services import calculation, channel_calc
+from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
+from services import calculation
 
 
 stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
@@ -545,7 +545,8 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
 
 
 def kb_confirm_channel_post(calc_id: int):
-    send_data = channel_calc.getByCalc(calc_id)
+    # TODO - Получение инфо о данных по каналу
+    send_data = None
     calc = calculation.get(userId=1, calcId=calc_id)
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)
@@ -736,7 +737,7 @@ def kb_calc_activation(lang: LANGUAGES_TYPE, calc: Calculation):
     return keyboard
 
 
-def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: SendCalc | None):
+def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int):
     keyboard = InlineKeyboardMarkup(row_width=5)
 
     buttons = []
@@ -753,7 +754,7 @@ def kb_auto_take(lang: LANGUAGES_TYPE, calc_id: int, send_data: SendCalc | None)
         getButton(not_specify_txt(lang), 'auto_take+null', calc_id),
         getButton(
             back_txt(lang),
-            ('channel_item' if send_data.sent else 'stc+back') if send_data else 'active_calc', calc_id
+            'active_calc', calc_id
         )
     )
     return keyboard

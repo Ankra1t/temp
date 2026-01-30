@@ -5,16 +5,14 @@ from service import user_settings_storage
 from common.utils import send_in_development
 
 from states.calculate import CalculateState
-from messages.enter import msg_choose_direct, msg_enter_atr, msg_enter_stop_loss
+from messages.enter import msg_enter_stop_loss
 
 from pages.calculate import send_calculation
 from pages.user import send_user_main, send_site_code
 from pages.admin import send_admin_main
 
-from keyboards.calculate import kb_calc_atr, kb_calc_direct
-
 from models import Calculation, Message, StateContext, User
-from services import calculation, channel_calc
+from services import calculation
 
 
 async def send_start_by_user(
@@ -40,65 +38,13 @@ async def send_start_by_user(
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
-        send_data = channel_calc.getByCalc(int(id))
         calc = calculation.get(userId=user.id, calcId=int(id))
 
         u_base = user_settings_storage.get_or_create(user.tgId)
-        if send_data is None or calc is None or u_base is None:
+        if calc is None or u_base is None:
             return
 
-        if send_data.withoutStop and not has_registered_now:
-            stop_type = user_settings_storage.get_user_stop(user.tgId) or ''
-
-            if 'atr' in stop_type:
-                atr_settings = user_settings_storage.get_user_atr_settings(
-                    user.tgId)
-                period, count = atr_settings[1].split('+')
-
-                await state.set(CalculateState.stop_atr)
-
-                # ticker_val = ticker.get_atr(
-                #     calc.tool or '', period, int(count)
-                # ) or None
-                # TODO - Получения ATR
-                ticker_val = None
-
-                if atr_settings[0] and ticker_val is not None:
-                    rate = 1
-                    if 'atr_percent' in stop_type:
-                        _, percent = stop_type.split('+')
-                        rate = float(percent) * 0.01
-
-                    atr = abs(ticker_val) * abs(rate)
-                    await state.add_data(
-                        atr=atr
-                    )
-                    await bot.send_message(
-                        chat_id,
-                        msg_choose_direct(user.lang, user.tgId, ticker_val),
-                        reply_markup=kb_calc_direct(user.lang, atr, True)
-                    )
-                else:
-                    await bot.send_message(
-                        chat_id, msg_enter_atr(user.lang, calc),
-                        reply_markup=kb_calc_atr(
-                            user.lang, user.tgId, ticker_val)
-                    )
-            else:
-                await bot.send_message(
-                    chat_id, msg_enter_stop_loss(user.lang, send_stat=calc),
-                )
-                await state.set(CalculateState.stop_loss)
-
-            await state.add_data(
-                action='send_calc',
-                stat_id=id,
-                open_price=calc.openPrice,
-                tool=calc.tool,
-                deposit=u_base.deposit,
-                risk=u_base.risk
-            )
-        elif has_registered_now:
+        if has_registered_now:
             await first_start_with_calc(
                 bot, message, state, user
             )

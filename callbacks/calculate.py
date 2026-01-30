@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
-from services import calculation, channel_calc
+from services import calculation
 from config_logger import logger
 from service import user_settings_storage
 from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
@@ -204,20 +204,20 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             isVote = user_settings_storage.get_send_settings('isVote')
             time = user_settings_storage.get_send_settings('time')
 
-            send_data = channel_calc.create(stat_id)
+            # TODO - channel_calc.create(stat_id)
+            send_data = None
             if send_data is None:
                 return
 
-            if withoutStop == 'True' or stat.stopLoss == -1:
-                channel_calc.update(send_data.id, withoutStop=True)
-            if isVote == 'False':
-                channel_calc.update(send_data.id, isVote=False)
-            if style:
-                # TODO - изменить стиль через api
-                # db.change_calculation_style(stat_id, style)
-                channel_calc.update(send_data.id, tradingStyle=style)
-            if time:
-                channel_calc.update(send_data.id, time=time or 'avg')
+            # TODO - channel_calc обновления
+            # if withoutStop == 'True' or stat.stopLoss == -1:
+            #     channel_calc.update(send_data.id, withoutStop=True)
+            # if isVote == 'False':
+            #     channel_calc.update(send_data.id, isVote=False)
+            # if style:
+            #     channel_calc.update(send_data.id, tradingStyle=style)
+            # if time:
+            #     channel_calc.update(send_data.id, time=time or 'avg')
 
             await send_confirm_calc_send(bot, call.message, stat_id)
             await state.delete()
