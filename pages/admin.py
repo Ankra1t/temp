@@ -7,7 +7,7 @@ from common.dt import get_str_by_datetime
 
 from messages.admin import msg_admin_main, msg_admin_users, msg_admin_menu
 
-from keyboards.admin_main import kb_admin_main, kb_admin_tools_list
+from keyboards.admin_main import kb_admin_main
 from keyboards.admin_users import kb_admin_users
 from keyboards.admin_params import kb_params
 
@@ -210,35 +210,6 @@ async def send_admin_client(
 
     # Временно показываем сообщение
     await bot.send_message(chat_id, 'Функция просмотра клиента временно недоступна')
-
-
-async def send_admin_tools_list(
-    bot: AsyncTeleBot,
-    message: Message,
-    turnover='',
-    is_first=False,
-):
-    chat_id = message.chat.id
-    mes_id = message.id
-
-    turnover_show = ''
-    if turnover:
-        turnover_show = f'\nОборот от {turnover}M USDT'
-
-    kb = kb_admin_tools_list(turnover)
-    msg = f'Какие инструменты вы хотите получить?{turnover_show}'
-
-    if is_first:
-        await bot.send_message(
-            chat_id, msg,
-            reply_markup=kb
-        )
-    else:
-        await bot.edit_message_text(
-            msg,
-            chat_id, mes_id,
-            reply_markup=kb
-        )
 
 
 async def send_admin_subs(

@@ -1,20 +1,15 @@
-import os
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import InaccessibleMessage, InputFile
-
-from common.utils import delete_message
+from telebot.types import InaccessibleMessage
 from models import CallbackQuery, StateContext, User
 
-from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter, kb_tools_list_back
+from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
 
 from pages.calculate import send_admin_send_settings
 from pages.user import send_site_code
 from pages.admin import (
-    send_admin_main, send_admin_subs, send_admin_tools_list, send_admin_users,
+    send_admin_main, send_admin_subs, send_admin_users,
     send_admin_params, send_admin_payment
 )
-from services import ticker
-from states.admin_params import AdminMainState
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -48,48 +43,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'send_settings':
         await send_admin_send_settings(bot, call.message, state, user)
-
-    if type == 'tools':
-        await send_admin_tools_list(bot, call.message, value)
-
-    if type == 'tools_spot' or type == 'tools_default':
-        isSpot = type == 'tools_spot'
-
-        await delete_message(
-            bot, chat_id, mes_id
-        )
-
-        text = ticker.get_text(
-            isSpot,
-            (float(value) * (10 ** 6)) if value != '' else None
-        ) or ''
-
-        filename = f'ByBit{chat_id}.txt'
-        text_file = open(filename, 'w+')
-        text_file.write(text)
-        text_file.close()
-
-        await bot.send_document(
-            chat_id, InputFile(
-                filename, 'ByBit.txt'
-            )
-        )
-
-        os.remove(filename)
-
-        await send_admin_tools_list(bot, call.message, value, True)
-
-    if type == 'tools_turnover':
-        current = ''
-        if value:
-            current = f'Сейчас от: {value}M USDT\n'
-        await bot.edit_message_text(
-            f'{current}Введите оборот в миллионах:',
-            chat_id, mes_id,
-            reply_markup=kb_tools_list_back(value)
-        )
-        await state.set(AdminMainState.turnover)
-        await state.add_data(del_mes_id=mes_id)
 
     await bot.answer_callback_query(call.id)
 
