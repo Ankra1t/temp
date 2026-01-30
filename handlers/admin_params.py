@@ -8,7 +8,8 @@ from common.utils import digit_accept, get_print_float
 
 from pages.admin import send_admin_tools_list
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
-from services import calculation, settings
+from services import calculation
+from service import advanced_settings_storage
 from states.admin_params import AdminMainState, AdminParamsState
 
 
@@ -49,7 +50,7 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         type = data.get('type')
 
     if calc_id is None:
-        settings.updateAdvanced(user.id, trailingStop=value, autoTake=None)
+        advanced_settings_storage.update_advanced(user.id, trailingStop=value, autoTake=None)
         await send_admin_send_settings(bot, message, state, user, True)
     else:
         calculation.updateActive(

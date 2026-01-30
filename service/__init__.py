@@ -43,6 +43,11 @@ from service.user_service import (
     UserService,
     user_service,
 )
+from service.advanced_settings_storage import (
+    AdvancedSettingsData,
+    AdvancedSettingsStorage,
+    advanced_settings_storage,
+)
 from service.middleware import (
     RefreshTokenMiddleware,
     request_with_auth,
@@ -110,6 +115,10 @@ __all__ = [
     # Сервис пользовательских данных
     "UserService",
     "user_service",
+    # Хранилище продвинутых настроек
+    "AdvancedSettingsData",
+    "AdvancedSettingsStorage",
+    "advanced_settings_storage",
     # Middleware
     "RefreshTokenMiddleware",
     "request_with_auth",

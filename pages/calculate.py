@@ -22,7 +22,8 @@ from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
-from services import calculation, channel_calc, settings, ticker, violation
+from services import calculation, channel_calc, ticker, violation
+from service import advanced_settings_storage
 
 from keyboards.channel_post import (
     kb_channel_calc, kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
@@ -192,7 +193,7 @@ async def send_active_settings(
 
     await state.delete()
 
-    advSettings = settings.getAdvanced(user.id)
+    advSettings = advanced_settings_storage.get_advanced(user.id)
 
     msg = msg_active_settings(user.lang, advSettings)
     kb = kb_active_settings(user.lang)
@@ -818,7 +819,7 @@ async def send_admin_send_settings(  # TODO - move to admin
     isVote = user_settings_storage.get_send_settings('isVote')
     tradingStyle = user_settings_storage.get_send_settings('style')
     time = user_settings_storage.get_send_settings('time')
-    advancedSettings = settings.getAdvanced(user.id)
+    advancedSettings = advanced_settings_storage.get_advanced(user.id)
 
     msg = msg_admin_send_settings(
         withoutStop == 'False', isVote == 'True', tradingStyle, time,

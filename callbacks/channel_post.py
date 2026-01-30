@@ -9,7 +9,8 @@ from service import user_settings_storage
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
 from pages.admin import send_admin_main
-from services import calculation, channel_calc, settings, ticker
+from services import calculation, channel_calc, ticker
+from service import advanced_settings_storage
 
 from states.admin_params import AdminParamsState
 from states.stats import StatsState
@@ -125,7 +126,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             value = float(value)
 
-        settings.updateAdvanced(
+        advanced_settings_storage.update_advanced(
             user.id,
             trailingStop=value,
             autoTake=None
@@ -407,7 +408,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             time = 60 * 24
 
-        calc = settings.updateAdvanced(user.id, cancelMinutes=time)
+        calc = advanced_settings_storage.update_advanced(user.id, cancelMinutes=time)
         await send_admin_send_settings(bot, call.message, state, user)
 
     await bot.answer_callback_query(call.id)

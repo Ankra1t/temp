@@ -5,7 +5,8 @@ from NOTIFIER import notifier
 from config_logger import logger
 from service import user_settings_storage
 from models import LANGUAGES, CallbackQuery, User, StateContext
-from services import auth, calculation, settings
+from services import auth, calculation
+from service import advanced_settings_storage
 
 from states.settings import FirstCalcState, SettingsState
 
@@ -679,7 +680,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             time = 60 * 24
 
-        settings.updateAdvanced(user.id, cancelMinutes=time)
+        advanced_settings_storage.update_advanced(user.id, cancelMinutes=time)
         await send_active_settings(bot, call.message, state, user)
 
     if type == 'tr_stop':
@@ -702,7 +703,7 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             value = float(value)
 
-        settings.updateAdvanced(
+        advanced_settings_storage.update_advanced(
             user.id,
             trailingStop=value,
             autoTake=None
@@ -724,12 +725,12 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             val = float(val)
 
-        settings.updateAdvanced(user.id, autoTake=val, trailingStop=None)
+        advanced_settings_storage.update_advanced(user.id, autoTake=val, trailingStop=None)
         await send_active_settings(bot, call.message, state, user)
 
     if type == 'auto_stop':
-        advSettings = settings.getAdvanced(user.id)
-        settings.updateAdvanced(
+        advSettings = advanced_settings_storage.get_advanced(user.id)
+        advanced_settings_storage.update_advanced(
             user.id,
             autoStop=not (advSettings and advSettings.autoStop)
         )

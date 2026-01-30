@@ -3,13 +3,12 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from messages.admin import msg_admin_subs_list
-from models import CallbackQuery, StateContext, User
+from models import CallbackQuery, GetAllSubscribes, StateContext, User
 
 from keyboards.admin_subs import (
     admin_subs_factory, AdminSubsCallbackFilter, kb_admin_subs_back, kb_admin_subs_choose_type, kb_admin_subs_choose_user, kb_admin_subs_list,
 )
 from pages.admin import send_admin_main, send_admin_subs
-from services import subscribe
 from states.admin_tariff import AdminSubsState
 
 
@@ -57,7 +56,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             page = 1
 
-        subs = subscribe.getAll(LIMIT, page)
+        # TODO: Получение подписок
+        subs = GetAllSubscribes(count=0, data=[])
 
         if subs is None or len(subs.data) == 0:
             msg = 'Подписок нет'

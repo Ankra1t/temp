@@ -19,7 +19,8 @@ from keyboards.stats import kb_channel_confirm_back, kb_channel_item_back, kb_co
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
-from services import calculation, channel_calc, settings, ticker, violation
+from services import calculation, channel_calc, ticker, violation
+from service import advanced_settings_storage
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -392,7 +393,7 @@ async def handle_cancel_at(message: Message, bot: AsyncTeleBot, state: StateCont
         )
 
     if is_settings:
-        settings.updateAdvanced(user.id, cancelMinutes=value)
+        advanced_settings_storage.update_advanced(user.id, cancelMinutes=value)
 
     if action == 'settings':
         await send_active_settings(bot, message, state, user, True)
@@ -481,7 +482,7 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
         return
 
     if action == 'settings':
-        settings.updateAdvanced(user.id, trailingStop=value, autoTake=None)
+        advanced_settings_storage.update_advanced(user.id, trailingStop=value, autoTake=None)
         await send_active_settings(bot, message, state, user, True)
     else:
         calculation.updateActive(
