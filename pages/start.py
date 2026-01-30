@@ -14,7 +14,7 @@ from pages.admin import send_admin_main
 from keyboards.calculate import kb_calc_atr, kb_calc_direct
 
 from models import Calculation, Message, StateContext, User
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc
 
 
 async def send_start_by_user(
@@ -57,9 +57,11 @@ async def send_start_by_user(
 
                 await state.set(CalculateState.stop_atr)
 
-                ticker_val = ticker.get_atr(
-                    calc.tool or '', period, int(count)
-                ) or None
+                # ticker_val = ticker.get_atr(
+                #     calc.tool or '', period, int(count)
+                # ) or None
+                # TODO - Получения ATR
+                ticker_val = None
 
                 if atr_settings[0] and ticker_val is not None:
                     rate = 1

@@ -3,7 +3,6 @@ from telebot.async_telebot import AsyncTeleBot
 from service import user_settings_storage
 from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
-from services import ticker
 
 from states.calculate import CalculateState, ForexCalcState
 from pages.calculate import create_and_send_calc
@@ -190,7 +189,9 @@ async def choose_calculate_step(
                 user.tgId)
             period, count = atr_settings[1].split('+')
 
-            value = ticker.get_atr(tool, period, int(count)) or None
+            # value = ticker.get_atr(tool, period, int(count)) or None
+            # TODO - Получения ATR
+            value = None
 
             if atr_settings[0] and value is not None:
                 rate = 1

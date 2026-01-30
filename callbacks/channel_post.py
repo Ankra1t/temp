@@ -9,7 +9,7 @@ from service import user_settings_storage
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
 from pages.admin import send_admin_main
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc
 from service import advanced_settings_storage
 
 from states.admin_params import AdminParamsState
@@ -69,12 +69,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'ss_stop':
         current = user_settings_storage.get_send_settings('withoutStop')
-        user_settings_storage.update_send_settings('withoutStop', f'{current != "True"}')
+        user_settings_storage.update_send_settings(
+            'withoutStop', f'{current != "True"}')
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_vote':
         current = user_settings_storage.get_send_settings('isVote')
-        user_settings_storage.update_send_settings('isVote', f'{current != "True"}')
+        user_settings_storage.update_send_settings(
+            'isVote', f'{current != "True"}')
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'ss_time':
@@ -172,7 +174,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if not calc:
             return
 
-        ticker_info = ticker.get_info(calc.tool or '')
+        # TODO - Получения информации по монете
+        ticker_info = None
         if not ticker_info or not ticker_info.indexPrice:
             return
 
@@ -193,7 +196,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if not calc or calc.status != 'DEAL':
             return
 
-        ticker_info = ticker.get_info(calc.tool or '')
+        # TODO - Получения информации по монете
+        ticker_info = None
         if not ticker_info or not ticker_info.indexPrice:
             return
 
@@ -408,7 +412,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             time = 60 * 24
 
-        calc = advanced_settings_storage.update_advanced(user.id, cancelMinutes=time)
+        calc = advanced_settings_storage.update_advanced(
+            user.id, cancelMinutes=time)
         await send_admin_send_settings(bot, call.message, state, user)
 
     await bot.answer_callback_query(call.id)

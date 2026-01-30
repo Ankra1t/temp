@@ -11,8 +11,6 @@ from config_global import SITE_URL
 from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, CalcActiveInfo, Calculation
 
-from services import ticker
-
 
 months = {'ru': [
     'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
@@ -463,10 +461,8 @@ def msg_channel_calc(
 
     tickerInfo = None
     try:
-        tickerInfo = ticker.get_info(
-            (calc.tool or '').replace(
-                '/', ''), calc.ActiveCalc.exchange if calc.ActiveCalc else 'bybit', calc.tradingType
-        )
+        # TODO - Получения информации по монете
+        tickerInfo = None
     except:
         pass
 

@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
-from services import calculation, channel_calc, ticker
+from services import calculation, channel_calc
 from config_logger import logger
 from service import user_settings_storage
 from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
@@ -153,7 +153,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
         period, count = atr_settings[1].split('+')
 
-        value = ticker.get_atr(cur_tool, period, int(count))
+        # value = ticker.get_atr(cur_tool, period, int(count))
+        # TODO - Получения ATR
+        value = None
+
         if not value:
             return
 

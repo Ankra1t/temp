@@ -22,7 +22,7 @@ from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
-from services import calculation, channel_calc, ticker, violation
+from services import calculation, channel_calc, violation
 from service import advanced_settings_storage
 
 from keyboards.channel_post import (
@@ -598,7 +598,8 @@ async def send_confirm_calc_send(
     if stat is None or send_data is None:
         return
 
-    info = ticker.get_info(stat.tool or '')
+    # TODO - Получения информации по монете
+    info = None
 
     photo = stat.photo
     text = msg_channel_calc(
