@@ -2,7 +2,7 @@ from common.utils import get_print_float
 from messages.common import ENTER, msg_risk_info, msg_current_value, msg_sended_data
 from models import LANGUAGES_TYPE, MARKETS_TYPE, Calculation
 
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 
 
 def msg_enter_bars(lang: LANGUAGES_TYPE):
@@ -248,7 +248,7 @@ def msg_enter_splitting(lang: LANGUAGES_TYPE, tp_ratio: list[float], split: list
 
     text += '\n'
     if is_last:
-        text += f'{texts[lang]["last"]} <b>{get_print_float(100-percents_sum, 2)}%</b> {texts[lang]["split"]}. '
+        text += f'{texts[lang]["last"]} <b>{get_print_float(100 - percents_sum, 2)}%</b> {texts[lang]["split"]}. '
         text += texts[lang]["info"]
     elif tp_count == 0:
         text += texts[lang]['1']

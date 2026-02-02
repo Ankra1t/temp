@@ -2,11 +2,9 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.util import extract_arguments
 
 from config_logger import logger
-from NOTIFIER import notifier
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from messages.main import msg_support
 from models import LANGUAGES, Message, StateContext, User
-from services import auth
 
 from common.utils import is_digit
 from common.calc_step import send_calc_start
@@ -49,11 +47,13 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
 
         username = message.from_user.username
 
-        is_registered = auth.registration(
-            userId=user.tgId,
-            username=username,
-            referId=ref_id
-        )
+        # TODO - Регистрация?
+        # is_registered = auth.registration(
+        #     userId=user.tgId,
+        #     username=username,
+        #     referId=ref_id
+        # )
+
         new_user = None  # TODO - изменить логику с проверкой из API
 
         if new_user is not None and is_registered == True:
@@ -70,17 +70,9 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
             user_settings_storage.set_lang(user.tgId, lang)
 
             # Уведомление о регистрации
-            sentMessages = await notifier.send_user_is_registered(
-                new_user.id, num
-            )
-
-            if sentMessages:
-                auth.addUserNotificationMessages(
-                    userId=new_user.id,
-                    value=sentMessages,
-                    lang=user_lang,
-                    num=num
-                )
+            # sentMessages = await notifier.send_user_is_registered(
+            #     new_user.id, num
+            # )
 
             is_registered = True
         else:

@@ -7,7 +7,7 @@ from common.utils import digit_accept
 
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
 from services import calculation
-from service import advanced_settings_storage
+from service.advanced_settings_storage import advanced_settings_storage
 from states.admin_params import AdminParamsState
 
 

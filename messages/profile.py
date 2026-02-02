@@ -34,36 +34,6 @@ def msg_referral(lang: LANGUAGES_TYPE, ref_count: int, bot_name: str, user_db_id
 <code>https://t.me/{bot_name}/?start={user_db_id}</code>"""
 
 
-def msg_site_login(lang: LANGUAGES_TYPE):
-    texts = {
-        'ru': {
-            'name': 'Вход на сайт',
-            'click': 'Нажмите на кнопку для перехода на сайт',
-            'time': 'Ссылка действует несколько минут',
-        },
-        'en': {
-            'name': 'Website',
-            'click': 'Press the button to go to the website',
-            'time': 'The link is valid for several minutes',
-        },
-        'uz': {
-            'name': 'Saytga kiring',
-            'click': 'Saytga o\'tish uchun tugmani bosing',
-            'time': 'Havola bir necha daqiqa davomida amal qiladi',
-        },
-        'tr': {
-            'name': 'Siteye giriş yap',
-            'click': 'Siteye gitmek için tıklayınız',
-            'time': 'Bağlantı birkaç dakika geçerlidir',
-        },
-    }
-
-    return f"""<b><u>{texts[lang]['name']}</u></b>
-
-👇 {texts[lang]['click']}
-<i>{texts[lang]['time']}</i>"""
-
-
 def msg_user_account(lang: LANGUAGES_TYPE, refs: int):
     texts = {
         'ru': {

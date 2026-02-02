@@ -11,7 +11,7 @@ from keyboards.user_main import user_main_factory, UserMainCallbackFilter
 
 from pages.calculate import send_main
 from pages.admin import send_admin_main
-from pages.user import send_user_education, send_user_account, send_site_code, send_user_main
+from pages.user import send_user_education, send_user_account, send_user_main
 
 
 async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -21,9 +21,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     callback_data: dict = user_main_factory.parse(call.data)
     type = callback_data.get('type', '')
 
-    chat_id = call.message.chat.id
     user_id = call.from_user.id
-    mes_id = call.message.id
 
     logger.info(
         f'callback "user_main_factory" user_tg_id={user_id} type={type}')
@@ -50,10 +48,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'signals':
         await send_in_development(bot, call.message)
-
-    if 'site' in type:
-        is_reset = 'reset' in type
-        await send_site_code(bot, call.message, state, user, is_reset, is_first=False)
 
     await bot.answer_callback_query(call.id)
 

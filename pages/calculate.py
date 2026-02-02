@@ -9,8 +9,6 @@ from common.calculation import get_result, getStrValueCount
 from states.stats import ChannelCalcState
 from common.utils import edit_message, edit_message, get_print_float
 
-from service import user_settings_storage
-
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
 from messages.calc import msg_calc_list, msg_calculation, msg_channel_calc
@@ -23,7 +21,9 @@ from messages.main import msg_main
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
 from services import calculation, violation
-from service import advanced_settings_storage
+
+from service.advanced_settings_storage import advanced_settings_storage
+from service.user_settings_storage import user_settings_storage
 
 from keyboards.channel_post import (
     kb_channel_calc, kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,

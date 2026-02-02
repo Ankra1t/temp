@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from config_logger import logger
-from service import user_service
+from service.user_service import user_service
 from models import CallbackQuery, StateContext, User
 
 from messages.education import curs_contents, curs, termins
@@ -83,6 +83,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, user: User, s
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(UserEducationCallbackFilter())
     bot.register_callback_query_handler(
-        _handle_callback, # type: ignore
+        _handle_callback,  # type: ignore
         lambda _: True, pass_bot=True,
         user_education=user_education_factory.filter())

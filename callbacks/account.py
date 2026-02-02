@@ -8,7 +8,7 @@ from models import LANGUAGES, CallbackQuery, StateContext, User
 
 from messages.profile import msg_enter_nickname
 
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from states.account import UserAccountState
 from keyboards.account import (
     user_account_factory, UserAccountCallbackFilter,
@@ -58,12 +58,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             'Функция в разработке',
             chat_id, mes_id
         )
-
-    if type == 'password':
-        await bot.edit_message_text(
-            'Введите новый пароль:', chat_id, mes_id
-        )
-        await state.set(UserAccountState.password)
 
     if type == 'params':
         await send_user_params(bot, call.message, state, user)

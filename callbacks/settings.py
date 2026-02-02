@@ -1,12 +1,12 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from NOTIFIER import notifier
 from config_logger import logger
-from service import user_settings_storage
 from models import LANGUAGES, CallbackQuery, User, StateContext
-from services import auth, calculation
-from service import advanced_settings_storage
+from services import calculation
+
+from service.user_settings_storage import user_settings_storage
+from service.advanced_settings_storage import advanced_settings_storage
 
 from states.settings import FirstCalcState, SettingsState
 
@@ -216,15 +216,6 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                         reply_markup=kb_first_calc(langg),
                         disable_web_page_preview=True
                     )
-
-                    sent_messages = auth.getUserNotificationMessages(
-                        userId=user.id
-                    )
-
-                    if sent_messages:
-                        await notifier.change_user_choosed_lang(
-                            user.id, langg, sent_messages
-                        )
                 else:
                     await send_settings(bot, call.message, state, user)
 
@@ -725,7 +716,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
         else:
             val = float(val)
 
-        advanced_settings_storage.update_advanced(user.id, autoTake=val, trailingStop=None)
+        advanced_settings_storage.update_advanced(
+            user.id, autoTake=val, trailingStop=None)
         await send_active_settings(bot, call.message, state, user)
 
     if type == 'auto_stop':

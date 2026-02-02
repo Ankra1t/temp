@@ -1,6 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 

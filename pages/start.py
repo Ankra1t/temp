@@ -1,6 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 
 from common.utils import send_in_development
 
@@ -8,7 +8,7 @@ from states.calculate import CalculateState
 from messages.enter import msg_enter_stop_loss
 
 from pages.calculate import send_calculation
-from pages.user import send_user_main, send_site_code
+from pages.user import send_user_main
 from pages.admin import send_admin_main
 
 from models import Calculation, Message, StateContext, User
@@ -24,8 +24,6 @@ async def send_start_by_user(
     quick_calc_tool: str | None = None,
     quick_calc_price: float | None = None,
 ):
-    chat_id = message.chat.id
-
     await state.delete()
 
     # Обработка быстрого запуска калькулятора из start параметра
@@ -52,10 +50,6 @@ async def send_start_by_user(
             await start_with_calc(
                 bot, message, state, user, int(id),
             )
-
-    elif message.text is not None and len(message.text.split()) == 2 and 'site' in message.text:
-        await send_site_code(bot, message, state, user, is_first=True)
-        return
 
     elif user.role == 0:
         await send_user_main(bot, message, state, user, has_registered_now, True)

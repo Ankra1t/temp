@@ -20,7 +20,7 @@ from keyboards.stats import kb_confirm_take_price, kb_deal_profit_cancel, kb_dea
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
 from services import calculation, violation
-from service import advanced_settings_storage
+from service.advanced_settings_storage import advanced_settings_storage
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):

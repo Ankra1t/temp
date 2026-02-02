@@ -4,7 +4,7 @@ from messages.common import POINT, msg_atr_bars, transl_market, transl_tr_style,
 from models import LANGUAGES_TYPE, AdvancedSettings
 
 # TODO - delete db from messages files
-from service import user_settings_storage, UserSettings
+from service.user_settings_storage import user_settings_storage, UserSettings
 
 
 def msg_settings(lang: LANGUAGES_TYPE, u_base: UserSettings, is_risk_update=False):

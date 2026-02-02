@@ -4,7 +4,7 @@ from telebot.types import InaccessibleMessage
 from messages.enter import msg_choose_direct, msg_enter_max_bar
 from services import calculation
 from config_logger import logger
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
 
 from states.calculate import CalculateState

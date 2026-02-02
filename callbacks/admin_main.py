@@ -5,7 +5,6 @@ from models import CallbackQuery, StateContext, User
 from keyboards.admin_main import admin_main_factory, AdminMainCallbackFilter
 
 from pages.calculate import send_admin_send_settings
-from pages.user import send_site_code
 from pages.admin import (
     send_admin_main, send_admin_subs, send_admin_users,
     send_admin_params, send_admin_payment
@@ -31,9 +30,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     if type == 'payment':
         await send_admin_payment(bot, call.message, state)
-
-    if type == 'site_code':
-        await send_site_code(bot, call.message, state, user)
 
     if type == 'back':
         await send_admin_main(bot, call.message, state)

@@ -5,7 +5,7 @@ from telebot.async_telebot import AsyncTeleBot
 from states.settings import FirstCalcState, SettingsState
 
 from config_logger import logger
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from models import BASE_VALUE_TYPE, Message, User, StateContext
 from common.utils import digit_accept, is_digit, text_accept
 

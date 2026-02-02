@@ -5,12 +5,13 @@ from common.calculation import getStrValueCount
 from keyboards.stats import kb_auto_take, kb_deal_profit_cancel
 from common.utils import delete_message, edit_message, get_print_float
 from config_logger import logger
-from service import user_settings_storage
 from messages.enter import msg_enter_auto_take, msg_enter_cancel_at, msg_enter_close_price, msg_enter_trading_style
 from models import CallbackQuery, StateContext, User
 from pages.admin import send_admin_main
 from services import calculation
-from service import advanced_settings_storage
+
+from service.user_settings_storage import user_settings_storage
+from service.advanced_settings_storage import advanced_settings_storage
 
 from states.admin_params import AdminParamsState
 from states.stats import StatsState

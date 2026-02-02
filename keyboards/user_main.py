@@ -2,10 +2,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.callback_data import CallbackData, CallbackDataFilter
 from telebot.asyncio_filters import AdvancedCustomFilter
 
-from config_global import SITE_URL
 from models import LANGUAGES_TYPE, CallbackQuery
-
-from common.keyboard import back_txt
 
 
 user_main_factory = CallbackData('type', prefix='user_main')
@@ -65,7 +62,6 @@ def kb_user_main(lang: LANGUAGES_TYPE, new_user=False):
     # btn3 = getButton("Обучение", 'education')
     btn_calc = getButton(f"⌨️ {texts[lang]['calc']}", 'calculator')
     btn_account = getButton(f"{texts[lang]['account']}", 'account')
-    # btn_site = getButton(f"{texts[lang]['site']}", 'site')
 
     news_link = 'my_investors' if lang == 'ru' else 'my_traders'
     btn_channel = InlineKeyboardButton(
@@ -78,38 +74,4 @@ def kb_user_main(lang: LANGUAGES_TYPE, new_user=False):
         keyboard.add(btn_calc)
         keyboard.add(btn_channel, btn_account)
 
-    return keyboard
-
-
-def kb_site_login(lang: LANGUAGES_TYPE, code: str, is_reset=False):
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-    texts = {
-        'ru': {
-            'site': 'Войти на сайт',
-        },
-        'en': {
-            'site': 'Go to the website',
-        },
-        'uz': {
-            'site': 'Saytga kiring',
-        },
-        'tr': {
-            'site': 'Siteye giriş yap',
-        },
-    }
-
-    btn_link = InlineKeyboardButton(
-        texts[lang]['site'], url=f'{SITE_URL}/auth/tg?code={code}'
-    )
-    btn_reset = getButton('✅' if is_reset else '🔄', 'site_reset')
-    btn_back = getButton(back_txt(lang), 'main')
-
-    buttons = []
-    if code:
-        buttons.append(btn_link)
-    buttons.append(btn_reset)
-    buttons.append(btn_back)
-
-    keyboard.add(*buttons)
     return keyboard

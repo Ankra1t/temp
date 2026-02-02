@@ -2,7 +2,7 @@ import re
 from telebot.async_telebot import AsyncTeleBot
 
 from config_logger import logger
-from service import user_settings_storage
+from service.user_settings_storage import user_settings_storage
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
 from messages.errors import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
