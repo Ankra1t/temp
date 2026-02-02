@@ -20,7 +20,6 @@ from common.calc_step import choose_calculate_step
 from common.utils import digit_accept, is_digit, text_accept
 
 from states.calculate import CalculateState, ForexCalcState
-from services import calculation
 
 
 async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -59,14 +58,16 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         await state.add_data(tool=tool)
         await choose_calculate_step(bot, message, state, user, last_value='tool')
     else:
-        calc_info = calculation.get(userId=user.id, calcId=stat_id)
-        if calc_info is None or calc_info.ActiveCalc:
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc_info = None
+        if calc_info is None or (calc_info.ActiveCalc):
             return
 
         # TODO: Обновить инструмент через API
         # db.change_calculation_tool(stat_id, tool)
 
-        calc_info = calculation.get(userId=user.id, calcId=stat_id)
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc_info = None
         if calc_info:
             await send_calculation(bot, message, state, user, calc_info, True)
             await state.delete()
@@ -125,7 +126,8 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         # TODO: Обновить forex через API
         # db.change_calculation_forex(stat_id, forex)
 
-        calc_info = calculation.get(userId=user.id, calcId=stat_id)
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc_info = None
         if calc_info is None:
             return
 
@@ -210,13 +212,13 @@ async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContex
         calc_id = data.get('calc_id')
 
     if calc_id:
-        calc = calculation.get(userId=user.id, calcId=calc_id)
+        # TODO - calculation.get(userId=user.id, calcId=calc_id)
+        calc = None
         if not calc or calc.status == 'FINISH':
             return
 
-        calc = calculation.update(
-            userId=user.id, calcId=calc_id, deposit=value
-        )
+        # TODO - calculation.update(userId=user.id, calcId=calc_id, deposit=value)
+        calc = None
         if calc:
             await send_calculation(bot, message, state, user, calc, True)
     else:
@@ -248,14 +250,13 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
         calc_id = data.get('calc_id')
 
     if calc_id:
-        calc = calculation.get(userId=user.id, calcId=calc_id)
+        # TODO - calculation.get(userId=user.id, calcId=calc_id)
+        calc = None
         if not calc or calc.status == 'FINISH':
             return
 
-        calc = calculation.update(
-            userId=user.id, calcId=calc_id,
-            riskValue=value if not is_percent else calc.deposit * value / 100
-        )
+        # TODO - calculation.update(userId=user.id, calcId=calc_id, riskValue=value if not is_percent else calc.deposit * value / 100)
+        calc = None
         if calc:
             await send_calculation(bot, message, state, user, calc, True)
     else:
@@ -292,7 +293,8 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
             last_value='trading_style'
         )
     else:
-        calc_info = calculation.get(userId=user.id, calcId=stat_id)
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc_info = None
         if calc_info is None:
             return
 
@@ -331,7 +333,8 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             bot, message, state, user, last_value='open_price'
         )
     else:
-        calc = calculation.get(userId=user.id, calcId=stat_id)
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc = None
         # TODO - channel_calc.getByCalc(stat_id)
         send_data = None
         if calc and not (calc.ActiveCalc and not send_data):

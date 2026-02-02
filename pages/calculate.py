@@ -20,7 +20,6 @@ from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
-from services import calculation
 
 from service.advanced_settings_storage import advanced_settings_storage
 from service.user_settings_storage import user_settings_storage
@@ -338,7 +337,8 @@ async def send_stats(
 
     await state.delete()
 
-    values = calculation.getWeekStats(userId=user.id)
+    # TODO - calculation.getWeekStats(userId=user.id)
+    values = None
 
     if values is None:
         return
@@ -379,6 +379,9 @@ async def send_stats(
             'success': 'Success deals percent',
         },
     }
+
+    # TODO - мок
+    values = []
 
     msg = f"<b>{texts[lang]['title']}</b>"
 
@@ -482,13 +485,17 @@ async def send_calc_list(
 
     calc_list = None
     if list_type == 'deal':
-        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
+        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
+        calc_list = []
     elif list_type == 'canceled':
-        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
+        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
+        calc_list = []
     elif list_type == 'wait':
-        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
+        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
+        calc_list = []
     elif list_type == 'done':
-        calc_list = calculation.getByUserList(userId=user.id, type=list_type)
+        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
+        calc_list = []
     else:
         return
 
@@ -555,7 +562,8 @@ async def send_calculation(
     await state.delete()
 
     if is_list:
-        calculation.update(userId=user.id, calcId=calc.id, openedList=True)
+        # TODO - calculation.update(userId=user.id, calcId=calc.id, openedList=True)
+        pass
 
     if is_try:
         kb = None
@@ -593,7 +601,8 @@ async def send_confirm_calc_send(
 ):
     chat_id = message.chat.id
 
-    stat = calculation.get(userId=1, calcId=calc_id)
+    # TODO - calculation.get(userId=1, calcId=calc_id)
+    stat = None
 
     # TODO - Получение инфо о данных по каналу
     send_data = None
@@ -663,11 +672,12 @@ async def create_and_send_calc(
         is_from_deposit = data.get('is_from_deposit') or False
 
     if stat_id is not None:
-        calc_info = calculation.get(userId=user.id, calcId=stat_id)
-        if calc_info is None or calc_info.ActiveCalc:
+        # TODO - calculation.get(userId=user.id, calcId=stat_id)
+        calc_info = None
+        if calc_info is None or (calc_info and calc_info.ActiveCalc):
             return
 
-        if calc_info.openPrice == stop_loss:
+        if calc_info and calc_info.openPrice == stop_loss:
             new_mes = await bot.send_message(chat_id, msg_sl_op_equal_error(user.lang))
             await state.add_data(
                 del_mes_id=new_mes.id,
@@ -676,7 +686,8 @@ async def create_and_send_calc(
 
         # TODO: Обновить стоп-лосс через API
         # db.change_calculation_stop_loss(stat_id, stop_loss)
-        calc_info.stopLoss = stop_loss
+        if calc_info:
+            calc_info.stopLoss = stop_loss
 
         await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
@@ -968,7 +979,8 @@ async def send_admin_channel_calc_item(
 
     # TODO - Получение инфо о данных по каналу
     send_data = None
-    calc = calculation.get(userId=1, calcId=calc_id)
+    # TODO - calculation.get(userId=1, calcId=calc_id)
+    calc = None
     if calc is None:
         return
 
@@ -1153,7 +1165,8 @@ async def create_and_send_channel_calc(
 ):
     chat_id = message.chat.id
 
-    calc = calculation.get(userId=user.id, calcId=calc_id)
+    # TODO - calculation.get(userId=user.id, calcId=calc_id)
+    calc = None
     if calc is None:
         return
 

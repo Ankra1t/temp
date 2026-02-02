@@ -3,7 +3,6 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from models import LANGUAGES, CallbackQuery, User, StateContext
-from services import calculation
 
 from service.user_settings_storage import user_settings_storage
 from service.advanced_settings_storage import advanced_settings_storage
@@ -123,7 +122,8 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 async with state.data() as data:
                     stat_id = data.get('stat_id', 0)
 
-                calc_info = calculation.get(userId=user.id, calcId=stat_id)
+                # TODO - calculation.get(userId=user.id, calcId=stat_id)
+                calc_info = None
                 if calc_info is None:
                     return
 

@@ -2,7 +2,6 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
 from messages.enter import msg_choose_direct, msg_enter_max_bar
-from services import calculation
 from config_logger import logger
 from service.user_settings_storage import user_settings_storage
 from models import Calculation, ForexInfo, CallbackQuery, StateContext, User
@@ -194,7 +193,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if not stat_id:
                 return
 
-            stat = calculation.get(userId=user.id, calcId=stat_id)
+            # TODO - calculation.get(userId=user.id, calcId=stat_id)
+            stat = None
             if stat is None:
                 return
 
@@ -232,7 +232,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if 'f_direct' in type:
                 await state.delete()
 
-                calc = calculation.get(userId=user.id, calcId=int(stat_id))
+                # TODO - calculation.get(userId=user.id, calcId=int(stat_id))
+                calc = None
                 if calc is None:
                     return
 

@@ -7,7 +7,6 @@ from keyboards.channel_post import getButton as getChannelButton
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 
 from models import MARKETS_TYPE, Calculation, LANGUAGES_TYPE, CallbackQuery
-from services import calculation
 
 
 stats_factory = CallbackData('type', 'stat_id', 'sm', 'p', prefix='stats')
@@ -359,8 +358,9 @@ def kb_deal_result(lang: LANGUAGES_TYPE, stat_id: int):
     row_width = 3
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
-    calc_info = calculation.get(userId=1, calcId=stat_id)
-    tp: list[int] = getattr(calc_info, 'tpRatio', [])
+    # TODO - calculation.get(userId=1, calcId=stat_id)
+    calc_info = None
+    tp: list[int] = getattr(calc_info, 'tpRatio', []) if calc_info else []
 
     buttons = []
     for i, el in enumerate(tp):
@@ -547,7 +547,8 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
 def kb_confirm_channel_post(calc_id: int):
     # TODO - Получение инфо о данных по каналу
     send_data = None
-    calc = calculation.get(userId=1, calcId=calc_id)
+    # TODO - calculation.get(userId=1, calcId=calc_id)
+    calc = None
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)
 

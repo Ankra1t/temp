@@ -12,7 +12,6 @@ from pages.user import send_user_main
 from pages.admin import send_admin_main
 
 from models import Calculation, Message, StateContext, User
-from services import calculation
 
 
 async def send_start_by_user(
@@ -36,7 +35,8 @@ async def send_start_by_user(
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
-        calc = calculation.get(userId=user.id, calcId=int(id))
+        # TODO - calculation.get(userId=user.id, calcId=int(id))
+        calc = None
 
         u_base = user_settings_storage.get_or_create(user.tgId)
         if calc is None or u_base is None:
@@ -71,7 +71,8 @@ async def start_with_calc(
 ):
     await state.delete()
 
-    calc = calculation.get(userId=user.id, calcId=int(stat_id))
+    # TODO - calculation.get(userId=user.id, calcId=int(stat_id))
+    calc = None
     if calc is None:
         return
 

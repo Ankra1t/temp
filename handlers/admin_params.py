@@ -6,7 +6,6 @@ from models import Message, StateContext, User
 from common.utils import digit_accept
 
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
-from services import calculation
 from service.advanced_settings_storage import advanced_settings_storage
 from states.admin_params import AdminParamsState
 
@@ -35,11 +34,7 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
             user.id, trailingStop=value, autoTake=None)
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        calculation.updateActive(
-            userId=user.id, id=calc_id,
-            trailingStopCount=value,
-            autoTake=None
-        )
+        # TODO - calculation.updateActive(userId=user.id, id=calc_id, trailingStopCount=value, autoTake=None)
 
         if type == 'change_sent':
             await send_admin_channel_calc_item(
