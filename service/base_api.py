@@ -45,7 +45,6 @@ class BaseApiClient(ABC, Generic[T]):
     с автоматической аутентификацией и обновлением токена.
     """
 
-    # Дочерние классы должны определить эти атрибуты
     base_url: str = API_AUTH_URL
 
     def __init__(self, base_url: str | None = None) -> None:
@@ -101,22 +100,30 @@ class BaseApiClient(ABC, Generic[T]):
         kwargs["headers"] = headers
 
         try:
-            response = await request_with_auth(method, url, user_id, **kwargs)
-            data = await response.json()
+            session, data = await request_with_auth(method, url, user_id, **kwargs)
 
-            if response.status >= 400:
+            # Получаем статус из данных (если API возвращает его)
+            # или проверяем наличие поля 'success'
+            if not data.get("success", True):
                 raise BaseApiError(
                     message=data.get("message", f"{method} {endpoint} failed"),
-                    status_code=response.status,
+                    status_code=data.get("status"),
                     response_data=data,
                 )
 
             return data
 
+        except AuthApiError as e:
+            logger.error(f"Auth error during {method} {endpoint}: {e}")
+            raise BaseApiError(
+                f"Authentication failed for {method} {endpoint}") from e
         except aiohttp.ClientError as e:
             logger.error(f"Network error during {method} {endpoint}: {e}")
             raise BaseApiError(
                 f"Network error during {method} {endpoint}") from e
+        finally:
+            if 'session' in locals():
+                await session.close()  # type: ignore
 
     async def _get(
         self,
@@ -182,6 +189,7 @@ class PublicApiClient(BaseApiClient[T]):
         self,
         method: str,
         endpoint: str,
+        user_id: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """

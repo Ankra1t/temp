@@ -8,7 +8,7 @@ Middleware для обновления токена при API запросах.
 import logging
 from typing import Any
 
-from aiohttp import ClientSession, ClientResponse
+from aiohttp import ClientSession
 
 from service.auth import auth_service, AuthApiError
 from service.token_storage import token_storage, TokenPair
@@ -22,13 +22,9 @@ async def request_with_auth(
     user_id: int,
     *args: Any,
     **kwargs: Any,
-) -> ClientResponse:
+) -> tuple[ClientSession, dict[str, Any]]:
     """
     Выполнить аутентифицированный API запрос с автоматическим обновлением токена при 401/403.
-
-    Это удобная функция, которая обрабатывает логику обновления токена
-    для отдельных API запросов. Обновление выполняется только когда
-    сервер возвращает коды статуса 401 или 403.
 
     Args:
         method: HTTP метод (GET, POST, и т.д.)
@@ -38,18 +34,10 @@ async def request_with_auth(
         **kwargs: Дополнительные именованные аргументы для запроса
 
     Returns:
-        ClientResponse из API
+        Кортеж (session, data) - сессия и данные ответа
 
     Raises:
         AuthApiError: Если аутентификация не удалась
-
-    Example:
-        response = await request_with_auth(
-            "GET",
-            "https://api.example.com/data",
-            user_id=12345
-        )
-        data = await response.json()
     """
     access_token = token_storage.get_access_token(user_id)
 
@@ -63,10 +51,10 @@ async def request_with_auth(
     session = ClientSession()
     try:
         async with session.request(method, url, *args, **kwargs) as response:
+            data = await response.json()
+
             # Обработка истёкшего токена - обновить и повторить один раз
             if response.status in (401, 403):
-                await session.close()
-
                 refresh_token = token_storage.get_refresh_token(user_id)
                 if not refresh_token:
                     raise AuthApiError("No refresh token available")
@@ -88,23 +76,25 @@ async def request_with_auth(
                     headers["Authorization"] = f"Bearer {new_tokens.access_token}"
                     kwargs["headers"] = headers
 
-                    session = ClientSession()
                     async with session.request(method, url, *args, **kwargs) as retry_response:
+                        retry_data = await retry_response.json()
+
                         # Если всё ещё получаем 401/403, аутентификация не удалась
                         if retry_response.status in (401, 403):
                             token_storage.remove(user_id)
                             raise AuthApiError(
                                 f"Authentication failed after token refresh (status: {retry_response.status})"
                             )
-                        return retry_response
+
+                        return session, retry_data
 
                 except AuthApiError as e:
-                    logger.error(
-                        f"Failed to refresh token for user {user_id}: {e}")
+                    logger.error(f"Failed to refresh token for user {user_id}: {e}")
                     token_storage.remove(user_id)
                     raise
 
-            return response
+            return session, data
 
-    finally:
+    except Exception:
         await session.close()
+        raise
