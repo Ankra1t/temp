@@ -3,7 +3,6 @@ from telebot.types import InaccessibleMessage
 
 from config_logger import logger
 from pages.start import first_start_with_calc
-from services import violation
 from models import CallbackQuery, StateContext, User
 
 from common.utils import delete_message
@@ -84,14 +83,18 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if 'violation+' in type:
         result = False if '+no' in type else True if '+yes' in type else None
-        violation.create(user.id, result)
+        # TODO - Создать нарушение?
+        # violation.create(user.id, result)
         type = 'violations'
 
     if 'violation_edit+' in type:
-        today_violation = violation.getToday(user.id)
+        # TODO - Получить информацию о нарушениях
+        # today_violation = violation.getToday(user.id)
+        today_violation = None
         if today_violation:
             result = False if '+no' in type else True if '+yes' in type else 'null'
-            violation.update(today_violation.get('id', 0), status=result)
+            # TODO - Обновить инфо о нарушениях
+            # violation.update(today_violation.get('id', 0), status=result)
             type = 'violations'
 
     if type == 'violation_edit':

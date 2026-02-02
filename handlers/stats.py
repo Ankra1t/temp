@@ -19,7 +19,7 @@ from keyboards.stats import kb_confirm_take_price, kb_deal_profit_cancel, kb_dea
 
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
-from services import calculation, violation
+from services import calculation
 from service.advanced_settings_storage import advanced_settings_storage
 
 
@@ -351,11 +351,12 @@ async def handle_violation_message(message: Message, bot: AsyncTeleBot, state: S
     if message.photo is not None:
         photo = message.photo[0].file_id
 
-    violation.update(
-        violation_id,
-        text,
-        photo
-    )
+    # TODO - Обновить инфо о нарушениях
+    # violation.update(
+    #     violation_id,
+    #     text,
+    #     photo
+    # )
 
     await state.delete()
     await send_violation(bot, message, state, user, is_first=True)

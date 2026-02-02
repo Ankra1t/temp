@@ -20,7 +20,7 @@ from messages.main import msg_main
 
 from messages.violation import msg_violation
 from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateContext, User
-from services import calculation, violation
+from services import calculation
 
 from service.advanced_settings_storage import advanced_settings_storage
 from service.user_settings_storage import user_settings_storage
@@ -1110,11 +1110,15 @@ async def send_violation(
 
     await state.delete()
 
-    current = violation.getMonthPoints(user.id)
+    # TODO - Получить информацию о нарушениях
+    # current = violation.getMonthPoints(user.id)
+    current = None
     if current is None:
         return
 
-    isToday = violation.getToday(user.id) is not None
+    # TODO - Получить информацию о нарушениях
+    # isToday = violation.getToday(user.id) is not None
+    isToday = False
 
     msg = msg_violation(
         user.lang,

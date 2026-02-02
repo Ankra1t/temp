@@ -6,7 +6,6 @@ from common.dt import get_str_by_datetime
 from common.utils import antiflood
 from config_logger import logger
 from models import SentMessages, UserInfo, UserNotification, LANGUAGES_TYPE
-from services import user
 
 
 MESSAGE_TYPE = Literal['text', 'photo', 'video']
@@ -73,7 +72,9 @@ class Notifier():
         if block_time:
             message += f'(BLOCK {get_str_by_datetime(block_time)})'
 
-        refer_user = user.getReferralOfUser(new_user.id)
+        # TODO - получить реферала пользователя
+        # refer_user = user.getReferralOfUser(new_user.id)
+        refer_user = None
 
         if refer_user is not None:
             refer_name = f'@{refer_user.tgUsername}' if refer_user.tgUsername and refer_user.tgUsername != '-' else refer_user.tgId
