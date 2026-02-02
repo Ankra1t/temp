@@ -15,7 +15,6 @@ from service.base import (
     LoginData,
     LoginResponse,
     RefreshResponse,
-    LogoutResponse,
     SessionResponse,
     TokenPair,
 )
@@ -108,32 +107,6 @@ class AuthService:
             logger.error(f"Network error during token refresh: {e}")
             raise AuthApiError("Network error during token refresh") from e
 
-    async def logout(self, refresh_token: str) -> LogoutResponse:
-        session = await self._get_session()
-        url = self._build_url("/auth/logout")
-
-        payload = {"refreshToken": refresh_token}
-
-        try:
-            async with session.post(
-                url,
-                json=payload,
-                headers={"Content-Type": "application/json"},
-            ) as response:
-                data = await response.json()
-
-                if response.status >= 400:
-                    raise AuthApiError(
-                        message=data.get("message", "Logout failed"),
-                        status_code=response.status,
-                    )
-
-                return LogoutResponse(**data)
-
-        except aiohttp.ClientError as e:
-            logger.error(f"Network error during logout: {e}")
-            raise AuthApiError("Network error during logout") from e
-
     async def get_session(self, access_token: str) -> SessionResponse:
         session = await self._get_session()
         url = self._build_url("/users/me")
@@ -182,23 +155,3 @@ async def register_user_from_tg(
     logger.info(f"User {tgId} authenticated successfully")
 
     return response.data
-
-
-def get_user_tokens(tgId: int) -> Optional[TokenPair]:
-    return token_storage.get(tgId)
-
-
-def ensure_authenticated(tgId: int) -> Optional[str]:
-    return token_storage.get_access_token(tgId)
-
-
-async def logout_user(tgId: int) -> None:
-    refresh_token = token_storage.get_refresh_token(tgId)
-    if refresh_token:
-        try:
-            await auth_service.logout(refresh_token)
-        except AuthApiError as e:
-            logger.warning(f"Failed to logout user {tgId} from API: {e}")
-
-    token_storage.remove(tgId)
-    logger.info(f"User {tgId} logged out")

@@ -81,19 +81,12 @@ class SessionData(BaseData):
     referrer_id: Optional[int] = Field(alias="referrerId", default=None)
 
 
-class LogoutData(BaseData):
-    """Данные ответа для endpoint выхода."""
-
-    message: str
-
-
 # Псевдонимы типов для полных типов ответов
 ApiResponse = BaseResponse[BaseData]
 LoginResponse = BaseResponse[LoginData]
 RefreshResponse = BaseResponse[RefreshData]
 UserResponse = BaseResponse[UserData]
 SessionResponse = BaseResponse[SessionData]
-LogoutResponse = BaseResponse[LogoutData]
 
 
 class TokenType(str, Enum):

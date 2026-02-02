@@ -9,13 +9,10 @@ import logging
 from typing import Any
 
 from pydantic import BaseModel
-import aiohttp
 
 from config_global import API_AUTH_URL
-from service.auth import AuthApiError
 from service.base import BaseData
-from service.middleware import request_with_auth
-from service.token_storage import token_storage
+from service.base_api import BaseApiClient, BaseApiError
 
 logger = logging.getLogger(__name__)
 
@@ -187,13 +184,9 @@ class CalcCreateRequest(BaseData):
     riskValue: str
     openPrice: float
     stopLoss: float
-    # category: str | None = None
-    market: str = 'crypto'
-    tpRatio: str = '3'
-    # round_count: int
-    # trading_style: str | None = None
+    market: str = "crypto"
+    tpRatio: str = "3"
     symbol: str | None = None
-    # quote: str | None = None
     description: str | None = None
     comment: str | None = None
     photo: str | None = None
@@ -265,35 +258,22 @@ class CalcCreateFullResponse(BaseModel):
     response: CalcCreateResponse
 
 
-class CalcService:
+class CalcApiError(BaseApiError):
+    """Исключение для ошибок API расчётов."""
+
+    pass
+
+
+class CalcService(BaseApiClient[CalcDetails]):
     """
     Сервис для операций расчётов через API.
 
-    Предоставляет асинхронные методы для:
-    - Получения списка расчётов
-    - Создания новых расчётов
+    Использует BaseApiClient для выполнения HTTP запросов
+    с автоматической аутентификацией.
     """
 
     def __init__(self, base_url: str = API_AUTH_URL) -> None:
-        """
-        Инициализировать сервис расчётов.
-
-        Args:
-            base_url: Базовый URL для API
-        """
-        self.base_url = base_url.rstrip("/")
-
-    def _build_url(self, endpoint: str) -> str:
-        """
-        Построить полный URL для endpoint.
-
-        Args:
-            endpoint: Путь к API endpoint
-
-        Returns:
-            Полный URL
-        """
-        return f"{self.base_url}{endpoint}"
+        super().__init__(base_url)
 
     async def get_calculations(
         self,
@@ -313,53 +293,21 @@ class CalcService:
             CalcListResponse со списком расчётов и метаинформацией
 
         Raises:
-            AuthApiError: Если аутентификация не удалась
+            CalcApiError: Если запрос не удался
         """
-        access_token = token_storage.get_access_token(user_id)
-        if not access_token:
-            raise AuthApiError("User not authenticated")
-
-        url = self._build_url(
-            f"/calc/index-details?id={sort_id}&count={count}")
-
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
-        session = aiohttp.ClientSession()
         try:
-            async with session.get(url, headers=headers) as response:
-                data = await response.json()
+            data = await self._get(
+                f"/calc/index-details?id={sort_id}&count={count}",
+                user_id=user_id,
+            )
+            return CalcListResponse(**data)
 
-                if response.status in (401, 403):
-                    await session.close()
-                    # Используем middleware для повтора с обновлением токена
-                    retry_response = await request_with_auth("GET", url, user_id, headers=headers)
-                    data = await retry_response.json()
-                    if retry_response.status >= 400:
-                        raise AuthApiError(
-                            message=data.get(
-                                "message", "Failed to get calculations"),
-                            status_code=retry_response.status,
-                        )
-                    return CalcListResponse(**data)
-
-                if response.status >= 400:
-                    raise AuthApiError(
-                        message=data.get(
-                            "message", "Failed to get calculations"),
-                        status_code=response.status,
-                    )
-
-                return CalcListResponse(**data)
-
-        except aiohttp.ClientError as e:
-            logger.error(f"Network error during get calculations: {e}")
-            raise AuthApiError("Network error during get calculations") from e
-        finally:
-            await session.close()
+        except BaseApiError as e:
+            raise CalcApiError(
+                message=f"Failed to get calculations: {e.message}",
+                status_code=e.status_code,
+                response_data=e.response_data,
+            ) from e
 
     async def create_calculation(
         self,
@@ -377,100 +325,100 @@ class CalcService:
             CalcCreateFullResponse с данными созданного расчёта
 
         Raises:
-            AuthApiError: Если аутентификация не удалась или создание не удалось
+            CalcApiError: Если создание не удалось
         """
-        access_token = token_storage.get_access_token(user_id)
-        if not access_token:
-            raise AuthApiError("User not authenticated")
-
-        url = self._build_url("/calc/create")
-
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
         payload = calc_data.model_dump(by_alias=True, exclude_none=True)
+        # Добавляем обязательные поля
+        payload.update({
+            "category": "future",
+            "quote": "USDT",
+            "status": "WAIT",
+            "openedList": False,
+            "isOpenPriceChanged": False,
+        })
 
-        session = aiohttp.ClientSession()
         try:
-            async with session.post(url, json=payload | {"category": "future", "quote": "USDT", "status": "WAIT", "openedList": False,
-                                                         "isOpenPriceChanged": False, }, headers=headers) as response:
-                print(calc_data.model_dump_json())
-                data = await response.json()
+            data = await self._post(
+                "/calc/create",
+                user_id=user_id,
+                json=payload,
+            )
+            return CalcCreateFullResponse(**data)
 
-                if response.status in (401, 403):
-                    await session.close()
-                    # Используем middleware для повтора с обновлением токена
-                    retry_response = await request_with_auth("POST", url, user_id, json=payload, headers=headers)
-                    data = await retry_response.json()
-                    if retry_response.status >= 400:
-                        raise AuthApiError(
-                            message=data.get(
-                                "message", "Failed to create calculation"),
-                            status_code=retry_response.status,
-                        )
-                    return CalcCreateFullResponse.model_validate_json(data)
+        except BaseApiError as e:
+            raise CalcApiError(
+                message=f"Failed to create calculation: {e.message}",
+                status_code=e.status_code,
+                response_data=e.response_data,
+            ) from e
 
-                if response.status >= 400:
-                    raise AuthApiError(
-                        message=data.get(
-                            "message", "Failed to create calculation"),
-                        status_code=response.status,
-                    )
+    async def get_calculation(
+        self,
+        user_id: int,
+        calc_id: int,
+    ) -> CalcDetails:
+        """
+        Получить детали расчёта по ID.
 
-                return CalcCreateFullResponse(**data)
+        Args:
+            user_id: Telegram ID пользователя
+            calc_id: ID расчёта
 
-        except aiohttp.ClientError as e:
-            logger.error(f"Network error during create calculation: {e}")
-            raise AuthApiError(
-                "Network error during create calculation") from e
-        finally:
-            await session.close()
+        Returns:
+            CalcDetails с деталями расчёта
+
+        Raises:
+            CalcApiError: Если запрос не удался
+        """
+        try:
+            data = await self._get(
+                f"/calc/details?id={calc_id}",
+                user_id=user_id,
+            )
+            return CalcDetails(**data)
+
+        except BaseApiError as e:
+            raise CalcApiError(
+                message=f"Failed to get calculation {calc_id}: {e.message}",
+                status_code=e.status_code,
+                response_data=e.response_data,
+            ) from e
+
+    async def update_calculation(
+        self,
+        user_id: int,
+        calc_id: int,
+        **updates: Any,
+    ) -> CalcDetails:
+        """
+        Обновить расчёт.
+
+        Args:
+            user_id: Telegram ID пользователя
+            calc_id: ID расчёта
+            **updates: Поля для обновления
+
+        Returns:
+            CalcDetails с обновлёнными данными
+
+        Raises:
+            CalcApiError: Если обновление не удалось
+        """
+        try:
+            data = await self._post(
+                f"/calc/update?id={calc_id}",
+                user_id=user_id,
+                json=updates,
+            )
+            return CalcDetails(**data)
+
+        except BaseApiError as e:
+            raise CalcApiError(
+                message=f"Failed to update calculation {calc_id}: {e.message}",
+                status_code=e.status_code,
+                response_data=e.response_data,
+            ) from e
 
 
 # Глобальный экземпляр сервиса расчётов
 calc_service = CalcService()
-
-
-async def get_calculations(
-    user_id: int,
-    sort_id: str = "desc",
-    count: int = 10,
-) -> CalcListResponse:
-    """
-    Получить список расчётов пользователя.
-
-    Args:
-        user_id: Telegram ID пользователя
-        sort_id: Направление сортировки (asc/desc)
-        count: Количество элементов для возврата
-
-    Returns:
-        CalcListResponse со списком расчётов и метаинформацией
-
-    Raises:
-        AuthApiError: Если аутентификация не удалась
-    """
-    return await calc_service.get_calculations(user_id, sort_id, count)
-
-
-async def create_calculation(
-    user_id: int,
-    calc_data: CalcCreateRequest,
-) -> CalcCreateFullResponse:
-    """
-    Создать новый расчёт.
-
-    Args:
-        user_id: Telegram ID пользователя
-        calc_data: Данные расчёта для создания
-
-    Returns:
-        CalcCreateFullResponse с данными созданного расчёта
-
-    Raises:
-        AuthApiError: Если аутентификация не удалась или создание не удалось
-    """
-    return await calc_service.create_calculation(user_id, calc_data)
