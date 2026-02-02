@@ -17,10 +17,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
 
     callback_data = admin_main_factory.parse(call.data)
     type = callback_data.get('type', '')
-    value = callback_data.get('value', '')
-
-    chat_id = call.message.chat.id
-    mes_id = call.message.id
 
     if type == 'users':
         await send_admin_users(bot, call.message, state)

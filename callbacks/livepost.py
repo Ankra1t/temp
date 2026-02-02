@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InaccessibleMessage
 
-from models import Post, CallbackQuery, StateContext
+from models import CallbackQuery, StateContext
 
 from states.admin_posts import AdminPostsState
 from keyboards.livepost import (
@@ -70,9 +70,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
                 users = []
 
             if len(users) != 0:
-                async with state.data() as data:
-                    post: Post = data.get('post', {})
-
                 await bot.edit_message_text('Отправка...', chat_id, mes_id)
                 await bot.edit_message_text(
                     'Успешно отправлен!', chat_id, mes_id)

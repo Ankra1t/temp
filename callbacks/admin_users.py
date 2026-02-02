@@ -24,7 +24,6 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         'sort_by', 'new'
     )  # type: ignore
     filter: str = callback_data.get('filter', '')
-    client_db_id = int(callback_data.get('client_db_id', 0))
     page = int(callback_data.get('page', 1))
 
     chat_id = call.message.chat.id

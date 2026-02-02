@@ -12,13 +12,9 @@ async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
-    callback_data: dict = manual_factory.parse(call.data)
+    callback_data = manual_factory.parse(call.data)
     type = callback_data['type']
     page = int(callback_data['page'])
-
-    user_id = call.from_user.id
-    chat_id = call.message.chat.id
-    mes_id = call.message.id
 
     if type == 'main':
         await send_main(bot, call.message, state, user)
@@ -46,7 +42,7 @@ async def _manual_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state
 def registration(bot: AsyncTeleBot):
     bot.add_custom_filter(ManualCallbackFilter())
     bot.register_callback_query_handler(
-        _manual_callback_handler, # type: ignore
+        _manual_callback_handler,  # type: ignore
         lambda _: True, pass_bot=True,
         manual=manual_factory.filter()
     )

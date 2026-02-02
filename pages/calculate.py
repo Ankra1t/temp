@@ -7,7 +7,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 from common.calculation import get_result, getStrValueCount
 from states.stats import ChannelCalcState
-from common.utils import edit_message, edit_message, get_print_float
+from common.utils import edit_message, get_print_float
 
 from messages.common import msg_manuals
 from messages.admin import msg_admin_send_settings
@@ -889,7 +889,7 @@ async def send_admin_channel_calc_list(
     inWaitSends = []
 
     # TODO - channel_calc.getWeekStat()
-    weekStat = None
+    # weekStat = None
     stats_link = ''
     # if weekStat is not None:
     #     messages = weekStat.get('messages')
@@ -1170,10 +1170,10 @@ async def create_and_send_channel_calc(
     if calc is None:
         return
 
-    withoutStop = user_settings_storage.get_send_settings('withoutStop')
-    style = user_settings_storage.get_send_settings('style')
-    isVote = user_settings_storage.get_send_settings('isVote')
-    time = user_settings_storage.get_send_settings('time')
+    # withoutStop = user_settings_storage.get_send_settings('withoutStop')
+    # style = user_settings_storage.get_send_settings('style')
+    # isVote = user_settings_storage.get_send_settings('isVote')
+    # time = user_settings_storage.get_send_settings('time')
 
     # TODO - channel_calc.create(calc_id)
     send_data = None

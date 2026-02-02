@@ -152,7 +152,6 @@ async def send_user_params(
     is_first=False,
 ):
     chat_id = message.chat.id
-    mes_id = message.id
 
     await state.delete()
 

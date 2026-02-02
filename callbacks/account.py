@@ -13,7 +13,6 @@ from states.account import UserAccountState
 from keyboards.account import (
     user_account_factory, UserAccountCallbackFilter,
     kb_params_choose_lang, kb_support, kb_user_params_back,
-    kb_params_choose_lang
 )
 
 from pages.user import send_referral, send_user_account, send_user_main, send_user_params
@@ -23,7 +22,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
-    callback_data: dict = user_account_factory.parse(call.data)
+    callback_data = user_account_factory.parse(call.data)
     type = callback_data.get('type') or ''
 
     chat_id = call.message.chat.id

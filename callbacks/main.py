@@ -82,7 +82,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         await send_manual(bot, call.message, state, user)
 
     if 'violation+' in type:
-        result = False if '+no' in type else True if '+yes' in type else None
+        # result = False if '+no' in type else True if '+yes' in type else None
         # TODO - Создать нарушение?
         # violation.create(user.id, result)
         type = 'violations'
@@ -92,7 +92,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         # today_violation = violation.getToday(user.id)
         today_violation = None
         if today_violation:
-            result = False if '+no' in type else True if '+yes' in type else 'null'
+            # result = False if '+no' in type else True if '+yes' in type else 'null'
             # TODO - Обновить инфо о нарушениях
             # violation.update(today_violation.get('id', 0), status=result)
             type = 'violations'

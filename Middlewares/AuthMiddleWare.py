@@ -46,7 +46,7 @@ class AuthMiddleWare(BaseMiddleware):
                 return CancelUpdate()
             chat_id = message.message.chat.id
 
-        state = StateContext(message, self.bot)  # type: ignore
+        state = StateContext(message, self.bot)
 
         if (await state.get() is not None) and isText:
             async with state.data() as state_data:

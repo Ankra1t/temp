@@ -18,7 +18,7 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if isinstance(call.message, InaccessibleMessage) or call.data is None:
         return
 
-    callback_data: dict = user_main_factory.parse(call.data)
+    callback_data = user_main_factory.parse(call.data)
     type = callback_data.get('type', '')
 
     user_id = call.from_user.id

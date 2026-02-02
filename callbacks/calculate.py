@@ -145,13 +145,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
 
     if type == 'calc_atr+':
         async with state.data() as data:
-            cur_tool: str = data.get('tool', '')
             stop_type: str = data.get('stop_type', '')
             op: float = data.get('open_price', 0)
 
-        atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
-        period, count = atr_settings[1].split('+')
-
+        # atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
+        # period, count = atr_settings[1].split('+')
         # value = ticker.get_atr(cur_tool, period, int(count))
         # TODO - Получения ATR
         value = None
@@ -198,11 +196,11 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if stat is None:
                 return
 
-            withoutStop = user_settings_storage.get_send_settings(
-                'withoutStop')
-            style = user_settings_storage.get_send_settings('style')
-            isVote = user_settings_storage.get_send_settings('isVote')
-            time = user_settings_storage.get_send_settings('time')
+            # withoutStop = user_settings_storage.get_send_settings(
+            #     'withoutStop')
+            # style = user_settings_storage.get_send_settings('style')
+            # isVote = user_settings_storage.get_send_settings('isVote')
+            # time = user_settings_storage.get_send_settings('time')
 
             # TODO - channel_calc.create(stat_id)
             send_data = None

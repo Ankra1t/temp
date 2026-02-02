@@ -806,8 +806,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         if not calc:
             return
 
-        value_count = (value - calc.openPrice) / \
-            (calc.openPrice - calc.stopLoss)
+        # value_count = (value - calc.openPrice) / \
+        #     (calc.openPrice - calc.stopLoss)
 
         # TODO - calculation.updateActive(userId=user.id, id=calc_id, trailingStopCount=None, autoTake=value_count)
 

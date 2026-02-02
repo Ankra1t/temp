@@ -70,9 +70,9 @@ class StateFilter(AdvancedCustomFilter):
         user_state = await self.bot.current_states.get_state(
             chat_id=chat_id,
             user_id=user_id,
-            business_connection_id=business_connection_id,  # type: ignore
-            bot_id=bot_id,  # type: ignore
-            message_thread_id=message_thread_id,  # type: ignore
+            business_connection_id=business_connection_id,
+            bot_id=bot_id,
+            message_thread_id=message_thread_id,
         )
 
         # ИЗМЕНЁННОЕ ПОВЕДЕНИЕ
@@ -92,11 +92,11 @@ class StateContext(_StateContext):
 
 
 class Message(_Message):
-    from_user: _User
+    from_user: _User  # type: ignore
 
 
 class CallbackQuery(_CallbackQuery):
-    message: Message
+    message: Message  # type: ignore
 
 
 class User(BaseModel):
