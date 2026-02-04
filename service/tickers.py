@@ -64,7 +64,6 @@ class TickerRawItem(BaseData):
     sid: Optional[str] = None
     exchange: Optional[str] = None
     symbol: Optional[str] = None
-    quote: Optional[str] = None
     # Ценовые данные
     markPrice: Optional[float] = None
     indexPrice: Optional[float] = None

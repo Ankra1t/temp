@@ -21,7 +21,7 @@ class UserSettings(BaseModel):
     exchange: Optional[Tuple[Optional[str], Optional[float]]] = None
     stop: Optional[str] = None
     style_change: bool = False
-    atr_settings: Tuple[bool, str] = (False, '')
+    atr_settings: Tuple[bool, str] = (True, '1h+5')
 
 
 class UserSettingsStorage:
