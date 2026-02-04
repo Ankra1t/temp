@@ -10,6 +10,7 @@ from config_logger import logger
 from config_global import SITE_URL
 from messages.common import ENTER, TAB, transl_status, transl_tr_style, transl_tr_type
 from models import LANGUAGES_TYPE, CalcActiveInfo, Calculation
+from service.tickers import tickers_service
 
 
 months = {'ru': [
@@ -434,7 +435,7 @@ def msg_calculation(lang: LANGUAGES_TYPE, calc: Calculation, is_try=False):
     ))
 
 
-def msg_channel_calc(
+async def msg_channel_calc(
     calc: Calculation,
     lang: Literal['ru', 'en'] = 'ru',
     without_stop=False,
@@ -459,11 +460,12 @@ def msg_channel_calc(
         logger.info(
             f"ActiveCalc.__dict__: {getattr(calc.ActiveCalc, '__dict__', calc.ActiveCalc)}")
 
-    tickerInfo = None
     try:
-        # TODO - Получения информации по монете
-        tickerInfo = None
+        tickerInfo = await tickers_service.get_ticker_by_symbol(
+            calc.tool or ''
+        )
     except:
+        tickerInfo = None
         pass
 
     description = calc.description if lang == 'ru' else None
@@ -648,7 +650,7 @@ def msg_channel_calc(
 
     turnover24h_show = ''
     if tickerInfo is not None:
-        turnover24h_show = format_number(tickerInfo.turnover24h)
+        turnover24h_show = format_number(tickerInfo.turnover or 0)
 
     info = ''
     if (percent24h_show or turnover24h_show):

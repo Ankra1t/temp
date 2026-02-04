@@ -11,6 +11,7 @@ from pages.admin import send_admin_main
 
 from service.user_settings_storage import user_settings_storage
 from service.advanced_settings_storage import advanced_settings_storage
+from service.tickers import tickers_service
 
 from states.admin_params import AdminParamsState
 from states.stats import StatsState
@@ -172,8 +173,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if not calc:
             return
 
-        # TODO - Получения информации по монете
-        ticker_info = None
+        # Получаем информацию по монете через новый сервис
+        symbol = calc.tool or ''
+        ticker_info = await tickers_service.get_ticker_by_symbol(symbol, atr_period=1)
         if not ticker_info or not ticker_info.indexPrice:
             return
 
@@ -194,8 +196,9 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         if not calc or calc.status != 'DEAL':
             return
 
-        # TODO - Получения информации по монете
-        ticker_info = None
+        # Получаем информацию по монете через новый сервис
+        symbol = calc.tool or ''
+        ticker_info = await tickers_service.get_ticker_by_symbol(symbol, atr_period=1)
         if not ticker_info or not ticker_info.indexPrice:
             return
 

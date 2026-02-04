@@ -23,6 +23,7 @@ from models import CALC_STATUS_TYPE, MANUAL_TYPE, Calculation, Message, StateCon
 
 from service.advanced_settings_storage import advanced_settings_storage
 from service.user_settings_storage import user_settings_storage
+from service.tickers import tickers_service
 
 from keyboards.channel_post import (
     kb_channel_calc, kb_channel_calc_result, kb_channel_calc_result_stop, kb_channel_calc_result_take,
@@ -609,11 +610,12 @@ async def send_confirm_calc_send(
     if stat is None or send_data is None:
         return
 
-    # TODO - Получения информации по монете
-    info = None
+    # Получаем информацию по монете через новый сервис
+    symbol = stat.tool or ''
+    info = await tickers_service.get_ticker_by_symbol(symbol, atr_period=1)
 
     photo = stat.photo
-    text = msg_channel_calc(
+    text = await msg_channel_calc(
         stat, 'ru', send_data.withoutStop, send_data.isPreStop,
         indexPrice=info and info.indexPrice, percent24h=info and info.percent24h
     )

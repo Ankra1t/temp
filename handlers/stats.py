@@ -20,6 +20,7 @@ from keyboards.stats import kb_confirm_take_price, kb_deal_profit_cancel, kb_dea
 from states.stats import StatsState
 from messages.errors import msg_digit_error, msg_text_error
 from service.advanced_settings_storage import advanced_settings_storage
+from service.tickers import tickers_service
 
 
 async def handle_loss(message: Message, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -441,8 +442,9 @@ async def handle_new_stop(message: Message, bot: AsyncTeleBot, state: StateConte
     if calc is None:
         return
 
-    # TODO - Получения информации по монете
-    ticker_info = None
+    # Получаем информацию по монете через новый сервис
+    symbol = calc.tool or ''
+    ticker_info = await tickers_service.get_ticker_by_symbol(symbol, atr_period=1)
 
     diffOpSl = calc.openPrice - calc.stopLoss
 

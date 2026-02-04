@@ -20,6 +20,7 @@ from keyboards.calculate import (
 from pages.calculate import create_and_send_calc, send_calculation, send_confirm_calc_send, send_main, send_settings
 
 from service.calc import CalcCreateRequest, calc_service
+from service.tickers import tickers_service
 
 
 async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: StateContext, user: User):
@@ -147,12 +148,10 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
         async with state.data() as data:
             stop_type: str = data.get('stop_type', '')
             op: float = data.get('open_price', 0)
+            tool: str = data.get('tool', '')
 
-        # atr_settings = user_settings_storage.get_user_atr_settings(user.tgId)
-        # period, count = atr_settings[1].split('+')
-        # value = ticker.get_atr(cur_tool, period, int(count))
-        # TODO - Получения ATR
-        value = None
+        # Получаем ATR через новый сервис
+        value = await tickers_service.get_ticker_atr(tool, atr_period=1)
 
         if not value:
             return

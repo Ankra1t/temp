@@ -171,25 +171,38 @@ class BaseApiClient(ABC, Generic[T]):
         return await self._request("DELETE", endpoint, user_id, **kwargs)
 
 
-class PublicApiClient(BaseApiClient[T]):
+class PublicApiClient(ABC, Generic[T]):
     """
     Базовый класс для публичных API клиентов (без аутентификации).
 
     Используется для endpoints, которые не требуют токена аутентификации.
     """
+    base_url: str = API_AUTH_URL
 
-    def _get_default_headers(self, user_id: int | None = None) -> dict[str, str]:
+    def __init__(self, base_url: str | None = None) -> None:
+        """
+        Инициализировать API клиент.
+
+        Args:
+            base_url: Опциональный базовый URL (переопределяет base_url класса)
+        """
+        self.base_url = (base_url or self.base_url).rstrip("/")
+
+    def _get_default_headers(self) -> dict[str, str]:
         """Получить заголовки по умолчанию для публичного запроса."""
         return {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
+    def _build_url(self, endpoint: str) -> str:
+        """Построить полный URL для endpoint."""
+        return f"{self.base_url}{endpoint}"
+
     async def _request(
         self,
         method: str,
         endpoint: str,
-        user_id: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """
