@@ -1,6 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 
 from service.user_settings_storage import user_settings_storage
+from service.calc import calc_service
 
 from common.utils import send_in_development
 
@@ -35,8 +36,8 @@ async def send_start_by_user(
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
         _, id = message.text.split('_')
-        # TODO - calculation.get(userId=user.id, calcId=int(id))
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, int(id))
 
         u_base = user_settings_storage.get_or_create(user.tgId)
         if calc is None or u_base is None:
@@ -71,8 +72,8 @@ async def start_with_calc(
 ):
     await state.delete()
 
-    # TODO - calculation.get(userId=user.id, calcId=int(stat_id))
-    calc = None
+    # Получаем расчёт через API
+    calc = await calc_service.get_calculation(user.tgId, int(stat_id))
     if calc is None:
         return
 

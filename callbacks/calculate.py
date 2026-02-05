@@ -190,8 +190,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if not stat_id:
                 return
 
-            # TODO - calculation.get(userId=user.id, calcId=stat_id)
-            stat = None
+            # Получаем расчёт через API
+            stat = await calc_service.get_calculation(user.tgId, stat_id)
             if stat is None:
                 return
 
@@ -202,6 +202,7 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             # time = user_settings_storage.get_send_settings('time')
 
             # TODO - channel_calc.create(stat_id)
+            # Для работы с channel_calc нужен отдельный сервис или endpoint
             send_data = None
             if send_data is None:
                 return
@@ -229,8 +230,8 @@ async def _main_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, state: 
             if 'f_direct' in type:
                 await state.delete()
 
-                # TODO - calculation.get(userId=user.id, calcId=int(stat_id))
-                calc = None
+                # Получаем расчёт через API
+                calc = await calc_service.get_calculation(user.tgId, int(stat_id))
                 if calc is None:
                     return
 

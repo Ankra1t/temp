@@ -1,6 +1,6 @@
 from common.utils import get_print_float
 from messages.common import ENTER, msg_risk_info, msg_current_value, msg_sended_data
-from models import LANGUAGES_TYPE, MARKETS_TYPE, Calculation
+from models import LANGUAGES_TYPE, Calculation
 
 from service.user_settings_storage import user_settings_storage
 
@@ -325,7 +325,7 @@ def msg_enter_summury_profit_type(lang: LANGUAGES_TYPE):
 *Separation - the sale of a trading position is divided into several take profites </i>"""
 
 
-def msg_enter_tool(lang: LANGUAGES_TYPE, market: MARKETS_TYPE = 'crypto', is_try=False):
+def msg_enter_tool(lang: LANGUAGES_TYPE, market: str = 'crypto', is_try=False):
     if is_try:
         texts = {
             'ru': 'Ваш инструмент (например, BTC или DOGE)\n<u>Введите</u> SOL',

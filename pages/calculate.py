@@ -339,10 +339,11 @@ async def send_stats(
     await state.delete()
 
     # TODO - calculation.getWeekStats(userId=user.id)
-    values = None
-
-    if values is None:
-        return
+    # Для получения статистики за неделю нужно:
+    # 1. Получить список расчётов за период (через get_calculations с date_from/date_to)
+    # 2. Вычислить статистику (сумма профитов, количество сделок, и т.д.)
+    # Для этого нужен отдельный метод в calc_service или вычисление здесь
+    values = []
 
     texts = {
         'ru': {
@@ -380,9 +381,6 @@ async def send_stats(
             'success': 'Success deals percent',
         },
     }
-
-    # TODO - мок
-    values = []
 
     msg = f"<b>{texts[lang]['title']}</b>"
 
@@ -484,19 +482,23 @@ async def send_calc_list(
 
     await state.delete()
 
-    calc_list = None
-    if list_type == 'deal':
-        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
-        calc_list = []
-    elif list_type == 'canceled':
-        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
-        calc_list = []
-    elif list_type == 'wait':
-        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
-        calc_list = []
-    elif list_type == 'done':
-        # TODO - calculation.getByUserList(userId=user.id, type=list_type)
-        calc_list = []
+    # Определяем статус для фильтрации через API
+    status_map = {
+        'deal': 'DEAL',
+        'canceled': 'CANCEL',
+        'wait': 'WAIT',
+        'done': 'FINISH'
+    }
+
+    calc_list = []
+    if list_type in status_map:
+        # Получаем список расчётов через API с фильтрацией по статусу
+        response = await calc_service.get_calculations(
+            user.tgId, sort_id="desc", count=1000
+        )
+        # Фильтруем по нужному статусу
+        calc_list = [c for c in response.data if c.status ==
+                     status_map[list_type]]
     else:
         return
 
@@ -563,7 +565,8 @@ async def send_calculation(
     await state.delete()
 
     if is_list:
-        # TODO - calculation.update(userId=user.id, calcId=calc.id, openedList=True)
+        # API не поддерживает поле openedList в CalcUpdateRequest
+        # Если понадобится, можно добавить через параметр status или другой механизм
         pass
 
     if is_try:
@@ -602,11 +605,12 @@ async def send_confirm_calc_send(
 ):
     chat_id = message.chat.id
 
-    # TODO - calculation.get(userId=1, calcId=calc_id)
-    stat = None
-
     # TODO - Получение инфо о данных по каналу
+    # Для работы с channel_calc нужен отдельный сервис или endpoint
     send_data = None
+
+    # Получаем расчёт через API
+    stat = await calc_service.get_calculation(message.from_user.id, calc_id)
     if stat is None or send_data is None:
         return
 
@@ -674,8 +678,8 @@ async def create_and_send_calc(
         is_from_deposit = data.get('is_from_deposit') or False
 
     if stat_id is not None:
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc_info = None
+        # Получаем расчёт через API
+        calc_info = await calc_service.get_calculation(user.tgId, stat_id)
         if calc_info is None or (calc_info and calc_info.ActiveCalc):
             return
 
@@ -686,10 +690,10 @@ async def create_and_send_calc(
             )
             return
 
-        # TODO: Обновить стоп-лосс через API
-        # db.change_calculation_stop_loss(stat_id, stop_loss)
-        if calc_info:
-            calc_info.stopLoss = stop_loss
+        # Обновляем стоп-лосс через API
+        calc_info = await calc_service.update_calculation(
+            user.tgId, stat_id, stopLoss=stop_loss
+        )
 
         await send_calculation(bot, message, state, user, calc_info, True)
         await state.delete()
@@ -980,8 +984,13 @@ async def send_admin_channel_calc_item(
     await state.delete()
 
     # TODO - Получение инфо о данных по каналу
+    # Для работы с channel_calc нужен отдельный сервис или endpoint
     send_data = None
-    # TODO - calculation.get(userId=1, calcId=calc_id)
+
+    # Получаем расчёт через API (используем user.tgId вместо userId=1)
+    # Если пользователь не передан, можно использовать calc_id напрямую
+    # Но для аутентификации нужен user.tgId - передадим его через параметры
+    # calc = await calc_service.get_calculation(user_id, calc_id)
     calc = None
     if calc is None:
         return
@@ -1167,8 +1176,8 @@ async def create_and_send_channel_calc(
 ):
     chat_id = message.chat.id
 
-    # TODO - calculation.get(userId=user.id, calcId=calc_id)
-    calc = None
+    # Получаем расчёт через API
+    calc = await calc_service.get_calculation(user.tgId, calc_id)
     if calc is None:
         return
 
@@ -1178,6 +1187,7 @@ async def create_and_send_channel_calc(
     # time = user_settings_storage.get_send_settings('time')
 
     # TODO - channel_calc.create(calc_id)
+    # Для работы с channel_calc нужен отдельный сервис или endpoint
     send_data = None
     if send_data is None:
         return

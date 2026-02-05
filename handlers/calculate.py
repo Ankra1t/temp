@@ -3,6 +3,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 from config_logger import logger
 from service.user_settings_storage import user_settings_storage
+from service.calc import calc_service
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
 from messages.errors import msg_currency_error, msg_digit_error, msg_latin_error, msg_pair_error, msg_sl_op_equal_error, msg_text_error, msg_trading_style_error
@@ -58,16 +59,14 @@ async def handle_tool(message: Message, bot: AsyncTeleBot, state: StateContext, 
         await state.add_data(tool=tool)
         await choose_calculate_step(bot, message, state, user, last_value='tool')
     else:
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc_info = None
+        # Получаем расчёт через API
+        calc_info = await calc_service.get_calculation(user.tgId, stat_id)
         if calc_info is None or (calc_info.ActiveCalc):
             return
 
         # TODO: Обновить инструмент через API
         # db.change_calculation_tool(stat_id, tool)
 
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc_info = None
         if calc_info:
             await send_calculation(bot, message, state, user, calc_info, True)
             await state.delete()
@@ -126,8 +125,8 @@ async def handle_forex_pair(message: Message, bot: AsyncTeleBot, state: StateCon
         # TODO: Обновить forex через API
         # db.change_calculation_forex(stat_id, forex)
 
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc_info = None
+        # Получаем расчёт через API
+        calc_info = await calc_service.get_calculation(user.tgId, stat_id)
         if calc_info is None:
             return
 
@@ -212,13 +211,15 @@ async def handle_deposit(message: Message, bot: AsyncTeleBot, state: StateContex
         calc_id = data.get('calc_id')
 
     if calc_id:
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if not calc or calc.status == 'FINISH':
             return
 
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, deposit=value)
-        calc = None
+        # Обновляем депозит через API
+        calc = await calc_service.update_calculation(
+            user.tgId, calc_id, deposit=str(value)
+        )
         if calc:
             await send_calculation(bot, message, state, user, calc, True)
     else:
@@ -250,13 +251,16 @@ async def handle_risk_percent(message: Message, bot: AsyncTeleBot, state: StateC
         calc_id = data.get('calc_id')
 
     if calc_id:
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if not calc or calc.status == 'FINISH':
             return
 
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, riskValue=value if not is_percent else calc.deposit * value / 100)
-        calc = None
+        # Обновляем riskValue через API
+        risk_value = value if not is_percent else calc.deposit * value / 100
+        calc = await calc_service.update_calculation(
+            user.tgId, calc_id, riskValue=str(risk_value)
+        )
         if calc:
             await send_calculation(bot, message, state, user, calc, True)
     else:
@@ -293,8 +297,8 @@ async def handle_trading_style(message: Message, bot: AsyncTeleBot, state: State
             last_value='trading_style'
         )
     else:
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc_info = None
+        # Получаем расчёт через API
+        calc_info = await calc_service.get_calculation(user.tgId, stat_id)
         if calc_info is None:
             return
 
@@ -333,8 +337,8 @@ async def handle_open_price(message: Message, bot: AsyncTeleBot, state: StateCon
             bot, message, state, user, last_value='open_price'
         )
     else:
-        # TODO - calculation.get(userId=user.id, calcId=stat_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, stat_id)
         # TODO - channel_calc.getByCalc(stat_id)
         send_data = None
         if calc and not (calc.ActiveCalc and not send_data):

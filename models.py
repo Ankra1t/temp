@@ -14,6 +14,8 @@ from pydantic import BaseModel
 from typing import Literal, Optional
 from datetime import datetime
 
+from service.base import BaseData
+
 BASE_VALUE_TYPE = Literal["deposit", "risk", "currency"]
 SORT_BY_TYPE = Literal["new", "old"]
 
@@ -175,7 +177,7 @@ class CalcActiveInfo(BaseModel):
     exchange: EXCHANGE_TYPE = "BYBIT"
 
 
-class Calculation(BaseModel):
+class Calculation(BaseData):
     id: int = 0
     userId: int
 

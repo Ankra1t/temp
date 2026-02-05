@@ -6,6 +6,7 @@ from models import LANGUAGES, CallbackQuery, User, StateContext
 
 from service.user_settings_storage import user_settings_storage
 from service.advanced_settings_storage import advanced_settings_storage
+from service.calc import calc_service
 
 from states.settings import FirstCalcState, SettingsState
 
@@ -122,15 +123,16 @@ async def _settings_callback_handler(call: CallbackQuery, bot: AsyncTeleBot, sta
                 async with state.data() as data:
                     stat_id = data.get('stat_id', 0)
 
-                # TODO - calculation.get(userId=user.id, calcId=stat_id)
-                calc_info = None
+                # Получаем расчёт через API
+                calc_info = await calc_service.get_calculation(user.tgId, stat_id)
                 if calc_info is None:
                     return
 
                 if value != '**cancel**':
-                    # TODO - изменить стиль через api
-                    # db.change_calculation_style(stat_id, value)
-                    calc_info.tradingStyle = value
+                    # Обновляем стиль через API
+                    calc_info = await calc_service.update_calculation(
+                        user.tgId, stat_id, tradingStyle=value
+                    )
 
                 if '+stc' in type:
                     await send_confirm_calc_send(bot, call.message, stat_id)

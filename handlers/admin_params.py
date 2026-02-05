@@ -7,6 +7,7 @@ from common.utils import digit_accept
 
 from pages.calculate import send_admin_channel_calc_item, send_admin_send_settings, send_confirm_calc_send
 from service.advanced_settings_storage import advanced_settings_storage
+from service.calc import calc_service
 from states.admin_params import AdminParamsState
 
 
@@ -34,7 +35,14 @@ async def handle_trailing_stop(message: Message, bot: AsyncTeleBot, state: State
             user.id, trailingStop=value, autoTake=None)
         await send_admin_send_settings(bot, message, state, user, True)
     else:
-        # TODO - calculation.updateActive(userId=user.id, id=calc_id, trailingStopCount=value, autoTake=None)
+        # Создаём/обновляем активный расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
+        if calc:
+            exchange = "bybit"
+            await calc_service.create_active_calc(
+                user.tgId, calc_id, exchange=exchange,
+                trailing_stop_count=int(value) if value else None
+            )
 
         if type == 'change_sent':
             await send_admin_channel_calc_item(

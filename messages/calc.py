@@ -766,7 +766,8 @@ def msg_calc_list(lang: LANGUAGES_TYPE, calcs: list[Calculation], type: str):
             count = f'_{tools[tool]}'
 
         msg += f'\n\n/<b>{tool}{count}</b>'
-        msg += f' ({(datetime.fromisoformat((el.createdAt or "").replace("Z", "")) + timedelta(hours=3)).strftime("%d.%m %H:%M")})'
+        if el.createdAt:
+            msg += f' ({(datetime.fromisoformat((el.createdAt).replace("Z", "")) + timedelta(hours=3)).strftime("%d.%m %H:%M")})'
 
         if type == 'done':
             tp_sl_count = ((el.profit or 0) / el.riskValue)

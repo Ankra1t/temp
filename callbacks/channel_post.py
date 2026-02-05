@@ -12,6 +12,7 @@ from pages.admin import send_admin_main
 from service.user_settings_storage import user_settings_storage
 from service.advanced_settings_storage import advanced_settings_storage
 from service.tickers import tickers_service
+from service.calc import calc_service
 
 from states.admin_params import AdminParamsState
 from states.stats import StatsState
@@ -138,38 +139,41 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_send_settings(bot, call.message, state, user)
 
     if type == 'result_cancel':
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, status='CANCEL')
+        # Обновляем статус через API
+        await calc_service.update_calculation(user.tgId, calc_id, status="CANCEL")
 
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc is None:
             return
 
         await send_stats(bot, call.message, state, user)
 
     if type == 'result_deal':
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, status='DEAL')
+        # Обновляем статус через API
+        await calc_service.update_calculation(user.tgId, calc_id, status="DEAL")
 
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc is None:
             return
 
         await send_stats(bot, call.message, state, user)
 
     if type == 'result_wait':
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, status='WAIT')
+        # Обновляем статус через API
+        await calc_service.update_calculation(user.tgId, calc_id, status="WAIT")
 
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc is None:
             return
 
         await send_stats(bot, call.message, state, user)
 
     if type == 'result_end':
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if not calc:
             return
 
@@ -191,8 +195,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if type == 'result_end_yes':
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if not calc or calc.status != 'DEAL':
             return
 
@@ -206,20 +210,21 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         valueCount = (ticker_info.indexPrice - calc.openPrice) / diffOpSl
 
         # TODO - calculation.closeActive(userId=user.id, calcId=calc_id)
+        # Для закрытия активного расчёта можно удалить запись ActiveCalc
         calc = None
 
         if calc:
             await send_calculation(bot, call.message, state, user, calc)
 
     if type == 'result_end_no':
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc:
             await send_calculation(bot, call.message, state, user, calc, is_activate=True)
 
     if 'stop+' in type or 'take+' in type:
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc is None or (calc.ActiveCalc):
             return
 
@@ -236,8 +241,10 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         #     calc.riskValue * value * spot_rate
         # )
 
-        # TODO - calculation.update(userId=user.id, calcId=calc_id, status='FINISH')
-        calc = None
+        # Обновляем статус через API
+        calc = await calc_service.update_calculation(
+            user.tgId, calc_id, status="FINISH"
+        )
         if not calc:
             return
 
@@ -245,8 +252,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
             await send_stats(bot, call.message, state, user)
 
         if is_calc == 1:
-            # TODO - calculation.get(userId=user.id, calcId=calc_id)
-            calc = None
+            # Получаем расчёт через API
+            calc = await calc_service.get_calculation(user.tgId, calc_id)
             if calc is None:
                 return
             await delete_message(bot, chat_id, mes_id)
@@ -256,8 +263,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         await send_admin_channel_calc_list(bot, call.message, state, page)
 
     if type == 'auto_take':
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
 
         takes = []
         if calc:
@@ -284,8 +291,8 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         )
 
     if type == 'calc':
-        # TODO - calculation.get(userId=user.id, calcId=calc_id)
-        calc = None
+        # Получаем расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
         if calc is None:
             return
 
@@ -328,8 +335,15 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
         else:
             time = 60 * 24
 
-        # TODO - calculation.updateCancelAt(userId=user.id, id=calc_id, minutes=time)
-        calc = None
+        # Обновляем cancelTime через API
+        if time is not None:
+            from common.dt import get_datetime_now
+            from datetime import timedelta
+            cancel_time = int(
+                (get_datetime_now() + timedelta(minutes=time)).timestamp())
+            calc = await calc_service.update_calculation(user.tgId, calc_id, cancelTime=cancel_time)
+        else:
+            calc = await calc_service.get_calculation(user.tgId, calc_id)
 
     if type == 'new_stop':
         await bot.edit_message_text(
@@ -356,7 +370,14 @@ async def _handle_callback(call: CallbackQuery, bot: AsyncTeleBot, state: StateC
     if 'trailing+' in type:
         _, value = type.split('+')
 
-        # TODO - calculation.updateActive(userId=user.id, id=calc_id, trailingStopCount=int(value), autoTake=None)
+        # Создаём/обновляем активный расчёт через API
+        calc = await calc_service.get_calculation(user.tgId, calc_id)
+        if calc:
+            exchange = "bybit"
+            await calc_service.create_active_calc(
+                user.tgId, calc_id, exchange=exchange,
+                trailing_stop_count=int(value) if value != '0' else None
+            )
 
         await send_admin_channel_calc_item(
             bot, call.message, state, calc_id

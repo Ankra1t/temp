@@ -359,6 +359,9 @@ def kb_deal_result(lang: LANGUAGES_TYPE, stat_id: int):
     keyboard = InlineKeyboardMarkup(row_width=row_width)
 
     # TODO - calculation.get(userId=1, calcId=stat_id)
+    # Клавиатура не должна запрашивать данные API.
+    # Данные расчёта должны передаваться как параметр функции:
+    # def kb_deal_profit(lang: LANGUAGES_TYPE, stat_id: int, calc: Calculation | None = None)
     calc_info = None
     tp: list[int] = getattr(calc_info, 'tpRatio', []) if calc_info else []
 
@@ -546,8 +549,12 @@ def kb_calc_image_text(lang: LANGUAGES_TYPE, calc: Calculation, type: Literal['s
 
 def kb_confirm_channel_post(calc_id: int):
     # TODO - Получение инфо о данных по каналу
+    # Для работы с channel_calc нужен отдельный сервис или endpoint
     send_data = None
     # TODO - calculation.get(userId=1, calcId=calc_id)
+    # Клавиатура не должна запрашивать данные API.
+    # Данные должны передаваться как параметры функции:
+    # def kb_confirm_channel_post(calc_id: int, calc: Calculation | None = None, send_data: Any = None)
     calc = None
 
     send = getButton('Отправить ➡️', f'stc+send', calc_id)

@@ -2,6 +2,8 @@ from telebot.async_telebot import AsyncTeleBot
 
 from service.user_settings_storage import user_settings_storage
 from service.tickers import tickers_service
+from service.calc import calc_service
+
 from messages.calc import msg_calc_buttons_info
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
@@ -122,7 +124,13 @@ async def choose_calculate_step(
         edit_to = names[user.lang]['tool']
         new_state = CalculateState.tool
 
-        keyboard = kb_tool(user.lang, [])
+        calcs = await calc_service.get_calculations(user.tgId, count=50)
+        tools = []
+        for calc in calcs.data:
+            if calc.tool and calc.tool not in tools and len(tools) <= 3:
+                tools.append(calc.tool)
+
+        keyboard = kb_tool(user.lang, tools)
 
     elif (
         calc_type == 'forex' and
