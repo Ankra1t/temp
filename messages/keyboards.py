@@ -1,0 +1,128 @@
+"""
+Функции локализации для кнопок (keyboards).
+
+Этот модуль содержит тексты для кнопок интерфейса
+на всех поддерживаемых языках (ru, en, uz, tr).
+"""
+
+from models import LANGUAGES_TYPE
+
+
+def kb_settings_texts(lang: LANGUAGES_TYPE) -> dict:
+    """
+    Тексты для страницы настроек (keyboards/settings.py).
+
+    Returns:
+        dict: Словарь с текстами на указанном языке
+    """
+    texts = {
+        'ru': {
+            'lang': 'Язык',
+            'style': 'Стиль торговли',
+            'deposit': 'Депозит',
+            'risk': 'Риск',
+            'currency': 'Валюта',
+            'market': 'Рынок',
+            'tp': 'Тейк-профит',
+            'split': 'Разделение',
+            'round': 'Округление',
+            'day_risk': 'Риск за день',
+            'trading_type': 'Тип торговли',
+            'exchange': 'Биржа',
+            'stop': 'Стоп-лосс',
+            'atr': 'ATR',
+            'update_deposit': 'Обновление депозита',
+            'reset': 'Сброс',
+            'save': 'Сохранить',
+            'back': 'Назад',
+            'settings': 'Настройки',
+            'yes': 'Да',
+            'no': 'Нет',
+            'on': 'Вкл',
+            'off': 'Выкл',
+            'cancel': 'Отмена',
+            'edit': 'Изменить',
+        },
+        'en': {
+            'lang': 'Language',
+            'style': 'Trading style',
+            'deposit': 'Deposit',
+            'risk': 'Risk',
+            'currency': 'Currency',
+            'market': 'Market',
+            'tp': 'Take profit',
+            'split': 'Split',
+            'round': 'Rounding',
+            'day_risk': 'Day risk',
+            'trading_type': 'Trading type',
+            'exchange': 'Exchange',
+            'stop': 'Stop loss',
+            'atr': 'ATR',
+            'update_deposit': 'Update deposit',
+            'reset': 'Reset',
+            'save': 'Save',
+            'back': 'Back',
+            'settings': 'Settings',
+            'yes': 'Yes',
+            'no': 'No',
+            'on': 'On',
+            'off': 'Off',
+            'cancel': 'Cancel',
+            'edit': 'Edit',
+        },
+        'uz': {
+            'lang': 'Til',
+            'style': 'Savdo uslubi',
+            'deposit': 'Depozit',
+            'risk': 'Xavf',
+            'currency': 'Valyuta',
+            'market': 'Bozor',
+            'tp': 'Oling foyda',
+            'split': 'Bo\'linish',
+            'round': 'Yaxlitish',
+            'day_risk': 'Kunlik xavf',
+            'trading_type': 'Savdo turi',
+            'exchange': 'Birja',
+            'stop': 'Stop loss',
+            'atr': 'ATR',
+            'update_deposit': 'Depozitni yangilash',
+            'reset': 'Qayta tikish',
+            'save': 'Saqlash',
+            'back': 'Orqaga',
+            'settings': 'Sozlamalar',
+            'yes': 'Ha',
+            'no': 'Yo\'q',
+            'on': 'Yoniq',
+            'off': 'O\'chiq',
+            'cancel': 'Bekor qilish',
+            'edit': 'Tahrirlash',
+        },
+        'tr': {
+            'lang': 'Dil',
+            'style': 'İşlem tarzı',
+            'deposit': 'Depozit',
+            'risk': 'Risk',
+            'currency': 'Para birimi',
+            'market': 'Piyasa',
+            'tp': 'Take profit',
+            'split': 'Bölünme',
+            'round': 'Yuvarlama',
+            'day_risk': 'Günlük risk',
+            'trading_type': 'İşlem türü',
+            'exchange': 'Borsa',
+            'stop': 'Stop loss',
+            'atr': 'ATR',
+            'update_deposit': 'Depozit güncelleme',
+            'reset': 'Sıfırla',
+            'save': 'Kaydet',
+            'back': 'Geri',
+            'settings': 'Ayarlar',
+            'yes': 'Evet',
+            'no': 'Hayır',
+            'on': 'Açık',
+            'off': 'Kapalı',
+            'cancel': 'İptal',
+            'edit': 'Düzenle',
+        },
+    }
+    return texts[lang]

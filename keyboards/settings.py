@@ -5,6 +5,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from common.keyboard import back_txt, cancel_txt, not_specify_txt
 from messages.common import transl_market, transl_tr_style, transl_tr_type
+from messages.keyboards import kb_settings_texts
 from models import LANGUAGES_TYPE, MARKETS_TYPE, STYLES, CallbackQuery
 
 from keyboards.stats import getButton as getStatsButton
@@ -44,56 +45,8 @@ def getButton(
 
 
 def kb_settings(lang: LANGUAGES_TYPE, user_db_id: int):
-    texts = {
-        'ru': {
-            'lang': 'Язык',
-            'style': 'Стиль торговли',
-            'trading_type': 'Тип торговли',
-            'reset': 'Сброс',
-            'deposit': 'Настроить торговлю',
-            'dop': 'Дополнительно',
+    texts = kb_settings_texts(lang)
 
-            'exchange': 'Биржа',
-            'stop': 'Вид риска',
-            'active': 'Активация',
-        },
-        'en': {
-            'lang': 'Language',
-            'style': 'Trading style',
-            'trading_type': 'Trading type',
-            'reset': 'Reset',
-            'deposit': 'Configure trading',
-            'dop': 'Extra',
-
-            'exchange': 'Exchange',
-            'stop': 'Type of risk',
-            'active': 'Activation',
-        },
-        'uz': {
-            'lang': 'Tillar',
-            'style': 'Savdo uslubi',
-            'trading_type': 'Savdo turi',
-            'reset': 'Qayta o\'rnatish',
-            'deposit': 'Savdolarni sozlash',
-            'dop': 'Bundan tashqari',
-
-            'exchange': 'Almashish',
-            'stop': 'Xavf turi',
-            'active': 'Faollashtirish',
-        },
-        'tr': {
-            'lang': 'Dil',
-            'style': 'Ticaret tarzı',
-            'trading_type': 'Ticaret türü',
-            'reset': 'Sıfırla',
-            'deposit': 'Ticareti yapılandırın',
-            'dop': 'Ek',
-
-            'exchange': 'Borsa',
-            'stop': 'Risk türü',
-            'active': 'Aktivasyon',
-        },
-    }
 
     keyboard = InlineKeyboardMarkup(row_width=2)
 

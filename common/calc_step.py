@@ -5,6 +5,7 @@ from service.tickers import tickers_service
 from service.calc import calc_service
 
 from messages.calc import msg_calc_buttons_info
+from messages.common import msg_calc_terms
 from models import MARKETS_TYPE, ForexInfo, Message, StateContext, User
 
 from states.calculate import CalculateState, ForexCalcState
@@ -20,52 +21,6 @@ from messages.enter import (
 )
 
 
-names = {
-    'ru': {
-        'dep': 'Депозит',
-        'risk': 'Риск',
-        'currency': 'Валюта',
-        'pair': 'Пара',
-        'tool': 'Инструмент',
-        'style': 'Стиль',
-        'op': 'Цена входа',
-        'sl': 'Стоп-лосс',
-        'atr': 'ATR',
-    },
-    'en': {
-        'dep': 'Deposit',
-        'risk': 'Risk',
-        'currency': 'Currency',
-        'pair': 'Pair',
-        'tool': 'Tool',
-        'style': 'Style',
-        'op': 'Entry price',
-        'sl': 'Stop loss',
-        'atr': 'ATR',
-    },
-    'uz': {
-        'dep': 'Depozit',
-        'risk': 'Xavf',
-        'currency': 'Valyuta',
-        'pair': 'Juftlik',
-        'tool': 'Asbob',
-        'style': 'Uslubi',
-        'op': 'Ochiq narx',
-        'sl': 'Stop loss',
-        'atr': 'ATR',
-    },
-    'tr': {
-        'dep': 'Depozito',
-        'risk': 'Risk',
-        'currency': 'Para birimi',
-        'pair': 'Çift',
-        'tool': 'Enstrüman',
-        'style': 'Tarzı',
-        'op': 'açılış fiyatını',
-        'sl': 'Stop loss',
-        'atr': 'ATR',
-    },
-}
 
 
 async def choose_calculate_step(
@@ -109,19 +64,19 @@ async def choose_calculate_step(
 
     if currency is None:
         text += msg_enter_currency(user.lang)
-        edit_to = names[user.lang]['currency']
+        edit_to = msg_calc_terms(user.lang)['currency']
         new_state = CalculateState.currency
         keyboard = kb_change_currency(user.lang, 'calc')
 
     elif calc_type == 'forex' and forex is None:
         text += msg_enter_pair(user.lang)
-        edit_to = names[user.lang]['pair']
+        edit_to = msg_calc_terms(user.lang)['pair']
         new_state = ForexCalcState.pair
         keyboard = kb_pair(user.lang)
 
     elif calc_type != 'forex' and tool is None:
         text += msg_enter_tool(user.lang, calc_type, is_try)
-        edit_to = names[user.lang]['tool']
+        edit_to = msg_calc_terms(user.lang)['tool']
         new_state = CalculateState.tool
 
         calcs = await calc_service.get_calculations(user.tgId, count=50)
@@ -155,23 +110,23 @@ async def choose_calculate_step(
 
     elif is_style_change:
         text += msg_enter_trading_style(user.lang)
-        edit_to = names[user.lang]['style']
+        edit_to = msg_calc_terms(user.lang)['style']
         new_state = CalculateState.trading_style
         keyboard = kb_trading_style(user.lang, 'calc')
 
     elif deposit is None:
         text += msg_enter_deposit(user.lang)
-        edit_to = names[user.lang]['dep']
+        edit_to = msg_calc_terms(user.lang)['dep']
         new_state = CalculateState.deposit
 
     elif risk is None:
         text += msg_enter_risk_percent(user.lang)
-        edit_to = names[user.lang]['risk']
+        edit_to = msg_calc_terms(user.lang)['risk']
         new_state = CalculateState.risk_percent
 
     elif open_price is None:
         text += msg_enter_open_price(user.lang, is_try)
-        edit_to = names[user.lang]['op']
+        edit_to = msg_calc_terms(user.lang)['op']
         new_state = CalculateState.open_price
 
         op_value = None
@@ -191,7 +146,7 @@ async def choose_calculate_step(
     else:
         if 'atr' in stop_type:
             text += msg_enter_atr(user.lang)
-            edit_to = names[user.lang]['atr']
+            edit_to = msg_calc_terms(user.lang)['atr']
             new_state = CalculateState.stop_atr
 
             atr_settings = user_settings_storage.get_user_atr_settings(
@@ -220,7 +175,7 @@ async def choose_calculate_step(
         else:
             if stop_loss is None:
                 text += msg_enter_stop_loss(user.lang, is_try)
-                edit_to = names[user.lang]['sl']
+                edit_to = msg_calc_terms(user.lang)['sl']
                 new_state = CalculateState.stop_loss
             else:
                 await create_and_send_calc(bot, message, state, user, stop_loss)

@@ -327,3 +327,59 @@ msg_manuals = ["""
 Приятного использования.
 """
                ]
+
+
+def msg_calc_terms(lang: LANGUAGES_TYPE) -> dict:
+    """
+    Словарь терминов для калькулятора.
+
+    Returns:
+        dict: Словарь с терминами на указанном языке
+    """
+    terms = {
+        'ru': {
+            'dep': 'Депозит',
+            'risk': 'Риск',
+            'currency': 'Валюта',
+            'pair': 'Пара',
+            'tool': 'Инструмент',
+            'style': 'Стиль',
+            'op': 'Цена входа',
+            'sl': 'Стоп-лосс',
+            'atr': 'ATR',
+        },
+        'en': {
+            'dep': 'Deposit',
+            'risk': 'Risk',
+            'currency': 'Currency',
+            'pair': 'Pair',
+            'tool': 'Tool',
+            'style': 'Style',
+            'op': 'Entry price',
+            'sl': 'Stop loss',
+            'atr': 'ATR',
+        },
+        'uz': {
+            'dep': 'Depozit',
+            'risk': 'Xavf',
+            'currency': 'Valyuta',
+            'pair': 'Juftlik',
+            'tool': 'Asbob',
+            'style': 'Uslub',
+            'op': 'Ochiq narx',
+            'sl': 'Stop loss',
+            'atr': 'ATR',
+        },
+        'tr': {
+            'dep': 'Depozito',
+            'risk': 'Risk',
+            'currency': 'Para birimi',
+            'pair': 'Çift',
+            'tool': 'Enstrüman',
+            'style': 'Tarz',
+            'op': 'Açılış fiyatı',
+            'sl': 'Stop loss',
+            'atr': 'ATR',
+        },
+    }
+    return terms[lang]
