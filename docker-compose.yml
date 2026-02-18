@@ -10,6 +10,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+
     networks:
       - bot_network
 
