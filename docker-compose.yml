@@ -13,9 +13,6 @@ services:
     networks:
       - bot_network
 
-volumes:
-  postgres_data:
-
 networks:
   bot_network:
     driver: bridge
