@@ -203,7 +203,7 @@ async def _start_calc(
     open_price: float,
     stop_loss: float
 ):
-    u_base = await user_settings_storage.get_or_create(user.tgId)
+    u_base = user_settings_storage.get_or_create(user.tgId)
 
     tool = tool.replace('USDT', '').replace('/', '') + '/USDT'
 
