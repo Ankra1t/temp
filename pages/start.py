@@ -8,7 +8,7 @@ from common.utils import send_in_development
 from states.calculate import CalculateState
 from messages.enter import msg_enter_stop_loss
 
-from pages.calculate import send_calculation
+from pages.calculate import create_and_send_calc, send_calculation
 from pages.user import send_user_main
 from pages.admin import send_admin_main
 
@@ -23,15 +23,24 @@ async def send_start_by_user(
     has_registered_now=False,
     quick_calc_tool: str | None = None,
     quick_calc_price: float | None = None,
+    quick_calc_stop: float | None = None,
 ):
     await state.delete()
 
     # Обработка быстрого запуска калькулятора из start параметра
     if quick_calc_tool is not None and quick_calc_price is not None:
-        await _start_quick_calc(
-            bot, message, state, user,
-            quick_calc_tool, quick_calc_price
-        )
+        if quick_calc_stop is not None:
+            await _start_calc(
+                bot, message, state, user,
+                quick_calc_tool, quick_calc_price,
+                quick_calc_stop
+            )
+        else:
+            await _start_quick_calc(
+                bot, message, state, user,
+                quick_calc_tool, quick_calc_price
+            )
+
         return
 
     if message.text is not None and len(message.text.split()) == 2 and 'calc' in message.text:
@@ -183,3 +192,32 @@ async def _start_quick_calc(
         f'<b>{tool}</b>\nЦена входа: <code>{open_price}</code>$ \n' +
         msg_enter_stop_loss(user.lang)
     )
+
+
+async def _start_calc(
+    bot: AsyncTeleBot,
+    message: Message,
+    state: StateContext,
+    user: User,
+    tool: str,
+    open_price: float,
+    stop_loss: float
+):
+    u_base = await user_settings_storage.get_or_create(user.tgId)
+
+    tool = tool.replace('USDT', '').replace('/', '') + '/USDT'
+
+    await state.set(CalculateState.stop_loss)
+
+    await state.add_data(
+        tool=tool,
+        open_price=open_price,
+        deposit=u_base.deposit if u_base else 10000,
+        risk=u_base.risk if u_base else (100, False),
+        currency=u_base.currency if u_base else 'USDT',
+        trading_type=u_base.trading_type if u_base else 'margin',
+        calc_type='crypto',
+        stop_type='default',
+    )
+
+    await create_and_send_calc(bot, message, state, user, stop_loss)

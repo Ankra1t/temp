@@ -21,6 +21,7 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
     is_registered = False
     quick_calc_tool = None
     quick_calc_price = None
+    quick_calc_stop = None
 
     # Проверяем реферальный id или быстрый запуск калькулятора
     mes_args = extract_arguments(message.text or '')
@@ -29,16 +30,23 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
         # Проверяем формат монета_цена для быстрого запуска калькулятора
         if mes_args.startswith('l_'):
             parts = mes_args.split('_')
-            if len(parts) == 4:
-                _, tool_part, price_part, float_part = parts
-                # Проверяем, что price_part - число (может быть дробным)
-                try:
+            try:
+                if len(parts) == 4:
+                    _, tool_part, price_part, float_part = parts
+                    # Проверяем, что price_part - число (может быть дробным)
                     quick_calc_price = float(f'{price_part}.{float_part or 0}')
                     quick_calc_tool = tool_part  # например, BTCUSDT
-                except ValueError:
-                    # Если не число, проверяем на ref_id
-                    if is_digit(mes_args):
-                        ref_id = int(mes_args)
+
+                if len(parts) == 6:
+                    _, tool_part, price_part, float_part, stop_part, stop_float = parts
+                    # Проверяем, что price_part - число (может быть дробным)
+                    quick_calc_price = float(f'{price_part}.{float_part or 0}')
+                    quick_calc_tool = tool_part  # например, BTCUSDT
+                    quick_calc_stop = float(f'{stop_part}.{stop_float or 0}')
+            except ValueError:
+                # Если не число, проверяем на ref_id
+                if is_digit(mes_args):
+                    ref_id = int(mes_args)
         elif is_digit(mes_args):
             ref_id = int(mes_args)
 
@@ -88,6 +96,7 @@ async def _start(message: Message, bot: AsyncTeleBot, state: StateContext, user:
         is_registered or False,
         quick_calc_tool=quick_calc_tool,
         quick_calc_price=quick_calc_price,
+        quick_calc_stop=quick_calc_stop,
     )
 
 
