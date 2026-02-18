@@ -10,27 +10,6 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - bot_network
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: proriski_db
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${DB_PG_NAME}
-      - POSTGRES_USER=${DB_PG_USER}
-      - POSTGRES_PASSWORD=${DB_PG_PASS}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_PG_USER} -d ${DB_PG_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - bot_network
 
